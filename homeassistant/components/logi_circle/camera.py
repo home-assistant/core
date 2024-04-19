@@ -1,4 +1,5 @@
 """Support to the Logi Circle cameras."""
+
 from __future__ import annotations
 
 from datetime import timedelta

@@ -1,4 +1,5 @@
 """Fully Kiosk Browser switch."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -18,22 +19,15 @@ from .coordinator import FullyKioskDataUpdateCoordinator
 from .entity import FullyKioskEntity
 
 
-@dataclass(frozen=True)
-class FullySwitchEntityDescriptionMixin:
-    """Fully Kiosk Browser switch entity description mixin."""
+@dataclass(frozen=True, kw_only=True)
+class FullySwitchEntityDescription(SwitchEntityDescription):
+    """Fully Kiosk Browser switch entity description."""
 
     on_action: Callable[[FullyKiosk], Any]
     off_action: Callable[[FullyKiosk], Any]
     is_on_fn: Callable[[dict[str, Any]], Any]
     mqtt_on_event: str | None
     mqtt_off_event: str | None
-
-
-@dataclass(frozen=True)
-class FullySwitchEntityDescription(
-    SwitchEntityDescription, FullySwitchEntityDescriptionMixin
-):
-    """Fully Kiosk Browser switch entity description."""
 
 
 SWITCHES: tuple[FullySwitchEntityDescription, ...] = (

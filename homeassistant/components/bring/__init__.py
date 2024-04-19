@@ -1,10 +1,11 @@
 """The Bring! integration."""
+
 from __future__ import annotations
 
 import logging
 
-from python_bring_api.bring import Bring
-from python_bring_api.exceptions import (
+from bring_api.bring import Bring
+from bring_api.exceptions import (
     BringAuthException,
     BringParseException,
     BringRequestException,
@@ -31,30 +32,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     password = entry.data[CONF_PASSWORD]
 
     session = async_get_clientsession(hass)
-    bring = Bring(email, password, sessionAsync=session)
+    bring = Bring(session, email, password)
 
     try:
-        await bring.loginAsync()
-        await bring.loadListsAsync()
+        await bring.login()
+        await bring.load_lists()
     except BringRequestException as e:
         raise ConfigEntryNotReady(
-            f"Timeout while connecting for email '{email}'"
-        ) from e
-    except BringAuthException as e:
-        _LOGGER.error(
-            "Authentication failed for '%s', check your email and password",
-            email,
-        )
-        raise ConfigEntryError(
-            f"Authentication failed for '{email}', check your email and password"
+            translation_domain=DOMAIN,
+            translation_key="setup_request_exception",
         ) from e
     except BringParseException as e:
-        _LOGGER.error(
-            "Failed to parse request '%s', check your email and password",
-            email,
-        )
         raise ConfigEntryNotReady(
-            "Failed to parse response request from server, try again later"
+            translation_domain=DOMAIN,
+            translation_key="setup_request_exception",
+        ) from e
+    except BringAuthException as e:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="setup_authentication_exception",
+            translation_placeholders={CONF_EMAIL: email},
         ) from e
 
     coordinator = BringDataUpdateCoordinator(hass, bring)

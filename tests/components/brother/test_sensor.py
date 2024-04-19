@@ -1,4 +1,5 @@
 """Test sensor of Brother integration."""
+
 from datetime import datetime, timedelta
 import json
 from unittest.mock import Mock, patch
@@ -45,11 +46,13 @@ async def test_sensors(hass: HomeAssistant, entity_registry: er.EntityRegistry) 
         disabled_by=None,
     )
     test_time = datetime(2019, 11, 11, 9, 10, 32, tzinfo=UTC)
-    with patch("brother.Brother.initialize"), patch(
-        "brother.datetime", now=Mock(return_value=test_time)
-    ), patch(
-        "brother.Brother._get_data",
-        return_value=json.loads(load_fixture("printer_data.json", "brother")),
+    with (
+        patch("brother.Brother.initialize"),
+        patch("brother.datetime", now=Mock(return_value=test_time)),
+        patch(
+            "brother.Brother._get_data",
+            return_value=json.loads(load_fixture("printer_data.json", "brother")),
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -393,8 +396,9 @@ async def test_availability(hass: HomeAssistant) -> None:
     assert state.state == "waiting"
 
     future = utcnow() + timedelta(minutes=5)
-    with patch("brother.Brother.initialize"), patch(
-        "brother.Brother._get_data", side_effect=ConnectionError()
+    with (
+        patch("brother.Brother.initialize"),
+        patch("brother.Brother._get_data", side_effect=ConnectionError()),
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -404,9 +408,12 @@ async def test_availability(hass: HomeAssistant) -> None:
         assert state.state == STATE_UNAVAILABLE
 
     future = utcnow() + timedelta(minutes=10)
-    with patch("brother.Brother.initialize"), patch(
-        "brother.Brother._get_data",
-        return_value=json.loads(load_fixture("printer_data.json", "brother")),
+    with (
+        patch("brother.Brother.initialize"),
+        patch(
+            "brother.Brother._get_data",
+            return_value=json.loads(load_fixture("printer_data.json", "brother")),
+        ),
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()

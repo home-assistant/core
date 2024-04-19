@@ -1,4 +1,5 @@
 """Constants for the AVM Fritz!Box call monitor integration."""
+
 from enum import StrEnum
 from typing import Final
 

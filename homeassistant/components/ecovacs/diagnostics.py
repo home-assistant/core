@@ -1,7 +1,10 @@
 """Ecovacs diagnostics."""
+
 from __future__ import annotations
 
 from typing import Any
+
+from deebot_client.capabilities import Capabilities
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
@@ -31,8 +34,8 @@ async def async_get_config_entry_diagnostics(
     }
 
     diag["devices"] = [
-        async_redact_data(device.device_info.api_device_info, REDACT_DEVICE)
-        for device in controller.devices
+        async_redact_data(device.device_info, REDACT_DEVICE)
+        for device in controller.devices(Capabilities)
     ]
     diag["legacy_devices"] = [
         async_redact_data(device.vacuum, REDACT_DEVICE)

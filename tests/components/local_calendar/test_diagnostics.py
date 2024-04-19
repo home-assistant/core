@@ -1,4 +1,5 @@
 """Tests for diagnostics platform of local calendar."""
+
 from aiohttp.test_utils import TestClient
 from freezegun import freeze_time
 import pytest

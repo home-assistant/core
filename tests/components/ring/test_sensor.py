@@ -1,10 +1,12 @@
 """The tests for the Ring sensor platform."""
+
 import logging
 
 from freezegun.api import FrozenDateTimeFactory
 import requests_mock
 
 from homeassistant.components.ring.const import SCAN_INTERVAL
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -22,21 +24,34 @@ async def test_sensor(hass: HomeAssistant, requests_mock: requests_mock.Mocker) 
     front_battery_state = hass.states.get("sensor.front_battery")
     assert front_battery_state is not None
     assert front_battery_state.state == "80"
+    assert (
+        front_battery_state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+    )
 
     front_door_battery_state = hass.states.get("sensor.front_door_battery")
     assert front_door_battery_state is not None
     assert front_door_battery_state.state == "100"
+    assert (
+        front_door_battery_state.attributes[ATTR_STATE_CLASS]
+        == SensorStateClass.MEASUREMENT
+    )
 
     downstairs_volume_state = hass.states.get("sensor.downstairs_volume")
     assert downstairs_volume_state is not None
     assert downstairs_volume_state.state == "2"
 
-    front_door_last_activity_state = hass.states.get("sensor.front_door_last_activity")
-    assert front_door_last_activity_state is not None
-
     downstairs_wifi_signal_strength_state = hass.states.get(
         "sensor.downstairs_wifi_signal_strength"
     )
+
+    ingress_mic_volume_state = hass.states.get("sensor.ingress_mic_volume")
+    assert ingress_mic_volume_state.state == "11"
+
+    ingress_doorbell_volume_state = hass.states.get("sensor.ingress_doorbell_volume")
+    assert ingress_doorbell_volume_state.state == "8"
+
+    ingress_voice_volume_state = hass.states.get("sensor.ingress_voice_volume")
+    assert ingress_voice_volume_state.state == "11"
 
     if not WIFI_ENABLED:
         return
@@ -55,6 +70,24 @@ async def test_sensor(hass: HomeAssistant, requests_mock: requests_mock.Mocker) 
     )
     assert front_door_wifi_signal_strength_state is not None
     assert front_door_wifi_signal_strength_state.state == "-58"
+
+
+async def test_history(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test history derived sensors."""
+    await setup_platform(hass, Platform.SENSOR)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(True)
+
+    front_door_last_activity_state = hass.states.get("sensor.front_door_last_activity")
+    assert front_door_last_activity_state.state == "2017-03-05T15:03:40+00:00"
+
+    ingress_last_activity_state = hass.states.get("sensor.ingress_last_activity")
+    assert ingress_last_activity_state.state == "2024-02-02T11:21:24+00:00"
 
 
 async def test_only_chime_devices(

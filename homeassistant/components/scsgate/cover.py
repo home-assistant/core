@@ -1,4 +1,5 @@
 """Support for SCSGate covers."""
+
 from __future__ import annotations
 
 import logging

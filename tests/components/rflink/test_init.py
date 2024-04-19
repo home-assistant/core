@@ -57,8 +57,7 @@ async def mock_rflink(
 
         if fail:
             raise ConnectionRefusedError
-        else:
-            return transport, protocol
+        return transport, protocol
 
     mock_create = Mock(wraps=create_rflink_connection)
     monkeypatch.setattr(

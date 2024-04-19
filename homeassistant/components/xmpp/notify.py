@@ -1,4 +1,5 @@
 """Jabber (XMPP) notification service."""
+
 from __future__ import annotations
 
 from concurrent.futures import TimeoutError as FutTimeoutError
@@ -296,15 +297,13 @@ async def async_send_message(  # noqa: C901
 
             _LOGGER.info("Uploading file from URL, %s", filename)
 
-            url = await self["xep_0363"].upload_file(
+            return await self["xep_0363"].upload_file(
                 filename,
                 size=filesize,
                 input_file=result.content,
                 content_type=result.headers["Content-Type"],
                 timeout=timeout,
             )
-
-            return url
 
         async def upload_file_from_path(self, path, timeout=None):
             """Upload a file from a local file path via XEP_0363."""
@@ -327,15 +326,13 @@ async def async_send_message(  # noqa: C901
             filename = self.get_random_filename(data.get(ATTR_PATH))
             _LOGGER.debug("Uploading file with random filename %s", filename)
 
-            url = await self["xep_0363"].upload_file(
+            return await self["xep_0363"].upload_file(
                 filename,
                 size=filesize,
                 input_file=input_file,
                 content_type=content_type,
                 timeout=timeout,
             )
-
-            return url
 
         def send_text_message(self):
             """Send a text only message to a room or a recipient."""

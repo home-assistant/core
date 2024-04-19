@@ -1,4 +1,5 @@
 """Support for monitoring the rtorrent BitTorrent client API."""
+
 from __future__ import annotations
 
 import logging

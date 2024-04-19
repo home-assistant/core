@@ -17,7 +17,7 @@ async def test_form(hass: HomeAssistant, laundrify_setup_entry) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
@@ -26,7 +26,7 @@ async def test_form(hass: HomeAssistant, laundrify_setup_entry) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DOMAIN
     assert result["data"] == {
         CONF_ACCESS_TOKEN: VALID_ACCESS_TOKEN,
@@ -46,7 +46,7 @@ async def test_form_invalid_format(
         data={CONF_CODE: "invalidFormat"},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_CODE: "invalid_format"}
 
 
@@ -59,7 +59,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, laundrify_exchange_code) -
         data=VALID_USER_INPUT,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_CODE: "invalid_auth"}
 
 
@@ -74,7 +74,7 @@ async def test_form_cannot_connect(
         data=VALID_USER_INPUT,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -89,7 +89,7 @@ async def test_form_unkown_exception(
         data=VALID_USER_INPUT,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
 
 
@@ -99,7 +99,7 @@ async def test_step_reauth(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_REAUTH}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
@@ -108,7 +108,7 @@ async def test_step_reauth(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
 
 async def test_integration_already_exists(hass: HomeAssistant) -> None:
@@ -125,5 +125,5 @@ async def test_integration_already_exists(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

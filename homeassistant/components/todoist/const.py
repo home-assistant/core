@@ -1,4 +1,5 @@
 """Constants for the Todoist component."""
+
 from typing import Final
 
 CONF_EXTRA_PROJECTS: Final = "custom_projects"

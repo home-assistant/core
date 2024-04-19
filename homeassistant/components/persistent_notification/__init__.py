@@ -1,4 +1,5 @@
 """Support for displaying persistent notifications."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -20,6 +21,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
+from homeassistant.util.signal_type import SignalType
 from homeassistant.util.uuid import random_uuid_hex
 
 DOMAIN = "persistent_notification"
@@ -49,7 +51,9 @@ class UpdateType(StrEnum):
     UPDATED = "updated"
 
 
-SIGNAL_PERSISTENT_NOTIFICATIONS_UPDATED = "persistent_notifications_updated"
+SIGNAL_PERSISTENT_NOTIFICATIONS_UPDATED = SignalType[
+    UpdateType, dict[str, Notification]
+]("persistent_notifications_updated")
 
 SCHEMA_SERVICE_NOTIFICATION = vol.Schema(
     {vol.Required(ATTR_NOTIFICATION_ID): cv.string}

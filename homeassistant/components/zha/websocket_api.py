@@ -1,4 +1,5 @@
 """Web socket API for Zigbee Home Automation devices."""
+
 from __future__ import annotations
 
 import asyncio
@@ -387,30 +388,30 @@ async def websocket_get_groupable_devices(
     zha_gateway = get_zha_gateway(hass)
 
     devices = [device for device in zha_gateway.devices.values() if device.is_groupable]
-    groupable_devices = []
+    groupable_devices: list[dict[str, Any]] = []
 
     for device in devices:
         entity_refs = zha_gateway.device_registry[device.ieee]
-        for ep_id in device.async_get_groupable_endpoints():
-            groupable_devices.append(
-                {
-                    "endpoint_id": ep_id,
-                    "entities": [
-                        {
-                            "name": _get_entity_name(zha_gateway, entity_ref),
-                            "original_name": _get_entity_original_name(
-                                zha_gateway, entity_ref
-                            ),
-                        }
-                        for entity_ref in entity_refs
-                        if list(entity_ref.cluster_handlers.values())[
-                            0
-                        ].cluster.endpoint.endpoint_id
-                        == ep_id
-                    ],
-                    "device": device.zha_device_info,
-                }
-            )
+        groupable_devices.extend(
+            {
+                "endpoint_id": ep_id,
+                "entities": [
+                    {
+                        "name": _get_entity_name(zha_gateway, entity_ref),
+                        "original_name": _get_entity_original_name(
+                            zha_gateway, entity_ref
+                        ),
+                    }
+                    for entity_ref in entity_refs
+                    if list(entity_ref.cluster_handlers.values())[
+                        0
+                    ].cluster.endpoint.endpoint_id
+                    == ep_id
+                ],
+                "device": device.zha_device_info,
+            }
+            for ep_id in device.async_get_groupable_endpoints()
+        )
 
     connection.send_result(msg[ID], groupable_devices)
 
@@ -520,9 +521,9 @@ async def websocket_remove_groups(
     group_ids: list[int] = msg[GROUP_IDS]
 
     if len(group_ids) > 1:
-        tasks = []
-        for group_id in group_ids:
-            tasks.append(zha_gateway.async_remove_zigpy_group(group_id))
+        tasks = [
+            zha_gateway.async_remove_zigpy_group(group_id) for group_id in group_ids
+        ]
         await asyncio.gather(*tasks)
     else:
         await zha_gateway.async_remove_zigpy_group(group_ids[0])
@@ -1033,7 +1034,7 @@ async def async_binding_operation(
             )
         )
     res = await asyncio.gather(*(t[0] for t in bind_tasks), return_exceptions=True)
-    for outcome, log_msg in zip(res, bind_tasks):
+    for outcome, log_msg in zip(res, bind_tasks, strict=False):
         if isinstance(outcome, Exception):
             fmt = f"{log_msg[1]} failed: %s"
         else:
@@ -1097,7 +1098,7 @@ async def websocket_update_zha_configuration(
     """Update the ZHA configuration."""
     zha_gateway = get_zha_gateway(hass)
     options = zha_gateway.config_entry.options
-    data_to_save = {**options, **{CUSTOM_CONFIGURATION: msg["data"]}}
+    data_to_save = {**options, CUSTOM_CONFIGURATION: msg["data"]}
 
     for section, schema in ZHA_CONFIG_SCHEMAS.items():
         for entry in schema.schema:

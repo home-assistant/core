@@ -1,7 +1,8 @@
 """The tests for Kodi device triggers."""
+
 import pytest
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.kodi import DOMAIN
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN

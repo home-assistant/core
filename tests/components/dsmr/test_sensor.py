@@ -4,6 +4,7 @@ Tests setup of the DSMR component and ensure incoming telegrams cause
 Entity to be updated with new values.
 
 """
+
 import asyncio
 import datetime
 from decimal import Decimal
@@ -12,17 +13,16 @@ from unittest.mock import DEFAULT, MagicMock
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNKNOWN,
     UnitOfEnergy,
@@ -106,7 +106,6 @@ async def test_default_setup(
     assert (
         power_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
     )
-    assert power_consumption.attributes.get(ATTR_ICON) is None
     assert (
         power_consumption.attributes.get(ATTR_STATE_CLASS)
         == SensorStateClass.MEASUREMENT
@@ -145,7 +144,6 @@ async def test_default_setup(
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
     assert active_tariff.state == "low"
     assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
-    assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
     assert (
         active_tariff.attributes.get(ATTR_FRIENDLY_NAME)
         == "Electricity Meter Active tariff"
@@ -282,7 +280,6 @@ async def test_v4_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
     assert active_tariff.state == "low"
     assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
-    assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
     assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
@@ -369,7 +366,6 @@ async def test_v5_meter(
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
     assert active_tariff.state == "low"
     assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
-    assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
     assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
@@ -447,7 +443,6 @@ async def test_luxembourg_meter(hass: HomeAssistant, dsmr_connection_fixture) ->
     active_tariff = hass.states.get("sensor.electricity_meter_energy_consumption_total")
     assert active_tariff.state == "123.456"
     assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
-    assert active_tariff.attributes.get(ATTR_ICON) is None
     assert (
         active_tariff.attributes.get(ATTR_STATE_CLASS)
         == SensorStateClass.TOTAL_INCREASING
@@ -605,7 +600,6 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
     assert active_tariff.state == "normal"
     assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
-    assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
     assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
@@ -614,7 +608,7 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     avg_demand = hass.states.get("sensor.electricity_meter_current_average_demand")
     assert avg_demand.state == "1.75"
     assert avg_demand.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.KILO_WATT
-    assert avg_demand.attributes.get(ATTR_STATE_CLASS) is None
+    assert avg_demand.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     # check max average demand is parsed correctly
     max_demand = hass.states.get(
@@ -622,7 +616,7 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     )
     assert max_demand.state == "4.11"
     assert max_demand.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.KILO_WATT
-    assert max_demand.attributes.get(ATTR_STATE_CLASS) is None
+    assert max_demand.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     # check if gas consumption mbus1 is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
@@ -1009,7 +1003,6 @@ async def test_belgian_meter_low(hass: HomeAssistant, dsmr_connection_fixture) -
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
     assert active_tariff.state == "low"
     assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
-    assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
     assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
@@ -1066,7 +1059,6 @@ async def test_swedish_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     active_tariff = hass.states.get("sensor.electricity_meter_energy_consumption_total")
     assert active_tariff.state == "123.456"
     assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
-    assert active_tariff.attributes.get(ATTR_ICON) is None
     assert (
         active_tariff.attributes.get(ATTR_STATE_CLASS)
         == SensorStateClass.TOTAL_INCREASING
@@ -1142,7 +1134,6 @@ async def test_easymeter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     active_tariff = hass.states.get("sensor.electricity_meter_energy_consumption_total")
     assert active_tariff.state == "54184.632"
     assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
-    assert active_tariff.attributes.get(ATTR_ICON) is None
     assert (
         active_tariff.attributes.get(ATTR_STATE_CLASS)
         == SensorStateClass.TOTAL_INCREASING
@@ -1334,7 +1325,7 @@ async def test_reconnect(hass: HomeAssistant, dsmr_connection_fixture) -> None:
 
     await hass.config_entries.async_unload(mock_entry.entry_id)
 
-    assert mock_entry.state == config_entries.ConfigEntryState.NOT_LOADED
+    assert mock_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_gas_meter_providing_energy_reading(

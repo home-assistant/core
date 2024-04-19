@@ -1,4 +1,5 @@
 """The tests for Tasmota device triggers."""
+
 import copy
 import json
 from unittest.mock import Mock, patch
@@ -7,7 +8,7 @@ from hatasmota.switch import TasmotaSwitchTriggerConfig
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.tasmota import _LOGGER
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX, DOMAIN

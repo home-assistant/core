@@ -1,4 +1,5 @@
 """Config validation for the Z-Wave JS integration."""
+
 from typing import Any
 
 import voluptuous as vol

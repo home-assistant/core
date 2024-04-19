@@ -1,4 +1,5 @@
 """Fixtures for IntelliFire integration tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 

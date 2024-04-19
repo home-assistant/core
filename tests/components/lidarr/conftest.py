@@ -1,4 +1,5 @@
 """Configure pytest for Lidarr tests."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Generator
