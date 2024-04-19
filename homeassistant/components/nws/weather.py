@@ -326,15 +326,24 @@ class NWSWeather(CoordinatorWeatherEntity):
         """Return if state is available."""
         last_success = (
             self.coordinator.last_update_success
+            and self.coordinator_forecast_hourly.last_update_success
+            and self.coordinator_forecast_twice_daily.last_update_success
             and self.coordinator_forecast_legacy.last_update_success
         )
         if (
             self.coordinator.last_update_success_time
+            and self.coordinator_forecast_hourly.last_update_success_time
+            and self.coordinator_forecast_twice_daily.last_update_success_time
             and self.coordinator_forecast_legacy.last_update_success_time
         ):
             last_success_time = (
                 utcnow() - self.coordinator.last_update_success_time
                 < OBSERVATION_VALID_TIME
+                and utcnow() - self.coordinator_forecast_hourly.last_update_success_time
+                < FORECAST_VALID_TIME
+                and utcnow()
+                - self.coordinator_forecast_twice_daily.last_update_success_time
+                < FORECAST_VALID_TIME
                 and utcnow() - self.coordinator_forecast_legacy.last_update_success_time
                 < FORECAST_VALID_TIME
             )
@@ -349,3 +358,5 @@ class NWSWeather(CoordinatorWeatherEntity):
         """
         await self.coordinator.async_request_refresh()
         await self.coordinator_forecast_legacy.async_request_refresh()
+        await self.coordinator_forecast_hourly.async_request_refresh()
+        await self.coordinator_forecast_twice_daily.async_request_refresh()
