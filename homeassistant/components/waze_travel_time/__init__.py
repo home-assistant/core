@@ -28,8 +28,6 @@ from .const import (
     CONF_AVOID_SUBSCRIPTION_ROADS,
     CONF_AVOID_TOLL_ROADS,
     CONF_DESTINATION,
-    CONF_EXCL_FILTER,
-    CONF_INCL_FILTER,
     CONF_ORIGIN,
     CONF_REALTIME,
     CONF_UNITS,
@@ -57,8 +55,6 @@ SERVICE_GET_TRAVEL_TIMES_SCHEMA = vol.Schema(
                 translation_key=CONF_REGION,
             )
         ),
-        vol.Optional(CONF_INCL_FILTER, default=""): TextSelector(),
-        vol.Optional(CONF_EXCL_FILTER, default=""): TextSelector(),
         vol.Optional(CONF_REALTIME, default=False): BooleanSelector(),
         vol.Optional(CONF_VEHICLE_TYPE, default=DEFAULT_VEHICLE_TYPE): SelectSelector(
             SelectSelectorConfig(
@@ -105,8 +101,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             avoid_subscription_roads=service.data[CONF_AVOID_SUBSCRIPTION_ROADS],
             avoid_ferries=service.data[CONF_AVOID_FERRIES],
             realtime=service.data[CONF_REALTIME],
-            incl_filter=service.data[CONF_INCL_FILTER],
-            excl_filter=service.data[CONF_EXCL_FILTER],
         )
         return {"routes": [vars(route) for route in response]} if response else None
 

@@ -39,14 +39,6 @@ get_travel_times:
             - car
             - taxi
             - motorcycle
-    incl_filter:
-      required: false
-      selector:
-        text:
-    excl_filter:
-      required: false
-      selector:
-        text:
     realtime:
       required: false
       selector:
