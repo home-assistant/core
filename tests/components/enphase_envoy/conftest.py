@@ -342,17 +342,17 @@ def mock_envoy_fixture(
 
 
 @pytest.fixture(name="setup_enphase_envoy")
-async def setup_enphase_envoy_fixture(hass, config, mock_envoy):
+async def setup_enphase_envoy_fixture(hass: HomeAssistant, config, mock_envoy):
     """Define a fixture to set up Enphase Envoy."""
-    with patch(
-        "homeassistant.components.enphase_envoy.config_flow.Envoy",
-        return_value=mock_envoy,
-    ), patch(
-        "homeassistant.components.enphase_envoy.Envoy",
-        return_value=mock_envoy,
-    ), patch(
-        "homeassistant.components.enphase_envoy.coordinator.EnphaseUpdateCoordinator._async_mark_setup_complete",
-        return_value=None,
+    with (
+        patch(
+            "homeassistant.components.enphase_envoy.config_flow.Envoy",
+            return_value=mock_envoy,
+        ),
+        patch(
+            "homeassistant.components.enphase_envoy.Envoy",
+            return_value=mock_envoy,
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
