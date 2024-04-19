@@ -1158,3 +1158,70 @@ def test_qr_code_selector_schema(schema, valid_selections, invalid_selections) -
 def test_label_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test label selector."""
     _test_selector("label", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        ({}, ("abc123",), (None,)),
+        ({"entity": {}}, ("abc123",), (None,)),
+        ({"entity": {"domain": "light"}}, ("abc123",), (None,)),
+        (
+            {"entity": {"domain": "binary_sensor", "device_class": "motion"}},
+            ("abc123",),
+            (None,),
+        ),
+        (
+            {
+                "entity": {
+                    "domain": "binary_sensor",
+                    "device_class": "motion",
+                    "integration": "demo",
+                }
+            },
+            ("abc123",),
+            (None,),
+        ),
+        (
+            {
+                "entity": [
+                    {"domain": "light"},
+                    {"domain": "binary_sensor", "device_class": "motion"},
+                ]
+            },
+            ("abc123",),
+            (None,),
+        ),
+        (
+            {"device": {"integration": "demo", "model": "mock-model"}},
+            ("abc123",),
+            (None,),
+        ),
+        (
+            {
+                "device": [
+                    {"integration": "demo", "model": "mock-model"},
+                    {"integration": "other-demo", "model": "other-mock-model"},
+                ]
+            },
+            ("abc123",),
+            (None,),
+        ),
+        (
+            {
+                "entity": {"domain": "binary_sensor", "device_class": "motion"},
+                "device": {"integration": "demo", "model": "mock-model"},
+            },
+            ("abc123",),
+            (None,),
+        ),
+        (
+            {"multiple": True},
+            ((["abc123", "def456"],)),
+            (None, "abc123", ["abc123", None]),
+        ),
+    ],
+)
+def test_floor_selector_schema(schema, valid_selections, invalid_selections) -> None:
+    """Test floor selector."""
+    _test_selector("floor", schema, valid_selections, invalid_selections)

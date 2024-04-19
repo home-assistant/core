@@ -168,16 +168,13 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
         self, entry_data: Mapping[str, Any], keep_password: bool
     ) -> ConfigFlowResult:
         """Re-run configuration step."""
+        protocol = entry_data.get(CONF_PROTOCOL, "http")
+        password = entry_data[CONF_PASSWORD] if keep_password else ""
         self.discovery_schema = {
-            vol.Required(
-                CONF_PROTOCOL, default=entry_data.get(CONF_PROTOCOL, "http")
-            ): str,
+            vol.Required(CONF_PROTOCOL, default=protocol): vol.In(PROTOCOL_CHOICES),
             vol.Required(CONF_HOST, default=entry_data[CONF_HOST]): str,
             vol.Required(CONF_USERNAME, default=entry_data[CONF_USERNAME]): str,
-            vol.Required(
-                CONF_PASSWORD,
-                default=entry_data[CONF_PASSWORD] if keep_password else "",
-            ): str,
+            vol.Required(CONF_PASSWORD, default=password): str,
             vol.Required(CONF_PORT, default=entry_data[CONF_PORT]): int,
         }
 

@@ -24,12 +24,12 @@ async def test_reload(
     """Test reloading the integration."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
 
-    assert mock_config_entry.state == ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_service(
@@ -68,7 +68,7 @@ async def test_retry_after_failure(
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_issue_if_not_rova_area(
@@ -83,5 +83,5 @@ async def test_issue_if_not_rova_area(
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert len(issue_registry.issues) == 1

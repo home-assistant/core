@@ -147,11 +147,10 @@ class BaseLight(LogMixin, light.LightEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return state attributes."""
-        attributes = {
+        return {
             "off_with_transition": self._off_with_transition,
             "off_brightness": self._off_brightness,
         }
-        return attributes
 
     @property
     def is_on(self) -> bool:

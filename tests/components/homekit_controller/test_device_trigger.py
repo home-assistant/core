@@ -370,7 +370,7 @@ async def test_handle_events_late_setup(
 
     await hass.config_entries.async_unload(helper.config_entry.entry_id)
     await hass.async_block_till_done()
-    assert helper.config_entry.state == ConfigEntryState.NOT_LOADED
+    assert helper.config_entry.state is ConfigEntryState.NOT_LOADED
 
     assert await async_setup_component(
         hass,
@@ -424,7 +424,7 @@ async def test_handle_events_late_setup(
 
     await hass.config_entries.async_setup(helper.config_entry.entry_id)
     await hass.async_block_till_done()
-    assert helper.config_entry.state == ConfigEntryState.LOADED
+    assert helper.config_entry.state is ConfigEntryState.LOADED
 
     # Make sure first automation (only) fires for single press
     helper.pairing.testing.update_named_service(

@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 import pytest
 from requests.exceptions import ConnectTimeout, HTTPError
 
-from homeassistant import data_entry_flow
 from homeassistant.components.rova.const import (
     CONF_HOUSE_NUMBER,
     CONF_HOUSE_NUMBER_SUFFIX,
@@ -14,6 +13,7 @@ from homeassistant.components.rova.const import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -27,7 +27,7 @@ async def test_user(hass: HomeAssistant, mock_rova: MagicMock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     # test with all information provided
@@ -40,7 +40,7 @@ async def test_user(hass: HomeAssistant, mock_rova: MagicMock) -> None:
             CONF_HOUSE_NUMBER_SUFFIX: HOUSE_NUMBER_SUFFIX,
         },
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
 
     data = result.get("data")
     assert data
@@ -69,7 +69,7 @@ async def test_error_if_not_rova_area(
         },
     )
 
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {"base": "invalid_rova_area"}
 
     # now reset the return value and test if we can recover
@@ -84,7 +84,7 @@ async def test_error_if_not_rova_area(
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{ZIP_CODE} {HOUSE_NUMBER} {HOUSE_NUMBER_SUFFIX}"
     assert result["data"] == {
         CONF_ZIP_CODE: ZIP_CODE,
@@ -114,7 +114,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
             CONF_HOUSE_NUMBER_SUFFIX: HOUSE_NUMBER_SUFFIX,
         },
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -145,7 +145,7 @@ async def test_abort_if_api_throws_exception(
             CONF_HOUSE_NUMBER_SUFFIX: HOUSE_NUMBER_SUFFIX,
         },
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {"base": error}
 
     # now reset the side effect to see if we can recover
@@ -160,7 +160,7 @@ async def test_abort_if_api_throws_exception(
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{ZIP_CODE} {HOUSE_NUMBER} {HOUSE_NUMBER_SUFFIX}"
     assert result["data"] == {
         CONF_ZIP_CODE: ZIP_CODE,
@@ -181,7 +181,7 @@ async def test_import(hass: HomeAssistant, mock_rova: MagicMock) -> None:
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{ZIP_CODE} {HOUSE_NUMBER} {HOUSE_NUMBER_SUFFIX}"
     assert result["data"] == {
         CONF_ZIP_CODE: ZIP_CODE,
@@ -215,7 +215,7 @@ async def test_import_already_configured(
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -237,7 +237,7 @@ async def test_import_if_not_rova_area(
         },
     )
 
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "invalid_rova_area"
 
 
@@ -266,5 +266,5 @@ async def test_import_connection_errors(
         },
     )
 
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == error

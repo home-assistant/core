@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 from enum import Enum
+from functools import cached_property
 import logging
 import random
 import time
@@ -23,7 +24,6 @@ from zigpy.zcl.clusters.general import Groups, Identify
 from zigpy.zcl.foundation import Status as ZclStatus, ZCLCommandDef
 import zigpy.zdo.types as zdo_types
 
-from homeassistant.backports.functools import cached_property
 from homeassistant.const import ATTR_COMMAND, ATTR_DEVICE_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -996,7 +996,7 @@ class ZHADevice(LogMixin):
                     )
                 )
         res = await asyncio.gather(*(t[0] for t in tasks), return_exceptions=True)
-        for outcome, log_msg in zip(res, tasks):
+        for outcome, log_msg in zip(res, tasks, strict=False):
             if isinstance(outcome, Exception):
                 fmt = f"{log_msg[1]} failed: %s"
             else:
