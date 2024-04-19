@@ -21,7 +21,7 @@ from aiohttp.typedefs import JSONDecoder, StrOrURL
 from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
 from aiohttp.web_protocol import RequestHandler
 from aiohttp_fast_url_dispatcher import FastUrlDispatcher, attach_fast_url_dispatcher
-from aiohttp_zlib_ng import enable_zlib_ng
+from aiohttp_isal import enable_isal
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -202,7 +202,7 @@ class ApiConfig:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HTTP API and debug interface."""
-    enable_zlib_ng()
+    enable_isal()
 
     conf: ConfData | None = config.get(DOMAIN)
 

@@ -346,8 +346,9 @@ async def test_component_base_exception_setup(hass: HomeAssistant) -> None:
 
     mock_integration(hass, MockModule("comp", setup=exception_setup))
 
-    with pytest.raises(BaseException):
+    with pytest.raises(BaseException) as exc_info:
         await setup.async_setup_component(hass, "comp", {})
+    assert str(exc_info.value) == "fail!"
 
     assert "comp" not in hass.config.components
 

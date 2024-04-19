@@ -191,6 +191,18 @@
     },
     "service_not_found": {
       "message": "Service {domain}.{service} not found."
+    },
+    "service_does_not_supports_reponse": {
+      "message": "A service which does not return responses can't be called with {return_response}."
+    },
+    "service_lacks_response_request": {
+      "message": "The service call requires responses and must be called with {return_response}."
+    },
+    "service_reponse_invalid": {
+      "message": "Failed to process the returned service response data, expected a dictionary, but got {response_data_type}."
+    },
+    "service_should_be_blocking": {
+      "message": "A non blocking service call with argument {non_blocking_argument} can't be used together with argument {return_response}."
     }
   }
 }

@@ -4,11 +4,11 @@
 
 # Home Assistant Core
 aiodns==3.2.0
-aiohttp==3.9.4
+aiohttp==3.9.5
 aiohttp_cors==0.7.0
 aiohttp_session==2.12.0
 aiohttp-fast-url-dispatcher==0.3.0
-aiohttp-zlib-ng==0.3.1
+aiohttp-isal==0.2.0
 astral==2.2
 async-interrupt==1.1.1
 attrs==23.2.0
@@ -28,7 +28,7 @@ PyJWT==2.8.0
 cryptography==42.0.5
 Pillow==10.3.0
 pyOpenSSL==24.1.0
-orjson==3.9.15
+orjson==3.10.1
 packaging>=23.1
 pip>=21.3.1
 psutil-home-assistant==0.0.1
