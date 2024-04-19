@@ -1,4 +1,5 @@
 """Platform for sensor integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -20,18 +21,11 @@ from .const import ACCOUNTS, CONF_COORDINATOR, DOMAIN, MODEL_POT, POTS
 from .entity import MonzoBaseEntity
 
 
-@dataclass
-class MonzoSensorEntityDescriptionMixin:
-    """Adds fields for Monzo sensors."""
+@dataclass(frozen=True, kw_only=True)
+class MonzoSensorEntityDescription(SensorEntityDescription):
+    """Describes Monzo sensor entity."""
 
     value_fn: Callable[[dict[str, Any]], Any]
-
-
-@dataclass
-class MonzoSensorEntityDescription(
-    SensorEntityDescription, MonzoSensorEntityDescriptionMixin
-):
-    """Describes Monzo sensor entity."""
 
 
 ACC_SENSORS = (
@@ -73,28 +67,29 @@ async def async_setup_entry(
     """Defer sensor setup to the shared sensor module."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
 
-    entities = []
-    for index, account in enumerate(hass.data[DOMAIN][config_entry.entry_id][ACCOUNTS]):
-        for entity_description in ACC_SENSORS:
-            entities.append(
-                MonzoSensor(
-                    coordinator,
-                    entity_description,
-                    index,
-                    account["name"],
-                    lambda x: x["accounts"],
-                )
-            )
+    accounts = [
+        MonzoSensor(
+            coordinator,
+            entity_description,
+            index,
+            account["name"],
+            lambda x: x["accounts"],
+        )
+        for entity_description in ACC_SENSORS
+        for index, account in enumerate(
+            hass.data[DOMAIN][config_entry.entry_id][ACCOUNTS]
+        )
+    ]
 
-    for index, _pot in enumerate(hass.data[DOMAIN][config_entry.entry_id][POTS]):
-        for entity_description in POT_SENSORS:
-            entities.append(
-                MonzoSensor(
-                    coordinator, entity_description, index, MODEL_POT, lambda x: x[POTS]
-                )
-            )
+    pots = [
+        MonzoSensor(
+            coordinator, entity_description, index, MODEL_POT, lambda x: x[POTS]
+        )
+        for entity_description in POT_SENSORS
+        for index, _pot in enumerate(hass.data[DOMAIN][config_entry.entry_id][POTS])
+    ]
 
-    async_add_entities(entities)
+    async_add_entities(accounts + pots)
 
 
 class MonzoSensor(MonzoBaseEntity, SensorEntity):
