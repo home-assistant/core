@@ -22,18 +22,23 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import STATE_ON
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DOMAIN, GAS_VALVE_OPEN_STATES, MOTION_MODELS
+from .const import CONF_SLEEP_PERIOD, DOMAIN, GAS_VALVE_OPEN_STATES, MOTION_MODELS
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
     ShellyBlockAttributeEntity,
     ShellyBlockEntity,
     ShellyRpcEntity,
+    ShellySleepingBlockAttributeEntity,
     async_setup_block_attribute_entities,
+    async_setup_entry_attribute_entities,
 )
 from .utils import (
     async_remove_shelly_entity,
@@ -63,7 +68,6 @@ GAS_VALVE_SWITCH = BlockSwitchDescription(
 MOTION_SWITCH = BlockSwitchDescription(
     key="sensor|motionActive",
     name="Motion active",
-    entity_registry_enabled_default=False,
 )
 
 
@@ -102,13 +106,16 @@ def async_setup_block_entry(
 
     # Add Shelly Motion as a switch
     if coordinator.model in MOTION_MODELS:
-        async_setup_block_attribute_entities(
+        async_setup_entry_attribute_entities(
             hass,
+            config_entry,
             async_add_entities,
-            coordinator,
             {("sensor", "motionActive"): MOTION_SWITCH},
-            BlockMotionSwitch,
+            BlockSleepingMotionSwitch,
         )
+        return
+
+    if config_entry.data[CONF_SLEEP_PERIOD]:
         return
 
     # In roller mode the relay blocks exist but do not contain required info
@@ -182,26 +189,52 @@ def async_setup_rpc_entry(
     async_add_entities(RpcRelaySwitch(coordinator, id_) for id_ in switch_ids)
 
 
-class BlockMotionSwitch(ShellyBlockAttributeEntity, SwitchEntity):
+class BlockSleepingMotionSwitch(
+    ShellySleepingBlockAttributeEntity, RestoreEntity, SwitchEntity
+):
     """Entity that controls Motion Sensor on Block based Shelly devices."""
 
     entity_description: BlockSwitchDescription
     _attr_translation_key = "motion_switch"
 
+    def __init__(
+        self,
+        coordinator: ShellyBlockCoordinator,
+        block: Block | None,
+        attribute: str,
+        description: BlockSwitchDescription,
+        entry: RegistryEntry | None = None,
+    ) -> None:
+        """Initialize the sleeping sensor."""
+        super().__init__(coordinator, block, attribute, description, entry)
+        self.last_state: State | None = None
+
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """If motion is active."""
-        return bool(self.block.motionActive)
+        if self.block is not None:
+            return bool(self.block.motionActive)
+
+        if self.last_state is None:
+            return None
+
+        return self.last_state.state == STATE_ON
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Activate switch."""
-        await self.block.device.set_shelly_motion_detection(True)
+        await self.coordinator.device.set_shelly_motion_detection(True)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Deactivate switch."""
-        await self.block.device.set_shelly_motion_detection(False)
+        await self.coordinator.device.set_shelly_motion_detection(False)
         self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        if (last_state := await self.async_get_last_state()) is not None:
+            self.last_state = last_state
 
 
 class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
