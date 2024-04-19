@@ -69,13 +69,7 @@ class MonzoFlowHandler(
 
             self.oauth_data = data
 
-            # return self.async_show_form(step_id="await_approval_confirmation", description_placeholders="banana")
-
             return await self.async_step_await_approval_confirmation()
-
-            # return self.async_create_entry(
-            #     title=DOMAIN, data={**data, "webhook_ids": {}}
-            # )
 
         if self.reauth_entry.unique_id == user_id:
             self.hass.config_entries.async_update_entry(
