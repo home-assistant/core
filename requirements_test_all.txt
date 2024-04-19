@@ -119,7 +119,7 @@ Tami4EdgeAPI==2.1
 WSDiscovery==2.0.0
 
 # homeassistant.components.accuweather
-accuweather==2.1.1
+accuweather==3.0.0
 
 # homeassistant.components.adax
 adax==0.4.0
@@ -201,7 +201,7 @@ aiocomelit==0.9.0
 aiodhcpwatcher==1.0.0
 
 # homeassistant.components.dhcp
-aiodiscover==2.0.0
+aiodiscover==2.1.0
 
 # homeassistant.components.dnsip
 aiodns==3.2.0
@@ -356,7 +356,7 @@ aiotankerkoenig==0.4.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==74
+aiounifi==75
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -2261,7 +2261,7 @@ yalexs==3.0.1
 yeelight==0.7.14
 
 # homeassistant.components.yolink
-yolink-api==0.4.2
+yolink-api==0.4.3
 
 # homeassistant.components.youless
 youless-api==1.0.1
