@@ -29,26 +29,6 @@
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
-  "services": {
-    "pot_transfer": {
-      "name": "Pot transfer",
-      "description": "Move money between a pot and your current or joint account.",
-      "fields": {
-        "transfer_account": {
-          "name": "Transfer account",
-          "description": "The current or joint account to transfer from or to."
-        },
-        "transfer_type": {
-          "name": "Transfer type",
-          "description": "Deposit into or withdraw from the pot"
-        },
-        "amount": {
-          "name": "Amount",
-          "description": "The amount of money to transfer in GBP."
-        }
-      }
-    }
-  },
   "entity": {
     "sensor": {
       "balance": {
