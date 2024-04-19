@@ -1,4 +1,5 @@
 """Tests for the Epic Games Store helpers."""
+
 from typing import Any
 
 import pytest

@@ -1,4 +1,5 @@
 """Helper for Epic Games Store."""
+
 import contextlib
 from typing import Any
 

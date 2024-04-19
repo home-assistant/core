@@ -1,4 +1,5 @@
 """Define fixtures for Epic Games Store tests."""
+
 from unittest.mock import Mock, patch
 
 import pytest

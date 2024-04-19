@@ -1,4 +1,5 @@
 """Test constants."""
+
 from homeassistant.components.epic_games_store.const import DOMAIN
 
 from tests.common import load_json_object_fixture

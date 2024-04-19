@@ -1,4 +1,5 @@
 """Test the Epic Games Store config flow."""
+
 from http.client import HTTPException
 from unittest.mock import patch
 
