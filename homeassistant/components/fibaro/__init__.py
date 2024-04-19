@@ -476,10 +476,11 @@ class FibaroDevice(Entity):
             return self.fibaro_device.value_2.int_value()
         return None
 
-    def dont_know_message(self) -> None:
+    def dont_know_message(self, cmd: str) -> None:
         """Make a warning in case we don't know how to perform an action."""
         _LOGGER.warning(
-            "Not sure how to setValue: %s (available actions: %s)",
+            "Not sure how to %s: %s (available actions: %s)",
+            cmd,
             str(self.ha_id),
             str(self.fibaro_device.actions),
         )
@@ -522,7 +523,7 @@ class FibaroDevice(Entity):
             self.fibaro_device.execute_action(cmd, args)
             _LOGGER.debug("-> %s.%s%s called", str(self.ha_id), str(cmd), str(args))
         else:
-            self.dont_know_message()
+            self.dont_know_message(cmd)
 
     @property
     def current_binary_state(self) -> bool:
