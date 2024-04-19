@@ -34,10 +34,10 @@ class MonzoBaseEntity(CoordinatorEntity):
         self._data_accessor = data_accessor
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{self.data['id']}")},
+            identifiers={(DOMAIN, str(self.data["id"]))},
             manufacturer="Monzo",
             model=device_model,
-            name=f"{self.data['name']}",
+            name=self.data["name"],
         )
 
     @property
