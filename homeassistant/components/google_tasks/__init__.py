@@ -18,11 +18,6 @@ PLATFORMS: list[Platform] = [Platform.TODO]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Google Tasks from a config entry."""
-
-    if not entry.unique_id:
-        entry.async_start_reauth(hass, context={"source": "reauth"})
-        return False
-
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry
