@@ -18,6 +18,8 @@ class MonzoFlowHandler(
 ):
     """Handle a config flow."""
 
+    DOMAIN = DOMAIN
+
     oauth_data: dict[str, Any]
 
     @property
