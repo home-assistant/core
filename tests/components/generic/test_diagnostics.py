@@ -1,4 +1,5 @@
 """Test generic (IP camera) diagnostics."""
+
 import pytest
 
 from homeassistant.components.diagnostics import REDACTED

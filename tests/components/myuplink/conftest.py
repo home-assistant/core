@@ -1,10 +1,12 @@
 """Test helpers for myuplink."""
-from collections.abc import Generator
+
+from collections.abc import AsyncGenerator, Generator
 import time
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 from myuplink import Device, DevicePoint, System
+import orjson
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -93,7 +95,7 @@ def load_systems_jv_file(load_systems_file: str) -> dict[str, Any]:
 @pytest.fixture(scope="session")
 def load_systems_file() -> str:
     """Load fixture file for systems."""
-    return load_fixture("systems.json", DOMAIN)
+    return load_fixture("systems-2dev.json", DOMAIN)
 
 
 @pytest.fixture
@@ -106,22 +108,22 @@ def system_fixture(load_systems_file: str) -> list[System]:
 # Fixture group for device points API endpoint.
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def load_device_points_file() -> str:
     """Load fixture file for device-points endpoint."""
-    return load_fixture("device_points_nibe_f730.json", DOMAIN)
+    return "device_points_nibe_f730.json"
 
 
 @pytest.fixture
-def load_device_points_jv_file():
+def load_device_points_jv_file(load_device_points_file) -> str:
     """Load fixture file for device_points."""
-    return json_loads(load_device_points_file)
+    return load_fixture(load_device_points_file, DOMAIN)
 
 
 @pytest.fixture
-def device_points_fixture(load_device_points_file: str) -> list[DevicePoint]:
-    """Fixture for devce_points."""
-    data = json_loads(load_device_points_file)
+def device_points_fixture(load_device_points_jv_file: str) -> list[DevicePoint]:
+    """Fixture for device_points."""
+    data = orjson.loads(load_device_points_jv_file)
     return [DevicePoint(point_data) for point_data in data]
 
 
@@ -129,7 +131,7 @@ def device_points_fixture(load_device_points_file: str) -> list[DevicePoint]:
 def mock_myuplink_client(
     load_device_file,
     device_fixture,
-    load_device_points_file,
+    load_device_points_jv_file,
     device_points_fixture,
     system_fixture,
     load_systems_jv_file,
@@ -149,7 +151,7 @@ def mock_myuplink_client(
         client.async_get_device_json.return_value = load_device_file
 
         client.async_get_device_points.return_value = device_points_fixture
-        client.async_get_device_points_json.return_value = load_device_points_file
+        client.async_get_device_points_json.return_value = load_device_points_jv_file
 
         yield client
 
@@ -167,3 +169,23 @@ async def init_integration(
     await hass.async_block_till_done()
 
     return mock_config_entry
+
+
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture for platforms."""
+    return []
+
+
+@pytest.fixture
+async def setup_platform(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    platforms,
+) -> AsyncGenerator[None, None]:
+    """Set up one or all platforms."""
+
+    with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        yield

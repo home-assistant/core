@@ -1,10 +1,15 @@
 """Tests for the Area Registry."""
+
 from typing import Any
 
 import pytest
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import area_registry as ar, floor_registry as fr
+from homeassistant.helpers import (
+    area_registry as ar,
+    floor_registry as fr,
+    label_registry as lr,
+)
 
 from tests.common import ANY, async_capture_events, flush_store
 
@@ -30,6 +35,7 @@ async def test_create_area(hass: HomeAssistant, area_registry: ar.AreaRegistry) 
         floor_id=None,
         icon=None,
         id=ANY,
+        labels=set(),
         name="mock",
         normalized_name=ANY,
         picture=None,
@@ -46,7 +52,10 @@ async def test_create_area(hass: HomeAssistant, area_registry: ar.AreaRegistry) 
 
     # Create area with all parameters
     area = area_registry.async_create(
-        "mock 2", aliases={"alias_1", "alias_2"}, picture="/image/example.png"
+        "mock 2",
+        aliases={"alias_1", "alias_2"},
+        labels={"label1", "label2"},
+        picture="/image/example.png",
     )
 
     assert area == ar.AreaEntry(
@@ -54,6 +63,7 @@ async def test_create_area(hass: HomeAssistant, area_registry: ar.AreaRegistry) 
         floor_id=None,
         icon=None,
         id=ANY,
+        labels={"label1", "label2"},
         name="mock 2",
         normalized_name=ANY,
         picture="/image/example.png",
@@ -139,6 +149,7 @@ async def test_update_area(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
     floor_registry: fr.FloorRegistry,
+    label_registry: lr.LabelRegistry,
 ) -> None:
     """Make sure that we can read areas."""
     update_events = async_capture_events(hass, ar.EVENT_AREA_REGISTRY_UPDATED)
@@ -150,6 +161,7 @@ async def test_update_area(
         aliases={"alias_1", "alias_2"},
         floor_id="first",
         icon="mdi:garage",
+        labels={"label1", "label2"},
         name="mock1",
         picture="/image/example.png",
     )
@@ -160,6 +172,7 @@ async def test_update_area(
         floor_id="first",
         icon="mdi:garage",
         id=ANY,
+        labels={"label1", "label2"},
         name="mock1",
         normalized_name=ANY,
         picture="/image/example.png",
@@ -269,6 +282,7 @@ async def test_loading_area_from_storage(
                     "floor_id": "first_floor",
                     "id": "12345A",
                     "icon": "mdi:garage",
+                    "labels": ["mock-label1", "mock-label2"],
                     "name": "mock",
                     "picture": "blah",
                 }
@@ -312,6 +326,7 @@ async def test_migration_from_1_1(
                     "floor_id": None,
                     "icon": None,
                     "id": "12345A",
+                    "labels": [],
                     "name": "mock",
                     "picture": None,
                 }
@@ -411,3 +426,68 @@ async def test_entries_for_floor(
 
     assert not ar.async_entries_for_floor(area_registry, "unknown")
     assert not ar.async_entries_for_floor(area_registry, "")
+
+
+async def test_removing_labels(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Make sure we can clear labels."""
+    label1 = label_registry.async_create("Label 1")
+    label2 = label_registry.async_create("Label 2")
+
+    kitchen = area_registry.async_create("Kitchen")
+    kitchen = area_registry.async_update(
+        kitchen.id, labels={label1.label_id, label2.label_id}
+    )
+
+    bedroom = area_registry.async_create("Bedroom")
+    bedroom = area_registry.async_update(bedroom.id, labels={label2.label_id})
+
+    assert area_registry.async_get_area(kitchen.id).labels == {
+        label1.label_id,
+        label2.label_id,
+    }
+    assert area_registry.async_get_area(bedroom.id).labels == {label2.label_id}
+
+    label_registry.async_delete(label1.label_id)
+    await hass.async_block_till_done()
+
+    assert area_registry.async_get_area(kitchen.id).labels == {label2.label_id}
+    assert area_registry.async_get_area(bedroom.id).labels == {label2.label_id}
+
+    label_registry.async_delete(label2.label_id)
+    await hass.async_block_till_done()
+
+    assert not area_registry.async_get_area(kitchen.id).labels
+    assert not area_registry.async_get_area(bedroom.id).labels
+
+
+@pytest.mark.usefixtures("hass")
+async def test_entries_for_label(
+    area_registry: ar.AreaRegistry, label_registry: lr.LabelRegistry
+) -> None:
+    """Test getting area entries by label."""
+    label1 = label_registry.async_create("Label 1")
+    label2 = label_registry.async_create("Label 2")
+
+    kitchen = area_registry.async_create("Kitchen")
+    kitchen = area_registry.async_update(
+        kitchen.id, labels={label1.label_id, label2.label_id}
+    )
+    living_room = area_registry.async_create("Living room")
+    living_room = area_registry.async_update(living_room.id, labels={label1.label_id})
+    bedroom = area_registry.async_create("Bedroom")
+    bedroom = area_registry.async_update(bedroom.id, labels={label2.label_id})
+
+    entries = ar.async_entries_for_label(area_registry, label1.label_id)
+    assert len(entries) == 2
+    assert entries == [kitchen, living_room]
+
+    entries = ar.async_entries_for_label(area_registry, label2.label_id)
+    assert len(entries) == 2
+    assert entries == [kitchen, bedroom]
+
+    assert not ar.async_entries_for_label(area_registry, "unknown")
+    assert not ar.async_entries_for_label(area_registry, "")

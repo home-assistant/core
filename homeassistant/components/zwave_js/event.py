@@ -1,4 +1,5 @@
 """Support for Z-Wave controls using the event platform."""
+
 from __future__ import annotations
 
 from zwave_js_server.client import Client as ZwaveClient

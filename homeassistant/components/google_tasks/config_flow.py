@@ -1,4 +1,5 @@
 """Config flow for Google Tasks."""
+
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -8,9 +9,8 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import HttpRequest
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN, OAUTH2_SCOPES
@@ -40,7 +40,7 @@ class OAuth2FlowHandler(
             "prompt": "consent",
         }
 
-    async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow."""
         credentials = Credentials(token=data[CONF_TOKEN][CONF_ACCESS_TOKEN])
         try:
@@ -66,8 +66,8 @@ class OAuth2FlowHandler(
                 reason="access_not_configured",
                 description_placeholders={"message": error},
             )
-        except Exception as ex:  # pylint: disable=broad-except
-            self.logger.exception("Unknown error occurred: %s", ex)
+        except Exception:  # pylint: disable=broad-except
+            self.logger.exception("Unknown error occurred")
             return self.async_abort(reason="unknown")
         user_id = user_resource_info["id"]
         if not self.reauth_entry:
@@ -82,7 +82,9 @@ class OAuth2FlowHandler(
 
         return self.async_abort(reason="wrong_account")
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -91,7 +93,7 @@ class OAuth2FlowHandler(
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")

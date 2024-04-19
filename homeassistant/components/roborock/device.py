@@ -1,21 +1,22 @@
 """Support for Roborock device base class."""
+
 from typing import Any
 
-from roborock.api import AttributeCache, RoborockClient
-from roborock.cloud_api import RoborockMqttClient
 from roborock.command_cache import CacheableAttribute
 from roborock.containers import Consumable, Status
 from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockDataProtocol
 from roborock.roborock_typing import RoborockCommand
+from roborock.version_1_apis.roborock_client_v1 import AttributeCache, RoborockClientV1
+from roborock.version_1_apis.roborock_mqtt_client_v1 import RoborockMqttClientV1
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import RoborockDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import RoborockDataUpdateCoordinator
 
 
 class RoborockEntity(Entity):
@@ -27,7 +28,7 @@ class RoborockEntity(Entity):
         self,
         unique_id: str,
         device_info: DeviceInfo,
-        api: RoborockClient,
+        api: RoborockClientV1,
     ) -> None:
         """Initialize the coordinated Roborock Device."""
         self._attr_unique_id = unique_id
@@ -35,7 +36,7 @@ class RoborockEntity(Entity):
         self._api = api
 
     @property
-    def api(self) -> RoborockClient:
+    def api(self) -> RoborockClientV1:
         """Returns the api."""
         return self._api
 
@@ -57,7 +58,6 @@ class RoborockEntity(Entity):
             else:
                 command_name = command
             raise HomeAssistantError(
-                f"Error while calling {command}",
                 translation_domain=DOMAIN,
                 translation_key="command_failed",
                 translation_placeholders={
@@ -116,7 +116,7 @@ class RoborockCoordinatedEntity(
         return data.status
 
     @property
-    def cloud_api(self) -> RoborockMqttClient:
+    def cloud_api(self) -> RoborockMqttClientV1:
         """Return the cloud api."""
         return self.coordinator.cloud_api
 

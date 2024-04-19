@@ -1,4 +1,5 @@
 """Platform for sensor integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -57,7 +58,6 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
     IntellifireSensorEntityDescription(
         key="flame_height",
         translation_key="flame_height",
-        icon="mdi:fire-circle",
         state_class=SensorStateClass.MEASUREMENT,
         # UI uses 1-5 for flame height, backing lib uses 0-4
         value_fn=lambda data: (data.flameheight + 1),
@@ -80,14 +80,12 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
     IntellifireSensorEntityDescription(
         key="fan_speed",
         translation_key="fan_speed",
-        icon="mdi:fan",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.fanspeed,
     ),
     IntellifireSensorEntityDescription(
         key="timer_end_timestamp",
         translation_key="timer_end_timestamp",
-        icon="mdi:timer-sand",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=_time_remaining_to_timestamp,

@@ -7,8 +7,7 @@ from typing import Any
 from dwdwfsapi import DwdWeatherWarningsAPI
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_REGION_IDENTIFIER, DOMAIN
@@ -21,7 +20,7 @@ class DwdWeatherWarningsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict = {}
 

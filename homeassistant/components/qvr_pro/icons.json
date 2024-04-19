@@ -1,0 +1,6 @@
+{
+  "services": {
+    "start_record": "mdi:record-rec",
+    "stop_record": "mdi:stop"
+  }
+}

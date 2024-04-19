@@ -1,4 +1,5 @@
 """Support for Home Assistant iOS app sensors."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -52,13 +53,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up iOS from a config entry."""
-    entities = [
+    async_add_entities(
         IOSSensor(device_name, device, description)
         for device_name, device in ios.devices(hass).items()
         for description in SENSOR_TYPES
-    ]
-
-    async_add_entities(entities, True)
+    )
 
 
 class IOSSensor(SensorEntity):

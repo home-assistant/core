@@ -1,4 +1,5 @@
 """Test the Google Tasks config flow."""
+
 from collections.abc import Generator
 from unittest.mock import Mock, patch
 
@@ -84,11 +85,14 @@ async def test_full_flow(
         },
     )
 
-    with patch(
-        "homeassistant.components.google_tasks.async_setup_entry", return_value=True
-    ) as mock_setup:
+    with (
+        patch(
+            "homeassistant.components.google_tasks.async_setup_entry", return_value=True
+        ) as mock_setup,
+        patch("homeassistant.components.google_tasks.config_flow.build"),
+    ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "123"
     assert result["result"].title == "Test Name"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -148,7 +152,7 @@ async def test_api_not_enabled(
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "access_not_configured"
     assert (
         result["description_placeholders"]["message"]
@@ -206,7 +210,7 @@ async def test_general_exception(
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 

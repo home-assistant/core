@@ -1,5 +1,5 @@
 """Tests for lawn_mower module."""
-from datetime import timedelta
+
 from unittest.mock import AsyncMock
 
 from aioautomower.exceptions import ApiException
@@ -8,19 +8,19 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN
+from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.components.lawn_mower import LawnMowerActivity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_integration
+from .const import TEST_MOWER_ID
 
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     load_json_value_fixture,
 )
-
-TEST_MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
 
 
 async def test_lawn_mower_states(
@@ -46,7 +46,7 @@ async def test_lawn_mower_states(
         values[TEST_MOWER_ID].mower.activity = activity
         values[TEST_MOWER_ID].mower.state = state
         mock_automower_client.get_status.return_value = values
-        freezer.tick(timedelta(minutes=5))
+        freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         state = hass.states.get("lawn_mower.test_mower_1")

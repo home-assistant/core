@@ -1,16 +1,19 @@
 """Test the Honeywell Lyric config flow."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
 from homeassistant.components.lyric.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
@@ -38,7 +41,7 @@ async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "missing_credentials"
 
 
@@ -61,7 +64,7 @@ async def test_full_flow(
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
@@ -83,9 +86,12 @@ async def test_full_flow(
         },
     )
 
-    with patch("homeassistant.components.lyric.api.ConfigEntryLyricClient"), patch(
-        "homeassistant.components.lyric.async_setup_entry", return_value=True
-    ) as mock_setup:
+    with (
+        patch("homeassistant.components.lyric.api.ConfigEntryLyricClient"),
+        patch(
+            "homeassistant.components.lyric.async_setup_entry", return_value=True
+        ) as mock_setup,
+    ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["data"]["auth_implementation"] == "cred"
@@ -100,7 +106,7 @@ async def test_full_flow(
 
     assert DOMAIN in hass.config.components
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
@@ -151,12 +157,15 @@ async def test_reauthentication_flow(
         },
     )
 
-    with patch("homeassistant.components.lyric.api.ConfigEntryLyricClient"), patch(
-        "homeassistant.components.lyric.async_setup_entry", return_value=True
-    ) as mock_setup:
+    with (
+        patch("homeassistant.components.lyric.api.ConfigEntryLyricClient"),
+        patch(
+            "homeassistant.components.lyric.async_setup_entry", return_value=True
+        ) as mock_setup,
+    ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
     assert len(mock_setup.mock_calls) == 1

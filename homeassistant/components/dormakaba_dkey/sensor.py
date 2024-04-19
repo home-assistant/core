@@ -1,4 +1,5 @@
 """Dormakaba dKey integration sensor platform."""
+
 from __future__ import annotations
 
 from py_dormakaba_dkey import DKEYLock

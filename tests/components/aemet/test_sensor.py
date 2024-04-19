@@ -2,10 +2,7 @@
 
 from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant.components.weather import (
-    ATTR_CONDITION_PARTLYCLOUDY,
-    ATTR_CONDITION_SNOWY,
-)
+from homeassistant.components.weather import ATTR_CONDITION_SNOWY
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
@@ -23,27 +20,27 @@ async def test_aemet_forecast_create_sensors(
     await async_init_integration(hass)
 
     state = hass.states.get("sensor.aemet_daily_forecast_condition")
-    assert state.state == ATTR_CONDITION_PARTLYCLOUDY
+    assert state.state == ATTR_CONDITION_SNOWY
 
     state = hass.states.get("sensor.aemet_daily_forecast_precipitation_probability")
-    assert state.state == "30"
+    assert state.state == "0"
 
     state = hass.states.get("sensor.aemet_daily_forecast_temperature")
-    assert state.state == "4"
+    assert state.state == "2"
 
     state = hass.states.get("sensor.aemet_daily_forecast_temperature_low")
-    assert state.state == "-4"
+    assert state.state == "-1"
 
     state = hass.states.get("sensor.aemet_daily_forecast_time")
     assert (
-        state.state == dt_util.parse_datetime("2021-01-10 00:00:00+00:00").isoformat()
+        state.state == dt_util.parse_datetime("2021-01-08 23:00:00+00:00").isoformat()
     )
 
     state = hass.states.get("sensor.aemet_daily_forecast_wind_bearing")
-    assert state.state == "45.0"
+    assert state.state == "90.0"
 
     state = hass.states.get("sensor.aemet_daily_forecast_wind_speed")
-    assert state.state == "20"
+    assert state.state == "0"
 
     state = hass.states.get("sensor.aemet_hourly_forecast_condition")
     assert state is None
@@ -99,7 +96,7 @@ async def test_aemet_weather_create_sensors(
     assert state.state == "100"
 
     state = hass.states.get("sensor.aemet_snow")
-    assert state.state == "1.8"
+    assert state.state == "1.2"
 
     state = hass.states.get("sensor.aemet_snow_probability")
     assert state.state == "100"

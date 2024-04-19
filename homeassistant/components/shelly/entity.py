@@ -1,4 +1,5 @@
 """Shelly entity helper."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -73,12 +74,12 @@ def async_setup_block_attribute_entities(
 
     for block in coordinator.device.blocks:
         for sensor_id in block.sensor_ids:
-            description = sensors.get((block.type, sensor_id))
+            description = sensors.get((cast(str, block.type), sensor_id))
             if description is None:
                 continue
 
             # Filter out non-existing sensors and sensors without a value
-            if getattr(block, sensor_id, None) in (-1, None):
+            if getattr(block, sensor_id, None) is None:
                 continue
 
             # Filter and remove entities that according to settings
@@ -278,20 +279,15 @@ class BlockEntityDescription(EntityDescription):
     extra_state_attributes: Callable[[Block], dict | None] | None = None
 
 
-@dataclass(frozen=True)
-class RpcEntityRequiredKeysMixin:
-    """Class for RPC entity required keys."""
-
-    sub_key: str
-
-
-@dataclass(frozen=True)
-class RpcEntityDescription(EntityDescription, RpcEntityRequiredKeysMixin):
+@dataclass(frozen=True, kw_only=True)
+class RpcEntityDescription(EntityDescription):
     """Class to describe a RPC entity."""
 
     # BlockEntity does not support UNDEFINED or None,
     # restrict the type to str.
     name: str = ""
+
+    sub_key: str
 
     value: Callable[[Any, Any], Any] | None = None
     available: Callable[[dict], bool] | None = None
@@ -348,7 +344,7 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
                 f" {repr(err)}"
             ) from err
         except InvalidAuthError:
-            self.coordinator.entry.async_start_reauth(self.hass)
+            await self.coordinator.async_shutdown_device_and_start_reauth()
 
 
 class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
@@ -401,7 +397,7 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
                 f" {params}, error: {repr(err)}"
             ) from err
         except InvalidAuthError:
-            self.coordinator.entry.async_start_reauth(self.hass)
+            await self.coordinator.async_shutdown_device_and_start_reauth()
 
 
 class ShellyBlockAttributeEntity(ShellyBlockEntity, Entity):
@@ -633,9 +629,9 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
         )
-        self._attr_unique_id = (
-            self._attr_unique_id
-        ) = f"{coordinator.mac}-{key}-{attribute}"
+        self._attr_unique_id = self._attr_unique_id = (
+            f"{coordinator.mac}-{key}-{attribute}"
+        )
         self._last_value = None
 
         if coordinator.device.initialized:

@@ -1,4 +1,5 @@
 """Support for XS1 sensors."""
+
 from __future__ import annotations
 
 from xs1_api_client.api_constants import ActuatorType

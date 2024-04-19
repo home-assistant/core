@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "switch": {
+      "autofocus": {
+        "default": "mdi:focus-auto"
+      },
+      "ir_lamp": {
+        "default": "mdi:spotlight-beam"
+      },
+      "wiper": {
+        "default": "mdi:wiper"
+      }
+    }
+  },
+  "services": {
+    "ptz": "mdi:pan"
+  }
+}

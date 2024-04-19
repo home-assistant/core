@@ -1,4 +1,5 @@
 """Sensors for National Weather Service (NWS)."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

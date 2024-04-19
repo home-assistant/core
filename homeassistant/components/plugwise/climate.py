@@ -1,4 +1,5 @@
 """Plugwise Climate component for Home Assistant."""
+
 from __future__ import annotations
 
 from typing import Any

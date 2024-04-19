@@ -21,6 +21,7 @@
     'context': <ANY>,
     'entity_id': 'climate.climate_system_s2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'heat_cool',
   })
@@ -42,6 +43,7 @@
     'context': <ANY>,
     'entity_id': 'climate.climate_system_s2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -68,6 +70,7 @@
     'context': <ANY>,
     'entity_id': 'climate.climate_system_s3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'heat_cool',
   })
@@ -89,6 +92,7 @@
     'context': <ANY>,
     'entity_id': 'climate.climate_system_s3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -121,6 +125,7 @@
     'context': <ANY>,
     'entity_id': 'climate.climate_system_s2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'heat_cool',
   })
@@ -147,6 +152,7 @@
     'context': <ANY>,
     'entity_id': 'climate.climate_system_s2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
   })
@@ -173,6 +179,7 @@
     'context': <ANY>,
     'entity_id': 'climate.climate_system_s2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'heat',
   })
@@ -199,6 +206,7 @@
     'context': <ANY>,
     'entity_id': 'climate.climate_system_s2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'heat_cool',
   })
@@ -225,6 +233,7 @@
     'context': <ANY>,
     'entity_id': 'climate.climate_system_s2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'heat_cool',
   })
@@ -251,6 +260,7 @@
     'context': <ANY>,
     'entity_id': 'climate.climate_system_s2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'heat_cool',
   })
@@ -277,6 +287,7 @@
     'context': <ANY>,
     'entity_id': 'climate.climate_system_s2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
   })
@@ -303,6 +314,7 @@
     'context': <ANY>,
     'entity_id': 'climate.climate_system_s2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
   })
@@ -329,6 +341,7 @@
     'context': <ANY>,
     'entity_id': 'climate.climate_system_s1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'heat_cool',
   })
@@ -355,6 +368,7 @@
     'context': <ANY>,
     'entity_id': 'climate.climate_system_s1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
   })
@@ -381,6 +395,7 @@
     'context': <ANY>,
     'entity_id': 'climate.climate_system_s1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'heat',
   })
@@ -407,6 +422,7 @@
     'context': <ANY>,
     'entity_id': 'climate.climate_system_s1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'heat_cool',
   })
@@ -433,6 +449,7 @@
     'context': <ANY>,
     'entity_id': 'climate.climate_system_s1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'heat_cool',
   })
@@ -459,6 +476,7 @@
     'context': <ANY>,
     'entity_id': 'climate.climate_system_s1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'heat_cool',
   })
@@ -485,6 +503,7 @@
     'context': <ANY>,
     'entity_id': 'climate.climate_system_s1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
   })
@@ -511,6 +530,7 @@
     'context': <ANY>,
     'entity_id': 'climate.climate_system_s1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
   })

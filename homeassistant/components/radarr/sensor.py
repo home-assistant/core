@@ -1,4 +1,5 @@
 """Support for Radarr."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -60,10 +61,13 @@ class RadarrSensorEntityDescription(
 ):
     """Class to describe a Radarr sensor."""
 
-    description_fn: Callable[
-        [RadarrSensorEntityDescription[T], RootFolder],
-        tuple[RadarrSensorEntityDescription[T], str] | None,
-    ] | None = None
+    description_fn: (
+        Callable[
+            [RadarrSensorEntityDescription[T], RootFolder],
+            tuple[RadarrSensorEntityDescription[T], str] | None,
+        ]
+        | None
+    ) = None
 
 
 SENSOR_TYPES: dict[str, RadarrSensorEntityDescription[Any]] = {
@@ -80,7 +84,6 @@ SENSOR_TYPES: dict[str, RadarrSensorEntityDescription[Any]] = {
         key="movies",
         translation_key="movies",
         native_unit_of_measurement="Movies",
-        icon="mdi:television",
         entity_registry_enabled_default=False,
         value_fn=lambda data, _: data,
     ),
@@ -88,7 +91,6 @@ SENSOR_TYPES: dict[str, RadarrSensorEntityDescription[Any]] = {
         key="queue",
         translation_key="queue",
         native_unit_of_measurement="Movies",
-        icon="mdi:download",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data, _: data,
