@@ -55,6 +55,7 @@ from homeassistant.exceptions import (
     InvalidStateError,
     MaxLengthExceeded,
     ServiceNotFound,
+    ServiceValidationError,
 )
 from homeassistant.helpers.json import json_dumps
 from homeassistant.setup import async_setup_component
@@ -1791,8 +1792,9 @@ async def test_services_call_return_response_requires_blocking(
     hass: HomeAssistant,
 ) -> None:
     """Test that non-blocking service calls cannot ask for response data."""
+    await async_setup_component(hass, "homeassistant", {})
     async_mock_service(hass, "test_domain", "test_service")
-    with pytest.raises(ValueError, match="when blocking=False"):
+    with pytest.raises(ServiceValidationError, match="blocking=False") as exc:
         await hass.services.async_call(
             "test_domain",
             "test_service",
@@ -1800,6 +1802,10 @@ async def test_services_call_return_response_requires_blocking(
             blocking=False,
             return_response=True,
         )
+    assert (
+        str(exc.value)
+        == "A non blocking service call with argument blocking=False can't be used together with argument return_response=True"
+    )
 
 
 @pytest.mark.parametrize(
@@ -1816,6 +1822,7 @@ async def test_serviceregistry_return_response_invalid(
     hass: HomeAssistant, response_data: Any, expected_error: str
 ) -> None:
     """Test service call response data must be json serializable objects."""
+    await async_setup_component(hass, "homeassistant", {})
 
     def service_handler(call: ServiceCall) -> ServiceResponse:
         """Service handler coroutine."""
@@ -1842,8 +1849,8 @@ async def test_serviceregistry_return_response_invalid(
 @pytest.mark.parametrize(
     ("supports_response", "return_response", "expected_error"),
     [
-        (SupportsResponse.NONE, True, "not support responses"),
-        (SupportsResponse.ONLY, False, "caller did not ask for responses"),
+        (SupportsResponse.NONE, True, "does not return responses"),
+        (SupportsResponse.ONLY, False, "call requires responses"),
     ],
 )
 async def test_serviceregistry_return_response_arguments(
@@ -1853,6 +1860,7 @@ async def test_serviceregistry_return_response_arguments(
     expected_error: str,
 ) -> None:
     """Test service call response data invalid arguments."""
+    await async_setup_component(hass, "homeassistant", {})
 
     hass.services.async_register(
         "test_domain",
@@ -1861,7 +1869,7 @@ async def test_serviceregistry_return_response_arguments(
         supports_response=supports_response,
     )
 
-    with pytest.raises(ValueError, match=expected_error):
+    with pytest.raises(ServiceValidationError, match=expected_error):
         await hass.services.async_call(
             "test_domain",
             "test_service",
@@ -3411,3 +3419,20 @@ async def test_async_listen_with_run_immediately_deprecated(
         f"Detected code that calls `{method}` with run_immediately, which is "
         "deprecated and will be removed in Home Assistant 2025.5."
     ) in caplog.text
+
+
+async def test_top_level_components(hass: HomeAssistant) -> None:
+    """Test top level components are updated when components change."""
+    hass.config.components.add("homeassistant")
+    assert hass.config.components == {"homeassistant"}
+    assert hass.config.top_level_components == {"homeassistant"}
+    hass.config.components.add("homeassistant.scene")
+    assert hass.config.components == {"homeassistant", "homeassistant.scene"}
+    assert hass.config.top_level_components == {"homeassistant"}
+    hass.config.components.remove("homeassistant")
+    assert hass.config.components == {"homeassistant.scene"}
+    assert hass.config.top_level_components == set()
+    with pytest.raises(ValueError):
+        hass.config.components.remove("homeassistant.scene")
+    with pytest.raises(NotImplementedError):
+        hass.config.components.discard("homeassistant")
