@@ -599,6 +599,8 @@ build.json @home-assistant/supervisor
 /tests/components/homekit_controller/ @Jc2k @bdraco
 /homeassistant/components/homematic/ @pvizeli
 /tests/components/homematic/ @pvizeli
+/homeassistant/components/homematicip_cloud/ @hahn-th
+/tests/components/homematicip_cloud/ @hahn-th
 /homeassistant/components/homewizard/ @DCSBL
 /tests/components/homewizard/ @DCSBL
 /homeassistant/components/honeywell/ @rdfurman @mkmer
