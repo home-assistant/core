@@ -1,4 +1,4 @@
-"""Test the Home Assistant analytics init module."""
+"""Test the Sanix init module."""
 
 from __future__ import annotations
 
