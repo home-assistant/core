@@ -111,6 +111,8 @@ class FibaroController:
     def connect(self) -> None:
         """Start the communication with the Fibaro controller."""
 
+        # Return value doesn't need to be checked,
+        # it is only relevant when connecting without credentials
         self._client.connect()
         info = self._client.read_info()
         self.hub_serial = info.serial_number
