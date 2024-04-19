@@ -20,12 +20,33 @@ from homeassistant.helpers.schema_config_entry_flow import (
 
 from .const import (
     CONF_DELTA,
+    CONF_FORECAST_DAYS,
     CONF_TIMEFRAME,
     DEFAULT_COUNTRY,
     DEFAULT_DELTA,
     DEFAULT_TIMEFRAME,
     DOMAIN,
     SUPPORTED_COUNTRY_CODES,
+)
+
+FORECAST_OPTIONS = vol.Schema(
+    {
+        vol.Required(CONF_FORECAST_DAYS, default=["now"]): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[
+                    "now",
+                    "_1d",
+                    "_2d",
+                    "_3d",
+                    "_4d",
+                    "_5d",
+                ],
+                multiple=True,
+                mode=selector.SelectSelectorMode("list"),
+                translation_key="forecast_days",
+            )
+        )
+    }
 )
 
 OPTIONS_SCHEMA = vol.Schema(
@@ -55,7 +76,7 @@ OPTIONS_SCHEMA = vol.Schema(
             ),
         ),
     }
-)
+).extend(FORECAST_OPTIONS.schema)
 
 
 async def _options_suggested_values(handler: SchemaCommonFlowHandler) -> dict[str, Any]:
@@ -77,6 +98,10 @@ class BuienradarFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:  # noqa: D107
+        super().__init__()
+        self.config: dict[str, Any] = {}
+
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -96,7 +121,10 @@ class BuienradarFlowHandler(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(f"{lat}-{lon}")
             self._abort_if_unique_id_configured()
 
-            return self.async_create_entry(title=f"{lat},{lon}", data=user_input)
+            self.config.update(user_input)
+            return await self.async_step_forecasts()
+
+            #
 
         data_schema = vol.Schema(
             {
@@ -113,4 +141,25 @@ class BuienradarFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=data_schema,
             errors={},
+        )
+
+    async def async_step_forecasts(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow to select enabled forecast days."""
+        if user_input is not None:
+            lat = self.config.get(CONF_LATITUDE)
+            lon = self.config.get(CONF_LONGITUDE)
+
+            return self.async_create_entry(
+                title=f"{lat},{lon}",
+                data={
+                    CONF_LATITUDE: self.config.get(CONF_LATITUDE),
+                    CONF_LONGITUDE: self.config.get(CONF_LONGITUDE),
+                },
+                options={CONF_FORECAST_DAYS: user_input.get(CONF_FORECAST_DAYS)},
+            )
+
+        return self.async_show_form(
+            step_id="forecasts", data_schema=FORECAST_OPTIONS, errors={}
         )

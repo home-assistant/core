@@ -1,5 +1,7 @@
 """Constants for buienradar component."""
 
+from typing import Final
+
 DOMAIN = "buienradar"
 
 DEFAULT_TIMEFRAME = 60
@@ -9,6 +11,7 @@ DEFAULT_DELTA = 600
 
 CONF_DELTA = "delta"
 CONF_TIMEFRAME = "timeframe"
+CONF_FORECAST_DAYS = "forecast_days"
 
 SUPPORTED_COUNTRY_CODES = ["NL", "BE"]
 DEFAULT_COUNTRY = "NL"
@@ -63,3 +66,5 @@ STATE_CONDITION_CODES = [
     "g",
     "s",
 ]
+
+MANUFACTURER: Final = "Buienradar"

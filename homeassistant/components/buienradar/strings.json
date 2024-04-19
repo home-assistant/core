@@ -6,6 +6,14 @@
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]"
         }
+      },
+      "forecasts": {
+        "data": {
+          "forecast_days": "Forecast Days"
+        },
+        "data_description": {
+          "forecast_days": "Select the forecast days that should be enabled"
+        }
       }
     },
     "error": {
@@ -13,6 +21,18 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+    }
+  },
+  "selector": {
+    "forecast_days": {
+      "options": {
+        "now": "Today",
+        "d1": "Tomorrow",
+        "d2": "Over 2 days",
+        "d3": "Over 3 days",
+        "d4": "Over 4 days",
+        "d5": "Over 5 days"
+      }
     }
   },
   "options": {

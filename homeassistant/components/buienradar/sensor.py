@@ -46,13 +46,17 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_FORECAST_DAYS,
     CONF_TIMEFRAME,
     DEFAULT_TIMEFRAME,
     DOMAIN,
+    MANUFACTURER,
     STATE_CONDITION_CODES,
     STATE_CONDITIONS,
     STATE_DETAILED_CONDITIONS,
@@ -717,7 +721,7 @@ async def async_setup_entry(
 
     # create weather entities:
     entities = [
-        BrSensor(config.get(CONF_NAME, "Buienradar"), coordinates, description)
+        BrSensor(config.get(CONF_NAME, "Buienradar"), coordinates, options, description)
         for description in SENSOR_TYPES
     ]
 
@@ -732,20 +736,32 @@ async def async_setup_entry(
 class BrSensor(SensorEntity):
     """Representation of a Buienradar sensor."""
 
-    _attr_entity_registry_enabled_default = False
     _attr_should_poll = False
     _attr_has_entity_name = True
 
     def __init__(
-        self, client_name, coordinates, description: SensorEntityDescription
+        self, client_name, coordinates, options, description: SensorEntityDescription
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
+        self._selected = options.get(CONF_FORECAST_DAYS, [])
         self._measured = None
-        self._attr_unique_id = (
-            f"{coordinates[CONF_LATITUDE]:2.6f}{coordinates[CONF_LONGITUDE]:2.6f}"
-            f"{description.key}"
+        self._attr_unique_id = f"{coordinates[CONF_LATITUDE]:2.6f}{coordinates[CONF_LONGITUDE]:2.6f}{description.key}"
+        self._day = (
+            description.key[-3:]
+            if all(x in description.key[-3:] for x in ("_", "d"))
+            else "now"
         )
+        self._naming = {
+            "now": "Today",
+            "_1d": "Tomorrow",
+            "_2d": "In 2 days",
+            "_3d": "In 3 days",
+            "_4d": "In 4 days",
+            "_5d": "In 5 days",
+        }
+        # only enable at entity creation
+        # self._attr_entity_registry_enabled_default = self._day in self._selected
 
         # All continuous sensors should be forced to be updated
         self._attr_force_update = (
@@ -754,6 +770,35 @@ class BrSensor(SensorEntity):
 
         if description.key.startswith(PRECIPITATION_FORECAST):
             self._timeframe = None
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, self._day)},
+            name=self._naming[self._day],
+            manufacturer=MANUFACTURER,
+        )
+
+    async def async_disable_entity(self):
+        """Disable entity."""
+        entity_registry = er.async_get(self.hass)
+        if self._day not in self._selected:
+            entity_registry.async_update_entity(
+                entity_id=self.entity_id,
+                disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+            )
+
+    async def async_enable_entity(self):
+        """Enable entity."""
+        entity_registry = er.async_get(self.hass)
+        entity_registry.async_update_entity(entity_id=self.entity_id, disabled_by=None)
+
+    async def async_added_to_hass(self):
+        """Handle options update."""
+        if self._day not in self._selected:
+            await self.async_disable_entity()
 
     @callback
     def data_updated(self, data: BrData):
@@ -774,7 +819,9 @@ class BrSensor(SensorEntity):
         self._measured = data.get(MEASURED)
         sensor_type = self.entity_description.key
 
-        if sensor_type.endswith(("_1d", "_2d", "_3d", "_4d", "_5d")):
+        if sensor_type.endswith("_1d") or sensor_type.endswith(
+            "_2d", "_3d", "_4d", "_5d"
+        ):
             # update forecasting sensors:
             fcday = 0
             if sensor_type.endswith("_2d"):
@@ -787,7 +834,7 @@ class BrSensor(SensorEntity):
                 fcday = 4
 
             # update weather symbol & status text
-            if sensor_type.startswith((SYMBOL, CONDITION)):
+            if sensor_type.startswith(SYMBOL, CONDITION):
                 try:
                     condition = data.get(FORECAST)[fcday].get(CONDITION)
                 except IndexError:
@@ -819,13 +866,13 @@ class BrSensor(SensorEntity):
                     self._attr_native_value = data.get(FORECAST)[fcday].get(
                         sensor_type[:-3]
                     )
+                    if self.state is not None:
+                        self._attr_native_value = round(self.state * 3.6, 1)
                 except IndexError:
                     _LOGGER.warning("No forecast for fcday=%s", fcday)
                     return False
-
-                if self.state is not None:
-                    self._attr_native_value = round(self.state * 3.6, 1)
-                return True
+                else:
+                    return True
 
             # update all other sensors
             try:
@@ -835,7 +882,8 @@ class BrSensor(SensorEntity):
             except IndexError:
                 _LOGGER.warning("No forecast for fcday=%s", fcday)
                 return False
-            return True
+            else:
+                return True
 
         if sensor_type == SYMBOL or sensor_type.startswith(CONDITION):
             # update weather symbol & status text
