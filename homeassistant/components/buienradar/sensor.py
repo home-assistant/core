@@ -760,8 +760,6 @@ class BrSensor(SensorEntity):
             "4d": "In 4 days",
             "5d": "In 5 days",
         }
-        # only enable at entity creation
-        # self._attr_entity_registry_enabled_default = self._day in self._selected
 
         # All continuous sensors should be forced to be updated
         self._attr_force_update = (
@@ -818,9 +816,7 @@ class BrSensor(SensorEntity):
         self._measured = data.get(MEASURED)
         sensor_type = self.entity_description.key
 
-        if sensor_type.endswith("_1d") or sensor_type.endswith(
-            "_2d", "_3d", "_4d", "_5d"
-        ):
+        if sensor_type.endswith(("_1d", "_2d", "_3d", "_4d", "_5d")):
             # update forecasting sensors:
             fcday = 0
             if sensor_type.endswith("_2d"):
@@ -833,7 +829,7 @@ class BrSensor(SensorEntity):
                 fcday = 4
 
             # update weather symbol & status text
-            if sensor_type.startswith(SYMBOL, CONDITION):
+            if sensor_type.startswith((SYMBOL, CONDITION)):
                 try:
                     condition = data.get(FORECAST)[fcday].get(CONDITION)
                 except IndexError:
