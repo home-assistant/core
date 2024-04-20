@@ -204,12 +204,11 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Show the setup form to the user."""
 
+        advanced_data_schema = {}
         if self.show_advanced_options:
             advanced_data_schema = {
                 vol.Optional(CONF_PORT): vol.Coerce(int),
             }
-        else:
-            advanced_data_schema = {}
 
         return self.async_show_form(
             step_id="user",
@@ -253,8 +252,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._password = user_input[CONF_PASSWORD]
         self._use_tls = user_input[CONF_SSL]
 
-        port = user_input.get(CONF_PORT)
-        if port is None:
+        if (port := user_input.get(CONF_PORT)) is None:
             self._port = DEFAULT_HTTPS_PORT if self._use_tls else DEFAULT_HTTP_PORT
         else:
             self._port = port
