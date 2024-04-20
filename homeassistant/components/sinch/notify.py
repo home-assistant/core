@@ -19,19 +19,16 @@ from homeassistant.components.notify import (
     ATTR_MESSAGE,
     ATTR_TARGET,
     PLATFORM_SCHEMA,
-    BaseNotificationService,
+    NotifyEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_SENDER
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    ATTR_OPTIONS,
-    CONF_DEFAULT_RECIPIENTS,
-    CONF_SERVICE_PLAN_ID,
-    DEFAULT_SENDER,
-)
+from .const import CONF_DEFAULT_RECIPIENTS, CONF_SERVICE_PLAN_ID, DEFAULT_SENDER, DOMAIN
 
 ATTR_SENDER = CONF_SENDER
 
@@ -51,28 +48,51 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> SinchNotificationService | None:
-    """Get the Sinch notification service."""
-    if discovery_info is None:
-        return None
-    options = discovery_info.pop(ATTR_OPTIONS, {})
-    return SinchNotificationService(discovery_info, options)
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the sinch notify entity platform."""
+    async_add_entities(
+        [
+            SinchNotifiyEntity(
+                unique_id=config_entry.data.get(CONF_SERVICE_PLAN_ID),
+                device_name="Sinch",
+                config_entry=config_entry,
+            )
+        ]
+    )
 
 
-class SinchNotificationService(BaseNotificationService):
-    """Send Notifications to Sinch SMS recipients."""
+class SinchNotifiyEntity(NotifyEntity):
+    """Representation of a Sinch notify entity."""
 
-    def __init__(self, config, options):
-        """Initialize the service."""
-        self.default_recipients = options.get(CONF_DEFAULT_RECIPIENTS, [])
-        self.sender = options.get(CONF_SENDER, DEFAULT_SENDER)
-        self.client = Client(config[CONF_SERVICE_PLAN_ID], config[CONF_API_KEY])
+    _attr_has_entity_name = True
+    _attr_should_poll = False
 
-    def send_message(self, message="", **kwargs):
+    def __init__(
+        self,
+        unique_id: str,
+        device_name: str,
+        entity_name: str | None,
+        config_entry: ConfigEntry | None,
+    ) -> None:
+        """Initialize the Sinch notify entity."""
+        self._attr_unique_id = unique_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            name=device_name,
+        )
+        self._attr_name = entity_name
+        self.default_recipients = config_entry.options.get(CONF_DEFAULT_RECIPIENTS, [])
+        self.sender = config_entry.options.get(CONF_SENDER, DEFAULT_SENDER)
+        self.client = Client(
+            config_entry.data.get(CONF_SERVICE_PLAN_ID),
+            config_entry.data.get(CONF_API_KEY),
+        )
+
+    def send_message(self, message: str, **kwargs: any) -> None:
         """Send a message to a user."""
         targets = kwargs.get(ATTR_TARGET, self.default_recipients)
         data = kwargs.get(ATTR_DATA) or {}
@@ -84,7 +104,7 @@ class SinchNotificationService(BaseNotificationService):
 
         if not targets:
             _LOGGER.error("At least 1 target is required")
-            return
+            return None
 
         try:
             for target in targets:
