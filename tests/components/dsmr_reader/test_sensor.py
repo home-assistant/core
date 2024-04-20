@@ -10,9 +10,11 @@ from homeassistant.components.dsmr_reader.definitions import (
     DSMRReaderSensorEntityDescription,
 )
 from homeassistant.components.dsmr_reader.sensor import DSMRSensor
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_mqtt_message
+from tests.typing import MqttMockHAClient
 
 
 @pytest.mark.parametrize(
@@ -34,7 +36,7 @@ async def test_dsmr_sensor_async_added_to_hass(
     state_function: Callable,
     expected_native_value: str,
 ) -> None:
-    """Test the async_added_to_hass method of the DSMRSensor class."""
+    """Test the sensor via a typical unit test."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title=DOMAIN,
@@ -60,3 +62,33 @@ async def test_dsmr_sensor_async_added_to_hass(
     sensor.hass = hass
     await sensor.async_added_to_hass()
     assert sensor.native_value == expected_native_value
+
+
+async def test_dsmr_sensor_mqtt(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
+    """Test the DSMRSensor class, via an emluated MQTT message."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=DOMAIN,
+        options={},
+        entry_id="TEST_ENTRY_ID",
+        unique_id="UNIQUE_TEST_ID",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    electricity_delivered_1 = "sensor.dsmr_reading_electricity_delivered_1"
+    assert hass.states.get(electricity_delivered_1).state == STATE_UNKNOWN
+
+    electricity_delivered_2 = "sensor.dsmr_reading_electricity_delivered_2"
+    assert hass.states.get(electricity_delivered_2).state == STATE_UNKNOWN
+
+    async_fire_mqtt_message(hass, "dsmr/reading/electricity_delivered_1", "1050.39")
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, "dsmr/reading/electricity_delivered_2", "2001.12")
+    await hass.async_block_till_done()
+
+    assert hass.states.get(electricity_delivered_1).state == "1050.39"
+    assert hass.states.get(electricity_delivered_2).state == "2001.12"
