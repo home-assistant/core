@@ -4,9 +4,9 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from nextdns import ApiError
+from syrupy import SnapshotAssertion
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
@@ -17,270 +17,30 @@ from tests.common import async_fire_time_changed
 
 
 async def test_sensor(
-    hass: HomeAssistant, entity_registry_enabled_by_default: None
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: None,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test states of sensors."""
-    registry = er.async_get(hass)
+    with patch("homeassistant.components.accuweather.PLATFORMS", [Platform.SENSOR]):
+        entry = await init_integration(hass)
 
-    await init_integration(hass)
+    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
 
-    state = hass.states.get("sensor.fake_profile_dns_queries")
-    assert state
-    assert state.state == "100"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
-
-    entry = registry.async_get("sensor.fake_profile_dns_queries")
-    assert entry
-    assert entry.unique_id == "xyz12_all_queries"
-
-    state = hass.states.get("sensor.fake_profile_dns_queries_blocked")
-    assert state
-    assert state.state == "20"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
-
-    entry = registry.async_get("sensor.fake_profile_dns_queries_blocked")
-    assert entry
-    assert entry.unique_id == "xyz12_blocked_queries"
-
-    state = hass.states.get("sensor.fake_profile_dns_queries_blocked_ratio")
-    assert state
-    assert state.state == "20.0"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-
-    entry = registry.async_get("sensor.fake_profile_dns_queries_blocked_ratio")
-    assert entry
-    assert entry.unique_id == "xyz12_blocked_queries_ratio"
-
-    state = hass.states.get("sensor.fake_profile_dns_queries_relayed")
-    assert state
-    assert state.state == "10"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
-
-    entry = registry.async_get("sensor.fake_profile_dns_queries_relayed")
-    assert entry
-    assert entry.unique_id == "xyz12_relayed_queries"
-
-    state = hass.states.get("sensor.fake_profile_dns_over_https_queries")
-    assert state
-    assert state.state == "20"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
-
-    entry = registry.async_get("sensor.fake_profile_dns_over_https_queries")
-    assert entry
-    assert entry.unique_id == "xyz12_doh_queries"
-
-    state = hass.states.get("sensor.fake_profile_dns_over_https_queries_ratio")
-    assert state
-    assert state.state == "17.4"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-
-    entry = registry.async_get("sensor.fake_profile_dns_over_https_queries_ratio")
-    assert entry
-    assert entry.unique_id == "xyz12_doh_queries_ratio"
-
-    state = hass.states.get("sensor.fake_profile_dns_over_http_3_queries")
-    assert state
-    assert state.state == "15"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
-
-    entry = registry.async_get("sensor.fake_profile_dns_over_http_3_queries")
-    assert entry
-    assert entry.unique_id == "xyz12_doh3_queries"
-
-    state = hass.states.get("sensor.fake_profile_dns_over_http_3_queries_ratio")
-    assert state
-    assert state.state == "13.0"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-
-    entry = registry.async_get("sensor.fake_profile_dns_over_http_3_queries_ratio")
-    assert entry
-    assert entry.unique_id == "xyz12_doh3_queries_ratio"
-
-    state = hass.states.get("sensor.fake_profile_dns_over_quic_queries")
-    assert state
-    assert state.state == "10"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
-
-    entry = registry.async_get("sensor.fake_profile_dns_over_quic_queries")
-    assert entry
-    assert entry.unique_id == "xyz12_doq_queries"
-
-    state = hass.states.get("sensor.fake_profile_dns_over_quic_queries_ratio")
-    assert state
-    assert state.state == "8.7"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-
-    entry = registry.async_get("sensor.fake_profile_dns_over_quic_queries_ratio")
-    assert entry
-    assert entry.unique_id == "xyz12_doq_queries_ratio"
-
-    state = hass.states.get("sensor.fake_profile_dns_over_tls_queries")
-    assert state
-    assert state.state == "30"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
-
-    entry = registry.async_get("sensor.fake_profile_dns_over_tls_queries")
-    assert entry
-    assert entry.unique_id == "xyz12_dot_queries"
-
-    state = hass.states.get("sensor.fake_profile_dns_over_tls_queries_ratio")
-    assert state
-    assert state.state == "26.1"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-
-    entry = registry.async_get("sensor.fake_profile_dns_over_tls_queries_ratio")
-    assert entry
-    assert entry.unique_id == "xyz12_dot_queries_ratio"
-
-    state = hass.states.get("sensor.fake_profile_dnssec_not_validated_queries")
-    assert state
-    assert state.state == "25"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
-
-    entry = registry.async_get("sensor.fake_profile_dnssec_not_validated_queries")
-    assert entry
-    assert entry.unique_id == "xyz12_not_validated_queries"
-
-    state = hass.states.get("sensor.fake_profile_dnssec_validated_queries")
-    assert state
-    assert state.state == "75"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
-
-    entry = registry.async_get("sensor.fake_profile_dnssec_validated_queries")
-    assert entry
-    assert entry.unique_id == "xyz12_validated_queries"
-
-    state = hass.states.get("sensor.fake_profile_dnssec_validated_queries_ratio")
-    assert state
-    assert state.state == "75.0"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-
-    entry = registry.async_get("sensor.fake_profile_dnssec_validated_queries_ratio")
-    assert entry
-    assert entry.unique_id == "xyz12_validated_queries_ratio"
-
-    state = hass.states.get("sensor.fake_profile_encrypted_queries")
-    assert state
-    assert state.state == "60"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
-
-    entry = registry.async_get("sensor.fake_profile_encrypted_queries")
-    assert entry
-    assert entry.unique_id == "xyz12_encrypted_queries"
-
-    state = hass.states.get("sensor.fake_profile_unencrypted_queries")
-    assert state
-    assert state.state == "40"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
-
-    entry = registry.async_get("sensor.fake_profile_unencrypted_queries")
-    assert entry
-    assert entry.unique_id == "xyz12_unencrypted_queries"
-
-    state = hass.states.get("sensor.fake_profile_encrypted_queries_ratio")
-    assert state
-    assert state.state == "60.0"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-
-    entry = registry.async_get("sensor.fake_profile_encrypted_queries_ratio")
-    assert entry
-    assert entry.unique_id == "xyz12_encrypted_queries_ratio"
-
-    state = hass.states.get("sensor.fake_profile_ipv4_queries")
-    assert state
-    assert state.state == "90"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
-
-    entry = registry.async_get("sensor.fake_profile_ipv4_queries")
-    assert entry
-    assert entry.unique_id == "xyz12_ipv4_queries"
-
-    state = hass.states.get("sensor.fake_profile_ipv6_queries")
-    assert state
-    assert state.state == "10"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
-
-    entry = registry.async_get("sensor.fake_profile_ipv6_queries")
-    assert entry
-    assert entry.unique_id == "xyz12_ipv6_queries"
-
-    state = hass.states.get("sensor.fake_profile_ipv6_queries_ratio")
-    assert state
-    assert state.state == "10.0"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-
-    entry = registry.async_get("sensor.fake_profile_ipv6_queries_ratio")
-    assert entry
-    assert entry.unique_id == "xyz12_ipv6_queries_ratio"
-
-    state = hass.states.get("sensor.fake_profile_tcp_queries")
-    assert state
-    assert state.state == "0"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
-
-    entry = registry.async_get("sensor.fake_profile_tcp_queries")
-    assert entry
-    assert entry.unique_id == "xyz12_tcp_queries"
-
-    state = hass.states.get("sensor.fake_profile_tcp_queries_ratio")
-    assert state
-    assert state.state == "0.0"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-
-    entry = registry.async_get("sensor.fake_profile_tcp_queries_ratio")
-    assert entry
-    assert entry.unique_id == "xyz12_tcp_queries_ratio"
-
-    state = hass.states.get("sensor.fake_profile_udp_queries")
-    assert state
-    assert state.state == "40"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
-
-    entry = registry.async_get("sensor.fake_profile_udp_queries")
-    assert entry
-    assert entry.unique_id == "xyz12_udp_queries"
-
-    state = hass.states.get("sensor.fake_profile_udp_queries_ratio")
-    assert state
-    assert state.state == "34.8"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-
-    entry = registry.async_get("sensor.fake_profile_udp_queries_ratio")
-    assert entry
-    assert entry.unique_id == "xyz12_udp_queries_ratio"
+    assert entity_entries
+    for entity_entry in entity_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert (state := hass.states.get(entity_entry.entity_id))
+        assert state == snapshot(name=f"{entity_entry.entity_id}-state")
 
 
 async def test_availability(
-    hass: HomeAssistant, entity_registry_enabled_by_default: None
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: None,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
-    er.async_get(hass)
-
     await init_integration(hass)
 
     state = hass.states.get("sensor.fake_profile_dns_queries")
