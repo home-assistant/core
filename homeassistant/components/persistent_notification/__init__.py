@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from contextlib import suppress
 from datetime import datetime
 from enum import StrEnum
 from functools import partial
@@ -13,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import config_validation as cv, singleton
+from homeassistant.helpers import config_validation as cv, singleton, translation
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -63,6 +64,18 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
+@callback
+def async_load_translantions(
+    hass: HomeAssistant, domain: str | None = None
+) -> dict[str, str]:
+    """Load notification translations specified domain."""
+
+    lang = hass.config.language
+
+    return translation.async_get_cached_translations(
+        hass, lang, "notification", domain
+    )
+
 
 @callback
 def async_register_callback(
@@ -93,17 +106,49 @@ def dismiss(hass: HomeAssistant, notification_id: str) -> None:
 
 
 @callback
-@bind_hass
 def async_create(
     hass: HomeAssistant,
-    message: str,
+    message: str | None = None,
     title: str | None = None,
     notification_id: str | None = None,
+    *,
+    domain: str | None = None,
+    translation_key: str | None = None,
+    translation_placeholders: dict[str, str] | None = None,
 ) -> None:
     """Generate a notification."""
     notifications = _async_get_or_create_notifications(hass)
     if notification_id is None:
         notification_id = random_uuid_hex()
+
+    # If domain and translation key is specified,
+    # load notification translations for domain.
+    if domain and translation_key:
+        translations = async_load_translantions(hass, domain)
+
+        localize_message = f"component.{domain}.notification.{translation_key}.message"
+        localize_title = f"component.{domain}.notification.{translation_key}.title"
+
+        if localize_message in translations:
+            if not translation_placeholders:
+                message = translations[localize_message]
+                # It is obligatory to have translated title.
+                title = (
+                    translations[localize_title]
+                    if translations[localize_title]
+                    else title
+                )
+            else:
+                with suppress(KeyError):
+                    message = translations[localize_message].format(
+                        **translation_placeholders
+                    )
+                title = (
+                    translations[localize_title]
+                    if translations[localize_title]
+                    else title
+                )
+
     notifications[notification_id] = {
         ATTR_MESSAGE: message,
         ATTR_NOTIFICATION_ID: notification_id,
