@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from elevenlabs.core import ApiError
 import pytest
@@ -55,14 +55,15 @@ async def setup_fixture(
     hass: HomeAssistant,
     config: dict[str, Any],
     request: pytest.FixtureRequest,
-) -> None:
+) -> AsyncMock:
     """Set up the test environment."""
     if request.param == "mock_config_entry_setup":
-        await mock_config_entry_setup(hass, config)
+        eleven_mock = await mock_config_entry_setup(hass, config)
     else:
         raise RuntimeError("Invalid setup fixture")
 
     await hass.async_block_till_done()
+    return eleven_mock
 
 
 @pytest.fixture(name="config")
@@ -71,17 +72,24 @@ def config_fixture() -> dict[str, Any]:
     return {}
 
 
-async def mock_config_entry_setup(hass: HomeAssistant, config: dict[str, Any]) -> None:
+async def mock_config_entry_setup(
+    hass: HomeAssistant, config: dict[str, Any]
+) -> AsyncMock:
     """Mock config entry setup."""
     default_config = {
         CONF_VOICE: "voice1",
         CONF_MODEL: "model1",
         CONF_API_KEY: "api_key",
     }
-    config_entry = MockConfigEntry(domain=DOMAIN, data=default_config | config)
-    config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    mock_eleven = AsyncMock()
+    with patch(
+        "homeassistant.components.elevenlabstts.tts.AsyncElevenLabs",
+        return_value=mock_eleven,
+    ):
+        config_entry = MockConfigEntry(domain=DOMAIN, data=default_config | config)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        return mock_eleven
 
 
 @pytest.mark.parametrize(
@@ -109,35 +117,29 @@ async def mock_config_entry_setup(hass: HomeAssistant, config: dict[str, Any]) -
     indirect=["setup"],
 )
 async def test_tts_service_speak(
+    setup: AsyncMock,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     calls: list[ServiceCall],
-    setup: str,
     tts_service: str,
     service_data: dict[str, Any],
 ) -> None:
     """Test tts service."""
-    with patch("homeassistant.components.elevenlabstts.tts.ElevenLabs") as mock_eleven:
-        mock_instance = mock_eleven.return_value
-        await hass.services.async_call(
-            tts.DOMAIN,
-            tts_service,
-            service_data,
-            blocking=True,
-        )
+    await hass.services.async_call(
+        tts.DOMAIN,
+        tts_service,
+        service_data,
+        blocking=True,
+    )
 
-        assert len(calls) == 1
-        assert (
-            await retrieve_media(
-                hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID]
-            )
-            == HTTPStatus.OK
-        )
-
-        mock_eleven.assert_called_once_with(api_key="api_key")
-        mock_instance.generate.assert_called_once_with(
-            text="There is a person at the front door.", voice="voice1", model="model1"
-        )
+    assert len(calls) == 1
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.OK
+    )
+    setup.generate.assert_called_once_with(
+        text="There is a person at the front door.", voice="voice1", model="model1"
+    )
 
 
 @pytest.mark.parametrize(
@@ -167,34 +169,30 @@ async def test_tts_service_speak(
     indirect=["setup"],
 )
 async def test_tts_service_speak_lang_config(
+    setup: AsyncMock,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     calls: list[ServiceCall],
-    setup: str,
     tts_service: str,
     service_data: dict[str, Any],
 ) -> None:
     """Test service call say with other langcodes in the config."""
-    with patch("homeassistant.components.elevenlabstts.tts.ElevenLabs") as mock_eleven:
-        mock_instance = mock_eleven.return_value
-        await hass.services.async_call(
-            tts.DOMAIN,
-            tts_service,
-            service_data,
-            blocking=True,
-        )
+    await hass.services.async_call(
+        tts.DOMAIN,
+        tts_service,
+        service_data,
+        blocking=True,
+    )
 
-        assert len(calls) == 1
-        assert (
-            await retrieve_media(
-                hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID]
-            )
-            == HTTPStatus.OK
-        )
-        mock_eleven.assert_called_once_with(api_key="api_key")
-        mock_instance.generate.assert_called_once_with(
-            text="There is a person at the front door.", voice="voice1", model="model1"
-        )
+    assert len(calls) == 1
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.OK
+    )
+
+    setup.generate.assert_called_once_with(
+        text="There is a person at the front door.", voice="voice1", model="model1"
+    )
 
 
 @pytest.mark.parametrize(
@@ -213,32 +211,28 @@ async def test_tts_service_speak_lang_config(
     indirect=["setup"],
 )
 async def test_tts_service_speak_error(
+    setup: AsyncMock,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     calls: list[ServiceCall],
-    setup: str,
     tts_service: str,
     service_data: dict[str, Any],
 ) -> None:
     """Test service call say with http response 400."""
-    with patch("homeassistant.components.elevenlabstts.tts.ElevenLabs") as mock_eleven:
-        mock_instance = mock_eleven.return_value
-        mock_instance.generate.side_effect = ApiError
-        await hass.services.async_call(
-            tts.DOMAIN,
-            tts_service,
-            service_data,
-            blocking=True,
-        )
+    setup.generate.side_effect = ApiError
+    await hass.services.async_call(
+        tts.DOMAIN,
+        tts_service,
+        service_data,
+        blocking=True,
+    )
 
-        assert len(calls) == 1
-        assert (
-            await retrieve_media(
-                hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID]
-            )
-            == HTTPStatus.NOT_FOUND
-        )
-        mock_eleven.assert_called_once_with(api_key="api_key")
-        mock_instance.generate.assert_called_once_with(
-            text="There is a person at the front door.", voice="voice1", model="model1"
-        )
+    assert len(calls) == 1
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.NOT_FOUND
+    )
+
+    setup.generate.assert_called_once_with(
+        text="There is a person at the front door.", voice="voice1", model="model1"
+    )

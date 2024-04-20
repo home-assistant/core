@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from elevenlabs.client import ElevenLabs
+from elevenlabs.client import AsyncElevenLabs
 from elevenlabs.core import ApiError
 
 from homeassistant.components.tts import TextToSpeechEntity, TtsAudioType
@@ -41,6 +41,7 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
         self._model = model
         self._voice = voice
         self._api_key = config_entry.data[CONF_API_KEY]
+        self._client = AsyncElevenLabs(api_key=self._api_key)
         self._attr_name = f"ElevenLabs {model} {voice}"
         self._attr_unique_id = config_entry.entry_id
 
@@ -59,15 +60,19 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
         """Return a list of supported options."""
         return SUPPORT_OPTIONS
 
-    def get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+    async def async_get_tts_audio(
+        self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
-        """Load TTS from ElevenLabs."""
-        client = ElevenLabs(api_key=self._api_key)
+        """Load tts audio file from the engine."""
+        _LOGGER.debug("Getting TTS audio for %s", message)
         try:
-            audio = client.generate(text=message, voice=self._voice, model=self._model)
-            bytes_combined = b"".join(audio)
+            audio = await self._client.generate(
+                text=message, voice=self._voice, model=self._model
+            )
+            bytes_combined = b"".join([byte_seg async for byte_seg in audio])
         except ApiError as exc:
-            _LOGGER.exception("Error during processing of TTS request %s")
+            _LOGGER.warning(
+                "Error during processing of TTS request %s", exc, exc_info=True
+            )
             raise HomeAssistantError(exc) from exc
         return "mp3", bytes_combined

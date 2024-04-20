@@ -1512,7 +1512,7 @@
     },
     "elevenlabstts": {
       "name": "ElevenLabs Text-to-Speech (TTS)",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_push"
     },

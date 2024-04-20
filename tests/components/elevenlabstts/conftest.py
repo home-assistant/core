@@ -61,3 +61,13 @@ def mock_async_client_fail() -> Generator[AsyncMock, None, None]:
     ) as mock_async_client:
         mock_async_client.side_effect = ApiError
         yield mock_async_client
+
+
+@pytest.fixture
+def mock_async_generate() -> Generator[AsyncMock, None, None]:
+    """Override async ElevenLabs generate."""
+    with patch(
+        "elevenlabs.client.AsyncElevenLabs.generate",
+        return_value=AsyncMock(),
+    ) as mock_generate:
+        yield mock_generate

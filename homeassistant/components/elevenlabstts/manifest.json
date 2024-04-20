@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_push",
   "loggers": ["elevenlabs"],
-  "requirements": ["elevenlabs==1.0.5"]
+  "requirements": ["elevenlabs==1.1.2"]
 }
