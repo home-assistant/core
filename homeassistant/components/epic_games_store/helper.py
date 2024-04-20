@@ -6,16 +6,6 @@ from typing import Any
 from homeassistant.util import dt as dt_util
 
 
-def get_country_from_language(language: str) -> str:
-    """Get the country code from language."""
-    excepts = {"ja": "JP", "ko": "KR", "zh-Hant": "CN"}
-    return (
-        excepts[language]
-        if excepts.get(language)
-        else (language[3:] if ("-" in language) else language)
-    ).upper()
-
-
 def format_game_data(raw_game_data: dict[str, Any], language: str) -> dict[str, Any]:
     """Format raw API game data for Home Assistant users."""
     img_portrait = None

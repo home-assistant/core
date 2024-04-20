@@ -6,7 +6,6 @@ import pytest
 
 from homeassistant.components.epic_games_store.helper import (
     format_game_data,
-    get_country_from_language,
     get_game_url,
     is_free_game,
 )
@@ -16,21 +15,6 @@ from .const import DATA_ERROR_ATTRIBUTE_NOT_FOUND, DATA_FREE_GAMES_ONE
 FREE_GAMES_API = DATA_FREE_GAMES_ONE["data"]["Catalog"]["searchStore"]["elements"]
 FREE_GAME = FREE_GAMES_API[2]
 NOT_FREE_GAME = FREE_GAMES_API[0]
-
-
-@pytest.mark.parametrize(
-    ("language", "country"),
-    [
-        ("en-US", "US"),
-        ("fr", "FR"),
-        ("ja", "JP"),
-        ("ko", "KR"),
-        ("zh-Hant", "CN"),
-    ],
-)
-async def test_get_country_from_language(language: str, country: str) -> None:
-    """Test that the country is well created."""
-    assert get_country_from_language(language) == country
 
 
 def test_format_game_data() -> None:

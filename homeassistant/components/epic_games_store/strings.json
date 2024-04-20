@@ -3,7 +3,8 @@
     "step": {
       "user": {
         "data": {
-          "language": "Language"
+          "language": "Language",
+          "country": "Country"
         }
       }
     },

@@ -9,12 +9,12 @@ from typing import Any
 from epicstore_api import EpicGamesStoreAPI
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LANGUAGE
+from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, CalendarType
-from .helper import format_game_data, get_country_from_language
+from .helper import format_game_data
 
 SCAN_INTERVAL = timedelta(days=1)
 
@@ -30,7 +30,7 @@ class EGSCalendarUpdateCoordinator(
         """Initialize."""
         self._api = EpicGamesStoreAPI(
             entry.data[CONF_LANGUAGE],
-            get_country_from_language(entry.data[CONF_LANGUAGE]),
+            entry.data[CONF_COUNTRY],
         )
         self.language = entry.data[CONF_LANGUAGE]
 
