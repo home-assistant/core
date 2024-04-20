@@ -51,6 +51,13 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
 
         self.data = FritzboxCoordinatorData({}, {})
 
+    async def async_setup(self) -> None:
+        """Set up the coordinator."""
+        await self.async_config_entry_first_refresh()
+        self.cleanup_removed_devices(
+            list(self.data.devices) + list(self.data.templates)
+        )
+
     def cleanup_removed_devices(self, avaiable_ains: list[str]) -> None:
         """Cleanup entity and device registry from removed devices."""
         entity_reg = er.async_get(self.hass)
@@ -117,8 +124,7 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
         self.new_templates = template_data.keys() - self.data.templates.keys()
 
         if (
-            (not self.data.devices and not self.data.templates)
-            or self.data.devices.keys() - device_data.keys()
+            self.data.devices.keys() - device_data.keys()
             or self.data.templates.keys() - template_data.keys()
         ):
             self.cleanup_removed_devices(list(device_data) + list(template_data))
