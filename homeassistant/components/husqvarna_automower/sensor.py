@@ -298,10 +298,8 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         key="next_start_timestamp",
         translation_key="next_start_timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: (
-            dt_util.as_local(data.planner.next_start_datetime_naive)
-            if data.planner.next_start_datetime_naive is not None
-            else None
+        value_fn=lambda data: convert_next_start(
+            data.planner.next_start_datetime_naive
         ),
     ),
     AutomowerSensorEntityDescription(
@@ -321,6 +319,13 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         value_fn=lambda data: data.planner.restricted_reason.lower(),
     ),
 )
+
+
+def convert_next_start(next_start: datetime | None) -> datetime | None:
+    """Convert next start to aware datetime."""
+    if next_start is None:
+        return None
+    return dt_util.as_local(next_start)
 
 
 async def async_setup_entry(
