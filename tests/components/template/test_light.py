@@ -1546,6 +1546,64 @@ async def test_all_colors_mode_no_template(
     [
         {
             "test_template_light": {
+                **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
+                "value_template": "{{1 == 1}}",
+                "temperature_template": "{% if is_state('light.test_state', 'on') %}200{% else %}None{% endif %}",
+                "hs_template": "{% if is_state('light.test_state', 'on') %}(27.001, 19.243){% else %}(40, 50){% endif %}",
+                "set_hs": {
+                    "service": "test.automation",
+                    "data_template": {
+                        "entity_id": "test.test_state",
+                        "h": "{{h}}",
+                        "s": "{{s}}",
+                    },
+                },
+                "set_temperature": {
+                    "service": "test.automation",
+                    "data_template": {
+                        "entity_id": "test.test_state",
+                        "color_temp": "{{color_temp}}",
+                    },
+                },
+            }
+        },
+    ],
+)
+async def test_color_mode_not_optimistic_template(
+    hass: HomeAssistant, setup_light, calls
+) -> None:
+    """Test setting color and color temperature with not optimistic template."""
+    hass.states.async_set("light.test_state", STATE_OFF)
+    await hass.async_block_till_done()
+    state = hass.states.get("light.test_template_light")
+    assert state.attributes["color_mode"] == ColorMode.HS
+    assert state.attributes["color_temp"] is None
+    assert state.attributes["hs_color"] == (40, 50)
+    assert state.attributes["supported_color_modes"] == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
+    ]
+    assert state.attributes["supported_features"] == 0
+
+    hass.states.async_set("light.test_state", STATE_ON)
+    await hass.async_block_till_done()
+    state = hass.states.get("light.test_template_light")
+    assert state.attributes["color_mode"] == ColorMode.COLOR_TEMP
+    assert state.attributes["color_temp"] == 200
+    assert "hs_color" in state.attributes  # Color temp represented as hs_color
+    assert state.attributes["supported_color_modes"] == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
+    ]
+    assert state.attributes["supported_features"] == 0
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "light_config",
+    [
+        {
+            "test_template_light": {
                 **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
                 "value_template": "{{true}}",
                 "set_effect": {
