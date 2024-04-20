@@ -244,7 +244,6 @@ class LyricAccessorySensor(LyricAccessoryEntity, SensorEntity):
             accessory,
             f"{parentDevice.macID}_room{room.id}_acc{accessory.id}_{description.key}",
         )
-        self.room = room
         self.entity_description = description
         if description.device_class == SensorDeviceClass.TEMPERATURE:
             if parentDevice.units == "Fahrenheit":
@@ -255,4 +254,4 @@ class LyricAccessorySensor(LyricAccessoryEntity, SensorEntity):
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state."""
-        return self.entity_description.value_fn(self._room, self._accessory)
+        return self.entity_description.value_fn(self.room, self.accessory)
