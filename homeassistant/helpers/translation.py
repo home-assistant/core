@@ -30,9 +30,11 @@ TRANSLATION_FLATTEN_CACHE = "translation_flatten_cache"
 LOCALE_EN = "en"
 
 
-def recursive_flatten(prefix: Any, data: dict[str, Any]) -> dict[str, Any]:
+def recursive_flatten(
+    prefix: str, data: dict[str, dict[str, Any] | str]
+) -> dict[str, str]:
     """Return a flattened representation of dict data."""
-    output = {}
+    output: dict[str, str] = {}
     for key, value in data.items():
         if isinstance(value, dict):
             output.update(recursive_flatten(f"{prefix}{key}.", value))
@@ -250,9 +252,9 @@ class _TranslationCache:
     def _validate_placeholders(
         self,
         language: str,
-        updated_resources: dict[str, Any],
-        cached_resources: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
+        updated_resources: dict[str, str],
+        cached_resources: dict[str, str] | None = None,
+    ) -> dict[str, str]:
         """Validate if updated resources have same placeholders as cached resources."""
         if cached_resources is None:
             return updated_resources
@@ -301,9 +303,11 @@ class _TranslationCache:
         """Extract resources into the cache."""
         resource: dict[str, Any] | str
         cached = self.cache.setdefault(language, {})
-        categories: set[str] = set()
-        for resource in translation_strings.values():
-            categories.update(resource)
+        categories = {
+            category
+            for component in translation_strings.values()
+            for category in component
+        }
 
         for category in categories:
             new_resources = build_resources(translation_strings, components, category)
@@ -312,17 +316,14 @@ class _TranslationCache:
             for component, resource in new_resources.items():
                 component_cache = category_cache.setdefault(component, {})
 
-                if isinstance(resource, dict):
-                    resources_flatten = recursive_flatten(
-                        f"component.{component}.{category}.",
-                        resource,
-                    )
-                    resources_flatten = self._validate_placeholders(
-                        language, resources_flatten, component_cache
-                    )
-                    component_cache.update(resources_flatten)
-                else:
+                if not isinstance(resource, dict):
                     component_cache[f"component.{component}.{category}"] = resource
+                    continue
+
+                prefix = f"component.{component}.{category}."
+                flat = recursive_flatten(prefix, resource)
+                flat = self._validate_placeholders(language, flat, component_cache)
+                component_cache.update(flat)
 
 
 @bind_hass
