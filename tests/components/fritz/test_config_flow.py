@@ -24,7 +24,13 @@ from homeassistant.components.fritz.const import (
 )
 from homeassistant.components.ssdp import ATTR_UPNP_UDN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -42,15 +48,50 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("show_advanced_options", "user_input"),
-    [(True, MOCK_USER_INPUT_ADVANCED), (False, MOCK_USER_INPUT_SIMPLE)],
+    ("show_advanced_options", "user_input", "expected_config"),
+    [
+        (
+            True,
+            MOCK_USER_INPUT_ADVANCED,
+            {
+                CONF_HOST: "fake_host",
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+                CONF_PORT: 1234,
+                CONF_SSL: False,
+            },
+        ),
+        (
+            False,
+            MOCK_USER_INPUT_SIMPLE,
+            {
+                CONF_HOST: "fake_host",
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+                CONF_PORT: 49000,
+                CONF_SSL: False,
+            },
+        ),
+        (
+            False,
+            {**MOCK_USER_INPUT_SIMPLE, CONF_SSL: True},
+            {
+                CONF_HOST: "fake_host",
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+                CONF_PORT: 49443,
+                CONF_SSL: True,
+            },
+        ),
+    ],
 )
 async def test_user(
     hass: HomeAssistant,
     fc_class_mock,
     mock_get_source_ip,
     show_advanced_options: bool,
-    user_input,
+    user_input: dict,
+    expected_config: dict,
 ) -> None:
     """Test starting a flow by user."""
     with (
@@ -93,10 +134,7 @@ async def test_user(
             result["flow_id"], user_input=user_input
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["data"][CONF_HOST] == "fake_host"
-        assert result["data"][CONF_PASSWORD] == "fake_pass"
-        assert result["data"][CONF_USERNAME] == "fake_user"
-        assert result["data"][CONF_SSL] is False
+        assert result["data"] == expected_config
         assert (
             result["options"][CONF_CONSIDER_HOME]
             == DEFAULT_CONSIDER_HOME.total_seconds()
