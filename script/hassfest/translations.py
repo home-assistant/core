@@ -284,6 +284,10 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 vol.Optional("condition_type"): {str: translation_value_validator},
                 vol.Optional("trigger_type"): {str: translation_value_validator},
                 vol.Optional("trigger_subtype"): {str: translation_value_validator},
+                vol.Optional("extra_fields"): {str: translation_value_validator},
+                vol.Optional("extra_fields_descriptions"): {
+                    str: translation_value_validator
+                },
             },
             vol.Optional("system_health"): {
                 vol.Optional("info"): cv.schema_with_slug_keys(
