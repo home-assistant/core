@@ -243,6 +243,9 @@ def get_accessory(  # noqa: C901
         else:
             a_type = "Switch"
 
+    elif state.domain == "valve":
+        a_type = "Valve"
+
     elif state.domain == "vacuum":
         a_type = "Vacuum"
 
