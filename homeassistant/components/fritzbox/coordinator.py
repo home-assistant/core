@@ -82,9 +82,9 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
     def _update_fritz_devices(self) -> FritzboxCoordinatorData:
         """Update all fritzbox device data."""
         try:
-            self.fritz.update_devices()
+            self.fritz.update_devices(ignore_removed=False)
             if self.has_templates:
-                self.fritz.update_templates()
+                self.fritz.update_templates(ignore_removed=False)
         except RequestConnectionError as ex:
             raise UpdateFailed from ex
         except HTTPError:
@@ -93,9 +93,9 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
                 self.fritz.login()
             except LoginError as ex:
                 raise ConfigEntryAuthFailed from ex
-            self.fritz.update_devices()
+            self.fritz.update_devices(ignore_removed=False)
             if self.has_templates:
-                self.fritz.update_templates()
+                self.fritz.update_templates(ignore_removed=False)
 
         devices = self.fritz.get_devices()
         device_data = {}
