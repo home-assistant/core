@@ -9,4 +9,5 @@ def random_uuid_hex() -> str:
     This uuid should not be used for cryptographically secure
     operations.
     """
-    return f"{getrandbits(32 * 4):%032x}"
+    random_bits = getrandbits(32 * 4)
+    return f"{random_bits:032x}"

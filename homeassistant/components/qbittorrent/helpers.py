@@ -55,6 +55,6 @@ def format_torrent(torrent) -> dict[str, Any]:
     value["percent_done"] = format_progress(torrent)
     value["status"] = torrent["state"]
     value["eta"] = seconds_to_hhmmss(torrent["eta"])
-    value["ratio"] = "{:.2f}".format(float(torrent["ratio"]))
+    value["ratio"] = f"{float(torrent['ratio']):.2f}"
 
     return value
