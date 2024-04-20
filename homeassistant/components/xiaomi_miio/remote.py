@@ -139,7 +139,7 @@ async def async_setup_platform(
             _LOGGER.debug("Message received from device: '%s'", message)
 
             if "code" in message and message["code"]:
-                log_msg = "Received command is: {}".format(message["code"])
+                log_msg = f"Received command is: {message['code']}"
                 _LOGGER.info(log_msg)
                 persistent_notification.async_create(
                     hass, log_msg, title="Xiaomi Miio Remote"

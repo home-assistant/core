@@ -433,11 +433,7 @@ def _add_columns(
         try:
             connection = session.connection()
             connection.execute(
-                text(
-                    "ALTER TABLE {table} {columns_def}".format(
-                        table=table_name, columns_def=", ".join(columns_def)
-                    )
-                )
+                text(f"ALTER TABLE {table_name} {', '.join(columns_def)}")
             )
         except (InternalError, OperationalError, ProgrammingError):
             # Some engines support adding all columns at once,
@@ -491,10 +487,7 @@ def _modify_columns(
 
     if engine.dialect.name == SupportedDialect.POSTGRESQL:
         columns_def = [
-            "ALTER {column} TYPE {type}".format(
-                **dict(zip(["column", "type"], col_def.split(" ", 1), strict=False))
-            )
-            for col_def in columns_def
+            "ALTER " + " TYPE ".join(col_def.split(" ", 1)) for col_def in columns_def
         ]
     elif engine.dialect.name == "mssql":
         columns_def = [f"ALTER COLUMN {col_def}" for col_def in columns_def]
@@ -505,11 +498,7 @@ def _modify_columns(
         try:
             connection = session.connection()
             connection.execute(
-                text(
-                    "ALTER TABLE {table} {columns_def}".format(
-                        table=table_name, columns_def=", ".join(columns_def)
-                    )
-                )
+                text(f"ALTER TABLE {table_name} {', '.join(columns_def)}")
             )
         except (InternalError, OperationalError):
             _LOGGER.info("Unable to use quick column modify. Modifying 1 by 1")

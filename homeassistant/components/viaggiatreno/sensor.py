@@ -171,7 +171,7 @@ class ViaggiaTrenoSensor(SensorEntity):
                 self._state = NO_INFORMATION_STRING
                 self._unit = ""
             else:
-                self._state = "Error: {}".format(res["error"])
+                self._state = "Error: " + res["error"]
                 self._unit = ""
         else:
             for i in MONITORED_INFO:

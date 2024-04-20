@@ -359,12 +359,14 @@ class StreamMuxer:
                 data=self._memory_file.read(),
             ),
             (
-                segment_duration := float(
-                    (adjusted_dts - self._segment_start_dts) * packet.time_base
+                (
+                    segment_duration := float(
+                        (adjusted_dts - self._segment_start_dts) * packet.time_base
+                    )
                 )
-            )
-            if last_part
-            else 0,
+                if last_part
+                else 0
+            ),
         )
         if last_part:
             # If we've written the last part, we can close the memory_file.
@@ -592,7 +594,7 @@ def stream_worker(
     except av.AVError as ex:
         container.close()
         raise StreamWorkerError(
-            "Error demuxing stream while finding first packet: %s" % str(ex)
+            f"Error demuxing stream while finding first packet: {ex}"
         ) from ex
 
     muxer = StreamMuxer(
@@ -617,7 +619,7 @@ def stream_worker(
             except StopIteration as ex:
                 raise StreamEndedError("Stream ended; no additional packets") from ex
             except av.AVError as ex:
-                raise StreamWorkerError("Error demuxing stream: %s" % str(ex)) from ex
+                raise StreamWorkerError(f"Error demuxing stream: {ex}") from ex
 
             muxer.mux_packet(packet)
 

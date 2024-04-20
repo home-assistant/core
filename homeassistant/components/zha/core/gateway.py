@@ -862,9 +862,7 @@ class LogRelayHandler(logging.Handler):
         hass_path: str = HOMEASSISTANT_PATH[0]
         config_dir = self.hass.config.config_dir
         self.paths_re = re.compile(
-            r"(?:{})/(.*)".format(
-                "|".join([re.escape(x) for x in (hass_path, config_dir)])
-            )
+            rf"(?:{re.escape(hass_path)}|{re.escape(config_dir)})/(.*)"
         )
 
     def emit(self, record: LogRecord) -> None:

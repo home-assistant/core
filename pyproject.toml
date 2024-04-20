@@ -151,7 +151,6 @@ class-const-naming-style = "any"
 # inconsistent-return-statements - doesn't handle raise
 # too-many-ancestors - it's too strict.
 # wrong-import-order - isort guards this
-# consider-using-f-string - str.format sometimes more readable
 # ---
 # Pylint CodeStyle plugin
 # consider-using-namedtuple-or-dataclass - too opinionated
@@ -173,7 +172,6 @@ disable = [
     "too-many-public-methods",
     "too-many-boolean-expressions",
     "wrong-import-order",
-    "consider-using-f-string",
     "consider-using-namedtuple-or-dataclass",
     "consider-using-assignment-expr",
 

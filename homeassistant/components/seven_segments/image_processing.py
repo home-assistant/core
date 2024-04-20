@@ -82,7 +82,7 @@ class ImageProcessingSsocr(ImageProcessingEntity):
 
         self.filepath = os.path.join(
             self.hass.config.config_dir,
-            "ssocr-{}.png".format(self._name.replace(" ", "_")),
+            f"ssocr-{self._name.replace(' ', '_')}.png",
         )
         crop = [
             "crop",
