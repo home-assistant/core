@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import group
+from homeassistant.components import group, vacuum
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
@@ -656,6 +656,24 @@ async def test_is_on(hass: HomeAssistant) -> None:
             ("cover", "lock", "light"),
             (STATE_OPEN, STATE_LOCKED, STATE_ON),
             (STATE_CLOSED, STATE_LOCKED, STATE_OFF),
+            (STATE_ON, True),
+            (STATE_OFF, False),
+        ),
+        (
+            ("vacuum", "vacuum"),
+            # Cleaning is the only on state
+            (vacuum.STATE_DOCKED, vacuum.STATE_CLEANING),
+            # Returning is the only on state
+            (vacuum.STATE_RETURNING, vacuum.STATE_PAUSED),
+            (vacuum.STATE_CLEANING, True),
+            (vacuum.STATE_RETURNING, True),
+        ),
+        (
+            ("vacuum", "vacuum"),
+            # Multiple on states, so group state will be STATE_ON
+            (vacuum.STATE_RETURNING, vacuum.STATE_CLEANING),
+            # Only off states, so group state will be off
+            (vacuum.STATE_PAUSED, vacuum.STATE_IDLE),
             (STATE_ON, True),
             (STATE_OFF, False),
         ),
