@@ -6,7 +6,6 @@ from datetime import datetime
 import logging
 
 from aioautomower.model import MowerAttributes, MowerModes, RestrictedReasons
-from aioautomower.utils import convert_timestamp_to_datetime_utc
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -299,11 +298,11 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         key="next_start_timestamp",
         translation_key="next_start_timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: convert_timestamp_to_datetime_utc(
-            data.planner.next_start_timestamp, dt_util.DEFAULT_TIME_ZONE
-        ),  # Timestamp is in milliseconds since 1970-01-01T00:00:00 in local
-        # time instead of UTC and has to be converted in a aware datetime.
-        # Assuming the device is in the same timezone as the HA instance.
+        value_fn=lambda data: (
+            dt_util.as_local(data.planner.next_start_datetime_naive)
+            if data.planner.next_start_datetime_naive is not None
+            else None
+        ),
     ),
     AutomowerSensorEntityDescription(
         key="error",
