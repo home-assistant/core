@@ -16,13 +16,16 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
     CONF_MAC,
-    CONF_NAME,
+    CONF_PASSWORD,
     CONF_TOKEN,
+    CONF_USERNAME,
+    Platform,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -30,12 +33,12 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import verify_domain_control
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, PLATFORMS, SCAN_INTERVAL
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
 
 # temperature is repeated here, as it gives access to high-precision temps
 GH_ZONE_ATTRS = ["mode", "temperature", "type", "occupied", "override"]
@@ -47,6 +50,27 @@ GH_DEVICE_ATTRS = {
     "setTemperature": "set_temperature",
     "wakeupInterval": "wakeup_interval",
 }
+
+SCAN_INTERVAL = timedelta(seconds=60)
+
+MAC_ADDRESS_REGEXP = r"^([0-9A-F]{2}:){5}([0-9A-F]{2})$"
+V1_API_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_TOKEN): cv.string,
+        vol.Required(CONF_MAC): vol.Match(MAC_ADDRESS_REGEXP),
+    }
+)
+V3_API_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_MAC): vol.Match(MAC_ADDRESS_REGEXP),
+    }
+)
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.Any(V3_API_SCHEMA, V1_API_SCHEMA)}, extra=vol.ALLOW_EXTRA
+)
 
 ATTR_ZONE_MODE = "mode"
 ATTR_DURATION = "duration"
@@ -73,24 +97,24 @@ SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
     }
 )
 
+PLATFORMS = (
+    Platform.CLIMATE,
+    Platform.WATER_HEATER,
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+    Platform.SWITCH,
+)
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Create a Genius Hub system."""
-    hass.data.setdefault(DOMAIN, {})
-    hass_data = dict(entry.data)
-    # # Registers update listener to update config entry when options are updated.
-    # unsub_options_update_listener = entry.add_update_listener(options_update_listener)
-    # # Store a reference to the unsubscribe function to cleanup if an entry is unloaded.
-    # hass_data["unsub_options_update_listener"] = unsub_options_update_listener
-    hass.data[DOMAIN][entry.entry_id] = hass_data
 
-    if CONF_HOST in hass_data:
-        args = (hass_data.pop(CONF_HOST),)
+async def do_setup(hass: HomeAssistant, kwargs):
+    """Create a Genius Hub client and broker."""
+    if CONF_HOST in kwargs:
+        args = (kwargs.pop(CONF_HOST),)
     else:
-        args = (hass_data.pop(CONF_TOKEN),)
-    hub_uid = hass_data.pop(CONF_MAC, None)
+        args = (kwargs.pop(CONF_TOKEN),)
+    hub_uid = kwargs.pop(CONF_MAC, None)
 
-    client = GeniusHub(*args, **hass_data, session=async_get_clientsession(hass))
+    client = GeniusHub(*args, **kwargs, session=async_get_clientsession(hass))
 
     broker = hass.data[DOMAIN]["broker"] = GeniusBroker(hass, client, hub_uid)
 
@@ -103,41 +127,48 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async_track_time_interval(hass, broker.async_update, SCAN_INTERVAL)
 
-    # for platform in PLATFORMS:
-    #     hass.async_create_task(
-    #         async_load_platform(hass, platform, DOMAIN, {}, config.data)
-    #     )
-
-    # Forward the setup to the sensor platform.
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
-
     setup_service_functions(hass, broker)
 
     return True
 
 
-async def options_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
-    """Handle options update."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Create a Genius Hub system."""
+    if DOMAIN not in config:
+        return True
+
+    hass.data[DOMAIN] = {}
+
+    result = await do_setup(hass, dict(config[DOMAIN]))
+    if not result:
+        return False
+
+    for platform in PLATFORMS:
+        hass.async_create_task(async_load_platform(hass, platform, DOMAIN, {}, config))
+
+    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-    _LOGGER.debug("__init__.py:async_unload_entry: ", extra=entry.as_dict())
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
+    """Create a Genius Hub system."""
+    hass.data.setdefault(DOMAIN, {})
+    hass_data = dict(config.data)
+    # # Registers update listener to update config entry when options are updated.
+    # unsub_options_update_listener = entry.add_update_listener(options_update_listener)
+    # # Store a reference to the unsubscribe function to cleanup if an entry is unloaded.
+    # hass_data["unsub_options_update_listener"] = unsub_options_update_listener
+    hass.data[DOMAIN][config.entry_id] = hass_data
 
+    result = await do_setup(hass, hass_data)
+    if not result:
+        return False
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    _LOGGER.debug("__init__.py:update_listener:", extra=entry.as_dict())
-    hass.data[DOMAIN][entry.entry_id].config(entry)
-    entry.title = entry.options[CONF_NAME]
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config, platform)
+        )
+
+    return True
 
 
 @callback
