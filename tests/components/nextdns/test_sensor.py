@@ -23,7 +23,7 @@ async def test_sensor(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test states of sensors."""
-    with patch("homeassistant.components.accuweather.PLATFORMS", [Platform.SENSOR]):
+    with patch("homeassistant.components.nextdns.PLATFORMS", [Platform.SENSOR]):
         entry = await init_integration(hass)
 
     entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)

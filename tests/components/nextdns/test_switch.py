@@ -36,7 +36,7 @@ async def test_switch(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test states of the switches."""
-    with patch("homeassistant.components.accuweather.PLATFORMS", [Platform.SWITCH]):
+    with patch("homeassistant.components.nextdns.PLATFORMS", [Platform.SWITCH]):
         entry = await init_integration(hass)
 
     entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
