@@ -4,8 +4,9 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from nextdns import ApiError
+from syrupy import SnapshotAssertion
 
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
@@ -15,31 +16,20 @@ from . import init_integration, mock_nextdns
 from tests.common import async_fire_time_changed
 
 
-async def test_binary_Sensor(hass: HomeAssistant) -> None:
+async def test_binary_sensor(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+) -> None:
     """Test states of the binary sensors."""
-    registry = er.async_get(hass)
+    with patch("homeassistant.components.nextdns.PLATFORMS", [Platform.BINARY_SENSOR]):
+        entry = await init_integration(hass)
 
-    await init_integration(hass)
+    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
 
-    state = hass.states.get("binary_sensor.fake_profile_device_connection_status")
-    assert state
-    assert state.state == STATE_ON
-
-    entry = registry.async_get("binary_sensor.fake_profile_device_connection_status")
-    assert entry
-    assert entry.unique_id == "xyz12_this_device_nextdns_connection_status"
-
-    state = hass.states.get(
-        "binary_sensor.fake_profile_device_profile_connection_status"
-    )
-    assert state
-    assert state.state == STATE_OFF
-
-    entry = registry.async_get(
-        "binary_sensor.fake_profile_device_profile_connection_status"
-    )
-    assert entry
-    assert entry.unique_id == "xyz12_this_device_profile_connection_status"
+    assert entity_entries
+    for entity_entry in entity_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert (state := hass.states.get(entity_entry.entity_id))
+        assert state == snapshot(name=f"{entity_entry.entity_id}-state")
 
 
 async def test_availability(hass: HomeAssistant) -> None:
