@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from operator import attrgetter
 from typing import Any
 
 from pyenphase import Envoy, EnvoyDryContactSettings
@@ -47,14 +48,14 @@ RELAY_ENTITIES = (
         translation_key="cutoff_battery_level",
         device_class=NumberDeviceClass.BATTERY,
         entity_category=EntityCategory.CONFIG,
-        value_fn=lambda relay: relay.soc_low,
+        value_fn=attrgetter("soc_low"),
     ),
     EnvoyRelayNumberEntityDescription(
         key="soc_high",
         translation_key="restore_battery_level",
         device_class=NumberDeviceClass.BATTERY,
         entity_category=EntityCategory.CONFIG,
-        value_fn=lambda relay: relay.soc_high,
+        value_fn=attrgetter("soc_high"),
     ),
 )
 
@@ -63,7 +64,7 @@ STORAGE_RESERVE_SOC_ENTITY = EnvoyStorageSettingsNumberEntityDescription(
     translation_key="reserve_soc",
     native_unit_of_measurement=PERCENTAGE,
     device_class=NumberDeviceClass.BATTERY,
-    value_fn=lambda storage_settings: storage_settings.reserved_soc,
+    value_fn=attrgetter("reserved_soc"),
     update_fn=lambda envoy, value: envoy.set_reserve_soc(int(value)),
 )
 

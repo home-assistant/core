@@ -1053,18 +1053,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     @callback
     def async_clear_area_id(self, area_id: str) -> None:
         """Clear area id from registry entries."""
-        for dev_id, device in self.devices.items():
-            if area_id == device.area_id:
-                self.async_update_device(dev_id, area_id=None)
+        for device in self.devices.get_devices_for_area_id(area_id):
+            self.async_update_device(device.id, area_id=None)
 
     @callback
     def async_clear_label_id(self, label_id: str) -> None:
         """Clear label from registry entries."""
-        for device_id, entry in self.devices.items():
-            if label_id in entry.labels:
-                labels = entry.labels.copy()
-                labels.remove(label_id)
-                self.async_update_device(device_id, labels=labels)
+        for device in self.devices.get_devices_for_label(label_id):
+            self.async_update_device(device.id, labels=device.labels - {label_id})
 
 
 @callback
@@ -1239,21 +1235,21 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
 
         return True
 
-    if hass.is_running:
+    def _async_listen_for_cleanup() -> None:
+        """Listen for entity registry changes."""
         hass.bus.async_listen(
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
             _async_entity_registry_changed,
             event_filter=entity_registry_changed_filter,
         )
+
+    if hass.is_running:
+        _async_listen_for_cleanup()
         return
 
     async def startup_clean(event: Event) -> None:
         """Clean up on startup."""
-        hass.bus.async_listen(
-            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
-            _async_entity_registry_changed,
-            event_filter=entity_registry_changed_filter,
-        )
+        _async_listen_for_cleanup()
         await debounced_cleanup.async_call()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, startup_clean)

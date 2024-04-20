@@ -30,14 +30,14 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TYPE,
 )
-from homeassistant.core import State, callback
+from homeassistant.core import Event, EventStateChangedData, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 
 from . import (
     DOMAIN,
@@ -353,10 +353,10 @@ class RfxtrxOptionsFlow(OptionsFlow):
                 entity_migration_map[new_entity_id] = entry
 
         @callback
-        def _handle_state_removed(
-            entity_id: str, old_state: State | None, new_state: State | None
-        ) -> None:
+        def _handle_state_removed(event: Event[EventStateChangedData]) -> None:
             # Wait for entities to finish cleanup
+            new_state = event.data["new_state"]
+            entity_id = event.data["entity_id"]
             if new_state is None and entity_id in entities_to_be_removed:
                 entities_to_be_removed.remove(entity_id)
             if not entities_to_be_removed:
@@ -370,7 +370,7 @@ class RfxtrxOptionsFlow(OptionsFlow):
             if not self.hass.states.async_available(entry.entity_id)
         }
         wait_for_entities = asyncio.Event()
-        remove_track_state_changes = async_track_state_change(
+        remove_track_state_changes = async_track_state_change_event(
             self.hass, entities_to_be_removed, _handle_state_removed
         )
 
@@ -384,10 +384,10 @@ class RfxtrxOptionsFlow(OptionsFlow):
         remove_track_state_changes()
 
         @callback
-        def _handle_state_added(
-            entity_id: str, old_state: State | None, new_state: State | None
-        ) -> None:
+        def _handle_state_added(event: Event[EventStateChangedData]) -> None:
             # Wait for entities to be added
+            old_state = event.data["old_state"]
+            entity_id = event.data["entity_id"]
             if old_state is None and entity_id in entities_to_be_added:
                 entities_to_be_added.remove(entity_id)
             if not entities_to_be_added:
@@ -400,7 +400,7 @@ class RfxtrxOptionsFlow(OptionsFlow):
             if self.hass.states.async_available(entry.entity_id)
         }
         wait_for_entities = asyncio.Event()
-        remove_track_state_changes = async_track_state_change(
+        remove_track_state_changes = async_track_state_change_event(
             self.hass, entities_to_be_added, _handle_state_added
         )
 

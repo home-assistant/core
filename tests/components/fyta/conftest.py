@@ -5,8 +5,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from .test_config_flow import ACCESS_TOKEN, EXPIRATION
-
 
 @pytest.fixture
 def mock_fyta():
@@ -17,10 +15,7 @@ def mock_fyta():
         "homeassistant.components.fyta.config_flow.FytaConnector",
         return_value=mock_fyta_api,
     ) as mock_fyta_api:
-        mock_fyta_api.return_value.login.return_value = {
-            "access_token": ACCESS_TOKEN,
-            "expiration": EXPIRATION,
-        }
+        mock_fyta_api.return_value.login.return_value = {}
         yield mock_fyta_api
 
 

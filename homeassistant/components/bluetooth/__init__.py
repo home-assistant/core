@@ -53,7 +53,6 @@ from homeassistant.loader import async_get_bluetooth
 
 from . import models, passive_update_processor
 from .api import (
-    _get_manager,
     async_address_present,
     async_ble_device_from_address,
     async_discovered_service_info,
@@ -130,13 +129,6 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
-async def _async_get_adapter_from_address(
-    hass: HomeAssistant, address: str
-) -> str | None:
-    """Get an adapter by the address."""
-    return await _get_manager(hass).async_get_adapter_from_address(address)
-
-
 async def _async_start_adapter_discovery(
     hass: HomeAssistant,
     manager: HomeAssistantBluetoothManager,
@@ -204,6 +196,17 @@ async def _async_start_adapter_discovery(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the bluetooth integration."""
+    if platform.system() == "Linux":
+        # Remove any config entries that are using the default address
+        # that were created from discovering adapters in a crashed state
+        #
+        # DEFAULT_ADDRESS is perfectly valid on MacOS but on
+        # Linux it means the adapter is not yet configured
+        # or crashed
+        for entry in list(hass.config_entries.async_entries(DOMAIN)):
+            if entry.unique_id == DEFAULT_ADDRESS:
+                await hass.config_entries.async_remove(entry.entry_id)
+
     bluetooth_adapters = get_adapters()
     bluetooth_storage = BluetoothStorage(hass)
     slot_manager = BleakSlotManager()
@@ -265,13 +268,19 @@ async def async_discover_adapters(
     adapters: dict[str, AdapterDetails],
 ) -> None:
     """Discover adapters and start flows."""
-    if platform.system() == "Windows":
+    system = platform.system()
+    if system == "Windows":
         # We currently do not have a good way to detect if a bluetooth device is
         # available on Windows. We will just assume that it is not unless they
         # actively add it.
         return
 
     for adapter, details in adapters.items():
+        if system == "Linux" and details[ADAPTER_ADDRESS] == DEFAULT_ADDRESS:
+            # DEFAULT_ADDRESS is perfectly valid on MacOS but on
+            # Linux it means the adapter is not yet configured
+            # or crashed so we should not try to start a flow for it.
+            continue
         discovery_flow.async_create_flow(
             hass,
             DOMAIN,
@@ -303,28 +312,24 @@ async def async_update_device(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry for a bluetooth scanner."""
+    manager: HomeAssistantBluetoothManager = hass.data[DATA_MANAGER]
     address = entry.unique_id
     assert address is not None
-    adapter = await _async_get_adapter_from_address(hass, address)
+    adapter = await manager.async_get_adapter_from_address_or_recover(address)
     if adapter is None:
         raise ConfigEntryNotReady(
             f"Bluetooth adapter {adapter} with address {address} not found"
         )
-
     passive = entry.options.get(CONF_PASSIVE)
     mode = BluetoothScanningMode.PASSIVE if passive else BluetoothScanningMode.ACTIVE
-    manager: HomeAssistantBluetoothManager = hass.data[DATA_MANAGER]
     scanner = HaScanner(mode, adapter, address)
+    scanner.async_setup()
     try:
-        scanner.async_setup()
-    except RuntimeError as err:
+        await scanner.async_start()
+    except (RuntimeError, ScannerStartError) as err:
         raise ConfigEntryNotReady(
             f"{adapter_human_name(adapter, address)}: {err}"
         ) from err
-    try:
-        await scanner.async_start()
-    except ScannerStartError as err:
-        raise ConfigEntryNotReady from err
     adapters = await manager.async_get_bluetooth_adapters()
     details = adapters[adapter]
     slots: int = details.get(ADAPTER_CONNECTION_SLOTS) or DEFAULT_CONNECTION_SLOTS
@@ -332,6 +337,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await async_update_device(hass, entry, adapter, details)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = scanner
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
+    entry.async_on_unload(scanner.async_stop)
     return True
 
 
