@@ -151,12 +151,7 @@ def _format_err[*_Ts](
     *args: Any,
 ) -> str:
     """Format error message."""
-    return "Exception in {} when dispatching '{}': {}".format(
-        # Functions wrapped in partial do not have a __name__
-        getattr(target, "__name__", None) or str(target),
-        signal,
-        args,
-    )
+    return f"Exception in {getattr(target, '__name__', None) or target} when dispatching '{signal}': {args}"
 
 
 def _generate_job[*_Ts](
