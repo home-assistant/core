@@ -63,7 +63,6 @@ class AutomowerSelectEntity(AutomowerControlEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        # mode: Literal[HeadlightModes.ALWAYS_OFF,HeadlightModes.ALWAYS_ON,HeadlightModes.EVENING_AND_NIGHT, HeadlightModes.EVENING_ONLY] = cast(HeadlightModes, option.upper())
         try:
             await self.coordinator.api.set_headlight_mode(
                 self.mower_id, cast(HeadlightModes, option.upper())
