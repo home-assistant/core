@@ -55,6 +55,7 @@ from homeassistant.exceptions import (
     InvalidStateError,
     MaxLengthExceeded,
     ServiceNotFound,
+    ServiceValidationError,
 )
 from homeassistant.helpers.json import json_dumps
 from homeassistant.setup import async_setup_component
@@ -794,7 +795,7 @@ async def test_async_create_task_pending_tasks_coro(hass: HomeAssistant) -> None
         call_count.append("call")
 
     for _ in range(2):
-        hass.async_create_task(test_coro())
+        hass.async_create_task(test_coro(), eager_start=False)
 
     assert len(hass._tasks) == 2
     await hass.async_block_till_done()
@@ -1791,8 +1792,9 @@ async def test_services_call_return_response_requires_blocking(
     hass: HomeAssistant,
 ) -> None:
     """Test that non-blocking service calls cannot ask for response data."""
+    await async_setup_component(hass, "homeassistant", {})
     async_mock_service(hass, "test_domain", "test_service")
-    with pytest.raises(ValueError, match="when blocking=False"):
+    with pytest.raises(ServiceValidationError, match="blocking=False") as exc:
         await hass.services.async_call(
             "test_domain",
             "test_service",
@@ -1800,6 +1802,10 @@ async def test_services_call_return_response_requires_blocking(
             blocking=False,
             return_response=True,
         )
+    assert (
+        str(exc.value)
+        == "A non blocking service call with argument blocking=False can't be used together with argument return_response=True"
+    )
 
 
 @pytest.mark.parametrize(
@@ -1816,6 +1822,7 @@ async def test_serviceregistry_return_response_invalid(
     hass: HomeAssistant, response_data: Any, expected_error: str
 ) -> None:
     """Test service call response data must be json serializable objects."""
+    await async_setup_component(hass, "homeassistant", {})
 
     def service_handler(call: ServiceCall) -> ServiceResponse:
         """Service handler coroutine."""
@@ -1842,8 +1849,8 @@ async def test_serviceregistry_return_response_invalid(
 @pytest.mark.parametrize(
     ("supports_response", "return_response", "expected_error"),
     [
-        (SupportsResponse.NONE, True, "not support responses"),
-        (SupportsResponse.ONLY, False, "caller did not ask for responses"),
+        (SupportsResponse.NONE, True, "does not return responses"),
+        (SupportsResponse.ONLY, False, "call requires responses"),
     ],
 )
 async def test_serviceregistry_return_response_arguments(
@@ -1853,6 +1860,7 @@ async def test_serviceregistry_return_response_arguments(
     expected_error: str,
 ) -> None:
     """Test service call response data invalid arguments."""
+    await async_setup_component(hass, "homeassistant", {})
 
     hass.services.async_register(
         "test_domain",
@@ -1861,7 +1869,7 @@ async def test_serviceregistry_return_response_arguments(
         supports_response=supports_response,
     )
 
-    with pytest.raises(ValueError, match=expected_error):
+    with pytest.raises(ServiceValidationError, match=expected_error):
         await hass.services.async_call(
             "test_domain",
             "test_service",
@@ -2376,11 +2384,11 @@ async def test_log_blocking_events(
     async def _wait_a_bit_2():
         await asyncio.sleep(0.1)
 
-    hass.async_create_task(_wait_a_bit_1())
+    hass.async_create_task(_wait_a_bit_1(), eager_start=False)
     await hass.async_block_till_done()
 
     with patch.object(ha, "BLOCK_LOG_TIMEOUT", 0.0001):
-        hass.async_create_task(_wait_a_bit_2())
+        hass.async_create_task(_wait_a_bit_2(), eager_start=False)
         await hass.async_block_till_done()
 
     assert "_wait_a_bit_2" in caplog.text
@@ -2400,14 +2408,14 @@ async def test_chained_logging_hits_log_timeout(
         created += 1
         if created > 1000:
             return
-        hass.async_create_task(_task_chain_2())
+        hass.async_create_task(_task_chain_2(), eager_start=False)
 
     async def _task_chain_2():
         nonlocal created
         created += 1
         if created > 1000:
             return
-        hass.async_create_task(_task_chain_1())
+        hass.async_create_task(_task_chain_1(), eager_start=False)
 
     with patch.object(ha, "BLOCK_LOG_TIMEOUT", 0.0):
         hass.async_create_task(_task_chain_1())
@@ -2429,16 +2437,16 @@ async def test_chained_logging_misses_log_timeout(
         created += 1
         if created > 10:
             return
-        hass.async_create_task(_task_chain_2())
+        hass.async_create_task(_task_chain_2(), eager_start=False)
 
     async def _task_chain_2():
         nonlocal created
         created += 1
         if created > 10:
             return
-        hass.async_create_task(_task_chain_1())
+        hass.async_create_task(_task_chain_1(), eager_start=False)
 
-    hass.async_create_task(_task_chain_1())
+    hass.async_create_task(_task_chain_1(), eager_start=False)
     await hass.async_block_till_done()
 
     assert "_task_chain_" not in caplog.text
@@ -3409,5 +3417,22 @@ async def test_async_listen_with_run_immediately_deprecated(
     func(EVENT_HOMEASSISTANT_START, _test, run_immediately=run_immediately)
     assert (
         f"Detected code that calls `{method}` with run_immediately, which is "
-        "deprecated and will be removed in Assistant 2025.5."
+        "deprecated and will be removed in Home Assistant 2025.5."
     ) in caplog.text
+
+
+async def test_top_level_components(hass: HomeAssistant) -> None:
+    """Test top level components are updated when components change."""
+    hass.config.components.add("homeassistant")
+    assert hass.config.components == {"homeassistant"}
+    assert hass.config.top_level_components == {"homeassistant"}
+    hass.config.components.add("homeassistant.scene")
+    assert hass.config.components == {"homeassistant", "homeassistant.scene"}
+    assert hass.config.top_level_components == {"homeassistant"}
+    hass.config.components.remove("homeassistant")
+    assert hass.config.components == {"homeassistant.scene"}
+    assert hass.config.top_level_components == set()
+    with pytest.raises(ValueError):
+        hass.config.components.remove("homeassistant.scene")
+    with pytest.raises(NotImplementedError):
+        hass.config.components.discard("homeassistant")

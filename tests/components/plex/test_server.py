@@ -68,6 +68,7 @@ async def test_new_ignored_users_available(
     )
     trigger_plex_update(mock_websocket)
     await wait_for_debouncer(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     server_id = mock_plex_server.machine_identifier
 
@@ -89,6 +90,7 @@ async def test_new_ignored_users_available(
             )
 
     await wait_for_debouncer(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     sensor = hass.states.get("sensor.plex_server_1")
     assert sensor.state == str(len(active_sessions))
