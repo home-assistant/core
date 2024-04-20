@@ -39,7 +39,7 @@ HATasmota==0.8.0
 Pillow==10.3.0
 
 # homeassistant.components.plex
-PlexAPI==4.15.11
+PlexAPI==4.15.12
 
 # homeassistant.components.progettihwsw
 ProgettiHWSW==0.1.3
@@ -491,7 +491,7 @@ bluecurrent-api==1.2.3
 bluemaestro-ble==0.2.3
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.18.0
+bluetooth-adapters==0.19.0
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.4.1
@@ -1098,7 +1098,7 @@ nessclient==1.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==2.2.2
+nettigo-air-monitor==3.0.0
 
 # homeassistant.components.nexia
 nexia==2.0.8
@@ -1110,7 +1110,7 @@ nextcloudmonitor==1.5.0
 nextcord==2.6.0
 
 # homeassistant.components.nextdns
-nextdns==2.1.0
+nextdns==3.0.0
 
 # homeassistant.components.nibe_heatpump
 nibe==2.8.0
@@ -1516,7 +1516,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.6.2
 
 # homeassistant.components.litterrobot
-pylitterbot==2023.4.11
+pylitterbot==2023.5.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.20.0
@@ -2222,7 +2222,7 @@ wiffi==1.1.2
 wled==0.17.0
 
 # homeassistant.components.wolflink
-wolf-comm==0.0.6
+wolf-comm==0.0.7
 
 # homeassistant.components.wyoming
 wyoming==1.5.3

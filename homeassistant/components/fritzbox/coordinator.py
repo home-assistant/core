@@ -12,6 +12,7 @@ from requests.exceptions import ConnectionError as RequestConnectionError, HTTPE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_CONNECTIONS, DOMAIN, LOGGER
@@ -28,27 +29,55 @@ class FritzboxCoordinatorData:
 class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorData]):
     """Fritzbox Smarthome device data update coordinator."""
 
+    config_entry: ConfigEntry
     configuration_url: str
 
-    def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, has_templates: bool
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, name: str, has_templates: bool) -> None:
         """Initialize the Fritzbox Smarthome device coordinator."""
-        self.entry = entry
-        self.fritz: Fritzhome = hass.data[DOMAIN][self.entry.entry_id][CONF_CONNECTIONS]
+        super().__init__(
+            hass,
+            LOGGER,
+            name=name,
+            update_interval=timedelta(seconds=30),
+        )
+
+        self.fritz: Fritzhome = hass.data[DOMAIN][self.config_entry.entry_id][
+            CONF_CONNECTIONS
+        ]
         self.configuration_url = self.fritz.get_prefixed_host()
         self.has_templates = has_templates
         self.new_devices: set[str] = set()
         self.new_templates: set[str] = set()
 
-        super().__init__(
-            hass,
-            LOGGER,
-            name=entry.entry_id,
-            update_interval=timedelta(seconds=30),
+        self.data = FritzboxCoordinatorData({}, {})
+
+    async def async_setup(self) -> None:
+        """Set up the coordinator."""
+        await self.async_config_entry_first_refresh()
+        self.cleanup_removed_devices(
+            list(self.data.devices) + list(self.data.templates)
         )
 
-        self.data = FritzboxCoordinatorData({}, {})
+    def cleanup_removed_devices(self, avaiable_ains: list[str]) -> None:
+        """Cleanup entity and device registry from removed devices."""
+        entity_reg = er.async_get(self.hass)
+        for entity in er.async_entries_for_config_entry(
+            entity_reg, self.config_entry.entry_id
+        ):
+            if entity.unique_id.split("_")[0] not in avaiable_ains:
+                LOGGER.debug("Removing obsolete entity entry %s", entity.entity_id)
+                entity_reg.async_remove(entity.entity_id)
+
+        device_reg = dr.async_get(self.hass)
+        identifiers = {(DOMAIN, ain) for ain in avaiable_ains}
+        for device in dr.async_entries_for_config_entry(
+            device_reg, self.config_entry.entry_id
+        ):
+            if not set(device.identifiers) & identifiers:
+                LOGGER.debug("Removing obsolete device entry %s", device.name)
+                device_reg.async_update_device(
+                    device.id, remove_config_entry_id=self.config_entry.entry_id
+                )
 
     def _update_fritz_devices(self) -> FritzboxCoordinatorData:
         """Update all fritzbox device data."""
@@ -94,6 +123,12 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
 
         self.new_devices = device_data.keys() - self.data.devices.keys()
         self.new_templates = template_data.keys() - self.data.templates.keys()
+
+        if (
+            self.data.devices.keys() - device_data.keys()
+            or self.data.templates.keys() - template_data.keys()
+        ):
+            self.cleanup_removed_devices(list(device_data) + list(template_data))
 
         return FritzboxCoordinatorData(devices=device_data, templates=template_data)
 
