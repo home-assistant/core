@@ -427,19 +427,15 @@ class Group(Entity):
 
         registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
 
-        def filter_on_states() -> set[str]:
-            on_states: set[str] = set()
-            for entity_id in self.tracking:
-                domain = entity_id.split(".")[0]
-                state = self.hass.states.get(entity_id)
-                if (
-                    state is not None
-                    and state.state in registry.on_states_by_domain.get(domain, set())
-                ):
-                    on_states.update({state.state})
-            return on_states
+        def _active_on_states() -> set[str]:
+            return {
+                state.state
+                for entity_id in self.tracking
+                if (domain := entity_id.split(".")[0]) in registry.on_states_by_domain
+                and (state := self.hass.states.get(entity_id)) is not None
+                and state.state in registry.on_states_by_domain[domain]
+            }
 
-        active_on_states = filter_on_states()
         active_domains = {entity_id.split(".")[0] for entity_id in self.tracking}
 
         num_on_states = len(self._on_states)
@@ -454,9 +450,12 @@ class Group(Entity):
             self._state = None
             return
         # If the entity domains have more than one
-        # on state, we use STATE_ON/STATE_OFF
-        # unless there is only one specific state in use for one specific domain
-        elif len(active_on_states) == 1 and len(active_domains) == 1:
+        # on state, we use STATE_ON/STATE_OFF, unless there is
+        # only one specific `on` state in use for one specific domain
+        elif (
+            len(active_on_states := _active_on_states()) == 1
+            and len(active_domains) == 1
+        ):
             on_state = list(active_on_states)[0]
         else:
             on_state = STATE_ON
@@ -473,10 +472,13 @@ class Group(Entity):
         elif len(active_off_states) == 1:
             # If there is one off state in use then return the specific one
             self._state = list(active_off_states)[0]
-        elif len(active_domains) == 1:
+        elif (
+            len(active_domains) == 1
+            and (domain := list(active_domains)[0])
+            and domain in registry.off_state_by_domain
+        ):
             # If there is only one domain used, then return the off state for that domain
-            domain = list(active_domains)[0]
-            self._state = registry.off_state_by_domain.get(domain, STATE_OFF)
+            self._state = registry.off_state_by_domain[domain]
         else:
             # Default to STATE_OFF
             self._state = STATE_OFF
