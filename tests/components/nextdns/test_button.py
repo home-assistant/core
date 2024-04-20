@@ -2,8 +2,10 @@
 
 from unittest.mock import patch
 
+from syrupy import SnapshotAssertion
+
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -11,19 +13,20 @@ from homeassistant.util import dt as dt_util
 from . import init_integration
 
 
-async def test_button(hass: HomeAssistant) -> None:
+async def test_button(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+) -> None:
     """Test states of the button."""
-    registry = er.async_get(hass)
+    with patch("homeassistant.components.nextdns.PLATFORMS", [Platform.BUTTON]):
+        entry = await init_integration(hass)
 
-    await init_integration(hass)
+    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
 
-    state = hass.states.get("button.fake_profile_clear_logs")
-    assert state
-    assert state.state == STATE_UNKNOWN
-
-    entry = registry.async_get("button.fake_profile_clear_logs")
-    assert entry
-    assert entry.unique_id == "xyz12_clear_logs"
+    assert entity_entries
+    for entity_entry in entity_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert (state := hass.states.get(entity_entry.entity_id))
+        assert state == snapshot(name=f"{entity_entry.entity_id}-state")
 
 
 async def test_button_press(hass: HomeAssistant) -> None:
