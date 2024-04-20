@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for TechnoVE."""
+
 from __future__ import annotations
 
 from technove import Station as TechnoVEStation, TechnoVE, TechnoVEError

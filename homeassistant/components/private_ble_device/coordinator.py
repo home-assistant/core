@@ -1,4 +1,5 @@
 """Central manager for tracking devices with random but resolvable MAC addresses."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

@@ -2,6 +2,7 @@
 
 https://github.com/home-assistant/core/issues/15336
 """
+
 from typing import Any
 from unittest import mock
 

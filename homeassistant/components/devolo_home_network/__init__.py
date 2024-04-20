@@ -1,4 +1,5 @@
 """The devolo Home Network integration."""
+
 from __future__ import annotations
 
 import logging
@@ -48,9 +49,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(  # noqa: C901
-    hass: HomeAssistant, entry: ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up devolo Home Network from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     zeroconf_instance = await zeroconf.async_get_async_instance(hass)
@@ -68,7 +67,10 @@ async def async_setup_entry(  # noqa: C901
         )
     except DeviceNotFound as err:
         raise ConfigEntryNotReady(
-            f"Unable to connect to {entry.data[CONF_IP_ADDRESS]}"
+            f"Unable to connect to {entry.data[CONF_IP_ADDRESS]}",
+            translation_domain=DOMAIN,
+            translation_key="connection_failed",
+            translation_placeholders={"ip_address": entry.data[CONF_IP_ADDRESS]},
         ) from err
 
     hass.data[DOMAIN][entry.entry_id] = {"device": device}
@@ -100,7 +102,9 @@ async def async_setup_entry(  # noqa: C901
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
         except DevicePasswordProtected as err:
-            raise ConfigEntryAuthFailed(err) from err
+            raise ConfigEntryAuthFailed(
+                err, translation_domain=DOMAIN, translation_key="password_wrong"
+            ) from err
 
     async def async_update_led_status() -> bool:
         """Fetch data from API endpoint."""

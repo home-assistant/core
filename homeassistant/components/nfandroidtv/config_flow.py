@@ -1,4 +1,5 @@
 """Config flow for NFAndroidTV integration."""
+
 from __future__ import annotations
 
 import logging
@@ -7,21 +8,20 @@ from typing import Any
 from notifications_android_tv.notifications import ConnectError, Notifications
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class NFAndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NFAndroidTV."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 

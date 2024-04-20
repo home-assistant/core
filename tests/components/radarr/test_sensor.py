@@ -1,4 +1,5 @@
 """The tests for Radarr sensor platform."""
+
 import pytest
 
 from homeassistant.components.sensor import (

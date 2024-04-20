@@ -1,4 +1,5 @@
 """Support for Modern Forms switches."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -43,12 +44,11 @@ class ModernFormsSensor(ModernFormsDeviceEntity, SensorEntity):
         *,
         entry_id: str,
         coordinator: ModernFormsDataUpdateCoordinator,
-        icon: str,
         key: str,
     ) -> None:
         """Initialize Modern Forms switch."""
         self._key = key
-        super().__init__(entry_id=entry_id, coordinator=coordinator, icon=icon)
+        super().__init__(entry_id=entry_id, coordinator=coordinator)
         self._attr_unique_id = f"{self.coordinator.data.info.mac_address}_{self._key}"
 
 
@@ -64,7 +64,6 @@ class ModernFormsLightTimerRemainingTimeSensor(ModernFormsSensor):
         super().__init__(
             coordinator=coordinator,
             entry_id=entry_id,
-            icon="mdi:timer-outline",
             key="light_timer_remaining_time",
         )
         self._attr_device_class = SensorDeviceClass.TIMESTAMP
@@ -95,7 +94,6 @@ class ModernFormsFanTimerRemainingTimeSensor(ModernFormsSensor):
         super().__init__(
             coordinator=coordinator,
             entry_id=entry_id,
-            icon="mdi:timer-outline",
             key="fan_timer_remaining_time",
         )
         self._attr_device_class = SensorDeviceClass.TIMESTAMP

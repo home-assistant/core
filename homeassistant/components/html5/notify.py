@@ -1,4 +1,5 @@
 """HTML5 Push Messaging notification service."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -19,7 +20,7 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant.components import websocket_api
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
@@ -231,7 +232,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
         self.registrations[name] = data
 
         try:
-            hass = request.app["hass"]
+            hass = request.app[KEY_HASS]
 
             await hass.async_add_executor_job(
                 save_json, self.json_path, self.registrations
@@ -279,7 +280,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
         reg = self.registrations.pop(found)
 
         try:
-            hass = request.app["hass"]
+            hass = request.app[KEY_HASS]
 
             await hass.async_add_executor_job(
                 save_json, self.json_path, self.registrations
@@ -388,7 +389,7 @@ class HTML5PushCallbackView(HomeAssistantView):
             )
 
         event_name = f"{NOTIFY_CALLBACK_EVENT}.{event_payload[ATTR_TYPE]}"
-        request.app["hass"].bus.fire(event_name, event_payload)
+        request.app[KEY_HASS].bus.fire(event_name, event_payload)
         return self.json({"status": "ok", "event": event_payload[ATTR_TYPE]})
 
 

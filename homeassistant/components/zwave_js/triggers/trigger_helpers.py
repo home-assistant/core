@@ -1,4 +1,5 @@
 """Helpers for Z-Wave JS custom triggers."""
+
 from zwave_js_server.client import Client as ZwaveClient
 
 from homeassistant.config_entries import ConfigEntryState

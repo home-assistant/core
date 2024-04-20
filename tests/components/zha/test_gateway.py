@@ -1,13 +1,13 @@
 """Test ZHA Gateway."""
+
 import asyncio
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 from zigpy.application import ControllerApplication
-import zigpy.profiles.zha as zha
+from zigpy.profiles import zha
 import zigpy.types
-import zigpy.zcl.clusters.general as general
-import zigpy.zcl.clusters.lighting as lighting
+from zigpy.zcl.clusters import general, lighting
 import zigpy.zdo.types
 
 from homeassistant.components.zha.core.gateway import ZHAGateway
@@ -60,8 +60,7 @@ def required_platform_only():
 async def zha_dev_basic(hass, zha_device_restored, zigpy_dev_basic):
     """ZHA device with just a basic cluster."""
 
-    zha_device = await zha_device_restored(zigpy_dev_basic)
-    return zha_device
+    return await zha_device_restored(zigpy_dev_basic)
 
 
 @pytest.fixture
@@ -263,7 +262,7 @@ async def test_gateway_initialize_bellows_thread(
     ) as mock_new:
         await zha_gateway.async_initialize()
 
-    mock_new.mock_calls[-1].kwargs["config"]["use_thread"] is thread_state
+    assert mock_new.mock_calls[-1].kwargs["config"]["use_thread"] is thread_state
 
     await zha_gateway.shutdown()
 

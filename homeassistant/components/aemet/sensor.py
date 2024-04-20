@@ -1,4 +1,5 @@
 """Support for the AEMET OpenData service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -367,20 +368,16 @@ async def async_setup_entry(
     name: str = domain_data[ENTRY_NAME]
     coordinator: WeatherUpdateCoordinator = domain_data[ENTRY_WEATHER_COORDINATOR]
 
-    entities: list[AemetSensor] = []
-
-    for description in FORECAST_SENSORS + WEATHER_SENSORS:
-        if dict_nested_value(coordinator.data["lib"], description.keys) is not None:
-            entities.append(
-                AemetSensor(
-                    name,
-                    coordinator,
-                    description,
-                    config_entry,
-                )
-            )
-
-    async_add_entities(entities)
+    async_add_entities(
+        AemetSensor(
+            name,
+            coordinator,
+            description,
+            config_entry,
+        )
+        for description in FORECAST_SENSORS + WEATHER_SENSORS
+        if dict_nested_value(coordinator.data["lib"], description.keys) is not None
+    )
 
 
 class AemetSensor(AemetEntity, SensorEntity):

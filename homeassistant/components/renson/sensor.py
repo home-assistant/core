@@ -1,4 +1,5 @@
 """Sensor data of the Renson ventilation unit."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -50,19 +51,12 @@ from .coordinator import RensonCoordinator
 from .entity import RensonEntity
 
 
-@dataclass(frozen=True)
-class RensonSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class RensonSensorEntityDescription(SensorEntityDescription):
+    """Description of a Renson sensor."""
 
     field: FieldEnum
     raw_format: bool
-
-
-@dataclass(frozen=True)
-class RensonSensorEntityDescription(
-    SensorEntityDescription, RensonSensorEntityDescriptionMixin
-):
-    """Description of a Renson sensor."""
 
 
 SENSORS: tuple[RensonSensorEntityDescription, ...] = (

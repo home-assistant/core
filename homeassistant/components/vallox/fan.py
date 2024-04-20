@@ -1,4 +1,5 @@
 """Support for the Vallox ventilation unit fan."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

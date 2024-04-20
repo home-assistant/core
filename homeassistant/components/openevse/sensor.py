@@ -1,4 +1,5 @@
 """Support for monitoring an OpenEVSE Charger."""
+
 from __future__ import annotations
 
 import logging

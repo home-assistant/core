@@ -1,4 +1,5 @@
 """Test the Switcher config flow."""
+
 from unittest.mock import patch
 
 import pytest
@@ -22,7 +23,7 @@ async def test_import(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Switcher"
     assert result["data"] == {}
 
@@ -50,7 +51,7 @@ async def test_user_setup(hass: HomeAssistant, mock_bridge) -> None:
     assert mock_bridge.is_running is False
     assert len(hass.data[DOMAIN][DATA_DISCOVERY].result()) == 2
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"] is None
 
@@ -59,7 +60,7 @@ async def test_user_setup(hass: HomeAssistant, mock_bridge) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Switcher"
     assert result2["result"].data == {}
 
@@ -77,13 +78,13 @@ async def test_user_setup_abort_no_devices_found(
     assert mock_bridge.is_running is False
     assert len(hass.data[DOMAIN][DATA_DISCOVERY].result()) == 0
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"] is None
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "no_devices_found"
 
 
@@ -103,5 +104,5 @@ async def test_single_instance(hass: HomeAssistant, source) -> None:
         DOMAIN, context={"source": source}
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"

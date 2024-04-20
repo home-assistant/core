@@ -1,4 +1,5 @@
 """Support for IP Cameras."""
+
 from __future__ import annotations
 
 import asyncio

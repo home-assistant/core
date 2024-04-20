@@ -1,4 +1,5 @@
 """Tests for the devolo Home Control cover platform."""
+
 from unittest.mock import patch
 
 from syrupy.assertion import SnapshotAssertion

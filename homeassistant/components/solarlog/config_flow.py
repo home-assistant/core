@@ -1,4 +1,5 @@
 """Config flow for solarlog integration."""
+
 import logging
 from urllib.parse import ParseResult, urlparse
 
@@ -6,7 +7,7 @@ from requests.exceptions import HTTPError, Timeout
 from sunwatcher.solarlog.solarlog import SolarLog
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
@@ -24,7 +25,7 @@ def solarlog_entries(hass: HomeAssistant):
     }
 
 
-class SolarLogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for solarlog."""
 
     VERSION = 1
@@ -43,14 +44,14 @@ class SolarLogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Check if we can connect to the Solar-Log device."""
         try:
             await self.hass.async_add_executor_job(SolarLog, host)
-            return True
         except (OSError, HTTPError, Timeout):
             self._errors[CONF_HOST] = "cannot_connect"
             _LOGGER.error(
                 "Could not connect to Solar-Log device at %s, check host ip address",
                 host,
             )
-        return False
+            return False
+        return True
 
     async def async_step_user(self, user_input=None):
         """Step when user initializes a integration."""

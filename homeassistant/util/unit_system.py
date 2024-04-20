@@ -1,4 +1,5 @@
 """Unit system helper class and methods."""
+
 from __future__ import annotations
 
 from numbers import Number

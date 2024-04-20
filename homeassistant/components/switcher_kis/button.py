@@ -1,4 +1,5 @@
 """Switcher integration Button platform."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -29,26 +30,18 @@ from .const import SIGNAL_DEVICE_ADD
 from .utils import get_breeze_remote_manager
 
 
-@dataclass(frozen=True)
-class SwitcherThermostatButtonDescriptionMixin:
-    """Mixin to describe a Switcher Thermostat Button entity."""
+@dataclass(frozen=True, kw_only=True)
+class SwitcherThermostatButtonEntityDescription(ButtonEntityDescription):
+    """Class to describe a Switcher Thermostat Button entity."""
 
     press_fn: Callable[[SwitcherType2Api, SwitcherBreezeRemote], SwitcherBaseResponse]
     supported: Callable[[SwitcherBreezeRemote], bool]
-
-
-@dataclass(frozen=True)
-class SwitcherThermostatButtonEntityDescription(
-    ButtonEntityDescription, SwitcherThermostatButtonDescriptionMixin
-):
-    """Class to describe a Switcher Thermostat Button entity."""
 
 
 THERMOSTAT_BUTTONS = [
     SwitcherThermostatButtonEntityDescription(
         key="assume_on",
         translation_key="assume_on",
-        icon="mdi:fan",
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda api, remote: api.control_breeze_device(
             remote, state=DeviceState.ON, update_state=True
@@ -58,7 +51,6 @@ THERMOSTAT_BUTTONS = [
     SwitcherThermostatButtonEntityDescription(
         key="assume_off",
         translation_key="assume_off",
-        icon="mdi:fan-off",
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda api, remote: api.control_breeze_device(
             remote, state=DeviceState.OFF, update_state=True
@@ -68,7 +60,6 @@ THERMOSTAT_BUTTONS = [
     SwitcherThermostatButtonEntityDescription(
         key="vertical_swing_on",
         translation_key="vertical_swing_on",
-        icon="mdi:autorenew",
         press_fn=lambda api, remote: api.control_breeze_device(
             remote, swing=ThermostatSwing.ON
         ),
@@ -77,7 +68,6 @@ THERMOSTAT_BUTTONS = [
     SwitcherThermostatButtonEntityDescription(
         key="vertical_swing_off",
         translation_key="vertical_swing_off",
-        icon="mdi:autorenew-off",
         press_fn=lambda api, remote: api.control_breeze_device(
             remote, swing=ThermostatSwing.OFF
         ),

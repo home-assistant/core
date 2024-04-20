@@ -1,4 +1,5 @@
 """Vizio SmartCast Device support."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -42,7 +43,6 @@ from .const import (
     DEFAULT_VOLUME_STEP,
     DEVICE_ID,
     DOMAIN,
-    ICON,
     SERVICE_UPDATE_SETTING,
     SUPPORTED_COMMANDS,
     UPDATE_SETTING_SCHEMA,
@@ -166,7 +166,6 @@ class VizioDevice(MediaPlayerEntity):
         self._attr_supported_features = SUPPORTED_COMMANDS[device_class]
 
         # Entity class attributes that will not change
-        self._attr_icon = ICON[device_class]
         unique_id = config_entry.unique_id
         assert unique_id
         self._attr_unique_id = unique_id

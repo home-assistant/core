@@ -1,0 +1,23 @@
+{
+  "entity": {
+    "number": {
+      "manual_minutes": {
+        "default": "mdi:timer-cog-outline"
+      },
+      "frequency_interval_hours": {
+        "default": "mdi:calendar-refresh-outline"
+      },
+      "frequency_duration_minutes": {
+        "default": "mdi:timer-outline"
+      }
+    },
+    "switch": {
+      "manual": {
+        "default": "mdi:sprinkler"
+      },
+      "frequency": {
+        "default": "mdi:calendar-sync-outline"
+      }
+    }
+  }
+}

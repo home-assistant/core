@@ -1,9 +1,10 @@
 """Test the GitHub init file."""
+
 import pytest
 
 from homeassistant.components.github import CONF_REPOSITORIES
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er, icon
 
 from .common import setup_github_integration
 
@@ -20,7 +21,7 @@ async def test_device_registry_cleanup(
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that we remove untracked repositories from the decvice registry."""
+    """Test that we remove untracked repositories from the device registry."""
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         mock_config_entry,
@@ -112,3 +113,22 @@ async def test_subscription_setup_polling_disabled(
         "https://api.github.com/repos/home-assistant/core/events" in x[1]
         for x in aioclient_mock.mock_calls
     )
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_sensor_icons(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test to ensure that all sensor entities have an icon definition."""
+    entities = er.async_entries_for_config_entry(
+        entity_registry,
+        config_entry_id=init_integration.entry_id,
+    )
+
+    icons = await icon.async_get_icons(hass, "entity", integrations=["github"])
+    for entity in entities:
+        assert entity.translation_key is not None
+        assert icons["github"]["sensor"][entity.translation_key] is not None

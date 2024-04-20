@@ -112,8 +112,9 @@ class AsyncConfigEntryAuth:
                 raise GoogleTasksApiError(
                     f"Google Tasks API responded with error ({exception.status_code})"
                 ) from exception
-            data = json.loads(response)
-            _raise_if_error(data)
+            if response:
+                data = json.loads(response)
+                _raise_if_error(data)
 
         for task_id in task_ids:
             batch.add(
