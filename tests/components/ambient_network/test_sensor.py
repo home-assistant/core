@@ -14,11 +14,12 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_platform
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, snapshot_platform
 
 
 @freeze_time("2023-11-08")
 @pytest.mark.parametrize("config_entry", ["AA:AA:AA:AA:AA:AA"], indirect=True)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
     open_api: OpenAPI,
@@ -30,16 +31,7 @@ async def test_sensors(
     """Test all sensors under normal operation."""
     await setup_platform(True, hass, config_entry)
 
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    )
-
-    assert entity_entries
-    for entity_entry in entity_entries:
-        assert hass.states.get(entity_entry.entity_id) == snapshot(
-            name=f"{entity_entry.entity_id}-state"
-        )
-        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 @freeze_time("2023-11-09")

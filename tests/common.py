@@ -22,6 +22,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
 import pytest
+from syrupy import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant import auth, bootstrap, config_entries, loader
@@ -1733,3 +1734,22 @@ def setup_test_component_platform(
 
     mock_platform(hass, f"test.{domain}", platform, built_in=built_in)
     return platform
+
+
+async def snapshot_platform(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    config_entry_id: str,
+) -> None:
+    """Snapshot a platform."""
+    entity_entries = er.async_entries_for_config_entry(entity_registry, config_entry_id)
+    assert entity_entries
+    assert (
+        len({entity_entry.domain for entity_entry in entity_entries}) == 1
+    ), "Please limit the loaded platforms to 1 platform."
+    for entity_entry in entity_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert entity_entry.disabled_by is None, "Please enable all entities."
+        assert (state := hass.states.get(entity_entry.entity_id))
+        assert state == snapshot(name=f"{entity_entry.entity_id}-state")

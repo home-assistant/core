@@ -45,7 +45,7 @@ Mastodon.py==1.8.1
 Pillow==10.3.0
 
 # homeassistant.components.plex
-PlexAPI==4.15.11
+PlexAPI==4.15.12
 
 # homeassistant.components.progettihwsw
 ProgettiHWSW==0.1.3
@@ -140,7 +140,7 @@ TwitterAPI==2.7.12
 WSDiscovery==2.0.0
 
 # homeassistant.components.accuweather
-accuweather==2.1.1
+accuweather==3.0.0
 
 # homeassistant.components.adax
 adax==0.4.0
@@ -222,7 +222,7 @@ aiocomelit==0.9.0
 aiodhcpwatcher==1.0.0
 
 # homeassistant.components.dhcp
-aiodiscover==2.0.0
+aiodiscover==2.1.0
 
 # homeassistant.components.dnsip
 aiodns==3.2.0
@@ -243,7 +243,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==24.0.0
+aioesphomeapi==24.1.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -383,7 +383,7 @@ aiotankerkoenig==0.4.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==74
+aiounifi==75
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -464,7 +464,7 @@ aranet4==2.3.3
 arcam-fmj==1.4.0
 
 # homeassistant.components.arris_tg2492lg
-arris-tg2492lg==1.2.1
+arris-tg2492lg==2.2.0
 
 # homeassistant.components.ampio
 asmog==0.0.6
@@ -576,10 +576,10 @@ bluemaestro-ble==0.2.3
 # bluepy==1.3.0
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.18.0
+bluetooth-adapters==0.19.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==1.4.0
+bluetooth-auto-recovery==1.4.1
 
 # homeassistant.components.bluetooth
 # homeassistant.components.ld2410_ble
@@ -601,7 +601,7 @@ boto3==1.34.51
 bring-api==0.5.7
 
 # homeassistant.components.broadlink
-broadlink==0.18.3
+broadlink==0.19.0
 
 # homeassistant.components.brother
 brother==4.1.0
@@ -658,7 +658,7 @@ colorthief==0.2.1
 concord232==0.15
 
 # homeassistant.components.upc_connect
-connect-box==0.2.8
+connect-box==0.3.1
 
 # homeassistant.components.xiaomi_miio
 construct==2.10.68
@@ -934,7 +934,7 @@ georss-qld-bushfire-alert-client==0.7
 getmac==0.9.4
 
 # homeassistant.components.gios
-gios==3.2.2
+gios==4.0.0
 
 # homeassistant.components.gitter
 gitterpy==0.1.7
@@ -962,7 +962,7 @@ google-cloud-texttospeech==2.12.3
 google-generativeai==0.3.1
 
 # homeassistant.components.nest
-google-nest-sdm==3.0.3
+google-nest-sdm==3.0.4
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1029,7 +1029,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.bluetooth
-habluetooth==2.4.2
+habluetooth==2.8.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.78.0
@@ -1362,7 +1362,7 @@ netdata==1.1.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==2.2.2
+nettigo-air-monitor==3.0.0
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
@@ -1377,7 +1377,7 @@ nextcloudmonitor==1.5.0
 nextcord==2.6.0
 
 # homeassistant.components.nextdns
-nextdns==2.1.0
+nextdns==3.0.0
 
 # homeassistant.components.nibe_heatpump
 nibe==2.8.0
@@ -1941,7 +1941,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.6.2
 
 # homeassistant.components.litterrobot
-pylitterbot==2023.4.11
+pylitterbot==2023.5.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.20.0
@@ -2427,7 +2427,7 @@ refoss-ha==1.2.0
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.2.1
+renault-api==0.2.2
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.1
@@ -2491,6 +2491,9 @@ samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
 samsungtvws[async,encrypted]==2.6.0
+
+# homeassistant.components.sanix
+sanix==1.0.5
 
 # homeassistant.components.satel_integra
 satel-integra==0.3.7
@@ -2863,7 +2866,7 @@ wirelesstagpy==0.8.1
 wled==0.17.0
 
 # homeassistant.components.wolflink
-wolf-comm==0.0.6
+wolf-comm==0.0.7
 
 # homeassistant.components.wyoming
 wyoming==1.5.3
@@ -2908,7 +2911,7 @@ yeelight==0.7.14
 yeelightsunflower==0.0.10
 
 # homeassistant.components.yolink
-yolink-api==0.4.2
+yolink-api==0.4.3
 
 # homeassistant.components.youless
 youless-api==1.0.1

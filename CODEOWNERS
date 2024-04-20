@@ -389,6 +389,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/energyzero/ @klaasnicolaas
 /tests/components/energyzero/ @klaasnicolaas
 /homeassistant/components/enigma2/ @autinerd
+/tests/components/enigma2/ @autinerd
 /homeassistant/components/enocean/ @bdurrer
 /tests/components/enocean/ @bdurrer
 /homeassistant/components/enphase_envoy/ @bdraco @cgarwood @dgomes @joostlek @catsmanac
@@ -598,6 +599,8 @@ build.json @home-assistant/supervisor
 /tests/components/homekit_controller/ @Jc2k @bdraco
 /homeassistant/components/homematic/ @pvizeli
 /tests/components/homematic/ @pvizeli
+/homeassistant/components/homematicip_cloud/ @hahn-th
+/tests/components/homematicip_cloud/ @hahn-th
 /homeassistant/components/homewizard/ @DCSBL
 /tests/components/homewizard/ @DCSBL
 /homeassistant/components/honeywell/ @rdfurman @mkmer
@@ -1186,6 +1189,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/saj/ @fredericvl
 /homeassistant/components/samsungtv/ @chemelli74 @epenet
 /tests/components/samsungtv/ @chemelli74 @epenet
+/homeassistant/components/sanix/ @tomaszsluszniak
+/tests/components/sanix/ @tomaszsluszniak
 /homeassistant/components/scene/ @home-assistant/core
 /tests/components/scene/ @home-assistant/core
 /homeassistant/components/schedule/ @home-assistant/core
@@ -1577,8 +1582,8 @@ build.json @home-assistant/supervisor
 /tests/components/wiz/ @sbidy
 /homeassistant/components/wled/ @frenck
 /tests/components/wled/ @frenck
-/homeassistant/components/wolflink/ @adamkrol93
-/tests/components/wolflink/ @adamkrol93
+/homeassistant/components/wolflink/ @adamkrol93 @mtielen
+/tests/components/wolflink/ @adamkrol93 @mtielen
 /homeassistant/components/workday/ @fabaff @gjohansson-ST
 /tests/components/workday/ @fabaff @gjohansson-ST
 /homeassistant/components/worldclock/ @fabaff
