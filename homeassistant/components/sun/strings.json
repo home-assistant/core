@@ -28,5 +28,26 @@
       "solar_elevation": { "name": "Solar elevation" },
       "solar_rising": { "name": "Solar rising" }
     }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "test_sun_trigger": "Sun trigger 🌞"
+    },
+    "extra_fields": {
+      "bool": "Boolean",
+      "time": "Time ⏰",
+      "number": "Number 🔢",
+      "datetime": "Date and time",
+      "duration": "Duration ⏳",
+      "cv_bool": "Config validation boolean",
+      "plain_bool": "Plain boolean"
+    },
+    "extra_fields_descriptions": {
+      "bool": "Boolean helper text",
+      "time": "A nice time",
+      "number": "Some number between 10 and 100",
+      "datetime": "Today may be the day 📅",
+      "duration": "Duration ⏳"
+    }
   }
 }

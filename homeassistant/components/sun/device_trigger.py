@@ -22,6 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import selector
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
@@ -71,6 +72,20 @@ async def async_get_trigger_capabilities(
                 vol.Required("const", default=True): selector.ConstantSelector(
                     selector.ConstantSelectorConfig(label="Constant", value=True)
                 ),
+                vol.Required("time"): selector.TimeSelector(
+                    selector.TimeSelectorConfig()
+                ),
+                vol.Required("datetime"): selector.DateTimeSelector(
+                    selector.DateTimeSelectorConfig()
+                ),
+                vol.Required("duration"): selector.DurationSelector(
+                    selector.DurationSelectorConfig(enable_day=False)
+                ),
+                vol.Required("number"): selector.NumberSelector(
+                    selector.NumberSelectorConfig(min=10, max=100)
+                ),
+                vol.Required("cv_bool"): cv.boolean,
+                vol.Required("plain_bool"): bool,
             }
         )
     }
