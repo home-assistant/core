@@ -49,7 +49,6 @@ async def test_discount_games(
     assert state.state == STATE_ON
 
     cal_attrs = dict(state.attributes)
-    cal_games = cal_attrs.pop("games")
     assert cal_attrs == {
         "friendly_name": "Epic Games Store Discount games",
         "message": "Shadow of the Tomb Raider: Definitive Edition",
@@ -59,12 +58,6 @@ async def test_discount_games(
         "location": "",
         "description": "In Shadow of the Tomb Raider Definitive Edition experience the final chapter of Lara\u2019s origin as she is forged into the Tomb Raider she is destined to be.\n\nhttps://store.epicgames.com/fr/p/shadow-of-the-tomb-raider",
     }
-    assert [cal_game["title"] for cal_game in cal_games] == [
-        "Shadow of the Tomb Raider: Definitive Edition",
-        "Terraforming Mars",
-        "A Game Of Thrones: The Board Game Digital Edition",
-        "Fallout 3: Game of the Year Edition",
-    ]
 
 
 async def test_free_games(
@@ -81,7 +74,6 @@ async def test_free_games(
     assert state.state == STATE_ON
 
     cal_attrs = dict(state.attributes)
-    cal_games = cal_attrs.pop("games")
     assert cal_attrs == {
         "friendly_name": "Epic Games Store Free games",
         "message": "Warhammer 40,000: Mechanicus - Standard Edition",
@@ -91,12 +83,6 @@ async def test_free_games(
         "location": "",
         "description": "Take control of the most technologically advanced army in the Imperium - The Adeptus Mechanicus. Your every decision will weigh heavily on the outcome of the mission, in this turn-based tactical game. Will you be blessed by the Omnissiah?\n\nhttps://store.epicgames.com/fr/p/warhammer-mechanicus-0e4b71",
     }
-    assert [cal_game["title"] for cal_game in cal_games] == [
-        "Warhammer 40,000: Mechanicus - Standard Edition",
-        "Saturnalia",
-        "Rising Storm 2: Vietnam",
-        "Filament",
-    ]
 
 
 async def test_attribute_not_found(
@@ -114,9 +100,6 @@ async def test_attribute_not_found(
     state = hass.states.get("calendar.epic_games_store_free_games")
     assert state.name == "Epic Games Store Free games"
     assert state.state == STATE_ON
-    cal_attrs = dict(state.attributes)
-    cal_games = cal_attrs.pop("games")
-    assert len(cal_games) == 3
 
 
 async def test_christmas_special(
@@ -132,16 +115,10 @@ async def test_christmas_special(
     state = hass.states.get("calendar.epic_games_store_discount_games")
     assert state.name == "Epic Games Store Discount games"
     assert state.state == STATE_OFF
-    cal_attrs = dict(state.attributes)
-    cal_games = cal_attrs.pop("games")
-    assert len(cal_games) == 0
 
     state = hass.states.get("calendar.epic_games_store_free_games")
     assert state.name == "Epic Games Store Free games"
     assert state.state == STATE_ON
-    cal_attrs = dict(state.attributes)
-    cal_games = cal_attrs.pop("games")
-    assert len(cal_games) == 2
 
 
 async def test_get_events(
@@ -153,12 +130,6 @@ async def test_get_events(
     freezer.move_to("2022-10-30T00:00:00.000Z")
 
     await setup_platform(hass, CALENDAR_DOMAIN)
-
-    # Initial state
-    state = hass.states.get("calendar.epic_games_store_discount_games")
-    cal_attrs = dict(state.attributes)
-    cal_games = cal_attrs.pop("games")
-    assert len(cal_games) == 4
 
     # 1 week in range of data
     result = await hass.services.async_call(
