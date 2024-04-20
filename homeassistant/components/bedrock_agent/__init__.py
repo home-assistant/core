@@ -37,6 +37,18 @@ __all__ = [
 ]
 
 
+# Example migration function
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+    if config_entry.version == 1:
+        hass.config_entries.async_update_entry(
+            config_entry, data=config_entry.data, minor_version=1, version=2
+        )
+
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bedrock Agent from a config entry."""
     hass.data.setdefault(DOMAIN, {})
@@ -58,7 +70,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def options_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
     """Handle options update."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
+    # await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 class BedrockAgent(conversation.AbstractConversationAgent):
@@ -95,10 +107,10 @@ class BedrockAgent(conversation.AbstractConversationAgent):
     async def async_call_bedrock(self, question) -> str:
         """Return result from Amazon Bedrock."""
 
-        question = self.entry.data[CONST_PROMPT_CONTEXT] + question
+        question = self.entry.options[CONST_PROMPT_CONTEXT] + question
 
-        modelId = self.entry.data[CONST_MODEL_ID]
-        knowledgebaseId = self.entry.data.get(CONST_KNOWLEDGEBASE_ID) or ""
+        modelId = self.entry.options[CONST_MODEL_ID]
+        knowledgebaseId = self.entry.options.get(CONST_KNOWLEDGEBASE_ID) or ""
         body = json.dumps({"prompt": question})
 
         if knowledgebaseId != "":

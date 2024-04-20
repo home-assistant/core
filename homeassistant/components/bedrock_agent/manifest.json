@@ -4,7 +4,7 @@
   "after_dependencies": ["assist_pipeline"],
   "codeowners": ["@paul-enno"],
   "config_flow": true,
-  "dependencies": [],
+  "dependencies": ["conversation"],
   "documentation": "https://www.home-assistant.io/integrations/bedrock_agent",
   "integration_type": "service",
   "iot_class": "cloud_push",

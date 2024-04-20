@@ -44,7 +44,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 STEP_MODELCONFIG_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(
+        vol.Optional(
             CONST_PROMPT_CONTEXT,
             default="Provide me a short answer to the following question: ",
         ): str,
@@ -61,9 +61,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     bedrock = boto3.client(
         service_name="bedrock",
-        region_name=data[CONST_REGION],
-        aws_access_key_id=data[CONST_KEY_ID],
-        aws_secret_access_key=data[CONST_KEY_SECRET],
+        region_name=data.get(CONST_REGION),
+        aws_access_key_id=data.get(CONST_KEY_ID),
+        aws_secret_access_key=data.get(CONST_KEY_SECRET),
     )
 
     response = None
@@ -89,8 +89,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 class BedrockAgentConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Amazon Bedrock Agent."""
 
-    VERSION = 1
-    MINOR_VERSION = 2
+    VERSION = 2
+    MINOR_VERSION = 1
 
     def __init__(self) -> None:
         """Initialize options flow."""
@@ -125,9 +125,10 @@ class BedrockAgentConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self.config_data.update(user_input)
             return self.async_create_entry(
-                title=self.config_data[CONST_TITLE], data=self.config_data
+                title=self.config_data.get(CONST_TITLE, "Bedrock"),
+                data=self.config_data,
+                options=user_input,
             )
 
         return self.async_show_form(
@@ -163,53 +164,33 @@ class OptionsFlowHandler(OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage the options."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            try:
-                await validate_input(self.hass, user_input)
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry, data=user_input
-                )
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except HomeAssistantError:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                return self.async_create_entry(
-                    title=self.config_entry.data[CONST_TITLE], data=user_input
-                )
-
+        """Optionsflow to edit model configuration."""
         options_schema = vol.Schema(
             {
                 vol.Required(
-                    CONST_REGION, default=self.config_entry.data[CONST_REGION]
-                ): str,
-                vol.Required(
-                    CONST_KEY_ID, default=self.config_entry.data[CONST_KEY_ID]
-                ): str,
-                vol.Required(
-                    CONST_KEY_SECRET, default=self.config_entry.data[CONST_KEY_SECRET]
-                ): str,
-                vol.Required(
                     CONST_PROMPT_CONTEXT,
-                    default=self.config_entry.data[CONST_PROMPT_CONTEXT],
+                    default=self.config_entry.options.get(CONST_PROMPT_CONTEXT),
                 ): str,
                 vol.Required(
-                    CONST_MODEL_ID, default=self.config_entry.data[CONST_MODEL_ID]
+                    CONST_MODEL_ID,
+                    default=self.config_entry.options.get(CONST_MODEL_ID),
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(options=CONST_MODEL_LIST),
                 ),
                 vol.Optional(
                     CONST_KNOWLEDGEBASE_ID,
-                    default=self.config_entry.data[CONST_KNOWLEDGEBASE_ID],
+                    description={
+                        "suggested_value": self.config_entry.options.get(
+                            CONST_KNOWLEDGEBASE_ID
+                        )
+                    },
                 ): str,
             }
         )
 
-        return self.async_show_form(
-            step_id="init", data_schema=options_schema, errors=errors
-        )
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self.config_entry.title, data=user_input
+            )
+
+        return self.async_show_form(step_id="init", data_schema=options_schema)
