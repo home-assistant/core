@@ -26,9 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
-# For testing
-# TODO: change back
-DEFAULT_SCAN_INTERVAL = datetime.timedelta(minutes=1)
+DEFAULT_SCAN_INTERVAL = datetime.timedelta(minutes=10)
 FAILED_SCAN_INTERVAL = datetime.timedelta(minutes=1)
 DEBOUNCE_TIME = 60  # in seconds
 

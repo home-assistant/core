@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import partial
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, cast
 
@@ -146,6 +147,23 @@ class NWSWeather(CoordinatorWeatherEntity):
         self._attr_unique_id = _calculate_unique_id(entry_data, DAYNIGHT)
         self._attr_device_info = device_info(latitude, longitude)
         self._attr_name = self.station
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(partial(self._remove_forecast_listener, "daily"))
+        self.async_on_remove(partial(self._remove_forecast_listener, "hourly"))
+        self.async_on_remove(partial(self._remove_forecast_listener, "twice_daily"))
+
+        if self.forecast_coordinators["twice_daily"] is not None:
+            self.unsub_forecast["twice_daily"] = self.forecast_coordinators[
+                "twice_daily"
+            ].async_add_listener(partial(self._handle_forecast_update, "twice_daily"))
+
+        if self.forecast_coordinators["hourly"] is not None:
+            self.unsub_forecast["hourly"] = self.forecast_coordinators[
+                "hourly"
+            ].async_add_listener(partial(self._handle_forecast_update, "hourly"))
 
     @property
     def native_temperature(self) -> float | None:
