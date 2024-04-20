@@ -1,7 +1,7 @@
 {
   "domain": "elevenlabstts",
   "name": "ElevenLabs Text-to-Speech (TTS)",
-  "codeowners": [],
+  "codeowners": ["@sorgfresser"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/elevenlabs",
   "integration_type": "service",
