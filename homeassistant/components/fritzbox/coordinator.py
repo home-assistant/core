@@ -69,10 +69,11 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
                 entity_reg.async_remove(entity.entity_id)
 
         device_reg = dr.async_get(self.hass)
+        identifiers = {(DOMAIN, ain) for ain in avaiable_ains}
         for device in dr.async_entries_for_config_entry(
             device_reg, self.config_entry.entry_id
         ):
-            if not any((DOMAIN, ain) in device.identifiers for ain in avaiable_ains):
+            if not set(device.identifiers) & identifiers:
                 LOGGER.debug("Removing obsolete device entry %s", device.name)
                 device_reg.async_update_device(
                     device.id, remove_config_entry_id=self.config_entry.entry_id
