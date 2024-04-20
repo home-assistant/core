@@ -64,6 +64,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX A21": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX BR30": {
         "always_discover": True,
         "domain": "lifx",
@@ -73,6 +77,10 @@ HOMEKIT = {
         "domain": "lifx",
     },
     "LIFX Candle": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX Ceiling": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -108,6 +116,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX Indoor Neon": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Lightstrip": {
         "always_discover": True,
         "domain": "lifx",
@@ -124,11 +136,23 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX PAR38": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Pls": {
         "always_discover": True,
         "domain": "lifx",
     },
     "LIFX Plus": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX Round": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX Square": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -248,6 +272,11 @@ ZEROCONF = {
             "domain": "volumio",
         },
     ],
+    "_aicu-http._tcp.local.": [
+        {
+            "domain": "romy",
+        },
+    ],
     "_airplay._tcp.local.": [
         {
             "domain": "apple_tv",
@@ -338,10 +367,21 @@ ZEROCONF = {
             },
         },
         {
+            "domain": "axis",
+            "properties": {
+                "macaddress": "e82725*",
+            },
+        },
+        {
             "domain": "doorbird",
             "properties": {
                 "macaddress": "1ccae3*",
             },
+        },
+    ],
+    "_bangolufsen._tcp.local.": [
+        {
+            "domain": "bang_olufsen",
         },
     ],
     "_bbxsrv._tcp.local.": [
@@ -399,6 +439,11 @@ ZEROCONF = {
     "_elg._tcp.local.": [
         {
             "domain": "elgato",
+        },
+    ],
+    "_elmax-ssl._tcp.local.": [
+        {
+            "domain": "elmax",
         },
     ],
     "_enphase-envoy._tcp.local.": [
@@ -494,6 +539,12 @@ ZEROCONF = {
                 "vendor": "synology*",
             },
         },
+        {
+            "domain": "tailwind",
+            "properties": {
+                "vendor": "tailwind",
+            },
+        },
     ],
     "_hue._tcp.local.": [
         {
@@ -552,6 +603,11 @@ ZEROCONF = {
             },
         },
     ],
+    "_matter._tcp.local.": [
+        {
+            "domain": "matter",
+        },
+    ],
     "_mediaremotetv._tcp.local.": [
         {
             "domain": "apple_tv",
@@ -604,6 +660,11 @@ ZEROCONF = {
             "domain": "plugwise",
         },
     ],
+    "_powerview-g3._tcp.local.": [
+        {
+            "domain": "hunterdouglas_powerview",
+        },
+    ],
     "_powerview._tcp.local.": [
         {
             "domain": "hunterdouglas_powerview",
@@ -613,6 +674,11 @@ ZEROCONF = {
         {
             "domain": "brother",
             "name": "brother*",
+        },
+    ],
+    "_rabbitair._udp.local.": [
+        {
+            "domain": "rabbitair",
         },
     ],
     "_raop._tcp.local.": [
@@ -694,9 +760,19 @@ ZEROCONF = {
             "domain": "system_bridge",
         },
     ],
+    "_technove-stations._tcp.local.": [
+        {
+            "domain": "technove",
+        },
+    ],
     "_touch-able._tcp.local.": [
         {
             "domain": "apple_tv",
+        },
+    ],
+    "_tvm._tcp.local.": [
+        {
+            "domain": "motionmount",
         },
     ],
     "_uzg-01._tcp.local.": [

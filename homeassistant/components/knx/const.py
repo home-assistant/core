@@ -1,4 +1,5 @@
 """Constants for the KNX integration."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -82,8 +83,20 @@ DATA_HASS_CONFIG: Final = "knx_hass_config"
 ATTR_COUNTER: Final = "counter"
 ATTR_SOURCE: Final = "source"
 
+# dispatcher signal for KNX interface device triggers
+SIGNAL_KNX_TELEGRAM_DICT: Final = "knx_telegram_dict"
+
 AsyncMessageCallbackType = Callable[[Telegram], Awaitable[None]]
 MessageCallbackType = Callable[[Telegram], None]
+
+SERVICE_KNX_SEND: Final = "send"
+SERVICE_KNX_ATTR_PAYLOAD: Final = "payload"
+SERVICE_KNX_ATTR_TYPE: Final = "type"
+SERVICE_KNX_ATTR_RESPONSE: Final = "response"
+SERVICE_KNX_ATTR_REMOVE: Final = "remove"
+SERVICE_KNX_EVENT_REGISTER: Final = "event_register"
+SERVICE_KNX_EXPOSURE_REGISTER: Final = "exposure_register"
+SERVICE_KNX_READ: Final = "read"
 
 
 class KNXConfigEntryData(TypedDict, total=False):

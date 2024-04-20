@@ -1,4 +1,5 @@
 """Support for IoTaWatt Energy monitor."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -36,7 +37,7 @@ from .coordinator import IotawattUpdater
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class IotaWattSensorEntityDescription(SensorEntityDescription):
     """Class describing IotaWatt sensor entities."""
 

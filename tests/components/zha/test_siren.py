@@ -1,13 +1,13 @@
 """Test zha siren."""
+
 from datetime import timedelta
 from unittest.mock import ANY, call, patch
 
 import pytest
 from zigpy.const import SIG_EP_PROFILE
-import zigpy.profiles.zha as zha
+from zigpy.profiles import zha
 import zigpy.zcl
-import zigpy.zcl.clusters.general as general
-import zigpy.zcl.clusters.security as security
+from zigpy.zcl.clusters import general, security
 import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.siren import (
@@ -85,13 +85,16 @@ async def test_siren(hass: HomeAssistant, siren) -> None:
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # turn on from HA
-    with patch(
-        "zigpy.device.Device.request",
-        return_value=[0x00, zcl_f.Status.SUCCESS],
-    ), patch(
-        "zigpy.zcl.Cluster.request",
-        side_effect=zigpy.zcl.Cluster.request,
-        autospec=True,
+    with (
+        patch(
+            "zigpy.device.Device.request",
+            return_value=[0x00, zcl_f.Status.SUCCESS],
+        ),
+        patch(
+            "zigpy.zcl.Cluster.request",
+            side_effect=zigpy.zcl.Cluster.request,
+            autospec=True,
+        ),
     ):
         # turn on via UI
         await hass.services.async_call(
@@ -117,13 +120,16 @@ async def test_siren(hass: HomeAssistant, siren) -> None:
     assert hass.states.get(entity_id).state == STATE_ON
 
     # turn off from HA
-    with patch(
-        "zigpy.device.Device.request",
-        return_value=[0x01, zcl_f.Status.SUCCESS],
-    ), patch(
-        "zigpy.zcl.Cluster.request",
-        side_effect=zigpy.zcl.Cluster.request,
-        autospec=True,
+    with (
+        patch(
+            "zigpy.device.Device.request",
+            return_value=[0x01, zcl_f.Status.SUCCESS],
+        ),
+        patch(
+            "zigpy.zcl.Cluster.request",
+            side_effect=zigpy.zcl.Cluster.request,
+            autospec=True,
+        ),
     ):
         # turn off via UI
         await hass.services.async_call(
@@ -149,13 +155,16 @@ async def test_siren(hass: HomeAssistant, siren) -> None:
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # turn on from HA
-    with patch(
-        "zigpy.device.Device.request",
-        return_value=[0x00, zcl_f.Status.SUCCESS],
-    ), patch(
-        "zigpy.zcl.Cluster.request",
-        side_effect=zigpy.zcl.Cluster.request,
-        autospec=True,
+    with (
+        patch(
+            "zigpy.device.Device.request",
+            return_value=[0x00, zcl_f.Status.SUCCESS],
+        ),
+        patch(
+            "zigpy.zcl.Cluster.request",
+            side_effect=zigpy.zcl.Cluster.request,
+            autospec=True,
+        ),
     ):
         # turn on via UI
         await hass.services.async_call(

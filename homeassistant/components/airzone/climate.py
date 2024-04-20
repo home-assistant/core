@@ -1,4 +1,5 @@
 """Support for the Airzone climate."""
+
 from __future__ import annotations
 
 from typing import Any, Final
@@ -117,6 +118,7 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
     _attr_name = None
     _speeds: dict[int, str] = {}
     _speeds_reverse: dict[str, int] = {}
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -129,7 +131,11 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         super().__init__(coordinator, entry, system_zone_id, zone_data)
 
         self._attr_unique_id = f"{self._attr_unique_id}_{system_zone_id}"
-        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
+        )
         self._attr_target_temperature_step = API_TEMPERATURE_STEP
         self._attr_temperature_unit = TEMP_UNIT_LIB_TO_HASS[
             self.get_airzone_value(AZD_TEMP_UNIT)
@@ -248,7 +254,6 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
             self._attr_hvac_mode = HVACMode.OFF
         self._attr_max_temp = self.get_airzone_value(AZD_TEMP_MAX)
         self._attr_min_temp = self.get_airzone_value(AZD_TEMP_MIN)
-        self._attr_target_temperature = self.get_airzone_value(AZD_TEMP_SET)
         if self.supported_features & ClimateEntityFeature.FAN_MODE:
             self._attr_fan_mode = self._speeds.get(self.get_airzone_value(AZD_SPEED))
         if self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
@@ -258,3 +263,5 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
             self._attr_target_temperature_low = self.get_airzone_value(
                 AZD_HEAT_TEMP_SET
             )
+        else:
+            self._attr_target_temperature = self.get_airzone_value(AZD_TEMP_SET)

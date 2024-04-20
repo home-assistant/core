@@ -1,5 +1,6 @@
 """Fixtures for cloud tests."""
-from collections.abc import AsyncGenerator
+
+from collections.abc import AsyncGenerator, Callable, Coroutine
 from typing import Any
 from unittest.mock import DEFAULT, MagicMock, PropertyMock, patch
 
@@ -15,8 +16,20 @@ import jwt
 import pytest
 
 from homeassistant.components.cloud import CloudClient, const, prefs
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from . import mock_cloud, mock_cloud_prefs
+
+
+@pytest.fixture(autouse=True)
+async def load_homeassistant(hass: HomeAssistant) -> None:
+    """Load the homeassistant integration.
+
+    This is needed for the cloud integration to work.
+    """
+    assert await async_setup_component(hass, "homeassistant", {})
 
 
 @pytest.fixture(name="cloud")
@@ -62,7 +75,8 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock, None]:
                 f"{name}_server": server
                 for name, server in DEFAULT_SERVERS[mode].items()
             }
-            mock_cloud.configure_mock(**default_values, **servers, **kwargs)
+            mock_cloud.configure_mock(**default_values, **servers)
+            mock_cloud.configure_mock(**kwargs)
             mock_cloud.mode = mode
 
             # Properties that we mock as attributes from the constructor.
@@ -74,16 +88,9 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock, None]:
 
         # Attributes that we mock with default values.
 
-        mock_cloud.id_token = jwt.encode(
-            {
-                "email": "hello@home-assistant.io",
-                "custom:sub-exp": "2018-01-03",
-                "cognito:username": "abcdefghjkl",
-            },
-            "test",
-        )
-        mock_cloud.access_token = "test_access_token"
-        mock_cloud.refresh_token = "test_refresh_token"
+        mock_cloud.id_token = None
+        mock_cloud.access_token = None
+        mock_cloud.refresh_token = None
 
         # Properties that we keep as properties.
 
@@ -101,7 +108,23 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock, None]:
         claims = PropertyMock(side_effect=mock_claims)
         type(mock_cloud).claims = claims
 
+        def mock_is_connected() -> bool:
+            """Return True if we are connected."""
+            return mock_cloud.iot.state == STATE_CONNECTED
+
+        is_connected = PropertyMock(side_effect=mock_is_connected)
+        type(mock_cloud).is_connected = is_connected
+        type(mock_cloud.iot).connected = is_connected
+
+        def mock_username() -> bool:
+            """Return the subscription username."""
+            return "abcdefghjkl"
+
+        username = PropertyMock(side_effect=mock_username)
+        type(mock_cloud).username = username
+
         # Properties that we mock as attributes.
+        mock_cloud.expiration_date = utcnow()
         mock_cloud.subscription_expired = False
 
         # Methods that we mock with a custom side effect.
@@ -111,18 +134,60 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock, None]:
 
             When called, it should call the on_start callback.
             """
+            mock_cloud.id_token = jwt.encode(
+                {
+                    "email": "hello@home-assistant.io",
+                    "custom:sub-exp": "2018-01-03",
+                    "cognito:username": "abcdefghjkl",
+                },
+                "test",
+            )
+            mock_cloud.access_token = "test_access_token"
+            mock_cloud.refresh_token = "test_refresh_token"
             on_start_callback = mock_cloud.register_on_start.call_args[0][0]
             await on_start_callback()
 
         mock_cloud.login.side_effect = mock_login
 
+        async def mock_logout() -> None:
+            """Mock logout."""
+            mock_cloud.id_token = None
+            mock_cloud.access_token = None
+            mock_cloud.refresh_token = None
+            await mock_cloud.stop()
+            await mock_cloud.client.logout_cleanups()
+
+        mock_cloud.logout.side_effect = mock_logout
+
         yield mock_cloud
+
+
+@pytest.fixture(name="set_cloud_prefs")
+def set_cloud_prefs_fixture(
+    cloud: MagicMock,
+) -> Callable[[dict[str, Any]], Coroutine[Any, Any, None]]:
+    """Fixture for cloud component."""
+
+    async def set_cloud_prefs(prefs_settings: dict[str, Any]) -> None:
+        """Set cloud prefs."""
+        prefs_to_set = cloud.client.prefs.as_dict()
+        prefs_to_set.pop(prefs.PREF_ALEXA_DEFAULT_EXPOSE)
+        prefs_to_set.pop(prefs.PREF_GOOGLE_DEFAULT_EXPOSE)
+        prefs_to_set.update(prefs_settings)
+        await cloud.client.prefs.async_update(**prefs_to_set)
+
+    return set_cloud_prefs
 
 
 @pytest.fixture(autouse=True)
 def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
     """Mock the TTS cache dir with empty dir."""
     return mock_tts_cache_dir
+
+
+@pytest.fixture(autouse=True)
+def tts_mutagen_mock_fixture_autouse(tts_mutagen_mock):
+    """Mock writing tags."""
 
 
 @pytest.fixture(autouse=True)
@@ -171,8 +236,9 @@ def mock_cloud_login(hass, mock_cloud_setup):
 @pytest.fixture(name="mock_auth")
 def mock_auth_fixture():
     """Mock check token."""
-    with patch("hass_nabucasa.auth.CognitoAuth.async_check_token"), patch(
-        "hass_nabucasa.auth.CognitoAuth.async_renew_access_token"
+    with (
+        patch("hass_nabucasa.auth.CognitoAuth.async_check_token"),
+        patch("hass_nabucasa.auth.CognitoAuth.async_renew_access_token"),
     ):
         yield
 

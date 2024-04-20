@@ -1,0 +1,27 @@
+printer_connect:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: octoprint
+    profile_name:
+      required: false
+      selector:
+        text:
+    port:
+      required: false
+      selector:
+        text:
+    baudrate:
+      required: false
+      selector:
+        select:
+          options:
+            - "9600"
+            - "19200"
+            - "38400"
+            - "57600"
+            - "115200"
+            - "230400"
+            - "250000"

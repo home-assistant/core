@@ -2,9 +2,27 @@
   "config": {
     "step": {
       "user": {
+        "title": "Configure your Whirlpool account",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "region": "Region",
+          "brand": "Brand"
+        },
+        "data_description": {
+          "brand": "Please choose the brand of the mobile app you use, or the brand of the appliances in your account"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Correct your Whirlpool account credentials",
+        "description": "For 'brand', please choose the brand of the mobile app you use, or the brand of the appliances in your account",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "region": "Region",
+          "brand": "Brand"
+        },
+        "data_description": {
+          "brand": "Please choose the brand of the mobile app you use, or the brand of the appliances in your account"
         }
       }
     },

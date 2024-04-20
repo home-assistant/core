@@ -1,4 +1,5 @@
 """Support for radiotherm switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -34,11 +35,6 @@ class RadioThermHoldSwitch(RadioThermostatEntity, SwitchEntity):
         """Initialize the hold mode switch."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.init_data.mac}_hold"
-
-    @property
-    def icon(self) -> str:
-        """Return the icon for the switch."""
-        return "mdi:timer-off" if self.is_on else "mdi:timer"
 
     @callback
     def _process_data(self) -> None:

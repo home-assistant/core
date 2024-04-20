@@ -1,4 +1,5 @@
 """Component providing support for Reolink IP cameras."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -24,7 +25,7 @@ from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescrip
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ReolinkCameraEntityDescription(
     CameraEntityDescription,
     ReolinkChannelEntityDescription,

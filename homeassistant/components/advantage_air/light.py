@@ -1,4 +1,5 @@
 """Light platform for Advantage Air integration."""
+
 from typing import Any
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
@@ -40,6 +41,7 @@ async def async_setup_entry(
 class AdvantageAirLight(AdvantageAirEntity, LightEntity):
     """Representation of Advantage Air Light."""
 
+    _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_name = None
 
@@ -82,7 +84,8 @@ class AdvantageAirLight(AdvantageAirEntity, LightEntity):
 class AdvantageAirLightDimmable(AdvantageAirLight):
     """Representation of Advantage Air Dimmable Light."""
 
-    _attr_supported_color_modes = {ColorMode.ONOFF, ColorMode.BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     def __init__(self, instance: AdvantageAirData, light: dict[str, Any]) -> None:
         """Initialize an Advantage Air Dimmable Light."""
@@ -106,13 +109,15 @@ class AdvantageAirLightDimmable(AdvantageAirLight):
 class AdvantageAirThingLight(AdvantageAirThingEntity, LightEntity):
     """Representation of Advantage Air Light controlled by myThings."""
 
+    _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
 
 class AdvantageAirThingLightDimmable(AdvantageAirThingEntity, LightEntity):
     """Representation of Advantage Air Dimmable Light controlled by myThings."""
 
-    _attr_supported_color_modes = {ColorMode.ONOFF, ColorMode.BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     @property
     def brightness(self) -> int:

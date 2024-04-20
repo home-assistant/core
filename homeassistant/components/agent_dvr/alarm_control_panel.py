@@ -1,4 +1,5 @@
 """Support for Agent DVR Alarm Control Panels."""
+
 from __future__ import annotations
 
 from homeassistant.components.alarm_control_panel import (
@@ -17,8 +18,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONNECTION, DOMAIN as AGENT_DOMAIN
-
-ICON = "mdi:security"
 
 CONF_HOME_MODE_NAME = "home"
 CONF_AWAY_MODE_NAME = "away"
@@ -41,7 +40,6 @@ async def async_setup_entry(
 class AgentBaseStation(AlarmControlPanelEntity):
     """Representation of an Agent DVR Alarm Control Panel."""
 
-    _attr_icon = ICON
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY

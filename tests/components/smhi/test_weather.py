@@ -1,5 +1,5 @@
 """Test for the smhi weather entity."""
-import asyncio
+
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
@@ -10,7 +10,6 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.smhi.const import ATTR_SMHI_THUNDER_PROBABILITY
 from homeassistant.components.smhi.weather import CONDITION_CLASSES, RETRY_TIMEOUT
 from homeassistant.components.weather import (
-    ATTR_FORECAST,
     ATTR_FORECAST_CONDITION,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
@@ -65,10 +64,6 @@ async def test_setup_hass(
     assert state
     assert state.state == "fog"
     assert state.attributes == snapshot
-    assert len(state.attributes["forecast"]) == 10
-
-    forecast = state.attributes["forecast"][1]
-    assert forecast == snapshot
 
 
 async def test_properties_no_data(hass: HomeAssistant) -> None:
@@ -95,7 +90,6 @@ async def test_properties_no_data(hass: HomeAssistant) -> None:
     assert ATTR_WEATHER_VISIBILITY not in state.attributes
     assert ATTR_WEATHER_WIND_SPEED not in state.attributes
     assert ATTR_WEATHER_WIND_BEARING not in state.attributes
-    assert ATTR_FORECAST not in state.attributes
     assert ATTR_WEATHER_CLOUD_COVERAGE not in state.attributes
     assert ATTR_SMHI_THUNDER_PROBABILITY not in state.attributes
     assert ATTR_WEATHER_WIND_GUST_SPEED not in state.attributes
@@ -165,12 +159,15 @@ async def test_properties_unknown_symbol(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.smhi.weather.Smhi.async_get_forecast",
-        return_value=testdata,
-    ), patch(
-        "homeassistant.components.smhi.weather.Smhi.async_get_forecast_hour",
-        return_value=None,
+    with (
+        patch(
+            "homeassistant.components.smhi.weather.Smhi.async_get_forecast",
+            return_value=testdata,
+        ),
+        patch(
+            "homeassistant.components.smhi.weather.Smhi.async_get_forecast_hour",
+            return_value=None,
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -180,14 +177,20 @@ async def test_properties_unknown_symbol(hass: HomeAssistant) -> None:
     assert state
     assert state.name == "test"
     assert state.state == STATE_UNKNOWN
-    assert ATTR_FORECAST in state.attributes
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECASTS,
+        {"entity_id": ENTITY_ID, "type": "daily"},
+        blocking=True,
+        return_response=True,
+    )
     assert all(
         forecast[ATTR_FORECAST_CONDITION] is None
-        for forecast in state.attributes[ATTR_FORECAST]
+        for forecast in response[ENTITY_ID]["forecast"]
     )
 
 
-@pytest.mark.parametrize("error", [SmhiForecastException(), asyncio.TimeoutError()])
+@pytest.mark.parametrize("error", [SmhiForecastException(), TimeoutError()])
 async def test_refresh_weather_forecast_retry(
     hass: HomeAssistant, error: Exception
 ) -> None:

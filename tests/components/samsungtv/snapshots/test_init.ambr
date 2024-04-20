@@ -9,11 +9,12 @@
         'TV',
         'HDMI',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 20413>,
+      'supported_features': <MediaPlayerEntityFeature: 24509>,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.any',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -40,6 +41,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -48,7 +51,7 @@
     'original_name': None,
     'platform': 'samsungtv',
     'previous_unique_id': None,
-    'supported_features': <MediaPlayerEntityFeature: 20413>,
+    'supported_features': <MediaPlayerEntityFeature: 24509>,
     'translation_key': None,
     'unique_id': 'sample-entry-id',
     'unit_of_measurement': None,

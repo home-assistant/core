@@ -1,4 +1,5 @@
 """Support for the Fitbit API."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -146,7 +147,7 @@ def _int_value_or_none(field: str) -> Callable[[dict[str, Any]], int | None]:
     return convert
 
 
-@dataclass
+@dataclass(frozen=True)
 class FitbitSensorEntityDescription(SensorEntityDescription):
     """Describes Fitbit sensor entity."""
 

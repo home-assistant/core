@@ -1,4 +1,5 @@
 """HomeAssistant specific aiohttp Site."""
+
 from __future__ import annotations
 
 import asyncio
@@ -29,7 +30,6 @@ class HomeAssistantTCPSite(web.BaseSite):
         host: None | str | list[str],
         port: int,
         *,
-        shutdown_timeout: float = 10.0,
         ssl_context: SSLContext | None = None,
         backlog: int = 128,
         reuse_address: bool | None = None,
@@ -38,7 +38,6 @@ class HomeAssistantTCPSite(web.BaseSite):
         """Initialize HomeAssistantTCPSite."""
         super().__init__(
             runner,
-            shutdown_timeout=shutdown_timeout,
             ssl_context=ssl_context,
             backlog=backlog,
         )

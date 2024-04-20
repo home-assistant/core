@@ -1,7 +1,7 @@
 """Support for RESTful switches."""
+
 from __future__ import annotations
 
-import asyncio
 from http import HTTPStatus
 import logging
 from typing import Any
@@ -117,7 +117,7 @@ async def async_setup_platform(
             "Missing resource or schema in configuration. "
             "Add http:// or https:// to your URL"
         )
-    except (asyncio.TimeoutError, httpx.RequestError) as exc:
+    except (TimeoutError, httpx.RequestError) as exc:
         raise PlatformNotReady(f"No route to resource/endpoint: {resource}") from exc
 
 
@@ -177,7 +177,7 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
                 _LOGGER.error(
                     "Can't turn on %s. Is resource/endpoint offline?", self._resource
                 )
-        except (asyncio.TimeoutError, httpx.RequestError):
+        except (TimeoutError, httpx.RequestError):
             _LOGGER.error("Error while switching on %s", self._resource)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -192,7 +192,7 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
                 _LOGGER.error(
                     "Can't turn off %s. Is resource/endpoint offline?", self._resource
                 )
-        except (asyncio.TimeoutError, httpx.RequestError):
+        except (TimeoutError, httpx.RequestError):
             _LOGGER.error("Error while switching off %s", self._resource)
 
     async def set_device_state(self, body: Any) -> httpx.Response:
@@ -202,25 +202,25 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
         rendered_headers = template.render_complex(self._headers, parse_result=False)
         rendered_params = template.render_complex(self._params)
 
-        async with asyncio.timeout(self._timeout):
-            req: httpx.Response = await getattr(websession, self._method)(
-                self._resource,
-                auth=self._auth,
-                content=bytes(body, "utf-8"),
-                headers=rendered_headers,
-                params=rendered_params,
-            )
-            return req
+        req: httpx.Response = await getattr(websession, self._method)(
+            self._resource,
+            auth=self._auth,
+            content=bytes(body, "utf-8"),
+            headers=rendered_headers,
+            params=rendered_params,
+            timeout=self._timeout,
+        )
+        return req
 
     async def async_update(self) -> None:
         """Get the current state, catching errors."""
         req = None
         try:
             req = await self.get_device_state(self.hass)
-        except asyncio.TimeoutError:
+        except (TimeoutError, httpx.TimeoutException):
             _LOGGER.exception("Timed out while fetching data")
-        except httpx.RequestError as err:
-            _LOGGER.exception("Error while fetching data: %s", err)
+        except httpx.RequestError:
+            _LOGGER.exception("Error while fetching data")
 
         if req:
             self._process_manual_data(req.text)
@@ -233,14 +233,14 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
         rendered_headers = template.render_complex(self._headers, parse_result=False)
         rendered_params = template.render_complex(self._params)
 
-        async with asyncio.timeout(self._timeout):
-            req = await websession.get(
-                self._state_resource,
-                auth=self._auth,
-                headers=rendered_headers,
-                params=rendered_params,
-            )
-            text = req.text
+        req = await websession.get(
+            self._state_resource,
+            auth=self._auth,
+            headers=rendered_headers,
+            params=rendered_params,
+            timeout=self._timeout,
+        )
+        text = req.text
 
         if self._is_on_template is not None:
             text = self._is_on_template.async_render_with_possible_json_value(

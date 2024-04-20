@@ -1,10 +1,14 @@
 """Offer API to configure Home Assistant auth."""
+
+from __future__ import annotations
+
 from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.auth.models import User
 from homeassistant.components import websocket_api
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 WS_TYPE_LIST = "config/auth/list"
 SCHEMA_WS_LIST = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
@@ -17,7 +21,8 @@ SCHEMA_WS_DELETE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
 )
 
 
-async def async_setup(hass):
+@callback
+def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Home Assistant views."""
     websocket_api.async_register_command(
         hass, WS_TYPE_LIST, websocket_list, SCHEMA_WS_LIST
@@ -151,7 +156,7 @@ async def websocket_update(
     )
 
 
-def _user_info(user):
+def _user_info(user: User) -> dict[str, Any]:
     """Format a user."""
 
     ha_username = next(

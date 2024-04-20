@@ -116,7 +116,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 async def mock_added_config_entry(
-    mock_add_config_entry: Callable[[], Awaitable[MockConfigEntry]]
+    mock_add_config_entry: Callable[[], Awaitable[MockConfigEntry]],
 ) -> MockConfigEntry:
     """Mock ConfigEntry that's been added to HA."""
     return await mock_add_config_entry()

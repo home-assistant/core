@@ -1,17 +1,18 @@
 """Coordinator for the Islamic prayer times integration."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
 from typing import Any, cast
 
-from prayer_times_calculator import PrayerTimesCalculator, exceptions
-from requests.exceptions import ConnectionError as ConnError
+from prayer_times_calculator_offline import PrayerTimesCalculator
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers.event import async_call_later, async_track_point_in_time
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.event import async_track_point_in_time
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -36,12 +37,14 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Islamic Prayer client."""
-        self.event_unsub: CALLBACK_TYPE | None = None
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
         )
+        self.latitude = self.config_entry.data[CONF_LATITUDE]
+        self.longitude = self.config_entry.data[CONF_LONGITUDE]
+        self.event_unsub: CALLBACK_TYPE | None = None
 
     @property
     def calc_method(self) -> str:
@@ -70,8 +73,8 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
     def get_new_prayer_times(self) -> dict[str, Any]:
         """Fetch prayer times for today."""
         calc = PrayerTimesCalculator(
-            latitude=self.hass.config.latitude,
-            longitude=self.hass.config.longitude,
+            latitude=self.latitude,
+            longitude=self.longitude,
             calculation_method=self.calc_method,
             latitudeAdjustmentMethod=self.lat_adj_method,
             midnightMode=self.midnight_mode,
@@ -138,13 +141,7 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
 
     async def _async_update_data(self) -> dict[str, datetime]:
         """Update sensors with new prayer times."""
-        try:
-            prayer_times = await self.hass.async_add_executor_job(
-                self.get_new_prayer_times
-            )
-        except (exceptions.InvalidResponseError, ConnError) as err:
-            async_call_later(self.hass, 60, self.async_request_update)
-            raise UpdateFailed from err
+        prayer_times = self.get_new_prayer_times()
 
         # introduced in prayer-times-calculator 0.0.8
         prayer_times.pop("date", None)

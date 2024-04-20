@@ -1,4 +1,5 @@
 """Consts for the OpenWeatherMap."""
+
 from __future__ import annotations
 
 from homeassistant.components.weather import (

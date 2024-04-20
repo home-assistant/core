@@ -1,4 +1,5 @@
 """The tests for the MQTT siren platform."""
+
 import copy
 from typing import Any
 from unittest.mock import patch
@@ -16,7 +17,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 
@@ -57,13 +57,6 @@ from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {siren.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
-
-
-@pytest.fixture(autouse=True)
-def siren_platform_only():
-    """Only setup the siren platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SIREN]):
-        yield
 
 
 async def async_turn_on(
@@ -839,7 +832,7 @@ async def test_command_templates(
     mqtt_mock.async_publish.assert_any_call(
         "test-topic", "CMD: ON, DURATION: 22, TONE: ping, VOLUME: 0.88", 0, False
     )
-    mqtt_mock.async_publish.call_count == 1
+    assert mqtt_mock.async_publish.call_count == 1
     mqtt_mock.reset_mock()
     await async_turn_off(
         hass,
@@ -848,7 +841,7 @@ async def test_command_templates(
     mqtt_mock.async_publish.assert_any_call(
         "test-topic", "CMD: OFF, DURATION: , TONE: , VOLUME:", 0, False
     )
-    mqtt_mock.async_publish.call_count == 1
+    assert mqtt_mock.async_publish.call_count == 1
     mqtt_mock.reset_mock()
 
     await async_turn_on(
@@ -869,7 +862,7 @@ async def test_command_templates(
         entity_id="siren.milk",
     )
     mqtt_mock.async_publish.assert_any_call("test-topic", "CMD_OFF: OFF", 0, False)
-    mqtt_mock.async_publish.call_count == 1
+    assert mqtt_mock.async_publish.call_count == 2
     mqtt_mock.reset_mock()
 
 
@@ -1143,3 +1136,32 @@ async def test_skipped_async_ha_write_state(
     """Test a write state command is only called when there is change."""
     await mqtt_mock_entry()
     await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            siren.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "state_topic": "test-topic",
+                    "state_value_template": "{{ value_json.some_var * 1 }}",
+                },
+            ),
+        )
+    ],
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
+    )

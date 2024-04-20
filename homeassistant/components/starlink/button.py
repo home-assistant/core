@@ -31,18 +31,11 @@ async def async_setup_entry(
     )
 
 
-@dataclass
-class StarlinkButtonEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class StarlinkButtonEntityDescription(ButtonEntityDescription):
+    """Describes a Starlink button entity."""
 
     press_fn: Callable[[StarlinkUpdateCoordinator], Awaitable[None]]
-
-
-@dataclass
-class StarlinkButtonEntityDescription(
-    ButtonEntityDescription, StarlinkButtonEntityDescriptionMixin
-):
-    """Describes a Starlink button entity."""
 
 
 class StarlinkButtonEntity(StarlinkEntity, ButtonEntity):

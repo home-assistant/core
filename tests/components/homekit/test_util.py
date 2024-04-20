@@ -1,4 +1,5 @@
 """Test HomeKit util module."""
+
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -66,7 +67,6 @@ def _mock_socket(failure_attempts: int = 0) -> MagicMock:
         attempts += 1
         if attempts <= failure_attempts:
             raise OSError
-        return
 
     mock_socket.bind = Mock(side_effect=_simulate_bind)
     return mock_socket
@@ -341,9 +341,12 @@ async def test_port_is_available_skips_existing_entries(hass: HomeAssistant) -> 
     ):
         assert async_port_is_available(next_port)
 
-    with pytest.raises(OSError), patch(
-        "homeassistant.components.homekit.util.socket.socket",
-        return_value=_mock_socket(10),
+    with (
+        pytest.raises(OSError),
+        patch(
+            "homeassistant.components.homekit.util.socket.socket",
+            return_value=_mock_socket(10),
+        ),
     ):
         async_find_next_available_port(hass, 65530)
 

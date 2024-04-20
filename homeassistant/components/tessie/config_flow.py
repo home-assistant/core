@@ -1,4 +1,5 @@
 """Config Flow for Tessie integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -9,18 +10,19 @@ from aiohttp import ClientConnectionError, ClientResponseError
 from tessie_api import get_state_of_all_vehicles
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
 TESSIE_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
+DESCRIPTION_PLACEHOLDERS = {
+    "url": "[my.tessie.com/settings/api](https://my.tessie.com/settings/api)"
+}
 
 
-class TessieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class TessieConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config Tessie API connection."""
 
     VERSION = 1
@@ -31,7 +33,7 @@ class TessieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: Mapping[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Get configuration from the user."""
         errors: dict[str, str] = {}
         if user_input:
@@ -57,10 +59,13 @@ class TessieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=TESSIE_SCHEMA,
+            description_placeholders=DESCRIPTION_PLACEHOLDERS,
             errors=errors,
         )
 
-    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, user_input: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle re-auth."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -69,7 +74,7 @@ class TessieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: Mapping[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Get update API Key from the user."""
         errors: dict[str, str] = {}
         assert self._reauth_entry
@@ -98,5 +103,6 @@ class TessieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=TESSIE_SCHEMA,
+            description_placeholders=DESCRIPTION_PLACEHOLDERS,
             errors=errors,
         )

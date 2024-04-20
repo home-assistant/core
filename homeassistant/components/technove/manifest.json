@@ -1,0 +1,11 @@
+{
+  "domain": "technove",
+  "name": "TechnoVE",
+  "codeowners": ["@Moustachauve"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/technove",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "requirements": ["python-technove==1.2.2"],
+  "zeroconf": ["_technove-stations._tcp.local."]
+}

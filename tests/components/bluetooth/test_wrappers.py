@@ -1,4 +1,5 @@
 """Tests for the Bluetooth integration."""
+
 from __future__ import annotations
 
 from contextlib import contextmanager
@@ -106,7 +107,7 @@ class FakeBleakClientRaisesOnConnect(BaseFakeBleakClient):
 
     async def connect(self, *args, **kwargs):
         """Connect."""
-        raise Exception("Test exception")
+        raise ConnectionError("Test exception")
 
 
 def _generate_ble_device_and_adv_data(
@@ -187,8 +188,8 @@ def _generate_scanners_with_fake_devices(hass):
     for device, adv_data in hci1_device_advs.values():
         scanner_hci1.inject_advertisement(device, adv_data)
 
-    cancel_hci0 = manager.async_register_scanner(scanner_hci0, True, 2)
-    cancel_hci1 = manager.async_register_scanner(scanner_hci1, True, 1)
+    cancel_hci0 = manager.async_register_scanner(scanner_hci0, connection_slots=2)
+    cancel_hci1 = manager.async_register_scanner(scanner_hci1, connection_slots=1)
 
     return hci0_device_advs, cancel_hci0, cancel_hci1
 
@@ -206,11 +207,12 @@ async def test_test_switch_adapters_when_out_of_slots(
         hass
     )
     # hci0 has 2 slots, hci1 has 1 slot
-    with patch.object(
-        manager.slot_manager, "release_slot"
-    ) as release_slot_mock, patch.object(
-        manager.slot_manager, "allocate_slot", return_value=True
-    ) as allocate_slot_mock:
+    with (
+        patch.object(manager.slot_manager, "release_slot") as release_slot_mock,
+        patch.object(
+            manager.slot_manager, "allocate_slot", return_value=True
+        ) as allocate_slot_mock,
+    ):
         ble_device = hci0_device_advs["00:00:00:00:00:01"][0]
         client = bleak.BleakClient(ble_device)
         assert await client.connect() is True
@@ -218,11 +220,12 @@ async def test_test_switch_adapters_when_out_of_slots(
         assert release_slot_mock.call_count == 0
 
     # All adapters are out of slots
-    with patch.object(
-        manager.slot_manager, "release_slot"
-    ) as release_slot_mock, patch.object(
-        manager.slot_manager, "allocate_slot", return_value=False
-    ) as allocate_slot_mock:
+    with (
+        patch.object(manager.slot_manager, "release_slot") as release_slot_mock,
+        patch.object(
+            manager.slot_manager, "allocate_slot", return_value=False
+        ) as allocate_slot_mock,
+    ):
         ble_device = hci0_device_advs["00:00:00:00:00:02"][0]
         client = bleak.BleakClient(ble_device)
         with pytest.raises(bleak.exc.BleakError):
@@ -236,14 +239,15 @@ async def test_test_switch_adapters_when_out_of_slots(
             return True
         return False
 
-    with patch.object(
-        manager.slot_manager, "release_slot"
-    ) as release_slot_mock, patch.object(
-        manager.slot_manager, "allocate_slot", _allocate_slot_mock
-    ) as allocate_slot_mock:
+    with (
+        patch.object(manager.slot_manager, "release_slot") as release_slot_mock,
+        patch.object(
+            manager.slot_manager, "allocate_slot", _allocate_slot_mock
+        ) as allocate_slot_mock,
+    ):
         ble_device = hci0_device_advs["00:00:00:00:00:03"][0]
         client = bleak.BleakClient(ble_device)
-        await client.connect() is True
+        assert await client.connect() is True
         assert release_slot_mock.call_count == 0
 
     cancel_hci0()
@@ -263,11 +267,12 @@ async def test_release_slot_on_connect_failure(
         hass
     )
     # hci0 has 2 slots, hci1 has 1 slot
-    with patch.object(
-        manager.slot_manager, "release_slot"
-    ) as release_slot_mock, patch.object(
-        manager.slot_manager, "allocate_slot", return_value=True
-    ) as allocate_slot_mock:
+    with (
+        patch.object(manager.slot_manager, "release_slot") as release_slot_mock,
+        patch.object(
+            manager.slot_manager, "allocate_slot", return_value=True
+        ) as allocate_slot_mock,
+    ):
         ble_device = hci0_device_advs["00:00:00:00:00:01"][0]
         client = bleak.BleakClient(ble_device)
         assert await client.connect() is False
@@ -291,15 +296,17 @@ async def test_release_slot_on_connect_exception(
         hass
     )
     # hci0 has 2 slots, hci1 has 1 slot
-    with patch.object(
-        manager.slot_manager, "release_slot"
-    ) as release_slot_mock, patch.object(
-        manager.slot_manager, "allocate_slot", return_value=True
-    ) as allocate_slot_mock:
+    with (
+        patch.object(manager.slot_manager, "release_slot") as release_slot_mock,
+        patch.object(
+            manager.slot_manager, "allocate_slot", return_value=True
+        ) as allocate_slot_mock,
+    ):
         ble_device = hci0_device_advs["00:00:00:00:00:01"][0]
         client = bleak.BleakClient(ble_device)
-        with pytest.raises(Exception):
-            assert await client.connect() is False
+        with pytest.raises(ConnectionError) as exc_info:
+            await client.connect()
+        assert str(exc_info.value) == "Test exception"
         assert allocate_slot_mock.call_count == 1
         assert release_slot_mock.call_count == 1
 
@@ -363,6 +370,38 @@ async def test_we_switch_adapters_on_failure(
         return_value=FakeBleakClientFailsHCI0Only,
     ):
         assert await client.connect() is False
+    cancel_hci0()
+    cancel_hci1()
+
+
+async def test_passing_subclassed_str_as_address(
+    hass: HomeAssistant,
+    two_adapters: None,
+    enable_bluetooth: None,
+    install_bleak_catcher,
+) -> None:
+    """Ensure the client wrapper can handle a subclassed str as the address."""
+    _, cancel_hci0, cancel_hci1 = _generate_scanners_with_fake_devices(hass)
+
+    class SubclassedStr(str):
+        __slots__ = ()
+
+    address = SubclassedStr("00:00:00:00:00:01")
+    client = bleak.BleakClient(address)
+
+    class FakeBleakClient(BaseFakeBleakClient):
+        """Fake bleak client."""
+
+        async def connect(self, *args, **kwargs):
+            """Connect."""
+            return True
+
+    with patch(
+        "habluetooth.wrappers.get_platform_client_backend_type",
+        return_value=FakeBleakClient,
+    ):
+        assert await client.connect() is True
+
     cancel_hci0()
     cancel_hci1()
 

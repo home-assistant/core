@@ -1,4 +1,5 @@
 """All constants related to the ZHA component."""
+
 from __future__ import annotations
 
 import enum
@@ -64,6 +65,8 @@ ATTR_WARNING_DEVICE_STROBE_INTENSITY = "intensity"
 BAUD_RATES = [2400, 4800, 9600, 14400, 19200, 38400, 57600, 115200, 128000, 256000]
 BINDINGS = "bindings"
 
+CLUSTER_DETAILS = "cluster_details"
+
 CLUSTER_HANDLER_ACCELEROMETER = "accelerometer"
 CLUSTER_HANDLER_BINARY_INPUT = "binary_input"
 CLUSTER_HANDLER_ANALOG_INPUT = "analog_input"
@@ -89,6 +92,7 @@ CLUSTER_HANDLER_LEVEL = ATTR_LEVEL
 CLUSTER_HANDLER_MULTISTATE_INPUT = "multistate_input"
 CLUSTER_HANDLER_OCCUPANCY = "occupancy"
 CLUSTER_HANDLER_ON_OFF = "on_off"
+CLUSTER_HANDLER_OTA = "ota"
 CLUSTER_HANDLER_POWER_CONFIGURATION = "power"
 CLUSTER_HANDLER_PRESSURE = "pressure"
 CLUSTER_HANDLER_SHADE = "shade"
@@ -120,6 +124,7 @@ PLATFORMS = (
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.UPDATE,
 )
 
 CONF_ALARM_MASTER_CODE = "alarm_master_code"
@@ -139,6 +144,7 @@ CONF_ENABLE_IDENTIFY_ON_JOIN = "enable_identify_on_join"
 CONF_ENABLE_QUIRKS = "enable_quirks"
 CONF_RADIO_TYPE = "radio_type"
 CONF_USB_PATH = "usb_path"
+CONF_USE_THREAD = "use_thread"
 CONF_ZIGPY = "zigpy_config"
 
 CONF_CONSIDER_UNAVAILABLE_MAINS = "consider_unavailable_mains"
@@ -214,6 +220,8 @@ DISCOVERY_KEY = "zha_discovery_info"
 
 DOMAIN = "zha"
 
+ENTITY_METADATA = "entity_metadata"
+
 GROUP_ID = "group_id"
 GROUP_IDS = "group_ids"
 GROUP_NAME = "group_name"
@@ -226,6 +234,8 @@ POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 PRESET_SCHEDULE = "Schedule"
 PRESET_COMPLEX = "Complex"
 PRESET_TEMP_MANUAL = "Temporary manual"
+
+ZCL_INIT_ATTRS = "ZCL_INIT_ATTRS"
 
 ZHA_ALARM_OPTIONS = "zha_alarm_options"
 ZHA_OPTIONS = "zha_options"

@@ -1,4 +1,5 @@
 """Tests for voice command segmenter."""
+
 import itertools as it
 from unittest.mock import patch
 

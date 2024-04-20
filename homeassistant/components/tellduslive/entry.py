@@ -1,4 +1,5 @@
 """Base Entity for all TelldusLive entities."""
+
 from datetime import datetime
 import logging
 

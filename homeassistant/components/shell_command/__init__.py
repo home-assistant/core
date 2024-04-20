@@ -1,4 +1,5 @@
 """Expose regular shell commands as services."""
+
 from __future__ import annotations
 
 import asyncio
@@ -57,8 +58,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 rendered_args = args_compiled.async_render(
                     variables=service.data, parse_result=False
                 )
-            except TemplateError as ex:
-                _LOGGER.exception("Error rendering command template: %s", ex)
+            except TemplateError:
+                _LOGGER.exception("Error rendering command template")
                 raise
         else:
             rendered_args = None
@@ -76,7 +77,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         else:
             # Template used. Break into list and use create_subprocess_exec
             # (which uses shell=False) for security
-            shlexed_cmd = [prog] + shlex.split(rendered_args)
+            shlexed_cmd = [prog, *shlex.split(rendered_args)]
 
             create_process = asyncio.create_subprocess_exec(
                 *shlexed_cmd,
@@ -90,7 +91,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         try:
             async with asyncio.timeout(COMMAND_TIMEOUT):
                 stdout_data, stderr_data = await process.communicate()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.error(
                 "Timed out running command: `%s`, after: %ss", cmd, COMMAND_TIMEOUT
             )
@@ -134,12 +135,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     service_response["stdout"] = stdout_data.decode("utf-8").strip()
                 if stderr_data:
                     service_response["stderr"] = stderr_data.decode("utf-8").strip()
-                return service_response
             except UnicodeDecodeError:
                 _LOGGER.exception(
                     "Unable to handle non-utf8 output of command: `%s`", cmd
                 )
                 raise
+            return service_response
         return None
 
     for name in conf:

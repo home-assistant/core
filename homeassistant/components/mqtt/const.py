@@ -1,5 +1,9 @@
 """Constants used by multiple MQTT modules."""
+
+import jinja2
+
 from homeassistant.const import CONF_PAYLOAD, Platform
+from homeassistant.exceptions import TemplateError
 
 ATTR_DISCOVERY_HASH = "discovery_hash"
 ATTR_DISCOVERY_PAYLOAD = "discovery_payload"
@@ -7,6 +11,7 @@ ATTR_DISCOVERY_TOPIC = "discovery_topic"
 ATTR_PAYLOAD = "payload"
 ATTR_QOS = "qos"
 ATTR_RETAIN = "retain"
+ATTR_SERIAL_NUMBER = "serial_number"
 ATTR_TOPIC = "topic"
 
 CONF_AVAILABILITY = "availability"
@@ -42,9 +47,18 @@ CONF_MODE_COMMAND_TOPIC = "mode_command_topic"
 CONF_MODE_LIST = "modes"
 CONF_MODE_STATE_TEMPLATE = "mode_state_template"
 CONF_MODE_STATE_TOPIC = "mode_state_topic"
+CONF_PAYLOAD_CLOSE = "payload_close"
+CONF_PAYLOAD_OPEN = "payload_open"
+CONF_PAYLOAD_STOP = "payload_stop"
+CONF_POSITION_CLOSED = "position_closed"
+CONF_POSITION_OPEN = "position_open"
 CONF_POWER_COMMAND_TOPIC = "power_command_topic"
 CONF_POWER_COMMAND_TEMPLATE = "power_command_template"
 CONF_PRECISION = "precision"
+CONF_STATE_CLOSED = "state_closed"
+CONF_STATE_CLOSING = "state_closing"
+CONF_STATE_OPEN = "state_open"
+CONF_STATE_OPENING = "state_opening"
 CONF_TEMP_COMMAND_TEMPLATE = "temperature_command_template"
 CONF_TEMP_COMMAND_TOPIC = "temperature_command_topic"
 CONF_TEMP_STATE_TEMPLATE = "temperature_state_template"
@@ -64,6 +78,7 @@ CONF_CONNECTIONS = "connections"
 CONF_MANUFACTURER = "manufacturer"
 CONF_HW_VERSION = "hw_version"
 CONF_SW_VERSION = "sw_version"
+CONF_SERIAL_NUMBER = "serial_number"
 CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
 CONF_SUGGESTED_AREA = "suggested_area"
@@ -81,11 +96,16 @@ DEFAULT_ENCODING = "utf-8"
 DEFAULT_OPTIMISTIC = False
 DEFAULT_QOS = 0
 DEFAULT_PAYLOAD_AVAILABLE = "online"
+DEFAULT_PAYLOAD_CLOSE = "CLOSE"
 DEFAULT_PAYLOAD_NOT_AVAILABLE = "offline"
+DEFAULT_PAYLOAD_OPEN = "OPEN"
 DEFAULT_PORT = 1883
 DEFAULT_RETAIN = False
 DEFAULT_WS_HEADERS: dict[str, str] = {}
 DEFAULT_WS_PATH = "/"
+DEFAULT_POSITION_CLOSED = 0
+DEFAULT_POSITION_OPEN = 100
+DEFAULT_RETAIN = False
 
 PROTOCOL_31 = "3.1"
 PROTOCOL_311 = "3.1.1"
@@ -122,33 +142,6 @@ MQTT_DISCONNECTED = "mqtt_disconnected"
 PAYLOAD_EMPTY_JSON = "{}"
 PAYLOAD_NONE = "None"
 
-PLATFORMS = [
-    Platform.ALARM_CONTROL_PANEL,
-    Platform.BINARY_SENSOR,
-    Platform.BUTTON,
-    Platform.CAMERA,
-    Platform.CLIMATE,
-    Platform.DEVICE_TRACKER,
-    Platform.EVENT,
-    Platform.COVER,
-    Platform.FAN,
-    Platform.HUMIDIFIER,
-    Platform.IMAGE,
-    Platform.LAWN_MOWER,
-    Platform.LIGHT,
-    Platform.LOCK,
-    Platform.NUMBER,
-    Platform.SELECT,
-    Platform.SCENE,
-    Platform.SENSOR,
-    Platform.SIREN,
-    Platform.SWITCH,
-    Platform.TEXT,
-    Platform.UPDATE,
-    Platform.VACUUM,
-    Platform.WATER_HEATER,
-]
-
 RELOADABLE_PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
@@ -164,6 +157,7 @@ RELOADABLE_PLATFORMS = [
     Platform.LIGHT,
     Platform.LAWN_MOWER,
     Platform.LOCK,
+    Platform.NOTIFY,
     Platform.NUMBER,
     Platform.SCENE,
     Platform.SELECT,
@@ -173,5 +167,8 @@ RELOADABLE_PLATFORMS = [
     Platform.TEXT,
     Platform.UPDATE,
     Platform.VACUUM,
+    Platform.VALVE,
     Platform.WATER_HEATER,
 ]
+
+TEMPLATE_ERRORS = (jinja2.TemplateError, TemplateError, TypeError, ValueError)

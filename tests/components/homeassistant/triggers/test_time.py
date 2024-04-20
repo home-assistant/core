@@ -1,4 +1,5 @@
 """The tests for the time automation."""
+
 from datetime import timedelta
 from unittest.mock import Mock, patch
 
@@ -210,7 +211,7 @@ async def test_if_not_fires_using_wrong_at(
     now = dt_util.utcnow()
 
     time_that_will_not_match_right_away = now.replace(
-        year=now.year + 1, hour=1, minute=0, second=0
+        year=now.year + 1, day=1, hour=1, minute=0, second=0
     )
 
     freezer.move_to(time_that_will_not_match_right_away)
@@ -233,7 +234,7 @@ async def test_if_not_fires_using_wrong_at(
     assert hass.states.get("automation.automation_0").state == STATE_UNAVAILABLE
 
     async_fire_time_changed(
-        hass, now.replace(year=now.year + 1, hour=1, minute=0, second=5)
+        hass, now.replace(year=now.year + 1, day=1, hour=1, minute=0, second=5)
     )
 
     await hass.async_block_till_done()

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate updated constraint and requirements files."""
+
 from __future__ import annotations
 
 import difflib
@@ -17,7 +18,6 @@ from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Integration
 
 COMMENT_REQUIREMENTS = (
-    "Adafruit-BBIO",
     "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avea",  # depends on bluepy
     "avion",
@@ -28,7 +28,6 @@ COMMENT_REQUIREMENTS = (
     "decora-wifi",
     "evdev",
     "face-recognition",
-    "opencv-python-headless",
     "pybluez",
     "pycocotools",
     "pycups",
@@ -58,11 +57,6 @@ CONSTRAINT_BASE = """
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
 pycryptodome>=3.6.6
-
-# Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
-# Temporary setting an upper bound, to prevent compat issues with urllib3>=2
-# https://github.com/home-assistant/core/issues/97248
-urllib3>=1.26.5,<2
 
 # Constrain httplib2 to protect against GHSA-93xj-8mrv-444m
 # https://github.com/advisories/GHSA-93xj-8mrv-444m
@@ -103,9 +97,9 @@ regex==2021.8.28
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.1.0
+anyio==4.3.0
 h11==0.14.0
-httpcore==0.18.0
+httpcore==1.0.5
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -139,13 +133,9 @@ pubnub!=6.4.0
 # https://github.com/dahlia/iso4217/issues/16
 iso4217!=1.10.20220401
 
-# Matplotlib 3.6.2 has issues building wheels on armhf/armv7
-# We need at least >=2.1.0 (tensorflow integration -> pycocotools)
-matplotlib==3.6.1
-
-# pyOpenSSL 23.1.0 or later required to avoid import errors when
-# cryptography 40.0.1 is installed with botocore
-pyOpenSSL>=23.1.0
+# pyOpenSSL 24.0.0 or later required to avoid import errors when
+# cryptography 42.0.0 is installed with botocore
+pyOpenSSL>=24.0.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
@@ -160,13 +150,9 @@ faust-cchardet>=2.1.18
 # https://github.com/aaugustin/websockets/issues/1329
 websockets>=11.0.1
 
-# pyasn1 0.5.0 has breaking changes which cause pysnmplib to fail
-# until they are resolved, we need to pin pyasn1 to 0.4.8 and
-# pysnmplib to 5.0.21 to avoid the issue.
-# https://github.com/pyasn1/pyasn1/pull/30#issuecomment-1517564335
-# https://github.com/pysnmp/pysnmp/issues/51
-pyasn1==0.4.8
-pysnmplib==5.0.21
+# pysnmplib is no longer maintained and does not work with newer
+# python
+pysnmplib==1000000000.0.0
 # pysnmp is no longer maintained and does not work with newer
 # python
 pysnmp==1000000000.0.0
@@ -179,6 +165,23 @@ get-mac==1000000000.0.0
 # They are build with mypyc, but causes issues with our wheel builder.
 # In order to do so, we need to constrain the version.
 charset-normalizer==3.2.0
+
+# dacite: Ensure we have a version that is able to handle type unions for
+# Roborock, NAM, Brother, and GIOS.
+dacite>=1.7.0
+
+# Musle wheels for pandas 2.2.0 cannot be build for any architecture.
+pandas==2.1.4
+
+# chacha20poly1305-reuseable==0.12.0 is incompatible with cryptography==42.0.x
+chacha20poly1305-reuseable>=0.12.1
+
+# pycountry<23.12.11 imports setuptools at run time
+# https://github.com/pycountry/pycountry/blob/ea69bab36f00df58624a0e490fdad4ccdc14268b/HISTORY.txt#L39
+pycountry>=23.12.11
+
+# scapy<2.5.0 will not work with python3.12
+scapy>=2.5.0
 """
 
 GENERATED_MESSAGE = (
@@ -258,17 +261,13 @@ def normalize_package_name(requirement: str) -> str:
     if not match:
         return ""
 
-    # pipdeptree needs lowercase and dash instead of underscore as separator
-    package = match.group(1).lower().replace("_", "-")
-
-    return package
+    # pipdeptree needs lowercase and dash instead of underscore or period as separator
+    return match.group(1).lower().replace("_", "-").replace(".", "-")
 
 
 def comment_requirement(req: str) -> bool:
     """Comment out requirement. Some don't install on all systems."""
-    return any(
-        normalize_package_name(req) == ign for ign in COMMENT_REQUIREMENTS_NORMALIZED
-    )
+    return normalize_package_name(req) in COMMENT_REQUIREMENTS_NORMALIZED
 
 
 def gather_modules() -> dict[str, list[str]] | None:
@@ -345,8 +344,7 @@ def generate_requirements_list(reqs: dict[str, list[str]]) -> str:
     """Generate a pip file based on requirements."""
     output = []
     for pkg, requirements in sorted(reqs.items(), key=itemgetter(0)):
-        for req in sorted(requirements):
-            output.append(f"\n# {req}")
+        output.extend(f"\n# {req}" for req in sorted(requirements))
 
         if comment_requirement(pkg):
             output.append(f"\n# {pkg}\n")
@@ -433,15 +431,17 @@ def gather_constraints() -> str:
     return (
         GENERATED_MESSAGE
         + "\n".join(
-            sorted(
-                {
-                    *core_requirements(),
-                    *gather_recursive_requirements("default_config"),
-                    *gather_recursive_requirements("mqtt"),
-                },
-                key=str.lower,
-            )
-            + [""]
+            [
+                *sorted(
+                    {
+                        *core_requirements(),
+                        *gather_recursive_requirements("default_config"),
+                        *gather_recursive_requirements("mqtt"),
+                    },
+                    key=str.lower,
+                ),
+                "",
+            ]
         )
         + CONSTRAINT_BASE
     )

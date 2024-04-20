@@ -1,4 +1,5 @@
 """The bluetooth integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
@@ -11,7 +12,7 @@ from bluetooth_adapters import BluetoothAdapters
 from habluetooth import BaseHaRemoteScanner, BaseHaScanner, BluetoothManager
 
 from homeassistant import config_entries
-from homeassistant.const import EVENT_LOGGING_CHANGED
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EVENT_LOGGING_CHANGED
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -136,6 +137,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         self._cancel_logging_listener = self.hass.bus.async_listen(
             EVENT_LOGGING_CHANGED, self._async_logging_changed
         )
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         seen: set[str] = set()
         for address, service_info in itertools.chain(
             self._connectable_history.items(), self._all_history.items()
@@ -187,7 +189,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         return _async_remove_callback
 
     @hass_callback
-    def async_stop(self) -> None:
+    def async_stop(self, event: Event | None = None) -> None:
         """Stop the Bluetooth integration at shutdown."""
         _LOGGER.debug("Stopping bluetooth manager")
         self._async_save_scanner_histories()
@@ -220,7 +222,6 @@ class HomeAssistantBluetoothManager(BluetoothManager):
     def async_register_scanner(
         self,
         scanner: BaseHaScanner,
-        connectable: bool,
         connection_slots: int | None = None,
     ) -> CALLBACK_TYPE:
         """Register a scanner."""
@@ -228,7 +229,5 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             if history := self.storage.async_get_advertisement_history(scanner.source):
                 scanner.restore_discovered_devices(history)
 
-        unregister = super().async_register_scanner(
-            scanner, connectable, connection_slots
-        )
+        unregister = super().async_register_scanner(scanner, connection_slots)
         return partial(self._async_unregister_scanner, scanner, unregister)

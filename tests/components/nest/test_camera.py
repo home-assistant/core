@@ -3,11 +3,13 @@
 These tests fake out the subscriber/devicemanager, and are not using a real
 pubsub subscriber.
 """
+
 import datetime
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
+from freezegun import freeze_time
 from google_nest_sdm.event import EventMessage
 import pytest
 
@@ -102,7 +104,7 @@ def webrtc_camera_device(create_device: CreateDevice) -> None:
 def make_motion_event(
     event_id: str = MOTION_EVENT_ID,
     event_session_id: str = EVENT_SESSION_ID,
-    timestamp: datetime.datetime = None,
+    timestamp: datetime.datetime | None = None,
 ) -> EventMessage:
     """Create an EventMessage for a motion event."""
     if not timestamp:
@@ -126,7 +128,7 @@ def make_motion_event(
 
 
 def make_stream_url_response(
-    expiration: datetime.datetime = None, token_num: int = 0
+    expiration: datetime.datetime | None = None, token_num: int = 0
 ) -> aiohttp.web.Response:
     """Make response for the API that generates a streaming url."""
     if not expiration:
@@ -173,7 +175,7 @@ async def async_get_image(hass, width=None, height=None):
 
 async def fire_alarm(hass, point_in_time):
     """Fire an alarm and wait for callbacks to run."""
-    with patch("homeassistant.util.dt.utcnow", return_value=point_in_time):
+    with freeze_time(point_in_time):
         async_fire_time_changed(hass, point_in_time)
         await hass.async_block_till_done()
 

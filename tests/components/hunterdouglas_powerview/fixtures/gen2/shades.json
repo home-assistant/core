@@ -1,0 +1,422 @@
+{
+  "shadeIds": [
+    49782, 13542, 6539, 37688, 5359, 26355, 13028, 65396, 40458, 17062, 40836,
+    49988
+  ],
+  "shadeData": [
+    {
+      "id": 13542,
+      "type": 6,
+      "batteryStatus": 0,
+      "batteryStrength": 0,
+      "roomId": 34274,
+      "firmware": {
+        "revision": 1,
+        "subRevision": 8,
+        "build": 1944
+      },
+      "motor": {
+        "revision": 0,
+        "subRevision": 0,
+        "build": 336
+      },
+      "name": "RmFtaWx5IExlZnQ=",
+      "groupId": 11497,
+      "signalStrength": 2,
+      "capabilities": 0,
+      "batteryKind": "unassigned",
+      "smartPowerSupply": {
+        "status": 0,
+        "id": 0,
+        "port": 0
+      },
+      "positions": {
+        "posKind1": 1,
+        "position1": 0
+      },
+      "name_unicode": "Family Left",
+      "shade_api_class": "ShadeBottomUp"
+    },
+    {
+      "id": 6539,
+      "type": 44,
+      "batteryStatus": 0,
+      "batteryStrength": 0,
+      "roomId": 34274,
+      "firmware": {
+        "revision": 1,
+        "subRevision": 8,
+        "build": 1944
+      },
+      "motor": {
+        "revision": 0,
+        "subRevision": 0,
+        "build": 336
+      },
+      "name": "RmFtaWx5IENlbnRyZQ==",
+      "groupId": 11497,
+      "signalStrength": 2,
+      "capabilities": 0,
+      "batteryKind": "unassigned",
+      "smartPowerSupply": {
+        "status": 0,
+        "id": 0,
+        "port": 0
+      },
+      "positions": {
+        "posKind1": 1,
+        "position1": 0,
+        "posKind2": 3,
+        "position2": 0
+      },
+      "name_unicode": "Family Centre",
+      "shade_api_class": "ShadeBottomUpTiltOnClosed180"
+    },
+    {
+      "id": 65396,
+      "type": 18,
+      "batteryStatus": 3,
+      "batteryStrength": 168,
+      "roomId": 34274,
+      "firmware": {
+        "revision": 1,
+        "subRevision": 8,
+        "build": 1944
+      },
+      "motor": {
+        "revision": 0,
+        "subRevision": 0,
+        "build": 336
+      },
+      "name": "RmFtaWx5IFJpZ2h0",
+      "groupId": 11497,
+      "signalStrength": 4,
+      "capabilities": 1,
+      "batteryKind": 1,
+      "smartPowerSupply": {
+        "status": 0,
+        "id": 0,
+        "port": 0
+      },
+      "positions": {
+        "posKind1": 1,
+        "position1": 0,
+        "posKind2": 3,
+        "position2": 0
+      },
+      "name_unicode": "Family Right",
+      "shade_api_class": "ShadeBottomUpTiltOnClosed90"
+    },
+    {
+      "id": 37688,
+      "type": 51,
+      "batteryStatus": 3,
+      "batteryStrength": 169,
+      "roomId": 61856,
+      "firmware": {
+        "revision": 1,
+        "subRevision": 8,
+        "build": 1944
+      },
+      "motor": {
+        "revision": 0,
+        "subRevision": 0,
+        "build": 336
+      },
+      "name": "QmVkIDI=",
+      "groupId": 47813,
+      "signalStrength": 2,
+      "capabilities": 2,
+      "batteryKind": 2,
+      "smartPowerSupply": {
+        "status": 0,
+        "id": 0,
+        "port": 0
+      },
+      "positions": {
+        "posKind1": 1,
+        "position1": 0,
+        "posKind2": 3,
+        "position2": 0
+      },
+      "name_unicode": "Bed 2",
+      "shade_api_class": "ShadeBottomUpTiltAnywhere"
+    },
+    {
+      "id": 49988,
+      "type": 71,
+      "batteryStatus": 3,
+      "batteryStrength": 169,
+      "roomId": 46225,
+      "firmware": {
+        "revision": 1,
+        "subRevision": 8,
+        "build": 1944
+      },
+      "motor": {
+        "revision": 0,
+        "subRevision": 0,
+        "build": 336
+      },
+      "name": "QmVkIDM=",
+      "groupId": 30562,
+      "signalStrength": 4,
+      "capabilities": 3,
+      "batteryKind": 3,
+      "smartPowerSupply": {
+        "status": 0,
+        "id": 0,
+        "port": 0
+      },
+      "positions": {
+        "posKind1": 1,
+        "position1": 0
+      },
+      "name_unicode": "Bed 3",
+      "shade_api_class": "ShadeVertical"
+    },
+    {
+      "id": 26355,
+      "type": 56,
+      "batteryStatus": 3,
+      "batteryStrength": 168,
+      "roomId": 24002,
+      "firmware": {
+        "revision": 1,
+        "subRevision": 8,
+        "build": 1944
+      },
+      "motor": {
+        "revision": 0,
+        "subRevision": 0,
+        "build": 336
+      },
+      "name": "QmVkIDQ=",
+      "groupId": 15150,
+      "signalStrength": 2,
+      "capabilities": 4,
+      "batteryKind": "unassigned",
+      "smartPowerSupply": {
+        "status": 0,
+        "id": 0,
+        "port": 0
+      },
+      "positions": {
+        "posKind1": 1,
+        "position1": 0,
+        "posKind2": 1,
+        "position2": 0
+      },
+      "name_unicode": "Bed 4",
+      "shade_api_class": "ShadeVerticalTiltAnywhere"
+    },
+    {
+      "id": 17062,
+      "type": 66,
+      "capabilities": 5,
+      "batteryKind": 3,
+      "smartPowerSupply": {
+        "status": 0,
+        "id": 0,
+        "port": 0
+      },
+      "batteryStatus": 3,
+      "batteryStrength": 184,
+      "roomId": 58286,
+      "name": "TG91bmdlIFJvb20gTGVmdA==",
+      "groupId": 32458,
+      "firmware": {
+        "revision": 1,
+        "subRevision": 8,
+        "build": 1944
+      },
+      "motor": {
+        "revision": 0,
+        "subRevision": 0,
+        "build": 366
+      },
+      "positions": {
+        "posKind1": 3,
+        "position1": 0
+      },
+      "signalStrength": 4,
+      "name_unicode": "Lounge Room Left",
+      "shade_api_class": "ShadeTiltOnly"
+    },
+    {
+      "id": 5359,
+      "type": 7,
+      "capabilities": 6,
+      "batteryKind": 2,
+      "smartPowerSupply": {
+        "status": 0,
+        "id": 0,
+        "port": 0
+      },
+      "batteryStatus": 3,
+      "batteryStrength": 182,
+      "roomId": 58286,
+      "name": "TG91bmdlIFJvb20gUmlnaHQ=",
+      "groupId": 32458,
+      "positions": {
+        "posKind1": 1,
+        "position1": 0,
+        "posKind2": 2,
+        "position2": 0
+      },
+      "signalStrength": 4,
+      "firmware": {
+        "revision": 1,
+        "subRevision": 8,
+        "build": 1944
+      },
+      "motor": {
+        "revision": 0,
+        "subRevision": 0,
+        "build": 366
+      },
+      "name_unicode": "Lounge Room Right",
+      "shade_api_class": "ShadeTopDown"
+    },
+    {
+      "id": 49782,
+      "type": 8,
+      "batteryStatus": 3,
+      "batteryStrength": 183,
+      "roomId": 2030,
+      "name": "TWFzdGVyIExlZnQ=",
+      "firmware": {
+        "revision": 1,
+        "subRevision": 8,
+        "build": 1944
+      },
+      "groupId": 44256,
+      "motor": {
+        "revision": 0,
+        "subRevision": 0,
+        "build": 366
+      },
+      "signalStrength": 2,
+      "capabilities": 7,
+      "batteryKind": 2,
+      "smartPowerSupply": {
+        "status": 0,
+        "id": 0,
+        "port": 0
+      },
+      "positions": {
+        "posKind1": 1,
+        "position1": 0,
+        "posKind2": 2,
+        "position2": 0
+      },
+      "name_unicode": "Master Left",
+      "shade_api_class": "ShadeTopDownBottomUp"
+    },
+    {
+      "id": 13028,
+      "type": 79,
+      "batteryStatus": 3,
+      "batteryStrength": 183,
+      "roomId": 2030,
+      "firmware": {
+        "revision": 1,
+        "subRevision": 8,
+        "build": 1944
+      },
+      "motor": {
+        "revision": 0,
+        "subRevision": 0,
+        "build": 366
+      },
+      "name": "TWFzdGVyIFJpZ2h0",
+      "groupId": 44256,
+      "signalStrength": 4,
+      "capabilities": 8,
+      "positions": {
+        "posKind1": 1,
+        "position1": 0,
+        "posKind2": 2,
+        "position2": 0
+      },
+      "batteryKind": 2,
+      "smartPowerSupply": {
+        "status": 0,
+        "id": 0,
+        "port": 0
+      },
+      "name_unicode": "Master Right",
+      "shade_api_class": "ShadeDualOverlapped"
+    },
+    {
+      "id": 40458,
+      "type": 38,
+      "batteryStatus": 0,
+      "batteryStrength": 0,
+      "roomId": 9910,
+      "firmware": {
+        "revision": 1,
+        "subRevision": 4,
+        "build": 1701
+      },
+      "name": "S2l0Y2hlbiBSb2xsZXI=",
+      "motor": {
+        "revision": 48,
+        "subRevision": 50,
+        "build": 11825
+      },
+      "groupId": 37320,
+      "signalStrength": 2,
+      "capabilities": 9,
+      "batteryKind": 2,
+      "smartPowerSupply": {
+        "status": 0,
+        "id": 0,
+        "port": 0
+      },
+      "positions": {
+        "posKind1": 1,
+        "position1": 0,
+        "posKind2": 2,
+        "position2": 0
+      },
+      "name_unicode": "Kitchen Roller",
+      "shade_api_class": "ShadeDualOverlappedTilt90"
+    },
+    {
+      "id": 40836,
+      "type": 999,
+      "capabilities": 10,
+      "batteryKind": 2,
+      "smartPowerSupply": {
+        "status": 0,
+        "id": 0,
+        "port": 0
+      },
+      "batteryStatus": 3,
+      "batteryStrength": 183,
+      "roomId": 3304,
+      "firmware": {
+        "revision": 1,
+        "subRevision": 8,
+        "build": 1944
+      },
+      "motor": {
+        "revision": 0,
+        "subRevision": 0,
+        "build": 366
+      },
+      "name": "U3R1ZHkgRHVldHRl",
+      "groupId": 41844,
+      "positions": {
+        "posKind1": 1,
+        "position1": 0,
+        "posKind2": 2,
+        "position2": 0
+      },
+      "signalStrength": 4,
+      "name_unicode": "Study Duette",
+      "shade_api_class": "ShadeDualOverlappedTilt180"
+    }
+  ]
+}

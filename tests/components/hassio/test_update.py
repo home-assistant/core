@@ -1,4 +1,5 @@
 """The tests for the hassio update entities."""
+
 from datetime import timedelta
 import os
 from unittest.mock import patch
@@ -469,9 +470,12 @@ async def test_release_notes_between_versions(
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
 
-    with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.hassio.get_addons_changelogs",
-        return_value={"test": "# 2.0.1\nNew updates\n# 2.0.0\nOld updates"},
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch(
+            "homeassistant.components.hassio.data.get_addons_changelogs",
+            return_value={"test": "# 2.0.1\nNew updates\n# 2.0.0\nOld updates"},
+        ),
     ):
         result = await async_setup_component(
             hass,
@@ -505,9 +509,12 @@ async def test_release_notes_full(
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
 
-    with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.hassio.get_addons_changelogs",
-        return_value={"test": "# 2.0.0\nNew updates\n# 2.0.0\nOld updates"},
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch(
+            "homeassistant.components.hassio.data.get_addons_changelogs",
+            return_value={"test": "# 2.0.0\nNew updates\n# 2.0.0\nOld updates"},
+        ),
     ):
         result = await async_setup_component(
             hass,
@@ -541,9 +548,12 @@ async def test_not_release_notes(
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
 
-    with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.hassio.get_addons_changelogs",
-        return_value={"test": None},
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch(
+            "homeassistant.components.hassio.data.get_addons_changelogs",
+            return_value={"test": None},
+        ),
     ):
         result = await async_setup_component(
             hass,
@@ -569,13 +579,16 @@ async def test_not_release_notes(
 
 async def test_no_os_entity(hass: HomeAssistant) -> None:
     """Test handling where there is no os entity."""
-    with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.hassio.HassIO.get_info",
-        return_value={
-            "supervisor": "222",
-            "homeassistant": "0.110.0",
-            "hassos": None,
-        },
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_info",
+            return_value={
+                "supervisor": "222",
+                "homeassistant": "0.110.0",
+                "hassos": None,
+            },
+        ),
     ):
         result = await async_setup_component(
             hass,
@@ -593,15 +606,20 @@ async def test_setting_up_core_update_when_addon_fails(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test setting up core update when single addon fails."""
-    with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.hassio.HassIO.get_addon_stats",
-        side_effect=HassioAPIError("add-on is not running"),
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_addon_changelog",
-        side_effect=HassioAPIError("add-on is not running"),
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_addon_info",
-        side_effect=HassioAPIError("add-on is not running"),
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_addon_stats",
+            side_effect=HassioAPIError("add-on is not running"),
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_addon_changelog",
+            side_effect=HassioAPIError("add-on is not running"),
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_addon_info",
+            side_effect=HassioAPIError("add-on is not running"),
+        ),
     ):
         result = await async_setup_component(
             hass,

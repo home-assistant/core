@@ -1,4 +1,5 @@
 """Smart energy cluster handlers module for Zigbee Home Automation."""
+
 from __future__ import annotations
 
 import enum
@@ -6,7 +7,20 @@ from functools import partialmethod
 from typing import TYPE_CHECKING
 
 import zigpy.zcl
-from zigpy.zcl.clusters import smartenergy
+from zigpy.zcl.clusters.smartenergy import (
+    Calendar,
+    DeviceManagement,
+    Drlc,
+    EnergyManagement,
+    Events,
+    KeyEstablishment,
+    MduPairing,
+    Messaging,
+    Metering,
+    Prepayment,
+    Price,
+    Tunneling,
+)
 
 from .. import registries
 from ..const import (
@@ -21,106 +35,162 @@ if TYPE_CHECKING:
     from ..endpoint import Endpoint
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(smartenergy.Calendar.cluster_id)
-class Calendar(ClusterHandler):
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(Calendar.cluster_id)
+class CalendarClusterHandler(ClusterHandler):
     """Calendar cluster handler."""
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
-    smartenergy.DeviceManagement.cluster_id
-)
-class DeviceManagement(ClusterHandler):
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(DeviceManagement.cluster_id)
+class DeviceManagementClusterHandler(ClusterHandler):
     """Device Management cluster handler."""
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(smartenergy.Drlc.cluster_id)
-class Drlc(ClusterHandler):
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(Drlc.cluster_id)
+class DrlcClusterHandler(ClusterHandler):
     """Demand Response and Load Control cluster handler."""
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
-    smartenergy.EnergyManagement.cluster_id
-)
-class EnergyManagement(ClusterHandler):
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(EnergyManagement.cluster_id)
+class EnergyManagementClusterHandler(ClusterHandler):
     """Energy Management cluster handler."""
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(smartenergy.Events.cluster_id)
-class Events(ClusterHandler):
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(Events.cluster_id)
+class EventsClusterHandler(ClusterHandler):
     """Event cluster handler."""
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
-    smartenergy.KeyEstablishment.cluster_id
-)
-class KeyEstablishment(ClusterHandler):
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(KeyEstablishment.cluster_id)
+class KeyEstablishmentClusterHandler(ClusterHandler):
     """Key Establishment cluster handler."""
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(smartenergy.MduPairing.cluster_id)
-class MduPairing(ClusterHandler):
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(MduPairing.cluster_id)
+class MduPairingClusterHandler(ClusterHandler):
     """Pairing cluster handler."""
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(smartenergy.Messaging.cluster_id)
-class Messaging(ClusterHandler):
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(Messaging.cluster_id)
+class MessagingClusterHandler(ClusterHandler):
     """Messaging cluster handler."""
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(smartenergy.Metering.cluster_id)
-class Metering(ClusterHandler):
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(Metering.cluster_id)
+class MeteringClusterHandler(ClusterHandler):
     """Metering cluster handler."""
 
     REPORT_CONFIG = (
-        AttrReportConfig(attr="instantaneous_demand", config=REPORT_CONFIG_OP),
-        AttrReportConfig(attr="current_summ_delivered", config=REPORT_CONFIG_DEFAULT),
         AttrReportConfig(
-            attr="current_tier1_summ_delivered", config=REPORT_CONFIG_DEFAULT
+            attr=Metering.AttributeDefs.instantaneous_demand.name,
+            config=REPORT_CONFIG_OP,
         ),
         AttrReportConfig(
-            attr="current_tier2_summ_delivered", config=REPORT_CONFIG_DEFAULT
+            attr=Metering.AttributeDefs.current_summ_delivered.name,
+            config=REPORT_CONFIG_DEFAULT,
         ),
         AttrReportConfig(
-            attr="current_tier3_summ_delivered", config=REPORT_CONFIG_DEFAULT
+            attr=Metering.AttributeDefs.current_tier1_summ_delivered.name,
+            config=REPORT_CONFIG_DEFAULT,
         ),
         AttrReportConfig(
-            attr="current_tier4_summ_delivered", config=REPORT_CONFIG_DEFAULT
+            attr=Metering.AttributeDefs.current_tier2_summ_delivered.name,
+            config=REPORT_CONFIG_DEFAULT,
         ),
         AttrReportConfig(
-            attr="current_tier5_summ_delivered", config=REPORT_CONFIG_DEFAULT
+            attr=Metering.AttributeDefs.current_tier3_summ_delivered.name,
+            config=REPORT_CONFIG_DEFAULT,
         ),
         AttrReportConfig(
-            attr="current_tier6_summ_delivered", config=REPORT_CONFIG_DEFAULT
+            attr=Metering.AttributeDefs.current_tier4_summ_delivered.name,
+            config=REPORT_CONFIG_DEFAULT,
         ),
-        AttrReportConfig(attr="status", config=REPORT_CONFIG_ASAP),
+        AttrReportConfig(
+            attr=Metering.AttributeDefs.current_tier5_summ_delivered.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
+        AttrReportConfig(
+            attr=Metering.AttributeDefs.current_tier6_summ_delivered.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
+        AttrReportConfig(
+            attr=Metering.AttributeDefs.current_summ_received.name,
+            config=REPORT_CONFIG_DEFAULT,
+        ),
+        AttrReportConfig(
+            attr=Metering.AttributeDefs.status.name,
+            config=REPORT_CONFIG_ASAP,
+        ),
     )
     ZCL_INIT_ATTRS = {
-        "demand_formatting": True,
-        "divisor": True,
-        "metering_device_type": True,
-        "multiplier": True,
-        "summation_formatting": True,
-        "unit_of_measure": True,
+        Metering.AttributeDefs.demand_formatting.name: True,
+        Metering.AttributeDefs.divisor.name: True,
+        Metering.AttributeDefs.metering_device_type.name: True,
+        Metering.AttributeDefs.multiplier.name: True,
+        Metering.AttributeDefs.summation_formatting.name: True,
+        Metering.AttributeDefs.unit_of_measure.name: True,
     }
+
+    METERING_DEVICE_TYPES_ELECTRIC = {
+        0,
+        7,
+        8,
+        9,
+        10,
+        11,
+        13,
+        14,
+        15,
+        127,
+        134,
+        135,
+        136,
+        137,
+        138,
+        140,
+        141,
+        142,
+    }
+    METERING_DEVICE_TYPES_GAS = {1, 128}
+    METERING_DEVICE_TYPES_WATER = {2, 129}
+    METERING_DEVICE_TYPES_HEATING_COOLING = {3, 5, 6, 130, 132, 133}
 
     metering_device_type = {
         0: "Electric Metering",
         1: "Gas Metering",
         2: "Water Metering",
-        3: "Thermal Metering",
+        3: "Thermal Metering",  # deprecated
         4: "Pressure Metering",
         5: "Heat Metering",
         6: "Cooling Metering",
+        7: "End Use Measurement Device (EUMD) for metering electric vehicle charging",
+        8: "PV Generation Metering",
+        9: "Wind Turbine Generation Metering",
+        10: "Water Turbine Generation Metering",
+        11: "Micro Generation Metering",
+        12: "Solar Hot Water Generation Metering",
+        13: "Electric Metering Element/Phase 1",
+        14: "Electric Metering Element/Phase 2",
+        15: "Electric Metering Element/Phase 3",
+        127: "Mirrored Electric Metering",
         128: "Mirrored Gas Metering",
         129: "Mirrored Water Metering",
-        130: "Mirrored Thermal Metering",
+        130: "Mirrored Thermal Metering",  # deprecated
         131: "Mirrored Pressure Metering",
         132: "Mirrored Heat Metering",
         133: "Mirrored Cooling Metering",
+        134: "Mirrored End Use Measurement Device (EUMD) for metering electric vehicle charging",
+        135: "Mirrored PV Generation Metering",
+        136: "Mirrored Wind Turbine Generation Metering",
+        137: "Mirrored Water Turbine Generation Metering",
+        138: "Mirrored Micro Generation Metering",
+        139: "Mirrored Solar Hot Water Generation Metering",
+        140: "Mirrored Electric Metering Element/Phase 1",
+        141: "Mirrored Electric Metering Element/Phase 2",
+        142: "Mirrored Electric Metering Element/Phase 3",
     }
 
     class DeviceStatusElectric(enum.IntFlag):
-        """Metering Device Status."""
+        """Electric Metering Device Status."""
 
         NO_ALARMS = 0
         CHECK_METER = 1
@@ -131,6 +201,45 @@ class Metering(ClusterHandler):
         LEAK_DETECT = 32  # Really?
         SERVICE_DISCONNECT = 64
         RESERVED = 128
+
+    class DeviceStatusGas(enum.IntFlag):
+        """Gas Metering Device Status."""
+
+        NO_ALARMS = 0
+        CHECK_METER = 1
+        LOW_BATTERY = 2
+        TAMPER_DETECT = 4
+        NOT_DEFINED = 8
+        LOW_PRESSURE = 16
+        LEAK_DETECT = 32
+        SERVICE_DISCONNECT = 64
+        REVERSE_FLOW = 128
+
+    class DeviceStatusWater(enum.IntFlag):
+        """Water Metering Device Status."""
+
+        NO_ALARMS = 0
+        CHECK_METER = 1
+        LOW_BATTERY = 2
+        TAMPER_DETECT = 4
+        PIPE_EMPTY = 8
+        LOW_PRESSURE = 16
+        LEAK_DETECT = 32
+        SERVICE_DISCONNECT = 64
+        REVERSE_FLOW = 128
+
+    class DeviceStatusHeatingCooling(enum.IntFlag):
+        """Heating and Cooling Metering Device Status."""
+
+        NO_ALARMS = 0
+        CHECK_METER = 1
+        LOW_BATTERY = 2
+        TAMPER_DETECT = 4
+        TEMPERATURE_SENSOR = 8
+        BURST_DETECT = 16
+        LEAK_DETECT = 32
+        SERVICE_DISCONNECT = 64
+        REVERSE_FLOW = 128
 
     class DeviceStatusDefault(enum.IntFlag):
         """Metering Device Status."""
@@ -152,12 +261,12 @@ class Metering(ClusterHandler):
     @property
     def divisor(self) -> int:
         """Return divisor for the value."""
-        return self.cluster.get("divisor") or 1
+        return self.cluster.get(Metering.AttributeDefs.divisor.name) or 1
 
     @property
     def device_type(self) -> str | int | None:
         """Return metering device type."""
-        dev_type = self.cluster.get("metering_device_type")
+        dev_type = self.cluster.get(Metering.AttributeDefs.metering_device_type.name)
         if dev_type is None:
             return None
         return self.metering_device_type.get(dev_type, dev_type)
@@ -165,39 +274,48 @@ class Metering(ClusterHandler):
     @property
     def multiplier(self) -> int:
         """Return multiplier for the value."""
-        return self.cluster.get("multiplier") or 1
+        return self.cluster.get(Metering.AttributeDefs.multiplier.name) or 1
 
     @property
     def status(self) -> int | None:
         """Return metering device status."""
-        if (status := self.cluster.get("status")) is None:
+        if (status := self.cluster.get(Metering.AttributeDefs.status.name)) is None:
             return None
-        if self.cluster.get("metering_device_type") == 0:
-            # Electric metering device type
+
+        metering_device_type = self.cluster.get(
+            Metering.AttributeDefs.metering_device_type.name
+        )
+        if metering_device_type in self.METERING_DEVICE_TYPES_ELECTRIC:
             return self.DeviceStatusElectric(status)
+        if metering_device_type in self.METERING_DEVICE_TYPES_GAS:
+            return self.DeviceStatusGas(status)
+        if metering_device_type in self.METERING_DEVICE_TYPES_WATER:
+            return self.DeviceStatusWater(status)
+        if metering_device_type in self.METERING_DEVICE_TYPES_HEATING_COOLING:
+            return self.DeviceStatusHeatingCooling(status)
         return self.DeviceStatusDefault(status)
 
     @property
     def unit_of_measurement(self) -> int:
         """Return unit of measurement."""
-        return self.cluster.get("unit_of_measure")
+        return self.cluster.get(Metering.AttributeDefs.unit_of_measure.name)
 
     async def async_initialize_cluster_handler_specific(self, from_cache: bool) -> None:
         """Fetch config from device and updates format specifier."""
 
         fmting = self.cluster.get(
-            "demand_formatting", 0xF9
+            Metering.AttributeDefs.demand_formatting.name, 0xF9
         )  # 1 digit to the right, 15 digits to the left
         self._format_spec = self.get_formatting(fmting)
 
         fmting = self.cluster.get(
-            "summation_formatting", 0xF9
+            Metering.AttributeDefs.summation_formatting.name, 0xF9
         )  # 1 digit to the right, 15 digits to the left
         self._summa_format = self.get_formatting(fmting)
 
-    async def async_force_update(self) -> None:
+    async def async_update(self) -> None:
         """Retrieve latest state."""
-        self.debug("async_force_update")
+        self.debug("async_update")
 
         attrs = [
             a["attr"]
@@ -255,16 +373,16 @@ class Metering(ClusterHandler):
     summa_formatter = partialmethod(_formatter_function, FormatSelector.SUMMATION)
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(smartenergy.Prepayment.cluster_id)
-class Prepayment(ClusterHandler):
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(Prepayment.cluster_id)
+class PrepaymentClusterHandler(ClusterHandler):
     """Prepayment cluster handler."""
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(smartenergy.Price.cluster_id)
-class Price(ClusterHandler):
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(Price.cluster_id)
+class PriceClusterHandler(ClusterHandler):
     """Price cluster handler."""
 
 
-@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(smartenergy.Tunneling.cluster_id)
-class Tunneling(ClusterHandler):
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(Tunneling.cluster_id)
+class TunnelingClusterHandler(ClusterHandler):
     """Tunneling cluster handler."""

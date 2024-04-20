@@ -1,0 +1,11 @@
+generate_content:
+  fields:
+    prompt:
+      required: true
+      selector:
+        text:
+          multiline: true
+    image_filename:
+      required: false
+      selector:
+        object:

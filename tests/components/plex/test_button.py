@@ -1,4 +1,5 @@
 """Tests for Plex buttons."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -30,7 +31,7 @@ async def test_scan_clients_button_schedule(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             {
-                ATTR_ENTITY_ID: "button.scan_clients_plex_server_1",
+                ATTR_ENTITY_ID: "button.plex_server_1_scan_clients",
             },
             True,
         )
