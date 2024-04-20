@@ -22,9 +22,9 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from . import INCOMPLETE_NAM_DATA, init_integration, nam_data
+from . import INCOMPLETE_NAM_DATA, init_integration
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, load_json_object_fixture
 
 
 async def test_sensor(
@@ -100,6 +100,8 @@ async def test_incompleta_data_after_device_restart(hass: HomeAssistant) -> None
 
 async def test_availability(hass: HomeAssistant) -> None:
     """Ensure that we mark the entities unavailable correctly when device causes an error."""
+    nam_data = load_json_object_fixture("nam/nam_data.json")
+
     await init_integration(hass)
 
     state = hass.states.get("sensor.nettigo_air_monitor_bme280_temperature")
@@ -142,6 +144,8 @@ async def test_availability(hass: HomeAssistant) -> None:
 
 async def test_manual_update_entity(hass: HomeAssistant) -> None:
     """Test manual update entity via service homeasasistant/update_entity."""
+    nam_data = load_json_object_fixture("nam/nam_data.json")
+
     await init_integration(hass)
 
     await async_setup_component(hass, "homeassistant", {})
