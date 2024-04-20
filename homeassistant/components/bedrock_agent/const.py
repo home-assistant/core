@@ -1,4 +1,5 @@
 """Constants for the Amazon Bedrock Agent integration."""
+
 from typing import Final
 
 DOMAIN: Final = "bedrock_agent"
@@ -7,6 +8,8 @@ CONST_KEY_ID: Final = "key_id"
 CONST_KEY_SECRET: Final = "key_secret"
 CONST_REGION: Final = "region"
 CONST_MODEL_ID: Final = "model_id"
+CONST_KNOWLEDGEBASE_ID: Final = "knowledgebase_id"
+CONST_TITLE: Final = "title"
 
 CONST_PROMPT_CONTEXT: Final = "prompt_context"
 CONST_MODEL_LIST: Final = [

@@ -1,4 +1,5 @@
 """Config flow for Amazon Bedrock Agent integration."""
+
 from __future__ import annotations
 
 import logging
@@ -21,10 +22,12 @@ from homeassistant.helpers import selector
 from .const import (
     CONST_KEY_ID,
     CONST_KEY_SECRET,
+    CONST_KNOWLEDGEBASE_ID,
     CONST_MODEL_ID,
     CONST_MODEL_LIST,
     CONST_PROMPT_CONTEXT,
     CONST_REGION,
+    CONST_TITLE,
     DOMAIN,
 )
 
@@ -32,9 +35,15 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
+        vol.Required(CONST_TITLE): str,
         vol.Required(CONST_REGION): str,
         vol.Required(CONST_KEY_ID): str,
         vol.Required(CONST_KEY_SECRET): str,
+    }
+)
+
+STEP_MODELCONFIG_DATA_SCHEMA = vol.Schema(
+    {
         vol.Required(
             CONST_PROMPT_CONTEXT,
             default="Provide me a short answer to the following question: ",
@@ -42,6 +51,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONST_MODEL_ID): selector.SelectSelector(
             selector.SelectSelectorConfig(options=CONST_MODEL_LIST),
         ),
+        vol.Optional(CONST_KNOWLEDGEBASE_ID): str,
     }
 )
 
@@ -80,6 +90,11 @@ class BedrockAgentConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Amazon Bedrock Agent."""
 
     VERSION = 1
+    MINOR_VERSION = 2
+
+    def __init__(self) -> None:
+        """Initialize options flow."""
+        self.config_data: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -88,7 +103,7 @@ class BedrockAgentConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
+                await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -97,10 +112,28 @@ class BedrockAgentConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                self.config_data.update(user_input)
+                return await self.async_step_modelconfig()
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_modelconfig(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial step."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            self.config_data.update(user_input)
+            return self.async_create_entry(
+                title=self.config_data[CONST_TITLE], data=self.config_data
+            )
+
+        return self.async_show_form(
+            step_id="modelconfig",
+            data_schema=STEP_MODELCONFIG_DATA_SCHEMA,
+            errors=errors,
         )
 
     @staticmethod
@@ -134,7 +167,7 @@ class OptionsFlowHandler(OptionsFlow):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
+                await validate_input(self.hass, user_input)
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, data=user_input
                 )
@@ -146,7 +179,9 @@ class OptionsFlowHandler(OptionsFlow):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(
+                    title=self.config_entry.data[CONST_TITLE], data=user_input
+                )
 
         options_schema = vol.Schema(
             {
@@ -168,6 +203,10 @@ class OptionsFlowHandler(OptionsFlow):
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(options=CONST_MODEL_LIST),
                 ),
+                vol.Optional(
+                    CONST_KNOWLEDGEBASE_ID,
+                    default=self.config_entry.data[CONST_KNOWLEDGEBASE_ID],
+                ): str,
             }
         )
 

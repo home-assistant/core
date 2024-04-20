@@ -3,11 +3,18 @@
     "step": {
       "user": {
         "data": {
+          "title": "Name",
           "region": "Region",
           "key_id": "Key ID",
-          "key_secret": "Key Secret",
+          "key_secret": "Key Secret"
+        }
+      },
+      "modelconfig": {
+        "data": {
+          "use_knowledgebase": "Activate Knowledgebase",
           "model_id": "Model ID",
-          "prompt_context": "Prompt Context"
+          "prompt_context": "Prompt Context",
+          "knowledgebase_id": "Knowledge Base ID"
         }
       },
       "init": {
@@ -16,7 +23,8 @@
           "key_id": "Key ID",
           "key_secret": "Key Secret",
           "model_id": "Model ID",
-          "prompt_context": "Prompt Context"
+          "prompt_context": "Prompt Context",
+          "knowledgebase_id": "Knowledge Base ID"
         }
       }
     },

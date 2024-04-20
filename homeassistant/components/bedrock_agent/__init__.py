@@ -19,6 +19,7 @@ from homeassistant.helpers import intent
 from .const import (
     CONST_KEY_ID,
     CONST_KEY_SECRET,
+    CONST_KNOWLEDGEBASE_ID,
     CONST_MODEL_ID,
     CONST_MODEL_LIST,
     CONST_PROMPT_CONTEXT,
@@ -74,6 +75,12 @@ class BedrockAgent(conversation.AbstractConversationAgent):
             aws_access_key_id=self.entry.data[CONST_KEY_ID],
             aws_secret_access_key=self.entry.data[CONST_KEY_SECRET],
         )
+        self.bedrock_agent = boto3.client(
+            service_name="bedrock-agent-runtime",
+            region_name=self.entry.data[CONST_REGION],
+            aws_access_key_id=self.entry.data[CONST_KEY_ID],
+            aws_secret_access_key=self.entry.data[CONST_KEY_SECRET],
+        )
 
     @property
     def supported_languages(self) -> list[str] | Literal["*"]:
@@ -91,7 +98,28 @@ class BedrockAgent(conversation.AbstractConversationAgent):
         question = self.entry.data[CONST_PROMPT_CONTEXT] + question
 
         modelId = self.entry.data[CONST_MODEL_ID]
+        knowledgebaseId = self.entry.data.get(CONST_KNOWLEDGEBASE_ID) or ""
         body = json.dumps({"prompt": question})
+
+        if knowledgebaseId != "":
+            agent_input = {"text": question}
+            agent_retrieveAndGenerateConfiguration = {
+                "knowledgeBaseConfiguration": {
+                    "knowledgeBaseId": knowledgebaseId,
+                    "modelArn": modelId,
+                },
+                "type": "KNOWLEDGE_BASE",
+            }
+
+            bedrock_agent_response = await self.hass.async_add_executor_job(
+                partial(
+                    self.bedrock_agent.retrieve_and_generate,
+                    input=agent_input,
+                    retrieveAndGenerateConfiguration=agent_retrieveAndGenerateConfiguration,
+                ),
+            )
+
+            return bedrock_agent_response["output"]["text"]
 
         # switch case statement
         if modelId.startswith("amazon.titan-text-express-v1"):

@@ -1,4 +1,5 @@
 """Constants for the Amazon Bedrock Agent integration test."""
+
 from typing import Final
 
 CONST_PROMPT: Final = "Hello there."
@@ -97,6 +98,34 @@ CONST_LIST_MODEL_RESPONSE: Final = {
             "customizationsSupported": [],
             "inferenceTypesSupported": ["ON_DEMAND"],
             "modelLifecycle": {"status": "ACTIVE"},
+        }
+    ],
+}
+
+CONST_KNOWLEDGEBASE_RESPONSE: Final = {
+    "ResponseMetadata": {
+        "RequestId": "ba0a7935-dd93-432d-9f7a-a49af092dcd8",
+        "HTTPStatusCode": 200,
+        "HTTPHeaders": {
+            "date": "Wed, 17 Apr 2024 12:32:59 GMT",
+            "content-type": "application/json",
+            "content-length": "301",
+            "connection": "keep-alive",
+            "x-amzn-requestid": "ba0a7935-dd93-432d-9f7a-a49af092dcd8",
+        },
+        "RetryAttempts": 0,
+    },
+    "sessionId": "844528b9-bcae-4c9f-8c21-a4e04cb520b8",
+    "output": {"text": "Sorry, I am unable to assist you with this request."},
+    "citations": [
+        {
+            "generatedResponsePart": {
+                "textResponsePart": {
+                    "text": "Sorry, I am unable to assist you with this request.",
+                    "span": {},
+                }
+            },
+            "retrievedReferences": [],
         }
     ],
 }

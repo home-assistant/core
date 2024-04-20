@@ -1,4 +1,5 @@
 """Tests for the Amazon Bedrock integration."""
+
 from io import BytesIO
 import json
 import logging
@@ -32,6 +33,7 @@ def mock_config_entry(hass: HomeAssistant, request):
             "key_secret": "123",
             "model_id": request.param,
             "prompt_context": CONST_PROMPT_CONTEXT,
+            # "knowledgebase_id": ""
         },
     )
     entry.add_to_hass(hass)
@@ -72,8 +74,7 @@ def build_response_body(response: str):
     """Generate streaming body response from JSON string."""
     body_encoded = json.dumps(response).encode()
     body = StreamingBody(BytesIO(body_encoded), len(body_encoded))
-    expected_response = {
+    return {
         "body": body,
         "contentType": "application/json",
     }
-    return expected_response
