@@ -124,14 +124,18 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
         self.new_devices = device_data.keys() - self.data.devices.keys()
         self.new_templates = template_data.keys() - self.data.templates.keys()
 
-        if (
-            self.data.devices.keys() - device_data.keys()
-            or self.data.templates.keys() - template_data.keys()
-        ):
-            self.cleanup_removed_devices(list(device_data) + list(template_data))
-
         return FritzboxCoordinatorData(devices=device_data, templates=template_data)
 
     async def _async_update_data(self) -> FritzboxCoordinatorData:
         """Fetch all device data."""
-        return await self.hass.async_add_executor_job(self._update_fritz_devices)
+        new_data = await self.hass.async_add_executor_job(self._update_fritz_devices)
+
+        if (
+            self.data.devices.keys() - new_data.devices.keys()
+            or self.data.templates.keys() - new_data.templates.keys()
+        ):
+            self.cleanup_removed_devices(
+                list(new_data.devices) + list(new_data.templates)
+            )
+
+        return new_data
