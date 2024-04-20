@@ -457,8 +457,8 @@ SENSORS_ESI = {
         ),
         HmipEsiSensorEntityDescription(
             key=ESI_TYPE_ENERGY_COUNTER_USAGE_HIGH_TARIFF,
-            native_unit_of_measurement=UnitOfPower.KILO_WATT,
-            device_class=SensorDeviceClass.POWER,
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda device: device.functional_channel.energyCounterOne,
             exists_fn=lambda channel: channel.energyCounterOneType != ESI_TYPE_UNKNOWN,
@@ -466,8 +466,8 @@ SENSORS_ESI = {
         ),
         HmipEsiSensorEntityDescription(
             key=ESI_TYPE_ENERGY_COUNTER_USAGE_LOW_TARIFF,
-            native_unit_of_measurement=UnitOfPower.KILO_WATT,
-            device_class=SensorDeviceClass.POWER,
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda device: device.functional_channel.energyCounterTwo,
             exists_fn=lambda channel: channel.energyCounterTwoType != ESI_TYPE_UNKNOWN,
@@ -475,8 +475,8 @@ SENSORS_ESI = {
         ),
         HmipEsiSensorEntityDescription(
             key=ESI_TYPE_ENERGY_COUNTER_INPUT_SINGLE_TARIFF,
-            native_unit_of_measurement=UnitOfPower.KILO_WATT,
-            device_class=SensorDeviceClass.POWER,
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda device: device.functional_channel.energyCounterThree,
             exists_fn=lambda channel: channel.energyCounterThreeType
