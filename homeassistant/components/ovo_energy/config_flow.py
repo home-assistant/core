@@ -6,11 +6,12 @@ from collections.abc import Mapping
 from typing import Any
 
 import aiohttp
-from ovoenergy.ovoenergy import OVOEnergy
+from ovoenergy import OVOEnergy
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_ACCOUNT, DOMAIN
 
@@ -41,13 +42,18 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input is not None:
-            client = OVOEnergy()
+            client = OVOEnergy(
+                client_session=async_get_clientsession(self.hass),
+            )
             try:
                 authenticated = await client.authenticate(
                     user_input[CONF_USERNAME],
                     user_input[CONF_PASSWORD],
-                    user_input.get(CONF_ACCOUNT, None),
                 )
+                await client.bootstrap_accounts()
+
+                if custom_account := user_input.get(CONF_ACCOUNT) is not None:
+                    client.custom_account_id = custom_account
             except aiohttp.ClientError:
                 errors["base"] = "cannot_connect"
             else:
@@ -86,11 +92,16 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {CONF_USERNAME: self.username}
 
         if user_input is not None and user_input.get(CONF_PASSWORD) is not None:
-            client = OVOEnergy()
+            client = OVOEnergy(
+                client_session=async_get_clientsession(self.hass),
+            )
             try:
                 authenticated = await client.authenticate(
-                    self.username, user_input[CONF_PASSWORD], self.account
+                    self.username,
+                    user_input[CONF_PASSWORD],
                 )
+                if self.account is not None:
+                    client.custom_account_id = self.account
             except aiohttp.ClientError:
                 errors["base"] = "connection_error"
             else:
