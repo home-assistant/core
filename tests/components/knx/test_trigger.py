@@ -1,4 +1,5 @@
 """Tests for KNX integration specific triggers."""
+
 import logging
 
 import pytest

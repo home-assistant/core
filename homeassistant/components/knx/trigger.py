@@ -1,4 +1,5 @@
 """Offer knx telegram automation triggers."""
+
 from typing import Final
 
 import voluptuous as vol
