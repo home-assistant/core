@@ -122,11 +122,11 @@ async def test_local_setup(
 
 
 async def _check_local_state(
-    hass, zones, property, value, entity_id, zone_id, callback
+    hass, zones, entity_property, value, entity_id, zone_id, callback
 ):
     with patch.object(
         zones[zone_id],
-        property,
+        entity_property,
         new_callable=PropertyMock(return_value=value),
     ):
         await callback(zone_id, zones[zone_id])
@@ -210,19 +210,19 @@ async def test_armed_local_states(
     )
 
 
-async def _check_system_state(hass, system, property, value, callback):
+async def _check_system_state(hass, system, entity_property, value, callback):
     with patch.object(
         system,
-        property,
+        entity_property,
         new_callable=PropertyMock(return_value=value),
     ):
         await callback(system)
         await hass.async_block_till_done()
 
         expected_value = STATE_ON if value else STATE_OFF
-        if property == "ac_trouble":
-            property = "a_c_trouble"
-        entity_id = f"binary_sensor.test_site_name_{property}"
+        if entity_property == "ac_trouble":
+            entity_property = "a_c_trouble"
+        entity_id = f"binary_sensor.test_site_name_{entity_property}"
         assert hass.states.get(entity_id).state == expected_value
 
 
@@ -275,6 +275,10 @@ async def test_system_states(
         "clock_trouble",
         "box_tamper",
     ]
-    for property in properties:
-        await _check_system_state(hass, system_only_local, property, True, callback)
-        await _check_system_state(hass, system_only_local, property, False, callback)
+    for entity_property in properties:
+        await _check_system_state(
+            hass, system_only_local, entity_property, True, callback
+        )
+        await _check_system_state(
+            hass, system_only_local, entity_property, False, callback
+        )
