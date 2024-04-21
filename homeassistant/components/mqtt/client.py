@@ -549,6 +549,9 @@ class MQTT:
         """Handle socket close."""
         fileno = sock.fileno()
         _LOGGER.debug("%s: connection closed %s", self.config_entry.title, fileno)
+        # If socket close is called before the connect
+        # result is set make sure the first connection result is set
+        self._async_connection_result(False)
         if fileno > -1:
             self.loop.remove_reader(fileno)
         if self._misc_task is not None and not self._misc_task.done():
