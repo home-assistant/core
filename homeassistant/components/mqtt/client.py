@@ -473,40 +473,43 @@ class MQTT:
         # While we are connecting in the executor we need to
         # handle on_socket_open and on_socket_register_write
         # in the executor as well.
+        mqttc = self._mqttc
         try:
-            self._mqttc.on_socket_open = self._on_socket_open
-            self._mqttc.on_socket_register_write = self._on_socket_register_write
+            mqttc.on_socket_open = self._on_socket_open
+            mqttc.on_socket_register_write = self._on_socket_register_write
             yield
         finally:
             # Once the executor job is done, we can switch back to
             # handling these in the event loop.
-            self._mqttc.on_socket_open = self._async_on_socket_open
-            self._mqttc.on_socket_register_write = self._async_on_socket_register_write
+            mqttc.on_socket_open = self._async_on_socket_open
+            mqttc.on_socket_register_write = self._async_on_socket_register_write
 
     def init_client(self) -> None:
         """Initialize paho client."""
-        self._mqttc = MqttClientSetup(self.conf).client
+        mqttc = MqttClientSetup(self.conf).client
         # on_socket_unregister_write and _async_on_socket_close
         # are only ever called in the event loop
-        self._mqttc.on_socket_close = self._async_on_socket_close
-        self._mqttc.on_socket_unregister_write = self._async_on_socket_unregister_write
+        mqttc.on_socket_close = self._async_on_socket_close
+        mqttc.on_socket_unregister_write = self._async_on_socket_unregister_write
 
         # These will be called in the event loop
-        self._mqttc.on_connect = self._async_mqtt_on_connect
-        self._mqttc.on_disconnect = self._async_mqtt_on_disconnect
-        self._mqttc.on_message = self._async_mqtt_on_message
-        self._mqttc.on_publish = self._async_mqtt_on_callback
-        self._mqttc.on_subscribe = self._async_mqtt_on_callback
-        self._mqttc.on_unsubscribe = self._async_mqtt_on_callback
+        mqttc.on_connect = self._async_mqtt_on_connect
+        mqttc.on_disconnect = self._async_mqtt_on_disconnect
+        mqttc.on_message = self._async_mqtt_on_message
+        mqttc.on_publish = self._async_mqtt_on_callback
+        mqttc.on_subscribe = self._async_mqtt_on_callback
+        mqttc.on_unsubscribe = self._async_mqtt_on_callback
 
         if will := self.conf.get(CONF_WILL_MESSAGE, DEFAULT_WILL):
             will_message = PublishMessage(**will)
-            self._mqttc.will_set(
+            mqttc.will_set(
                 topic=will_message.topic,
                 payload=will_message.payload,
                 qos=will_message.qos,
                 retain=will_message.retain,
             )
+
+        self._mqttc = mqttc
 
     async def _misc_loop(self) -> None:
         """Start the MQTT client misc loop."""
