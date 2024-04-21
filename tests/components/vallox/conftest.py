@@ -5,26 +5,95 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from vallox_websocket_api import MetricData
 
+from homeassistant import config_entries
 from homeassistant.components.vallox.const import DOMAIN
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
+DEFAULT_HOST = "192.168.100.50"
+DEFAULT_NAME = "Vallox"
+
 
 @pytest.fixture
-def mock_entry(hass: HomeAssistant) -> MockConfigEntry:
+def default_host() -> str:
+    """Return the default host used in the default mock entry."""
+    return DEFAULT_HOST
+
+
+@pytest.fixture
+def default_name() -> str:
+    """Return the default name used in the default mock entry."""
+    return DEFAULT_NAME
+
+
+@pytest.fixture
+def mock_entry(
+    hass: HomeAssistant, default_host: str, default_name: str
+) -> MockConfigEntry:
+    """Create mocked Vallox config entry fixture."""
+    return create_mock_entry(hass, default_host, default_name)
+
+
+def create_mock_entry(hass: HomeAssistant, host: str, name: str) -> MockConfigEntry:
     """Create mocked Vallox config entry."""
     vallox_mock_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_HOST: "192.168.100.50",
-            CONF_NAME: "Vallox",
+            CONF_HOST: host,
+            CONF_NAME: name,
         },
     )
     vallox_mock_entry.add_to_hass(hass)
 
     return vallox_mock_entry
+
+
+@pytest.fixture
+async def setup_vallox_entry(
+    hass: HomeAssistant, default_host: str, default_name: str
+) -> None:
+    """Define a fixture to set up Vallox."""
+    await do_setup_vallox_entry(hass, default_host, default_name)
+
+
+async def do_setup_vallox_entry(hass: HomeAssistant, host: str, name: str) -> None:
+    """Set up the Vallox component."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            CONF_HOST: host,
+            CONF_NAME: name,
+        },
+    )
+    await hass.async_block_till_done()
+
+
+@pytest.fixture
+async def init_reconfigure_flow(
+    hass: HomeAssistant, mock_entry, setup_vallox_entry
+) -> tuple[MockConfigEntry, ConfigFlowResult]:
+    """Initialize a config entry and a reconfigure flow for it."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": mock_entry.entry_id,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # original entry
+    assert mock_entry.data["host"] == "192.168.100.50"
+
+    return (mock_entry, result)
 
 
 @pytest.fixture
