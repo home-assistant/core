@@ -1438,7 +1438,7 @@ ollama-hass==0.1.7
 omnilogic==0.4.5
 
 # homeassistant.components.ondilo_ico
-ondilo==0.4.0
+ondilo==0.5.0
 
 # homeassistant.components.onkyo
 onkyo-eiscp==1.2.7

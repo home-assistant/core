@@ -4,7 +4,7 @@ from asyncio import run_coroutine_threadsafe
 import logging
 from typing import Any
 
-from ondilo import Ondilo
+from ondilo import Ondilo, OndiloError
 
 from homeassistant import config_entries, core
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -45,8 +45,33 @@ class OndiloClient(Ondilo):
             _LOGGER.debug(
                 "Retrieving data for pool/spa: %s, id: %d", pool["name"], pool["id"]
             )
-            pool["ICO"] = self.get_ICO_details(pool["id"])
-            pool["sensors"] = self.get_last_pool_measures(pool["id"])
-            _LOGGER.debug("Retrieved the following sensors data: %s", pool["sensors"])
 
-        return pools
+            try:
+                pool["ICO"] = self.get_ICO_details(pool["id"])
+                if not pool["ICO"]:
+                    _LOGGER.error("The pool id %s does not have any ICO attached")
+                    continue
+            except OndiloError as exc:
+                _LOGGER.error(
+                    "Error retrieving ICO details of your pool id %d. Server error was: %s",
+                    pool["id"],
+                    exc,
+                )
+                continue
+
+            try:
+                pool["sensors"] = self.get_last_pool_measures(pool["id"])
+                _LOGGER.debug(
+                    "Retrieved the following sensors data: %s", pool["sensors"]
+                )
+            except OndiloError as exc:
+                # Trying to retrieve data from an ICO that was replaced produces an error
+                # So we'll remove the pool/spa from the list
+                _LOGGER.error(
+                    "Error retrieving last data of your ICO '%s'. Server error was: %s",
+                    pool["ICO"],
+                    exc,
+                )
+                pool["ICO"] = None
+
+        return [pool for pool in pools if "ICO" in pool and pool["ICO"]]
