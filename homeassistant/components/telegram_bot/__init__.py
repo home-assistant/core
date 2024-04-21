@@ -969,7 +969,9 @@ class TelegramNotificationService:
         else:
             await self.send_file(SERVICE_SEND_STICKER, target, **kwargs)
 
-    async def send_location(self, latitude, longitude, target=None, context=None, **kwargs):
+    async def send_location(
+        self, latitude, longitude, target=None, context=None, **kwargs
+    ):
         """Send a location."""
         latitude = float(latitude)
         longitude = float(longitude)
