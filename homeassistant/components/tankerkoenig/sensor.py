@@ -102,8 +102,8 @@ class FuelPriceSensor(TankerkoenigCoordinatorEntity, SensorEntity):
         }
 
         if coordinator.show_on_map:
-            attrs[ATTR_LATITUDE] = str(station.lat)
-            attrs[ATTR_LONGITUDE] = str(station.lng)
+            attrs[ATTR_LATITUDE] = station.lat
+            attrs[ATTR_LONGITUDE] = station.lng
         self._attr_extra_state_attributes = attrs
 
     @property
