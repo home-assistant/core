@@ -499,10 +499,8 @@ class MQTT:
         # pylint: disable=import-outside-toplevel
         import paho.mqtt.client as mqtt
 
-        while (last_msg := self._mqttc.loop_misc()) == mqtt.MQTT_ERR_SUCCESS:
+        while self._mqttc.loop_misc() == mqtt.MQTT_ERR_SUCCESS:
             await asyncio.sleep(1)
-
-        _LOGGER.debug("%s: loop_misc stopped: %s", self.config_entry.title, last_msg)
 
     @callback
     def _async_reader_callback(self, client: mqtt.Client) -> None:
