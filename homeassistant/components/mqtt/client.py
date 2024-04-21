@@ -878,8 +878,6 @@ class MQTT:
             return
 
         self.connected = True
-        if self._available_future and not self._available_future.done():
-            self._available_future.set_result(True)
         async_dispatcher_send(self.hass, MQTT_CONNECTED)
         _LOGGER.info(
             "Connected to MQTT server %s:%s (%s)",
@@ -913,6 +911,9 @@ class MQTT:
         else:
             # Update subscribe cooldown period to a shorter time
             self._subscribe_debouncer.set_timeout(SUBSCRIBE_COOLDOWN)
+
+        if self._available_future:
+            _set_result_unless_done(self._available_future, True)
 
     async def _async_resubscribe(self) -> None:
         """Resubscribe on reconnect."""
