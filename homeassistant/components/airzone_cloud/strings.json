@@ -21,6 +21,16 @@
       "air_quality_active": {
         "name": "Air Quality active"
       }
+    },
+    "select": {
+      "air_quality": {
+        "name": "Air Quality mode",
+        "state": {
+          "off": "Off",
+          "on": "On",
+          "auto": "Auto"
+        }
+      }
     }
   }
 }

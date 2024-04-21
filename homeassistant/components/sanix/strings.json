@@ -1,0 +1,36 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "To get the Serial number and the Token you just have to sign in to the [Sanix Dashboard]({dashboard_url}) and open the Help -> System version page.",
+        "data": {
+          "serial_number": "Serial number",
+          "token": "[%key:common::config_flow::data::access_token%]"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "service_date": {
+        "name": "Service date"
+      },
+      "fill_perc": {
+        "name": "Filled"
+      },
+      "device_no": {
+        "name": "Device number"
+      },
+      "ssid": {
+        "name": "SSID"
+      }
+    }
+  }
+}
