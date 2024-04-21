@@ -1,4 +1,5 @@
 """Notify platform tests for mobile_app."""
+
 from datetime import datetime, timedelta
 from unittest.mock import patch
 

@@ -1,4 +1,5 @@
 """Hub for communication with 1-Wire server or mount_dir."""
+
 from __future__ import annotations
 
 import logging

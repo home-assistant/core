@@ -1,4 +1,5 @@
 """Config flow to configure SmartThings."""
+
 from http import HTTPStatus
 import logging
 
@@ -7,7 +8,7 @@ from pysmartthings import APIResponseError, AppOAuth, SmartThings
 from pysmartthings.installedapp import format_install_url
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -35,7 +36,7 @@ from .smartapp import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class SmartThingsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class SmartThingsFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle configuration of SmartThings integrations."""
 
     VERSION = 2

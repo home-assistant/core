@@ -1,4 +1,5 @@
 """Support for Freedompro cover."""
+
 import json
 from typing import Any
 

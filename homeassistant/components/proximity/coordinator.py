@@ -15,10 +15,16 @@ from homeassistant.const import (
     CONF_ZONE,
     UnitOfLength,
 )
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.location import distance
 from homeassistant.util.unit_conversion import DistanceConverter
@@ -100,14 +106,18 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         self.entity_mapping[tracked_entity_id].append(entity_id)
 
     async def async_check_proximity_state_change(
-        self, entity: str, old_state: State | None, new_state: State | None
+        self,
+        event: Event[EventStateChangedData],
     ) -> None:
         """Fetch and process state change event."""
-        self.state_change_data = StateChangedData(entity, old_state, new_state)
+        data = event.data
+        self.state_change_data = StateChangedData(
+            data["entity_id"], data["old_state"], data["new_state"]
+        )
         await self.async_refresh()
 
     async def async_check_tracked_entity_change(
-        self, event: EventType[er.EventEntityRegistryUpdatedData]
+        self, event: Event[er.EventEntityRegistryUpdatedData]
     ) -> None:
         """Fetch and process tracked entity change event."""
         data = event.data
@@ -124,8 +134,10 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                     **self.config_entry.data,
                     CONF_TRACKED_ENTITIES: [
                         tracked_entity
-                        for tracked_entity in self.tracked_entities
-                        + [new_tracked_entity_id]
+                        for tracked_entity in (
+                            *self.tracked_entities,
+                            new_tracked_entity_id,
+                        )
                         if tracked_entity != old_tracked_entity_id
                     ],
                 },
@@ -292,15 +304,15 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 old_lat = None
                 old_lon = None
 
-            entities_data[state_change_data.entity_id][
-                ATTR_DIR_OF_TRAVEL
-            ] = self._calc_direction_of_travel(
-                zone_state,
-                new_state,
-                old_lat,
-                old_lon,
-                new_state.attributes.get(ATTR_LATITUDE),
-                new_state.attributes.get(ATTR_LONGITUDE),
+            entities_data[state_change_data.entity_id][ATTR_DIR_OF_TRAVEL] = (
+                self._calc_direction_of_travel(
+                    zone_state,
+                    new_state,
+                    old_lat,
+                    old_lon,
+                    new_state.attributes.get(ATTR_LATITUDE),
+                    new_state.attributes.get(ATTR_LONGITUDE),
+                )
             )
 
         # takeover data for legacy proximity entity
@@ -335,9 +347,9 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
             if cast(int, nearest_distance_to) == int(distance_to):
                 _LOGGER.debug("set equally close entity_data: %s", entity_data)
-                proximity_data[
-                    ATTR_NEAREST
-                ] = f"{proximity_data[ATTR_NEAREST]}, {str(entity_data[ATTR_NAME])}"
+                proximity_data[ATTR_NEAREST] = (
+                    f"{proximity_data[ATTR_NEAREST]}, {str(entity_data[ATTR_NAME])}"
+                )
 
         return ProximityData(proximity_data, entities_data)
 

@@ -1,4 +1,5 @@
 """Test configuration for auth."""
+
 import pytest
 
 

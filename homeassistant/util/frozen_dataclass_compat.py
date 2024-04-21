@@ -3,13 +3,12 @@
 This module enabled a non-breaking transition from mutable to frozen dataclasses
 derived from EntityDescription and sub classes thereof.
 """
+
 from __future__ import annotations
 
 import dataclasses
 import sys
-from typing import Any
-
-from typing_extensions import dataclass_transform
+from typing import Any, dataclass_transform
 
 
 def _class_fields(cls: type, kw_only: bool) -> list[tuple[str, Any, Any]]:
@@ -56,9 +55,7 @@ class FrozenOrThawed(type):
 
     def _make_dataclass(cls, name: str, bases: tuple[type, ...], kw_only: bool) -> None:
         class_fields = _class_fields(cls, kw_only)
-        dataclass_bases = []
-        for base in bases:
-            dataclass_bases.append(getattr(base, "_dataclass", base))
+        dataclass_bases = [getattr(base, "_dataclass", base) for base in bases]
         cls._dataclass = dataclasses.make_dataclass(
             name, class_fields, bases=tuple(dataclass_bases), frozen=True
         )

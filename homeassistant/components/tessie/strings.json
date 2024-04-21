@@ -252,7 +252,7 @@
       "state": {
         "name": "Status"
       },
-      "charge_state_battery_heater_on": {
+      "climate_state_battery_heater": {
         "name": "Battery heater"
       },
       "charge_state_charge_enable_request": {

@@ -1,4 +1,5 @@
 """Representation of an EnOcean device."""
+
 from enocean.protocol.packet import Packet
 from enocean.utils import combine_hex
 

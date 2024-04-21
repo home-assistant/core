@@ -60,7 +60,6 @@ async def test_sensor(
         "state_class": "measurement",
         "unit_of_measurement": "MiB",
         "device_class": "data_size",
-        "icon": "mdi:memory",
         "friendly_name": "System Monitor Memory free",
     }
 
@@ -233,7 +232,7 @@ async def test_sensor_updating(
     mock_psutil.virtual_memory.side_effect = Exception("Failed to update")
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     memory_sensor = hass.states.get("sensor.system_monitor_memory_free")
     assert memory_sensor is not None
@@ -249,7 +248,7 @@ async def test_sensor_updating(
     )
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     memory_sensor = hass.states.get("sensor.system_monitor_memory_free")
     assert memory_sensor is not None
@@ -294,7 +293,7 @@ async def test_sensor_process_fails(
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     process_sensor = hass.states.get("sensor.system_monitor_process_python3")
     assert process_sensor is not None
@@ -331,7 +330,7 @@ async def test_sensor_network_sensors(
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     network_out_sensor = hass.states.get("sensor.system_monitor_network_out_eth1")
     packets_out_sensor = hass.states.get("sensor.system_monitor_packets_out_eth1")
@@ -363,7 +362,7 @@ async def test_sensor_network_sensors(
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     network_out_sensor = hass.states.get("sensor.system_monitor_network_out_eth1")
     packets_out_sensor = hass.states.get("sensor.system_monitor_packets_out_eth1")
@@ -471,12 +470,9 @@ async def test_exception_handling_disk_sensor(
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert (
-        "Error fetching System Monitor Disk / coordinator data: OS error for /"
-        in caplog.text
-    )
+    assert "OS error for /" in caplog.text
 
     disk_sensor = hass.states.get("sensor.system_monitor_disk_free")
     assert disk_sensor is not None
@@ -487,12 +483,9 @@ async def test_exception_handling_disk_sensor(
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert (
-        "Error fetching System Monitor Disk / coordinator data: OS error for /"
-        in caplog.text
-    )
+    assert "OS error for /" in caplog.text
 
     disk_sensor = hass.states.get("sensor.system_monitor_disk_free")
     assert disk_sensor is not None
@@ -505,7 +498,7 @@ async def test_exception_handling_disk_sensor(
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     disk_sensor = hass.states.get("sensor.system_monitor_disk_free")
     assert disk_sensor is not None
@@ -535,7 +528,7 @@ async def test_cpu_percentage_is_zero_returns_unknown(
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     cpu_sensor = hass.states.get("sensor.system_monitor_processor_use")
     assert cpu_sensor is not None
@@ -545,8 +538,81 @@ async def test_cpu_percentage_is_zero_returns_unknown(
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     cpu_sensor = hass.states.get("sensor.system_monitor_processor_use")
     assert cpu_sensor is not None
     assert cpu_sensor.state == "15"
+
+
+async def test_remove_obsolete_entities(
+    hass: HomeAssistant,
+    mock_psutil: Mock,
+    mock_added_config_entry: ConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test we remove sensors that are not actual and disabled."""
+    cpu_sensor = hass.states.get("sensor.system_monitor_processor_use")
+    assert cpu_sensor is None
+    cpu_sensor_entity = entity_registry.async_get("sensor.system_monitor_processor_use")
+    assert cpu_sensor_entity.disabled is True
+
+    assert (
+        len(
+            entity_registry.entities.get_entries_for_config_entry_id(
+                mock_added_config_entry.entry_id
+            )
+        )
+        == 37
+    )
+
+    entity_registry.async_update_entity(
+        "sensor.system_monitor_processor_use", disabled_by=None
+    )
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Fake an entity which should be removed as not supported and disabled
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "network_out_veth12345",
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+        config_entry=mock_added_config_entry,
+        has_entity_name=True,
+        device_id=cpu_sensor_entity.device_id,
+        translation_key="network_out",
+    )
+    # Fake an entity which should not be removed as not supported but not disabled
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "network_out_veth54321",
+        disabled_by=None,
+        config_entry=mock_added_config_entry,
+        has_entity_name=True,
+        device_id=cpu_sensor_entity.device_id,
+        translation_key="network_out",
+    )
+    await hass.config_entries.async_reload(mock_added_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        len(
+            entity_registry.entities.get_entries_for_config_entry_id(
+                mock_added_config_entry.entry_id
+            )
+        )
+        == 38
+    )
+
+    assert (
+        entity_registry.async_get("sensor.systemmonitor_network_out_veth12345") is None
+    )
+    assert (
+        entity_registry.async_get("sensor.systemmonitor_network_out_veth54321")
+        is not None
+    )

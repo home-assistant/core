@@ -1,4 +1,5 @@
 """Support for exposing NX584 elements as sensors."""
+
 from __future__ import annotations
 
 import logging

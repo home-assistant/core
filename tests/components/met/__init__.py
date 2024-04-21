@@ -1,4 +1,5 @@
 """Tests for Met.no."""
+
 from unittest.mock import patch
 
 from homeassistant.components.met.const import CONF_TRACK_HOME, DOMAIN

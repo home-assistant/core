@@ -1,4 +1,5 @@
 """Checks for basic helper utils."""
+
 from homeassistant.components.homekit_controller.utils import unique_id_to_iids
 
 

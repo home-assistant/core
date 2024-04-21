@@ -1,4 +1,5 @@
 """Support for Insteon lights via PowerLinc Modem."""
+
 from typing import Any
 
 from pyinsteon.config import ON_LEVEL

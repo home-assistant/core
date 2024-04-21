@@ -11,6 +11,7 @@ from homeassistant.components.cover import (
 from homeassistant.const import STATE_CLOSED, STATE_OPEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
+from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
 
@@ -60,7 +61,7 @@ async def test_close_cover_intent(hass: HomeAssistant) -> None:
 
 async def test_set_cover_position(hass: HomeAssistant) -> None:
     """Test HassSetPosition intent for covers."""
-    await cover_intent.async_setup_intents(hass)
+    assert await async_setup_component(hass, "intent", {})
 
     entity_id = f"{DOMAIN}.test_cover"
     hass.states.async_set(

@@ -1,4 +1,5 @@
 """The Yale Access Bluetooth integration."""
+
 from __future__ import annotations
 
 from yalexs_ble import (

@@ -1,4 +1,5 @@
 """Interfaces with iAlarm control panels."""
+
 from __future__ import annotations
 
 from homeassistant.components.alarm_control_panel import (

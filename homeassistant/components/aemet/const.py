@@ -1,4 +1,5 @@
 """Constant values for the AEMET OpenData component."""
+
 from __future__ import annotations
 
 from aemet_opendata.const import (
@@ -119,9 +120,4 @@ FORECAST_MAP = {
         AOD_WIND_SPEED_MAX: ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
         AOD_WIND_SPEED: ATTR_FORECAST_NATIVE_WIND_SPEED,
     },
-}
-
-WEATHER_FORECAST_MODES = {
-    AOD_FORECAST_DAILY: "daily",
-    AOD_FORECAST_HOURLY: "hourly",
 }

@@ -1,4 +1,5 @@
 """Climate device for CCM15 coordinator."""
+
 import logging
 from typing import Any
 
@@ -131,7 +132,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
 
     @property
     def available(self) -> bool:
-        """Return the avalability of the entity."""
+        """Return the availability of the entity."""
         return self.data is not None
 
     @property

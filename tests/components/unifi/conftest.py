@@ -1,4 +1,5 @@
 """Fixtures for UniFi Network methods."""
+
 from __future__ import annotations
 
 import asyncio
@@ -9,7 +10,7 @@ from aiounifi.models.message import MessageKey
 import pytest
 
 from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
-from homeassistant.components.unifi.hub import RETRY_TIMER
+from homeassistant.components.unifi.hub.websocket import RETRY_TIMER
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -45,10 +46,10 @@ class WebsocketStateManager(asyncio.Event):
         """
         hub = self.hass.data[UNIFI_DOMAIN][DEFAULT_CONFIG_ENTRY_ID]
         self.aioclient_mock.get(
-            f"https://{hub.host}:1234", status=302
+            f"https://{hub.config.host}:1234", status=302
         )  # Check UniFi OS
         self.aioclient_mock.post(
-            f"https://{hub.host}:1234/api/login",
+            f"https://{hub.config.host}:1234/api/login",
             json={"data": "login successful", "meta": {"rc": "ok"}},
             headers={"content-type": CONTENT_TYPE_JSON},
         )

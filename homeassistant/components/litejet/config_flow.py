@@ -1,4 +1,5 @@
 """Config flow for the LiteJet lighting system."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -7,25 +8,29 @@ import pylitejet
 from serial import SerialException
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_PORT
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_DEFAULT_TRANSITION, DOMAIN
 
 
-class LiteJetOptionsFlow(config_entries.OptionsFlow):
+class LiteJetOptionsFlow(OptionsFlow):
     """Handle LiteJet options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize LiteJet options flow."""
         self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage LiteJet options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -45,12 +50,12 @@ class LiteJetOptionsFlow(config_entries.OptionsFlow):
         )
 
 
-class LiteJetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class LiteJetConfigFlow(ConfigFlow, domain=DOMAIN):
     """LiteJet config flow."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Create a LiteJet config entry based upon user input."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -79,7 +84,7 @@ class LiteJetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> LiteJetOptionsFlow:
         """Get the options flow for this handler."""
         return LiteJetOptionsFlow(config_entry)

@@ -1,0 +1,38 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "protection_window": {
+        "default": "mdi:sunglasses"
+      }
+    },
+    "sensor": {
+      "current_uv_index": {
+        "default": "mdi:weather-sunny"
+      },
+      "current_uv_level": {
+        "default": "mdi:weather-sunny"
+      },
+      "max_uv_index": {
+        "default": "mdi:weather-sunny"
+      },
+      "skin_type_1_safe_exposure_time": {
+        "default": "mdi:timer-outline"
+      },
+      "skin_type_2_safe_exposure_time": {
+        "default": "mdi:timer-outline"
+      },
+      "skin_type_3_safe_exposure_time": {
+        "default": "mdi:timer-outline"
+      },
+      "skin_type_4_safe_exposure_time": {
+        "default": "mdi:timer-outline"
+      },
+      "skin_type_5_safe_exposure_time": {
+        "default": "mdi:timer-outline"
+      },
+      "skin_type_6_safe_exposure_time": {
+        "default": "mdi:timer-outline"
+      }
+    }
+  }
+}
