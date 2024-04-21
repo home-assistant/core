@@ -1,11 +1,14 @@
 """Test the cloud.iot module."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import aiohttp
 from aiohttp import web
+from hass_nabucasa.client import RemoteActivationNotAllowed
 import pytest
 
+from homeassistant.components import webhook
 from homeassistant.components.cloud import DOMAIN
 from homeassistant.components.cloud.client import (
     VALID_REPAIR_TRANSLATION_KEYS,
@@ -204,7 +207,7 @@ async def test_webhook_msg(
         received.append(request)
         return web.json_response({"from": "handler"})
 
-    hass.components.webhook.async_register("test", "Test", "mock-webhook-id", handler)
+    webhook.async_register(hass, "test", "Test", "mock-webhook-id", handler)
 
     response = await cloud.client.async_webhook_message(
         {
@@ -365,9 +368,10 @@ async def test_system_msg(hass: HomeAssistant) -> None:
 
 async def test_cloud_connection_info(hass: HomeAssistant) -> None:
     """Test connection info msg."""
-    with patch("hass_nabucasa.Cloud.initialize"), patch(
-        "uuid.UUID.hex", new_callable=PropertyMock
-    ) as hexmock:
+    with (
+        patch("hass_nabucasa.Cloud.initialize"),
+        patch("uuid.UUID.hex", new_callable=PropertyMock) as hexmock,
+    ):
         hexmock.return_value = "12345678901234567890"
         setup = await async_setup_component(hass, "cloud", {"cloud": {}})
         assert setup
@@ -376,14 +380,15 @@ async def test_cloud_connection_info(hass: HomeAssistant) -> None:
     response = await cloud.client.async_cloud_connection_info({})
 
     assert response == {
+        "instance_id": "12345678901234567890",
         "remote": {
+            "alias": None,
+            "can_enable": True,
             "connected": False,
             "enabled": False,
             "instance_domain": None,
-            "alias": None,
         },
         "version": HA_VERSION,
-        "instance_id": "12345678901234567890",
     }
 
 
@@ -428,3 +433,72 @@ async def test_async_create_repair_issue_unknown(
         )
     issue = issue_registry.async_get_issue(domain=DOMAIN, issue_id=identifier)
     assert issue is None
+
+
+async def test_disconnected(hass: HomeAssistant) -> None:
+    """Test cleanup when disconnected from the cloud."""
+    prefs = MagicMock(
+        alexa_enabled=False,
+        google_enabled=True,
+        async_set_username=AsyncMock(return_value=None),
+    )
+    client = CloudClient(hass, prefs, None, {}, {})
+    client.cloud = MagicMock(is_logged_in=True, username="mock-username")
+    client._google_config = Mock()
+    client._google_config.async_disable_local_sdk.assert_not_called()
+
+    await client.cloud_disconnected()
+    client._google_config.async_disable_local_sdk.assert_called_once_with()
+
+
+async def test_logged_out(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+) -> None:
+    """Test cleanup when logged out from the cloud."""
+
+    assert await async_setup_component(hass, "cloud", {"cloud": {}})
+    await hass.async_block_till_done()
+    await cloud.login("test-user", "test-pass")
+
+    alexa_config_mock = Mock(async_enable_proactive_mode=AsyncMock())
+    google_config_mock = Mock(async_sync_entities=AsyncMock())
+    cloud.client._alexa_config = alexa_config_mock
+    cloud.client._google_config = google_config_mock
+
+    await cloud.client.cloud_connected()
+    await hass.async_block_till_done()
+
+    # Simulate logged out
+    await cloud.logout()
+    await hass.async_block_till_done()
+
+    # Check we clean up Alexa and Google
+    assert cloud.client._alexa_config is None
+    assert cloud.client._google_config is None
+    google_config_mock.async_deinitialize.assert_called_once_with()
+    alexa_config_mock.async_deinitialize.assert_called_once_with()
+
+
+async def test_remote_enable(hass: HomeAssistant) -> None:
+    """Test enabling remote UI."""
+    prefs = MagicMock(async_update=AsyncMock(return_value=None))
+    client = CloudClient(hass, prefs, None, {}, {})
+    client.cloud = MagicMock(is_logged_in=True, username="mock-username")
+
+    await client.async_cloud_connect_update(True)
+    prefs.async_update.assert_called_once_with(remote_enabled=True)
+
+
+async def test_remote_enable_not_allowed(hass: HomeAssistant) -> None:
+    """Test enabling remote UI."""
+    prefs = MagicMock(
+        async_update=AsyncMock(return_value=None),
+        remote_allow_remote_enable=False,
+    )
+    client = CloudClient(hass, prefs, None, {}, {})
+    client.cloud = MagicMock(is_logged_in=True, username="mock-username")
+
+    with pytest.raises(RemoteActivationNotAllowed):
+        await client.async_cloud_connect_update(True)
+    prefs.async_update.assert_not_called()

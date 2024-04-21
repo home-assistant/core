@@ -1,4 +1,5 @@
 """Media Player platform for Tessie integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.media_player import (
@@ -33,7 +34,6 @@ async def async_setup_entry(
 class TessieMediaEntity(TessieEntity, MediaPlayerEntity):
     """Vehicle Location Media Class."""
 
-    _attr_name = None
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
     def __init__(

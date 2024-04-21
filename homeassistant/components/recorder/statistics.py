@@ -1,9 +1,9 @@
 """Statistics helper."""
+
 from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Sequence
-import contextlib
 import dataclasses
 from datetime import datetime, timedelta
 from functools import lru_cache, partial
@@ -11,12 +11,11 @@ from itertools import chain, groupby
 import logging
 from operator import itemgetter
 import re
-from statistics import mean
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
 from sqlalchemy import Select, and_, bindparam, func, lambda_stmt, select, text
 from sqlalchemy.engine.row import Row
-from sqlalchemy.exc import SQLAlchemyError, StatementError
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 import voluptuous as vol
@@ -31,6 +30,7 @@ from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
     DataRateConverter,
     DistanceConverter,
+    DurationConverter,
     ElectricCurrentConverter,
     ElectricPotentialConverter,
     EnergyConverter,
@@ -42,6 +42,7 @@ from homeassistant.util.unit_conversion import (
     TemperatureConverter,
     UnitlessRatioConverter,
     VolumeConverter,
+    VolumeFlowRateConverter,
 )
 
 from .const import (
@@ -71,6 +72,7 @@ from .models import (
 from .util import (
     execute,
     execute_stmt_lambda_element,
+    filter_unique_constraint_integrity_error,
     get_instance,
     retryable_database_job,
     session_scope,
@@ -115,7 +117,7 @@ QUERY_STATISTICS_SUMMARY_SUM = (
     StatisticsShortTerm.state,
     StatisticsShortTerm.sum,
     func.row_number()
-    .over(  # type: ignore[no-untyped-call]
+    .over(
         partition_by=StatisticsShortTerm.metadata_id,
         order_by=StatisticsShortTerm.start_ts.desc(),
     )
@@ -126,6 +128,7 @@ QUERY_STATISTICS_SUMMARY_SUM = (
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     **{unit: DataRateConverter for unit in DataRateConverter.VALID_UNITS},
     **{unit: DistanceConverter for unit in DistanceConverter.VALID_UNITS},
+    **{unit: DurationConverter for unit in DurationConverter.VALID_UNITS},
     **{unit: ElectricCurrentConverter for unit in ElectricCurrentConverter.VALID_UNITS},
     **{
         unit: ElectricPotentialConverter
@@ -140,9 +143,21 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     **{unit: TemperatureConverter for unit in TemperatureConverter.VALID_UNITS},
     **{unit: UnitlessRatioConverter for unit in UnitlessRatioConverter.VALID_UNITS},
     **{unit: VolumeConverter for unit in VolumeConverter.VALID_UNITS},
+    **{unit: VolumeFlowRateConverter for unit in VolumeFlowRateConverter.VALID_UNITS},
 }
 
 DATA_SHORT_TERM_STATISTICS_RUN_CACHE = "recorder_short_term_statistics_run_cache"
+
+
+def mean(values: list[float]) -> float | None:
+    """Return the mean of the values.
+
+    This is a very simple version that only works
+    with a non-empty list of floats. The built-in
+    statistics.mean is more robust but is is almost
+    an order of magnitude slower.
+    """
+    return sum(values) / len(values)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -334,8 +349,7 @@ def get_start_time() -> datetime:
     now = dt_util.utcnow()
     current_period_minutes = now.minute - now.minute % 5
     current_period = now.replace(minute=current_period_minutes, second=0, microsecond=0)
-    last_period = current_period - timedelta(minutes=5)
-    return last_period
+    return current_period - timedelta(minutes=5)
 
 
 def _compile_hourly_statistics_summary_mean_stmt(
@@ -440,7 +454,9 @@ def compile_missing_statistics(instance: Recorder) -> bool:
 
     with session_scope(
         session=instance.get_session(),
-        exception_filter=_filter_unique_constraint_integrity_error(instance),
+        exception_filter=filter_unique_constraint_integrity_error(
+            instance, "statistic"
+        ),
     ) as session:
         # Find the newest statistics run, if any
         if last_run := session.query(func.max(StatisticsRuns.start)).scalar():
@@ -472,7 +488,9 @@ def compile_statistics(instance: Recorder, start: datetime, fire_events: bool) -
     # Return if we already have 5-minute statistics for the requested period
     with session_scope(
         session=instance.get_session(),
-        exception_filter=_filter_unique_constraint_integrity_error(instance),
+        exception_filter=filter_unique_constraint_integrity_error(
+            instance, "statistic"
+        ),
     ) as session:
         modified_statistic_ids = _compile_statistics(
             instance, session, start, fire_events
@@ -622,7 +640,6 @@ def _insert_statistics(
     try:
         stat = table.from_stats(metadata_id, statistic)
         session.add(stat)
-        return stat
     except SQLAlchemyError:
         _LOGGER.exception(
             "Unexpected exception when inserting statistics %s:%s ",
@@ -630,6 +647,7 @@ def _insert_statistics(
             statistic,
         )
         return None
+    return stat
 
 
 def _update_statistics(
@@ -666,7 +684,7 @@ def get_metadata_with_session(
     session: Session,
     *,
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
     """Fetch meta data.
@@ -687,7 +705,7 @@ def get_metadata(
     hass: HomeAssistant,
     *,
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
     """Return metadata for statistic_ids."""
@@ -723,7 +741,9 @@ def update_statistics_metadata(
     if new_statistic_id is not UNDEFINED and new_statistic_id is not None:
         with session_scope(
             session=instance.get_session(),
-            exception_filter=_filter_unique_constraint_integrity_error(instance),
+            exception_filter=filter_unique_constraint_integrity_error(
+                instance, "statistic"
+            ),
         ) as session:
             statistics_meta_manager.update_statistic_id(
                 session, DOMAIN, statistic_id, new_statistic_id
@@ -733,7 +753,7 @@ def update_statistics_metadata(
 async def async_list_statistic_ids(
     hass: HomeAssistant,
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
 ) -> list[dict]:
     """Return all statistic_ids (or filtered one) and unit of measurement.
 
@@ -803,7 +823,7 @@ def _flatten_list_statistic_ids_metadata_result(
 def list_statistic_ids(
     hass: HomeAssistant,
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
 ) -> list[dict]:
     """Return all statistic_ids (or filtered one) and unit of measurement.
 
@@ -2018,7 +2038,7 @@ def _fast_build_sum_list(
     ]
 
 
-def _sorted_statistics_to_dict(  # noqa: C901
+def _sorted_statistics_to_dict(
     hass: HomeAssistant,
     session: Session,
     stats: Sequence[Row[Any]],
@@ -2042,7 +2062,7 @@ def _sorted_statistics_to_dict(  # noqa: C901
     seen_statistic_ids: set[str] = set()
     key_func = itemgetter(metadata_id_idx)
     for meta_id, group in groupby(stats, key_func):
-        stats_list = stats_by_meta_id[meta_id] = list(group)
+        stats_by_meta_id[meta_id] = list(group)
         seen_statistic_ids.add(metadata[meta_id]["statistic_id"])
 
     # Set all statistic IDs to empty lists in result set to maintain the order
@@ -2232,54 +2252,6 @@ def async_add_external_statistics(
     _async_import_statistics(hass, metadata, statistics)
 
 
-def _filter_unique_constraint_integrity_error(
-    instance: Recorder,
-) -> Callable[[Exception], bool]:
-    def _filter_unique_constraint_integrity_error(err: Exception) -> bool:
-        """Handle unique constraint integrity errors."""
-        if not isinstance(err, StatementError):
-            return False
-
-        assert instance.engine is not None
-        dialect_name = instance.engine.dialect.name
-
-        ignore = False
-        if (
-            dialect_name == SupportedDialect.SQLITE
-            and "UNIQUE constraint failed" in str(err)
-        ):
-            ignore = True
-        if (
-            dialect_name == SupportedDialect.POSTGRESQL
-            and err.orig
-            and hasattr(err.orig, "pgcode")
-            and err.orig.pgcode == "23505"
-        ):
-            ignore = True
-        if (
-            dialect_name == SupportedDialect.MYSQL
-            and err.orig
-            and hasattr(err.orig, "args")
-        ):
-            with contextlib.suppress(TypeError):
-                if err.orig.args[0] == 1062:
-                    ignore = True
-
-        if ignore:
-            _LOGGER.warning(
-                (
-                    "Blocked attempt to insert duplicated statistic rows, please report"
-                    " at %s"
-                ),
-                "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+recorder%22",
-                exc_info=err,
-            )
-
-        return ignore
-
-    return _filter_unique_constraint_integrity_error
-
-
 def _import_statistics_with_session(
     instance: Recorder,
     session: Session,
@@ -2383,7 +2355,9 @@ def import_statistics(
 
     with session_scope(
         session=instance.get_session(),
-        exception_filter=_filter_unique_constraint_integrity_error(instance),
+        exception_filter=filter_unique_constraint_integrity_error(
+            instance, "statistic"
+        ),
     ) as session:
         return _import_statistics_with_session(
             instance, session, metadata, statistics, table

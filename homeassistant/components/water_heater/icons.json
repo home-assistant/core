@@ -1,0 +1,31 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:water-boiler",
+      "state": {
+        "off": "mdi:water-boiler-off"
+      },
+      "state_attributes": {
+        "operation_mode": {
+          "default": "mdi:circle-medium",
+          "state": {
+            "eco": "mdi:leaf",
+            "electric": "mdi:lightning-bolt",
+            "gas": "mdi:fire-circle",
+            "heat_pump": "mdi:heat-wave",
+            "high_demand": "mdi:finance",
+            "off": "mdi:power",
+            "performance": "mdi:rocket-launch"
+          }
+        }
+      }
+    }
+  },
+  "services": {
+    "set_away_mode": "mdi:account-arrow-right",
+    "set_operation_mode": "mdi:water-boiler",
+    "set_temperature": "mdi:thermometer",
+    "turn_off": "mdi:water-boiler-off",
+    "turn_on": "mdi:water-boiler"
+  }
+}

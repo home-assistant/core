@@ -1,4 +1,5 @@
 """Feed Entity Manager Sensor support for GeoNet NZ Volcano Feeds."""
+
 from __future__ import annotations
 
 import logging
@@ -63,6 +64,7 @@ class GeonetnzVolcanoSensor(SensorEntity):
         self._config_entry_id = config_entry_id
         self._feed_manager = feed_manager
         self._external_id = external_id
+        self._attr_unique_id = f"{config_entry_id}_{external_id}"
         self._unit_system = unit_system
         self._title = None
         self._distance = None

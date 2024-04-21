@@ -1,4 +1,5 @@
 """Support for Ubiquiti's UniFi Protect NVR."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -28,7 +29,7 @@ from .utils import async_dispatch_id as _ufpd
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ProtectButtonEntityDescription(
     ProtectSetableKeysMixin[T], ButtonEntityDescription
 ):
@@ -113,7 +114,8 @@ async def async_setup_entry(
     """Discover devices on a UniFi Protect NVR."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
-    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         entities = async_all_device_entities(
             data,
             ProtectButton,
@@ -193,17 +195,3 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
 
         if self.entity_description.ufp_press is not None:
             await getattr(self.device, self.entity_description.ufp_press)()
-
-    @callback
-    def _async_updated_event(self, device: ProtectModelWithId) -> None:
-        """Call back for incoming data that only writes when state has changed.
-
-        Only available is updated for these entities, and since the websocket
-        update for the device will trigger an update for all entities connected
-        to the device, we want to avoid writing state unless something has
-        actually changed.
-        """
-        previous_available = self._attr_available
-        self._async_update_device_from_protect(device)
-        if self._attr_available != previous_available:
-            self.async_write_ha_state()

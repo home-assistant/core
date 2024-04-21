@@ -23,14 +23,12 @@ PROTECT_MODE = "protect_mode"
 
 PROTECT_MODE_OPTIONS = ["away", "home", "schedule"]
 
-FLOOD_ICON = "mdi:home-flood"
-
 
 @dataclass(kw_only=True, frozen=True)
 class DROPSelectEntityDescription(SelectEntityDescription):
     """Describes DROP select entity."""
 
-    value_fn: Callable[[DROPDeviceDataUpdateCoordinator], str | None]
+    value_fn: Callable[[DROPDeviceDataUpdateCoordinator], int | None]
     set_fn: Callable[[DROPDeviceDataUpdateCoordinator, str], Awaitable[Any]]
 
 
@@ -38,7 +36,6 @@ SELECTS: list[DROPSelectEntityDescription] = [
     DROPSelectEntityDescription(
         key=PROTECT_MODE,
         translation_key=PROTECT_MODE,
-        icon=FLOOD_ICON,
         options=PROTECT_MODE_OPTIONS,
         value_fn=lambda device: device.drop_api.protect_mode(),
         set_fn=lambda device, value: device.set_protect_mode(value),
@@ -88,7 +85,8 @@ class DROPSelect(DROPEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the current selected option."""
-        return self.entity_description.value_fn(self.coordinator)
+        val = self.entity_description.value_fn(self.coordinator)
+        return str(val) if val else None
 
     async def async_select_option(self, option: str) -> None:
         """Update the current selected option."""

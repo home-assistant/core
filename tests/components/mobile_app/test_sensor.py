@@ -1,4 +1,5 @@
 """Entity tests for mobile_app."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -18,10 +19,10 @@ from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 @pytest.mark.parametrize(
     ("unit_system", "state_unit", "state1", "state2"),
-    (
+    [
         (METRIC_SYSTEM, UnitOfTemperature.CELSIUS, "100", "123"),
         (US_CUSTOMARY_SYSTEM, UnitOfTemperature.FAHRENHEIT, "212", "253"),
-    ),
+    ],
 )
 async def test_sensor(
     hass: HomeAssistant,
@@ -53,7 +54,7 @@ async def test_sensor(
                 "type": "sensor",
                 "entity_category": "diagnostic",
                 "unique_id": "battery_temp",
-                "state_class": "total",
+                "state_class": "measurement",
                 "unit_of_measurement": UnitOfTemperature.CELSIUS,
             },
         },
@@ -73,7 +74,7 @@ async def test_sensor(
     # unit of temperature sensor is automatically converted to the system UoM
     assert entity.attributes["unit_of_measurement"] == state_unit
     assert entity.attributes["foo"] == "bar"
-    assert entity.attributes["state_class"] == "total"
+    assert entity.attributes["state_class"] == "measurement"
     assert entity.domain == "sensor"
     assert entity.name == "Test 1 Battery Temperature"
     assert entity.state == state1
@@ -127,7 +128,7 @@ async def test_sensor(
 
 @pytest.mark.parametrize(
     ("unique_id", "unit_system", "state_unit", "state1", "state2"),
-    (
+    [
         ("battery_temperature", METRIC_SYSTEM, UnitOfTemperature.CELSIUS, "100", "123"),
         (
             "battery_temperature",
@@ -144,7 +145,7 @@ async def test_sensor(
             "212",
             "123",
         ),
-    ),
+    ],
 )
 async def test_sensor_migration(
     hass: HomeAssistant,
@@ -175,7 +176,7 @@ async def test_sensor_migration(
                 "type": "sensor",
                 "entity_category": "diagnostic",
                 "unique_id": unique_id,
-                "state_class": "total",
+                "state_class": "measurement",
                 "unit_of_measurement": UnitOfTemperature.CELSIUS,
             },
         },
@@ -195,7 +196,7 @@ async def test_sensor_migration(
     # unit of temperature sensor is automatically converted to the system UoM
     assert entity.attributes["unit_of_measurement"] == state_unit
     assert entity.attributes["foo"] == "bar"
-    assert entity.attributes["state_class"] == "total"
+    assert entity.attributes["state_class"] == "measurement"
     assert entity.domain == "sensor"
     assert entity.name == "Test 1 Battery Temperature"
     assert entity.state == state1

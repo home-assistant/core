@@ -1,4 +1,5 @@
 """Plugwise Select component for Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -30,14 +31,12 @@ SELECT_TYPES = (
     PlugwiseSelectEntityDescription(
         key="select_schedule",
         translation_key="select_schedule",
-        icon="mdi:calendar-clock",
         command=lambda api, loc, opt: api.set_schedule_state(loc, STATE_ON, opt),
         options_key="available_schedules",
     ),
     PlugwiseSelectEntityDescription(
         key="select_regulation_mode",
         translation_key="regulation_mode",
-        icon="mdi:hvac",
         entity_category=EntityCategory.CONFIG,
         command=lambda api, loc, opt: api.set_regulation_mode(opt),
         options_key="regulation_modes",
@@ -45,10 +44,16 @@ SELECT_TYPES = (
     PlugwiseSelectEntityDescription(
         key="select_dhw_mode",
         translation_key="dhw_mode",
-        icon="mdi:shower",
         entity_category=EntityCategory.CONFIG,
         command=lambda api, loc, opt: api.set_dhw_mode(opt),
         options_key="dhw_modes",
+    ),
+    PlugwiseSelectEntityDescription(
+        key="select_gateway_mode",
+        translation_key="gateway_mode",
+        entity_category=EntityCategory.CONFIG,
+        command=lambda api, loc, opt: api.set_gateway_mode(opt),
+        options_key="gateway_modes",
     ),
 )
 
@@ -63,15 +68,12 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
 
-    entities: list[PlugwiseSelectEntity] = []
-    for device_id, device in coordinator.data.devices.items():
-        for description in SELECT_TYPES:
-            if description.options_key in device:
-                entities.append(
-                    PlugwiseSelectEntity(coordinator, device_id, description)
-                )
-
-    async_add_entities(entities)
+    async_add_entities(
+        PlugwiseSelectEntity(coordinator, device_id, description)
+        for device_id, device in coordinator.data.devices.items()
+        for description in SELECT_TYPES
+        if description.options_key in device
+    )
 
 
 class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):

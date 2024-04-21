@@ -1,7 +1,8 @@
 """Config flow to configure the GeoNet NZ Volcano integration."""
+
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -31,7 +32,7 @@ def configured_instances(hass):
     }
 
 
-class GeonetnzVolcanoFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class GeonetnzVolcanoFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a GeoNet NZ Volcano config flow."""
 
     async def _show_form(self, errors=None):

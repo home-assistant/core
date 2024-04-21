@@ -1,14 +1,16 @@
 """Tests for the Amber Electric Data Coordinator."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
+from datetime import date
 from unittest.mock import Mock, patch
 
 from amberelectric import ApiException
 from amberelectric.model.channel import Channel, ChannelType
 from amberelectric.model.current_interval import CurrentInterval
 from amberelectric.model.interval import Descriptor, SpikeStatus
-from amberelectric.model.site import Site
+from amberelectric.model.site import Site, SiteStatus
 from dateutil import parser
 import pytest
 
@@ -38,23 +40,35 @@ def mock_api_current_price() -> Generator:
     general_site = Site(
         GENERAL_ONLY_SITE_ID,
         "11111111111",
-        [Channel(identifier="E1", type=ChannelType.GENERAL)],
+        [Channel(identifier="E1", type=ChannelType.GENERAL, tariff="A100")],
+        "Jemena",
+        SiteStatus.ACTIVE,
+        date(2021, 1, 1),
+        None,
     )
     general_and_controlled_load = Site(
         GENERAL_AND_CONTROLLED_SITE_ID,
         "11111111112",
         [
-            Channel(identifier="E1", type=ChannelType.GENERAL),
-            Channel(identifier="E2", type=ChannelType.CONTROLLED_LOAD),
+            Channel(identifier="E1", type=ChannelType.GENERAL, tariff="A100"),
+            Channel(identifier="E2", type=ChannelType.CONTROLLED_LOAD, tariff="A180"),
         ],
+        "Jemena",
+        SiteStatus.ACTIVE,
+        date(2021, 1, 1),
+        None,
     )
     general_and_feed_in = Site(
         GENERAL_AND_FEED_IN_SITE_ID,
         "11111111113",
         [
-            Channel(identifier="E1", type=ChannelType.GENERAL),
-            Channel(identifier="E2", type=ChannelType.FEED_IN),
+            Channel(identifier="E1", type=ChannelType.GENERAL, tariff="A100"),
+            Channel(identifier="E2", type=ChannelType.FEED_IN, tariff="A100"),
         ],
+        "Jemena",
+        SiteStatus.ACTIVE,
+        date(2021, 1, 1),
+        None,
     )
     instance.get_sites.return_value = [
         general_site,

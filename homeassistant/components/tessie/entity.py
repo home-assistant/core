@@ -38,8 +38,9 @@ class TessieEntity(CoordinatorEntity[TessieStateUpdateCoordinator]):
             configuration_url="https://my.tessie.com/",
             name=coordinator.data["display_name"],
             model=MODELS.get(car_type, car_type),
-            sw_version=coordinator.data["vehicle_state_car_version"],
+            sw_version=coordinator.data["vehicle_state_car_version"].split(" ")[0],
             hw_version=coordinator.data["vehicle_config_driver_assist"],
+            serial_number=self.vin,
         )
 
     @property
@@ -52,11 +53,11 @@ class TessieEntity(CoordinatorEntity[TessieStateUpdateCoordinator]):
         return self.coordinator.data.get(key or self.key, default)
 
     async def run(
-        self, func: Callable[..., Awaitable[dict[str, bool]]], **kargs: Any
+        self, func: Callable[..., Awaitable[dict[str, Any]]], **kargs: Any
     ) -> None:
         """Run a tessie_api function and handle exceptions."""
         try:
-            await func(
+            response = await func(
                 session=self.coordinator.session,
                 vin=self.vin,
                 api_key=self.coordinator.api_key,
@@ -64,6 +65,14 @@ class TessieEntity(CoordinatorEntity[TessieStateUpdateCoordinator]):
             )
         except ClientResponseError as e:
             raise HomeAssistantError from e
+        if response["result"] is False:
+            name: str = getattr(self, "name", self.entity_id)
+            reason: str = response.get("reason", "unknown")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key=reason.replace(" ", "_"),
+                translation_placeholders={"name": name},
+            )
 
     def set(self, *args: Any) -> None:
         """Set a value in coordinator data."""

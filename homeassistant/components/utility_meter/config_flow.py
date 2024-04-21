@@ -1,4 +1,5 @@
 """Config flow for Utility Meter integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -23,6 +24,7 @@ from .const import (
     CONF_METER_OFFSET,
     CONF_METER_PERIODICALLY_RESETTING,
     CONF_METER_TYPE,
+    CONF_SENSOR_ALWAYS_AVAILABLE,
     CONF_SOURCE_SENSOR,
     CONF_TARIFFS,
     DAILY,
@@ -68,6 +70,10 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Required(
             CONF_METER_PERIODICALLY_RESETTING,
         ): selector.BooleanSelector(),
+        vol.Optional(
+            CONF_SENSOR_ALWAYS_AVAILABLE,
+            default=False,
+        ): selector.BooleanSelector(),
     }
 )
 
@@ -102,6 +108,10 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Required(
             CONF_METER_PERIODICALLY_RESETTING,
             default=True,
+        ): selector.BooleanSelector(),
+        vol.Optional(
+            CONF_SENSOR_ALWAYS_AVAILABLE,
+            default=False,
         ): selector.BooleanSelector(),
     }
 )

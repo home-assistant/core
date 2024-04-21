@@ -31,5 +31,24 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "jvc_power": {
+        "name": "[%key:component::sensor::entity_component::power::name%]"
+      }
+    },
+    "sensor": {
+      "jvc_power_status": {
+        "name": "Power status",
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "on": "[%key:common::state::on%]",
+          "warming": "Warming",
+          "cooling": "Cooling",
+          "error": "Error"
+        }
+      }
+    }
   }
 }

@@ -1,13 +1,17 @@
 """Tests for number entities provided by the Tailwind integration."""
+
 from unittest.mock import MagicMock
 
+from gotailwind import TailwindError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import number
 from homeassistant.components.number import ATTR_VALUE, SERVICE_SET_VALUE
+from homeassistant.components.tailwind.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 pytestmark = pytest.mark.usefixtures("init_integration")
@@ -44,3 +48,24 @@ async def test_number_entities(
 
     assert len(mock_tailwind.status_led.mock_calls) == 1
     mock_tailwind.status_led.assert_called_with(brightness=42)
+
+    # Test error handling
+    mock_tailwind.status_led.side_effect = TailwindError("Some error")
+
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await hass.services.async_call(
+            number.DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: state.entity_id,
+                ATTR_VALUE: 42,
+            },
+            blocking=True,
+        )
+
+    assert (
+        str(excinfo.value)
+        == "An error occurred while communicating with the Tailwind device"
+    )
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "communication_error"

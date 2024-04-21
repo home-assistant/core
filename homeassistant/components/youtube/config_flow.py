@@ -1,4 +1,5 @@
 """Config flow for YouTube integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -10,10 +11,13 @@ from youtubeaio.helper import first
 from youtubeaio.types import AuthScope, ForbiddenError
 from youtubeaio.youtube import YouTube
 
-from homeassistant.config_entries import ConfigEntry, OptionsFlowWithConfigEntry
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlowResult,
+    OptionsFlowWithConfigEntry,
+)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -67,7 +71,9 @@ class OAuth2FlowHandler(
             "prompt": "consent",
         }
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -76,7 +82,7 @@ class OAuth2FlowHandler(
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")
@@ -89,7 +95,7 @@ class OAuth2FlowHandler(
             await self._youtube.set_user_authentication(token, [AuthScope.READ_ONLY])
         return self._youtube
 
-    async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow, or update existing entry."""
         try:
             youtube = await self.get_resource(data[CONF_TOKEN][CONF_ACCESS_TOKEN])
@@ -129,7 +135,7 @@ class OAuth2FlowHandler(
 
     async def async_step_channels(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Select which channels to track."""
         if user_input:
             return self.async_create_entry(
@@ -164,7 +170,7 @@ class YouTubeOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Initialize form."""
         if user_input is not None:
             return self.async_create_entry(

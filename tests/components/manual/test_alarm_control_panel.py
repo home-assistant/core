@@ -1,4 +1,5 @@
 """The tests for the manual Alarm Control Panel component."""
+
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
@@ -1221,7 +1222,7 @@ async def test_restore_state(hass: HomeAssistant, expected_state) -> None:
     """Ensure state is restored on startup."""
     mock_restore_cache(hass, (State("alarm_control_panel.test", expected_state),))
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     mock_component(hass, "recorder")
 
     assert await async_setup_component(
@@ -1266,7 +1267,7 @@ async def test_restore_state_arming(hass: HomeAssistant, expected_state) -> None
         hass, (State(entity_id, expected_state, attributes, last_updated=time),)
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     mock_component(hass, "recorder")
 
     assert await async_setup_component(
@@ -1323,7 +1324,7 @@ async def test_restore_state_pending(hass: HomeAssistant, previous_state) -> Non
         (State(entity_id, STATE_ALARM_TRIGGERED, attributes, last_updated=time),),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     mock_component(hass, "recorder")
 
     assert await async_setup_component(
@@ -1388,7 +1389,7 @@ async def test_restore_state_triggered(hass: HomeAssistant, previous_state) -> N
         (State(entity_id, STATE_ALARM_TRIGGERED, attributes, last_updated=time),),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     mock_component(hass, "recorder")
 
     assert await async_setup_component(
@@ -1434,7 +1435,7 @@ async def test_restore_state_triggered_long_ago(hass: HomeAssistant) -> None:
         (State(entity_id, STATE_ALARM_TRIGGERED, attributes, last_updated=time),),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     mock_component(hass, "recorder")
 
     assert await async_setup_component(

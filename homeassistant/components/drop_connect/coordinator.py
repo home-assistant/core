@@ -1,4 +1,5 @@
 """DROP device data update coordinator object."""
+
 from __future__ import annotations
 
 import logging
@@ -15,7 +16,7 @@ from .const import CONF_COMMAND_TOPIC, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
+class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """DROP device object."""
 
     config_entry: ConfigEntry

@@ -1,4 +1,5 @@
 """Tracks devices by sending a ICMP echo request (ping)."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -136,7 +137,7 @@ async def async_setup_entry(
 class PingDeviceTracker(CoordinatorEntity[PingUpdateCoordinator], ScannerEntity):
     """Representation of a Ping device tracker."""
 
-    _first_offline: datetime | None = None
+    _last_seen: datetime | None = None
 
     def __init__(
         self, config_entry: ConfigEntry, coordinator: PingUpdateCoordinator
@@ -171,14 +172,12 @@ class PingDeviceTracker(CoordinatorEntity[PingUpdateCoordinator], ScannerEntity)
     def is_connected(self) -> bool:
         """Return true if ping returns is_alive or considered home."""
         if self.coordinator.data.is_alive:
-            self._first_offline = None
-            return True
+            self._last_seen = dt_util.utcnow()
 
-        now = dt_util.utcnow()
-        if self._first_offline is None:
-            self._first_offline = now
-
-        return (self._first_offline + self._consider_home_interval) > now
+        return (
+            self._last_seen is not None
+            and (dt_util.utcnow() - self._last_seen) < self._consider_home_interval
+        )
 
     @property
     def entity_registry_enabled_default(self) -> bool:

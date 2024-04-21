@@ -1,4 +1,5 @@
 """Tests for fan platforms."""
+
 import pytest
 
 from homeassistant.components import fan
@@ -8,14 +9,19 @@ from homeassistant.components.fan import (
     DOMAIN,
     SERVICE_SET_PRESET_MODE,
     FanEntity,
+    FanEntityFeature,
     NotValidPresetModeError,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import import_and_test_deprecated_constant_enum
-from tests.testing_config.custom_components.test.fan import MockFan
+from tests.common import (
+    help_test_all,
+    import_and_test_deprecated_constant_enum,
+    setup_test_component_platform,
+)
+from tests.components.fan.common import MockFan
 
 
 class BaseFan(FanEntity):
@@ -101,19 +107,19 @@ async def test_preset_mode_validation(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
 ) -> None:
     """Test preset mode validation."""
-
     await hass.async_block_till_done()
 
-    platform = getattr(hass.components, "test.fan")
-    platform.init(empty=False)
+    test_fan = MockFan(
+        name="Support fan with preset_mode support",
+        supported_features=FanEntityFeature.PRESET_MODE,
+        unique_id="unique_support_preset_mode",
+        preset_modes=["auto", "eco"],
+    )
+    setup_test_component_platform(hass, "fan", [test_fan])
 
     assert await async_setup_component(hass, "fan", {"fan": {"platform": "test"}})
-    await hass.async_block_till_done()
-
-    test_fan: MockFan = platform.ENTITIES["support_preset_mode"]
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.support_fan_with_preset_mode_support")
@@ -149,6 +155,11 @@ async def test_preset_mode_validation(
     assert exc.value.translation_key == "not_valid_preset_mode"
 
 
+def test_all() -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(fan)
+
+
 @pytest.mark.parametrize(("enum"), list(fan.FanEntityFeature))
 def test_deprecated_constants(
     caplog: pytest.LogCaptureFixture,
@@ -156,3 +167,23 @@ def test_deprecated_constants(
 ) -> None:
     """Test deprecated constants."""
     import_and_test_deprecated_constant_enum(caplog, fan, enum, "SUPPORT_", "2025.1")
+
+
+def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated supported features ints."""
+
+    class MockFan(FanEntity):
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return 1
+
+    entity = MockFan()
+    assert entity.supported_features_compat is FanEntityFeature(1)
+    assert "MockFan" in caplog.text
+    assert "is using deprecated supported features values" in caplog.text
+    assert "Instead it should use" in caplog.text
+    assert "FanEntityFeature.SET_SPEED" in caplog.text
+    caplog.clear()
+    assert entity.supported_features_compat is FanEntityFeature(1)
+    assert "is using deprecated supported features values" not in caplog.text

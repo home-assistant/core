@@ -25,7 +25,7 @@ from .const import DOMAIN, LOGGER, PATH_OBJECT_ID_FLAG, ROOT_OBJECT_ID, SOURCE_S
 from .dms import DidlPlayMedia, get_domain_data
 
 
-async def async_get_media_source(hass: HomeAssistant):
+async def async_get_media_source(hass: HomeAssistant) -> DmsMediaSource:
     """Set up DLNA DMS media source."""
     LOGGER.debug("Setting up DLNA media sources")
     return DmsMediaSource(hass)

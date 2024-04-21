@@ -1,4 +1,5 @@
 """Support for the Airly sensor service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -66,7 +67,6 @@ class AirlySensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_CAQI,
-        icon="mdi:air-filter",
         translation_key="caqi",
         native_unit_of_measurement="CAQI",
         suggested_display_precision=0,
@@ -181,13 +181,15 @@ async def async_setup_entry(
 
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    sensors = []
-    for description in SENSOR_TYPES:
-        # When we use the nearest method, we are not sure which sensors are available
-        if coordinator.data.get(description.key):
-            sensors.append(AirlySensor(coordinator, name, description))
-
-    async_add_entities(sensors, False)
+    async_add_entities(
+        (
+            AirlySensor(coordinator, name, description)
+            for description in SENSOR_TYPES
+            # When we use the nearest method, we are not sure which sensors are available
+            if coordinator.data.get(description.key)
+        ),
+        False,
+    )
 
 
 class AirlySensor(CoordinatorEntity[AirlyDataUpdateCoordinator], SensorEntity):

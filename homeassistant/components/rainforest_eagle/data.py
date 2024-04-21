@@ -1,4 +1,5 @@
 """Rainforest data."""
+
 from __future__ import annotations
 
 import asyncio
@@ -87,7 +88,7 @@ async def async_get_type(hass, cloud_id, install_code, host):
     return None, None
 
 
-class EagleDataCoordinator(DataUpdateCoordinator):
+class EagleDataCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
     """Get the latest data from the Eagle device."""
 
     eagle100_reader: Eagle100Reader | None = None

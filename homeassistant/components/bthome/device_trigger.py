@@ -1,4 +1,5 @@
 """Provides device triggers for BTHome BLE."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -66,7 +67,7 @@ async def async_validate_trigger_config(
     hass: HomeAssistant, config: ConfigType
 ) -> ConfigType:
     """Validate trigger config."""
-    return SCHEMA_BY_EVENT_CLASS.get(config[CONF_TYPE], DEVICE_TRIGGER_BASE_SCHEMA)(
+    return SCHEMA_BY_EVENT_CLASS.get(config[CONF_TYPE], DEVICE_TRIGGER_BASE_SCHEMA)(  # type: ignore[no-any-return]
         config
     )
 
@@ -87,6 +88,9 @@ async def async_get_triggers(
         None,
     )
     assert bthome_config_entry is not None
+    event_classes: list[str] = bthome_config_entry.data.get(
+        CONF_DISCOVERED_EVENT_CLASSES, []
+    )
     return [
         {
             # Required fields of TRIGGER_BASE_SCHEMA
@@ -97,10 +101,15 @@ async def async_get_triggers(
             CONF_TYPE: event_class,
             CONF_SUBTYPE: event_type,
         }
-        for event_class in bthome_config_entry.data.get(
-            CONF_DISCOVERED_EVENT_CLASSES, []
+        for event_class in event_classes
+        for event_type in TRIGGERS_BY_EVENT_CLASS.get(
+            event_class.split("_")[0],
+            # If the device has multiple buttons they will have
+            # event classes like button_1 button_2, button_3, etc
+            # but if there is only one button then it will be
+            # button without a number postfix.
+            (),
         )
-        for event_type in TRIGGERS_BY_EVENT_CLASS.get(event_class, [])
     ]
 
 

@@ -1,4 +1,5 @@
 """Button platform for Tessie integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -9,8 +10,6 @@ from tessie_api import (
     enable_keyless_driving,
     flash_lights,
     honk,
-    open_close_rear_trunk,
-    open_front_trunk,
     trigger_homelink,
     wake,
 )
@@ -33,28 +32,17 @@ class TessieButtonEntityDescription(ButtonEntityDescription):
 
 
 DESCRIPTIONS: tuple[TessieButtonEntityDescription, ...] = (
-    TessieButtonEntityDescription(key="wake", func=lambda: wake, icon="mdi:sleep-off"),
+    TessieButtonEntityDescription(key="wake", func=lambda: wake),
+    TessieButtonEntityDescription(key="flash_lights", func=lambda: flash_lights),
+    TessieButtonEntityDescription(key="honk", func=lambda: honk),
     TessieButtonEntityDescription(
-        key="flash_lights", func=lambda: flash_lights, icon="mdi:flashlight"
-    ),
-    TessieButtonEntityDescription(key="honk", func=honk, icon="mdi:bullhorn"),
-    TessieButtonEntityDescription(
-        key="trigger_homelink", func=lambda: trigger_homelink, icon="mdi:garage"
+        key="trigger_homelink", func=lambda: trigger_homelink
     ),
     TessieButtonEntityDescription(
         key="enable_keyless_driving",
         func=lambda: enable_keyless_driving,
-        icon="mdi:car-key",
     ),
-    TessieButtonEntityDescription(
-        key="boombox", func=lambda: boombox, icon="mdi:volume-high"
-    ),
-    TessieButtonEntityDescription(
-        key="frunk", func=lambda: open_front_trunk, icon="mdi:car"
-    ),
-    TessieButtonEntityDescription(
-        key="trunk", func=lambda: open_close_rear_trunk, icon="mdi:car-back"
-    ),
+    TessieButtonEntityDescription(key="boombox", func=lambda: boombox),
 )
 
 

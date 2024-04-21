@@ -1,8 +1,9 @@
 """Test ZHA Core cluster handlers."""
-import asyncio
+
 from collections.abc import Callable
 import logging
 import math
+from types import NoneType
 from unittest import mock
 from unittest.mock import AsyncMock, patch
 
@@ -11,17 +12,21 @@ import zigpy.device
 import zigpy.endpoint
 from zigpy.endpoint import Endpoint as ZigpyEndpoint
 import zigpy.profiles.zha
+import zigpy.quirks as zigpy_quirks
 import zigpy.types as t
 from zigpy.zcl import foundation
 import zigpy.zcl.clusters
+from zigpy.zcl.clusters import CLUSTERS_BY_ID
 import zigpy.zdo.types as zdo_t
 
-import homeassistant.components.zha.core.cluster_handlers as cluster_handlers
+from homeassistant.components.zha.core import cluster_handlers, registries
+from homeassistant.components.zha.core.cluster_handlers.lighting import (
+    ColorClusterHandler,
+)
 import homeassistant.components.zha.core.const as zha_const
 from homeassistant.components.zha.core.device import ZHADevice
 from homeassistant.components.zha.core.endpoint import Endpoint
 from homeassistant.components.zha.core.helpers import get_zha_gateway
-import homeassistant.components.zha.core.registries as registries
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -97,7 +102,9 @@ def poll_control_ch(endpoint, zigpy_device_mock):
     )
 
     cluster = zigpy_dev.endpoints[1].in_clusters[cluster_id]
-    cluster_handler_class = registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(cluster_id)
+    cluster_handler_class = registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
+        cluster_id
+    ).get(None)
     return cluster_handler_class(cluster, endpoint)
 
 
@@ -112,8 +119,7 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
         "test model",
     )
 
-    zha_device = await zha_device_restored(zigpy_dev)
-    return zha_device
+    return await zha_device_restored(zigpy_dev)
 
 
 @pytest.mark.parametrize(
@@ -140,7 +146,6 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
         (zigpy.zcl.clusters.general.AnalogInput.cluster_id, 1, {"present_value"}),
         (zigpy.zcl.clusters.general.AnalogOutput.cluster_id, 1, {"present_value"}),
         (zigpy.zcl.clusters.general.AnalogValue.cluster_id, 1, {"present_value"}),
-        (zigpy.zcl.clusters.general.AnalogOutput.cluster_id, 1, {"present_value"}),
         (zigpy.zcl.clusters.general.BinaryOutput.cluster_id, 1, {"present_value"}),
         (zigpy.zcl.clusters.general.BinaryValue.cluster_id, 1, {"present_value"}),
         (zigpy.zcl.clusters.general.MultistateInput.cluster_id, 1, {"present_value"}),
@@ -227,6 +232,7 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
                 "current_tier4_summ_delivered",
                 "current_tier5_summ_delivered",
                 "current_tier6_summ_delivered",
+                "current_summ_received",
                 "status",
             },
         ),
@@ -258,8 +264,8 @@ async def test_in_cluster_handler_config(
 
     cluster = zigpy_dev.endpoints[1].in_clusters[cluster_id]
     cluster_handler_class = registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
-        cluster_id, cluster_handlers.ClusterHandler
-    )
+        cluster_id, {None, cluster_handlers.ClusterHandler}
+    ).get(None)
     cluster_handler = cluster_handler_class(cluster, endpoint)
 
     await cluster_handler.async_configure()
@@ -322,8 +328,8 @@ async def test_out_cluster_handler_config(
     cluster = zigpy_dev.endpoints[1].out_clusters[cluster_id]
     cluster.bind_only = True
     cluster_handler_class = registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
-        cluster_id, cluster_handlers.ClusterHandler
-    )
+        cluster_id, {None: cluster_handlers.ClusterHandler}
+    ).get(None)
     cluster_handler = cluster_handler_class(cluster, endpoint)
 
     await cluster_handler.async_configure()
@@ -334,13 +340,46 @@ async def test_out_cluster_handler_config(
 
 def test_cluster_handler_registry() -> None:
     """Test ZIGBEE cluster handler Registry."""
+
+    # get all quirk ID from zigpy quirks registry
+    all_quirk_ids = {}
+    for cluster_id in CLUSTERS_BY_ID:
+        all_quirk_ids[cluster_id] = {None}
+    for manufacturer in zigpy_quirks._DEVICE_REGISTRY.registry.values():
+        for model_quirk_list in manufacturer.values():
+            for quirk in model_quirk_list:
+                quirk_id = getattr(quirk, zha_const.ATTR_QUIRK_ID, None)
+                device_description = getattr(quirk, "replacement", None) or getattr(
+                    quirk, "signature", None
+                )
+
+                for endpoint in device_description["endpoints"].values():
+                    cluster_ids = set()
+                    if "input_clusters" in endpoint:
+                        cluster_ids.update(endpoint["input_clusters"])
+                    if "output_clusters" in endpoint:
+                        cluster_ids.update(endpoint["output_clusters"])
+                    for cluster_id in cluster_ids:
+                        if not isinstance(cluster_id, int):
+                            cluster_id = cluster_id.cluster_id
+                        if cluster_id not in all_quirk_ids:
+                            all_quirk_ids[cluster_id] = {None}
+                        all_quirk_ids[cluster_id].add(quirk_id)
+
+    del quirk, model_quirk_list, manufacturer
+
     for (
         cluster_id,
-        cluster_handler,
+        cluster_handler_classes,
     ) in registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.items():
         assert isinstance(cluster_id, int)
         assert 0 <= cluster_id <= 0xFFFF
-        assert issubclass(cluster_handler, cluster_handlers.ClusterHandler)
+        assert cluster_id in all_quirk_ids
+        assert isinstance(cluster_handler_classes, dict)
+        for quirk_id, cluster_handler in cluster_handler_classes.items():
+            assert isinstance(quirk_id, (NoneType, str))
+            assert issubclass(cluster_handler, cluster_handlers.ClusterHandler)
+            assert quirk_id in all_quirk_ids[cluster_id]
 
 
 def test_epch_unclaimed_cluster_handlers(cluster_handler) -> None:
@@ -522,12 +561,12 @@ async def test_ep_cluster_handlers_configure(cluster_handler) -> None:
     ch_1 = cluster_handler(zha_const.CLUSTER_HANDLER_ON_OFF, 6)
     ch_2 = cluster_handler(zha_const.CLUSTER_HANDLER_LEVEL, 8)
     ch_3 = cluster_handler(zha_const.CLUSTER_HANDLER_COLOR, 768)
-    ch_3.async_configure = AsyncMock(side_effect=asyncio.TimeoutError)
-    ch_3.async_initialize = AsyncMock(side_effect=asyncio.TimeoutError)
+    ch_3.async_configure = AsyncMock(side_effect=TimeoutError)
+    ch_3.async_initialize = AsyncMock(side_effect=TimeoutError)
     ch_4 = cluster_handler(zha_const.CLUSTER_HANDLER_ON_OFF, 6)
     ch_5 = cluster_handler(zha_const.CLUSTER_HANDLER_LEVEL, 8)
-    ch_5.async_configure = AsyncMock(side_effect=asyncio.TimeoutError)
-    ch_5.async_initialize = AsyncMock(side_effect=asyncio.TimeoutError)
+    ch_5.async_configure = AsyncMock(side_effect=TimeoutError)
+    ch_5.async_initialize = AsyncMock(side_effect=TimeoutError)
 
     endpoint_mock = mock.MagicMock(spec_set=ZigpyEndpoint)
     type(endpoint_mock).in_clusters = mock.PropertyMock(return_value={})
@@ -537,9 +576,10 @@ async def test_ep_cluster_handlers_configure(cluster_handler) -> None:
     claimed = {ch_1.id: ch_1, ch_2.id: ch_2, ch_3.id: ch_3}
     client_handlers = {ch_4.id: ch_4, ch_5.id: ch_5}
 
-    with mock.patch.dict(
-        endpoint.claimed_cluster_handlers, claimed, clear=True
-    ), mock.patch.dict(endpoint.client_cluster_handlers, client_handlers, clear=True):
+    with (
+        mock.patch.dict(endpoint.claimed_cluster_handlers, claimed, clear=True),
+        mock.patch.dict(endpoint.client_cluster_handlers, client_handlers, clear=True),
+    ):
         await endpoint.async_configure()
         await endpoint.async_initialize(mock.sentinel.from_cache)
 
@@ -550,8 +590,8 @@ async def test_ep_cluster_handlers_configure(cluster_handler) -> None:
         assert ch.async_configure.call_count == 1
         assert ch.async_configure.await_count == 1
 
-    assert ch_3.warning.call_count == 2
-    assert ch_5.warning.call_count == 2
+    assert ch_3.debug.call_count == 2
+    assert ch_5.debug.call_count == 2
 
 
 async def test_poll_control_configure(poll_control_ch) -> None:
@@ -671,7 +711,9 @@ async def test_zll_device_groups(
     """Test adding coordinator to ZLL groups."""
 
     cluster = zigpy_zll_device.endpoints[1].lightlink
-    cluster_handler = cluster_handlers.lightlink.LightLink(cluster, endpoint)
+    cluster_handler = cluster_handlers.lightlink.LightLinkClusterHandler(
+        cluster, endpoint
+    )
 
     get_group_identifiers_rsp = zigpy.zcl.clusters.lightlink.LightLink.commands_by_name[
         "get_group_identifiers_rsp"
@@ -818,7 +860,8 @@ async def test_invalid_cluster_handler(hass: HomeAssistant, caplog) -> None:
         ],
     )
 
-    mock_zha_device = mock.AsyncMock(spec_set=ZHADevice)
+    mock_zha_device = mock.AsyncMock(spec=ZHADevice)
+    mock_zha_device.quirk_id = None
     zha_endpoint = Endpoint(zigpy_ep, mock_zha_device)
 
     # The cluster handler throws an error when matching this cluster
@@ -826,13 +869,86 @@ async def test_invalid_cluster_handler(hass: HomeAssistant, caplog) -> None:
         TestZigbeeClusterHandler(cluster, zha_endpoint)
 
     # And one is also logged at runtime
-    with patch.dict(
-        registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY,
-        {cluster.cluster_id: TestZigbeeClusterHandler},
-    ), caplog.at_level(logging.WARNING):
+    with (
+        patch.dict(
+            registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY[cluster.cluster_id],
+            {None: TestZigbeeClusterHandler},
+        ),
+        caplog.at_level(logging.WARNING),
+    ):
         zha_endpoint.add_all_cluster_handlers()
 
     assert "missing_attr" in caplog.text
+
+
+async def test_standard_cluster_handler(hass: HomeAssistant, caplog) -> None:
+    """Test setting up a cluster handler that matches a standard cluster."""
+
+    class TestZigbeeClusterHandler(ColorClusterHandler):
+        pass
+
+    mock_device = mock.AsyncMock(spec_set=zigpy.device.Device)
+    zigpy_ep = zigpy.endpoint.Endpoint(mock_device, endpoint_id=1)
+
+    cluster = zigpy_ep.add_input_cluster(zigpy.zcl.clusters.lighting.Color.cluster_id)
+    cluster.configure_reporting_multiple = AsyncMock(
+        spec_set=cluster.configure_reporting_multiple,
+        return_value=[
+            foundation.ConfigureReportingResponseRecord(
+                status=foundation.Status.SUCCESS
+            )
+        ],
+    )
+
+    mock_zha_device = mock.AsyncMock(spec=ZHADevice)
+    mock_zha_device.quirk_id = None
+    zha_endpoint = Endpoint(zigpy_ep, mock_zha_device)
+
+    with patch.dict(
+        registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY[cluster.cluster_id],
+        {"__test_quirk_id": TestZigbeeClusterHandler},
+    ):
+        zha_endpoint.add_all_cluster_handlers()
+
+    assert len(zha_endpoint.all_cluster_handlers) == 1
+    assert isinstance(
+        list(zha_endpoint.all_cluster_handlers.values())[0], ColorClusterHandler
+    )
+
+
+async def test_quirk_id_cluster_handler(hass: HomeAssistant, caplog) -> None:
+    """Test setting up a cluster handler that matches a standard cluster."""
+
+    class TestZigbeeClusterHandler(ColorClusterHandler):
+        pass
+
+    mock_device = mock.AsyncMock(spec_set=zigpy.device.Device)
+    zigpy_ep = zigpy.endpoint.Endpoint(mock_device, endpoint_id=1)
+
+    cluster = zigpy_ep.add_input_cluster(zigpy.zcl.clusters.lighting.Color.cluster_id)
+    cluster.configure_reporting_multiple = AsyncMock(
+        spec_set=cluster.configure_reporting_multiple,
+        return_value=[
+            foundation.ConfigureReportingResponseRecord(
+                status=foundation.Status.SUCCESS
+            )
+        ],
+    )
+
+    mock_zha_device = mock.AsyncMock(spec=ZHADevice)
+    mock_zha_device.quirk_id = "__test_quirk_id"
+    zha_endpoint = Endpoint(zigpy_ep, mock_zha_device)
+
+    with patch.dict(
+        registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY[cluster.cluster_id],
+        {"__test_quirk_id": TestZigbeeClusterHandler},
+    ):
+        zha_endpoint.add_all_cluster_handlers()
+
+    assert len(zha_endpoint.all_cluster_handlers) == 1
+    assert isinstance(
+        list(zha_endpoint.all_cluster_handlers.values())[0], TestZigbeeClusterHandler
+    )
 
 
 # parametrize side effects:
@@ -844,7 +960,7 @@ async def test_invalid_cluster_handler(hass: HomeAssistant, caplog) -> None:
             zigpy.exceptions.ZigbeeException("Zigbee exception"),
             "Failed to send request: Zigbee exception",
         ),
-        (asyncio.TimeoutError(), "Failed to send request: device did not respond"),
+        (TimeoutError(), "Failed to send request: device did not respond"),
     ],
 )
 async def test_retry_request(
@@ -867,3 +983,17 @@ async def test_retry_request(
     assert func.await_count == 3
     assert isinstance(exc.value, HomeAssistantError)
     assert str(exc.value) == expected_error
+
+
+async def test_cluster_handler_naming() -> None:
+    """Test that all cluster handlers are named appropriately."""
+    for client_cluster_handler in registries.CLIENT_CLUSTER_HANDLER_REGISTRY.values():
+        assert issubclass(client_cluster_handler, cluster_handlers.ClientClusterHandler)
+        assert client_cluster_handler.__name__.endswith("ClientClusterHandler")
+
+    for cluster_handler_dict in registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.values():
+        for cluster_handler in cluster_handler_dict.values():
+            assert not issubclass(
+                cluster_handler, cluster_handlers.ClientClusterHandler
+            )
+            assert cluster_handler.__name__.endswith("ClusterHandler")

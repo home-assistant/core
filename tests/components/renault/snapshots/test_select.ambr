@@ -18,6 +18,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
       'name': 'REG-NUMBER',
@@ -56,6 +58,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
       'name': 'REG-NUMBER',
@@ -78,6 +82,7 @@
           'always',
           'always_charging',
           'schedule_mode',
+          'scheduled',
         ]),
       }),
       'config_entry_id': <ANY>,
@@ -91,11 +96,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:calendar-remove',
+      'original_icon': None,
       'original_name': 'Charge mode',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -111,16 +118,17 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Charge mode',
-        'icon': 'mdi:calendar-remove',
         'options': list([
           'always',
           'always_charging',
           'schedule_mode',
+          'scheduled',
         ]),
       }),
       'context': <ANY>,
       'entity_id': 'select.reg_number_charge_mode',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -145,6 +153,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
       'name': 'REG-NUMBER',
@@ -167,6 +177,7 @@
           'always',
           'always_charging',
           'schedule_mode',
+          'scheduled',
         ]),
       }),
       'config_entry_id': <ANY>,
@@ -180,11 +191,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:calendar-remove',
+      'original_icon': None,
       'original_name': 'Charge mode',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -200,16 +213,17 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Charge mode',
-        'icon': 'mdi:calendar-remove',
         'options': list([
           'always',
           'always_charging',
           'schedule_mode',
+          'scheduled',
         ]),
       }),
       'context': <ANY>,
       'entity_id': 'select.reg_number_charge_mode',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -234,6 +248,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
       'name': 'REG-NUMBER',
@@ -256,6 +272,7 @@
           'always',
           'always_charging',
           'schedule_mode',
+          'scheduled',
         ]),
       }),
       'config_entry_id': <ANY>,
@@ -269,11 +286,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:calendar-remove',
+      'original_icon': None,
       'original_name': 'Charge mode',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -289,16 +308,17 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Charge mode',
-        'icon': 'mdi:calendar-remove',
         'options': list([
           'always',
           'always_charging',
           'schedule_mode',
+          'scheduled',
         ]),
       }),
       'context': <ANY>,
       'entity_id': 'select.reg_number_charge_mode',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -323,6 +343,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
       'name': 'REG-NUMBER',
@@ -361,6 +383,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
       'name': 'REG-NUMBER',
@@ -383,6 +407,7 @@
           'always',
           'always_charging',
           'schedule_mode',
+          'scheduled',
         ]),
       }),
       'config_entry_id': <ANY>,
@@ -396,11 +421,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:calendar-remove',
+      'original_icon': None,
       'original_name': 'Charge mode',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -416,16 +443,17 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Charge mode',
-        'icon': 'mdi:calendar-remove',
         'options': list([
           'always',
           'always_charging',
           'schedule_mode',
+          'scheduled',
         ]),
       }),
       'context': <ANY>,
       'entity_id': 'select.reg_number_charge_mode',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'always',
     }),
@@ -450,6 +478,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
       'name': 'REG-NUMBER',
@@ -472,6 +502,7 @@
           'always',
           'always_charging',
           'schedule_mode',
+          'scheduled',
         ]),
       }),
       'config_entry_id': <ANY>,
@@ -485,11 +516,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:calendar-remove',
+      'original_icon': None,
       'original_name': 'Charge mode',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -505,16 +538,17 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Charge mode',
-        'icon': 'mdi:calendar-remove',
         'options': list([
           'always',
           'always_charging',
           'schedule_mode',
+          'scheduled',
         ]),
       }),
       'context': <ANY>,
       'entity_id': 'select.reg_number_charge_mode',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'always',
     }),
@@ -539,6 +573,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
       'name': 'REG-NUMBER',
@@ -561,6 +597,7 @@
           'always',
           'always_charging',
           'schedule_mode',
+          'scheduled',
         ]),
       }),
       'config_entry_id': <ANY>,
@@ -574,11 +611,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:calendar-clock',
+      'original_icon': None,
       'original_name': 'Charge mode',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -594,16 +633,17 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Charge mode',
-        'icon': 'mdi:calendar-clock',
         'options': list([
           'always',
           'always_charging',
           'schedule_mode',
+          'scheduled',
         ]),
       }),
       'context': <ANY>,
       'entity_id': 'select.reg_number_charge_mode',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'schedule_mode',
     }),

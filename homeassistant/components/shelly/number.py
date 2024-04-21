@@ -1,9 +1,9 @@
 """Number for Shelly."""
+
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Final, cast
+from typing import Any, cast
 
 from aioshelly.block_device import Block
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
@@ -30,7 +30,7 @@ from .entity import (
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class BlockNumberDescription(BlockEntityDescription, NumberEntityDescription):
     """Class to describe a BLOCK sensor."""
 
@@ -38,10 +38,10 @@ class BlockNumberDescription(BlockEntityDescription, NumberEntityDescription):
     rest_arg: str = ""
 
 
-NUMBERS: Final = {
+NUMBERS: dict[tuple[str, str], BlockNumberDescription] = {
     ("device", "valvePos"): BlockNumberDescription(
         key="device|valvepos",
-        icon="mdi:pipe-valve",
+        translation_key="valve_position",
         name="Valve position",
         native_unit_of_measurement=PERCENTAGE,
         available=lambda block: cast(int, block.valveError) != 1,
@@ -54,22 +54,6 @@ NUMBERS: Final = {
         rest_arg="pos",
     ),
 }
-
-
-def _build_block_description(entry: RegistryEntry) -> BlockNumberDescription:
-    """Build description when restoring block attribute entities."""
-    assert entry.capabilities
-    return BlockNumberDescription(
-        key="",
-        name="",
-        icon=entry.original_icon,
-        native_unit_of_measurement=entry.unit_of_measurement,
-        device_class=entry.original_device_class,
-        native_min_value=cast(float, entry.capabilities.get("min")),
-        native_max_value=cast(float, entry.capabilities.get("max")),
-        native_step=cast(float, entry.capabilities.get("step")),
-        mode=cast(NumberMode, entry.capabilities.get("mode")),
-    )
 
 
 async def async_setup_entry(
@@ -85,7 +69,6 @@ async def async_setup_entry(
             async_add_entities,
             NUMBERS,
             BlockSleepingNumber,
-            _build_block_description,
         )
 
 
@@ -101,11 +84,10 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
         attribute: str,
         description: BlockNumberDescription,
         entry: RegistryEntry | None = None,
-        sensors: Mapping[tuple[str, str], BlockNumberDescription] | None = None,
     ) -> None:
         """Initialize the sleeping sensor."""
         self.restored_data: NumberExtraStoredData | None = None
-        super().__init__(coordinator, block, attribute, description, entry, sensors)
+        super().__init__(coordinator, block, attribute, description, entry)
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -144,4 +126,4 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
                 f" {repr(err)}"
             ) from err
         except InvalidAuthError:
-            self.coordinator.entry.async_start_reauth(self.hass)
+            await self.coordinator.async_shutdown_device_and_start_reauth()

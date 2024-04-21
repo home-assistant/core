@@ -1,4 +1,5 @@
 """Constants for the IoTaWatt integration."""
+
 from __future__ import annotations
 
 import json

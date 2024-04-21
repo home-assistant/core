@@ -1,7 +1,13 @@
 """Tests for cover entities provided by the Tailwind integration."""
+
 from unittest.mock import ANY, MagicMock
 
-from gotailwind import TailwindDoorOperationCommand
+from gotailwind import (
+    TailwindDoorDisabledError,
+    TailwindDoorLockedOutError,
+    TailwindDoorOperationCommand,
+    TailwindError,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -10,8 +16,10 @@ from homeassistant.components.cover import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
 )
+from homeassistant.components.tailwind.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 pytestmark = pytest.mark.usefixtures("init_integration")
@@ -74,3 +82,102 @@ async def test_cover_operations(
     mock_tailwind.operate.assert_called_with(
         door=ANY, operation=TailwindDoorOperationCommand.CLOSE
     )
+
+    # Test door disabled error handling
+    mock_tailwind.operate.side_effect = TailwindDoorDisabledError("Door disabled")
+
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {
+                ATTR_ENTITY_ID: "cover.door_1",
+            },
+            blocking=True,
+        )
+    assert str(excinfo.value) == "The door is disabled and cannot be operated"
+
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "door_disabled"
+
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {
+                ATTR_ENTITY_ID: "cover.door_1",
+            },
+            blocking=True,
+        )
+
+    assert str(excinfo.value) == "The door is disabled and cannot be operated"
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "door_disabled"
+
+    # Test door locked out error handling
+    mock_tailwind.operate.side_effect = TailwindDoorLockedOutError("Door locked out")
+
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {
+                ATTR_ENTITY_ID: "cover.door_1",
+            },
+            blocking=True,
+        )
+
+    assert str(excinfo.value) == "The door is locked out and cannot be operated"
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "door_locked_out"
+
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {
+                ATTR_ENTITY_ID: "cover.door_1",
+            },
+            blocking=True,
+        )
+
+    assert str(excinfo.value) == "The door is locked out and cannot be operated"
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "door_locked_out"
+
+    # Test door error handling
+    mock_tailwind.operate.side_effect = TailwindError("Some error")
+
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {
+                ATTR_ENTITY_ID: "cover.door_1",
+            },
+            blocking=True,
+        )
+
+    assert (
+        str(excinfo.value)
+        == "An error occurred while communicating with the Tailwind device"
+    )
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "communication_error"
+
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {
+                ATTR_ENTITY_ID: "cover.door_1",
+            },
+            blocking=True,
+        )
+
+    assert (
+        str(excinfo.value)
+        == "An error occurred while communicating with the Tailwind device"
+    )
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "communication_error"

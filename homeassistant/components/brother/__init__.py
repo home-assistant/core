@@ -1,4 +1,5 @@
 """The Brother component."""
+
 from __future__ import annotations
 
 from asyncio import timeout
@@ -33,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         brother = await Brother.create(
             host, printer_type=printer_type, snmp_engine=snmp_engine
         )
-    except (ConnectionError, SnmpError) as error:
+    except (ConnectionError, SnmpError, TimeoutError) as error:
         raise ConfigEntryNotReady from error
 
     coordinator = BrotherDataUpdateCoordinator(hass, brother)
@@ -62,7 +63,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class BrotherDataUpdateCoordinator(DataUpdateCoordinator[BrotherSensors]):
+class BrotherDataUpdateCoordinator(DataUpdateCoordinator[BrotherSensors]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching Brother data from the printer."""
 
     def __init__(self, hass: HomeAssistant, brother: Brother) -> None:

@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "pullspring_duration": {
+        "default": "mdi:timer-lock-open"
+      }
+    }
+  }
+}

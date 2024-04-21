@@ -1,4 +1,5 @@
 """Utils for Magic Home."""
+
 from __future__ import annotations
 
 from flux_led.aio import AIOWifiLedBulb
@@ -12,6 +13,8 @@ from .const import FLUX_COLOR_MODE_TO_HASS, MIN_RGB_BRIGHTNESS
 
 def _hass_color_modes(device: AIOWifiLedBulb) -> set[str]:
     color_modes = device.color_modes
+    if not color_modes:
+        return {ColorMode.ONOFF}
     return {_flux_color_mode_to_hass(mode, color_modes) for mode in color_modes}
 
 

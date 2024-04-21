@@ -1,43 +1,46 @@
 """Support for transport.opendata.ch."""
+
 from __future__ import annotations
 
-from collections.abc import Mapping
-from datetime import timedelta
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING
 
-from opendata_transport import OpendataTransport
-from opendata_transport.exceptions import OpendataTransportError
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_NAME
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.const import CONF_NAME, UnitOfTime
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_DESTINATION, CONF_START, DEFAULT_NAME, DOMAIN
+from .const import (
+    CONF_DESTINATION,
+    CONF_START,
+    DEFAULT_NAME,
+    DOMAIN,
+    PLACEHOLDERS,
+    SENSOR_CONNECTIONS_COUNT,
+)
+from .coordinator import DataConnection, SwissPublicTransportDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=90)
-
-ATTR_DEPARTURE_TIME1 = "next_departure"
-ATTR_DEPARTURE_TIME2 = "next_on_departure"
-ATTR_DURATION = "duration"
-ATTR_PLATFORM = "platform"
-ATTR_REMAINING_TIME = "remaining_time"
-ATTR_START = "start"
-ATTR_TARGET = "destination"
-ATTR_TRAIN_NUMBER = "train_number"
-ATTR_TRANSFERS = "transfers"
-ATTR_DELAY = "delay"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -48,19 +51,70 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+@dataclass(kw_only=True, frozen=True)
+class SwissPublicTransportSensorEntityDescription(SensorEntityDescription):
+    """Describes swiss public transport sensor entity."""
+
+    value_fn: Callable[[DataConnection], StateType | datetime]
+
+    index: int = 0
+    has_legacy_attributes: bool = False
+
+
+SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
+    *[
+        SwissPublicTransportSensorEntityDescription(
+            key=f"departure{i or ''}",
+            translation_key=f"departure{i}",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            has_legacy_attributes=i == 0,
+            value_fn=lambda data_connection: data_connection["departure"],
+            index=i,
+        )
+        for i in range(SENSOR_CONNECTIONS_COUNT)
+    ],
+    SwissPublicTransportSensorEntityDescription(
+        key="duration",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        value_fn=lambda data_connection: data_connection["duration"],
+    ),
+    SwissPublicTransportSensorEntityDescription(
+        key="transfers",
+        translation_key="transfers",
+        value_fn=lambda data_connection: data_connection["transfers"],
+    ),
+    SwissPublicTransportSensorEntityDescription(
+        key="platform",
+        translation_key="platform",
+        value_fn=lambda data_connection: data_connection["platform"],
+    ),
+    SwissPublicTransportSensorEntityDescription(
+        key="delay",
+        translation_key="delay",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        value_fn=lambda data_connection: data_connection["delay"],
+    ),
+)
+
+
 async def async_setup_entry(
     hass: core.HomeAssistant,
     config_entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor from a config entry created in the integrations UI."""
-    opendata = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    name = config_entry.title
+    unique_id = config_entry.unique_id
+
+    if TYPE_CHECKING:
+        assert unique_id
 
     async_add_entities(
-        [SwissPublicTransportSensor(opendata, name)],
-        True,
+        SwissPublicTransportSensor(coordinator, description, unique_id)
+        for description in SENSORS
     )
 
 
@@ -98,69 +152,69 @@ async def async_setup_platform(
         async_create_issue(
             hass,
             DOMAIN,
-            f"deprecated_yaml_import_issue_${result['reason']}",
+            f"deprecated_yaml_import_issue_{result['reason']}",
             breaks_in_ha_version="2024.7.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_${result['reason']}",
+            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+            translation_placeholders=PLACEHOLDERS,
         )
 
 
-class SwissPublicTransportSensor(SensorEntity):
-    """Implementation of an Swiss public transport sensor."""
+class SwissPublicTransportSensor(
+    CoordinatorEntity[SwissPublicTransportDataUpdateCoordinator], SensorEntity
+):
+    """Implementation of a Swiss public transport sensor."""
 
+    entity_description: SwissPublicTransportSensorEntityDescription
     _attr_attribution = "Data provided by transport.opendata.ch"
-    _attr_icon = "mdi:bus"
+    _attr_has_entity_name = True
 
-    def __init__(self, opendata: OpendataTransport, name: str) -> None:
+    def __init__(
+        self,
+        coordinator: SwissPublicTransportDataUpdateCoordinator,
+        entity_description: SwissPublicTransportSensorEntityDescription,
+        unique_id: str,
+    ) -> None:
         """Initialize the sensor."""
-        self._opendata = opendata
-        self._attr_name = name
-        self._remaining_time: timedelta | None = None
-
-    @property
-    def native_value(self) -> str:
-        """Return the state of the sensor."""
-        return self._opendata.connections[0]["departure"]
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any]:
-        """Return the state attributes."""
-        departure_time = dt_util.parse_datetime(
-            self._opendata.connections[0]["departure"]
+        super().__init__(coordinator)
+        self.entity_description = entity_description
+        self._attr_unique_id = f"{unique_id}_{entity_description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer="Opendata.ch",
+            entry_type=DeviceEntryType.SERVICE,
         )
-        if departure_time:
-            remaining_time = departure_time - dt_util.as_local(dt_util.utcnow())
-        else:
-            remaining_time = None
-        self._remaining_time = remaining_time
 
-        return {
-            ATTR_TRAIN_NUMBER: self._opendata.connections[0]["number"],
-            ATTR_PLATFORM: self._opendata.connections[0]["platform"],
-            ATTR_TRANSFERS: self._opendata.connections[0]["transfers"],
-            ATTR_DURATION: self._opendata.connections[0]["duration"],
-            ATTR_DEPARTURE_TIME1: self._opendata.connections[1]["departure"],
-            ATTR_DEPARTURE_TIME2: self._opendata.connections[2]["departure"],
-            ATTR_START: self._opendata.from_name,
-            ATTR_TARGET: self._opendata.to_name,
-            ATTR_REMAINING_TIME: f"{self._remaining_time}",
-            ATTR_DELAY: self._opendata.connections[0]["delay"],
-        }
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(
+            self.coordinator.data[self.entity_description.index]
+        )
 
-    async def async_update(self) -> None:
-        """Get the latest data from opendata.ch and update the states."""
+    async def async_added_to_hass(self) -> None:
+        """Prepare the extra attributes at start."""
+        if self.entity_description.has_legacy_attributes:
+            self._async_update_attrs()
+        await super().async_added_to_hass()
 
-        try:
-            if not self._remaining_time or self._remaining_time.total_seconds() < 0:
-                await self._opendata.async_get_data()
-        except OpendataTransportError:
-            self._attr_available = False
-            _LOGGER.warning(
-                "Unable to connect and retrieve data from transport.opendata.ch"
-            )
-        else:
-            if not self._attr_available:
-                self._attr_available = True
-                _LOGGER.info("Connection established with transport.opendata.ch")
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle the state update and prepare the extra state attributes."""
+        if self.entity_description.has_legacy_attributes:
+            self._async_update_attrs()
+        return super()._handle_coordinator_update()
+
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update the extra state attributes based on the coordinator data."""
+        if self.entity_description.has_legacy_attributes:
+            self._attr_extra_state_attributes = {
+                key: value
+                for key, value in self.coordinator.data[
+                    self.entity_description.index
+                ].items()
+                if key not in {"departure"}
+            }

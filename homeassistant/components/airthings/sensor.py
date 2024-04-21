@@ -1,4 +1,5 @@
 """Support for Airthings sensors."""
+
 from __future__ import annotations
 
 from airthings import AirthingsDevice
@@ -24,11 +25,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import AirthingsDataCoordinatorType
 from .const import DOMAIN
 
 SENSORS: dict[str, SensorEntityDescription] = {
@@ -49,7 +48,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "pressure": SensorEntityDescription(
         key="pressure",
-        device_class=SensorDeviceClass.PRESSURE,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         native_unit_of_measurement=UnitOfPressure.MBAR,
     ),
     "battery": SensorEntityDescription(
@@ -108,7 +107,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Airthings sensor."""
 
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: AirthingsDataCoordinatorType = hass.data[DOMAIN][entry.entry_id]
     entities = [
         AirthingsHeaterEnergySensor(
             coordinator,
@@ -122,7 +121,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AirthingsHeaterEnergySensor(CoordinatorEntity, SensorEntity):
+class AirthingsHeaterEnergySensor(
+    CoordinatorEntity[AirthingsDataCoordinatorType], SensorEntity
+):
     """Representation of a Airthings Sensor device."""
 
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -130,7 +131,7 @@ class AirthingsHeaterEnergySensor(CoordinatorEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: AirthingsDataCoordinatorType,
         airthings_device: AirthingsDevice,
         entity_description: SensorEntityDescription,
     ) -> None:
@@ -149,10 +150,10 @@ class AirthingsHeaterEnergySensor(CoordinatorEntity, SensorEntity):
             identifiers={(DOMAIN, airthings_device.device_id)},
             name=airthings_device.name,
             manufacturer="Airthings",
-            model=airthings_device.device_type.replace("_", " ").lower().title(),
+            model=airthings_device.product_name,
         )
 
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.coordinator.data[self._id].sensors[self.entity_description.key]
+        return self.coordinator.data[self._id].sensors[self.entity_description.key]  # type: ignore[no-any-return]

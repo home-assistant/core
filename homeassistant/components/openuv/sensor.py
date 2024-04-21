@@ -1,4 +1,5 @@
 """Support for OpenUV sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -71,18 +72,11 @@ def get_uv_label(uv_index: int) -> str:
     return label.value
 
 
-@dataclass(frozen=True)
-class OpenUvSensorEntityDescriptionMixin:
-    """Define a mixin for OpenUV sensor descriptions."""
+@dataclass(frozen=True, kw_only=True)
+class OpenUvSensorEntityDescription(SensorEntityDescription):
+    """Define a class that describes OpenUV sensor entities."""
 
     value_fn: Callable[[dict[str, Any]], int | str]
-
-
-@dataclass(frozen=True)
-class OpenUvSensorEntityDescription(
-    SensorEntityDescription, OpenUvSensorEntityDescriptionMixin
-):
-    """Define a class that describes OpenUV sensor entities."""
 
 
 SENSOR_DESCRIPTIONS = (
@@ -96,7 +90,6 @@ SENSOR_DESCRIPTIONS = (
     OpenUvSensorEntityDescription(
         key=TYPE_CURRENT_UV_INDEX,
         translation_key="current_uv_index",
-        icon="mdi:weather-sunny",
         native_unit_of_measurement=UV_INDEX,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data["uv"],
@@ -104,7 +97,6 @@ SENSOR_DESCRIPTIONS = (
     OpenUvSensorEntityDescription(
         key=TYPE_CURRENT_UV_LEVEL,
         translation_key="current_uv_level",
-        icon="mdi:weather-sunny",
         device_class=SensorDeviceClass.ENUM,
         options=[label.value for label in UV_LABEL_DEFINITIONS],
         value_fn=lambda data: get_uv_label(data["uv"]),
@@ -112,7 +104,6 @@ SENSOR_DESCRIPTIONS = (
     OpenUvSensorEntityDescription(
         key=TYPE_MAX_UV_INDEX,
         translation_key="max_uv_index",
-        icon="mdi:weather-sunny",
         native_unit_of_measurement=UV_INDEX,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data["uv_max"],
@@ -120,7 +111,6 @@ SENSOR_DESCRIPTIONS = (
     OpenUvSensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_1,
         translation_key="skin_type_1_safe_exposure_time",
-        icon="mdi:timer-outline",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data["safe_exposure_time"][
@@ -130,7 +120,6 @@ SENSOR_DESCRIPTIONS = (
     OpenUvSensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_2,
         translation_key="skin_type_2_safe_exposure_time",
-        icon="mdi:timer-outline",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data["safe_exposure_time"][
@@ -140,7 +129,6 @@ SENSOR_DESCRIPTIONS = (
     OpenUvSensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_3,
         translation_key="skin_type_3_safe_exposure_time",
-        icon="mdi:timer-outline",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data["safe_exposure_time"][
@@ -150,7 +138,6 @@ SENSOR_DESCRIPTIONS = (
     OpenUvSensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_4,
         translation_key="skin_type_4_safe_exposure_time",
-        icon="mdi:timer-outline",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data["safe_exposure_time"][
@@ -160,7 +147,6 @@ SENSOR_DESCRIPTIONS = (
     OpenUvSensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_5,
         translation_key="skin_type_5_safe_exposure_time",
-        icon="mdi:timer-outline",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data["safe_exposure_time"][
@@ -170,7 +156,6 @@ SENSOR_DESCRIPTIONS = (
     OpenUvSensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_6,
         translation_key="skin_type_6_safe_exposure_time",
-        icon="mdi:timer-outline",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data["safe_exposure_time"][

@@ -1,4 +1,5 @@
 """Support for Google Assistant SDK broadcast notifications."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -24,13 +25,13 @@ LANG_TO_BROADCAST_COMMAND = {
 }
 
 
-def broadcast_commands(language_code: str):
+def broadcast_commands(language_code: str) -> tuple[str, str]:
     """Get the commands for broadcasting a message for the given language code.
 
     Return type is a tuple where [0] is for broadcasting to your entire home,
     while [1] is for broadcasting to a specific target.
     """
-    return LANG_TO_BROADCAST_COMMAND.get(language_code.split("-", maxsplit=1)[0])
+    return LANG_TO_BROADCAST_COMMAND[language_code.split("-", maxsplit=1)[0]]
 
 
 async def async_get_service(
@@ -60,13 +61,13 @@ class BroadcastNotificationService(BaseNotificationService):
             CONF_LANGUAGE_CODE, default_language_code(self.hass)
         )
 
-        commands = []
+        commands: list[str] = []
         targets = kwargs.get(ATTR_TARGET)
         if not targets:
             commands.append(broadcast_commands(language_code)[0].format(message))
         else:
-            for target in targets:
-                commands.append(
-                    broadcast_commands(language_code)[1].format(message, target)
-                )
+            commands.extend(
+                broadcast_commands(language_code)[1].format(message, target)
+                for target in targets
+            )
         await async_send_text_commands(self.hass, commands)

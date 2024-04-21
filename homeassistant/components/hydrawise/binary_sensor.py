@@ -1,4 +1,5 @@
 """Support for Hydrawise sprinkler binary sensors."""
+
 from __future__ import annotations
 
 from pydrawise.schema import Zone
@@ -70,15 +71,15 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
     entities = []
-    for controller in coordinator.data.controllers:
+    for controller in coordinator.data.controllers.values():
         entities.append(
             HydrawiseBinarySensor(coordinator, BINARY_SENSOR_STATUS, controller)
         )
-        for zone in controller.zones:
-            for description in BINARY_SENSOR_TYPES:
-                entities.append(
-                    HydrawiseBinarySensor(coordinator, description, controller, zone)
-                )
+        entities.extend(
+            HydrawiseBinarySensor(coordinator, description, controller, zone)
+            for zone in controller.zones
+            for description in BINARY_SENSOR_TYPES
+        )
     async_add_entities(entities)
 
 

@@ -1,4 +1,5 @@
 """Deprecation helpers for Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -8,12 +9,6 @@ import functools
 import inspect
 import logging
 from typing import Any, NamedTuple, ParamSpec, TypeVar
-
-from homeassistant.core import HomeAssistant, async_get_hass
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import async_suggest_report_issue
-
-from .frame import MissingIntegrationFrame, get_integration_frame
 
 _ObjectT = TypeVar("_ObjectT", bound=object)
 _R = TypeVar("_R")
@@ -175,6 +170,13 @@ def _print_deprecation_warning_internal(
     *,
     log_when_no_integration_is_found: bool,
 ) -> None:
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.core import HomeAssistant, async_get_hass
+    from homeassistant.exceptions import HomeAssistantError
+    from homeassistant.loader import async_suggest_report_issue
+
+    from .frame import MissingIntegrationFrame, get_integration_frame
+
     logger = logging.getLogger(module_name)
     if breaks_in_ha_version:
         breaks_in = f" which will be removed in HA Core {breaks_in_ha_version}"
@@ -241,6 +243,14 @@ class DeprecatedConstantEnum(NamedTuple):
     breaks_in_ha_version: str | None
 
 
+class DeprecatedAlias(NamedTuple):
+    """Deprecated alias."""
+
+    value: Any
+    replacement: str
+    breaks_in_ha_version: str | None
+
+
 _PREFIX_DEPRECATED = "_DEPRECATED_"
 
 
@@ -251,8 +261,8 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
     Otherwise raise AttributeError.
     """
     module_name = module_globals.get("__name__")
-    logger = logging.getLogger(module_name)
     value = replacement = None
+    description = "constant"
     if (deprecated_const := module_globals.get(_PREFIX_DEPRECATED + name)) is None:
         raise AttributeError(f"Module {module_name!r} has no attribute {name!r}")
     if isinstance(deprecated_const, DeprecatedConstant):
@@ -265,18 +275,11 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
             f"{deprecated_const.enum.__class__.__name__}.{deprecated_const.enum.name}"
         )
         breaks_in_ha_version = deprecated_const.breaks_in_ha_version
-    elif isinstance(deprecated_const, tuple):
-        # Use DeprecatedConstant and DeprecatedConstant instead, where possible
-        # Used to avoid import cycles.
-        if len(deprecated_const) == 3:
-            value = deprecated_const[0]
-            replacement = deprecated_const[1]
-            breaks_in_ha_version = deprecated_const[2]
-        elif len(deprecated_const) == 2 and isinstance(deprecated_const[0], Enum):
-            enum = deprecated_const[0]
-            value = enum.value
-            replacement = f"{enum.__class__.__name__}.{enum.name}"
-            breaks_in_ha_version = deprecated_const[1]
+    elif isinstance(deprecated_const, DeprecatedAlias):
+        description = "alias"
+        value = deprecated_const.value
+        replacement = deprecated_const.replacement
+        breaks_in_ha_version = deprecated_const.breaks_in_ha_version
 
     if value is None or replacement is None:
         msg = (
@@ -284,18 +287,18 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
             "but an instance of DeprecatedConstant or DeprecatedConstantEnum is required"
         )
 
-        logger.debug(msg)
+        logging.getLogger(module_name).debug(msg)
         # PEP 562 -- Module __getattr__ and __dir__
         # specifies that __getattr__ should raise AttributeError if the attribute is not
         # found.
         # https://peps.python.org/pep-0562/#specification
-        raise AttributeError(msg)  # noqa: TRY004
+        raise AttributeError(msg)
 
     _print_deprecation_warning_internal(
         name,
         module_name or __name__,
         replacement,
-        "constant",
+        description,
         "used",
         breaks_in_ha_version,
         log_when_no_integration_is_found=False,
@@ -303,10 +306,22 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
     return value
 
 
-def dir_with_deprecated_constants(module_globals: dict[str, Any]) -> list[str]:
+def dir_with_deprecated_constants(module_globals_keys: list[str]) -> list[str]:
     """Return dir() with deprecated constants."""
-    return list(module_globals) + [
+    return module_globals_keys + [
         name.removeprefix(_PREFIX_DEPRECATED)
-        for name in module_globals
+        for name in module_globals_keys
+        if name.startswith(_PREFIX_DEPRECATED)
+    ]
+
+
+def all_with_deprecated_constants(module_globals: dict[str, Any]) -> list[str]:
+    """Generate a list for __all___ with deprecated constants."""
+    # Iterate over a copy in case the globals dict is mutated by another thread
+    # while we loop over it.
+    module_globals_keys = list(module_globals)
+    return [itm for itm in module_globals_keys if not itm.startswith("_")] + [
+        name.removeprefix(_PREFIX_DEPRECATED)
+        for name in module_globals_keys
         if name.startswith(_PREFIX_DEPRECATED)
     ]

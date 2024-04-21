@@ -1,4 +1,5 @@
 """Provides diagnostics for EcoWitt."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -21,7 +22,7 @@ async def async_get_device_diagnostics(
 
     station = ecowitt.stations[station_id]
 
-    data = {
+    return {
         "device": {
             "name": station.station,
             "model": station.model,
@@ -35,5 +36,3 @@ async def async_get_device_diagnostics(
             if sensor.station.key == station_id
         },
     }
-
-    return data

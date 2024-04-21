@@ -1,4 +1,5 @@
 """Test the swiss_public_transport config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from opendata_transport.exceptions import (
@@ -33,7 +34,7 @@ async def test_flow_user_init_data_success(hass: HomeAssistant) -> None:
         config_flow.DOMAIN, context={"source": "user"}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["handler"] == "swiss_public_transport"
     assert result["data_schema"] == config_flow.DATA_SCHEMA
@@ -51,7 +52,7 @@ async def test_flow_user_init_data_success(hass: HomeAssistant) -> None:
             user_input=MOCK_DATA_STEP,
         )
 
-        assert result["type"] == "create_entry"
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].title == "test_start test_destination"
 
         assert result["data"] == MOCK_DATA_STEP
@@ -65,7 +66,7 @@ async def test_flow_user_init_data_success(hass: HomeAssistant) -> None:
         (IndexError(), "unknown"),
     ],
 )
-async def test_flow_user_init_data_unknown_error_and_recover(
+async def test_flow_user_init_data_error_and_recover(
     hass: HomeAssistant, raise_error, text_error
 ) -> None:
     """Test unknown errors."""
@@ -82,21 +83,18 @@ async def test_flow_user_init_data_unknown_error_and_recover(
             user_input=MOCK_DATA_STEP,
         )
 
-        assert result["type"] == "form"
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"]["base"] == text_error
 
         # Recover
         mock_OpendataTransport.side_effect = None
         mock_OpendataTransport.return_value = True
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN, context={"source": "user"}
-        )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=MOCK_DATA_STEP,
         )
 
-        assert result["type"] == "create_entry"
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].title == "test_start test_destination"
 
         assert result["data"] == MOCK_DATA_STEP
@@ -108,20 +106,26 @@ async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> No
     entry = MockConfigEntry(
         domain=config_flow.DOMAIN,
         data=MOCK_DATA_STEP,
+        unique_id=f"{MOCK_DATA_STEP[CONF_START]} {MOCK_DATA_STEP[CONF_DESTINATION]}",
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
-    )
+    with patch(
+        "homeassistant.components.swiss_public_transport.config_flow.OpendataTransport.async_get_data",
+        autospec=True,
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN, context={"source": "user"}
+        )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=MOCK_DATA_STEP,
-    )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=MOCK_DATA_STEP,
+        )
 
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
 
 
 MOCK_DATA_IMPORT = {
@@ -148,7 +152,7 @@ async def test_import(
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == MOCK_DATA_IMPORT
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -161,9 +165,7 @@ async def test_import(
         (IndexError(), "unknown"),
     ],
 )
-async def test_import_cannot_connect_error(
-    hass: HomeAssistant, raise_error, text_error
-) -> None:
+async def test_import_error(hass: HomeAssistant, raise_error, text_error) -> None:
     """Test import flow cannot_connect error."""
     with patch(
         "homeassistant.components.swiss_public_transport.config_flow.OpendataTransport.async_get_data",
@@ -177,7 +179,7 @@ async def test_import_cannot_connect_error(
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == text_error
 
 
@@ -187,6 +189,7 @@ async def test_import_already_configured(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=config_flow.DOMAIN,
         data=MOCK_DATA_IMPORT,
+        unique_id=f"{MOCK_DATA_IMPORT[CONF_START]} {MOCK_DATA_IMPORT[CONF_DESTINATION]}",
     )
     entry.add_to_hass(hass)
 
@@ -196,5 +199,5 @@ async def test_import_already_configured(hass: HomeAssistant) -> None:
         data=MOCK_DATA_IMPORT,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

@@ -1,7 +1,9 @@
 """The base entity for the A. O. Smith integration."""
+
 from typing import TypeVar
 
 from py_aosmith import AOSmithAPIClient
+from py_aosmith.models import Device as AOSmithDevice
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -37,26 +39,20 @@ class AOSmithStatusEntity(AOSmithEntity[AOSmithStatusCoordinator]):
     """Base entity for entities that use data from the status coordinator."""
 
     @property
-    def device(self):
-        """Shortcut to get the device status from the coordinator data."""
-        return self.coordinator.data.get(self.junction_id)
-
-    @property
-    def device_data(self):
-        """Shortcut to get the device data within the device status."""
-        device = self.device
-        return None if device is None else device.get("data", {})
+    def device(self) -> AOSmithDevice:
+        """Shortcut to get the device from the coordinator data."""
+        return self.coordinator.data[self.junction_id]
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self.device_data.get("isOnline") is True
+        return super().available and self.device.status.is_online
 
 
 class AOSmithEnergyEntity(AOSmithEntity[AOSmithEnergyCoordinator]):
     """Base entity for entities that use data from the energy coordinator."""
 
     @property
-    def energy_usage(self) -> float | None:
+    def energy_usage(self) -> float:
         """Shortcut to get the energy usage from the coordinator data."""
-        return self.coordinator.data.get(self.junction_id)
+        return self.coordinator.data[self.junction_id]

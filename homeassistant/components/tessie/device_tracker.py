@@ -1,4 +1,5 @@
 """Device Tracker platform for Tessie integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.device_tracker import SourceType
@@ -48,7 +49,6 @@ class TessieDeviceTrackerEntity(TessieEntity, TrackerEntity):
 class TessieDeviceTrackerLocationEntity(TessieDeviceTrackerEntity):
     """Vehicle Location Device Tracker Class."""
 
-    _attr_name = None
     key = "location"
 
     @property

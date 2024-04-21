@@ -1,4 +1,5 @@
 """The tests for WebOS TV automation triggers."""
+
 from unittest.mock import patch
 
 import pytest

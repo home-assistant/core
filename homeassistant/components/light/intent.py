@@ -1,4 +1,5 @@
 """Intents for the light integration."""
+
 from __future__ import annotations
 
 import asyncio

@@ -1,4 +1,5 @@
 """Config flow for Open Exchange Rates integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -12,10 +13,10 @@ from aioopenexchangerates import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_BASE
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CLIENT_TIMEOUT, DEFAULT_BASE, DOMAIN, LOGGER
@@ -45,7 +46,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
     return {"title": data[CONF_BASE]}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class OpenExchangeRatesConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Open Exchange Rates."""
 
     VERSION = 1
@@ -53,11 +54,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.currencies: dict[str, str] = {}
-        self._reauth_entry: config_entries.ConfigEntry | None = None
+        self._reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         currencies = await self.async_get_currencies()
 
@@ -81,7 +82,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except OpenExchangeRatesClientError:
             errors["base"] = "cannot_connect"
-        except asyncio.TimeoutError:
+        except TimeoutError:
             errors["base"] = "timeout_connect"
         except Exception:  # pylint: disable=broad-except
             LOGGER.exception("Unexpected exception")
@@ -110,7 +111,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauth."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -126,6 +129,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self.currencies = await client.get_currencies()
             except OpenExchangeRatesClientError as err:
                 raise AbortFlow("cannot_connect") from err
-            except asyncio.TimeoutError as err:
+            except TimeoutError as err:
                 raise AbortFlow("timeout_connect") from err
         return self.currencies
