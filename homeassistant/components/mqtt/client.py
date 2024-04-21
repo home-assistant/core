@@ -261,7 +261,9 @@ class MqttClientSetup:
             # However, that feature is not mandatory so we generate our own.
             client_id = mqtt.base62(uuid.uuid4().int, padding=22)
         transport = config.get(CONF_TRANSPORT, DEFAULT_TRANSPORT)
-        self._client = mqtt.Client(client_id, protocol=proto, transport=transport)
+        self._client = mqtt.Client(
+            client_id, protocol=proto, transport=transport, reconnect_on_failure=False
+        )
 
         # Enable logging
         self._client.enable_logger()
