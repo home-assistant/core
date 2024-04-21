@@ -116,6 +116,21 @@
     },
     "not_loaded": {
       "message": "{target} is not loaded"
+    },
+    "failed_arm": {
+      "message": "Blink failed to arm camera."
+    },
+    "failed_disarm": {
+      "message": "Blink failed to disarm camera."
+    },
+    "failed_snap": {
+      "message": "Blink failed to snap a picture."
+    },
+    "failed_arm_motion": {
+      "message": "Blink failed to arm camera motion detection"
+    },
+    "failed_disarm_motion": {
+      "message": "Blink failed to disarm camera motion detection"
     }
   },
   "issues": {
