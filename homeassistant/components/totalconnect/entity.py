@@ -21,7 +21,7 @@ class TotalConnectLocationEntity(TotalConnectEntity):
         coordinator: TotalConnectDataUpdateCoordinator,
         location: TotalConnectLocation,
     ) -> None:
-        """Initialize the TotalConnect zone."""
+        """Initialize the TotalConnect location."""
         super().__init__(coordinator)
         self._location = location
         self.device = location.devices[location.security_device_id]
