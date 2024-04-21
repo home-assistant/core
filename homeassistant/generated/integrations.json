@@ -3650,6 +3650,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "meteoswiss": {
+      "name": "MeteoSwiss",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "metoffice": {
       "name": "Met Office",
       "integration_type": "hub",
