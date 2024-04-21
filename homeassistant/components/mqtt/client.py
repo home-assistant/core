@@ -549,8 +549,7 @@ class MQTT:
         """Handle socket open."""
         fileno = sock.fileno()
         _LOGGER.debug("%s: connection opened %s", self.config_entry.title, fileno)
-        if fileno > -1:
-            self.loop.add_reader(fileno, partial(self._async_reader_callback, client))
+        self.loop.add_reader(sock, partial(self._async_reader_callback, client))
         self._async_start_misc_loop()
 
     @callback
@@ -563,8 +562,7 @@ class MQTT:
         # If socket close is called before the connect
         # result is set make sure the first connection result is set
         self._async_connection_result(False)
-        if fileno > -1:
-            self.loop.remove_reader(fileno)
+        self.loop.remove_reader(sock)
         if self._misc_task is not None and not self._misc_task.done():
             self._misc_task.cancel()
 
@@ -589,8 +587,7 @@ class MQTT:
         """Register the socket for writing."""
         fileno = sock.fileno()
         _LOGGER.debug("%s: register write %s", self.config_entry.title, fileno)
-        if fileno > -1:
-            self.loop.add_writer(fileno, partial(self._async_writer_callback, client))
+        self.loop.add_writer(sock, partial(self._async_writer_callback, client))
 
     @callback
     def _async_on_socket_unregister_write(
@@ -599,8 +596,7 @@ class MQTT:
         """Unregister the socket for writing."""
         fileno = sock.fileno()
         _LOGGER.debug("%s: unregister write %s", self.config_entry.title, fileno)
-        if fileno > -1:
-            self.loop.remove_writer(fileno)
+        self.loop.remove_writer(sock)
 
     def _is_active_subscription(self, topic: str) -> bool:
         """Check if a topic has an active subscription."""
