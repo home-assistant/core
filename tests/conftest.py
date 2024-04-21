@@ -933,6 +933,12 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient, None,
             hass.loop.call_soon_threadsafe(
                 mock_client.on_connect, mock_client, None, 0, 0, 0
             )
+            mock_client.on_socket_open(
+                mock_client, None, Mock(fileno=Mock(return_value=-1))
+            )
+            mock_client.on_socket_register_write(
+                mock_client, None, Mock(fileno=Mock(return_value=-1))
+            )
             return 0
 
         mock_client = mock_client.return_value
