@@ -2488,7 +2488,6 @@ async def test_delayed_birth_message(
         await hass.async_block_till_done()
         with pytest.raises(TimeoutError):
             await asyncio.wait_for(birth.wait(), 0.2)
-
         assert not mqtt_client_mock.publish.called
         assert not birth.is_set()
 
