@@ -33,7 +33,7 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 5
+  CACHE_VERSION: 7
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 8
   HA_SHORT_VERSION: "2024.5"
@@ -95,6 +95,7 @@ jobs:
         run: >-
           echo "key=venv-${{ env.CACHE_VERSION }}-${{
             hashFiles('requirements_test.txt', 'requirements_test_pre_commit.txt') }}-${{
+            hashFiles('requirements.txt') }}-${{
             hashFiles('requirements_all.txt') }}-${{
             hashFiles('homeassistant/package_constraints.txt') }}" >> $GITHUB_OUTPUT
       - name: Generate partial pre-commit restore key
@@ -484,6 +485,7 @@ jobs:
             libavfilter-dev \
             libavformat-dev \
             libavutil-dev \
+            libgammu-dev \
             libswresample-dev \
             libswscale-dev \
             libudev-dev
@@ -496,6 +498,7 @@ jobs:
           pip install "$(grep '^uv' < requirements_test.txt)"
           uv pip install -U "pip>=21.3.1" setuptools wheel
           uv pip install -r requirements_all.txt
+          uv pip install "$(grep 'python-gammu' < requirements_all.txt | sed -e 's|# python-gammu|python-gammu|g')"
           uv pip install -r requirements_test.txt
           uv pip install -e . --config-settings editable_mode=compat
 
@@ -688,7 +691,8 @@ jobs:
           sudo apt-get update
           sudo apt-get -y install \
             bluez \
-            ffmpeg
+            ffmpeg \
+            libgammu-dev
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
@@ -711,7 +715,7 @@ jobs:
           . venv/bin/activate
           python -m script.split_tests ${{ needs.info.outputs.test_group_count }} tests
       - name: Upload pytest_buckets
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@v4.3.2
         with:
           name: pytest_buckets
           path: pytest_buckets.txt
@@ -747,7 +751,8 @@ jobs:
           sudo apt-get update
           sudo apt-get -y install \
             bluez \
-            ffmpeg
+            ffmpeg \
+            libgammu-dev
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.2
       - name: Set up Python ${{ matrix.python-version }}
@@ -771,7 +776,7 @@ jobs:
         run: |
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Download pytest_buckets
-        uses: actions/download-artifact@v4.1.4
+        uses: actions/download-artifact@v4.1.5
         with:
           name: pytest_buckets
       - name: Compile English translations
@@ -806,14 +811,14 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-full.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@v4.3.2
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{ matrix.group }}
           path: pytest-*.txt
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@v4.3.2
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
@@ -928,7 +933,7 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${mariadb}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@v4.3.2
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.mariadb }}
@@ -936,7 +941,7 @@ jobs:
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@v4.3.2
         with:
           name: coverage-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.mariadb }}
@@ -1051,7 +1056,7 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${postgresql}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@v4.3.2
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.postgresql }}
@@ -1059,7 +1064,7 @@ jobs:
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@v4.3.2
         with:
           name: coverage-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.postgresql }}
@@ -1083,7 +1088,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.2
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@v4.1.4
+        uses: actions/download-artifact@v4.1.5
         with:
           pattern: coverage-*
       - name: Upload coverage to Codecov
@@ -1124,7 +1129,8 @@ jobs:
           sudo apt-get update
           sudo apt-get -y install \
             bluez \
-            ffmpeg
+            ffmpeg \
+            libgammu-dev
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.2
       - name: Set up Python ${{ matrix.python-version }}
@@ -1187,14 +1193,14 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@v4.3.2
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{ matrix.group }}
           path: pytest-*.txt
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@v4.3.2
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
@@ -1215,7 +1221,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.2
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@v4.1.4
+        uses: actions/download-artifact@v4.1.5
         with:
           pattern: coverage-*
       - name: Upload coverage to Codecov

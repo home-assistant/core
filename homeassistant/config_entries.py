@@ -2609,14 +2609,12 @@ def _handle_entry_updated_filter(
     Only handle changes to "disabled_by".
     If "disabled_by" was CONFIG_ENTRY, reload is not needed.
     """
-    if (
+    return not (
         event_data["action"] != "update"
         or "disabled_by" not in event_data["changes"]
         or event_data["changes"]["disabled_by"]
         is entity_registry.RegistryEntryDisabler.CONFIG_ENTRY
-    ):
-        return False
-    return True
+    )
 
 
 async def support_entry_unload(hass: HomeAssistant, domain: str) -> bool:
