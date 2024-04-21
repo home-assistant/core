@@ -425,6 +425,7 @@ class MQTT:
         )
         self._misc_task: asyncio.Task | None = None
         self._reconnect_task: asyncio.Task | None = None
+        self._should_reconnect: bool = True
         self._available_future: asyncio.Future[bool] | None = None
 
         self._max_qos: dict[str, int] = {}  # topic, max qos
@@ -624,6 +625,7 @@ class MQTT:
 
         result: int | None = None
         self._available_future = client_available
+        self._should_reconnect = True
         try:
             result = await self.hass.async_add_executor_job(
                 self._mqttc.connect,
@@ -652,7 +654,7 @@ class MQTT:
         """
         if self._available_future:
             _set_result_unless_done(self._available_future, result)
-        if not result and not self._reconnect_task:
+        if self._should_reconnect and not result and not self._reconnect_task:
             self._reconnect_task = self.config_entry.async_create_background_task(
                 self.hass, self._reconnect_loop(), "mqtt reconnect loop"
             )
@@ -693,6 +695,7 @@ class MQTT:
 
         # stop the MQTT loop
         async with self._paho_lock:
+            self._should_reconnect = False
             if self._reconnect_task:
                 self._reconnect_task.cancel()
             self._mqttc.disconnect()
