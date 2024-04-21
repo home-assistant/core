@@ -636,7 +636,7 @@ class MQTT:
             _LOGGER.error("Failed to connect to MQTT server due to exception: %s", err)
             _set_result_unless_done(client_available, False)
         finally:
-            if result is not None or result != 0:
+            if result is not None and result != 0:
                 if result is not None:
                     _LOGGER.error(
                         "Failed to connect to MQTT server: %s",
