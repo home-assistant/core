@@ -51,7 +51,7 @@ async def test_form_success(hass: HomeAssistant) -> None:
                 CONF_IP_ADDRESS: "192.168.1.87",
                 CONF_PORT: 80,
                 CONF_PASSWORD: "password",
-                CONF_SOLAX_INVERTER: ["X1MiniV34"],
+                CONF_SOLAX_INVERTER: "x1_mini_v34",
             },
         )
         await hass.async_block_till_done()
@@ -62,7 +62,7 @@ async def test_form_success(hass: HomeAssistant) -> None:
         CONF_IP_ADDRESS: "192.168.1.87",
         CONF_PORT: 80,
         CONF_PASSWORD: "password",
-        CONF_SOLAX_INVERTER: ["X1MiniV34"],
+        CONF_SOLAX_INVERTER: "x1_mini_v34",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -85,7 +85,6 @@ async def test_form_connect_error(hass: HomeAssistant) -> None:
                 CONF_IP_ADDRESS: "192.168.1.87",
                 CONF_PORT: 80,
                 CONF_PASSWORD: "password",
-                CONF_SOLAX_INVERTER: [],
             },
         )
 
@@ -111,7 +110,6 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
                 CONF_IP_ADDRESS: "192.168.1.87",
                 CONF_PORT: 80,
                 CONF_PASSWORD: "password",
-                CONF_SOLAX_INVERTER: [],
             },
         )
 

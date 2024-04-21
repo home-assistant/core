@@ -1,31 +1,39 @@
 """The solax component."""
 
+import asyncio
+from importlib.metadata import entry_points
 import logging
 
 import solax
 from solax import RealTimeAPI
-from solax.discovery import REGISTRY
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_SOLAX_INVERTER, DOMAIN
+from .const import CONF_SOLAX_INVERTER, DOMAIN, SOLAX_ENTRY_POINT_GROUP
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
 
+INVERTERS_ENTRY_POINTS = {
+    ep.name: ep.load() for ep in entry_points(group=SOLAX_ENTRY_POINT_GROUP)
+}
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the sensors from a ConfigEntry."""
 
-    registry_hash = {cls.__name__: cls for cls in REGISTRY}
-
     invset = set()
-    for cls_name in entry.data[CONF_SOLAX_INVERTER]:
-        invset.add(registry_hash[cls_name])
+    if (CONF_SOLAX_INVERTER in entry.data) and entry.data.get(
+        CONF_SOLAX_INVERTER
+    ) is not None:
+        invset.add(INVERTERS_ENTRY_POINTS.get(entry.data[CONF_SOLAX_INVERTER]))
+    else:
+        for ep in INVERTERS_ENTRY_POINTS.values():
+            invset.add(ep)
 
     _LOGGER.debug("solax inverter set %s", invset)
 
@@ -35,6 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_PORT],
             entry.data[CONF_PASSWORD],
             inverters=invset,
+            return_when=asyncio.FIRST_COMPLETED,
         )
         api = RealTimeAPI(inverter)
         await api.get_data()
