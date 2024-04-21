@@ -57,6 +57,7 @@ class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):  # pylint: disab
             self.hass, self._address, connectable=True
         )
         if ble_device is None:
+            _LOGGER.warning("No BLEDevice for %s", self._address)
             return False
         self._expected_connected = True
         await self.desk.connect(ble_device)
