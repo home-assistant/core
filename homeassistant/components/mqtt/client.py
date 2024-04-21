@@ -636,12 +636,12 @@ class MQTT:
             _LOGGER.error("Failed to connect to MQTT server due to exception: %s", err)
             _set_result_unless_done(client_available, False)
         finally:
-            if result is None:
-                _set_result_unless_done(client_available, False)
-            if result and result != 0:
-                _LOGGER.error(
-                    "Failed to connect to MQTT server: %s", mqtt.error_string(result)
-                )
+            if result is not None or result != 0:
+                if result is not None:
+                    _LOGGER.error(
+                        "Failed to connect to MQTT server: %s",
+                        mqtt.error_string(result),
+                    )
                 _set_result_unless_done(client_available, False)
 
         self._reconnect_task = self.config_entry.async_create_background_task(
