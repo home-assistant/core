@@ -14,7 +14,10 @@ import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
-from homeassistant.components.mqtt.client import EnsureJobAfterCooldown
+from homeassistant.components.mqtt.client import (
+    RECONNECT_INTERVAL_SECONDS,
+    EnsureJobAfterCooldown,
+)
 from homeassistant.components.mqtt.mixins import MQTT_ENTITY_DEVICE_INFO_SCHEMA
 from homeassistant.components.mqtt.models import (
     MessageCallbackType,
@@ -4153,6 +4156,7 @@ async def test_auto_reconnect(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test reconnection is automatically done."""
     mqtt_mock = await mqtt_mock_entry()
@@ -4164,9 +4168,20 @@ async def test_auto_reconnect(
     mqtt_client_mock.on_disconnect(None, None, 0)
     await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    mqtt_client_mock.reconnect.side_effect = OSError("foo")
+    async_fire_time_changed(
+        hass, utcnow() + timedelta(seconds=RECONNECT_INTERVAL_SECONDS)
+    )
     await hass.async_block_till_done()
     assert len(mqtt_client_mock.reconnect.mock_calls) == 2
+    assert "Error re-connecting to MQTT server due to exception: foo" in caplog.text
+
+    mqtt_client_mock.reconnect.side_effect = None
+    async_fire_time_changed(
+        hass, utcnow() + timedelta(seconds=RECONNECT_INTERVAL_SECONDS)
+    )
+    await hass.async_block_till_done()
+    assert len(mqtt_client_mock.reconnect.mock_calls) == 3
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
 
@@ -4174,7 +4189,9 @@ async def test_auto_reconnect(
     mqtt_client_mock.on_disconnect(None, None, 0)
     await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    async_fire_time_changed(
+        hass, utcnow() + timedelta(seconds=RECONNECT_INTERVAL_SECONDS)
+    )
     await hass.async_block_till_done()
     # Should not reconnect after stop
-    assert len(mqtt_client_mock.reconnect.mock_calls) == 2
+    assert len(mqtt_client_mock.reconnect.mock_calls) == 3
