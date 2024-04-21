@@ -57,23 +57,23 @@ def _async_migrate_options_from_data_if_missing(
         hass.config_entries.async_update_entry(entry, data=data, options=options)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up Sinch SMS from a config entry."""
 
-    _async_migrate_options_from_data_if_missing(hass, entry)
+    _async_migrate_options_from_data_if_missing(hass, config_entry)
     try:
         await hass.async_add_executor_job(
             check_client_connection,
-            entry.data[CONF_SERVICE_PLAN_ID],
-            entry.data[CONF_API_KEY],
+            config_entry.data[CONF_SERVICE_PLAN_ID],
+            config_entry.data[CONF_API_KEY],
         )
     except (UnauthorizedException, UnexpectedResponseException) as ex:
         raise ConfigEntryNotReady(
-            f"Failed to connect to sinch using service plan: {entry.data[CONF_SERVICE_PLAN_ID]}"
+            f"Failed to connect to sinch using service plan: {config_entry.data[CONF_SERVICE_PLAN_ID]}"
         ) from ex
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data | {
-        ATTR_OPTIONS: entry.options
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = config_entry.data | {
+        ATTR_OPTIONS: config_entry.options
     }
     hass.async_create_task(
         discovery.async_load_platform(
