@@ -437,4 +437,4 @@ async def async_handle_snapshot_service(
     try:
         await hass.async_add_executor_job(_write_image, snapshot_file, image_data)
     except OSError as err:
-        raise HomeAssistantError(f"Can't write image to file: {err}")
+        raise HomeAssistantError("Can't write image to file") from err
