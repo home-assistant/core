@@ -42,6 +42,7 @@ from homeassistant.core import (
     CoreState,
     HassJob,
     HomeAssistant,
+    ReleaseChannel,
     ServiceCall,
     ServiceResponse,
     State,
@@ -3060,13 +3061,15 @@ async def test_validate_state(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("version", "release_channel"),
     [
-        ("0.115.0.dev20200815", "nightly"),
-        ("0.115.0", "stable"),
-        ("0.115.0b4", "beta"),
-        ("0.115.0dev0", "dev"),
+        ("0.115.0.dev20200815", ReleaseChannel.NIGHTLY),
+        ("0.115.0", ReleaseChannel.STABLE),
+        ("0.115.0b4", ReleaseChannel.BETA),
+        ("0.115.0dev0", ReleaseChannel.DEV),
     ],
 )
-async def test_get_release_channel(version: str, release_channel: str) -> None:
+async def test_get_release_channel(
+    version: str, release_channel: ReleaseChannel
+) -> None:
     """Test if release channel detection works from Home Assistant version number."""
     with patch("homeassistant.core.__version__", f"{version}"):
         assert get_release_channel() == release_channel
