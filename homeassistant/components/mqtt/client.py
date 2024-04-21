@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Generator, Iterable
+from collections.abc import AsyncGenerator, Callable, Coroutine, Iterable
 import contextlib
 from dataclasses import dataclass
 from functools import lru_cache, partial
@@ -468,18 +468,20 @@ class MQTT:
         while self._cleanup_on_unload:
             self._cleanup_on_unload.pop()()
 
-    @contextlib.contextmanager
-    def _connect_in_executor(self) -> Generator[None, None, None]:
+    @contextlib.asynccontextmanager
+    async def _async_connect_in_executor(self) -> AsyncGenerator[None, None]:
         # While we are connecting in the executor we need to
         # handle on_socket_open and on_socket_register_write
         # in the executor as well.
-        self._mqttc.on_socket_open = self._on_socket_open
-        self._mqttc.on_socket_register_write = self._on_socket_register_write
-        yield
-        # Once the executor job is done, we can switch back to
-        # handling these in the event loop.
-        self._mqttc.on_socket_open = self._async_on_socket_open
-        self._mqttc.on_socket_register_write = self._async_on_socket_register_write
+        try:
+            self._mqttc.on_socket_open = self._on_socket_open
+            self._mqttc.on_socket_register_write = self._on_socket_register_write
+            yield
+        finally:
+            # Once the executor job is done, we can switch back to
+            # handling these in the event loop.
+            self._mqttc.on_socket_open = self._async_on_socket_open
+            self._mqttc.on_socket_register_write = self._async_on_socket_register_write
 
     def init_client(self) -> None:
         """Initialize paho client."""
@@ -628,14 +630,13 @@ class MQTT:
         self._available_future = client_available
         self._should_reconnect = True
         try:
-            async with self._connection_lock:
-                with self._connect_in_executor():
-                    result = await self.hass.async_add_executor_job(
-                        self._mqttc.connect,
-                        self.conf[CONF_BROKER],
-                        self.conf.get(CONF_PORT, DEFAULT_PORT),
-                        self.conf.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE),
-                    )
+            async with self._connection_lock, self._async_connect_in_executor():
+                result = await self.hass.async_add_executor_job(
+                    self._mqttc.connect,
+                    self.conf[CONF_BROKER],
+                    self.conf.get(CONF_PORT, DEFAULT_PORT),
+                    self.conf.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE),
+                )
         except OSError as err:
             _LOGGER.error("Failed to connect to MQTT server due to exception: %s", err)
             self._async_connection_result(False)
@@ -673,11 +674,8 @@ class MQTT:
         while True:
             if not self.connected:
                 try:
-                    async with self._connection_lock:
-                        with self._connect_in_executor():
-                            await self.hass.async_add_executor_job(
-                                self._mqttc.reconnect
-                            )
+                    async with self._connection_lock, self._async_connect_in_executor():
+                        await self.hass.async_add_executor_job(self._mqttc.reconnect)
                 except OSError as err:
                     _LOGGER.debug(
                         "Error re-connecting to MQTT server due to exception: %s", err
