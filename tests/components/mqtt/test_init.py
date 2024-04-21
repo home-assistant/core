@@ -3,7 +3,6 @@
 import asyncio
 from copy import deepcopy
 from datetime import datetime, timedelta
-from functools import partial
 import json
 import ssl
 from typing import Any, TypedDict
@@ -23,6 +22,7 @@ from homeassistant.components.mqtt.models import (
     MqttValueTemplateException,
     ReceiveMessage,
 )
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -52,10 +52,9 @@ from tests.common import (
     async_fire_mqtt_message,
     async_fire_time_changed,
     mock_restore_cache,
+    setup_test_component_platform,
 )
-from tests.testing_config.custom_components.test.sensor import (  # type: ignore[attr-defined]
-    DEVICE_CLASSES,
-)
+from tests.components.sensor.common import MockSensor
 from tests.typing import (
     MqttMockHAClient,
     MqttMockHAClientGenerator,
@@ -82,12 +81,6 @@ class _DebugInfo(TypedDict):
 
     domain: str
     config: _DebugDeviceInfo
-
-
-class RecordCallsPartial(partial[Any]):
-    """Wrapper class for partial."""
-
-    __name__ = "RecordCallPartialTest"
 
 
 @pytest.fixture(autouse=True)
@@ -3142,12 +3135,12 @@ async def test_debug_info_non_mqtt(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    mock_sensor_entities: dict[str, MockSensor],
 ) -> None:
     """Test we get empty debug_info for a device with non MQTT entities."""
     await mqtt_mock_entry()
     domain = "sensor"
-    platform = getattr(hass.components, f"test.{domain}")
-    platform.init()
+    setup_test_component_platform(hass, domain, mock_sensor_entities)
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -3155,11 +3148,11 @@ async def test_debug_info_non_mqtt(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    for device_class in DEVICE_CLASSES:
+    for device_class in SensorDeviceClass:
         entity_registry.async_get_or_create(
             domain,
             "test",
-            platform.ENTITIES[device_class].unique_id,
+            mock_sensor_entities[device_class].unique_id,
             device_id=device_entry.id,
         )
 

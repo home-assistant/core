@@ -2,10 +2,8 @@
 
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant.components.color_extractor.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -18,7 +16,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     with patch(
@@ -30,42 +28,22 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
             user_input={},
         )
 
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "Color extractor"
     assert result.get("data") == {}
     assert result.get("options") == {}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize("source", [SOURCE_USER, SOURCE_IMPORT])
-async def test_single_instance_allowed(
-    hass: HomeAssistant,
-    source: str,
-) -> None:
+async def test_single_instance_allowed(hass: HomeAssistant) -> None:
     """Test we abort if already setup."""
     mock_config_entry = MockConfigEntry(domain=DOMAIN)
 
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": source}, data={}
+        DOMAIN, context={"source": SOURCE_USER}, data={}
     )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "single_instance_allowed"
-
-
-async def test_import_flow(
-    hass: HomeAssistant,
-) -> None:
-    """Test the import configuration flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={},
-    )
-
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "Color extractor"
-    assert result.get("data") == {}
-    assert result.get("options") == {}

@@ -229,7 +229,7 @@ async def test_message_history_pruning(
             assert isinstance(result.conversation_id, str)
             conversation_ids.append(result.conversation_id)
 
-        agent = await conversation._get_agent_manager(hass).async_get_agent(
+        agent = conversation.get_agent_manager(hass).async_get_agent(
             mock_config_entry.entry_id
         )
         assert isinstance(agent, ollama.OllamaAgent)
@@ -284,7 +284,7 @@ async def test_message_history_unlimited(
                 result.response.response_type == intent.IntentResponseType.ACTION_DONE
             ), result
 
-        agent = await conversation._get_agent_manager(hass).async_get_agent(
+        agent = conversation.get_agent_manager(hass).async_get_agent(
             mock_config_entry.entry_id
         )
         assert isinstance(agent, ollama.OllamaAgent)
@@ -340,7 +340,7 @@ async def test_conversation_agent(
     mock_init_component,
 ) -> None:
     """Test OllamaAgent."""
-    agent = await conversation._get_agent_manager(hass).async_get_agent(
+    agent = conversation.get_agent_manager(hass).async_get_agent(
         mock_config_entry.entry_id
     )
     assert agent.supported_languages == MATCH_ALL

@@ -27,7 +27,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -40,7 +40,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == FIXTURE_USER_INPUT[CONF_EMAIL]
     assert result2["data"] == FIXTURE_USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
@@ -63,7 +63,7 @@ async def test_form_exception(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -74,7 +74,7 @@ async def test_form_exception(
             result["flow_id"],
             FIXTURE_USER_INPUT,
         )
-        assert result2["type"] == FlowResultType.FORM
+        assert result2["type"] is FlowResultType.FORM
         assert result2["errors"] == {"base": expected_error_key}
 
     with patch(
@@ -87,7 +87,7 @@ async def test_form_exception(
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == FIXTURE_USER_INPUT[CONF_EMAIL]
     assert result3["data"] == FIXTURE_USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
@@ -141,7 +141,7 @@ async def test_reauth_flow(
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == FlowResultType.ABORT
+        assert result2["type"] is FlowResultType.ABORT
         assert result2["reason"] == "reauth_successful"
 
 
@@ -178,7 +178,7 @@ async def test_reauth_flow_retry(
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == FlowResultType.FORM
+        assert result2["type"] is FlowResultType.FORM
         assert result2["errors"] == {"base": "invalid_auth"}
 
     # Second attempt at reauth - authentication succeeds
@@ -195,5 +195,5 @@ async def test_reauth_flow_retry(
         )
         await hass.async_block_till_done()
 
-        assert result3["type"] == FlowResultType.ABORT
+        assert result3["type"] is FlowResultType.ABORT
         assert result3["reason"] == "reauth_successful"

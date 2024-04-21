@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from functools import cached_property
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -18,11 +19,6 @@ from homeassistant.core import Context, State
 import homeassistant.util.dt as dt_util
 
 from .state_attributes import decode_attributes_from_source
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 

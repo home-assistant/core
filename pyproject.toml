@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools==68.0.0", "wheel~=0.40.0"]
+requires = ["setuptools==69.2.0", "wheel~=0.43.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -23,10 +23,12 @@ classifiers = [
 ]
 requires-python = ">=3.12.0"
 dependencies    = [
-    "aiohttp==3.9.3",
+    "aiodns==3.2.0",
+    "aiohttp==3.9.5",
     "aiohttp_cors==0.7.0",
+    "aiohttp_session==2.12.0",
     "aiohttp-fast-url-dispatcher==0.3.0",
-    "aiohttp-zlib-ng==0.3.1",
+    "aiohttp-isal==0.2.0",
     "astral==2.2",
     "async-interrupt==1.1.1",
     "attrs==23.2.0",
@@ -38,7 +40,7 @@ dependencies    = [
     "fnv-hash-fast==0.5.0",
     # hass-nabucasa is imported by helpers which don't depend on the cloud
     # integration
-    "hass-nabucasa==0.79.0",
+    "hass-nabucasa==0.78.0",
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
     "httpx==0.27.0",
@@ -49,9 +51,9 @@ dependencies    = [
     "PyJWT==2.8.0",
     # PyJWT has loose dependency. We want the latest one.
     "cryptography==42.0.5",
-    "Pillow==10.2.0",
+    "Pillow==10.3.0",
     "pyOpenSSL==24.1.0",
-    "orjson==3.9.15",
+    "orjson==3.10.1",
     "packaging>=23.1",
     "pip>=21.3.1",
     "psutil-home-assistant==0.0.1",
@@ -59,7 +61,7 @@ dependencies    = [
     "PyYAML==6.0.1",
     "requests==2.31.0",
     "SQLAlchemy==2.0.29",
-    "typing-extensions>=4.10.0,<5.0",
+    "typing-extensions>=4.11.0,<5.0",
     "ulid-transform==0.9.0",
     # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
@@ -304,6 +306,10 @@ disable = [
     "use-list-literal", # C405
     "useless-object-inheritance", # UP004
     "useless-return", # PLR1711
+    "no-else-break", # RET508
+    "no-else-continue", # RET507
+    "no-else-raise", # RET506
+    "no-else-return", # RET505
     # "no-self-use", # PLR6301  # Optional plugin, not enabled
 
     # Handled by mypy
@@ -479,18 +485,12 @@ filterwarnings = [
     # -- fixed, waiting for release / update
     # https://github.com/mkmer/AIOAladdinConnect/commit/8851fff4473d80d70ac518db2533f0fbef63b69c - >=0.2.0
     "ignore:module 'sre_constants' is deprecated:DeprecationWarning:AIOAladdinConnect",
-    # https://github.com/timmo001/aioazuredevops/commit/7c6a41bed45805396cd96e0696372c79b5416612 - >=1.4.0
-    "ignore:\"(is|is not)\" with 'int' literal. Did you mean \"(==|!=)\"?:SyntaxWarning:.*aioazuredevops.client",
-    # https://github.com/ludeeus/aiogithubapi/pull/208 - >=23.9.0
-    "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:aiogithubapi.namespaces.events",
     # https://github.com/bachya/aiopurpleair/pull/200 - >=2023.10.0
     "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:aiopurpleair.helpers.validators",
-    # https://github.com/rossengeorgiev/aprs-python/commit/5e79c810355fc2df4348581779815f2981493e3f - >=0.7.1
-    "ignore:invalid escape sequence:SyntaxWarning:.*aprslib.parsing.weather",
-    # https://github.com/tschamm/boschshcpy/pull/39 - >=0.2.89
-    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:boschshcpy.api",
     # https://github.com/DataDog/datadogpy/pull/290 - >=0.23.0
     "ignore:invalid escape sequence:SyntaxWarning:.*datadog.dogstatsd.base",
+    # https://github.com/DataDog/datadogpy/pull/566/files - >=0.37.0
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:datadog.util.compat",
     # https://github.com/fwestenberg/devialet/pull/6 - >1.4.5
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:devialet.devialet_api",
     # https://github.com/jaraco/jaraco.abode/commit/9e3e789efc96cddcaa15f920686bbeb79a7469e0 - update jaraco.abode to >=5.1.0
@@ -499,28 +499,30 @@ filterwarnings = [
     "ignore:\"is not\" with 'str' literal. Did you mean \"!=\"?:SyntaxWarning:.*lupupy.devices.alarm",
     # https://github.com/nextcord/nextcord/pull/1095 - >2.6.1
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:nextcord.health_check",
-    # https://github.com/timmo001/ovoenergy/pull/68 - >=1.3.0
-    "ignore:\"is not\" with 'int' literal. Did you mean \"!=\"?:SyntaxWarning:.*ovoenergy.ovoenergy",
     # https://github.com/eclipse/paho.mqtt.python/issues/653 - >=2.0.0
     # https://github.com/eclipse/paho.mqtt.python/pull/665
     "ignore:ssl.PROTOCOL_TLS is deprecated:DeprecationWarning:paho.mqtt.client",
-    # https://github.com/bachya/pytile/pull/280 - >=2023.10.0
-    "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:pytile.tile",
     # https://github.com/rytilahti/python-miio/pull/1809 - >=0.6.0.dev0
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:miio.protocol",
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:miio.miioprotocol",
     # https://github.com/hunterjm/python-onvif-zeep-async/pull/51 - >3.1.12
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:onvif.client",
+    # https://github.com/googleapis/python-pubsub/commit/060f00bcea5cd129be3a2d37078535cc97b4f5e8 - >=2.13.12
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:google.pubsub_v1.services.publisher.client",
     # https://github.com/okunishinishi/python-stringcase/commit/6a5c5bbd3fe5337862abc7fd0853a0f36e18b2e1 - >1.2.0
     "ignore:invalid escape sequence:SyntaxWarning:.*stringcase",
-    # https://github.com/pyudev/pyudev/pull/466 - >=0.24.0
-    "ignore:invalid escape sequence:SyntaxWarning:.*pyudev.monitor",
-    # https://github.com/xeniter/romy/pull/1 - >=0.0.8
-    "ignore:with timeout\\(\\) is deprecated, use async with timeout\\(\\) instead:DeprecationWarning:romy.utils",
     # https://github.com/grahamwetzler/smart-meter-texas/pull/143 - >0.5.3
     "ignore:ssl.OP_NO_SSL\\*/ssl.OP_NO_TLS\\* options are deprecated:DeprecationWarning:smart_meter_texas",
+    # https://github.com/timmo001/system-bridge-connector/pull/27 - >= 4.1.0
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:systembridgeconnector.version",
+    # https://github.com/jschlyter/ttls/commit/d64f1251397b8238cf6a35bea64784de25e3386c - >=1.8.1
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:ttls",
     # https://github.com/mvantellingen/python-zeep/pull/1364 - >4.2.1
     "ignore:'cgi' is deprecated and slated for removal in Python 3.13:DeprecationWarning:zeep.utils",
+
+    # -- fixed for Python 3.13
+    # https://github.com/rhasspy/wyoming/commit/e34af30d455b6f2bb9e5cfb25fad8d276914bc54 - >=1.4.2
+    "ignore:'audioop' is deprecated and slated for removal in Python 3.13:DeprecationWarning:wyoming.audio",
 
     # -- other
     # Locale changes might take some time to resolve upstream
@@ -548,15 +550,47 @@ filterwarnings = [
     # https://pypi.org/project/pyblackbird/ - v0.6 - 2023-03-15
     # https://github.com/koolsb/pyblackbird/pull/9 -> closed
     "ignore:invalid escape sequence:SyntaxWarning:.*pyblackbird",
-    # https://pypi.org/project/pybotvac/ - v0.0.24 - 2023-01-02
-    # https://github.com/stianaske/pybotvac/pull/81 -> closed
-    "ignore:invalid escape sequence:SyntaxWarning:.*pybotvac.robot",
-    # https://github.com/pkkid/python-plexapi/pull/1244 - v4.15.10 -> new issue same file
+    # https://github.com/pkkid/python-plexapi/pull/1244 - v4.15.11 -> new issue same file
+    # https://github.com/pkkid/python-plexapi/pull/1370 -> Not fixed here
     "ignore:invalid escape sequence:SyntaxWarning:.*plexapi.base",
     # https://pypi.org/project/pyws66i/ - v1.1 - 2022-04-05
     "ignore:invalid escape sequence:SyntaxWarning:.*pyws66i",
     # https://pypi.org/project/sleekxmppfs/ - v1.4.1 - 2022-08-18
     "ignore:invalid escape sequence:SyntaxWarning:.*sleekxmppfs.thirdparty.mini_dateutil",
+    # - pkg_resources
+    # https://pypi.org/project/aiomusiccast/ - v0.14.8 - 2023-03-20
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:aiomusiccast",
+    # https://github.com/eavanvalkenburg/pysiaalarm/blob/v3.1.1/src/pysiaalarm/data/data.py#L7 - v3.1.1 - 2023-04-17
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:pysiaalarm.data.data",
+    # https://pypi.org/project/pybotvac/ - v0.0.25 - 2024-04-11
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:pybotvac.version",
+    # https://github.com/home-assistant-ecosystem/python-mystrom/blob/2.2.0/pymystrom/__init__.py#L10 - v2.2.0 - 2023-05-21
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:pymystrom",
+    # https://pypi.org/project/velbus-aio/ - v2024.4.0
+    # https://github.com/Cereal2nd/velbus-aio/blob/2024.4.0/velbusaio/handler.py#L13
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:velbusaio.handler",
+
+    # -- Python 3.13
+    # HomeAssistant
+    "ignore:'audioop' is deprecated and slated for removal in Python 3.13:DeprecationWarning:homeassistant.components.assist_pipeline.websocket_api",
+    # https://pypi.org/project/pylutron/ - v0.2.12 - 2024-02-12
+    # https://github.com/thecynic/pylutron/issues/89
+    "ignore:'telnetlib' is deprecated and slated for removal in Python 3.13:DeprecationWarning:pylutron",
+    # https://pypi.org/project/SpeechRecognition/ - v3.10.3 - 2024-03-30
+    # https://github.com/Uberi/speech_recognition/blob/3.10.3/speech_recognition/__init__.py#L7
+    "ignore:'aifc' is deprecated and slated for removal in Python 3.13:DeprecationWarning:speech_recognition",
+    # https://pypi.org/project/voip-utils/ - v0.1.0 - 2023-06-28
+    # https://github.com/home-assistant-libs/voip-utils/blob/v0.1.0/voip_utils/rtp_audio.py#L2
+    "ignore:'audioop' is deprecated and slated for removal in Python 3.13:DeprecationWarning:voip_utils.rtp_audio",
+
+    # -- Python 3.13 - unmaintained projects, last release about 2+ years
+    # https://pypi.org/project/pydub/ - v0.25.1 - 2021-03-10
+    "ignore:'audioop' is deprecated and slated for removal in Python 3.13:DeprecationWarning:pydub.utils",
+    # https://github.com/heathbar/plum-lightpad-python/issues/7 - v0.0.11 - 2018-10-16
+    "ignore:'telnetlib' is deprecated and slated for removal in Python 3.13:DeprecationWarning:plumlightpad.lightpad",
+    # https://pypi.org/project/pyws66i/ - v1.1 - 2022-04-05
+    # https://github.com/ssaenger/pyws66i/blob/v1.1/pyws66i/__init__.py#L2
+    "ignore:'telnetlib' is deprecated and slated for removal in Python 3.13:DeprecationWarning:pyws66i",
 
     # -- unmaintained projects, last release about 2+ years
     # https://pypi.org/project/agent-py/ - v0.0.23 - 2020-06-04
@@ -570,6 +604,10 @@ filterwarnings = [
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:directv.models",
     # https://pypi.org/project/foobot_async/ - v1.0.0 - 2020-11-24
     "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:foobot_async",
+    # https://pypi.org/project/habitipy/ - v0.3.0 - 2019-01-14
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:habitipy.api",
+    # https://pypi.org/project/httpsig/ - v1.3.0 - 2018-11-28
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:httpsig",
     # https://pypi.org/project/influxdb/ - v5.3.1 - 2020-11-11 (archived)
     "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:influxdb.line_protocol",
     # https://pypi.org/project/lark-parser/ - v0.12.0 - 2021-08-30 -> moved to `lark`
@@ -586,6 +624,8 @@ filterwarnings = [
     "ignore:\"is not\" with 'int' literal. Did you mean \"!=\"?:SyntaxWarning:.*opuslib.api.decoder",
     # https://pypi.org/project/passlib/ - v1.7.4 - 2020-10-08
     "ignore:'crypt' is deprecated and slated for removal in Python 3.13:DeprecationWarning:passlib.utils",
+    # https://pypi.org/project/pilight/ - v0.1.1 - 2016-10-19
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:pilight",
     # https://pypi.org/project/plumlightpad/ - v0.0.11 - 2018-10-16
     "ignore:invalid escape sequence:SyntaxWarning:.*plumlightpad.plumdiscovery",
     "ignore:\"is\" with 'int' literal. Did you mean \"==\"?:SyntaxWarning:.*plumlightpad.(lightpad|logicalload)",
@@ -597,6 +637,10 @@ filterwarnings = [
     "ignore:\"is\" with 'int' literal. Did you mean \"==\"?:SyntaxWarning:.*pyiss",
     # https://pypi.org/project/PyMetEireann/ - v2021.8.0 - 2021-08-16
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:meteireann",
+    # https://pypi.org/project/pyowm/ - v3.3.0 - 2022-02-14
+    # https://github.com/csparpa/pyowm/issues/435
+    # https://github.com/csparpa/pyowm/blob/3.3.0/pyowm/commons/cityidregistry.py#L7
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:pyowm.commons.cityidregistry",
     # https://pypi.org/project/PyPasser/ - v0.0.5 - 2021-10-21
     "ignore:invalid escape sequence:SyntaxWarning:.*pypasser.utils",
     # https://pypi.org/project/pyqwikswitch/ - v0.94 - 2019-08-19
@@ -614,6 +658,9 @@ filterwarnings = [
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:webrtcvad",
 ]
 
+[tool.ruff]
+required-version = ">=0.4.1"
+
 [tool.ruff.lint]
 select = [
     "B002", # Python does not support the unary prefix increment
@@ -621,11 +668,13 @@ select = [
     "B007", # Loop control variable {name} not used within loop body
     "B014", # Exception handler with duplicate exception
     "B015", # Pointless comparison. Did you mean to assign a value? Otherwise, prepend assert or remove it.
+    "B017", # pytest.raises(BaseException) should be considered evil
     "B018", # Found useless attribute access. Either assign it to a variable or remove it.
     "B023", # Function definition does not bind loop variable {name}
     "B026", # Star-arg unpacking after a keyword argument is strongly discouraged
     "B032", # Possible unintentional type annotation (using :). Did you mean to assign (using =)?
     "B904", # Use raise from to specify exception cause
+    "B905", # zip() without an explicit strict= parameter
     "C", # complexity
     "COM818", # Trailing comma on bare tuple prohibited
     "D", # docstrings
@@ -633,8 +682,10 @@ select = [
     "DTZ004", # Use datetime.fromtimestamp(ts, tz=) instead of datetime.utcfromtimestamp(ts)
     "E", # pycodestyle
     "F", # pyflakes/autoflake
+    "FLY", # flynt
     "G", # flake8-logging-format
     "I", # isort
+    "INP", # flake8-no-pep420
     "ISC", # flake8-implicit-str-concat
     "ICN001", # import concentions; {name} should be imported as {asname}
     "LOG", # flake8-logging
@@ -642,13 +693,17 @@ select = [
     "N805", # First argument of a method should be named self
     "N815", # Variable {name} in class scope should not be mixedCase
     "PERF", # Perflint
-    "PGH004", # Use specific rule codes when using noqa
+    "PGH", # pygrep-hooks
     "PIE", # flake8-pie
     "PL", # pylint
     "PT", # flake8-pytest-style
+    "PYI", # flake8-pyi
+    "RET", # flake8-return
     "RSE", # flake8-raise
     "RUF005", # Consider iterable unpacking instead of concatenation
     "RUF006", # Store a reference to the return value of asyncio.create_task
+    "RUF013", # PEP 484 prohibits implicit Optional
+    "RUF018", # Avoid assignment expressions in assert statements
     # "RUF100", # Unused `noqa` directive; temporarily every now and then to clean them up
     "S102", # Use of exec detected
     "S103", # bad-file-permissions
@@ -669,11 +724,11 @@ select = [
     "S608", # hardcoded-sql-expression
     "S609", # unix-command-wildcard-injection
     "SIM", # flake8-simplify
+    "SLOT", # flake8-slots
     "T100", # Trace found: {name} used
     "T20", # flake8-print
     "TID251", # Banned imports
-    "TRY004", # Prefer TypeError exception for invalid type
-    "TRY302", # Remove exception handler; error is immediately re-raised
+    "TRY", # tryceratops
     "UP", # pyupgrade
     "W", # pycodestyle
 ]
@@ -685,7 +740,6 @@ ignore = [
     "D406", # Section name should end with a newline
     "D407", # Section name underlining
     "E501", # line too long
-    "E731", # do not assign a lambda expression, use a def
 
     "PLC1901", # {existing} can be simplified to {replacement} as an empty string is falsey; too many false positives
     "PLR0911", # Too many return statements ({returns} > {max_returns})
@@ -698,11 +752,15 @@ ignore = [
     "PT011", # pytest.raises({exception}) is too broad, set the `match` parameter or use a more specific exception
     "PT012", # `pytest.raises()` block should contain a single simple statement
     "PT018", # Assertion should be broken down into multiple parts
+    "RUF001", # String contains ambiguous unicode character.
+    "RUF002", # Docstring contains ambiguous unicode character.
+    "RUF003", # Comment contains ambiguous unicode character.
+    "RUF015", # Prefer next(...) over single element slice
     "SIM102", # Use a single if statement instead of nested if statements
     "SIM108", # Use ternary operator {contents} instead of if-else-block
     "SIM115", # Use context handler for opening files
-    "UP006", # keep type annotation style as is
-    "UP007", # keep type annotation style as is
+    "TRY003", # Avoid specifying long messages outside the exception class
+    "TRY400", # Use `logging.exception` instead of `logging.error`
     # Ignored due to performance: https://github.com/charliermarsh/ruff/issues/2923
     "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
     # Ignored due to incompatible with mypy: https://github.com/python/mypy/issues/15238
@@ -724,7 +782,13 @@ ignore = [
     "PLE0605",
 
     # temporarily disabled
-    "PT019"
+    "PT019",
+    "PYI024", # Use typing.NamedTuple instead of collections.namedtuple
+    "RET503",
+    "RET502",
+    "RET501",
+    "TRY002",
+    "TRY301"
 ]
 
 [tool.ruff.lint.flake8-import-conventions.extend-aliases]

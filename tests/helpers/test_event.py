@@ -15,12 +15,11 @@ import pytest
 
 from homeassistant.const import MATCH_ALL
 import homeassistant.core as ha
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     TrackStates,
     TrackTemplate,
     TrackTemplateResult,
@@ -4805,3 +4804,18 @@ async def test_async_track_device_registry_updated_event_with_a_callback_that_th
     unsub2()
 
     assert event_data[0] == {"action": "create", "device_id": device_id}
+
+
+async def test_track_state_change_deprecated(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test track_state_change is deprecated."""
+    async_track_state_change(
+        hass, "light.Bowl", lambda entity_id, old_state, new_state: None, "on", "off"
+    )
+
+    assert (
+        "Detected code that calls `async_track_state_change` instead "
+        "of `async_track_state_change_event` which is deprecated and "
+        "will be removed in Home Assistant 2025.5. Please report this issue."
+    ) in caplog.text

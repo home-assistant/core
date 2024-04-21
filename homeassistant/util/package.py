@@ -147,5 +147,4 @@ async def async_get_user_site(deps_dir: str) -> str:
         close_fds=False,  # required for posix_spawn
     )
     stdout, _ = await process.communicate()
-    lib_dir = stdout.decode().strip()
-    return lib_dir
+    return stdout.decode().strip()

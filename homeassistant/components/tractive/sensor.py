@@ -37,7 +37,6 @@ from .const import (
     CLIENT,
     DOMAIN,
     TRACKABLES,
-    TRACKER_ACTIVITY_STATUS_UPDATED,
     TRACKER_HARDWARE_STATUS_UPDATED,
     TRACKER_WELLNESS_STATUS_UPDATED,
 )
@@ -108,6 +107,7 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
         options=[
+            "inaccurate_position",
             "not_reporting",
             "operational",
             "system_shutdown_user",
@@ -118,7 +118,7 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         key=ATTR_MINUTES_ACTIVE,
         translation_key="activity_time",
         native_unit_of_measurement=UnitOfTime.MINUTES,
-        signal_prefix=TRACKER_ACTIVITY_STATUS_UPDATED,
+        signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
         state_class=SensorStateClass.TOTAL,
     ),
     TractiveSensorEntityDescription(
@@ -139,7 +139,7 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         key=ATTR_DAILY_GOAL,
         translation_key="daily_goal",
         native_unit_of_measurement=UnitOfTime.MINUTES,
-        signal_prefix=TRACKER_ACTIVITY_STATUS_UPDATED,
+        signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_DAY_SLEEP,
