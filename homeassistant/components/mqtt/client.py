@@ -572,8 +572,7 @@ class MQTT:
         self, client: mqtt.Client, userdata: Any, sock: SocketType
     ) -> None:
         """Unregister the socket for writing."""
-        loop = self.loop
-        loop.call_soon_threadsafe(
+        self.loop.call_soon_threadsafe(
             self._async_on_socket_unregister_write, client, None, sock
         )
 
