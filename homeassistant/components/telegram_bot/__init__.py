@@ -454,11 +454,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         elif msgtype == SERVICE_SEND_POLL:
             await notify_service.send_poll(context=service.context, **kwargs)
         elif msgtype == SERVICE_ANSWER_CALLBACK_QUERY:
-            await notify_service.answer_callback_query(context=service.context, **kwargs)
+            await notify_service.answer_callback_query(
+                context=service.context, **kwargs
+            )
         elif msgtype == SERVICE_DELETE_MESSAGE:
             await notify_service.delete_message(context=service.context, **kwargs)
         else:
-            await notify_service.edit_message(msgtype, context=service.context, **kwargs)
+            await notify_service.edit_message(
+                msgtype, context=service.context, **kwargs
+            )
 
     # Register notification services
     for service_notif, schema in SERVICE_MAP.items():
@@ -697,7 +701,9 @@ class TelegramNotificationService:
                 }
                 if message_tag is not None:
                     event_data[ATTR_MESSAGE_TAG] = message_tag
-                self.hass.bus.async_fire(EVENT_TELEGRAM_SENT, event_data, context=context)
+                self.hass.bus.async_fire(
+                    EVENT_TELEGRAM_SENT, event_data, context=context
+                )
             elif not isinstance(out, bool):
                 _LOGGER.warning(
                     "Update last message: out_type:%s, out=%s", type(out), out
@@ -829,7 +835,9 @@ class TelegramNotificationService:
             context=context,
         )
 
-    async def send_file(self, file_type=SERVICE_SEND_PHOTO, target=None, context=None, **kwargs):
+    async def send_file(
+        self, file_type=SERVICE_SEND_PHOTO, target=None, context=None, **kwargs
+    ):
         """Send a photo, sticker, video, or document."""
         params = self._get_msg_kwargs(kwargs)
         file_content = await load_data(
@@ -961,7 +969,7 @@ class TelegramNotificationService:
         else:
             await self.send_file(SERVICE_SEND_STICKER, target, **kwargs)
 
-    def send_location(self, latitude, longitude, target=None, context=None, **kwargs):
+    async def send_location(self, latitude, longitude, target=None, context=None, **kwargs):
         """Send a location."""
         latitude = float(latitude)
         longitude = float(longitude)
