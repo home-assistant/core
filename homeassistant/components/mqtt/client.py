@@ -475,8 +475,7 @@ class MQTT:
         self._mqttc.on_socket_open = self._on_socket_open
         self._mqttc.on_socket_close = self._on_socket_close
         self._mqttc.on_socket_register_write = self._on_socket_register_write
-        # Unregister is always called in the event loop
-        self._mqttc.on_socket_unregister_write = self._async_on_socket_unregister_write
+        self._mqttc.on_socket_unregister_write = self._on_socket_unregister_write
 
         # These will be called in the event loop
         self._mqttc.on_connect = self._async_mqtt_on_connect
@@ -571,6 +570,15 @@ class MQTT:
         loop = self.loop
         loop.call_soon_threadsafe(
             loop.add_writer, sock, partial(self._async_writer_callback, client)
+        )
+
+    def _on_socket_unregister_write(
+        self, client: mqtt.Client, userdata: Any, sock: SocketType
+    ) -> None:
+        """Unregister the socket for writing."""
+        loop = self.loop
+        loop.call_soon_threadsafe(
+            self._async_on_socket_unregister_write, client, None, sock
         )
 
     @callback
