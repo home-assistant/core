@@ -1052,13 +1052,13 @@ class MQTT:
 
     @callback
     def _async_on_disconnect(self, result_code: int) -> None:
-        # If disconnect is called before the connect
-        # result is set make sure the first connection result is set
-        self._async_connection_result(False)
         if not self.connected:
             # This function is re-entrant and may be called multiple times
             # when there is a broken pipe error.
             return
+        # If disconnect is called before the connect
+        # result is set make sure the first connection result is set
+        self._async_connection_result(False)
         self.connected = False
         async_dispatcher_send(self.hass, MQTT_DISCONNECTED)
         _LOGGER.warning(
