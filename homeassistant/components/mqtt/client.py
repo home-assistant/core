@@ -638,7 +638,8 @@ class MQTT:
         while True:
             if not self.connected:
                 try:
-                    await self.hass.async_add_executor_job(self._mqttc.reconnect)
+                    async with self._paho_lock:
+                        await self.hass.async_add_executor_job(self._mqttc.reconnect)
                 except OSError as err:
                     _LOGGER.debug(
                         "Error re-connecting to MQTT server due to exception: %s", err
