@@ -63,14 +63,14 @@ jobs:
           ) > .env_file
 
       - name: Upload env_file
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@v4.3.2
         with:
           name: env_file
           path: ./.env_file
           overwrite: true
 
       - name: Upload requirements_diff
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@v4.3.2
         with:
           name: requirements_diff
           path: ./requirements_diff.txt
@@ -91,12 +91,12 @@ jobs:
         uses: actions/checkout@v4.1.2
 
       - name: Download env_file
-        uses: actions/download-artifact@v4.1.4
+        uses: actions/download-artifact@v4.1.5
         with:
           name: env_file
 
       - name: Download requirements_diff
-        uses: actions/download-artifact@v4.1.4
+        uses: actions/download-artifact@v4.1.5
         with:
           name: requirements_diff
 
@@ -129,12 +129,12 @@ jobs:
         uses: actions/checkout@v4.1.2
 
       - name: Download env_file
-        uses: actions/download-artifact@v4.1.4
+        uses: actions/download-artifact@v4.1.5
         with:
           name: env_file
 
       - name: Download requirements_diff
-        uses: actions/download-artifact@v4.1.4
+        uses: actions/download-artifact@v4.1.5
         with:
           name: requirements_diff
 
@@ -142,11 +142,9 @@ jobs:
         run: |
           requirement_files="requirements_all.txt requirements_diff.txt"
           for requirement_file in ${requirement_files}; do
-            sed -i "s|# fritzconnection|fritzconnection|g" ${requirement_file}
             sed -i "s|# pyuserinput|pyuserinput|g" ${requirement_file}
             sed -i "s|# evdev|evdev|g" ${requirement_file}
             sed -i "s|# pycups|pycups|g" ${requirement_file}
-            sed -i "s|# homekit|homekit|g" ${requirement_file}
             sed -i "s|# decora-wifi|decora-wifi|g" ${requirement_file}
             sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
 
@@ -163,16 +161,11 @@ jobs:
               sed -i "s|pykrakenapi|# pykrakenapi|g" ${requirement_file}
             fi
 
-            # Some speedups are only for 64-bit
-            if [ "${{ matrix.arch }}" = "amd64" ] || [ "${{ matrix.arch }}" = "aarch64" ]; then
-              sed -i "s|aiohttp-zlib-ng|aiohttp-zlib-ng\[isal\]|g" ${requirement_file}
-            fi
-
           done
 
       - name: Split requirements all
         run: |
-          # We split requirements all into two different files.
+          # We split requirements all into multiple files.
           # This is to prevent the build from running out of memory when
           # resolving packages on 32-bits systems (like armhf, armv7).
 

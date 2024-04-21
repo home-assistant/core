@@ -476,3 +476,49 @@ async def test_forecast_subscription(
 
     assert forecast2 != []
     assert forecast2 == snapshot
+
+
+@pytest.mark.parametrize(
+    ("forecast_type", "entity_id"),
+    [("hourly", "weather.abc")],
+)
+async def test_forecast_subscription_with_failing_coordinator(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
+    mock_simple_nws_times_out,
+    no_sensor,
+    forecast_type: str,
+    entity_id: str,
+) -> None:
+    """Test a forecast subscription when the coordinator is failing to update."""
+    client = await hass_ws_client(hass)
+
+    registry = er.async_get(hass)
+    # Pre-create the hourly entity
+    registry.async_get_or_create(
+        WEATHER_DOMAIN,
+        nws.DOMAIN,
+        "35_-75_hourly",
+        suggested_object_id="abc_hourly",
+    )
+
+    entry = MockConfigEntry(
+        domain=nws.DOMAIN,
+        data=NWS_CONFIG,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id(
+        {
+            "type": "weather/subscribe_forecast",
+            "forecast_type": forecast_type,
+            "entity_id": entity_id,
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]

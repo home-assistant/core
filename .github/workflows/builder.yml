@@ -69,7 +69,7 @@ jobs:
         run: find ./homeassistant/components/*/translations -name "*.json" | tar zcvf translations.tar.gz -T -
 
       - name: Upload translations
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@v4.3.2
         with:
           name: translations
           path: translations.tar.gz
@@ -174,17 +174,8 @@ jobs:
           sed -i "s|pyezviz|# pyezviz|g" requirements_all.txt
           sed -i "s|pykrakenapi|# pykrakenapi|g" requirements_all.txt
 
-      - name: Adjustments for 64-bit
-        if: matrix.arch == 'amd64' || matrix.arch == 'aarch64'
-        run: |
-          # Some speedups are only available on 64-bit, and since
-          # we build 32bit images on 64bit hosts, we only enable
-          # the speed ups on 64bit since the wheels for 32bit
-          # are not available.
-          sed -i "s|aiohttp-zlib-ng|aiohttp-zlib-ng\[isal\]|g" requirements_all.txt
-
       - name: Download translations
-        uses: actions/download-artifact@v4.1.4
+        uses: actions/download-artifact@v4.1.5
         with:
           name: translations
 
@@ -467,7 +458,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
       - name: Download translations
-        uses: actions/download-artifact@v4.1.4
+        uses: actions/download-artifact@v4.1.5
         with:
           name: translations
 
