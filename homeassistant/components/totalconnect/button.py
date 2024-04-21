@@ -32,32 +32,26 @@ async def async_setup_entry(
 
 
 class TotalConnectZoneBypassButton(ButtonEntity):
-    """Represent an TotalConnect zone bypass button."""
+    """Represent a TotalConnect zone bypass button."""
 
-    def __init__(self, location_id, zone):
+    _attr_has_entity_name = True
+    _attr_translation_key = "bypass"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, location_id, zone) -> None:
         """Initialize the TotalConnect status."""
         self._zone = zone
-        self.entity_description: ButtonEntityDescription = ButtonEntityDescription(
-            key="bypass", name="Bypass", entity_category=EntityCategory.DIAGNOSTIC
+        identifier = self._zone.sensor_serial_number or f"zone_{self._zone.zoneid}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, identifier)},
+            name=self._zone.description,
+            serial_number=self._zone.sensor_serial_number,
         )
-        self._attr_name = f"{zone.description} {self.entity_description.name}"
-        self._attr_unique_id = (
-            f"{location_id}_{zone.zoneid}_{self.entity_description.key}"
-        )
+        self._attr_unique_id = f"{location_id}_{zone.zoneid}_bypass"
 
     def press(self):
         """Press the bypass button."""
         self._zone.bypass()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        identifier = self._zone.sensor_serial_number or f"zone_{self._zone.zoneid}"
-        return DeviceInfo(
-            name=self._zone.description,
-            identifiers={(DOMAIN, identifier)},
-            serial_number=self._zone.sensor_serial_number,
-        )
 
 
 class TotalConnectPanelButton(ButtonEntity):
