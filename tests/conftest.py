@@ -904,22 +904,25 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient, None,
             self.rc = 0
 
     with patch("paho.mqtt.client.Client") as mock_client:
+        # The below use a call_soon for the on_publish/on_subscribe/on_unsubscribe
+        # callbacks to simulate the behavior of the real MQTT client which will
+        # not be synchronous.
 
         @ha.callback
         def _async_fire_mqtt_message(topic, payload, qos, retain):
             async_fire_mqtt_message(hass, topic, payload, qos, retain)
             mid = get_mid()
-            mock_client.on_publish(0, 0, mid)
+            hass.loop.call_soon(mock_client.on_publish, 0, 0, mid)
             return FakeInfo(mid)
 
         def _subscribe(topic, qos=0):
             mid = get_mid()
-            mock_client.on_subscribe(0, 0, mid)
+            hass.loop.call_soon(mock_client.on_subscribe, 0, 0, mid)
             return (0, mid)
 
         def _unsubscribe(topic):
             mid = get_mid()
-            mock_client.on_unsubscribe(0, 0, mid)
+            hass.loop.call_soon(mock_client.on_unsubscribe, 0, 0, mid)
             return (0, mid)
 
         def _connect(*args, **kwargs):
