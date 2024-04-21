@@ -1112,7 +1112,7 @@ ibmiotf==0.3.4
 # homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==7.0.3
+ical==8.0.0
 
 # homeassistant.components.ping
 icmplib==3.0
