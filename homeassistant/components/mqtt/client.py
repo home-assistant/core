@@ -472,9 +472,10 @@ class MQTT:
         self._mqttc = MqttClientSetup(self.conf).client
         # These may be called in a thread or in the event loop
         self._mqttc.on_socket_open = self._on_socket_open
-        self._mqttc.on_socket_close = self._on_socket_close
         self._mqttc.on_socket_register_write = self._on_socket_register_write
-        # on_socket_unregister_write is only ever called in the event loop
+        # on_socket_unregister_write and _async_on_socket_close
+        # is only ever called in the event loop
+        self._mqttc.on_socket_close = self._async_on_socket_close
         self._mqttc.on_socket_unregister_write = self._async_on_socket_unregister_write
 
         # These will be called in the event loop
@@ -535,14 +536,6 @@ class MQTT:
         if fileno > -1:
             self.loop.add_reader(fileno, partial(self._async_reader_callback, client))
         self._async_start_misc_loop()
-
-    def _on_socket_close(
-        self, client: mqtt.Client, userdata: Any, sock: SocketType
-    ) -> None:
-        """Handle socket close."""
-        self.loop.call_soon_threadsafe(
-            self._async_on_socket_close, client, userdata, sock
-        )
 
     @callback
     def _async_on_socket_close(
