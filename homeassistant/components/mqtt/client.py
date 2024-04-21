@@ -933,17 +933,6 @@ class MQTT:
         )
         await self._async_perform_subscriptions()
 
-    @callback
-    def _async_mqtt_on_message(
-        self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage
-    ) -> None:
-        """Message received callback."""
-        # MQTT messages tend to be high volume,
-        # and since they come in via a thread and need to be processed in the event loop,
-        # we want to avoid hass.add_job since most of the time is spent calling
-        # inspect to figure out how to run the callback.
-        self._mqtt_handle_message(msg)
-
     @lru_cache(None)  # pylint: disable=method-cache-max-size-none
     def _matching_subscriptions(self, topic: str) -> list[Subscription]:
         subscriptions: list[Subscription] = []
@@ -957,7 +946,9 @@ class MQTT:
         return subscriptions
 
     @callback
-    def _mqtt_handle_message(self, msg: mqtt.MQTTMessage) -> None:
+    def _async_mqtt_on_message(
+        self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage
+    ) -> None:
         topic = msg.topic
         # msg.topic is a property that decodes the topic to a string
         # every time it is accessed. Save the result to avoid
