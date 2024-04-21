@@ -23,6 +23,8 @@ def mock_config_entry(hass: HomeAssistant, request):
             "region": "us-west-2",
             "key_id": "abc",
             "key_secret": "123",
+        },
+        options={
             "model_id": "anthropic.claude-v2:1",
             "prompt_context": "",
             "knowledgebase_id": "123",
@@ -52,7 +54,7 @@ async def test_knowledgebase(hass: HomeAssistant, mock_config_entry) -> None:
     entry = mock_config_entry
     with mock.patch(
         "boto3.client",
-        mock.MagicMock(return_value=mock_bedrock_client(entry.data["model_id"])),
+        mock.MagicMock(return_value=mock_bedrock_client(entry.options["model_id"])),
     ):
         agent = bedrock_agent.BedrockAgent(hass, entry)
         conversationResult = await agent.async_process(conversationInput)
