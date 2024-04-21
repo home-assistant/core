@@ -57,44 +57,22 @@ class TotalConnectZoneBypassButton(ButtonEntity):
 class TotalConnectPanelButton(ButtonEntity):
     """Generic TotalConnect panel button."""
 
-    def __init__(self, location):
-        """Initialize the TotalConnect clear bypass button."""
-        self._location = location
-        self._device = self._location.devices[self._location.security_device_id]
-        self._attr_name = f"{self.entity_description.name}"
-        self._attr_unique_id = f"{location.location_id}_{self.entity_description.key}"
+    _attr_has_entity_name = True
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device.serial_number)},
-            name=self._device.name,
-            serial_number=self._device.serial_number,
+    entity_description: TotalConnectButtonEntityDescription
+
+    def __init__(self, location, entity_description: TotalConnectButtonEntityDescription) -> None:
+        """Initialize the TotalConnect button."""
+        self._location = location
+        device = location.devices[location.security_device_id]
+        self._attr_unique_id = f"{location.location_id}_{entity_description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device.serial_number)},
+            name=device.name,
+            serial_number=device.serial_number,
         )
 
 
-class TotalConnectClearBypassButton(TotalConnectPanelButton):
-    """Clear Bypass button."""
-
-    entity_description: ButtonEntityDescription = ButtonEntityDescription(
-        key="clear_bypass",
-        name="Clear Bypass",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    )
-
-    def press(self):
-        """Press the clear bypass button."""
-        self._location.clear_bypass()
-
-
-class TotalConnectBypassAllButton(TotalConnectPanelButton):
-    """Bypass All button."""
-
-    entity_description: ButtonEntityDescription = ButtonEntityDescription(
-        key="bypass_all", name="Bypass All", entity_category=EntityCategory.DIAGNOSTIC
-    )
-
-    def press(self):
-        """Press the bypass all button."""
-        self._location.zone_bypass_all()
+    def press(self) -> None:
+        """Press the button."""
+        self.entity_description.press_fn()
