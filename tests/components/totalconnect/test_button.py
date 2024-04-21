@@ -20,8 +20,8 @@ from .common import (
 )
 
 ZONE_BYPASS_ID = "button.security_bypass"
-PANEL_CLEAR_ID = "button.clear_bypass"
-PANEL_BYPASS_ID = "button.bypass_all"
+PANEL_CLEAR_ID = "button.test_clear_bypass"
+PANEL_BYPASS_ID = "button.test_bypass_all"
 
 
 async def test_entity_registry(hass: HomeAssistant) -> None:
