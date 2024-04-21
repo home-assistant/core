@@ -568,8 +568,18 @@ class MQTT:
     ) -> None:
         """Register the socket for writing."""
         self.loop.call_soon_threadsafe(
-            self.loop.add_writer, sock, partial(self._async_writer_callback, client)
+            self._async_on_socket_register_write, client, None, sock
         )
+
+    @callback
+    def _async_on_socket_register_write(
+        self, client: mqtt.Client, userdata: Any, sock: SocketType
+    ) -> None:
+        """Register the socket for writing."""
+        fileno = sock.fileno()
+        _LOGGER.debug("%s: register write %s", self.config_entry.title, fileno)
+        if fileno > -1:
+            self.loop.add_writer(sock, partial(self._async_writer_callback, client))
 
     def _on_socket_unregister_write(
         self, client: mqtt.Client, userdata: Any, sock: SocketType
@@ -584,7 +594,9 @@ class MQTT:
         self, client: mqtt.Client, userdata: Any, sock: SocketType
     ) -> None:
         """Unregister the socket for writing."""
-        if sock.fileno() > -1:
+        fileno = sock.fileno()
+        _LOGGER.debug("%s: unregister write %s", self.config_entry.title, fileno)
+        if fileno > -1:
             self.loop.remove_writer(sock)
 
     def _is_active_subscription(self, topic: str) -> bool:
