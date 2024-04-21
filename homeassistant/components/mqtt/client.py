@@ -489,6 +489,10 @@ class MQTT:
             )
 
     async def _misc_loop(self) -> None:
+        """Start the MQTT client misc loop."""
+        # pylint: disable=import-outside-toplevel
+        import paho.mqtt.client as mqtt
+
         while self._mqttc.loop_misc() == mqtt.MQTT_ERR_SUCCESS:
             await asyncio.sleep(1)
 
