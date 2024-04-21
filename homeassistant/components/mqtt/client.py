@@ -93,6 +93,7 @@ INITIAL_SUBSCRIBE_COOLDOWN = 1.0
 SUBSCRIBE_COOLDOWN = 0.1
 UNSUBSCRIBE_COOLDOWN = 0.1
 TIMEOUT_ACK = 10
+CONNECT_TIMEOUT = 10
 RECONNECT_INTERVAL_SECONDS = 10
 
 SocketType = socket.socket | ssl.SSLSocket | Any
@@ -418,6 +419,7 @@ class MQTT:
         )
         self._misc_task: asyncio.Task | None = None
         self._reconnect_task: asyncio.Task | None = None
+        self._available_future: asyncio.Future[None] = hass.loop.create_future()
 
         self._max_qos: dict[str, int] = {}  # topic, max qos
         self._pending_subscriptions: dict[str, int] = {}  # topic, qos
@@ -627,15 +629,29 @@ class MQTT:
             )
         except OSError as err:
             _LOGGER.error("Failed to connect to MQTT server due to exception: %s", err)
-
-        if result is not None and result != 0:
-            _LOGGER.error(
-                "Failed to connect to MQTT server: %s", mqtt.error_string(result)
-            )
+        else:
+            if result != 0:
+                _LOGGER.error(
+                    "Failed to connect to MQTT server: %s", mqtt.error_string(result)
+                )
+            else:
+                await self._async_wait_for_connection()
 
         self._reconnect_task = self.config_entry.async_create_background_task(
             self.hass, self._reconnect_loop(), "mqtt reconnect loop"
         )
+
+    async def _async_wait_for_connection(self) -> None:
+        """Wait for the connection to be established."""
+        try:
+            async with asyncio.timeout(CONNECT_TIMEOUT):
+                await self._available_future
+        except TimeoutError:
+            _LOGGER.error(
+                "Timed out waiting for MQTT server to become available"
+                " after %s seconds",
+                CONNECT_TIMEOUT,
+            )
 
     async def _reconnect_loop(self) -> None:
         """Reconnect to the MQTT server."""
@@ -868,6 +884,8 @@ class MQTT:
             return
 
         self.connected = True
+        if not self._available_future.done():
+            self._available_future.set_result(None)
         async_dispatcher_send(self.hass, MQTT_CONNECTED)
         _LOGGER.info(
             "Connected to MQTT server %s:%s (%s)",

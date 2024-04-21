@@ -166,8 +166,14 @@ async def test_mqtt_await_ack_at_disconnect(
         rc = 0
 
     with patch("paho.mqtt.client.Client") as mock_client:
-        mock_client().connect = MagicMock(return_value=0)
-        mock_client().publish = MagicMock(return_value=FakeInfo())
+        mqtt_client = mock_client.return_value
+        mqtt_client.connect = MagicMock(
+            return_value=0,
+            side_effect=lambda *args, **kwargs: hass.loop.call_soon_threadsafe(
+                mqtt_client.on_connect, mqtt_client, None, 0, 0, 0
+            ),
+        )
+        mqtt_client.publish = MagicMock(return_value=FakeInfo())
         entry = MockConfigEntry(
             domain=mqtt.DOMAIN,
             data={"certificate": "auto", mqtt.CONF_BROKER: "test-broker"},
@@ -1674,6 +1680,7 @@ async def test_not_calling_subscribe_when_unsubscribed_within_cooldown(
     the subscribe cool down period has ended.
     """
     mqtt_mock = await mqtt_mock_entry()
+    mqtt_client_mock.subscribe.reset_mock()
     # Fake that the client is connected
     mqtt_mock().connected = True
 
@@ -1930,6 +1937,7 @@ async def test_canceling_debouncer_on_shutdown(
     """Test canceling the debouncer when HA shuts down."""
 
     mqtt_mock = await mqtt_mock_entry()
+    mqtt_client_mock.subscribe.reset_mock()
 
     # Fake that the client is connected
     mqtt_mock().connected = True
@@ -2013,7 +2021,7 @@ async def test_initial_setup_logs_error(
     """Test for setup failure if initial client connection fails."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
     entry.add_to_hass(hass)
-    mqtt_client_mock.connect.return_value = 1
+    mqtt_client_mock.connect.side_effect = MagicMock(return_value=1)
     try:
         assert await hass.config_entries.async_setup(entry.entry_id)
     except HomeAssistantError:
@@ -2235,7 +2243,12 @@ async def test_handle_mqtt_timeout_on_callback(
         mock_client = mock_client.return_value
         mock_client.publish.return_value = FakeInfo()
         mock_client.subscribe.side_effect = _mock_ack
-        mock_client.connect.return_value = 0
+        mock_client.connect = MagicMock(
+            return_value=0,
+            side_effect=lambda *args, **kwargs: hass.loop.call_soon_threadsafe(
+                mock_client.on_connect, mock_client, None, 0, 0, 0
+            ),
+        )
 
         entry = MockConfigEntry(
             domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"}

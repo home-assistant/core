@@ -922,8 +922,18 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient, None,
             mock_client.on_unsubscribe(0, 0, mid)
             return (0, mid)
 
+        def _connect(*args, **kwargs):
+            # Connect always calls reconnect once, but we
+            # mock it out so we call reconnect to simulate
+            # the behavior.
+            mock_client.reconnect()
+            hass.loop.call_soon_threadsafe(
+                mock_client.on_connect, mock_client, None, 0, 0, 0
+            )
+            return 0
+
         mock_client = mock_client.return_value
-        mock_client.connect.return_value = 0
+        mock_client.connect.side_effect = _connect
         mock_client.subscribe.side_effect = _subscribe
         mock_client.unsubscribe.side_effect = _unsubscribe
         mock_client.publish.side_effect = _async_fire_mqtt_message
@@ -985,6 +995,7 @@ async def _mqtt_mock_entry(
 
         # connected set to True to get a more realistic behavior when subscribing
         mock_mqtt_instance.connected = True
+        mqtt_client_mock.on_connect(mqtt_client_mock, None, 0, 0, 0)
 
         async_dispatcher_send(hass, mqtt.MQTT_CONNECTED)
         await hass.async_block_till_done()
