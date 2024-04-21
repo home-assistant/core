@@ -5,7 +5,7 @@ from unittest.mock import patch
 import aiohttp
 
 from homeassistant import config_entries
-from homeassistant.components.ovo_energy.const import DOMAIN
+from homeassistant.components.ovo_energy.const import CONF_ACCOUNT, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -13,7 +13,11 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 FIXTURE_REAUTH_INPUT = {CONF_PASSWORD: "something1"}
-FIXTURE_USER_INPUT = {CONF_USERNAME: "example@example.com", CONF_PASSWORD: "something"}
+FIXTURE_USER_INPUT = {
+    CONF_USERNAME: "example@example.com",
+    CONF_PASSWORD: "something",
+    CONF_ACCOUNT: "123456",
+}
 
 UNIQUE_ID = "example@example.com"
 
