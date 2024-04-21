@@ -414,7 +414,7 @@ async def async_handle_snapshot_service(
     filename: Template = service_call.data[ATTR_FILENAME]
     filename.hass = hass
 
-    snapshot_file = filename.async_render(variables={ATTR_ENTITY_ID: image})
+    snapshot_file = filename.async_render(variables={ATTR_ENTITY_ID: image.entity_id})
 
     # check if we allow to access to that file
     if not hass.config.is_allowed_path(snapshot_file):
