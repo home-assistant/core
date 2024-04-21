@@ -8,10 +8,8 @@ from aqvify import AqvifyAPI, DevicesAPI
 from requests.exceptions import ConnectionError as ConnectError, HTTPError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_DEVICES, CONF_HOST, CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
@@ -27,7 +25,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AqvifyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Aqvify."""
 
     VERSION = 1
@@ -39,7 +37,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
@@ -71,7 +69,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_devices(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Select Aqvify devices to configure."""
 
         if not user_input:
@@ -106,11 +104,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ],
             },
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
