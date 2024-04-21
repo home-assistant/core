@@ -23,10 +23,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import TotalConnectDataUpdateCoordinator
 from .const import DOMAIN
+from .entity import TotalConnectEntity
 
 SERVICE_ALARM_ARM_AWAY_INSTANT = "arm_away_instant"
 SERVICE_ALARM_ARM_HOME_INSTANT = "arm_home_instant"
@@ -70,9 +70,7 @@ async def async_setup_entry(
     )
 
 
-class TotalConnectAlarm(
-    CoordinatorEntity[TotalConnectDataUpdateCoordinator], alarm.AlarmControlPanelEntity
-):
+class TotalConnectAlarm(TotalConnectEntity, alarm.AlarmControlPanelEntity):
     """Represent an TotalConnect status."""
 
     _attr_supported_features = (
