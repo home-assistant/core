@@ -289,10 +289,8 @@ class NWSWeather(CoordinatorWeatherEntity):
     @property
     def available(self) -> bool:
         """Return if state is available."""
-        if (
-            self.coordinator.last_update_success
-            and self.coordinator.last_update_success_time
-        ):
+
+        if self.coordinator.last_update_success_time:
             last_success_time = (
                 utcnow() - self.coordinator.last_update_success_time
                 < OBSERVATION_VALID_TIME
