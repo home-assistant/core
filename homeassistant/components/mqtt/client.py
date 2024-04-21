@@ -470,11 +470,13 @@ class MQTT:
     def init_client(self) -> None:
         """Initialize paho client."""
         self._mqttc = MqttClientSetup(self.conf).client
-        # These may be called in a thread or in the event loop
+        # on_socket_open and on_socket_register_write may be called
+        # from a thread since we establish the connection in the executor
+        # since paho-mqtt does not have a way to connect in the event loop.
         self._mqttc.on_socket_open = self._on_socket_open
         self._mqttc.on_socket_register_write = self._on_socket_register_write
         # on_socket_unregister_write and _async_on_socket_close
-        # is only ever called in the event loop
+        # are only ever called in the event loop
         self._mqttc.on_socket_close = self._async_on_socket_close
         self._mqttc.on_socket_unregister_write = self._async_on_socket_unregister_write
 
