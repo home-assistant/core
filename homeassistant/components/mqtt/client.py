@@ -309,12 +309,6 @@ def _is_simple_match(topic: str) -> bool:
     return not ("+" in topic or "#" in topic)
 
 
-def _set_result_unless_done(future: asyncio.Future[Any], result: Any) -> None:
-    """Set the result of a future if it is not already done."""
-    if not future.done():
-        future.set_result(result)
-
-
 class EnsureJobAfterCooldown:
     """Ensure a cool down period before executing a job.
 
@@ -635,7 +629,7 @@ class MQTT:
             )
         except OSError as err:
             _LOGGER.error("Failed to connect to MQTT server due to exception: %s", err)
-            self._async_first_connection_result(False)
+            self._async_connection_result(False)
         finally:
             if result is not None and result != 0:
                 if result is not None:
@@ -643,21 +637,27 @@ class MQTT:
                         "Failed to connect to MQTT server: %s",
                         mqtt.error_string(result),
                     )
-                self._async_first_connection_result(False)
+                self._async_connection_result(False)
 
     @callback
-    def _async_first_connection_result(self, result: bool) -> None:
-        """Handle the first connection result.
+    def _async_connection_result(self, connected: bool) -> None:
+        """Handle a connection result."""
+        if self._available_future and not self._available_future.done():
+            self._available_future.set_result(connected)
 
-        If the future is already done or the reconnect
-        task is already running, we don't need to do anything.
-        """
-        if self._available_future:
-            _set_result_unless_done(self._available_future, result)
-        if self._should_reconnect and not result and not self._reconnect_task:
+        if connected:
+            self._async_cancel_reconnect()
+        elif self._should_reconnect and not self._reconnect_task:
             self._reconnect_task = self.config_entry.async_create_background_task(
                 self.hass, self._reconnect_loop(), "mqtt reconnect loop"
             )
+
+    @callback
+    def _async_cancel_reconnect(self) -> None:
+        """Cancel the reconnect task."""
+        if self._reconnect_task:
+            self._reconnect_task.cancel()
+            self._reconnect_task = None
 
     async def _reconnect_loop(self) -> None:
         """Reconnect to the MQTT server."""
@@ -696,8 +696,7 @@ class MQTT:
         # stop the MQTT loop
         async with self._paho_lock:
             self._should_reconnect = False
-            if self._reconnect_task:
-                self._reconnect_task.cancel()
+            self._async_cancel_reconnect()
             self._mqttc.disconnect()
 
     @callback
@@ -925,7 +924,7 @@ class MQTT:
             # Update subscribe cooldown period to a shorter time
             self._subscribe_debouncer.set_timeout(SUBSCRIBE_COOLDOWN)
 
-        self._async_first_connection_result(True)
+        self._async_connection_result(True)
 
     async def _async_resubscribe(self) -> None:
         """Resubscribe on reconnect."""
@@ -1059,7 +1058,7 @@ class MQTT:
         """Disconnected callback."""
         # If disconnect is called before the connect
         # result is set make sure the first connection result is set
-        self._async_first_connection_result(False)
+        self._async_connection_result(False)
         self._async_on_disconnect(result_code)
 
     @callback
