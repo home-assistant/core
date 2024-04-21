@@ -21,6 +21,7 @@ import re
 import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
+import threading
 from types import CodeType, TracebackType
 from typing import (
     Any,
@@ -85,6 +86,7 @@ from . import (
     device_registry,
     entity_registry,
     floor_registry as fr,
+    frame,
     issue_registry,
     label_registry,
     location as loc_helper,
@@ -695,6 +697,13 @@ class Template:
         **kwargs: Any,
     ) -> RenderInfo:
         """Render the template and collect an entity filter."""
+        if (
+            self.hass
+            and self.hass.debug
+            and (loop_thread_ident := self.hass.loop.__dict__.get("_thread_ident"))
+            and loop_thread_ident != threading.get_ident()
+        ):
+            frame.report("calls async_render_to_info from a thread")
         self._renders += 1
         assert self.hass and _render_info.get() is None
 
