@@ -65,9 +65,10 @@ class Tool:
         text_input: str | None,
         context: Context,
         language: str | None,
-        assistant: str | None,
+        agent_id: str | None,
         conversation_id: str | None,
         device_id: str | None,
+        assistant: str | None,
         **kwargs: Any,
     ) -> Any:
         """Call the tool."""
@@ -119,9 +120,10 @@ async def async_call_tool(
     text_input: str | None = None,
     context: Context | None = None,
     language: str | None = None,
-    assistant: str | None = None,
+    agent_id: str | None = None,
     conversation_id: str | None = None,
     device_id: str | None = None,
+    assistant: str | None = None,
 ) -> str:
     """Call a LLM tool, parse args and return the response."""
     if (tools := hass.data.get(DATA_KEY)) is None:
@@ -139,9 +141,10 @@ async def async_call_tool(
             text_input,
             context,
             language,
-            assistant,
+            agent_id,
             conversation_id,
             device_id,
+            assistant,
             **tool_args,
         )
         json_response = json.dumps(response)
@@ -335,9 +338,10 @@ class IntentTool(Tool):
         text_input: str | None,
         context: Context,
         language: str | None,
-        assistant: str | None,
+        agent_id: str | None,
         conversation_id: str | None,
         device_id: str | None,
+        assistant: str | None,
         **kwargs: Any,
     ) -> Any:
         """Handle the intent."""

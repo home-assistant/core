@@ -37,7 +37,7 @@ async def test_tool() -> None:
     assert tool.parameters == test_parameters
     assert str(tool) == "<Tool - test_name>"
     with pytest.raises(NotImplementedError):
-        await tool.async_call(None, None, None, None, None, None, None, None)
+        await tool.async_call(None, None, None, None, None, None, None, None, None)
 
 
 def test_async_register(hass: HomeAssistant) -> None:
@@ -117,9 +117,10 @@ async def test_call_tool(hass: HomeAssistant) -> None:
         "test_text",
         test_context,
         "en",
-        "test_assistant",
+        "test_agent",
         "test_conversation_id",
         "test_device_id",
+        "test_assistant",
     )
 
     tool.async_call.assert_awaited_once_with(
@@ -128,9 +129,10 @@ async def test_call_tool(hass: HomeAssistant) -> None:
         "test_text",
         test_context,
         "en",
-        "test_assistant",
+        "test_agent",
         "test_conversation_id",
         "test_device_id",
+        "test_assistant",
         test_arg="test_value",
     )
     assert response == '{"result": "test_response"}'
@@ -153,9 +155,10 @@ async def test_call_tool_exception(hass: HomeAssistant) -> None:
         "test_text",
         test_context,
         "en",
-        "test_assistant",
+        "test_agent",
         "test_conversation_id",
         "test_device_id",
+        "test_assistant",
     )
 
     tool.async_call.assert_awaited_once_with(
@@ -164,9 +167,10 @@ async def test_call_tool_exception(hass: HomeAssistant) -> None:
         "test_text",
         test_context,
         "en",
-        "test_assistant",
+        "test_agent",
         "test_conversation_id",
         "test_device_id",
+        "test_assistant",
         test_arg="test_value",
     )
     assert response == '{"error": "RuntimeError", "error_text": "Test exception"}'
@@ -329,9 +333,10 @@ async def test_intent_tool(hass: HomeAssistant) -> None:
             "test_text",
             test_context,
             "*",
-            "test_assistant",
+            "test_agent",
             "test_conversation_id",
             "test_device_id",
+            "test_assistant",
             area="kitchen",
             floor="ground_floor",
         )
@@ -425,9 +430,10 @@ async def test_intent_tool_with_area_and_floor(
             "test_text",
             test_context,
             "*",
-            "test_assistant",
+            "test_agent",
             "test_conversation_id",
             "test_device_id",
+            "test_assistant",
             test_arg="test_value",
             area="küche",
             floor="ground floor",
