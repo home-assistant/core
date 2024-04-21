@@ -633,7 +633,7 @@ class MQTT:
             )
         except OSError as err:
             _LOGGER.error("Failed to connect to MQTT server due to exception: %s", err)
-            _set_result_unless_done(client_available, False)
+            self._async_first_connection_result(False)
         finally:
             if result is not None and result != 0:
                 if result is not None:
@@ -641,11 +641,21 @@ class MQTT:
                         "Failed to connect to MQTT server: %s",
                         mqtt.error_string(result),
                     )
-                _set_result_unless_done(client_available, False)
+                self._async_first_connection_result(False)
 
-        self._reconnect_task = self.config_entry.async_create_background_task(
-            self.hass, self._reconnect_loop(), "mqtt reconnect loop"
-        )
+    @callback
+    def _async_first_connection_result(self, result: bool) -> None:
+        """Handle the first connection result.
+
+        If the future is already done or the reconnect
+        task is already running, we don't need to do anything.
+        """
+        if self._available_future:
+            _set_result_unless_done(self._available_future, result)
+        if not result and not self._reconnect_task:
+            self._reconnect_task = self.config_entry.async_create_background_task(
+                self.hass, self._reconnect_loop(), "mqtt reconnect loop"
+            )
 
     async def _reconnect_loop(self) -> None:
         """Reconnect to the MQTT server."""
@@ -912,8 +922,7 @@ class MQTT:
             # Update subscribe cooldown period to a shorter time
             self._subscribe_debouncer.set_timeout(SUBSCRIBE_COOLDOWN)
 
-        if self._available_future:
-            _set_result_unless_done(self._available_future, True)
+        self._async_first_connection_result(True)
 
     async def _async_resubscribe(self) -> None:
         """Resubscribe on reconnect."""
@@ -1045,6 +1054,9 @@ class MQTT:
         properties: mqtt.Properties | None = None,
     ) -> None:
         """Disconnected callback."""
+        # If disconnect is called before the connect
+        # result is set make sure the first connection result is set
+        self._async_first_connection_result(False)
         self._async_on_disconnect(result_code)
 
     @callback
