@@ -93,6 +93,7 @@ INITIAL_SUBSCRIBE_COOLDOWN = 1.0
 SUBSCRIBE_COOLDOWN = 0.1
 UNSUBSCRIBE_COOLDOWN = 0.1
 TIMEOUT_ACK = 10
+RECONNECT_INTERVAL_SECONDS = 10
 
 SocketType = socket.socket | ssl.SSLSocket | Any
 
@@ -416,6 +417,8 @@ class MQTT:
             INITIAL_SUBSCRIBE_COOLDOWN, self._async_perform_subscriptions
         )
         self._misc_task: asyncio.Task | None = None
+        self._reconnect_task: asyncio.Task | None = None
+
         self._max_qos: dict[str, int] = {}  # topic, max qos
         self._pending_subscriptions: dict[str, int] = {}  # topic, qos
         self._unsubscribe_debouncer = EnsureJobAfterCooldown(
@@ -626,6 +629,23 @@ class MQTT:
                 "Failed to connect to MQTT server: %s", mqtt.error_string(result)
             )
 
+        self._reconnect_task = self.config_entry.async_create_background_task(
+            self.hass, self._reconnect_loop(), "mqtt reconnect loop"
+        )
+
+    async def _reconnect_loop(self) -> None:
+        """Reconnect to the MQTT server."""
+        while True:
+            if not self.connected:
+                try:
+                    await self.hass.async_add_executor_job(self._mqttc.reconnect)
+                except OSError as err:
+                    _LOGGER.debug(
+                        "Error re-connecting to MQTT server due to exception: %s", err
+                    )
+
+            await asyncio.sleep(RECONNECT_INTERVAL_SECONDS)
+
     async def async_disconnect(self) -> None:
         """Stop the MQTT client."""
 
@@ -648,6 +668,8 @@ class MQTT:
 
         # stop the MQTT loop
         async with self._paho_lock:
+            if self._reconnect_task:
+                self._reconnect_task.cancel()
             self._mqttc.disconnect()
 
     @callback
