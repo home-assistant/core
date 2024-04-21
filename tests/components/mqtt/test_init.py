@@ -4144,3 +4144,37 @@ async def test_multi_platform_discovery(
             )
             is not None
         )
+
+
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+async def test_auto_reconnect(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test reconnection is automatically done."""
+    mqtt_mock = await mqtt_mock_entry()
+    await hass.async_block_till_done()
+    assert mqtt_mock.connected
+    assert len(mqtt_client_mock.reconnect.mock_calls) == 1
+
+    mqtt_client_mock.disconnect()
+    mqtt_client_mock.on_disconnect(None, None, 0)
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert len(mqtt_client_mock.reconnect.mock_calls) == 2
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+
+    mqtt_client_mock.disconnect()
+    mqtt_client_mock.on_disconnect(None, None, 0)
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    # Should not reconnect after stop
+    assert len(mqtt_client_mock.reconnect.mock_calls) == 2
