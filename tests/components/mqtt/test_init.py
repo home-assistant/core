@@ -4245,6 +4245,7 @@ async def test_server_sock_connect_and_disconnect(
 
     mqtt_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_CONN_LOST
     mqtt_client_mock.on_socket_unregister_write(mqtt_client_mock, None, client)
+    mqtt_client_mock.on_socket_close(mqtt_client_mock, None, client)
     mqtt_client_mock.on_disconnect(mqtt_client_mock, None, client)
     await hass.async_block_till_done()
     unsub()
