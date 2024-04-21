@@ -529,10 +529,9 @@ class MQTT:
         self, client: mqtt.Client, userdata: Any, sock: SocketType
     ) -> None:
         """Handle socket open."""
-        loop = self.loop
         fileno = sock.fileno()
         _LOGGER.debug("%s: connection opened %s", self.config_entry.title, fileno)
-        loop.add_reader(fileno, partial(self._async_reader_callback, client))
+        self.loop.add_reader(fileno, partial(self._async_reader_callback, client))
         self._async_start_misc_loop()
 
     def _on_socket_close(
@@ -550,9 +549,8 @@ class MQTT:
         """Handle socket close."""
         fileno = sock.fileno()
         _LOGGER.debug("%s: connection closed %s", self.config_entry.title, fileno)
-        loop = self.loop
         if fileno > -1:
-            loop.remove_reader(fileno)
+            self.loop.remove_reader(fileno)
         if self._misc_task is not None and not self._misc_task.done():
             self._misc_task.cancel()
 
@@ -566,9 +564,8 @@ class MQTT:
         self, client: mqtt.Client, userdata: Any, sock: SocketType
     ) -> None:
         """Register the socket for writing."""
-        loop = self.loop
-        loop.call_soon_threadsafe(
-            loop.add_writer, sock, partial(self._async_writer_callback, client)
+        self.loop.call_soon_threadsafe(
+            self.loop.add_writer, sock, partial(self._async_writer_callback, client)
         )
 
     def _on_socket_unregister_write(
