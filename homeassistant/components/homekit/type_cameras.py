@@ -28,6 +28,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_time_interval,
 )
+from homeassistant.util.async_ import create_eager_task
 
 from .accessories import TYPES, HomeAccessory, HomeDriver
 from .const import (
@@ -431,7 +432,7 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
         async def watch_session(_: Any) -> None:
             await self._async_ffmpeg_watch(session_info["id"])
 
-        session_info[FFMPEG_LOGGER] = asyncio.create_task(
+        session_info[FFMPEG_LOGGER] = create_eager_task(
             self._async_log_stderr_stream(stderr_reader)
         )
         session_info[FFMPEG_WATCHER] = async_track_time_interval(
