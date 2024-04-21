@@ -4,11 +4,13 @@ import asyncio
 from copy import deepcopy
 from datetime import datetime, timedelta
 import json
+import socket
 import ssl
 from typing import Any, TypedDict
 from unittest.mock import ANY, MagicMock, call, mock_open, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import paho.mqtt.client as paho_mqtt
 import pytest
 import voluptuous as vol
 
@@ -4161,7 +4163,7 @@ async def test_auto_reconnect(
     """Test reconnection is automatically done."""
     mqtt_mock = await mqtt_mock_entry()
     await hass.async_block_till_done()
-    assert mqtt_mock.connected
+    assert mqtt_mock.connected is True
     assert len(mqtt_client_mock.reconnect.mock_calls) == 1
 
     mqtt_client_mock.disconnect()
@@ -4195,3 +4197,88 @@ async def test_auto_reconnect(
     await hass.async_block_till_done()
     # Should not reconnect after stop
     assert len(mqtt_client_mock.reconnect.mock_calls) == 3
+
+
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+async def test_server_sock_connect_and_disconnect(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test handling the socket connected and disconnected."""
+    mqtt_mock = await mqtt_mock_entry()
+    await hass.async_block_till_done()
+    assert mqtt_mock.connected is True
+    assert len(mqtt_client_mock.reconnect.mock_calls) == 1
+
+    mqtt_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_SUCCESS
+
+    client, server = socket.socketpair(
+        family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0
+    )
+    client.setblocking(False)
+    server.setblocking(False)
+    mqtt_client_mock.on_socket_open(mqtt_client_mock, None, client)
+    mqtt_client_mock.on_socket_register_writer(mqtt_client_mock, None, client)
+    await hass.async_block_till_done()
+
+    server.close()  # mock the server closing the connection on us
+
+    unsub = await mqtt.async_subscribe(hass, "test-topic", record_calls)
+
+    mqtt_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_CONN_LOST
+    mqtt_client_mock.on_socket_unregister_write(mqtt_client_mock, None, client)
+    mqtt_client_mock.on_disconnect(mqtt_client_mock, None, client)
+    await hass.async_block_till_done()
+    unsub()
+
+    # Should have failed
+    assert len(calls) == 0
+
+
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+async def test_client_sock_failure_after_connect(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test handling the socket connected and disconnected."""
+    mqtt_mock = await mqtt_mock_entry()
+    # Fake that the client is connected
+    mqtt_mock().connected = True
+    await hass.async_block_till_done()
+    assert mqtt_mock.connected is True
+    assert len(mqtt_client_mock.reconnect.mock_calls) == 1
+
+    mqtt_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_SUCCESS
+
+    client, server = socket.socketpair(
+        family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0
+    )
+    client.setblocking(False)
+    server.setblocking(False)
+    mqtt_client_mock.on_socket_open(mqtt_client_mock, None, client)
+    mqtt_client_mock.on_socket_register_writer(mqtt_client_mock, None, client)
+    await hass.async_block_till_done()
+
+    mqtt_client_mock.loop_write.side_effect = OSError("foo")
+    client.close()  # close the client socket out from under the client
+
+    assert mqtt_mock.connected is True
+    unsub = await mqtt.async_subscribe(hass, "test-topic", record_calls)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
+    await hass.async_block_till_done()
+
+    unsub()
+    # Should have failed
+    assert len(calls) == 0

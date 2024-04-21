@@ -472,7 +472,8 @@ class MQTT:
         self._mqttc.on_socket_open = self._on_socket_open
         self._mqttc.on_socket_close = self._on_socket_close
         self._mqttc.on_socket_register_write = self._on_socket_register_write
-        self._mqttc.on_socket_unregister_write = self._on_socket_unregister_write
+        # Unregister is always called in the event loop
+        self._mqttc.on_socket_unregister_write = self._async_on_socket_unregister_write
 
         # These will be called in the event loop
         self._mqttc.on_connect = self._async_mqtt_on_connect
@@ -496,14 +497,18 @@ class MQTT:
         # pylint: disable=import-outside-toplevel
         import paho.mqtt.client as mqtt
 
-        while self._mqttc.loop_misc() == mqtt.MQTT_ERR_SUCCESS:
+        while (last_msg := self._mqttc.loop_misc()) == mqtt.MQTT_ERR_SUCCESS:
             await asyncio.sleep(1)
+
+        _LOGGER.debug("%s: loop_misc stopped: %s", self.config_entry.title, last_msg)
 
     @callback
     def _async_reader_callback(self, client: mqtt.Client) -> None:
         """Handle reading data from the socket."""
         try:
             client.loop_read()
+        # This might raise BrokenPipeError if the socket is closed
+        # out from under us so we immediately move to a disconnected state
         except Exception as exc:  # pylint: disable=broad-except
             self._async_on_disconnect(0, exc)
 
@@ -511,6 +516,7 @@ class MQTT:
     def _async_start_misc_loop(self) -> None:
         """Start the misc loop."""
         if self._misc_task is None or self._misc_task.done():
+            _LOGGER.debug("%s: Starting client misc loop", self.config_entry.title)
             self._misc_task = self.config_entry.async_create_background_task(
                 self.hass, self._misc_loop(), name="mqtt misc loop"
             )
@@ -529,7 +535,9 @@ class MQTT:
     ) -> None:
         """Handle socket open."""
         loop = self.loop
-        loop.add_reader(sock.fileno(), partial(self._async_reader_callback, client))
+        fileno = sock.fileno()
+        _LOGGER.debug("%s: connection opened %s", self.config_entry.title, fileno)
+        loop.add_reader(fileno, partial(self._async_reader_callback, client))
         self._async_start_misc_loop()
 
     def _on_socket_close(
@@ -546,6 +554,7 @@ class MQTT:
     ) -> None:
         """Handle socket close."""
         fileno = sock.fileno()
+        _LOGGER.debug("%s: connection closed %s", self.config_entry.title, fileno)
         loop = self.loop
         if fileno > -1:
             loop.remove_reader(fileno)
@@ -555,8 +564,11 @@ class MQTT:
     @callback
     def _async_writer_callback(self, client: mqtt.Client) -> None:
         """Handle writing data to the socket."""
+        _LOGGER.warning("Writer callback")
         try:
             client.loop_write()
+        # This might raise BrokenPipeError if the socket is closed
+        # out from under us so we immediately move to a disconnected state
         except Exception as exc:  # pylint: disable=broad-except
             self._async_on_disconnect(0, exc)
 
@@ -567,14 +579,6 @@ class MQTT:
         loop = self.loop
         loop.call_soon_threadsafe(
             loop.add_writer, sock, partial(self._async_writer_callback, client)
-        )
-
-    def _on_socket_unregister_write(
-        self, client: mqtt.Client, userdata: Any, sock: SocketType
-    ) -> None:
-        """Unregister the socket for writing."""
-        self.loop.call_soon_threadsafe(
-            self._async_on_socket_unregister_write, client, userdata, sock
         )
 
     @callback
