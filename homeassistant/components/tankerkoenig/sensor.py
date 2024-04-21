@@ -91,7 +91,7 @@ class FuelPriceSensor(TankerkoenigCoordinatorEntity, SensorEntity):
         self._fuel_type = fuel_type
         self._attr_translation_key = fuel_type
         self._attr_unique_id = f"{station.id}_{fuel_type}"
-        attrs = {
+        attrs: dict[str, int | str | float | None] = {
             ATTR_BRAND: station.brand,
             ATTR_FUEL_TYPE: fuel_type,
             ATTR_STATION_NAME: station.name,
