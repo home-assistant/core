@@ -1,7 +1,7 @@
 """Test the IKEA Idasen Desk cover."""
 
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from bleak.exc import BleakError
 import pytest
@@ -39,6 +39,7 @@ async def test_cover_available(
     assert state.state == STATE_OPEN
     assert state.attributes[ATTR_CURRENT_POSITION] == 60
 
+    mock_desk_api.connect = AsyncMock()
     mock_desk_api.is_connected = False
     mock_desk_api.trigger_update_callback(None)
 

@@ -70,20 +70,24 @@ class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):  # pylint: disab
         self._connection_lost = False
         await self.desk.disconnect()
 
-    @callback
-    def async_set_updated_data(self, data: int | None) -> None:
-        """Handle data update."""
+    async def async_ensure_connection_state(self) -> None:
+        """Check if the expected connection state matches the current state and correct it if needed."""
         if self._expected_connected:
             if not self.desk.is_connected:
-                _LOGGER.debug("Desk disconnected. Reconnecting")
+                _LOGGER.warning("Desk disconnected. Reconnecting")
                 self._connection_lost = True
-                self.hass.async_create_task(self.async_connect(), eager_start=False)
+                await self.async_connect()
             elif self._connection_lost:
                 _LOGGER.info("Reconnected to desk")
                 self._connection_lost = False
         elif self.desk.is_connected:
             _LOGGER.warning("Desk is connected but should not be. Disconnecting")
-            self.hass.async_create_task(self.desk.disconnect())
+            await self.desk.disconnect()
+
+    @callback
+    def async_set_updated_data(self, data: int | None) -> None:
+        """Handle data update."""
+        self.hass.async_create_task(self.async_ensure_connection_state())
         return super().async_set_updated_data(data)
 
 
@@ -124,8 +128,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         change: bluetooth.BluetoothChange,
     ) -> None:
         """Update from a Bluetooth callback to ensure that a new BLEDevice is fetched."""
-        _LOGGER.debug("Bluetooth callback triggered. Reconnecting")
-        hass.async_create_task(coordinator.async_connect())
+        _LOGGER.debug("Bluetooth callback triggered")
+        hass.async_create_task(coordinator.async_ensure_connection_state())
 
     entry.async_on_unload(
         bluetooth.async_register_callback(

@@ -65,9 +65,10 @@ async def test_reconnect_on_bluetooth_callback(
         mock_desk_api.connect.assert_called_once()
         mock_register_callback.assert_called_once()
 
+        mock_desk_api.is_connected = False
         _, register_callback_args, _ = mock_register_callback.mock_calls[0]
-        callback = register_callback_args[1]
-        callback(None, None)
+        bt_callback = register_callback_args[1]
+        bt_callback(None, None)
         await hass.async_block_till_done()
         assert mock_desk_api.connect.call_count == 2
 
