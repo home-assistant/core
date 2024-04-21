@@ -407,7 +407,6 @@ class MQTT:
         # which has subscribed messages.
         self._retained_topics: dict[Subscription, set[str]] = {}
         self.connected = False
-        self.socket_open = False
         self._ha_started = asyncio.Event()
         self._cleanup_on_unload: list[Callable[[], None]] = []
 
@@ -529,7 +528,6 @@ class MQTT:
         self, client: mqtt.Client, userdata: Any, sock: SocketType
     ) -> None:
         """Handle socket open."""
-        self.socket_open = True
         loop = self.loop
         loop.add_reader(sock.fileno(), partial(self._async_reader_callback, client))
         self._async_start_misc_loop()
@@ -547,7 +545,6 @@ class MQTT:
         self, client: mqtt.Client, userdata: Any, sock: SocketType
     ) -> None:
         """Handle socket close."""
-        self.socket_open = False
         fileno = sock.fileno()
         loop = self.loop
         if fileno > -1:
@@ -639,7 +636,7 @@ class MQTT:
     async def _reconnect_loop(self) -> None:
         """Reconnect to the MQTT server."""
         while True:
-            if not self.socket_open:
+            if not self.connected:
                 try:
                     await self.hass.async_add_executor_job(self._mqttc.reconnect)
                 except OSError as err:
