@@ -410,7 +410,7 @@ class MQTT:
         self._ha_started = asyncio.Event()
         self._cleanup_on_unload: list[Callable[[], None]] = []
 
-        self._paho_lock = asyncio.Lock()  # Prevents parallel calls to the MQTT client
+        self._connection_lock = asyncio.Lock()
         self._pending_operations: dict[int, asyncio.Event] = {}
         self._pending_operations_condition = asyncio.Condition()
         self._subscribe_debouncer = EnsureJobAfterCooldown(
@@ -585,8 +585,7 @@ class MQTT:
         self, topic: str, payload: PublishPayloadType, qos: int, retain: bool
     ) -> None:
         """Publish a MQTT message."""
-        async with self._paho_lock:
-            msg_info = self._mqttc.publish(topic, payload, qos, retain)
+        msg_info = self._mqttc.publish(topic, payload, qos, retain)
         _LOGGER.debug(
             "Transmitting%s message on %s: '%s', mid: %s, qos: %s",
             " retained" if retain else "",
@@ -607,12 +606,13 @@ class MQTT:
         self._available_future = client_available
         self._should_reconnect = True
         try:
-            result = await self.hass.async_add_executor_job(
-                self._mqttc.connect,
-                self.conf[CONF_BROKER],
-                self.conf.get(CONF_PORT, DEFAULT_PORT),
-                self.conf.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE),
-            )
+            async with self._connection_lock:
+                result = await self.hass.async_add_executor_job(
+                    self._mqttc.connect,
+                    self.conf[CONF_BROKER],
+                    self.conf.get(CONF_PORT, DEFAULT_PORT),
+                    self.conf.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE),
+                )
         except OSError as err:
             _LOGGER.error("Failed to connect to MQTT server due to exception: %s", err)
             self._async_connection_result(False)
@@ -650,7 +650,7 @@ class MQTT:
         while True:
             if not self.connected:
                 try:
-                    async with self._paho_lock:
+                    async with self._connection_lock:
                         await self.hass.async_add_executor_job(self._mqttc.reconnect)
                 except OSError as err:
                     _LOGGER.debug(
@@ -680,7 +680,7 @@ class MQTT:
             await self._pending_operations_condition.wait_for(no_more_acks)
 
         # stop the MQTT loop
-        async with self._paho_lock:
+        async with self._connection_lock:
             self._should_reconnect = False
             self._async_cancel_reconnect()
             self._mqttc.disconnect()
@@ -822,9 +822,8 @@ class MQTT:
         subscriptions: dict[str, int] = self._pending_subscriptions
         self._pending_subscriptions = {}
 
-        async with self._paho_lock:
-            subscription_list = list(subscriptions.items())
-            result, mid = self._mqttc.subscribe(subscription_list)
+        subscription_list = list(subscriptions.items())
+        result, mid = self._mqttc.subscribe(subscription_list)
 
         for topic, qos in subscriptions.items():
             _LOGGER.debug("Subscribing to %s, mid: %s, qos: %s", topic, mid, qos)
@@ -843,8 +842,7 @@ class MQTT:
         topics = list(self._pending_unsubscribes)
         self._pending_unsubscribes = set()
 
-        async with self._paho_lock:
-            result, mid = self._mqttc.unsubscribe(topics)
+        result, mid = self._mqttc.unsubscribe(topics)
         _raise_on_error(result)
         for topic in topics:
             _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
