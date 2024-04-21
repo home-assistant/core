@@ -4177,7 +4177,7 @@ async def test_auto_reconnect(
     mqtt_mock = await mqtt_mock_entry()
     await hass.async_block_till_done()
     assert mqtt_mock.connected is True
-    assert len(mqtt_client_mock.reconnect.mock_calls) == 1
+    mqtt_client_mock.reconnect.reset_mock()
 
     mqtt_client_mock.disconnect()
     mqtt_client_mock.on_disconnect(None, None, 0)
@@ -4188,7 +4188,7 @@ async def test_auto_reconnect(
         hass, utcnow() + timedelta(seconds=RECONNECT_INTERVAL_SECONDS)
     )
     await hass.async_block_till_done()
-    assert len(mqtt_client_mock.reconnect.mock_calls) == 2
+    assert len(mqtt_client_mock.reconnect.mock_calls) == 1
     assert "Error re-connecting to MQTT server due to exception: foo" in caplog.text
 
     mqtt_client_mock.reconnect.side_effect = None
@@ -4196,7 +4196,7 @@ async def test_auto_reconnect(
         hass, utcnow() + timedelta(seconds=RECONNECT_INTERVAL_SECONDS)
     )
     await hass.async_block_till_done()
-    assert len(mqtt_client_mock.reconnect.mock_calls) == 3
+    assert len(mqtt_client_mock.reconnect.mock_calls) == 2
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
 
@@ -4209,7 +4209,7 @@ async def test_auto_reconnect(
     )
     await hass.async_block_till_done()
     # Should not reconnect after stop
-    assert len(mqtt_client_mock.reconnect.mock_calls) == 3
+    assert len(mqtt_client_mock.reconnect.mock_calls) == 2
 
 
 @patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
@@ -4227,7 +4227,6 @@ async def test_server_sock_connect_and_disconnect(
     mqtt_mock = await mqtt_mock_entry()
     await hass.async_block_till_done()
     assert mqtt_mock.connected is True
-    assert len(mqtt_client_mock.reconnect.mock_calls) == 1
 
     mqtt_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_SUCCESS
 
@@ -4271,7 +4270,6 @@ async def test_client_sock_failure_after_connect(
     mqtt_mock().connected = True
     await hass.async_block_till_done()
     assert mqtt_mock.connected is True
-    assert len(mqtt_client_mock.reconnect.mock_calls) == 1
 
     mqtt_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_SUCCESS
 

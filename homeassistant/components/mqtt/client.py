@@ -309,6 +309,12 @@ def _is_simple_match(topic: str) -> bool:
     return not ("+" in topic or "#" in topic)
 
 
+def _set_result_unless_done(future: asyncio.Future[Any], result: Any) -> None:
+    """Set the result of a future if it is not already done."""
+    if not future.done():
+        future.set_result(result)
+
+
 class EnsureJobAfterCooldown:
     """Ensure a cool down period before executing a job.
 
@@ -419,7 +425,7 @@ class MQTT:
         )
         self._misc_task: asyncio.Task | None = None
         self._reconnect_task: asyncio.Task | None = None
-        self._available_future: asyncio.Future[None] = hass.loop.create_future()
+        self._available_future: asyncio.Future[bool] | None = None
 
         self._max_qos: dict[str, int] = {}  # topic, max qos
         self._pending_subscriptions: dict[str, int] = {}  # topic, qos
@@ -612,12 +618,13 @@ class MQTT:
         _raise_on_error(msg_info.rc)
         await self._wait_for_mid(msg_info.mid)
 
-    async def async_connect(self) -> None:
+    async def async_connect(self, client_available: asyncio.Future[bool]) -> None:
         """Connect to the host. Does not process messages yet."""
         # pylint: disable-next=import-outside-toplevel
         import paho.mqtt.client as mqtt
 
         result: int | None = None
+        self._available_future = client_available
         try:
             result = await self.hass.async_add_executor_job(
                 self._mqttc.connect,
@@ -627,29 +634,19 @@ class MQTT:
             )
         except OSError as err:
             _LOGGER.error("Failed to connect to MQTT server due to exception: %s", err)
-        else:
-            if result != 0:
+            _set_result_unless_done(client_available, False)
+        finally:
+            if result is None:
+                _set_result_unless_done(client_available, False)
+            if result and result != 0:
                 _LOGGER.error(
                     "Failed to connect to MQTT server: %s", mqtt.error_string(result)
                 )
-            else:
-                await self._async_wait_for_connection()
+                _set_result_unless_done(client_available, False)
 
         self._reconnect_task = self.config_entry.async_create_background_task(
             self.hass, self._reconnect_loop(), "mqtt reconnect loop"
         )
-
-    async def _async_wait_for_connection(self) -> None:
-        """Wait for the connection to be established."""
-        try:
-            async with asyncio.timeout(CONNECT_TIMEOUT):
-                await self._available_future
-        except TimeoutError:
-            _LOGGER.error(
-                "Timed out waiting for MQTT server to become available"
-                " after %s seconds",
-                CONNECT_TIMEOUT,
-            )
 
     async def _reconnect_loop(self) -> None:
         """Reconnect to the MQTT server."""
@@ -882,8 +879,8 @@ class MQTT:
             return
 
         self.connected = True
-        if not self._available_future.done():
-            self._available_future.set_result(None)
+        if self._available_future and not self._available_future.done():
+            self._available_future.set_result(True)
         async_dispatcher_send(self.hass, MQTT_CONNECTED)
         _LOGGER.info(
             "Connected to MQTT server %s:%s (%s)",
