@@ -444,6 +444,10 @@ class Group(Entity):
                         and value in registry.on_states_by_domain[domain]
                     ):
                         active_on_states.add(value)
+                        # If we have more than on state, the group state
+                        # will result in STATE_ON and we can stop checking
+                        if len(active_on_states) > 1:
+                            break
                         continue
                     if value in registry.off_on_mapping:
                         active_off_states.add(value)
