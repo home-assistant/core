@@ -506,12 +506,8 @@ class MQTT:
     @callback
     def _async_reader_callback(self, client: mqtt.Client) -> None:
         """Handle reading data from the socket."""
-        try:
-            client.loop_read()
-        # This might raise BrokenPipeError if the socket is closed
-        # out from under us so we immediately move to a disconnected state
-        except Exception as exc:  # pylint: disable=broad-except
-            self._async_on_disconnect(0, exc)
+        if (status := client.loop_read()) != 0:
+            self._async_on_disconnect(status)
 
     @callback
     def _async_start_misc_loop(self) -> None:
@@ -565,12 +561,8 @@ class MQTT:
     @callback
     def _async_writer_callback(self, client: mqtt.Client) -> None:
         """Handle writing data to the socket."""
-        try:
-            client.loop_write()
-        # This might raise BrokenPipeError if the socket is closed
-        # out from under us so we immediately move to a disconnected state
-        except Exception as exc:  # pylint: disable=broad-except
-            self._async_on_disconnect(0, exc)
+        if (status := client.loop_write()) != 0:
+            self._async_on_disconnect(status)
 
     def _on_socket_register_write(
         self, client: mqtt.Client, userdata: Any, sock: SocketType
@@ -1062,16 +1054,18 @@ class MQTT:
         self._async_on_disconnect(result_code)
 
     @callback
-    def _async_on_disconnect(
-        self, result_code: int, exception: Exception | None = None
-    ) -> None:
+    def _async_on_disconnect(self, result_code: int) -> None:
+        if not self.connected:
+            # This function is re-entrant and may be called multiple times
+            # when there is a broken pipe error.
+            return
         self.connected = False
         async_dispatcher_send(self.hass, MQTT_DISCONNECTED)
         _LOGGER.warning(
             "Disconnected from MQTT server %s:%s (%s)",
             self.conf[CONF_BROKER],
             self.conf.get(CONF_PORT, DEFAULT_PORT),
-            result_code or exception,
+            result_code,
         )
 
     async def _wait_for_mid(self, mid: int) -> None:

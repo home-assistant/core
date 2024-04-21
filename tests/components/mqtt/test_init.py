@@ -4221,7 +4221,6 @@ async def test_server_sock_connect_and_disconnect(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     calls: list[ReceiveMessage],
     record_calls: MessageCallbackType,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling the socket connected and disconnected."""
     mqtt_mock = await mqtt_mock_entry()
@@ -4263,7 +4262,6 @@ async def test_client_sock_failure_after_connect(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     calls: list[ReceiveMessage],
     record_calls: MessageCallbackType,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling the socket connected and disconnected."""
     mqtt_mock = await mqtt_mock_entry()
@@ -4294,3 +4292,49 @@ async def test_client_sock_failure_after_connect(
     unsub()
     # Should have failed
     assert len(calls) == 0
+
+
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+async def test_loop_write_failure(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test handling the socket connected and disconnected."""
+    mqtt_mock = await mqtt_mock_entry()
+    await hass.async_block_till_done()
+    assert mqtt_mock.connected is True
+
+    mqtt_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_SUCCESS
+
+    client, server = socket.socketpair(
+        family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0
+    )
+    client.setblocking(False)
+    server.setblocking(False)
+    mqtt_client_mock.on_socket_open(mqtt_client_mock, None, client)
+    mqtt_client_mock.on_socket_register_write(mqtt_client_mock, None, client)
+    mqtt_client_mock.loop_write.return_value = paho_mqtt.MQTT_ERR_CONN_LOST
+    mqtt_client_mock.loop_read.return_value = paho_mqtt.MQTT_ERR_CONN_LOST
+
+    # Fill up the outgoing buffer to ensure that loop_write
+    # and loop_read are called that next time control is
+    # returned to the event loop
+    try:
+        for _ in range(1000):
+            server.send(b"long" * 100)
+    except BlockingIOError:
+        pass
+
+    server.close()
+    # Once for the reader callback
+    await hass.async_block_till_done()
+    # Another for the writer callback
+    await hass.async_block_till_done()
+    # Final for the disconnect callback
+    await hass.async_block_till_done()
+
+    assert "Disconnected from MQTT server mock-broker:1883 (7)" in caplog.text
