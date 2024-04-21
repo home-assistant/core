@@ -61,7 +61,7 @@ class ExchangeRateSensor(SensorEntity):
     """Representation of a Exchange sensor."""
 
     _attr_attribution = "Data provided by the European Central Bank (ECB)"
-    _attr_icon = "mdi:currency-usd"
+    _attr_icon = "mdi:currency-eur"
 
     def __init__(self, data, name, target):
         """Initialize the sensor."""
