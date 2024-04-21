@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_EXCHANGE_RATE = "Exchange rate"
 ATTR_TARGET = "Target currency"
 
-DEFAULT_BASE = "USD"
+DEFAULT_BASE = "EUR"
 DEFAULT_NAME = "Exchange rate"
 
 
