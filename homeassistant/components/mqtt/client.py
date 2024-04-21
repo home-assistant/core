@@ -570,7 +570,6 @@ class MQTT:
     @callback
     def _async_writer_callback(self, client: mqtt.Client) -> None:
         """Handle writing data to the socket."""
-        _LOGGER.warning("Writer callback")
         try:
             client.loop_write()
         # This might raise BrokenPipeError if the socket is closed

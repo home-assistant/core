@@ -4236,7 +4236,7 @@ async def test_server_sock_connect_and_disconnect(
     client.setblocking(False)
     server.setblocking(False)
     mqtt_client_mock.on_socket_open(mqtt_client_mock, None, client)
-    mqtt_client_mock.on_socket_register_writer(mqtt_client_mock, None, client)
+    mqtt_client_mock.on_socket_register_write(mqtt_client_mock, None, client)
     await hass.async_block_till_done()
 
     server.close()  # mock the server closing the connection on us
