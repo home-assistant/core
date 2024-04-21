@@ -3033,14 +3033,16 @@ async def test_debug_info_multiple_devices(
     for dev in devices:
         data = json.dumps(dev["config"])
         domain = dev["domain"]
-        id = dev["config"]["device"]["identifiers"][0]
-        async_fire_mqtt_message(hass, f"homeassistant/{domain}/{id}/config", data)
+        device_id = dev["config"]["device"]["identifiers"][0]
+        async_fire_mqtt_message(
+            hass, f"homeassistant/{domain}/{device_id}/config", data
+        )
         await hass.async_block_till_done()
 
     for dev in devices:
         domain = dev["domain"]
-        id = dev["config"]["device"]["identifiers"][0]
-        device = device_registry.async_get_device(identifiers={("mqtt", id)})
+        device_id = dev["config"]["device"]["identifiers"][0]
+        device = device_registry.async_get_device(identifiers={("mqtt", device_id)})
         assert device is not None
 
         debug_info_data = debug_info.info_for_device(hass, device.id)
@@ -3058,7 +3060,7 @@ async def test_debug_info_multiple_devices(
             assert len(debug_info_data["triggers"]) == 1
             discovery_data = debug_info_data["triggers"][0]["discovery_data"]
 
-        assert discovery_data["topic"] == f"homeassistant/{domain}/{id}/config"
+        assert discovery_data["topic"] == f"homeassistant/{domain}/{device_id}/config"
         assert discovery_data["payload"] == dev["config"]
 
 
@@ -3116,8 +3118,10 @@ async def test_debug_info_multiple_entities_triggers(
         data = json.dumps(c["config"])
         domain = c["domain"]
         # Use topic as discovery_id
-        id = c["config"].get("topic", c["config"].get("state_topic"))
-        async_fire_mqtt_message(hass, f"homeassistant/{domain}/{id}/config", data)
+        discovery_id = c["config"].get("topic", c["config"].get("state_topic"))
+        async_fire_mqtt_message(
+            hass, f"homeassistant/{domain}/{discovery_id}/config", data
+        )
         await hass.async_block_till_done()
 
     device_id = config[0]["config"]["device"]["identifiers"][0]
@@ -3131,7 +3135,7 @@ async def test_debug_info_multiple_entities_triggers(
         # Test we get debug info for each entity and trigger
         domain = c["domain"]
         # Use topic as discovery_id
-        id = c["config"].get("topic", c["config"].get("state_topic"))
+        discovery_id = c["config"].get("topic", c["config"].get("state_topic"))
 
         if c["domain"] != "device_automation":
             discovery_data = [e["discovery_data"] for e in debug_info_data["entities"]]
@@ -3143,7 +3147,7 @@ async def test_debug_info_multiple_entities_triggers(
             discovery_data = [e["discovery_data"] for e in debug_info_data["triggers"]]
 
         assert {
-            "topic": f"homeassistant/{domain}/{id}/config",
+            "topic": f"homeassistant/{domain}/{discovery_id}/config",
             "payload": c["config"],
         } in discovery_data
 
