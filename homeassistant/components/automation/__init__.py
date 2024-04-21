@@ -14,7 +14,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.components.rasc.entity import BaseRoutineEntity
 from homeassistant.components.rasc.log import output_routine
-from homeassistant.components.rasc.scheduler import create_routine
+from homeassistant.components.rasc.scheduler import RascalScheduler, create_routine
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,

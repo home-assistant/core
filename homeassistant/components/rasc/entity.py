@@ -333,23 +333,6 @@ class ActionEntity:
         return self.service_data.get(CONF_TRANSITION, None)
 
     @property
-    def service(self) -> str | None:
-        """Get service."""
-        return self.action.get(CONF_SERVICE, None)
-
-    @property
-    def service_data(self) -> dict[str, Any] | None:
-        """Get service data."""
-        return self.action.get(CONF_SERVICE_DATA, None)
-
-    @property
-    def transition(self) -> float | None:
-        """Get transition."""
-        if self.service_data is None or CONF_TRANSITION not in self.service_data:
-            return None
-        return self.service_data.get(CONF_TRANSITION, None)
-
-    @property
     def is_end_node(self) -> bool:
         """Get is_end_node attribute."""
         return self._attr_is_end_node
@@ -729,7 +712,7 @@ class Queue(Generic[_KT, _VT]):
             return self._data[key]
         return None
 
-    def prev(self, key: _KT) -> Any:
+    def prev(self, key: _KT) -> _VT | None:
         """Return the previous item with the key."""
         index = self._keys.index(key)
         if index - 1 >= 0:
