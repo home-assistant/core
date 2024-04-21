@@ -564,8 +564,17 @@ class MQTT:
         self, client: mqtt.Client, userdata: Any, sock: SocketType
     ) -> None:
         """Unregister the socket for writing."""
-        loop = self.loop
-        loop.call_soon_threadsafe(loop.remove_writer, sock)
+        self.loop.call_soon_threadsafe(
+            self._async_on_socket_unregister_write, client, userdata, sock
+        )
+
+    @callback
+    def _async_on_socket_unregister_write(
+        self, client: mqtt.Client, userdata: Any, sock: SocketType
+    ) -> None:
+        """Unregister the socket for writing."""
+        if sock.fileno() > -1:
+            self.loop.remove_writer(sock)
 
     def _is_active_subscription(self, topic: str) -> bool:
         """Check if a topic has an active subscription."""
