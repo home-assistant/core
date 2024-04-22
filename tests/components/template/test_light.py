@@ -1597,6 +1597,19 @@ async def test_color_mode_not_optimistic_template(
     ]
     assert state.attributes["supported_features"] == 0
 
+    # Make sure transition from COLOR_TEMP to HS works
+    hass.states.async_set("light.test_state", STATE_OFF)
+    await hass.async_block_till_done()
+    state = hass.states.get("light.test_template_light")
+    assert state.attributes["color_mode"] == ColorMode.HS
+    assert state.attributes["color_temp"] is None
+    assert state.attributes["hs_color"] == (40, 50)
+    assert state.attributes["supported_color_modes"] == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
+    ]
+    assert state.attributes["supported_features"] == 0
+
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
