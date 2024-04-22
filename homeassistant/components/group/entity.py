@@ -456,7 +456,7 @@ class Group(Entity):
                 domain_on_states := registry.on_states_by_domain.get(domain)
             ) and current_state in domain_on_states:
                 active_on_states.add(current_state)
-                # If we have more than on state, the group state
+                # If we have more than one on state, the group state
                 # will result in STATE_ON and we can stop checking
                 if len(active_on_states) > 1:
                     break
