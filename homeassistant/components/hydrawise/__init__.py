@@ -1,50 +1,15 @@
 """Support for Hydrawise cloud."""
 
 from pydrawise import legacy
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_API_KEY,
-    CONF_SCAN_INTERVAL,
-    Platform,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, SCAN_INTERVAL
 from .coordinator import HydrawiseDataUpdateCoordinator
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_ACCESS_TOKEN): cv.string,
-                vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Hunter Hydrawise component."""
-    if DOMAIN not in config:
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={CONF_API_KEY: config[DOMAIN][CONF_ACCESS_TOKEN]},
-        )
-    )
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
