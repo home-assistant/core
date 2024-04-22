@@ -1,5 +1,6 @@
 """Base class for TotalConnect entities."""
 
+from total_connect_client.location import TotalConnectLocation
 from total_connect_client.zone import TotalConnectZone
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -10,6 +11,25 @@ from . import DOMAIN, TotalConnectDataUpdateCoordinator
 
 class TotalConnectEntity(CoordinatorEntity[TotalConnectDataUpdateCoordinator]):
     """Represent a TotalConnect entity."""
+
+
+class TotalConnectLocationEntity(TotalConnectEntity):
+    """Represent a TotalConnect location."""
+
+    def __init__(
+        self,
+        coordinator: TotalConnectDataUpdateCoordinator,
+        location: TotalConnectLocation,
+    ) -> None:
+        """Initialize the TotalConnect location."""
+        super().__init__(coordinator)
+        self._location = location
+        self.device = location.devices[location.security_device_id]
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.device.serial_number)},
+            name=self.device.name,
+            serial_number=self.device.serial_number,
+        )
 
 
 class TotalConnectZoneEntity(TotalConnectEntity):

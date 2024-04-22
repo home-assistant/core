@@ -243,7 +243,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==24.1.0
+aioesphomeapi==24.2.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -805,6 +805,9 @@ env-canada==0.6.0
 
 # homeassistant.components.season
 ephem==4.1.5
+
+# homeassistant.components.epic_games_store
+epicstore-api==0.1.7
 
 # homeassistant.components.epion
 epion==0.0.3

@@ -1,20 +1,27 @@
-"""The dwd_weather_warnings component."""
+"""The Epic Games Store integration."""
 
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, PLATFORMS
-from .coordinator import DwdWeatherWarningsCoordinator
+from .const import DOMAIN
+from .coordinator import EGSCalendarUpdateCoordinator
+
+PLATFORMS: list[Platform] = [
+    Platform.CALENDAR,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up a config entry."""
-    coordinator = DwdWeatherWarningsCoordinator(hass, entry)
+    """Set up Epic Games Store from a config entry."""
+
+    coordinator = EGSCalendarUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
