@@ -18,7 +18,6 @@ from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfLength, UnitOf
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
@@ -298,9 +297,7 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         key="next_start_timestamp",
         translation_key="next_start_timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: convert_next_start(
-            data.planner.next_start_datetime_naive
-        ),
+        value_fn=lambda data: data.planner.next_start_datetime,
     ),
     AutomowerSensorEntityDescription(
         key="error",
@@ -319,13 +316,6 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         value_fn=lambda data: data.planner.restricted_reason.lower(),
     ),
 )
-
-
-def convert_next_start(next_start: datetime | None) -> datetime | None:
-    """Convert next start to aware datetime."""
-    if next_start is None:
-        return None
-    return dt_util.as_local(next_start)
 
 
 async def async_setup_entry(

@@ -62,32 +62,22 @@ async def test_cutting_blade_usage_time_sensor(
     assert state.state == "0.034"
 
 
-@pytest.mark.parametrize(
-    ("timezone", "result"),
-    [
-        ("Europe/Berlin", "2023-06-05T17:00:00+00:00"),
-        ("UTC", "2023-06-05T19:00:00+00:00"),
-    ],
-)
 async def test_next_start_sensor(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    timezone: str,
-    result: str,
 ) -> None:
     """Test if this sensor is only added, if data is available."""
-    hass.config.set_time_zone(timezone)
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get("sensor.test_mower_1_next_start")
     assert state is not None
-    assert state.state == result
+    assert state.state == "2023-06-05T19:00:00+00:00"
 
     values = mower_list_to_dictionary_dataclass(
         load_json_value_fixture("mower.json", DOMAIN)
     )
-    values[TEST_MOWER_ID].planner.next_start_datetime_naive = None
+    values[TEST_MOWER_ID].planner.next_start_datetime = None
     mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
