@@ -109,7 +109,7 @@ class WanIpSensor(SensorEntity):
                 [res.host for res in response], querytype=self.querytype
             )
             self._attr_native_value = sorted_ips[0]
-            self._attr_extra_state_attributes["IPs"] = sorted_ips
+            self._attr_extra_state_attributes["ip_addresses"] = sorted_ips
             self._attr_available = True
             self._retries = DEFAULT_RETRIES
         elif self._retries > 0:
