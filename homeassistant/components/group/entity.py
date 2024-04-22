@@ -131,7 +131,11 @@ class Group(Entity):
     _unrecorded_attributes = frozenset({ATTR_ENTITY_ID, ATTR_ORDER, ATTR_AUTO})
 
     _attr_should_poll = False
+    # Holds the a set of used domains for the tracked entities
+    # used determine to use a specific or generic ON or OFF state
     active_domains: set[str]
+    # In case there is only one active domain we use specific ON or OFF
+    # values, if all ON or OFF states are equal
     single_active_domain: str | None
     tracking: tuple[str, ...]
     trackable: tuple[str, ...]
