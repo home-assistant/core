@@ -10,7 +10,11 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    issue_registry as ir,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from . import api
@@ -159,6 +163,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_create_background_task(
         hass, async_get_device_config(hass, entry), "insteon-get-device-config"
+    )
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"{DOMAIN}_panel_moved",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="panel_moved",
+        learn_more_url="/config/integrations/integration/insteon",
     )
 
     return True

@@ -48,6 +48,12 @@
       "not_insteon_device": "Discovered device not an Insteon device"
     }
   },
+  "issues": {
+    "panel_moved": {
+      "title": "The Insteon configuration panel has moved.",
+      "description": "The Insteon configuration panel has moved to the 'Configure' button under the Insteon integration.\n\nSettings > Devices & Services > Insteon > Configure."
+    }
+  },
   "options": {
     "step": {
       "init": {
