@@ -108,26 +108,21 @@ class FibaroController:
         # Device infos by fibaro device id
         self._device_infos: dict[int, DeviceInfo] = {}
 
-    def connect(self) -> bool:
+    def connect(self) -> None:
         """Start the communication with the Fibaro controller."""
 
-        connected = self._client.connect()
+        # Return value doesn't need to be checked,
+        # it is only relevant when connecting without credentials
+        self._client.connect()
         info = self._client.read_info()
         self.hub_serial = info.serial_number
         self.hub_name = info.hc_name
         self.hub_model = info.platform
         self.hub_software_version = info.current_version
 
-        if connected is False:
-            _LOGGER.error(
-                "Invalid login for Fibaro HC. Please check username and password"
-            )
-            return False
-
         self._room_map = {room.fibaro_id: room for room in self._client.read_rooms()}
         self._read_devices()
         self._scenes = self._client.read_scenes()
-        return True
 
     def connect_with_error_handling(self) -> None:
         """Translate connect errors to easily differentiate auth and connect failures.
@@ -135,9 +130,7 @@ class FibaroController:
         When there is a better error handling in the used library this can be improved.
         """
         try:
-            connected = self.connect()
-            if not connected:
-                raise FibaroConnectFailed("Connect status is false")
+            self.connect()
         except HTTPError as http_ex:
             if http_ex.response.status_code == 403:
                 raise FibaroAuthFailed from http_ex
@@ -382,7 +375,7 @@ class FibaroController:
                 pass
 
 
-def _init_controller(data: Mapping[str, Any]) -> FibaroController:
+def init_controller(data: Mapping[str, Any]) -> FibaroController:
     """Validate the user input allows us to connect to fibaro."""
     controller = FibaroController(data)
     controller.connect_with_error_handling()
@@ -395,7 +388,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     The unique id of the config entry is the serial number of the home center.
     """
     try:
-        controller = await hass.async_add_executor_job(_init_controller, entry.data)
+        controller = await hass.async_add_executor_job(init_controller, entry.data)
     except FibaroConnectFailed as connect_ex:
         raise ConfigEntryNotReady(
             f"Could not connect to controller at {entry.data[CONF_URL]}"
