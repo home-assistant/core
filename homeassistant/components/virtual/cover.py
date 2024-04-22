@@ -17,6 +17,7 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
+from homeassistant.components.rasc.helpers import Dataset, load_dataset
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_CLOSED
 from homeassistant.core import HomeAssistant
@@ -110,6 +111,8 @@ class VirtualCover(VirtualEntity, CoverEntity):
         super().__init__(config, PLATFORM_DOMAIN)
 
         self._attr_device_class = config.get(CONF_CLASS, CoverDeviceClass.SHADE)
+        if self._attr_device_class == CoverDeviceClass.DOOR:
+            self._dataset = load_dataset(Dataset.DOOR)
         self._attr_supported_features = CoverEntityFeature(
             CoverEntityFeature.OPEN
             | CoverEntityFeature.CLOSE

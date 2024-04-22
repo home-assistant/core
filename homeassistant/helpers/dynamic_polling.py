@@ -288,7 +288,7 @@ def _r_get_polls(
     SLO: float = 0.95,
     name: str = "_",
 ) -> list[float]:
-    N = math.floor((left_N + right_N) / 2)
+    N = max(1, math.floor((left_N + right_N) / 2))
     # print(N)
     try:
         L = _get_polling_interval(dist, N, upper_bound)

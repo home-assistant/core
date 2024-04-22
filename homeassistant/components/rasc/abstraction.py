@@ -286,9 +286,19 @@ class RASCAbstraction:
 class StateDetector:
     """RASC State Detector."""
 
-    def __init__(self, history: list[float] | None) -> None:
+    def __init__(
+        self,
+        history: list[float] | None,
+        complete_state: dict[str, Any] | None = None,
+        worst_Q: float = 2.0,
+    ) -> None:
         """Init State Detector."""
-        super().__init__()
+        # for failure detection
+        self._complete_state: dict[str, Any] = complete_state or {}
+        self._progress: dict[str, Any] = {}
+        self._next_q: float = 1
+
+        self._worst_Q = worst_Q
         # no history is found, polling statically
         if history is None or len(history) == 0:
             self._static = True
@@ -306,22 +316,33 @@ class StateDetector:
         # TODO: put this in bg # pylint: disable=fixme
         dist = get_best_distribution(history)
         self._attr_upper_bound = dist.ppf(0.99)
-        self._polls = get_polls(dist)
+        self._polls = get_polls(dist, worst_case_delta=worst_Q)
 
     @property
     def upper_bound(self) -> float | None:
         """Return upper bound."""
         return self._attr_upper_bound
 
+    def add_progress(self, key: str, state: Any):
+        """Add progress."""
+        if key not in self._progress:
+            self._progress[key] = []
+        self._progress[key].append((state, time.time()))
+
     def next_interval(self) -> timedelta:
         """Get next interval."""
         if self._static:
-            return timedelta(seconds=1)
+            return timedelta(seconds=self._worst_Q)
         if self._cur_poll < len(self._polls):
             cur = self._cur_poll
             self._cur_poll += 1
-            return timedelta(seconds=self._polls[cur])
-        return timedelta(seconds=1)
+            if cur == 0:
+                return timedelta(seconds=self._polls[cur])
+            return timedelta(seconds=(self._polls[cur] - self._polls[cur - 1]))
+
+        next_q = self._next_q
+        self._next_q = min(self._worst_Q, 2 * self._next_q)
+        return timedelta(seconds=next_q)
 
 
 class RASCHistory:
@@ -465,6 +486,9 @@ class RASCState:
                     "Entity %s does not have attribute %s", self._entity.entity_id, attr
                 )
                 continue
+
+            if self._c_detector is not None:
+                self._c_detector.add_progress(attr, curr_value)
             if curr_value != prev_value:
                 self._last_changed = dt_util.utcnow()
                 self._current_state[attr] = curr_value
@@ -476,6 +500,7 @@ class RASCState:
                         self._check_no_progress,
                         self._last_changed + timedelta(seconds=CHANGE_TIMEOUT),
                     )
+                break
 
     def _update_store(self, tts: bool = False, ttc: bool = False):
         key = ",".join(
@@ -507,6 +532,7 @@ class RASCState:
     @callback
     async def update(self) -> None:
         """Handle callback function after polling."""
+
         entity_id = self._entity.entity_id
         action = self._service_call.service
         # check complete state
@@ -582,7 +608,7 @@ class RASCState:
         )
         history = self._store.histories.get(key, RASCHistory())
         self._s_detector = StateDetector(history.st_history)
-        self._c_detector = StateDetector(history.ct_history)
+        self._c_detector = StateDetector(history.ct_history, self._complete_state)
         # fire failure if exceed upper_bound
         if self._s_detector.upper_bound and self._c_detector.upper_bound:
             upper_bound = self._s_detector.upper_bound + self._c_detector.upper_bound
