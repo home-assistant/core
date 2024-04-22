@@ -179,4 +179,8 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
 
     async def get_maps(self) -> ServiceResponse:
         """Get map information such as map id and room ids."""
-        return {"maps": [asdict(map) for map in self.coordinator.maps.values()]}
+        return {
+            "maps": [
+                asdict(vacuum_map) for vacuum_map in self.coordinator.maps.values()
+            ]
+        }
