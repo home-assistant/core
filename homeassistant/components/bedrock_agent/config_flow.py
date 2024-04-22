@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 import logging
 from typing import Any
 
@@ -86,6 +87,33 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     return {"title": "Bedrock"}
 
 
+async def get_knowledgebases_selectOptionDict(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> Sequence[selector.SelectOptionDict]:
+    """Return available knowledgebases."""
+
+    bedrock_agent = boto3.client(
+        service_name="bedrock-agent",
+        region_name=data.get(CONST_REGION),
+        aws_access_key_id=data.get(CONST_KEY_ID),
+        aws_secret_access_key=data.get(CONST_KEY_SECRET),
+    )
+
+    response = await hass.async_add_executor_job(bedrock_agent.list_knowledge_bases)
+    knowledgebases = response.get("knowledgeBaseSummaries")
+    knowledgebases_list = [
+        selector.SelectOptionDict(
+            {"value": k.get("knowledgeBaseId"), "label": k.get("name")}
+        )
+        for k in knowledgebases
+    ]
+    knowledgebases_list.insert(
+        0, selector.SelectOptionDict({"value": "", "label": "None"})
+    )
+
+    return knowledgebases_list
+
+
 class BedrockAgentConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Amazon Bedrock Agent."""
 
@@ -123,6 +151,26 @@ class BedrockAgentConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
+
+        knowledgebases = await get_knowledgebases_selectOptionDict(
+            self.hass, self.config_data
+        )
+
+        modelconfig_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONST_PROMPT_CONTEXT,
+                    default="Provide me a short answer to the following question: ",
+                ): str,
+                vol.Required(CONST_MODEL_ID): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=CONST_MODEL_LIST),
+                ),
+                vol.Optional(CONST_KNOWLEDGEBASE_ID): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=knowledgebases),
+                ),
+            }
+        )
+
         errors: dict[str, str] = {}
         if user_input is not None:
             return self.async_create_entry(
@@ -133,7 +181,7 @@ class BedrockAgentConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="modelconfig",
-            data_schema=STEP_MODELCONFIG_DATA_SCHEMA,
+            data_schema=modelconfig_schema,
             errors=errors,
         )
 
@@ -165,6 +213,10 @@ class OptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Optionsflow to edit model configuration."""
+        knowledgebases = await get_knowledgebases_selectOptionDict(
+            self.hass, self.config_entry.data.copy()
+        )
+
         options_schema = vol.Schema(
             {
                 vol.Required(
@@ -184,7 +236,9 @@ class OptionsFlowHandler(OptionsFlow):
                             CONST_KNOWLEDGEBASE_ID
                         )
                     },
-                ): str,
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=knowledgebases),
+                ),
             }
         )
 

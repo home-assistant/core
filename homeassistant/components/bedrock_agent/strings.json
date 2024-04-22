@@ -20,7 +20,7 @@
           "use_knowledgebase": "Activate Knowledgebase",
           "model_id": "Model ID",
           "prompt_context": "Prompt Context",
-          "knowledgebase_id": "Knowledge Base ID"
+          "knowledgebase_id": "Knowledge Base"
         }
       }
     },

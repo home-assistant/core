@@ -1,5 +1,6 @@
 """Constants for the Amazon Bedrock Agent integration test."""
 
+import datetime
 from typing import Final
 
 CONST_PROMPT: Final = "Hello there."
@@ -98,6 +99,24 @@ CONST_LIST_MODEL_RESPONSE: Final = {
             "customizationsSupported": [],
             "inferenceTypesSupported": ["ON_DEMAND"],
             "modelLifecycle": {"status": "ACTIVE"},
+        }
+    ],
+}
+
+CONST_LIST_KNOWLEDGEBASE_RESPONSE: Final = {
+    "ResponseMetadata": {
+        "RequestId": "402bd2d5-5ac1-4143-af1c-f03b104c5ae9",
+        "HTTPStatusCode": 200,
+        "HTTPHeaders": {...},
+        "RetryAttempts": 0,
+    },
+    "knowledgeBaseSummaries": [
+        {
+            "knowledgeBaseId": "123",
+            "name": "knowledge-test",
+            "description": "testing content ingestion from website",
+            "status": "ACTIVE",
+            "updatedAt": datetime.datetime(2024, 4, 20, 22, 50, 54, 262369),
         }
     ],
 }
