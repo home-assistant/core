@@ -1746,13 +1746,19 @@ async def snapshot_platform(
 ) -> None:
     """Snapshot a platform."""
     entity_entries = er.async_entries_for_config_entry(entity_registry, config_entry_id)
-    assert entity_entries
-    assert platform or (
-        len({entity_entry.domain for entity_entry in entity_entries}) == 1
-    ), "Please limit the loaded platforms to 1 platform."
+    assert entity_entries, "No entities found."
+    if platform:
+        entity_entries = [
+            entity_entry
+            for entity_entry in entity_entries
+            if entity_entry.domain == platform
+        ]
+        assert entity_entries, f"No entities found in platform {platform}."
+    else:
+        assert (
+            len({entity_entry.domain for entity_entry in entity_entries}) == 1
+        ), "Please limit the loaded platforms to 1 platform."
     for entity_entry in entity_entries:
-        if platform and entity_entry.domain != platform:
-            continue
         assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
         assert entity_entry.disabled_by is None, "Please enable all entities."
         assert (state := hass.states.get(entity_entry.entity_id))
