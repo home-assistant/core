@@ -12,8 +12,9 @@ from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from ...common import snapshot_platform
 from .common import RESPONSE_DISARMED, ZONE_NORMAL, setup_platform
+
+from tests.common import snapshot_platform
 
 ZONE_ENTITY_ID = "binary_sensor.security"
 ZONE_LOW_BATTERY_ID = "binary_sensor.security_low_battery"
