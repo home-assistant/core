@@ -364,7 +364,6 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._temperature_template,
                 None,
                 self._update_temperature,
-                none_on_template_error=True,
             )
         if self._color_template:
             self.add_template_attribute(
@@ -372,7 +371,6 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._color_template,
                 None,
                 self._update_hs,
-                none_on_template_error=True,
             )
         if self._hs_template:
             self.add_template_attribute(
@@ -380,7 +378,6 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._hs_template,
                 None,
                 self._update_hs,
-                none_on_template_error=True,
             )
         if self._rgb_template:
             self.add_template_attribute(
@@ -388,7 +385,6 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._rgb_template,
                 None,
                 self._update_rgb,
-                none_on_template_error=True,
             )
         if self._rgbw_template:
             self.add_template_attribute(
@@ -396,7 +392,6 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._rgbw_template,
                 None,
                 self._update_rgbw,
-                none_on_template_error=True,
             )
         if self._rgbww_template:
             self.add_template_attribute(
@@ -404,7 +399,6 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._rgbww_template,
                 None,
                 self._update_rgbww,
-                none_on_template_error=True,
             )
         if self._effect_list_template:
             self.add_template_attribute(
@@ -752,7 +746,7 @@ class LightTemplate(TemplateEntity, LightEntity):
     def _update_temperature(self, render):
         """Update the temperature from the template."""
         try:
-            if render in (None, "None", ""):
+            if isinstance(render, TemplateError) or render in (None, "None", ""):
                 self._temperature = None
             else:
                 temperature = int(render)
@@ -781,7 +775,7 @@ class LightTemplate(TemplateEntity, LightEntity):
     @callback
     def _update_hs(self, render):
         """Update the color from the template."""
-        if render in (None, "None", ""):
+        if isinstance(render, TemplateError) or render in (None, "None", ""):
             self._hs_color = None
         else:
             h_str = s_str = None
@@ -824,7 +818,7 @@ class LightTemplate(TemplateEntity, LightEntity):
     @callback
     def _update_rgb(self, render):
         """Update the color from the template."""
-        if render in (None, "None", ""):
+        if isinstance(render, TemplateError) or render in (None, "None", ""):
             self._rgb_color = None
         else:
             r_int = g_int = b_int = None
@@ -867,7 +861,7 @@ class LightTemplate(TemplateEntity, LightEntity):
     @callback
     def _update_rgbw(self, render):
         """Update the color from the template."""
-        if render in (None, "None", ""):
+        if isinstance(render, TemplateError) or render in (None, "None", ""):
             self._rgbw_color = None
         else:
             r_int = g_int = b_int = w_int = None
@@ -911,7 +905,7 @@ class LightTemplate(TemplateEntity, LightEntity):
     @callback
     def _update_rgbww(self, render):
         """Update the color from the template."""
-        if render in (None, "None", ""):
+        if isinstance(render, TemplateError) or render in (None, "None", ""):
             self._rgbww_color = None
         else:
             r_int = g_int = b_int = cw_int = ww_int = None
