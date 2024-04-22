@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 
@@ -37,7 +37,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the ecobee thermostat switch entity."""
     data: EcobeeData = hass.data[DOMAIN]
-    _LOGGER.debug("Adding ventilators 20 min switch")
+    _LOGGER.debug("Adding ventilators 20 min switch if present")
 
     async_add_entities(
         (
@@ -61,6 +61,9 @@ class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
         super().__init__(data, thermostat_index)
         self._attr_unique_id = "ventilator_20m_timer"
         self._attr_native_value = False
+        self._time_zone_delay = datetime.strptime(
+            self.thermostat["utcTime"], DATE_FORMAT
+        ) - datetime.strptime(self.thermostat["thermostatTime"], DATE_FORMAT)
 
     @property
     def is_on(self) -> bool:
@@ -72,14 +75,12 @@ class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
         await self.data.update()
 
         ventilatorOffDateTime = self.thermostat["settings"]["ventilatorOffDateTime"]
-        time_zone_delay = datetime.strptime(
-            self.thermostat["utcTime"], DATE_FORMAT
-        ) - datetime.strptime(self.thermostat["thermostatTime"], DATE_FORMAT)
 
         self._attr_native_value = (
             ventilatorOffDateTime is not None
             and ventilatorOffDateTime != ""
-            and datetime.strptime(ventilatorOffDateTime, DATE_FORMAT) + time_zone_delay
+            and datetime.strptime(ventilatorOffDateTime, DATE_FORMAT)
+            + self._time_zone_delay
             >= datetime.now()
         )
 
@@ -89,6 +90,9 @@ class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
             self.data.ecobee.set_ventilator_timer, self.thermostat_index, True
         )
         self._attr_native_value = True
+        self.thermostat["settings"]["ventilatorOffDateTime"] = (
+            datetime.now() + timedelta(minutes=20) - self._time_zone_delay
+        ).strftime(DATE_FORMAT)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -97,4 +101,5 @@ class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
             self.data.ecobee.set_ventilator_timer, self.thermostat_index, False
         )
         self._attr_native_value = False
+        self.thermostat["settings"]["ventilatorOffDateTime"] = ""
         self.async_write_ha_state()
