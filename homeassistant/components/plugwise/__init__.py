@@ -51,6 +51,14 @@ def async_migrate_entity_entry(entry: er.RegistryEntry) -> dict[str, Any] | None
 
     - Migrates unique ID from old relay switches to the new unique ID
     """
+    if entry.domain == Platform.BINARY_SENSOR and entry.unique_id.endswith(
+        "-slave_boiler_state"
+    ):
+        return {
+            "new_unique_id": entry.unique_id.replace(
+                "-slave_boiler_state", "-secondary_boiler_state"
+            )
+        }
     if entry.domain == Platform.SWITCH and entry.unique_id.endswith("-plug"):
         return {"new_unique_id": entry.unique_id.replace("-plug", "-relay")}
 
