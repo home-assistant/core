@@ -89,7 +89,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.1.3
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
         run: >-
@@ -97,7 +97,8 @@ jobs:
             hashFiles('requirements_test.txt', 'requirements_test_pre_commit.txt') }}-${{
             hashFiles('requirements.txt') }}-${{
             hashFiles('requirements_all.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}" >> $GITHUB_OUTPUT
+            hashFiles('homeassistant/package_constraints.txt') }}-${{
+            hashFiles('script/gen_requirements_all.py') }}" >> $GITHUB_OUTPUT
       - name: Generate partial pre-commit restore key
         id: generate_pre-commit_cache_key
         run: >-
@@ -223,7 +224,7 @@ jobs:
       - info
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.1.3
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -269,7 +270,7 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.1.3
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v5.1.0
         id: python
@@ -309,7 +310,7 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.1.3
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v5.1.0
         id: python
@@ -348,7 +349,7 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.1.3
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v5.1.0
         id: python
@@ -442,7 +443,7 @@ jobs:
         python-version: ${{ fromJSON(needs.info.outputs.python_versions) }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.1.3
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -497,8 +498,9 @@ jobs:
           python --version
           pip install "$(grep '^uv' < requirements_test.txt)"
           uv pip install -U "pip>=21.3.1" setuptools wheel
-          uv pip install -r requirements_all.txt
-          uv pip install "$(grep 'python-gammu' < requirements_all.txt | sed -e 's|# python-gammu|python-gammu|g')"
+          uv pip install -r requirements.txt
+          python -m script.gen_requirements_all ci
+          uv pip install -r requirements_all_pytest.txt
           uv pip install -r requirements_test.txt
           uv pip install -e . --config-settings editable_mode=compat
 
@@ -513,7 +515,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.1.3
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -545,7 +547,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.1.3
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -578,7 +580,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.1.3
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -622,7 +624,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.1.3
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -694,7 +696,7 @@ jobs:
             ffmpeg \
             libgammu-dev
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.1.3
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -754,7 +756,7 @@ jobs:
             ffmpeg \
             libgammu-dev
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.1.3
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -869,7 +871,7 @@ jobs:
             ffmpeg \
             libmariadb-dev-compat
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.1.3
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -991,7 +993,7 @@ jobs:
             ffmpeg \
             postgresql-server-dev-14
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.1.3
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -1086,7 +1088,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.1.3
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v4.1.5
         with:
@@ -1132,7 +1134,7 @@ jobs:
             ffmpeg \
             libgammu-dev
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.1.3
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -1219,7 +1221,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.1.3
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v4.1.5
         with:
