@@ -27,9 +27,7 @@ async def test_generic_datetime_entity(
             unique_id="my_datetime",
         )
     ]
-    states = [
-        DateTimeState(key=1, year=2024, month=4, day=16, hour=12, minute=34, second=56)
-    ]
+    states = [DateTimeState(key=1, epoch_seconds=1713270896)]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -46,11 +44,11 @@ async def test_generic_datetime_entity(
         SERVICE_SET_VALUE,
         {
             ATTR_ENTITY_ID: "datetime.test_mydatetime",
-            ATTR_DATETIME: "2000-01-01 01:23:45",
+            ATTR_DATETIME: "2000-01-01T01:23:45+00:00",
         },
         blocking=True,
     )
-    mock_client.datetime_command.assert_has_calls([call(1, 2000, 1, 1, 1, 23, 45)])
+    mock_client.datetime_command.assert_has_calls([call(1, 946689825)])
     mock_client.datetime_command.reset_mock()
 
 
