@@ -1,5 +1,9 @@
 """Tests for Shelly valve platform."""
+
+from unittest.mock import Mock
+
 from aioshelly.const import MODEL_GAS
+import pytest
 
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.const import (
@@ -20,7 +24,7 @@ GAS_VALVE_BLOCK_ID = 6
 
 
 async def test_block_device_gas_valve(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test block device Shelly Gas with Valve addon."""
     registry = er.async_get(hass)

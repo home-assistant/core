@@ -1,4 +1,5 @@
 """Support for TPLink HS100/HS110/HS200 smart switch."""
+
 from __future__ import annotations
 
 import logging
@@ -9,7 +10,7 @@ from kasa import SmartDevice, SmartPlug
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import legacy_device_id
@@ -36,8 +37,10 @@ async def async_setup_entry(
     if device.is_strip:
         # Historically we only add the children if the device is a strip
         _LOGGER.debug("Initializing strip with %s sockets", len(device.children))
-        for child in device.children:
-            entities.append(SmartPlugSwitchChild(device, parent_coordinator, child))
+        entities.extend(
+            SmartPlugSwitchChild(device, parent_coordinator, child)
+            for child in device.children
+        )
     elif device.is_plug:
         entities.append(SmartPlugSwitch(device, parent_coordinator))
 
@@ -61,13 +64,8 @@ class SmartPlugLedSwitch(CoordinatedTPLinkEntity, SwitchEntity):
     ) -> None:
         """Initialize the LED switch."""
         super().__init__(device, coordinator)
-
-        self._attr_unique_id = f"{self.device.mac}_led"
-
-    @property
-    def icon(self) -> str:
-        """Return the icon for the LED."""
-        return "mdi:led-on" if self.is_on else "mdi:led-off"
+        self._attr_unique_id = f"{device.mac}_led"
+        self._async_update_attrs()
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -79,10 +77,16 @@ class SmartPlugLedSwitch(CoordinatedTPLinkEntity, SwitchEntity):
         """Turn the LED switch off."""
         await self.device.set_led(False)
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if LED switch is on."""
-        return bool(self.device.led)
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update the entity's attributes."""
+        self._attr_is_on = self.device.led
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._async_update_attrs()
+        super()._handle_coordinator_update()
 
 
 class SmartPlugSwitch(CoordinatedTPLinkEntity, SwitchEntity):
@@ -99,6 +103,7 @@ class SmartPlugSwitch(CoordinatedTPLinkEntity, SwitchEntity):
         super().__init__(device, coordinator)
         # For backwards compat with pyHS100
         self._attr_unique_id = legacy_device_id(device)
+        self._async_update_attrs()
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -109,6 +114,17 @@ class SmartPlugSwitch(CoordinatedTPLinkEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.device.turn_off()
+
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update the entity's attributes."""
+        self._attr_is_on = self.device.is_on
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._async_update_attrs()
+        super()._handle_coordinator_update()
 
 
 class SmartPlugSwitchChild(SmartPlugSwitch):
@@ -121,8 +137,8 @@ class SmartPlugSwitchChild(SmartPlugSwitch):
         plug: SmartDevice,
     ) -> None:
         """Initialize the child switch."""
-        super().__init__(device, coordinator)
         self._plug = plug
+        super().__init__(device, coordinator)
         self._attr_unique_id = legacy_device_id(plug)
         self._attr_name = plug.alias
 
@@ -136,7 +152,7 @@ class SmartPlugSwitchChild(SmartPlugSwitch):
         """Turn the child switch off."""
         await self._plug.turn_off()
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if child switch is on."""
-        return bool(self._plug.is_on)
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update the entity's attributes."""
+        self._attr_is_on = self._plug.is_on

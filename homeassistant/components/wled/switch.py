@@ -1,4 +1,5 @@
 """Support for WLED switches."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -53,7 +54,6 @@ async def async_setup_entry(
 class WLEDNightlightSwitch(WLEDEntity, SwitchEntity):
     """Defines a WLED nightlight switch."""
 
-    _attr_icon = "mdi:weather-night"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "nightlight"
 
@@ -91,7 +91,6 @@ class WLEDNightlightSwitch(WLEDEntity, SwitchEntity):
 class WLEDSyncSendSwitch(WLEDEntity, SwitchEntity):
     """Defines a WLED sync send switch."""
 
-    _attr_icon = "mdi:upload-network-outline"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "sync_send"
 
@@ -124,7 +123,6 @@ class WLEDSyncSendSwitch(WLEDEntity, SwitchEntity):
 class WLEDSyncReceiveSwitch(WLEDEntity, SwitchEntity):
     """Defines a WLED sync receive switch."""
 
-    _attr_icon = "mdi:download-network-outline"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "sync_receive"
 
@@ -157,7 +155,6 @@ class WLEDSyncReceiveSwitch(WLEDEntity, SwitchEntity):
 class WLEDReverseSwitch(WLEDEntity, SwitchEntity):
     """Defines a WLED reverse effect switch."""
 
-    _attr_icon = "mdi:swap-horizontal-bold"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "reverse"
     _segment: int

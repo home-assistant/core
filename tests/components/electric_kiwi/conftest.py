@@ -1,4 +1,5 @@
 """Define fixtures for electric kiwi tests."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Generator
@@ -62,7 +63,7 @@ def component_setup(
 @pytest.fixture(name="config_entry")
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create mocked config entry."""
-    entry = MockConfigEntry(
+    return MockConfigEntry(
         title="Electric Kiwi",
         domain=DOMAIN,
         data={
@@ -78,7 +79,6 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         },
         unique_id=DOMAIN,
     )
-    return entry
 
 
 @pytest.fixture

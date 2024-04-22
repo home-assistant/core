@@ -1,4 +1,5 @@
 """Test UniFi Network diagnostics."""
+
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
@@ -7,7 +8,7 @@ from homeassistant.components.unifi.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .test_controller import setup_unifi_integration
+from .test_hub import setup_unifi_integration
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.test_util.aiohttp import AiohttpClientMocker

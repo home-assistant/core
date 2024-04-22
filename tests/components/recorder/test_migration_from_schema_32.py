@@ -1,4 +1,5 @@
 """The tests for the recorder filter matching the EntityFilter component."""
+
 import datetime
 import importlib
 import sys
@@ -21,7 +22,10 @@ from homeassistant.components.recorder.db_schema import (
     StatesMeta,
 )
 from homeassistant.components.recorder.models import process_timestamp
-from homeassistant.components.recorder.queries import select_event_type_ids
+from homeassistant.components.recorder.queries import (
+    get_migration_changes,
+    select_event_type_ids,
+)
 from homeassistant.components.recorder.tasks import (
     EntityIDMigrationTask,
     EntityIDPostMigrationTask,
@@ -29,7 +33,10 @@ from homeassistant.components.recorder.tasks import (
     EventTypeIDMigrationTask,
     StatesContextIDMigrationTask,
 )
-from homeassistant.components.recorder.util import session_scope
+from homeassistant.components.recorder.util import (
+    execute_stmt_lambda_element,
+    session_scope,
+)
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 from homeassistant.util.ulid import bytes_to_ulid, ulid_at_time, ulid_to_bytes
@@ -44,13 +51,17 @@ from tests.typing import RecorderInstanceGenerator
 
 CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
 SCHEMA_MODULE = "tests.components.recorder.db_schema_32"
-ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
 
 async def _async_wait_migration_done(hass: HomeAssistant) -> None:
     """Wait for the migration to be done."""
     await recorder.get_instance(hass).async_block_till_done()
     await async_recorder_block_till_done(hass)
+
+
+def _get_migration_id(hass: HomeAssistant) -> dict[str, int]:
+    with session_scope(hass=hass, read_only=True) as session:
+        return dict(execute_stmt_lambda_element(session, get_migration_changes()))
 
 
 def _create_engine_test(*args, **kwargs):
@@ -81,16 +92,19 @@ def db_schema_32():
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
 
-    with patch.object(recorder, "db_schema", old_db_schema), patch.object(
-        recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch.object(core, "StatesMeta", old_db_schema.StatesMeta), patch.object(
-        core, "EventTypes", old_db_schema.EventTypes
-    ), patch.object(core, "EventData", old_db_schema.EventData), patch.object(
-        core, "States", old_db_schema.States
-    ), patch.object(core, "Events", old_db_schema.Events), patch.object(
-        core, "StateAttributes", old_db_schema.StateAttributes
-    ), patch.object(core, "EntityIDMigrationTask", core.RecorderTask), patch(
-        CREATE_ENGINE_TARGET, new=_create_engine_test
+    with (
+        patch.object(recorder, "db_schema", old_db_schema),
+        patch.object(
+            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
+        ),
+        patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
+        patch.object(core, "EventTypes", old_db_schema.EventTypes),
+        patch.object(core, "EventData", old_db_schema.EventData),
+        patch.object(core, "States", old_db_schema.States),
+        patch.object(core, "Events", old_db_schema.Events),
+        patch.object(core, "StateAttributes", old_db_schema.StateAttributes),
+        patch.object(migration.EntityIDMigration, "task", core.RecorderTask),
+        patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
     ):
         yield
 
@@ -308,6 +322,12 @@ async def test_migrate_events_context_ids(
         event_with_garbage_context_id_no_time_fired_ts["context_parent_id_bin"] is None
     )
 
+    migration_changes = await instance.async_add_executor_job(_get_migration_id, hass)
+    assert (
+        migration_changes[migration.EventsContextIDMigration.migration_id]
+        == migration.EventsContextIDMigration.migration_version
+    )
+
 
 @pytest.mark.parametrize("enable_migrate_context_ids", [True])
 async def test_migrate_states_context_ids(
@@ -495,6 +515,12 @@ async def test_migrate_states_context_ids(
         == b"\n\xe2\x97\x99\xeeNOE\x81\x16\xf5\x82\xd7\xd3\xeee"
     )
 
+    migration_changes = await instance.async_add_executor_job(_get_migration_id, hass)
+    assert (
+        migration_changes[migration.StatesContextIDMigration.migration_id]
+        == migration.StatesContextIDMigration.migration_version
+    )
+
 
 @pytest.mark.parametrize("enable_migrate_event_type_ids", [True])
 async def test_migrate_event_type_ids(
@@ -578,6 +604,12 @@ async def test_migrate_event_type_ids(
     assert mapped["event_type_one"] is not None
     assert mapped["event_type_two"] is not None
 
+    migration_changes = await instance.async_add_executor_job(_get_migration_id, hass)
+    assert (
+        migration_changes[migration.EventTypeIDMigration.migration_id]
+        == migration.EventTypeIDMigration.migration_version
+    )
+
 
 @pytest.mark.parametrize("enable_migrate_entity_ids", [True])
 async def test_migrate_entity_ids(
@@ -645,6 +677,12 @@ async def test_migrate_entity_ids(
     states_by_entity_id = await instance.async_add_executor_job(_fetch_migrated_states)
     assert len(states_by_entity_id["sensor.two"]) == 2
     assert len(states_by_entity_id["sensor.one"]) == 1
+
+    migration_changes = await instance.async_add_executor_job(_get_migration_id, hass)
+    assert (
+        migration_changes[migration.EntityIDMigration.migration_id]
+        == migration.EntityIDMigration.migration_version
+    )
 
 
 @pytest.mark.parametrize("enable_migrate_entity_ids", [True])
@@ -771,6 +809,16 @@ async def test_migrate_null_entity_ids(
     assert len(states_by_entity_id[migration._EMPTY_ENTITY_ID]) == 1000
     assert len(states_by_entity_id["sensor.one"]) == 2
 
+    def _get_migration_id():
+        with session_scope(hass=hass, read_only=True) as session:
+            return dict(execute_stmt_lambda_element(session, get_migration_changes()))
+
+    migration_changes = await instance.async_add_executor_job(_get_migration_id)
+    assert (
+        migration_changes[migration.EntityIDMigration.migration_id]
+        == migration.EntityIDMigration.migration_version
+    )
+
 
 @pytest.mark.parametrize("enable_migrate_event_type_ids", [True])
 async def test_migrate_null_event_type_ids(
@@ -847,6 +895,16 @@ async def test_migrate_null_event_type_ids(
     assert len(events_by_type["event_type_one"]) == 2
     assert len(events_by_type[migration._EMPTY_EVENT_TYPE]) == 1000
 
+    def _get_migration_id():
+        with session_scope(hass=hass, read_only=True) as session:
+            return dict(execute_stmt_lambda_element(session, get_migration_changes()))
+
+    migration_changes = await instance.async_add_executor_job(_get_migration_id)
+    assert (
+        migration_changes[migration.EventTypeIDMigration.migration_id]
+        == migration.EventTypeIDMigration.migration_version
+    )
+
 
 async def test_stats_timestamp_conversion_is_reentrant(
     async_setup_recorder_instance: RecorderInstanceGenerator,
@@ -914,18 +972,17 @@ async def test_stats_timestamp_conversion_is_reentrant(
 
     def _get_all_short_term_stats() -> list[dict[str, Any]]:
         with session_scope(hass=hass) as session:
-            results = []
-            for result in (
-                session.query(old_db_schema.StatisticsShortTerm)
-                .where(old_db_schema.StatisticsShortTerm.metadata_id == 1000)
-                .all()
-            ):
-                results.append(
-                    {
-                        field.name: getattr(result, field.name)
-                        for field in old_db_schema.StatisticsShortTerm.__table__.c
-                    }
+            results = [
+                {
+                    field.name: getattr(result, field.name)
+                    for field in old_db_schema.StatisticsShortTerm.__table__.c
+                }
+                for result in (
+                    session.query(old_db_schema.StatisticsShortTerm)
+                    .where(old_db_schema.StatisticsShortTerm.metadata_id == 1000)
+                    .all()
                 )
+            ]
             return sorted(results, key=lambda row: row["start_ts"])
 
     # Do not optimize this block, its intentionally written to interleave
@@ -1099,14 +1156,12 @@ async def test_stats_timestamp_with_one_by_one(
     def _get_all_stats(table: old_db_schema.StatisticsBase) -> list[dict[str, Any]]:
         """Get all stats from a table."""
         with session_scope(hass=hass) as session:
-            results = []
-            for result in session.query(table).where(table.metadata_id == 1000).all():
-                results.append(
-                    {
-                        field.name: getattr(result, field.name)
-                        for field in table.__table__.c
-                    }
-                )
+            results = [
+                {field.name: getattr(result, field.name) for field in table.__table__.c}
+                for result in session.query(table)
+                .where(table.metadata_id == 1000)
+                .all()
+            ]
             return sorted(results, key=lambda row: row["start_ts"])
 
     def _insert_and_do_migration():
@@ -1242,14 +1297,17 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
     one_month_ago = now - datetime.timedelta(days=30)
 
     def _do_migration():
-        with patch.object(
-            migration,
-            "_migrate_statistics_columns_to_timestamp",
-            side_effect=IntegrityError("test", "test", "test"),
-        ), patch.object(
-            migration,
-            "migrate_single_statistics_row_to_timestamp",
-            side_effect=IntegrityError("test", "test", "test"),
+        with (
+            patch.object(
+                migration,
+                "_migrate_statistics_columns_to_timestamp",
+                side_effect=IntegrityError("test", "test", "test"),
+            ),
+            patch.object(
+                migration,
+                "migrate_single_statistics_row_to_timestamp",
+                side_effect=IntegrityError("test", "test", "test"),
+            ),
         ):
             migration._migrate_statistics_columns_to_timestamp_removing_duplicates(
                 hass, instance, instance.get_session, instance.engine
@@ -1326,14 +1384,12 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
     def _get_all_stats(table: old_db_schema.StatisticsBase) -> list[dict[str, Any]]:
         """Get all stats from a table."""
         with session_scope(hass=hass) as session:
-            results = []
-            for result in session.query(table).where(table.metadata_id == 1000).all():
-                results.append(
-                    {
-                        field.name: getattr(result, field.name)
-                        for field in table.__table__.c
-                    }
-                )
+            results = [
+                {field.name: getattr(result, field.name) for field in table.__table__.c}
+                for result in session.query(table)
+                .where(table.metadata_id == 1000)
+                .all()
+            ]
             return sorted(results, key=lambda row: row["start_ts"])
 
     def _insert_and_do_migration():

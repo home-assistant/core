@@ -1,4 +1,5 @@
 """Test Matter locks."""
+
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
@@ -22,6 +23,16 @@ async def thermostat_fixture(
 ) -> MatterNode:
     """Fixture for a thermostat node."""
     return await setup_integration_with_node_fixture(hass, "thermostat", matter_client)
+
+
+@pytest.fixture(name="room_airconditioner")
+async def room_airconditioner(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> MatterNode:
+    """Fixture for a room air conditioner node."""
+    return await setup_integration_with_node_fixture(
+        hass, "room-airconditioner", matter_client
+    )
 
 
 # This tests needs to be adjusted to remove lingering tasks
@@ -386,3 +397,18 @@ async def test_thermostat(
             clusters.Thermostat.Enums.SetpointAdjustMode.kCool, -40
         ),
     )
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_room_airconditioner(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    room_airconditioner: MatterNode,
+) -> None:
+    """Test if a climate entity is created for a Room Airconditioner device."""
+    state = hass.states.get("climate.room_airconditioner")
+    assert state
+    assert state.attributes["current_temperature"] == 20
+    assert state.attributes["min_temp"] == 16
+    assert state.attributes["max_temp"] == 32

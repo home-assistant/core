@@ -1,4 +1,5 @@
 """Config flow for NuHeat integration."""
+
 from http import HTTPStatus
 import logging
 
@@ -6,8 +7,10 @@ import nuheat
 import requests.exceptions
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import CONF_SERIAL_NUMBER, DOMAIN
 
@@ -22,7 +25,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(hass: HomeAssistant, data):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -56,7 +59,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     return {"title": thermostat.room, "serial_number": thermostat.serial_number}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class NuHeatConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NuHeat."""
 
     VERSION = 1
@@ -87,13 +90,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
 
 
-class InvalidThermostat(exceptions.HomeAssistantError):
+class InvalidThermostat(HomeAssistantError):
     """Error to indicate there is invalid thermostat."""

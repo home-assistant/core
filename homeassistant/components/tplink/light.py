@@ -1,4 +1,5 @@
 """Support for TPLink lights."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -17,6 +18,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    filter_supported_color_modes,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -162,6 +164,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
 
     _attr_supported_features = LightEntityFeature.TRANSITION
     _attr_name = None
+    _fixed_color_mode: ColorMode | None = None
 
     device: SmartBulb
 
@@ -181,7 +184,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             self._attr_unique_id = legacy_device_id(device)
         else:
             self._attr_unique_id = device.mac.replace(":", "").upper()
-        modes: set[ColorMode] = set()
+        modes: set[ColorMode] = {ColorMode.ONOFF}
         if device.is_variable_color_temp:
             modes.add(ColorMode.COLOR_TEMP)
             temp_range = device.valid_temperature_range
@@ -191,9 +194,11 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             modes.add(ColorMode.HS)
         if device.is_dimmable:
             modes.add(ColorMode.BRIGHTNESS)
-        if not modes:
-            modes.add(ColorMode.ONOFF)
-        self._attr_supported_color_modes = modes
+        self._attr_supported_color_modes = filter_supported_color_modes(modes)
+        if len(self._attr_supported_color_modes) == 1:
+            # If the light supports only a single color mode, set it now
+            self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
+        self._async_update_attrs()
 
     @callback
     def _async_extract_brightness_transition(
@@ -223,7 +228,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         await self.device.set_hsv(hue, sat, brightness, transition=transition)
 
     async def _async_set_color_temp(
-        self, color_temp: float | int, brightness: int | None, transition: int | None
+        self, color_temp: float, brightness: int | None, transition: int | None
     ) -> None:
         device = self.device
         valid_temperature_range = device.valid_temperature_range
@@ -271,33 +276,37 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             transition = int(transition * 1_000)
         await self.device.turn_off(transition=transition)
 
-    @property
-    def color_temp_kelvin(self) -> int:
-        """Return the color temperature of this light."""
-        return cast(int, self.device.color_temp)
-
-    @property
-    def brightness(self) -> int | None:
-        """Return the brightness of this light between 0..255."""
-        return round((cast(int, self.device.brightness) * 255.0) / 100.0)
-
-    @property
-    def hs_color(self) -> tuple[int, int] | None:
-        """Return the color."""
-        hue, saturation, _ = self.device.hsv
-        return hue, saturation
-
-    @property
-    def color_mode(self) -> ColorMode:
+    def _determine_color_mode(self) -> ColorMode:
         """Return the active color mode."""
-        if self.device.is_color:
-            if self.device.is_variable_color_temp and self.device.color_temp:
-                return ColorMode.COLOR_TEMP
-            return ColorMode.HS
-        if self.device.is_variable_color_temp:
-            return ColorMode.COLOR_TEMP
+        if self._fixed_color_mode:
+            # The light supports only a single color mode, return it
+            return self._fixed_color_mode
 
-        return ColorMode.BRIGHTNESS
+        # The light supports both color temp and color, determine which on is active
+        if self.device.is_variable_color_temp and self.device.color_temp:
+            return ColorMode.COLOR_TEMP
+        return ColorMode.HS
+
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update the entity's attributes."""
+        device = self.device
+        self._attr_is_on = device.is_on
+        if device.is_dimmable:
+            self._attr_brightness = round((device.brightness * 255.0) / 100.0)
+        color_mode = self._determine_color_mode()
+        self._attr_color_mode = color_mode
+        if color_mode is ColorMode.COLOR_TEMP:
+            self._attr_color_temp_kelvin = device.color_temp
+        elif color_mode is ColorMode.HS:
+            hue, saturation, _ = device.hsv
+            self._attr_hs_color = hue, saturation
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._async_update_attrs()
+        super()._handle_coordinator_update()
 
 
 class TPLinkSmartLightStrip(TPLinkSmartBulb):
@@ -306,19 +315,19 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
     device: SmartLightStrip
     _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
 
-    @property
-    def effect_list(self) -> list[str] | None:
-        """Return the list of available effects."""
-        if effect_list := self.device.effect_list:
-            return cast(list[str], effect_list)
-        return None
-
-    @property
-    def effect(self) -> str | None:
-        """Return the current effect."""
-        if (effect := self.device.effect) and effect["enable"]:
-            return cast(str, effect["name"])
-        return None
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update the entity's attributes."""
+        super()._async_update_attrs()
+        device = self.device
+        if (effect := device.effect) and effect["enable"]:
+            self._attr_effect = effect["name"]
+        else:
+            self._attr_effect = None
+        if effect_list := device.effect_list:
+            self._attr_effect_list = effect_list
+        else:
+            self._attr_effect_list = None
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:

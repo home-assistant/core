@@ -1,4 +1,7 @@
 """The tests for Shelly device triggers."""
+
+from unittest.mock import Mock
+
 from aioshelly.const import MODEL_BUTTON1
 import pytest
 from pytest_unordered import unordered
@@ -16,9 +19,10 @@ from homeassistant.components.shelly.const import (
     EVENT_SHELLY_CLICK,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
+    DeviceRegistry,
     async_entries_for_config_entry,
     async_get as async_get_dev_reg,
 )
@@ -39,7 +43,11 @@ from tests.common import MockConfigEntry, async_get_device_automations
     ],
 )
 async def test_get_triggers_block_device(
-    hass: HomeAssistant, mock_block_device, monkeypatch, button_type, is_valid
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    button_type: str,
+    is_valid: bool,
 ) -> None:
     """Test we get the expected triggers from a shelly block device."""
     monkeypatch.setitem(
@@ -75,7 +83,9 @@ async def test_get_triggers_block_device(
     assert triggers == unordered(expected_triggers)
 
 
-async def test_get_triggers_rpc_device(hass: HomeAssistant, mock_rpc_device) -> None:
+async def test_get_triggers_rpc_device(
+    hass: HomeAssistant, mock_rpc_device: Mock
+) -> None:
     """Test we get the expected triggers from a shelly RPC device."""
     entry = await init_integration(hass, 2)
     dev_reg = async_get_dev_reg(hass)
@@ -86,11 +96,11 @@ async def test_get_triggers_rpc_device(hass: HomeAssistant, mock_rpc_device) -> 
             CONF_PLATFORM: "device",
             CONF_DEVICE_ID: device.id,
             CONF_DOMAIN: DOMAIN,
-            CONF_TYPE: type,
+            CONF_TYPE: trigger_type,
             CONF_SUBTYPE: "button1",
             "metadata": {},
         }
-        for type in [
+        for trigger_type in [
             "btn_down",
             "btn_up",
             "single_push",
@@ -107,7 +117,9 @@ async def test_get_triggers_rpc_device(hass: HomeAssistant, mock_rpc_device) -> 
     assert triggers == unordered(expected_triggers)
 
 
-async def test_get_triggers_button(hass: HomeAssistant, mock_block_device) -> None:
+async def test_get_triggers_button(
+    hass: HomeAssistant, mock_block_device: Mock
+) -> None:
     """Test we get the expected triggers from a shelly button."""
     entry = await init_integration(hass, 1, model=MODEL_BUTTON1)
     dev_reg = async_get_dev_reg(hass)
@@ -118,11 +130,11 @@ async def test_get_triggers_button(hass: HomeAssistant, mock_block_device) -> No
             CONF_PLATFORM: "device",
             CONF_DEVICE_ID: device.id,
             CONF_DOMAIN: DOMAIN,
-            CONF_TYPE: type,
+            CONF_TYPE: trigger_type,
             CONF_SUBTYPE: "button",
             "metadata": {},
         }
-        for type in ["single", "double", "triple", "long"]
+        for trigger_type in ["single", "double", "triple", "long"]
     ]
 
     triggers = await async_get_device_automations(
@@ -133,7 +145,7 @@ async def test_get_triggers_button(hass: HomeAssistant, mock_block_device) -> No
 
 
 async def test_get_triggers_non_initialized_devices(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test we get the empty triggers for non-initialized devices."""
     monkeypatch.setattr(mock_block_device, "initialized", False)
@@ -151,7 +163,7 @@ async def test_get_triggers_non_initialized_devices(
 
 
 async def test_get_triggers_for_invalid_device_id(
-    hass: HomeAssistant, device_reg, mock_block_device
+    hass: HomeAssistant, device_reg: DeviceRegistry, mock_block_device: Mock
 ) -> None:
     """Test error raised for invalid shelly device_id."""
     await init_integration(hass, 1)
@@ -169,7 +181,7 @@ async def test_get_triggers_for_invalid_device_id(
 
 
 async def test_if_fires_on_click_event_block_device(
-    hass: HomeAssistant, calls, mock_block_device
+    hass: HomeAssistant, calls: list[ServiceCall], mock_block_device: Mock
 ) -> None:
     """Test for click_event trigger firing for block device."""
     entry = await init_integration(hass, 1)
@@ -211,7 +223,7 @@ async def test_if_fires_on_click_event_block_device(
 
 
 async def test_if_fires_on_click_event_rpc_device(
-    hass: HomeAssistant, calls, mock_rpc_device
+    hass: HomeAssistant, calls: list[ServiceCall], mock_rpc_device: Mock
 ) -> None:
     """Test for click_event trigger firing for rpc device."""
     entry = await init_integration(hass, 2)
@@ -253,7 +265,10 @@ async def test_if_fires_on_click_event_rpc_device(
 
 
 async def test_validate_trigger_block_device_not_ready(
-    hass: HomeAssistant, calls, mock_block_device, monkeypatch
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test validate trigger config when block device is not ready."""
     monkeypatch.setattr(mock_block_device, "initialized", False)
@@ -295,7 +310,10 @@ async def test_validate_trigger_block_device_not_ready(
 
 
 async def test_validate_trigger_rpc_device_not_ready(
-    hass: HomeAssistant, calls, mock_rpc_device, monkeypatch
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test validate trigger config when RPC device is not ready."""
     monkeypatch.setattr(mock_rpc_device, "initialized", False)
@@ -337,7 +355,7 @@ async def test_validate_trigger_rpc_device_not_ready(
 
 
 async def test_validate_trigger_invalid_triggers(
-    hass: HomeAssistant, mock_block_device, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, mock_block_device: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for click_event with invalid triggers."""
     entry = await init_integration(hass, 1)

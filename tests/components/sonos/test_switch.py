@@ -1,4 +1,5 @@
 """Tests for the Sonos Alarm switch platform."""
+
 from copy import copy
 from datetime import timedelta
 from unittest.mock import patch
@@ -116,7 +117,7 @@ async def test_switch_attributes(
             hass,
             dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
         )
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert m.called
 
     # Trigger subscription callback for speaker discovery

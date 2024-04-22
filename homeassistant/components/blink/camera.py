@@ -1,9 +1,8 @@
 """Support for Blink system camera."""
+
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
-import contextlib
 import logging
 from typing import Any
 
@@ -79,7 +78,7 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, camera.serial)},
             serial_number=camera.serial,
-            sw_version=camera.attributes.get("version"),
+            sw_version=camera.version,
             name=name,
             manufacturer=DEFAULT_BRAND,
             model=camera.camera_type,
@@ -96,8 +95,11 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         try:
             await self._camera.async_arm(True)
 
-        except asyncio.TimeoutError as er:
-            raise HomeAssistantError("Blink failed to arm camera") from er
+        except TimeoutError as er:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_arm",
+            ) from er
 
         self._camera.motion_enabled = True
         await self.coordinator.async_refresh()
@@ -106,8 +108,11 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         """Disable motion detection for the camera."""
         try:
             await self._camera.async_arm(False)
-        except asyncio.TimeoutError as er:
-            raise HomeAssistantError("Blink failed to disarm camera") from er
+        except TimeoutError as er:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_disarm",
+            ) from er
 
         self._camera.motion_enabled = False
         await self.coordinator.async_refresh()
@@ -124,9 +129,14 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
 
     async def trigger_camera(self) -> None:
         """Trigger camera to take a snapshot."""
-        with contextlib.suppress(asyncio.TimeoutError):
+        try:
             await self._camera.snap_picture()
-            await self.coordinator.api.refresh()
+        except TimeoutError as er:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_snap",
+            ) from er
+
         self.async_write_ha_state()
 
     def camera_image(

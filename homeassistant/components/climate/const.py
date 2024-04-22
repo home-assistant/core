@@ -33,7 +33,7 @@ class HVACMode(StrEnum):
     # Device is in Dry/Humidity mode
     DRY = "dry"
 
-    # Only the fan is on, not fan and another mode like cool
+    # Only the fan is on, not fan and another mode like cool
     FAN_ONLY = "fan_only"
 
 
@@ -163,6 +163,8 @@ class ClimateEntityFeature(IntFlag):
     PRESET_MODE = 16
     SWING_MODE = 32
     AUX_HEAT = 64
+    TURN_OFF = 128
+    TURN_ON = 256
 
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.

@@ -1,4 +1,5 @@
 """Constants for the Kodi platform."""
+
 DOMAIN = "kodi"
 
 CONF_WS_PORT = "ws_port"

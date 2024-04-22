@@ -1,4 +1,5 @@
 """Tests for the jewish_calendar component."""
+
 from collections import namedtuple
 from datetime import datetime
 

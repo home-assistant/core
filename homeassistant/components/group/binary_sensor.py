@@ -1,4 +1,5 @@
 """Platform allowing several binary sensor to be grouped into one binary sensor."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -28,7 +29,7 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import GroupEntity
+from .entity import GroupEntity
 
 DEFAULT_NAME = "Binary Sensor Group"
 
@@ -89,7 +90,7 @@ async def async_setup_entry(
 
 @callback
 def async_create_preview_binary_sensor(
-    name: str, validated_config: dict[str, Any]
+    hass: HomeAssistant, name: str, validated_config: dict[str, Any]
 ) -> BinarySensorGroup:
     """Create a preview sensor."""
     return BinarySensorGroup(

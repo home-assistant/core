@@ -1,4 +1,5 @@
 """Support for TPLink HS100/HS110/HS200 smart switch energy sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -20,7 +21,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import legacy_device_id
@@ -108,11 +109,13 @@ def async_emeter_from_device(
 
 
 def _async_sensors_for_device(
-    device: SmartDevice, coordinator: TPLinkDataUpdateCoordinator
+    device: SmartDevice,
+    coordinator: TPLinkDataUpdateCoordinator,
+    has_parent: bool = False,
 ) -> list[SmartPlugSensor]:
     """Generate the sensors for the device."""
     return [
-        SmartPlugSensor(device, coordinator, description)
+        SmartPlugSensor(device, coordinator, description, has_parent)
         for description in ENERGY_SENSORS
         if async_emeter_from_device(device, description) is not None
     ]
@@ -136,7 +139,7 @@ async def async_setup_entry(
         # Historically we only add the children if the device is a strip
         for idx, child in enumerate(parent.children):
             entities.extend(
-                _async_sensors_for_device(child, children_coordinators[idx])
+                _async_sensors_for_device(child, children_coordinators[idx], True)
             )
     else:
         entities.extend(_async_sensors_for_device(parent, parent_coordinator))
@@ -154,15 +157,31 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
         device: SmartDevice,
         coordinator: TPLinkDataUpdateCoordinator,
         description: TPLinkSensorEntityDescription,
+        has_parent: bool = False,
     ) -> None:
         """Initialize the switch."""
         super().__init__(device, coordinator)
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{legacy_device_id(self.device)}_{self.entity_description.key}"
+        self._attr_unique_id = f"{legacy_device_id(device)}_{description.key}"
+        if has_parent:
+            assert device.alias
+            self._attr_translation_placeholders = {"device_name": device.alias}
+            if description.translation_key:
+                self._attr_translation_key = f"{description.translation_key}_child"
+            else:
+                assert description.device_class
+                self._attr_translation_key = f"{description.device_class.value}_child"
+        self._async_update_attrs()
+
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update the entity's attributes."""
+        self._attr_native_value = async_emeter_from_device(
+            self.device, self.entity_description
         )
 
-    @property
-    def native_value(self) -> float | None:
-        """Return the sensors state."""
-        return async_emeter_from_device(self.device, self.entity_description)
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._async_update_attrs()
+        super()._handle_coordinator_update()

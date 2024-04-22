@@ -1,4 +1,5 @@
 """The tests for the nx584 sensor platform."""
+
 from unittest import mock
 
 from nx584 import client as nx584_client
@@ -27,6 +28,7 @@ def fake_zones():
 
     Returns:
         list: List of fake zones
+
     """
     return [
         {"name": "front", "number": 1},
@@ -44,6 +46,7 @@ def client(fake_zones):
 
     Yields:
         MagicMock: Client Mock
+
     """
     with mock.patch.object(nx584_client, "Client") as _mock_client:
         client = nx584_client.Client.return_value
@@ -246,8 +249,8 @@ def test_nx584_watcher_run_retries_failures(mock_sleep) -> None:
         """Fake runner."""
         if empty_me:
             empty_me.pop()
-            raise requests.exceptions.ConnectionError()
-        raise StopMe()
+            raise requests.exceptions.ConnectionError
+        raise StopMe
 
     watcher = nx584.NX584Watcher(None, {})
     with mock.patch.object(watcher, "_run") as mock_inner:

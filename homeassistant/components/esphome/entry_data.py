@@ -1,8 +1,9 @@
 """Runtime entry data for ESPHome stored in hass.data."""
+
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from functools import partial
 import logging
@@ -18,6 +19,8 @@ from aioesphomeapi import (
     CameraState,
     ClimateInfo,
     CoverInfo,
+    DateInfo,
+    DateTimeInfo,
     DeviceInfo,
     EntityInfo,
     EntityState,
@@ -32,7 +35,9 @@ from aioesphomeapi import (
     SwitchInfo,
     TextInfo,
     TextSensorInfo,
+    TimeInfo,
     UserService,
+    ValveInfo,
     build_unique_id,
 )
 from aioesphomeapi.model import ButtonInfo
@@ -44,6 +49,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
+from homeassistant.util.signal_type import SignalType
 
 from .const import DOMAIN
 from .dashboard import async_get_dashboard
@@ -62,6 +68,8 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     CameraInfo: Platform.CAMERA,
     ClimateInfo: Platform.CLIMATE,
     CoverInfo: Platform.COVER,
+    DateInfo: Platform.DATE,
+    DateTimeInfo: Platform.DATETIME,
     FanInfo: Platform.FAN,
     LightInfo: Platform.LIGHT,
     LockInfo: Platform.LOCK,
@@ -72,6 +80,8 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     SwitchInfo: Platform.SWITCH,
     TextInfo: Platform.TEXT,
     TextSensorInfo: Platform.SENSOR,
+    TimeInfo: Platform.TIME,
+    ValveInfo: Platform.VALVE,
 }
 
 
@@ -107,24 +117,20 @@ class RuntimeEntryData:
     device_info: DeviceInfo | None = None
     bluetooth_device: ESPHomeBluetoothDevice | None = None
     api_version: APIVersion = field(default_factory=APIVersion)
-    cleanup_callbacks: list[Callable[[], None]] = field(default_factory=list)
-    disconnect_callbacks: set[Callable[[], None]] = field(default_factory=set)
-    state_subscriptions: dict[
-        tuple[type[EntityState], int], Callable[[], None]
-    ] = field(default_factory=dict)
+    cleanup_callbacks: list[CALLBACK_TYPE] = field(default_factory=list)
+    disconnect_callbacks: set[CALLBACK_TYPE] = field(default_factory=set)
+    state_subscriptions: dict[tuple[type[EntityState], int], CALLBACK_TYPE] = field(
+        default_factory=dict
+    )
+    device_update_subscriptions: set[CALLBACK_TYPE] = field(default_factory=set)
     loaded_platforms: set[Platform] = field(default_factory=set)
     platform_load_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     _storage_contents: StoreData | None = None
     _pending_storage: Callable[[], StoreData] | None = None
-    assist_pipeline_update_callbacks: list[Callable[[], None]] = field(
-        default_factory=list
-    )
+    assist_pipeline_update_callbacks: list[CALLBACK_TYPE] = field(default_factory=list)
     assist_pipeline_state: bool = False
     entity_info_callbacks: dict[
         type[EntityInfo], list[Callable[[list[EntityInfo]], None]]
-    ] = field(default_factory=dict)
-    entity_info_key_remove_callbacks: dict[
-        tuple[type[EntityInfo], int], list[Callable[[], Coroutine[Any, Any, None]]]
     ] = field(default_factory=dict)
     entity_info_key_updated_callbacks: dict[
         tuple[type[EntityInfo], int], list[Callable[[EntityInfo], None]]
@@ -146,14 +152,9 @@ class RuntimeEntryData:
         )
 
     @property
-    def signal_device_updated(self) -> str:
-        """Return the signal to listen to for core device state update."""
-        return f"esphome_{self.entry_id}_on_device_update"
-
-    @property
-    def signal_static_info_updated(self) -> str:
+    def signal_static_info_updated(self) -> SignalType[list[EntityInfo]]:
         """Return the signal to listen to for updates on static info."""
-        return f"esphome_{self.entry_id}_on_list"
+        return SignalType(f"esphome_{self.entry_id}_on_list")
 
     @callback
     def async_register_static_info_callback(
@@ -175,27 +176,6 @@ class RuntimeEntryData:
         callback_: Callable[[list[EntityInfo]], None],
     ) -> None:
         """Unsubscribe to when static info is registered."""
-        callbacks.remove(callback_)
-
-    @callback
-    def async_register_key_static_info_remove_callback(
-        self,
-        static_info: EntityInfo,
-        callback_: Callable[[], Coroutine[Any, Any, None]],
-    ) -> CALLBACK_TYPE:
-        """Register to receive callbacks when static info is removed for a specific key."""
-        callback_key = (type(static_info), static_info.key)
-        callbacks = self.entity_info_key_remove_callbacks.setdefault(callback_key, [])
-        callbacks.append(callback_)
-        return partial(self._async_unsubscribe_static_key_remove, callbacks, callback_)
-
-    @callback
-    def _async_unsubscribe_static_key_remove(
-        self,
-        callbacks: list[Callable[[], Coroutine[Any, Any, None]]],
-        callback_: Callable[[], Coroutine[Any, Any, None]],
-    ) -> None:
-        """Unsubscribe to when static info is removed."""
         callbacks.remove(callback_)
 
     @callback
@@ -230,28 +210,31 @@ class RuntimeEntryData:
 
     @callback
     def async_subscribe_assist_pipeline_update(
-        self, update_callback: Callable[[], None]
-    ) -> Callable[[], None]:
+        self, update_callback: CALLBACK_TYPE
+    ) -> CALLBACK_TYPE:
         """Subscribe to assist pipeline updates."""
         self.assist_pipeline_update_callbacks.append(update_callback)
         return partial(self._async_unsubscribe_assist_pipeline_update, update_callback)
 
     @callback
     def _async_unsubscribe_assist_pipeline_update(
-        self, update_callback: Callable[[], None]
+        self, update_callback: CALLBACK_TYPE
     ) -> None:
         """Unsubscribe to assist pipeline updates."""
         self.assist_pipeline_update_callbacks.remove(update_callback)
 
-    async def async_remove_entities(self, static_infos: Iterable[EntityInfo]) -> None:
+    @callback
+    def async_remove_entities(
+        self, hass: HomeAssistant, static_infos: Iterable[EntityInfo], mac: str
+    ) -> None:
         """Schedule the removal of an entity."""
-        callbacks: list[Coroutine[Any, Any, None]] = []
-        for static_info in static_infos:
-            callback_key = (type(static_info), static_info.key)
-            if key_callbacks := self.entity_info_key_remove_callbacks.get(callback_key):
-                callbacks.extend([callback_() for callback_ in key_callbacks])
-        if callbacks:
-            await asyncio.gather(*callbacks)
+        # Remove from entity registry first so the entity is fully removed
+        ent_reg = er.async_get(hass)
+        for info in static_infos:
+            if entry := ent_reg.async_get_entity_id(
+                INFO_TYPE_TO_PLATFORM[type(info)], DOMAIN, build_unique_id(mac, info)
+            ):
+                ent_reg.async_remove(entry)
 
     @callback
     def async_update_entity_infos(self, static_infos: Iterable[EntityInfo]) -> None:
@@ -278,7 +261,9 @@ class RuntimeEntryData:
         if async_get_dashboard(hass):
             needed_platforms.add(Platform.UPDATE)
 
-        if self.device_info and self.device_info.voice_assistant_version:
+        if self.device_info and self.device_info.voice_assistant_feature_flags_compat(
+            self.api_version
+        ):
             needed_platforms.add(Platform.BINARY_SENSOR)
             needed_platforms.add(Platform.SELECT)
 
@@ -319,12 +304,23 @@ class RuntimeEntryData:
         async_dispatcher_send(hass, self.signal_static_info_updated, infos)
 
     @callback
+    def async_subscribe_device_updated(self, callback_: CALLBACK_TYPE) -> CALLBACK_TYPE:
+        """Subscribe to state updates."""
+        self.device_update_subscriptions.add(callback_)
+        return partial(self._async_unsubscribe_device_update, callback_)
+
+    @callback
+    def _async_unsubscribe_device_update(self, callback_: CALLBACK_TYPE) -> None:
+        """Unsubscribe to device updates."""
+        self.device_update_subscriptions.remove(callback_)
+
+    @callback
     def async_subscribe_state_update(
         self,
         state_type: type[EntityState],
         state_key: int,
-        entity_callback: Callable[[], None],
-    ) -> Callable[[], None]:
+        entity_callback: CALLBACK_TYPE,
+    ) -> CALLBACK_TYPE:
         """Subscribe to state updates."""
         subscription_key = (state_type, state_key)
         self.state_subscriptions[subscription_key] = entity_callback
@@ -351,7 +347,7 @@ class RuntimeEntryData:
             and subscription_key not in stale_state
             and state_type is not CameraState
             and not (
-                state_type is SensorState  # noqa: E721
+                state_type is SensorState
                 and (platform_info := self.info.get(SensorInfo))
                 and (entity_info := platform_info.get(state.key))
                 and (cast(SensorInfo, entity_info)).force_update
@@ -363,16 +359,17 @@ class RuntimeEntryData:
         if subscription := self.state_subscriptions.get(subscription_key):
             try:
                 subscription()
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-except
                 # If we allow this exception to raise it will
                 # make it all the way to data_received in aioesphomeapi
                 # which will cause the connection to be closed.
-                _LOGGER.exception("Error while calling subscription: %s", ex)
+                _LOGGER.exception("Error while calling subscription")
 
     @callback
-    def async_update_device_state(self, hass: HomeAssistant) -> None:
+    def async_update_device_state(self) -> None:
         """Distribute an update of a core device state like availability."""
-        async_dispatcher_send(hass, self.signal_device_updated)
+        for callback_ in self.device_update_subscriptions.copy():
+            callback_()
 
     async def async_load_from_store(self) -> tuple[list[EntityInfo], list[UserService]]:
         """Load the retained data from store and return de-serialized data."""
@@ -396,7 +393,7 @@ class RuntimeEntryData:
         ]
         return infos, services
 
-    async def async_save_to_store(self) -> None:
+    def async_save_to_store(self) -> None:
         """Generate dynamic data to store and save it to the filesystem."""
         if TYPE_CHECKING:
             assert self.device_info is not None

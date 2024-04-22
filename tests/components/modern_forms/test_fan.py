@@ -1,4 +1,5 @@
 """Tests for the Modern Forms fan platform."""
+
 from unittest.mock import patch
 
 from aiomodernforms import ModernFormsConnectionError
@@ -209,9 +210,12 @@ async def test_fan_connection_error(
     """Test error handling of the Moder Forms fans."""
     await init_integration(hass, aioclient_mock)
 
-    with patch("homeassistant.components.modern_forms.ModernFormsDevice.update"), patch(
-        "homeassistant.components.modern_forms.ModernFormsDevice.fan",
-        side_effect=ModernFormsConnectionError,
+    with (
+        patch("homeassistant.components.modern_forms.ModernFormsDevice.update"),
+        patch(
+            "homeassistant.components.modern_forms.ModernFormsDevice.fan",
+            side_effect=ModernFormsConnectionError,
+        ),
     ):
         await hass.services.async_call(
             FAN_DOMAIN,

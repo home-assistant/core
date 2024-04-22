@@ -11,6 +11,7 @@
     'context': <ANY>,
     'entity_id': 'number.wled_rgb_light_segment_1_intensity',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '64',
   })
@@ -37,6 +38,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -73,6 +76,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'WLED',
     'model': 'DIY light',
     'name': 'WLED RGB Light',
@@ -87,7 +92,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'WLED RGB Light Segment 1 speed',
-      'icon': 'mdi:speedometer',
       'max': 255,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -96,6 +100,7 @@
     'context': <ANY>,
     'entity_id': 'number.wled_rgb_light_segment_1_speed',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '16',
   })
@@ -122,11 +127,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:speedometer',
+    'original_icon': None,
     'original_name': 'Segment 1 speed',
     'platform': 'wled',
     'previous_unique_id': None,
@@ -158,6 +165,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'WLED',
     'model': 'DIY light',
     'name': 'WLED RGB Light',

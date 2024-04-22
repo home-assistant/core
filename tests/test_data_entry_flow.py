@@ -1,4 +1,5 @@
 """Test the flow classes."""
+
 import asyncio
 import dataclasses
 import logging
@@ -188,7 +189,7 @@ async def test_abort_calls_async_remove_with_exception(
     with caplog.at_level(logging.ERROR):
         await manager.async_init("test")
 
-    assert "Error removing test flow: error" in caplog.text
+    assert "Error removing test flow" in caplog.text
 
     TestFlow.async_remove.assert_called_once()
 
@@ -211,7 +212,6 @@ async def test_create_saves_data(manager) -> None:
     assert len(manager.mock_created_entries) == 1
 
     entry = manager.mock_created_entries[0]
-    assert entry["version"] == 5
     assert entry["handler"] == "test"
     assert entry["title"] == "Test Title"
     assert entry["data"] == "Test Data"
@@ -237,7 +237,6 @@ async def test_discovery_init_flow(manager) -> None:
     assert len(manager.mock_created_entries) == 1
 
     entry = manager.mock_created_entries[0]
-    assert entry["version"] == 5
     assert entry["handler"] == "test"
     assert entry["title"] == "hello"
     assert entry["data"] == data
@@ -270,8 +269,7 @@ async def test_finish_callback_change_result_type(hass: HomeAssistant) -> None:
                     return flow.async_show_form(
                         step_id="init", data_schema=vol.Schema({"count": int})
                     )
-                else:
-                    result["result"] = result["data"]["count"]
+                result["result"] = result["data"]["count"]
             return result
 
     manager = FlowManager(hass)
@@ -401,7 +399,6 @@ async def test_show_progress(hass: HomeAssistant, manager) -> None:
     hass.bus.async_listen(
         data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESSED,
         capture_events,
-        run_immediately=True,
     )
 
     result = await manager.async_init("test")
@@ -463,6 +460,7 @@ async def test_show_progress_error(hass: HomeAssistant, manager) -> None:
 
         async def async_step_init(self, user_input=None):
             async def long_running_task() -> None:
+                await asyncio.sleep(0)
                 raise TypeError
 
             if not self.progress_task:
@@ -481,7 +479,6 @@ async def test_show_progress_error(hass: HomeAssistant, manager) -> None:
     hass.bus.async_listen(
         data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESSED,
         capture_events,
-        run_immediately=True,
     )
 
     result = await manager.async_init("test")
@@ -511,29 +508,31 @@ async def test_show_progress_hidden_from_frontend(hass: HomeAssistant, manager) 
     """Test show progress done is not sent to frontend."""
     manager.hass = hass
     async_show_progress_done_called = False
+    progress_task: asyncio.Task[None] | None = None
 
     @manager.mock_reg_handler("test")
     class TestFlow(data_entry_flow.FlowHandler):
         VERSION = 5
         data = None
-        progress_task: asyncio.Task[None] | None = None
 
         async def async_step_init(self, user_input=None):
-            async def long_running_job() -> None:
-                return
+            nonlocal progress_task
 
-            if not self.progress_task:
-                self.progress_task = hass.async_create_task(long_running_job())
-            if self.progress_task.done():
+            async def long_running_job() -> None:
+                await asyncio.sleep(0)
+
+            if not progress_task:
+                progress_task = hass.async_create_task(long_running_job())
+            if progress_task.done():
                 nonlocal async_show_progress_done_called
                 async_show_progress_done_called = True
                 return self.async_show_progress_done(next_step_id="finish")
             return self.async_show_progress(
                 step_id="init",
                 progress_action="task",
-                # Set to None to simulate flow manager has not yet called when
-                # frontend loads
-                progress_task=None,
+                # Set to a task which never finishes to simulate flow manager has not
+                # yet called when frontend loads
+                progress_task=hass.async_create_task(asyncio.Event().wait()),
             )
 
         async def async_step_finish(self, user_input=None):
@@ -546,7 +545,7 @@ async def test_show_progress_hidden_from_frontend(hass: HomeAssistant, manager) 
     assert len(manager.async_progress_by_handler("test")) == 1
     assert manager.async_get(result["flow_id"])["handler"] == "test"
 
-    await hass.async_block_till_done()
+    await progress_task
     assert not async_show_progress_done_called
 
     # Frontend refreshes the flow
@@ -628,8 +627,14 @@ async def test_show_progress_legacy(hass: HomeAssistant, manager, caplog) -> Non
     result = await manager.async_configure(
         result["flow_id"], {"task_finished": 2, "title": "Hello"}
     )
-    # Note: The SHOW_PROGRESS_DONE is hidden from frontend; FlowManager automatically
-    # calls the flow again
+    # Note: The SHOW_PROGRESS_DONE is not hidden from frontend when flows manage
+    # the progress tasks themselves
+    assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS_DONE
+
+    # Frontend refreshes the flow
+    result = await manager.async_configure(
+        result["flow_id"], {"task_finished": 2, "title": "Hello"}
+    )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "Hello"
 
@@ -753,8 +758,9 @@ async def test_abort_flow_exception(manager) -> None:
 async def test_init_unknown_flow(manager) -> None:
     """Test that UnknownFlow is raised when async_create_flow returns None."""
 
-    with pytest.raises(data_entry_flow.UnknownFlow), patch.object(
-        manager, "async_create_flow", return_value=None
+    with (
+        pytest.raises(data_entry_flow.UnknownFlow),
+        patch.object(manager, "async_create_flow", return_value=None),
     ):
         await manager.async_init("test")
 
@@ -901,7 +907,7 @@ async def test_abort_raises_unknown_flow_if_not_in_progress(manager) -> None:
 
 @pytest.mark.parametrize(
     "menu_options",
-    (["target1", "target2"], {"target1": "Target 1", "target2": "Target 2"}),
+    [["target1", "target2"], {"target1": "Target 1", "target2": "Target 2"}],
 )
 async def test_show_menu(hass: HomeAssistant, manager, menu_options) -> None:
     """Test show menu."""

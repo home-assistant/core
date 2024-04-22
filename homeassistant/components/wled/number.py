@@ -1,4 +1,5 @@
 """Support for LED numbers."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -50,7 +51,6 @@ NUMBERS = [
     WLEDNumberEntityDescription(
         key=ATTR_SPEED,
         translation_key="speed",
-        icon="mdi:speedometer",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,
@@ -140,7 +140,8 @@ def async_update_segments(
     # Process new segments, add them to Home Assistant
     for segment_id in segment_ids - current_ids:
         current_ids.add(segment_id)
-        for desc in NUMBERS:
-            new_entities.append(WLEDNumber(coordinator, segment_id, desc))
+        new_entities.extend(
+            WLEDNumber(coordinator, segment_id, desc) for desc in NUMBERS
+        )
 
     async_add_entities(new_entities)

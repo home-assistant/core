@@ -2,6 +2,7 @@
 
 Such systems include evohome, Round Thermostat, and others.
 """
+
 from __future__ import annotations
 
 from collections.abc import Awaitable
@@ -18,7 +19,10 @@ from evohomeasync2.schema.const import (
     SZ_ALLOWED_SYSTEM_MODES,
     SZ_AUTO_WITH_RESET,
     SZ_CAN_BE_TEMPORARY,
+    SZ_GATEWAY_ID,
+    SZ_GATEWAY_INFO,
     SZ_HEAT_SETPOINT,
+    SZ_LOCATION_ID,
     SZ_LOCATION_INFO,
     SZ_SETPOINT_STATUS,
     SZ_STATE_STATUS,
@@ -160,6 +164,7 @@ def convert_dict(dictionary: dict[str, Any]) -> dict[str, Any]:
 
 def _handle_exception(err: evo.RequestFailed) -> None:
     """Return False if the exception can't be ignored."""
+
     try:
         raise err
 
@@ -259,14 +264,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return False
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
-        _config: dict[str, Any] = {
-            SZ_LOCATION_INFO: {SZ_TIME_ZONE: None},
-            GWS: [{TCS: None}],
+        loc_info = {
+            SZ_LOCATION_ID: loc_config[SZ_LOCATION_INFO][SZ_LOCATION_ID],
+            SZ_TIME_ZONE: loc_config[SZ_LOCATION_INFO][SZ_TIME_ZONE],
         }
-        _config[SZ_LOCATION_INFO][SZ_TIME_ZONE] = loc_config[SZ_LOCATION_INFO][
-            SZ_TIME_ZONE
-        ]
-        _config[GWS][0][TCS] = loc_config[GWS][0][TCS]
+        gwy_info = {
+            SZ_GATEWAY_ID: loc_config[GWS][0][SZ_GATEWAY_INFO][SZ_GATEWAY_ID],
+            TCS: loc_config[GWS][0][TCS],
+        }
+        _config = {
+            SZ_LOCATION_INFO: loc_info,
+            GWS: [{SZ_GATEWAY_INFO: gwy_info, TCS: loc_config[GWS][0][TCS]}],
+        }
         _LOGGER.debug("Config = %s", _config)
 
     client_v1 = ev1.EvohomeClient(
@@ -471,12 +480,13 @@ class EvoBroker:
 
     async def call_client_api(
         self,
-        api_function: Awaitable[dict[str, Any] | None],
+        client_api: Awaitable[dict[str, Any] | None],
         update_state: bool = True,
     ) -> dict[str, Any] | None:
         """Call a client API and update the broker state if required."""
+
         try:
-            result = await api_function
+            result = await client_api
         except evo.RequestFailed as err:
             _handle_exception(err)
             return None
@@ -556,7 +566,6 @@ class EvoBroker:
             _handle_exception(err)
         else:
             async_dispatcher_send(self.hass, DOMAIN)
-
             _LOGGER.debug("Status = %s", status)
         finally:
             if access_token != self.client.access_token:
@@ -657,9 +666,9 @@ class EvoChild(EvoDevice):
 
         assert isinstance(self._evo_device, evo.HotWater | evo.Zone)  # mypy check
 
-        if self._evo_broker.temps.get(self._evo_id) is not None:
+        if (temp := self._evo_broker.temps.get(self._evo_id)) is not None:
             # use high-precision temps if available
-            return self._evo_broker.temps[self._evo_id]
+            return temp
         return self._evo_device.temperature
 
     @property

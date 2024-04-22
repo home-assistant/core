@@ -1,4 +1,5 @@
 """Support for AVM FRITZ!SmartHome lightbulbs."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -91,9 +92,13 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
     @property
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
-        if self.data.color_mode == COLOR_MODE:
-            return ColorMode.HS
-        return ColorMode.COLOR_TEMP
+        if self.data.has_color:
+            if self.data.color_mode == COLOR_MODE:
+                return ColorMode.HS
+            return ColorMode.COLOR_TEMP
+        if self.data.has_level:
+            return ColorMode.BRIGHTNESS
+        return ColorMode.ONOFF
 
     @property
     def supported_color_modes(self) -> set[ColorMode]:

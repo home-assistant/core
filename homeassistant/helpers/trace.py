@@ -1,4 +1,5 @@
 """Helpers for script and condition tracing."""
+
 from __future__ import annotations
 
 from collections import deque
@@ -93,7 +94,7 @@ class TraceElement:
         if self._variables:
             result["changed_variables"] = self._variables
         if self._error is not None:
-            result["error"] = str(self._error)
+            result["error"] = str(self._error) or self._error.__class__.__name__
         if self._result is not None:
             result["result"] = self._result
         return result

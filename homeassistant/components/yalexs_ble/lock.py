@@ -1,4 +1,5 @@
 """Support for Yale Access Bluetooth locks."""
+
 from __future__ import annotations
 
 from typing import Any

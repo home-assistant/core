@@ -1,4 +1,5 @@
 """Helpers to help coordinate updates."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -8,22 +9,16 @@ from datetime import datetime, timedelta
 import logging
 from random import randint
 from time import monotonic
-from typing import Any, Generic, Protocol, TypeVar
+from typing import Any, Generic, Protocol
 import urllib.error
 
 import aiohttp
 import requests
+from typing_extensions import TypeVar
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    Event,
-    HassJob,
-    HassJobType,
-    HomeAssistant,
-    callback,
-)
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -37,12 +32,14 @@ from .debounce import Debouncer
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
-_DataT = TypeVar("_DataT")
+_DataT = TypeVar("_DataT", default=dict[str, Any])
 _BaseDataUpdateCoordinatorT = TypeVar(
     "_BaseDataUpdateCoordinatorT", bound="BaseDataUpdateCoordinatorProtocol"
 )
 _DataUpdateCoordinatorT = TypeVar(
-    "_DataUpdateCoordinatorT", bound="DataUpdateCoordinator[Any]"
+    "_DataUpdateCoordinatorT",
+    bound="DataUpdateCoordinator[Any]",
+    default="DataUpdateCoordinator[dict[str, Any]]",
 )
 
 
@@ -104,18 +101,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         )
 
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
-        job_name = "DataUpdateCoordinator"
-        type_name = type(self).__name__
-        if type_name != job_name:
-            job_name += f" {type_name}"
-        job_name += f" {name}"
-        if entry := self.config_entry:
-            job_name += f" {entry.title} {entry.domain} {entry.entry_id}"
-        self._job = HassJob(
-            self._handle_refresh_interval,
-            job_name,
-            job_type=HassJobType.Coroutinefunction,
-        )
         self._unsub_refresh: CALLBACK_TYPE | None = None
         self._unsub_shutdown: CALLBACK_TYPE | None = None
         self._request_refresh_task: asyncio.TimerHandle | None = None
@@ -187,7 +172,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._shutdown_requested = True
         self._async_unsub_refresh()
         self._async_unsub_shutdown()
-        await self._debounced_refresh.async_shutdown()
+        self._debounced_refresh.async_shutdown()
 
     @callback
     def _unschedule_refresh(self) -> None:
@@ -247,8 +232,25 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             int(loop.time()) + self._microsecond + self._update_interval_seconds
         )
         self._unsub_refresh = loop.call_at(
-            next_refresh, hass.async_run_hass_job, self._job
+            next_refresh, self.__wrap_handle_refresh_interval
         ).cancel
+
+    @callback
+    def __wrap_handle_refresh_interval(self) -> None:
+        """Handle a refresh interval occurrence."""
+        if self.config_entry:
+            self.config_entry.async_create_background_task(
+                self.hass,
+                self._handle_refresh_interval(),
+                name=f"{self.name} - {self.config_entry.title} - refresh",
+                eager_start=True,
+            )
+        else:
+            self.hass.async_create_background_task(
+                self._handle_refresh_interval(),
+                name=f"{self.name} - refresh",
+                eager_start=True,
+            )
 
     async def _handle_refresh_interval(self, _now: datetime | None = None) -> None:
         """Handle a refresh interval occurrence."""
@@ -312,7 +314,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         try:
             self.data = await self._async_update_data()
 
-        except (asyncio.TimeoutError, requests.exceptions.Timeout) as err:
+        except (TimeoutError, requests.exceptions.Timeout) as err:
             self.last_exception = err
             if self.last_update_success:
                 if log_failures:
@@ -376,14 +378,12 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 self.config_entry.async_start_reauth(self.hass)
         except NotImplementedError as err:
             self.last_exception = err
-            raise err
+            raise
 
         except Exception as err:  # pylint: disable=broad-except
             self.last_exception = err
             self.last_update_success = False
-            self.logger.exception(
-                "Unexpected error fetching %s data: %s", self.name, err
-            )
+            self.logger.exception("Unexpected error fetching %s data", self.name)
 
         else:
             if not self.last_update_success:
@@ -401,6 +401,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             if not auth_failed and self._listeners and not self.hass.is_stopping:
                 self._schedule_refresh()
 
+        self._async_refresh_finished()
+
         if not self.last_update_success and not previous_update_success:
             return
 
@@ -410,6 +412,15 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             or previous_data != self.data
         ):
             self.async_update_listeners()
+
+    @callback
+    def _async_refresh_finished(self) -> None:
+        """Handle when a refresh has finished.
+
+        Called when refresh is finished before listeners are updated.
+
+        To be overridden by subclasses.
+        """
 
     @callback
     def async_set_update_error(self, err: Exception) -> None:
@@ -444,20 +455,9 @@ class TimestampDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
 
     last_update_success_time: datetime | None = None
 
-    async def _async_refresh(
-        self,
-        log_failures: bool = True,
-        raise_on_auth_failed: bool = False,
-        scheduled: bool = False,
-        raise_on_entry_error: bool = False,
-    ) -> None:
-        """Refresh data."""
-        await super()._async_refresh(
-            log_failures,
-            raise_on_auth_failed,
-            scheduled,
-            raise_on_entry_error,
-        )
+    @callback
+    def _async_refresh_finished(self) -> None:
+        """Handle when a refresh has finished."""
         if self.last_update_success:
             self.last_update_success_time = utcnow()
 

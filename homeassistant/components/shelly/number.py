@@ -1,8 +1,9 @@
 """Number for Shelly."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Final, cast
+from typing import Any, cast
 
 from aioshelly.block_device import Block
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
@@ -29,7 +30,7 @@ from .entity import (
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class BlockNumberDescription(BlockEntityDescription, NumberEntityDescription):
     """Class to describe a BLOCK sensor."""
 
@@ -37,10 +38,10 @@ class BlockNumberDescription(BlockEntityDescription, NumberEntityDescription):
     rest_arg: str = ""
 
 
-NUMBERS: Final = {
+NUMBERS: dict[tuple[str, str], BlockNumberDescription] = {
     ("device", "valvePos"): BlockNumberDescription(
         key="device|valvepos",
-        icon="mdi:pipe-valve",
+        translation_key="valve_position",
         name="Valve position",
         native_unit_of_measurement=PERCENTAGE,
         available=lambda block: cast(int, block.valveError) != 1,
@@ -125,4 +126,4 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
                 f" {repr(err)}"
             ) from err
         except InvalidAuthError:
-            self.coordinator.entry.async_start_reauth(self.hass)
+            await self.coordinator.async_shutdown_device_and_start_reauth()

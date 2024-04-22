@@ -1,4 +1,5 @@
 """Platform to retrieve Jewish calendar information for Home Assistant."""
+
 from __future__ import annotations
 
 from datetime import date as Date

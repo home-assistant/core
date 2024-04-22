@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from datetime import datetime, timedelta
+import itertools
 import logging
 from typing import Any, cast
 
@@ -18,6 +19,7 @@ from gcal_sync.model import AccessRole, DateOrDatetime, Event
 from gcal_sync.store import ScopedCalendarStore
 from gcal_sync.sync import CalendarEventSyncManager
 from gcal_sync.timeline import Timeline
+from ical.iter import SortableItemValue
 
 from homeassistant.components.calendar import (
     CREATE_EVENT_SCHEMA,
@@ -76,6 +78,9 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
+# Maximum number of upcoming events to consider for state changes between
+# coordinator updates.
+MAX_UPCOMING_EVENTS = 20
 
 # Avoid syncing super old data on initial syncs. Note that old but active
 # recurring events are still included.
@@ -244,7 +249,23 @@ async def async_setup_entry(
         )
 
 
-class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
+def _truncate_timeline(timeline: Timeline, max_events: int) -> Timeline:
+    """Truncate the timeline to a maximum number of events.
+
+    This is used to avoid repeated expansion of recurring events during
+    state machine updates.
+    """
+    upcoming = timeline.active_after(dt_util.now())
+    truncated = list(itertools.islice(upcoming, max_events))
+    return Timeline(
+        [
+            SortableItemValue(event.timespan_of(dt_util.DEFAULT_TIME_ZONE), event)
+            for event in truncated
+        ]
+    )
+
+
+class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):  # pylint: disable=hass-enforce-coordinator-module
     """Coordinator for calendar RPC calls that use an efficient sync."""
 
     config_entry: ConfigEntry
@@ -263,6 +284,7 @@ class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
             update_interval=MIN_TIME_BETWEEN_UPDATES,
         )
         self.sync = sync
+        self._upcoming_timeline: Timeline | None = None
 
     async def _async_update_data(self) -> Timeline:
         """Fetch data from API endpoint."""
@@ -271,9 +293,11 @@ class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
         except ApiException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-        return await self.sync.store_service.async_get_timeline(
+        timeline = await self.sync.store_service.async_get_timeline(
             dt_util.DEFAULT_TIME_ZONE
         )
+        self._upcoming_timeline = _truncate_timeline(timeline, MAX_UPCOMING_EVENTS)
+        return timeline
 
     async def async_get_events(
         self, start_date: datetime, end_date: datetime
@@ -291,12 +315,12 @@ class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
     @property
     def upcoming(self) -> Iterable[Event] | None:
         """Return upcoming events if any."""
-        if self.data:
-            return self.data.active_after(dt_util.now())
+        if self._upcoming_timeline:
+            return self._upcoming_timeline.active_after(dt_util.now())
         return None
 
 
-class CalendarQueryUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
+class CalendarQueryUpdateCoordinator(DataUpdateCoordinator[list[Event]]):  # pylint: disable=hass-enforce-coordinator-module
     """Coordinator for calendar RPC calls.
 
     This sends a polling RPC, not using sync, as a workaround

@@ -1,19 +1,22 @@
 """Tests for ZHA helpers."""
+
+import enum
 import logging
 from unittest.mock import patch
 
 import pytest
 import voluptuous_serialize
-import zigpy.profiles.zha as zha
+from zigpy.profiles import zha
+from zigpy.quirks.v2.homeassistant import UnitOfPower as QuirksUnitOfPower
 from zigpy.types.basic import uint16_t
-import zigpy.zcl.clusters.general as general
-import zigpy.zcl.clusters.lighting as lighting
+from zigpy.zcl.clusters import general, lighting
 
 from homeassistant.components.zha.core.helpers import (
     cluster_command_schema_to_vol_schema,
     convert_to_zcl_values,
+    validate_unit,
 )
-from homeassistant.const import Platform
+from homeassistant.const import Platform, UnitOfPower
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
@@ -39,7 +42,7 @@ def light_platform_only():
 
 
 @pytest.fixture
-async def device_light(hass, zigpy_device_mock, zha_device_joined):
+async def device_light(hass: HomeAssistant, zigpy_device_mock, zha_device_joined):
     """Test light."""
 
     zigpy_device = zigpy_device_mock(
@@ -210,3 +213,25 @@ async def test_zcl_schema_conversions(hass: HomeAssistant, device_light) -> None
 
     # No flags are passed through
     assert converted_data["update_flags"] == 0
+
+
+def test_unit_validation() -> None:
+    """Test unit validation."""
+
+    assert validate_unit(QuirksUnitOfPower.WATT) == UnitOfPower.WATT
+
+    class FooUnit(enum.Enum):
+        """Foo unit."""
+
+        BAR = "bar"
+
+    class UnitOfMass(enum.Enum):
+        """UnitOfMass."""
+
+        BAR = "bar"
+
+    with pytest.raises(KeyError):
+        validate_unit(FooUnit.BAR)
+
+    with pytest.raises(ValueError):
+        validate_unit(UnitOfMass.BAR)

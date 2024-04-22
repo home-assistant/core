@@ -1,4 +1,5 @@
 """Assist pipeline Websocket API."""
+
 import asyncio
 
 # Suppressing disable=deprecated-module is needed for Python 3.11
@@ -97,7 +98,12 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                     extra=vol.ALLOW_EXTRA,
                 ),
                 PipelineStage.STT: vol.Schema(
-                    {vol.Required("input"): {vol.Required("sample_rate"): int}},
+                    {
+                        vol.Required("input"): {
+                            vol.Required("sample_rate"): int,
+                            vol.Optional("wake_word_phrase"): str,
+                        }
+                    },
                     extra=vol.ALLOW_EXTRA,
                 ),
                 PipelineStage.INTENT: vol.Schema(
@@ -149,12 +155,15 @@ async def websocket_run(
         msg_input = msg["input"]
         audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
         incoming_sample_rate = msg_input["sample_rate"]
+        wake_word_phrase: str | None = None
 
         if start_stage == PipelineStage.WAKE_WORD:
             wake_word_settings = WakeWordSettings(
                 timeout=msg["input"].get("timeout", DEFAULT_WAKE_WORD_TIMEOUT),
                 audio_seconds_to_buffer=msg_input.get("audio_seconds_to_buffer", 0),
             )
+        elif start_stage == PipelineStage.STT:
+            wake_word_phrase = msg["input"].get("wake_word_phrase")
 
         async def stt_stream() -> AsyncGenerator[bytes, None]:
             state = None
@@ -189,6 +198,7 @@ async def websocket_run(
             channel=stt.AudioChannels.CHANNEL_MONO,
         )
         input_args["stt_stream"] = stt_stream()
+        input_args["wake_word_phrase"] = wake_word_phrase
 
         # Audio settings
         audio_settings = AudioSettings(
@@ -241,7 +251,7 @@ async def websocket_run(
         # Task contains a timeout
         async with asyncio.timeout(timeout):
             await run_task
-    except asyncio.TimeoutError:
+    except TimeoutError:
         pipeline_input.run.process_event(
             PipelineEvent(
                 PipelineEventType.ERROR,
@@ -281,8 +291,11 @@ def websocket_list_runs(
         msg["id"],
         {
             "pipeline_runs": [
-                {"pipeline_run_id": id, "timestamp": pipeline_run.timestamp}
-                for id, pipeline_run in pipeline_debug.items()
+                {
+                    "pipeline_run_id": pipeline_run_id,
+                    "timestamp": pipeline_run.timestamp,
+                }
+                for pipeline_run_id, pipeline_run in pipeline_debug.items()
             ]
         },
     )
@@ -487,7 +500,7 @@ async def websocket_device_capture(
     )
 
     try:
-        with contextlib.suppress(asyncio.TimeoutError):
+        with contextlib.suppress(TimeoutError):
             async with asyncio.timeout(timeout_seconds):
                 while True:
                     # Send audio chunks encoded as base64

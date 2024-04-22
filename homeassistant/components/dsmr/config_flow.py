@@ -1,4 +1,5 @@
 """Config flow for DSMR integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -17,11 +18,15 @@ import serial
 import serial.tools.list_ports
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL, CONF_TYPE
-from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
     CONF_DSMR_VERSION,
@@ -75,7 +80,7 @@ class DSMRConnection:
             return identifier
         return None
 
-    async def validate_connect(self, hass: core.HomeAssistant) -> bool:
+    async def validate_connect(self, hass: HomeAssistant) -> bool:
         """Test if we can validate connection with the device."""
 
         def update_telegram(telegram: dict[str, DSMRObject]) -> None:
@@ -123,7 +128,7 @@ class DSMRConnection:
             try:
                 async with asyncio.timeout(30):
                     await protocol.wait_closed()
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 # Timeout (no data received), close transport and return True (if telegram is empty, will result in CannotCommunicate error)
                 transport.close()
                 await protocol.wait_closed()
@@ -131,7 +136,7 @@ class DSMRConnection:
 
 
 async def _validate_dsmr_connection(
-    hass: core.HomeAssistant, data: dict[str, Any], protocol: str
+    hass: HomeAssistant, data: dict[str, Any], protocol: str
 ) -> dict[str, str | None]:
     """Validate the user input allows us to connect."""
     conn = DSMRConnection(
@@ -157,7 +162,7 @@ async def _validate_dsmr_connection(
     }
 
 
-class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for DSMR."""
 
     VERSION = 1
@@ -172,7 +177,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Step when user initializes a integration."""
         if user_input is not None:
             user_selection = user_input[CONF_TYPE]
@@ -188,7 +193,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_setup_network(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Step when setting up network configuration."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -213,7 +218,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_setup_serial(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Step when setting up serial configuration."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -257,7 +262,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_setup_serial_manual_path(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Select path manually."""
         if user_input is not None:
             validate_data = {
@@ -303,7 +308,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return data
 
 
-class DSMROptionFlowHandler(config_entries.OptionsFlow):
+class DSMROptionFlowHandler(OptionsFlow):
     """Handle options."""
 
     def __init__(self, entry: ConfigEntry) -> None:
@@ -312,7 +317,7 @@ class DSMROptionFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -344,9 +349,9 @@ def get_serial_by_id(dev_path: str) -> str:
     return dev_path
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class CannotCommunicate(exceptions.HomeAssistantError):
+class CannotCommunicate(HomeAssistantError):
     """Error to indicate we cannot connect."""

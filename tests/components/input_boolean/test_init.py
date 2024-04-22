@@ -1,4 +1,5 @@
 """The tests for the input_boolean component."""
+
 import logging
 from unittest.mock import patch
 

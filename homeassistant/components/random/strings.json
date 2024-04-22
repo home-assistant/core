@@ -19,7 +19,7 @@
         "title": "Random sensor"
       },
       "user": {
-        "description": "This helper allow you to create a helper that emits a random value.",
+        "description": "This helper allows you to create a helper that emits a random value.",
         "menu_options": {
           "binary_sensor": "Random binary sensor",
           "sensor": "Random sensor"
