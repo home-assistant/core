@@ -7,7 +7,6 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from .const import DOMAIN
 
 
 async def async_get_config_entry_diagnostics(
@@ -22,22 +21,7 @@ async def async_get_config_entry_diagnostics(
 
     entity_states = {entity: hass.states.get(entity) for entity in entities}
 
-    data = hass.data[DOMAIN][entry.entry_id]
-
-    ata_devices: list = {}
-    atw_devices: list = {}
-
-    if data["ata"]:
-        ata_devices_list = hass.data[DOMAIN][entry.entry_id]["ata"]
-        ata_devices = {device: device for device in ata_devices_list}
-
-    if data["atw"]:
-        atw_devices_list = hass.data[DOMAIN][entry.entry_id]["atw"]
-        atw_devices = {device: device for device in atw_devices_list}
-
     return {
         "entry": entry.as_dict(),
         "entities": entity_states,
-        "ata_devices": ata_devices,
-        "atw_devices": atw_devices,
     }
