@@ -51,32 +51,27 @@ INCLUDED_REQUIREMENTS_WHEELS = {
     "pyuserinput",
 }
 
-# Excluded requirements to include when running github actions.
-# Requirements listed in EXCLUDED_REQUIREMENTS_CI will be included in
-# requirements_all_{action}.txt
-INCLUDED_REQUIREMENTS_ACTIONS = {
-    "pytest": {"python-gammu"},
-    "wheels_aarch64": INCLUDED_REQUIREMENTS_WHEELS,
-    "wheels_armhf": INCLUDED_REQUIREMENTS_WHEELS,
-    "wheels_armv7": INCLUDED_REQUIREMENTS_WHEELS,
-    "wheels_amd64": INCLUDED_REQUIREMENTS_WHEELS,
-    "wheels_i386": INCLUDED_REQUIREMENTS_WHEELS,
-}
 
-# Requirements to exclude when running github actions.
-# Requirements listed in EXCLUDED_REQUIREMENTS_CI will be commented-out in
+# Requirements to exclude or include when running github actions.
+# Requirements listed in "exclude" will be commented-out in
 # requirements_all_{action}.txt
-EXCLUDED_REQUIREMENTS_ACTIONS = {
-    "pytest": set(),
-    "wheels_aarch64": set(),
+# Requirements listed in "include" must be listed in EXCLUDED_REQUIREMENTS_CI, and
+# will be included in requirements_all_{action}.txt
+
+OVERRIDDEN_REQUIREMENTS_ACTIONS = {
+    "pytest": {"exclude": set(), "include": {"python-gammu"}},
+    "wheels_aarch64": {"exclude": set(), "include": INCLUDED_REQUIREMENTS_WHEELS},
     # Pandas has issues building on armhf, it is expected they
     # will drop the platform in the near future (they consider it
     # "flimsy" on 386). The following packages depend on pandas,
     # so we comment them out.
-    "wheels_armhf": {"env-canada", "noaa-coops", "pyezviz", "pykrakenapi"},
-    "wheels_armv7": set(),
-    "wheels_amd64": set(),
-    "wheels_i386": set(),
+    "wheels_armhf": {
+        "exclude": {"env-canada", "noaa-coops", "pyezviz", "pykrakenapi"},
+        "include": INCLUDED_REQUIREMENTS_WHEELS,
+    },
+    "wheels_armv7": {"exclude": set(), "include": INCLUDED_REQUIREMENTS_WHEELS},
+    "wheels_amd64": {"exclude": set(), "include": INCLUDED_REQUIREMENTS_WHEELS},
+    "wheels_i386": {"exclude": set(), "include": INCLUDED_REQUIREMENTS_WHEELS},
 }
 
 IGNORE_PIN = ("colorlog>2.1,<3", "urllib3")
@@ -316,9 +311,9 @@ def comment_requirement(req: str) -> bool:
 def process_action_requirement(req: str, action: str) -> str:
     """Process requirement for a specific github action."""
     normalized_package_name = normalize_package_name(req)
-    if normalized_package_name in EXCLUDED_REQUIREMENTS_ACTIONS[action]:
+    if normalized_package_name in OVERRIDDEN_REQUIREMENTS_ACTIONS[action]["exclude"]:
         return f"# {req}"
-    if normalized_package_name in INCLUDED_REQUIREMENTS_ACTIONS[action]:
+    if normalized_package_name in OVERRIDDEN_REQUIREMENTS_ACTIONS[action]["include"]:
         return req
     if normalized_package_name in EXCLUDED_REQUIREMENTS_ALL:
         return f"# {req}"
@@ -549,34 +544,25 @@ def main(validate: bool, ci: bool) -> int:
 
     reqs_file = requirements_output()
     reqs_all_file = requirements_all_output(data)
-    reqs_all_pytest_file = requirements_all_action_output(data, "pytest")
-    reqs_all_wheels_aarch64_file = requirements_all_action_output(
-        data, "wheels_aarch64"
-    )
-    reqs_all_wheels_armhf_file = requirements_all_action_output(data, "wheels_armhf")
-    reqs_all_wheels_armv7_file = requirements_all_action_output(data, "wheels_armv7")
-    reqs_all_wheels_amd64_file = requirements_all_action_output(data, "wheels_amd64")
-    reqs_all_wheels_i386_file = requirements_all_action_output(data, "wheels_i386")
+    reqs_all_action_files = {
+        action: requirements_all_action_output(data, action)
+        for action in OVERRIDDEN_REQUIREMENTS_ACTIONS
+    }
     reqs_test_all_file = requirements_test_all_output(data)
     reqs_pre_commit_file = requirements_pre_commit_output()
     constraints = gather_constraints()
 
-    files = (
+    files = [
         ("requirements.txt", reqs_file),
         ("requirements_all.txt", reqs_all_file),
         ("requirements_test_pre_commit.txt", reqs_pre_commit_file),
         ("requirements_test_all.txt", reqs_test_all_file),
         ("homeassistant/package_constraints.txt", constraints),
-    )
+    ]
     if ci:
-        files = (
-            *files,
-            ("requirements_all_pytest.txt", reqs_all_pytest_file),
-            ("requirements_all_wheels_aarch64.txt", reqs_all_wheels_aarch64_file),
-            ("requirements_all_wheels_armhf.txt", reqs_all_wheels_armhf_file),
-            ("requirements_all_wheels_armv7.txt", reqs_all_wheels_armv7_file),
-            ("requirements_all_wheels_amd64.txt", reqs_all_wheels_amd64_file),
-            ("requirements_all_wheels_i386.txt", reqs_all_wheels_i386_file),
+        files.extend(
+            (action, reqs_all_file)
+            for action, reqs_all_file in reqs_all_action_files.items()
         )
 
     if validate:
