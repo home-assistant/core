@@ -438,6 +438,9 @@ class Group(Entity):
 
         registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
 
+        # In case the group contains entities of the same domain with the same on
+        # or off state, we want to use that specific state.
+        # If we have more then one ON or OFF state we default to STATE_ON or STATE_OFF.
         active_on_states: set[str] = set()
         active_off_states: set[str] = set()
         for entity_id in self.tracking:
