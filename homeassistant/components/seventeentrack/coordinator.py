@@ -48,9 +48,7 @@ class SeventeenTrackCoordinator(DataUpdateCoordinator[SeventeenTrackData]):
         self._show_archived = self.config_entry.options[CONF_SHOW_ARCHIVED]
         self._client = client
 
-    async def _async_update_data(
-        self,
-    ) -> SeventeenTrackData:
+    async def _async_update_data(self) -> SeventeenTrackData:
         """Fetch data from 17Track API."""
 
         summary = {}
