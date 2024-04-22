@@ -3185,4 +3185,4 @@ async def test_title_updated_if_mac_address(
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.title == "ACME Bluetooth Adapter 5.0 (cc01:aa01) (00:00:00:00:00:01)"
+    assert entry.title == "ACME Bluetooth Adapter 5.0 (00:00:00:00:00:01)"

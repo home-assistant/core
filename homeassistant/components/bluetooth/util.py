@@ -5,9 +5,9 @@ from __future__ import annotations
 from bluetooth_adapters import (
     ADAPTER_ADDRESS,
     ADAPTER_MANUFACTURER,
+    ADAPTER_PRODUCT,
     AdapterDetails,
     BluetoothAdapters,
-    adapter_model,
     adapter_unique_name,
 )
 from bluetooth_data_tools import monotonic_time_coarse
@@ -82,6 +82,6 @@ def async_load_history_from_system(
 def adapter_title(adapter: str, details: AdapterDetails) -> str:
     """Return the adapter title."""
     unique_name = adapter_unique_name(adapter, details[ADAPTER_ADDRESS])
-    model = adapter_model(details)
+    model = details.get(ADAPTER_PRODUCT, "Unknown")
     manufacturer = details[ADAPTER_MANUFACTURER] or "Unknown"
     return f"{manufacturer} {model} ({unique_name})"
