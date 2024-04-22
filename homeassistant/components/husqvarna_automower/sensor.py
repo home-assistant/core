@@ -298,7 +298,9 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         key="next_start_timestamp",
         translation_key="next_start_timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: dt_util.as_local(data.planner.next_start_datetime),
+        value_fn=lambda data: dt_util.as_local(data.planner.next_start_datetime)
+        if data.planner.next_start_datetime
+        else None,
     ),
     AutomowerSensorEntityDescription(
         key="error",
