@@ -48,6 +48,7 @@ PLATFORMS = [
     Platform.HUMIDIFIER,
     Platform.NUMBER,
     Platform.SENSOR,
+    Platform.SWITCH,
     Platform.WEATHER,
 ]
 
