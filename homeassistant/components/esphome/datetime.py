@@ -41,25 +41,8 @@ class EsphomeDateTime(EsphomeEntity[DateTimeInfo, DateTimeState], DateTimeEntity
         state = self._state
         if state.missing_state:
             return None
-        return datetime(
-            state.year,
-            state.month,
-            state.day,
-            state.hour,
-            state.minute,
-            state.second,
-            tzinfo=dt_util.DEFAULT_TIME_ZONE,
-        )
+        return datetime.fromtimestamp(state.epoch_seconds, dt_util.UTC)
 
     async def async_set_value(self, value: datetime) -> None:
         """Update the current datetime."""
-        tz_value = value.astimezone(dt_util.DEFAULT_TIME_ZONE)
-        self._client.datetime_command(
-            self._key,
-            tz_value.year,
-            tz_value.month,
-            tz_value.day,
-            tz_value.hour,
-            tz_value.minute,
-            tz_value.second,
-        )
+        self._client.datetime_command(self._key, int(value.timestamp()))
