@@ -5728,3 +5728,16 @@ async def test_label_areas(
     info = render_to_info(hass, f"{{{{ '{label.name}' | label_areas }}}}")
     assert_result_info(info, [master_bedroom.id])
     assert info.rate_limit is None
+
+
+async def test_template_thread_safety_checks(hass: HomeAssistant) -> None:
+    """Test template thread safety checks."""
+    hass.states.async_set("sensor.test", "23")
+    template_str = "{{ states('sensor.test') }}"
+    template_obj = template.Template(template_str, None)
+    template_obj.hass = hass
+
+    with pytest.raises(RuntimeError):
+        await hass.async_add_executor_job(template_obj.async_render_to_info)
+
+    assert template_obj.async_render_to_info().result() == 23
