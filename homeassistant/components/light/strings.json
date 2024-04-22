@@ -17,6 +17,10 @@
       "changed_states": "[%key:common::device_automation::trigger_type::changed_states%]",
       "turned_on": "[%key:common::device_automation::trigger_type::turned_on%]",
       "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]"
+    },
+    "extra_fields": {
+      "brightness_pct": "Brightness",
+      "flash": "Flash"
     }
   },
   "entity_component": {
