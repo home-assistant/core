@@ -39,6 +39,7 @@ from .const import (
     CONF_CUSTOMIZE,
     CONF_CUSTOMIZE_DOMAIN,
     CONF_CUSTOMIZE_GLOB,
+    CONF_DEBUG,
     CONF_ELEVATION,
     CONF_EXTERNAL_URL,
     CONF_ID,
@@ -391,6 +392,7 @@ CORE_CONFIG_SCHEMA = vol.All(
             vol.Optional(CONF_CURRENCY): _validate_currency,
             vol.Optional(CONF_COUNTRY): cv.country,
             vol.Optional(CONF_LANGUAGE): cv.language,
+            vol.Optional(CONF_DEBUG): cv.boolean,
         }
     ),
     _filter_bad_internal_external_urls,
@@ -892,6 +894,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
         (CONF_EXTERNAL_URL, "external_url"),
         (CONF_MEDIA_DIRS, "media_dirs"),
         (CONF_LEGACY_TEMPLATES, "legacy_templates"),
+        (CONF_DEBUG, "debug"),
         (CONF_CURRENCY, "currency"),
         (CONF_COUNTRY, "country"),
         (CONF_LANGUAGE, "language"),

@@ -973,7 +973,7 @@ class Entity(
         if self.hass is None:
             raise RuntimeError(f"Attribute hass is None for {self}")
         if (
-            self.hass.debug
+            self.hass.config.debug
             and (loop_thread_ident := self.hass.loop.__dict__.get("_thread_ident"))
             and loop_thread_ident != threading.get_ident()
         ):

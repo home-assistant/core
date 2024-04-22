@@ -194,7 +194,7 @@ def async_dispatcher_send(
     This method must be run in the event loop.
     """
     if (
-        hass.debug
+        hass.config.debug
         and (loop_thread_ident := hass.loop.__dict__.get("_thread_ident"))
         and loop_thread_ident != threading.get_ident()
     ):

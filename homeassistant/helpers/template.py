@@ -699,7 +699,7 @@ class Template:
         """Render the template and collect an entity filter."""
         if (
             self.hass
-            and self.hass.debug
+            and self.hass.config.debug
             and (loop_thread_ident := self.hass.loop.__dict__.get("_thread_ident"))
             and loop_thread_ident != threading.get_ident()
         ):

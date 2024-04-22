@@ -428,7 +428,6 @@ class HomeAssistant:
         self.import_executor = InterruptibleThreadPoolExecutor(
             max_workers=1, thread_name_prefix="ImportExecutor"
         )
-        self.debug: bool = True
 
     @property
     def _active_tasks(self) -> set[asyncio.Future[Any]]:
@@ -1452,7 +1451,7 @@ class EventBus:
         This method must be run in the event loop.
         """
         if (
-            self._hass.debug
+            self._hass.config.debug
             and (loop_thread_ident := self._hass.loop.__dict__.get("_thread_ident"))
             and loop_thread_ident != threading.get_ident()
         ):
@@ -2751,6 +2750,7 @@ class Config:
         self.elevation: int = 0
         """Elevation (always in meters regardless of the unit system)."""
 
+        self.debug: bool = False
         self.location_name: str = "Home"
         self.time_zone: str = "UTC"
         self.units: UnitSystem = METRIC_SYSTEM
@@ -2891,6 +2891,7 @@ class Config:
             "country": self.country,
             "language": self.language,
             "safe_mode": self.safe_mode,
+            "debug": self.debug,
         }
 
     def set_time_zone(self, time_zone_str: str) -> None:
