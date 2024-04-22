@@ -361,6 +361,8 @@ omit =
     homeassistant/components/environment_canada/weather.py
     homeassistant/components/envisalink/*
     homeassistant/components/ephember/climate.py
+    homeassistant/components/epic_games_store/__init__.py
+    homeassistant/components/epic_games_store/coordinator.py
     homeassistant/components/epion/__init__.py
     homeassistant/components/epion/coordinator.py
     homeassistant/components/epion/sensor.py
