@@ -1079,15 +1079,15 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfPower.WATT,
             suggested_display_precision=0,
-            suggested_unit_of_measurement=UnitOfPower.WATT
+            suggested_unit_of_measurement=UnitOfPower.WATT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
-            scale=0
-        )
+            scale=0,
+        ),
     ),
 }
 
