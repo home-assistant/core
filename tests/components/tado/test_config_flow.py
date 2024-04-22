@@ -365,7 +365,7 @@ async def test_import_step_device_authentication_failed(hass: HomeAssistant) -> 
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
+            context={"source": config_entries.SOURCE_RECONFIGURE},
             data={
                 "username": "test-username",
                 "password": "test-password",
@@ -409,3 +409,62 @@ async def test_import_step_unique_id_configured(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_setup_entry.call_count == 0
+
+
+async def test_reconfigure_flow(hass: HomeAssistant) -> None:
+    """Test re-configuration flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "username": "test-username",
+            "password": "test-password",
+            "home_id": 1,
+        },
+        unique_id="unique_id",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": entry.entry_id,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    with patch(
+        "homeassistant.components.tado.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                "username": "test-username",
+                "password": "test-password",
+                "home_id": 1,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+
+    with (
+        patch(
+            "homeassistant.components.tado.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    entry = hass.config_entries.async_get_entry(entry.entry_id)
