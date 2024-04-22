@@ -164,7 +164,7 @@ def trace_condition(variables: TemplateVarsType) -> Generator[TraceElement, None
         yield trace_element
     except Exception as ex:
         trace_element.set_error(ex)
-        raise ex
+        raise
     finally:
         if should_pop:
             trace_stack_pop(trace_stack_cv)

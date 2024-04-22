@@ -47,10 +47,12 @@ def _process_group_platform(
 class GroupIntegrationRegistry:
     """Class to hold a registry of integrations."""
 
-    on_off_mapping: dict[str, str] = {STATE_ON: STATE_OFF}
-    off_on_mapping: dict[str, str] = {STATE_OFF: STATE_ON}
-    on_states_by_domain: dict[str, set] = {}
-    exclude_domains: set = set()
+    def __init__(self) -> None:
+        """Imitialize registry."""
+        self.on_off_mapping: dict[str, str] = {STATE_ON: STATE_OFF}
+        self.off_on_mapping: dict[str, str] = {STATE_OFF: STATE_ON}
+        self.on_states_by_domain: dict[str, set[str]] = {}
+        self.exclude_domains: set[str] = set()
 
     def exclude_domain(self) -> None:
         """Exclude the current domain."""

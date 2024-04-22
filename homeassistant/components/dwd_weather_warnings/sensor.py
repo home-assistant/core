@@ -11,6 +11,8 @@ Wetterwarnungen (Stufe 1)
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -93,29 +95,27 @@ class DwdWeatherWarningsSensor(
             entry_type=DeviceEntryType.SERVICE,
         )
 
-        self.api = coordinator.api
-
     @property
-    def native_value(self):
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
         if self.entity_description.key == CURRENT_WARNING_SENSOR:
-            return self.api.current_warning_level
+            return self.coordinator.api.current_warning_level
 
-        return self.api.expected_warning_level
+        return self.coordinator.api.expected_warning_level
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         data = {
-            ATTR_REGION_NAME: self.api.warncell_name,
-            ATTR_REGION_ID: self.api.warncell_id,
-            ATTR_LAST_UPDATE: self.api.last_update,
+            ATTR_REGION_NAME: self.coordinator.api.warncell_name,
+            ATTR_REGION_ID: self.coordinator.api.warncell_id,
+            ATTR_LAST_UPDATE: self.coordinator.api.last_update,
         }
 
         if self.entity_description.key == CURRENT_WARNING_SENSOR:
-            searched_warnings = self.api.current_warnings
+            searched_warnings = self.coordinator.api.current_warnings
         else:
-            searched_warnings = self.api.expected_warnings
+            searched_warnings = self.coordinator.api.expected_warnings
 
         data[ATTR_WARNING_COUNT] = len(searched_warnings)
 
@@ -142,4 +142,4 @@ class DwdWeatherWarningsSensor(
     @property
     def available(self) -> bool:
         """Could the device be accessed during the last update call."""
-        return self.api.data_valid
+        return self.coordinator.api.data_valid
