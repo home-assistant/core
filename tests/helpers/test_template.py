@@ -5736,6 +5736,7 @@ async def test_template_thread_safety_checks(hass: HomeAssistant) -> None:
     template_str = "{{ states('sensor.test') }}"
     template_obj = template.Template(template_str, None)
     template_obj.hass = hass
+    hass.debug = True
 
     with pytest.raises(RuntimeError):
         await hass.async_add_executor_job(template_obj.async_render_to_info)
