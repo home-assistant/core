@@ -291,8 +291,11 @@ def websocket_list_runs(
         msg["id"],
         {
             "pipeline_runs": [
-                {"pipeline_run_id": id, "timestamp": pipeline_run.timestamp}
-                for id, pipeline_run in pipeline_debug.items()
+                {
+                    "pipeline_run_id": pipeline_run_id,
+                    "timestamp": pipeline_run.timestamp,
+                }
+                for pipeline_run_id, pipeline_run in pipeline_debug.items()
             ]
         },
     )

@@ -305,6 +305,8 @@ def gen_result_wrapper(kls: type[dict | list | set]) -> type:
 class TupleWrapper(tuple, ResultWrapper):
     """Wrap a tuple."""
 
+    __slots__ = ()
+
     # This is all magic to be allowed to subclass a tuple.
 
     def __new__(cls, value: tuple, *, render_result: str | None = None) -> Self:
@@ -1345,8 +1347,8 @@ def device_id(hass: HomeAssistant, entity_id_or_device_name: str) -> str | None:
     dev_reg = device_registry.async_get(hass)
     return next(
         (
-            id
-            for id, device in dev_reg.devices.items()
+            device_id
+            for device_id, device in dev_reg.devices.items()
             if (name := device.name_by_user or device.name)
             and (str(entity_id_or_device_name) == name)
         ),
@@ -1451,8 +1453,7 @@ def floor_areas(hass: HomeAssistant, floor_id_or_name: str) -> Iterable[str]:
 
 def areas(hass: HomeAssistant) -> Iterable[str | None]:
     """Return all areas."""
-    area_reg = area_registry.async_get(hass)
-    return [area.id for area in area_reg.async_list_areas()]
+    return list(area_registry.async_get(hass).areas)
 
 
 def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
@@ -1578,7 +1579,7 @@ def labels(hass: HomeAssistant, lookup_value: Any = None) -> Iterable[str | None
     """Return all labels, or those from a area ID, device ID, or entity ID."""
     label_reg = label_registry.async_get(hass)
     if lookup_value is None:
-        return [label.label_id for label in label_reg.async_list_labels()]
+        return list(label_reg.labels)
 
     ent_reg = entity_registry.async_get(hass)
 

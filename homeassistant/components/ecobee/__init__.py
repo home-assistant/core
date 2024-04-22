@@ -22,7 +22,7 @@ from .const import (
     PLATFORMS,
 )
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Optional(CONF_API_KEY): cv.string})}, extra=vol.ALLOW_EXTRA

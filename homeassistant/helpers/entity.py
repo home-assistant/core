@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABCMeta
 import asyncio
 from collections import deque
-from collections.abc import Callable, Coroutine, Iterable, Mapping, MutableMapping
+from collections.abc import Callable, Coroutine, Iterable, Mapping
 import dataclasses
 from enum import Enum, IntFlag, auto
 import functools as ft
@@ -52,6 +52,7 @@ from homeassistant.core import (
     Event,
     HassJobType,
     HomeAssistant,
+    ReleaseChannel,
     callback,
     get_hassjob_callable_job_type,
     get_release_channel,
@@ -537,7 +538,7 @@ class Entity(
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
     _attr_entity_registry_visible_default: bool
-    _attr_extra_state_attributes: MutableMapping[str, Any]
+    _attr_extra_state_attributes: dict[str, Any]
     _attr_force_update: bool
     _attr_icon: str | None
     _attr_name: str | None
@@ -657,7 +658,7 @@ class Entity(
             return name.format(**self.translation_placeholders)
         except KeyError as err:
             if not self._name_translation_placeholders_reported:
-                if get_release_channel() != "stable":
+                if get_release_channel() is not ReleaseChannel.STABLE:
                     raise HomeAssistantError("Missing placeholder %s" % err) from err
                 report_issue = self._suggest_report_issue()
                 _LOGGER.warning(
@@ -1052,8 +1053,10 @@ class Entity(
         available = self.available  # only call self.available once per update cycle
         state = self._stringify_state(available)
         if available:
-            attr.update(self.state_attributes or {})
-            attr.update(self.extra_state_attributes or {})
+            if state_attributes := self.state_attributes:
+                attr.update(state_attributes)
+            if extra_state_attributes := self.extra_state_attributes:
+                attr.update(extra_state_attributes)
 
         if (unit_of_measurement := self.unit_of_measurement) is not None:
             attr[ATTR_UNIT_OF_MEASUREMENT] = unit_of_measurement
