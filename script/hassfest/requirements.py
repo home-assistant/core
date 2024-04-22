@@ -22,9 +22,6 @@ from script.gen_requirements_all import (
 
 from .model import Config, Integration
 
-IGNORE_PACKAGES = {
-    excluded.lower().replace("_", "-") for excluded in EXCLUDED_REQUIREMENTS_ALL
-}
 PACKAGE_REGEX = re.compile(
     r"^(?:--.+\s)?([-_,\.\w\d\[\]]+)(==|>=|<=|~=|!=|<|>|===)*(.*)$"
 )
@@ -119,7 +116,7 @@ def validate_requirements(integration: Integration) -> None:
                 f"Failed to normalize package name from requirement {req}",
             )
             return
-        if package in IGNORE_PACKAGES:
+        if package in EXCLUDED_REQUIREMENTS_ALL:
             continue
         integration_requirements.add(req)
         integration_packages.add(package)

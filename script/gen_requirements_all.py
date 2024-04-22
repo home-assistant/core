@@ -17,16 +17,10 @@ from typing import Any
 from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Integration
 
-
-def normalize(req: str) -> str:
-    """Normalize a requirement."""
-    return req.lower().replace("_", "-")
-
-
 # Requirements which can't be installed on all systems because they rely on additional
 # system packages. Requirements listed in EXCLUDED_REQUIREMENTS_ALL will be commented-out
 # in requirements_all.txt and requirements_test_all.txt.
-EXCLUDED_REQUIREMENTS_ALL = (
+EXCLUDED_REQUIREMENTS_ALL = {
     "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avea",  # depends on bluepy
     "avion",
@@ -45,27 +39,23 @@ EXCLUDED_REQUIREMENTS_ALL = (
     "pyuserinput",
     "tensorflow",
     "tf-models-official",
-)
-
-EXCLUDED_REQUIREMENTS_ALL_NORMALIZED = {
-    normalize(commented) for commented in EXCLUDED_REQUIREMENTS_ALL
 }
 
-# Requirements excluded by COMMENT_REQUIREMENTS which should be included when
+# Requirements excluded by EXCLUDED_REQUIREMENTS_ALL which should be included when
 # building integration wheels for all architectures.
-INCLUDED_REQUIREMENTS_WHEELS = (
+INCLUDED_REQUIREMENTS_WHEELS = {
     "decora-wifi",
     "evdev",
     "pycups",
     "python-gammu",
     "pyuserinput",
-)
+}
 
 # Excluded requirements to include when running github actions.
 # Requirements listed in EXCLUDED_REQUIREMENTS_CI will be included in
 # requirements_all_{action}.txt
 INCLUDED_REQUIREMENTS_ACTIONS = {
-    "pytest": ("python-gammu",),
+    "pytest": {"python-gammu"},
     "wheels_aarch64": INCLUDED_REQUIREMENTS_WHEELS,
     "wheels_armhf": INCLUDED_REQUIREMENTS_WHEELS,
     "wheels_armv7": INCLUDED_REQUIREMENTS_WHEELS,
@@ -73,30 +63,20 @@ INCLUDED_REQUIREMENTS_ACTIONS = {
     "wheels_i386": INCLUDED_REQUIREMENTS_WHEELS,
 }
 
-INCLUDED_REQUIREMENTS_ACTIONS_NORMALIZED = {
-    action: {normalize(requirement) for requirement in requirements}
-    for action, requirements in INCLUDED_REQUIREMENTS_ACTIONS.items()
-}
-
 # Requirements to exclude when running github actions.
 # Requirements listed in EXCLUDED_REQUIREMENTS_CI will be commented-out in
 # requirements_all_{action}.txt
 EXCLUDED_REQUIREMENTS_ACTIONS = {
-    "pytest": (),
-    "wheels_aarch64": (),
+    "pytest": set(),
+    "wheels_aarch64": set(),
     # Pandas has issues building on armhf, it is expected they
     # will drop the platform in the near future (they consider it
     # "flimsy" on 386). The following packages depend on pandas,
     # so we comment them out.
-    "wheels_armhf": ("env-canada", "noaa-coops", "pyezviz", "pykrakenapi"),
-    "wheels_armv7": (),
-    "wheels_amd64": (),
-    "wheels_i386": (),
-}
-
-EXCLUDED_REQUIREMENTS_ACTIONS_NORMALIZED = {
-    action: {normalize(requirement) for requirement in requirements}
-    for action, requirements in EXCLUDED_REQUIREMENTS_ACTIONS.items()
+    "wheels_armhf": {"env-canada", "noaa-coops", "pyezviz", "pykrakenapi"},
+    "wheels_armv7": set(),
+    "wheels_amd64": set(),
+    "wheels_i386": set(),
 }
 
 IGNORE_PIN = ("colorlog>2.1,<3", "urllib3")
@@ -311,6 +291,12 @@ def gather_recursive_requirements(
     return reqs
 
 
+def _normalize_package_name(package_name: str) -> str:
+    """Normalize a package name."""
+    # pipdeptree needs lowercase and dash instead of underscore or period as separator
+    return package_name.lower().replace("_", "-").replace(".", "-")
+
+
 def normalize_package_name(requirement: str) -> str:
     """Return a normalized package name from a requirement string."""
     # This function is also used in hassfest.
@@ -319,22 +305,22 @@ def normalize_package_name(requirement: str) -> str:
         return ""
 
     # pipdeptree needs lowercase and dash instead of underscore or period as separator
-    return match.group(1).lower().replace("_", "-").replace(".", "-")
+    return _normalize_package_name(match.group(1))
 
 
 def comment_requirement(req: str) -> bool:
     """Comment out requirement. Some don't install on all systems."""
-    return normalize_package_name(req) in EXCLUDED_REQUIREMENTS_ALL_NORMALIZED
+    return normalize_package_name(req) in EXCLUDED_REQUIREMENTS_ALL
 
 
 def process_action_requirement(req: str, action: str) -> str:
     """Process requirement for a specific github action."""
     normalized_package_name = normalize_package_name(req)
-    if normalized_package_name in EXCLUDED_REQUIREMENTS_ACTIONS_NORMALIZED[action]:
+    if normalized_package_name in EXCLUDED_REQUIREMENTS_ACTIONS[action]:
         return f"# {req}"
-    if normalized_package_name in INCLUDED_REQUIREMENTS_ACTIONS_NORMALIZED[action]:
+    if normalized_package_name in INCLUDED_REQUIREMENTS_ACTIONS[action]:
         return req
-    if normalized_package_name in EXCLUDED_REQUIREMENTS_ALL_NORMALIZED:
+    if normalized_package_name in EXCLUDED_REQUIREMENTS_ALL:
         return f"# {req}"
     return req
 
