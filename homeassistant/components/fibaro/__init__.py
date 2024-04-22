@@ -454,37 +454,38 @@ class FibaroDevice(Entity):
         if not fibaro_device.visible:
             self._attr_entity_registry_visible_default = False
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self.controller.register(self.fibaro_device.fibaro_id, self._update_callback)
 
-    def _update_callback(self):
+    def _update_callback(self) -> None:
         """Update the state."""
         self.schedule_update_ha_state(True)
 
     @property
-    def level(self):
+    def level(self) -> int | None:
         """Get the level of Fibaro device."""
         if self.fibaro_device.value.has_value:
             return self.fibaro_device.value.int_value()
         return None
 
     @property
-    def level2(self):
+    def level2(self) -> int | None:
         """Get the tilt level of Fibaro device."""
         if self.fibaro_device.value_2.has_value:
             return self.fibaro_device.value_2.int_value()
         return None
 
-    def dont_know_message(self, action):
+    def dont_know_message(self, cmd: str) -> None:
         """Make a warning in case we don't know how to perform an action."""
         _LOGGER.warning(
-            "Not sure how to setValue: %s (available actions: %s)",
+            "Not sure how to %s: %s (available actions: %s)",
+            cmd,
             str(self.ha_id),
             str(self.fibaro_device.actions),
         )
 
-    def set_level(self, level):
+    def set_level(self, level: int) -> None:
         """Set the level of Fibaro device."""
         self.action("setValue", level)
         if self.fibaro_device.value.has_value:
@@ -492,21 +493,21 @@ class FibaroDevice(Entity):
         if self.fibaro_device.has_brightness:
             self.fibaro_device.properties["brightness"] = level
 
-    def set_level2(self, level):
+    def set_level2(self, level: int) -> None:
         """Set the level2 of Fibaro device."""
         self.action("setValue2", level)
         if self.fibaro_device.value_2.has_value:
             self.fibaro_device.properties["value2"] = level
 
-    def call_turn_on(self):
+    def call_turn_on(self) -> None:
         """Turn on the Fibaro device."""
         self.action("turnOn")
 
-    def call_turn_off(self):
+    def call_turn_off(self) -> None:
         """Turn off the Fibaro device."""
         self.action("turnOff")
 
-    def call_set_color(self, red, green, blue, white):
+    def call_set_color(self, red: int, green: int, blue: int, white: int) -> None:
         """Set the color of Fibaro device."""
         red = int(max(0, min(255, red)))
         green = int(max(0, min(255, green)))
@@ -516,7 +517,7 @@ class FibaroDevice(Entity):
         self.fibaro_device.properties["color"] = color_str
         self.action("setColor", str(red), str(green), str(blue), str(white))
 
-    def action(self, cmd, *args):
+    def action(self, cmd: str, *args: Any) -> None:
         """Perform an action on the Fibaro HC."""
         if cmd in self.fibaro_device.actions:
             self.fibaro_device.execute_action(cmd, args)
@@ -525,12 +526,12 @@ class FibaroDevice(Entity):
             self.dont_know_message(cmd)
 
     @property
-    def current_binary_state(self):
+    def current_binary_state(self) -> bool:
         """Return the current binary state."""
         return self.fibaro_device.value.bool_value(False)
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes of the device."""
         attr = {"fibaro_id": self.fibaro_device.fibaro_id}
 
