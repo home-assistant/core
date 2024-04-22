@@ -434,21 +434,20 @@ async def test_reconfigure_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
 
     with patch(
-        "homeassistant.components.tado.async_setup_entry",
-        return_value=True,
+        "homeassistant.components.tado.config_flow.Tado",
+        return_value=PyTado.exceptions.TadoWrongCredentialsException,
     ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                "username": "test-username",
-                "password": "test-password",
-                "home_id": 1,
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             },
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "wrong_credentials"}
 
     with (
         patch(
