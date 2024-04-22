@@ -45,15 +45,16 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
             client = OVOEnergy(
                 client_session=async_get_clientsession(self.hass),
             )
+
+            if custom_account := user_input.get(CONF_ACCOUNT) is not None:
+                client.custom_account_id = custom_account
+
             try:
                 authenticated = await client.authenticate(
                     user_input[CONF_USERNAME],
                     user_input[CONF_PASSWORD],
                 )
                 await client.bootstrap_accounts()
-
-                if custom_account := user_input.get(CONF_ACCOUNT) is not None:
-                    client.custom_account_id = custom_account
             except aiohttp.ClientError:
                 errors["base"] = "cannot_connect"
             else:

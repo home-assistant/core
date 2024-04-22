@@ -37,6 +37,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         client_session=async_get_clientsession(hass),
     )
 
+    if custom_account := entry.data.get(CONF_ACCOUNT) is not None:
+        client.custom_account_id = custom_account
+
     try:
         if not await client.authenticate(
             entry.data[CONF_USERNAME],
@@ -45,23 +48,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryAuthFailed
 
         await client.bootstrap_accounts()
-
-        if custom_account := entry.data.get(CONF_ACCOUNT) is not None:
-            client.custom_account_id = custom_account
     except aiohttp.ClientError as exception:
         _LOGGER.warning(exception)
         raise ConfigEntryNotReady from exception
 
     async def async_update_data() -> OVODailyUsage:
         """Fetch data from OVO Energy."""
+        if custom_account := entry.data.get(CONF_ACCOUNT) is not None:
+            client.custom_account_id = custom_account
+
         async with asyncio.timeout(10):
             try:
                 authenticated = await client.authenticate(
                     entry.data[CONF_USERNAME],
                     entry.data[CONF_PASSWORD],
                 )
-                if custom_account := entry.data.get(CONF_ACCOUNT) is not None:
-                    client.custom_account_id = custom_account
             except aiohttp.ClientError as exception:
                 raise UpdateFailed(exception) from exception
             if not authenticated:
