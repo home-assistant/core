@@ -205,6 +205,9 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+            description_placeholders={
+                CONF_USERNAME: self.config_entry.data[CONF_USERNAME]
+            },
         )
 
     @staticmethod

@@ -14,8 +14,12 @@
       },
       "reconfigure_confirm": {
         "title": "Reconfigure your Tado",
+        "description": "Reconfigure the entry, for your account: `{username}`.",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Enter the (new) password for Tado."
         }
       }
     },
