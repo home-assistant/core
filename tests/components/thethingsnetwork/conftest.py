@@ -89,12 +89,12 @@ def mock_ttnclient():
         patch(
             "homeassistant.components.thethingsnetwork.coordinator.TTNClient",
             autospec=True,
-        ) as TTNClient,
+        ) as ttn_client,
         patch(
             "homeassistant.components.thethingsnetwork.config_flow.TTNClient",
-            new=TTNClient,
+            new=ttn_client,
         ),
     ):
-        instance = TTNClient.return_value
+        instance = ttn_client.return_value
         instance.fetch_data = AsyncMock(return_value=DATA)
-        yield TTNClient
+        yield ttn_client
