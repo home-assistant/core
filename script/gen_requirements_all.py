@@ -561,7 +561,7 @@ def main(validate: bool, ci: bool) -> int:
     ]
     if ci:
         files.extend(
-            (action, reqs_all_file)
+            (f"requirements_all_{action}.txt", reqs_all_file)
             for action, reqs_all_file in reqs_all_action_files.items()
         )
 
