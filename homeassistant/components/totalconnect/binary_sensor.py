@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TotalConnectDataUpdateCoordinator
 from .const import DOMAIN
-from .entity import TotalConnectEntity, TotalConnectZoneEntity
+from .entity import TotalConnectLocationEntity, TotalConnectZoneEntity
 
 LOW_BATTERY = "low_battery"
 TAMPER = "tamper"
@@ -181,7 +181,7 @@ class TotalConnectZoneBinarySensor(TotalConnectZoneEntity, BinarySensorEntity):
         return super().device_class
 
 
-class TotalConnectAlarmBinarySensor(TotalConnectEntity, BinarySensorEntity):
+class TotalConnectAlarmBinarySensor(TotalConnectLocationEntity, BinarySensorEntity):
     """Represent a TotalConnect alarm device binary sensors."""
 
     entity_description: TotalConnectAlarmBinarySensorEntityDescription
@@ -193,10 +193,9 @@ class TotalConnectAlarmBinarySensor(TotalConnectEntity, BinarySensorEntity):
         location: TotalConnectLocation,
     ) -> None:
         """Initialize the TotalConnect alarm device binary sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, location)
         self.entity_description = entity_description
-        self._location = location
-        self._attr_name = f"{location.location_name}{entity_description.name}"
+        self._attr_name = f"{self.device.name}{entity_description.name}"
         self._attr_unique_id = f"{location.location_id}_{entity_description.key}"
         self._attr_extra_state_attributes = {
             "location_id": location.location_id,
