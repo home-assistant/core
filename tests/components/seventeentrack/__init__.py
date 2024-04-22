@@ -6,15 +6,18 @@ from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.seventeentrack.sensor import DEFAULT_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import async_setup_component
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def init_integration(hass: HomeAssistant, config: ConfigType):
-    """Set up the seventeentrack integration in Home Assistant."""
-    assert await async_setup_component(hass, "sensor", config)
+async def init_integration(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Set up the 17Track integration in Home Assistant."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
 

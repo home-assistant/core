@@ -656,9 +656,9 @@ def _get_deconz_event_from_device(
     device: dr.DeviceEntry,
 ) -> DeconzAlarmEvent | DeconzEvent | DeconzPresenceEvent | DeconzRelativeRotaryEvent:
     """Resolve deconz event from device."""
-    gateways: dict[str, DeconzHub] = hass.data.get(DOMAIN, {})
-    for gateway in gateways.values():
-        for deconz_event in gateway.events:
+    hubs: dict[str, DeconzHub] = hass.data.get(DOMAIN, {})
+    for hub in hubs.values():
+        for deconz_event in hub.events:
             if device.id == deconz_event.device_id:
                 return deconz_event
 

@@ -1399,15 +1399,13 @@ async def test_missing_discover_abbreviations(
             continue
         with open(fil, encoding="utf-8") as file:
             matches = re.findall(regex, file.read())
-            for match in matches:
-                if (
-                    match[1] not in ABBREVIATIONS.values()
-                    and match[1] not in DEVICE_ABBREVIATIONS.values()
-                    and match[0] not in ABBREVIATIONS_WHITE_LIST
-                ):
-                    missing.append(
-                        f"{fil}: no abbreviation for {match[1]} ({match[0]})"
-                    )
+            missing.extend(
+                f"{fil}: no abbreviation for {match[1]} ({match[0]})"
+                for match in matches
+                if match[1] not in ABBREVIATIONS.values()
+                and match[1] not in DEVICE_ABBREVIATIONS.values()
+                and match[0] not in ABBREVIATIONS_WHITE_LIST
+            )
 
     assert not missing
 
@@ -1508,8 +1506,9 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
         wait_unsub.set()
         return (0, 0)
 
-    with mock_config_flow("comp", TestFlow), patch.object(
-        mqtt_client_mock, "unsubscribe", side_effect=_mock_unsubscribe
+    with (
+        mock_config_flow("comp", TestFlow),
+        patch.object(mqtt_client_mock, "unsubscribe", side_effect=_mock_unsubscribe),
     ):
         async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
         await wait_unsub.wait()
@@ -1547,6 +1546,7 @@ async def test_mqtt_discovery_unsubscribe_once(
 
         async def async_step_mqtt(self, discovery_info: MqttServiceInfo) -> FlowResult:
             """Test mqtt step."""
+            await asyncio.sleep(0.1)
             return self.async_abort(reason="already_configured")
 
     with mock_config_flow("comp", TestFlow):

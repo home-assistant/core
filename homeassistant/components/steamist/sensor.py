@@ -31,18 +31,11 @@ UNIT_MAPPINGS = {
 }
 
 
-@dataclass(frozen=True)
-class SteamistSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class SteamistSensorEntityDescription(SensorEntityDescription):
+    """Describes a Steamist sensor entity."""
 
     value_fn: Callable[[SteamistStatus], int | None]
-
-
-@dataclass(frozen=True)
-class SteamistSensorEntityDescription(
-    SensorEntityDescription, SteamistSensorEntityDescriptionMixin
-):
-    """Describes a Steamist sensor entity."""
 
 
 SENSORS: tuple[SteamistSensorEntityDescription, ...] = (

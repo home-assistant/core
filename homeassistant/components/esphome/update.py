@@ -139,7 +139,9 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
         )
 
     @callback
-    def _handle_device_update(self, static_info: EntityInfo | None = None) -> None:
+    def _handle_device_update(
+        self, static_info: list[EntityInfo] | None = None
+    ) -> None:
         """Handle updated data from the device."""
         self._update_attrs()
         self.async_write_ha_state()

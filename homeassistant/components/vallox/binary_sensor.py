@@ -42,18 +42,11 @@ class ValloxBinarySensorEntity(ValloxEntity, BinarySensorEntity):
         return self.coordinator.data.get(self.entity_description.metric_key) == 1
 
 
-@dataclass(frozen=True)
-class ValloxMetricKeyMixin:
-    """Dataclass to allow defining metric_key without a default value."""
+@dataclass(frozen=True, kw_only=True)
+class ValloxBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes Vallox binary sensor entity."""
 
     metric_key: str
-
-
-@dataclass(frozen=True)
-class ValloxBinarySensorEntityDescription(
-    BinarySensorEntityDescription, ValloxMetricKeyMixin
-):
-    """Describes Vallox binary sensor entity."""
 
 
 BINARY_SENSOR_ENTITIES: tuple[ValloxBinarySensorEntityDescription, ...] = (

@@ -52,9 +52,9 @@ def _async_integration_platform_component_loaded(
         if component_name in integration_platform.seen_components:
             continue
         integration_platform.seen_components.add(component_name)
-        integration_platforms_by_name[
-            integration_platform.platform_name
-        ] = integration_platform
+        integration_platforms_by_name[integration_platform.platform_name] = (
+            integration_platform
+        )
 
     if not integration_platforms_by_name:
         return
@@ -140,7 +140,6 @@ def _process_integration_platforms(
                 hass,
                 integration.domain,
                 platform,
-                eager_start=True,
             )
         )
     ]
@@ -170,13 +169,12 @@ async def async_process_integration_platforms(
                 hass,
                 integration_platforms,
             ),
-            run_immediately=True,
         )
     else:
         integration_platforms = hass.data[DATA_INTEGRATION_PLATFORMS]
 
     async_register_preload_platform(hass, platform_name)
-    top_level_components = {comp for comp in hass.config.components if "." not in comp}
+    top_level_components = hass.config.top_level_components.copy()
     process_job = HassJob(
         catch_log_exception(
             process_platform,
@@ -250,7 +248,7 @@ async def _async_process_integration_platforms(
             continue
 
         if future := hass.async_run_hass_job(
-            process_job, hass, integration.domain, platform, eager_start=True
+            process_job, hass, integration.domain, platform
         ):
             futures.append(future)
 

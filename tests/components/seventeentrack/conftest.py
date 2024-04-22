@@ -1,46 +1,22 @@
 """Configuration for 17Track tests."""
 
-from typing import Optional
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from py17track.package import Package
 import pytest
 
+from homeassistant.components.seventeentrack.const import (
+    DEFAULT_SHOW_ARCHIVED,
+    DEFAULT_SHOW_DELIVERED,
+)
 from homeassistant.components.seventeentrack.sensor import (
     CONF_SHOW_ARCHIVED,
     CONF_SHOW_DELIVERED,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-VALID_CONFIG_MINIMAL = {
-    "sensor": {
-        "platform": "seventeentrack",
-        CONF_USERNAME: "test",
-        CONF_PASSWORD: "test",
-    }
-}
-
-INVALID_CONFIG = {"sensor": {"platform": "seventeentrack", "boom": "test"}}
-
-VALID_CONFIG_FULL = {
-    "sensor": {
-        "platform": "seventeentrack",
-        CONF_USERNAME: "test",
-        CONF_PASSWORD: "test",
-        CONF_SHOW_ARCHIVED: True,
-        CONF_SHOW_DELIVERED: True,
-    }
-}
-
-VALID_CONFIG_FULL_NO_DELIVERED = {
-    "sensor": {
-        "platform": "seventeentrack",
-        CONF_USERNAME: "test",
-        CONF_PASSWORD: "test",
-        CONF_SHOW_ARCHIVED: False,
-        CONF_SHOW_DELIVERED: False,
-    }
-}
+from tests.common import MockConfigEntry
 
 DEFAULT_SUMMARY = {
     "Not Found": 0,
@@ -52,6 +28,8 @@ DEFAULT_SUMMARY = {
     "Returned": 0,
 }
 
+ACCOUNT_ID = "1234"
+
 NEW_SUMMARY_DATA = {
     "Not Found": 1,
     "In Transit": 1,
@@ -62,6 +40,67 @@ NEW_SUMMARY_DATA = {
     "Returned": 1,
 }
 
+VALID_CONFIG = {
+    CONF_USERNAME: "test",
+    CONF_PASSWORD: "test",
+}
+
+INVALID_CONFIG = {"notusername": "seventeentrack", "notpassword": "test"}
+
+VALID_OPTIONS = {
+    CONF_SHOW_ARCHIVED: True,
+    CONF_SHOW_DELIVERED: True,
+}
+
+NO_DELIVERED_OPTIONS = {
+    CONF_SHOW_ARCHIVED: False,
+    CONF_SHOW_DELIVERED: False,
+}
+
+VALID_PLATFORM_CONFIG_FULL = {
+    "sensor": {
+        "platform": "seventeentrack",
+        CONF_USERNAME: "test",
+        CONF_PASSWORD: "test",
+        CONF_SHOW_ARCHIVED: True,
+        CONF_SHOW_DELIVERED: True,
+    }
+}
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.seventeentrack.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        domain="seventeentrack",
+        data=VALID_CONFIG,
+        options=VALID_OPTIONS,
+        unique_id=ACCOUNT_ID,
+    )
+
+
+@pytest.fixture
+def mock_config_entry_with_default_options() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        domain="seventeentrack",
+        data=VALID_CONFIG,
+        options={
+            CONF_SHOW_ARCHIVED: DEFAULT_SHOW_ARCHIVED,
+            CONF_SHOW_DELIVERED: DEFAULT_SHOW_DELIVERED,
+        },
+        unique_id=ACCOUNT_ID,
+    )
+
 
 @pytest.fixture
 def mock_seventeentrack():
@@ -69,10 +108,15 @@ def mock_seventeentrack():
     mock_seventeentrack_api = AsyncMock()
     with (
         patch(
-            "homeassistant.components.seventeentrack.sensor.SeventeenTrackClient",
+            "homeassistant.components.seventeentrack.SeventeenTrackClient",
+            return_value=mock_seventeentrack_api,
+        ),
+        patch(
+            "homeassistant.components.seventeentrack.config_flow.SeventeenTrackClient",
             return_value=mock_seventeentrack_api,
         ) as mock_seventeentrack_api,
     ):
+        mock_seventeentrack_api.return_value.profile.account_id = ACCOUNT_ID
         mock_seventeentrack_api.return_value.profile.login.return_value = True
         mock_seventeentrack_api.return_value.profile.packages.return_value = []
         mock_seventeentrack_api.return_value.profile.summary.return_value = (
@@ -84,7 +128,7 @@ def mock_seventeentrack():
 def get_package(
     tracking_number: str = "456",
     destination_country: int = 206,
-    friendly_name: Optional[str] = "friendly name 1",
+    friendly_name: str | None = "friendly name 1",
     info_text: str = "info text 1",
     location: str = "location 1",
     timestamp: str = "2020-08-10 10:32",

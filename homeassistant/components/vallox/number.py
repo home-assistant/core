@@ -59,16 +59,11 @@ class ValloxNumberEntity(ValloxEntity, NumberEntity):
         await self.coordinator.async_request_refresh()
 
 
-@dataclass(frozen=True)
-class ValloxMetricMixin:
-    """Holds Vallox metric key."""
+@dataclass(frozen=True, kw_only=True)
+class ValloxNumberEntityDescription(NumberEntityDescription):
+    """Describes Vallox number entity."""
 
     metric_key: str
-
-
-@dataclass(frozen=True)
-class ValloxNumberEntityDescription(NumberEntityDescription, ValloxMetricMixin):
-    """Describes Vallox number entity."""
 
 
 NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (

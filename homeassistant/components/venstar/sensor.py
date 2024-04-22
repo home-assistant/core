@@ -68,18 +68,13 @@ SCHEDULE_PARTS: dict[int, str] = {
 STAGES: dict[int, str] = {0: "idle", 1: "first_stage", 2: "second_stage"}
 
 
-@dataclass(frozen=True)
-class VenstarSensorTypeMixin:
-    """Mixin for sensor required keys."""
+@dataclass(frozen=True, kw_only=True)
+class VenstarSensorEntityDescription(SensorEntityDescription):
+    """Base description of a Sensor entity."""
 
     value_fn: Callable[[VenstarDataUpdateCoordinator, str], Any]
     name_fn: Callable[[str], str]
     uom_fn: Callable[[Any], str | None]
-
-
-@dataclass(frozen=True)
-class VenstarSensorEntityDescription(SensorEntityDescription, VenstarSensorTypeMixin):
-    """Base description of a Sensor entity."""
 
 
 async def async_setup_entry(
@@ -103,13 +98,11 @@ async def async_setup_entry(
             )
 
         runtimes = coordinator.runtimes[-1]
-        for sensor_name in runtimes:
-            if sensor_name in RUNTIME_DEVICES:
-                entities.append(
-                    VenstarSensor(
-                        coordinator, config_entry, RUNTIME_ENTITY, sensor_name
-                    )
-                )
+        entities.extend(
+            VenstarSensor(coordinator, config_entry, RUNTIME_ENTITY, sensor_name)
+            for sensor_name in runtimes
+            if sensor_name in RUNTIME_DEVICES
+        )
 
     for description in INFO_ENTITIES:
         try:

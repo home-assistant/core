@@ -101,11 +101,14 @@ def twitch_mock() -> TwitchMock:
 @pytest.fixture(name="twitch")
 def mock_twitch(twitch_mock: TwitchMock):
     """Mock Twitch."""
-    with patch(
-        "homeassistant.components.twitch.Twitch",
-        return_value=twitch_mock,
-    ), patch(
-        "homeassistant.components.twitch.config_flow.Twitch",
-        return_value=twitch_mock,
+    with (
+        patch(
+            "homeassistant.components.twitch.Twitch",
+            return_value=twitch_mock,
+        ),
+        patch(
+            "homeassistant.components.twitch.config_flow.Twitch",
+            return_value=twitch_mock,
+        ),
     ):
         yield twitch_mock

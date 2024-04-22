@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def x10_command(command):
     """Execute X10 command and check output."""
-    return check_output(["heyu"] + command.split(" "), stderr=STDOUT)
+    return check_output(["heyu", *command.split(" ")], stderr=STDOUT)
 
 
 def get_unit_status(code):

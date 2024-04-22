@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import math
-from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Concatenate, Generic, ParamSpec, TypeVar, cast
 
 from aioesphomeapi import (
+    APIConnectionError,
     EntityCategory as EsphomeEntityCategory,
     EntityInfo,
     EntityState,
@@ -18,6 +19,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
@@ -32,6 +34,7 @@ from .entry_data import RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
 
 _R = TypeVar("_R")
+_P = ParamSpec("_P")
 _InfoT = TypeVar("_InfoT", bound=EntityInfo)
 _EntityT = TypeVar("_EntityT", bound="EsphomeEntity[Any,Any]")
 _StateT = TypeVar("_StateT", bound=EntityState)
@@ -140,17 +143,37 @@ def esphome_state_property(
     return _wrapper
 
 
+def convert_api_error_ha_error(
+    func: Callable[Concatenate[_EntityT, _P], Awaitable[None]],
+) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
+    """Decorate ESPHome command calls that send commands/make changes to the device.
+
+    A decorator that wraps the passed in function, catches APIConnectionError errors,
+    and raises a HomeAssistant error instead.
+    """
+
+    async def handler(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        try:
+            return await func(self, *args, **kwargs)
+        except APIConnectionError as error:
+            raise HomeAssistantError(
+                f"Error communicating with device: {error}"
+            ) from error
+
+    return handler
+
+
 ICON_SCHEMA = vol.Schema(cv.icon)
 
 
-ENTITY_CATEGORIES: EsphomeEnumMapper[
-    EsphomeEntityCategory, EntityCategory | None
-] = EsphomeEnumMapper(
-    {
-        EsphomeEntityCategory.NONE: None,
-        EsphomeEntityCategory.CONFIG: EntityCategory.CONFIG,
-        EsphomeEntityCategory.DIAGNOSTIC: EntityCategory.DIAGNOSTIC,
-    }
+ENTITY_CATEGORIES: EsphomeEnumMapper[EsphomeEntityCategory, EntityCategory | None] = (
+    EsphomeEnumMapper(
+        {
+            EsphomeEntityCategory.NONE: None,
+            EsphomeEntityCategory.CONFIG: EntityCategory.CONFIG,
+            EsphomeEntityCategory.DIAGNOSTIC: EntityCategory.DIAGNOSTIC,
+        }
+    )
 )
 
 

@@ -1,7 +1,5 @@
 """The Minecraft Server binary sensor platform."""
 
-from dataclasses import dataclass
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -18,13 +16,8 @@ from .entity import MinecraftServerEntity
 KEY_STATUS = "status"
 
 
-@dataclass(frozen=True)
-class MinecraftServerBinarySensorEntityDescription(BinarySensorEntityDescription):
-    """Class describing Minecraft Server binary sensor entities."""
-
-
 BINARY_SENSOR_DESCRIPTIONS = [
-    MinecraftServerBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key=KEY_STATUS,
         translation_key=KEY_STATUS,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
@@ -52,12 +45,10 @@ async def async_setup_entry(
 class MinecraftServerBinarySensorEntity(MinecraftServerEntity, BinarySensorEntity):
     """Representation of a Minecraft Server binary sensor base entity."""
 
-    entity_description: MinecraftServerBinarySensorEntityDescription
-
     def __init__(
         self,
         coordinator: MinecraftServerCoordinator,
-        description: MinecraftServerBinarySensorEntityDescription,
+        description: BinarySensorEntityDescription,
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize binary sensor base entity."""

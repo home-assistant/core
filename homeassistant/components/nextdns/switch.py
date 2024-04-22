@@ -538,11 +538,9 @@ async def async_setup_entry(
         ATTR_SETTINGS
     ]
 
-    switches: list[NextDnsSwitch] = []
-    for description in SWITCHES:
-        switches.append(NextDnsSwitch(coordinator, description))
-
-    async_add_entities(switches)
+    async_add_entities(
+        NextDnsSwitch(coordinator, description) for description in SWITCHES
+    )
 
 
 class NextDnsSwitch(CoordinatorEntity[NextDnsSettingsUpdateCoordinator], SwitchEntity):

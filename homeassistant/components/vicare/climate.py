@@ -53,6 +53,7 @@ SERVICE_SET_VICARE_MODE_ATTR_MODE = "vicare_mode"
 
 VICARE_MODE_DHW = "dhw"
 VICARE_MODE_HEATING = "heating"
+VICARE_MODE_HEATINGCOOLING = "heatingCooling"
 VICARE_MODE_DHWANDHEATING = "dhwAndHeating"
 VICARE_MODE_DHWANDHEATINGCOOLING = "dhwAndHeatingCooling"
 VICARE_MODE_FORCEDREDUCED = "forcedReduced"
@@ -72,6 +73,7 @@ VICARE_TO_HA_HVAC_HEATING: dict[str, HVACMode] = {
     VICARE_MODE_DHW: HVACMode.OFF,
     VICARE_MODE_DHWANDHEATINGCOOLING: HVACMode.AUTO,
     VICARE_MODE_DHWANDHEATING: HVACMode.AUTO,
+    VICARE_MODE_HEATINGCOOLING: HVACMode.AUTO,
     VICARE_MODE_HEATING: HVACMode.AUTO,
     VICARE_MODE_FORCEDNORMAL: HVACMode.HEAT,
 }
@@ -197,14 +199,14 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
             }
 
             with suppress(PyViCareNotSupportedFeatureError):
-                self._attributes[
-                    "heating_curve_slope"
-                ] = self._circuit.getHeatingCurveSlope()
+                self._attributes["heating_curve_slope"] = (
+                    self._circuit.getHeatingCurveSlope()
+                )
 
             with suppress(PyViCareNotSupportedFeatureError):
-                self._attributes[
-                    "heating_curve_shift"
-                ] = self._circuit.getHeatingCurveShift()
+                self._attributes["heating_curve_shift"] = (
+                    self._circuit.getHeatingCurveShift()
+                )
 
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attributes["vicare_modes"] = self._circuit.getModes()

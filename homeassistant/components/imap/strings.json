@@ -35,6 +35,35 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
+  "exceptions": {
+    "copy_failed": {
+      "message": "Copying the message failed with \"{error}\"."
+    },
+    "delete_failed": {
+      "message": "Marking the message for deletion failed with \"{error}\"."
+    },
+    "expunge_failed": {
+      "message": "Expunging the message failed with \"{error}\"."
+    },
+    "fetch_failed": {
+      "message": "Fetching the message text failed with \"{error}\"."
+    },
+    "invalid_entry": {
+      "message": "No valid IMAP entry was found."
+    },
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "invalid_folder": {
+      "message": "[%key:component::imap::config::error::invalid_folder%]"
+    },
+    "imap_server_fail": {
+      "message": "The IMAP server failed to connect: {error}."
+    },
+    "seen_failed": {
+      "message": "Marking message as seen failed with \"{error}\"."
+    }
+  },
   "options": {
     "step": {
       "init": {
@@ -43,7 +72,8 @@
           "search": "[%key:component::imap::config::step::user::data::search%]",
           "custom_event_data_template": "Template to create custom event data",
           "max_message_size": "Max message size (2048 < size < 30000)",
-          "enable_push": "Enable Push-IMAP if the server supports it. Turn off if Push-IMAP updates are unreliable."
+          "enable_push": "Enable Push-IMAP if the server supports it. Turn off if Push-IMAP updates are unreliable.",
+          "event_message_data": "Message data to be included in the `imap_content` event data:"
         }
       }
     },
@@ -62,6 +92,78 @@
         "python_default": "Default settings",
         "modern": "Modern ciphers",
         "intermediate": "Intermediate ciphers"
+      }
+    },
+    "event_message_data": {
+      "options": {
+        "text": "Body text",
+        "headers": "Message headers"
+      }
+    }
+  },
+  "services": {
+    "fetch": {
+      "name": "Fetch message",
+      "description": "Fetch the email message from the server.",
+      "fields": {
+        "entry": {
+          "name": "Entry",
+          "description": "The IMAP config entry."
+        },
+        "uid": {
+          "name": "UID",
+          "description": "The email identifier (UID)."
+        }
+      }
+    },
+    "seen": {
+      "name": "Mark message as seen",
+      "description": "Mark an email as seen.",
+      "fields": {
+        "entry": {
+          "name": "Entry",
+          "description": "The IMAP config entry."
+        },
+        "uid": {
+          "name": "UID",
+          "description": "The email identifier (UID)."
+        }
+      }
+    },
+    "move": {
+      "name": "Move message",
+      "description": "Move an email to a target folder.",
+      "fields": {
+        "entry": {
+          "name": "[%key:component::imap::services::seen::fields::entry::name%]",
+          "description": "[%key:component::imap::services::seen::fields::entry::description%]"
+        },
+        "seen": {
+          "name": "Seen",
+          "description": "Mark the email as seen."
+        },
+        "uid": {
+          "name": "[%key:component::imap::services::seen::fields::uid::name%]",
+          "description": "[%key:component::imap::services::seen::fields::uid::description%]"
+        },
+        "target_folder": {
+          "name": "Target folder",
+          "description": "The target folder the email should be moved to."
+        }
+      }
+    },
+    "delete": {
+      "name": "Delete message",
+      "description": "Delete an email.",
+      "fields": {
+        "entry": {
+          "name": "[%key:component::imap::services::seen::fields::entry::name%]",
+          "description": "[%key:component::imap::services::seen::fields::entry::description%]"
+        },
+        "uid": {
+          "name": "[%key:component::imap::services::seen::fields::uid::name%]",
+          "description": "[%key:component::imap::services::seen::fields::uid::description%]"
+        }
       }
     }
   }

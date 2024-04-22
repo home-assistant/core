@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property
 import logging
-from typing import Any, TypeVar
+from typing import Any
 
 import voluptuous as vol
 
@@ -24,11 +24,16 @@ from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 
-from . import area_registry, config_validation as cv, device_registry, entity_registry
+from . import (
+    area_registry,
+    config_validation as cv,
+    device_registry,
+    entity_registry,
+    floor_registry,
+)
 
 _LOGGER = logging.getLogger(__name__)
 _SlotsType = dict[str, Any]
-_T = TypeVar("_T")
 
 INTENT_TURN_OFF = "HassTurnOff"
 INTENT_TURN_ON = "HassTurnOn"
@@ -109,7 +114,6 @@ async def async_handle(
     try:
         _LOGGER.info("Triggering intent handler %s", handler)
         result = await handler.async_handle(intent)
-        return result
     except vol.Invalid as err:
         _LOGGER.warning("Received invalid slot info for %s: %s", intent_type, err)
         raise InvalidSlotInfo(f"Received invalid slot info for {intent_type}") from err
@@ -117,6 +121,7 @@ async def async_handle(
         raise  # bubble up intent related errors
     except Exception as err:
         raise IntentUnexpectedError(f"Error handling {intent_type}") from err
+    return result
 
 
 class IntentError(HomeAssistantError):
@@ -144,16 +149,18 @@ class NoStatesMatchedError(IntentError):
 
     def __init__(
         self,
-        name: str | None,
-        area: str | None,
-        domains: set[str] | None,
-        device_classes: set[str] | None,
+        name: str | None = None,
+        area: str | None = None,
+        floor: str | None = None,
+        domains: set[str] | None = None,
+        device_classes: set[str] | None = None,
     ) -> None:
         """Initialize error."""
         super().__init__()
 
         self.name = name
         self.area = area
+        self.floor = floor
         self.domains = domains
         self.device_classes = device_classes
 
@@ -220,12 +227,35 @@ def _find_area(
     return None
 
 
-def _filter_by_area(
+def _find_floor(
+    id_or_name: str, floors: floor_registry.FloorRegistry
+) -> floor_registry.FloorEntry | None:
+    """Find an floor by id or name, checking aliases too."""
+    floor = floors.async_get_floor(id_or_name) or floors.async_get_floor_by_name(
+        id_or_name
+    )
+    if floor is not None:
+        return floor
+
+    # Check floor aliases
+    for maybe_floor in floors.floors.values():
+        if not maybe_floor.aliases:
+            continue
+
+        for floor_alias in maybe_floor.aliases:
+            if id_or_name == floor_alias.casefold():
+                return maybe_floor
+
+    return None
+
+
+def _filter_by_areas(
     states_and_entities: list[tuple[State, entity_registry.RegistryEntry | None]],
-    area: area_registry.AreaEntry,
+    areas: Iterable[area_registry.AreaEntry],
     devices: device_registry.DeviceRegistry,
 ) -> Iterable[tuple[State, entity_registry.RegistryEntry | None]]:
     """Filter state/entity pairs by an area."""
+    filter_area_ids: set[str | None] = {a.id for a in areas}
     entity_area_ids: dict[str, str | None] = {}
     for _state, entity in states_and_entities:
         if entity is None:
@@ -241,7 +271,7 @@ def _filter_by_area(
                 entity_area_ids[entity.id] = device.area_id
 
     for state, entity in states_and_entities:
-        if (entity is not None) and (entity_area_ids.get(entity.id) == area.id):
+        if (entity is not None) and (entity_area_ids.get(entity.id) in filter_area_ids):
             yield (state, entity)
 
 
@@ -252,11 +282,14 @@ def async_match_states(
     name: str | None = None,
     area_name: str | None = None,
     area: area_registry.AreaEntry | None = None,
+    floor_name: str | None = None,
+    floor: floor_registry.FloorEntry | None = None,
     domains: Collection[str] | None = None,
     device_classes: Collection[str] | None = None,
     states: Iterable[State] | None = None,
     entities: entity_registry.EntityRegistry | None = None,
     areas: area_registry.AreaRegistry | None = None,
+    floors: floor_registry.FloorRegistry | None = None,
     devices: device_registry.DeviceRegistry | None = None,
     assistant: str | None = None,
 ) -> Iterable[State]:
@@ -267,6 +300,15 @@ def async_match_states(
 
     if entities is None:
         entities = entity_registry.async_get(hass)
+
+    if devices is None:
+        devices = device_registry.async_get(hass)
+
+    if areas is None:
+        areas = area_registry.async_get(hass)
+
+    if floors is None:
+        floors = floor_registry.async_get(hass)
 
     # Gather entities
     states_and_entities: list[tuple[State, entity_registry.RegistryEntry | None]] = []
@@ -294,20 +336,35 @@ def async_match_states(
             if _is_device_class(state, entity, device_classes)
         ]
 
+    filter_areas: list[area_registry.AreaEntry] = []
+
+    if (floor is None) and (floor_name is not None):
+        # Look up floor by name
+        floor = _find_floor(floor_name, floors)
+        if floor is None:
+            _LOGGER.warning("Floor not found: %s", floor_name)
+            return
+
+    if floor is not None:
+        filter_areas = [
+            a for a in areas.async_list_areas() if a.floor_id == floor.floor_id
+        ]
+
     if (area is None) and (area_name is not None):
         # Look up area by name
-        if areas is None:
-            areas = area_registry.async_get(hass)
-
         area = _find_area(area_name, areas)
-        assert area is not None, f"No area named {area_name}"
+        if area is None:
+            _LOGGER.warning("Area not found: %s", area_name)
+            return
 
     if area is not None:
-        # Filter by states/entities by area
-        if devices is None:
-            devices = device_registry.async_get(hass)
+        filter_areas = [area]
 
-        states_and_entities = list(_filter_by_area(states_and_entities, area, devices))
+    if filter_areas:
+        # Filter by states/entities by area
+        states_and_entities = list(
+            _filter_by_areas(states_and_entities, filter_areas, devices)
+        )
 
     if assistant is not None:
         # Filter by exposure
@@ -318,9 +375,6 @@ def async_match_states(
         ]
 
     if name is not None:
-        if devices is None:
-            devices = device_registry.async_get(hass)
-
         # Filter by name
         name = name.casefold()
 
@@ -375,7 +429,7 @@ class IntentHandler:
 
     async def async_handle(self, intent_obj: Intent) -> IntentResponse:
         """Handle the intent."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def __repr__(self) -> str:
         """Represent a string of an intent handler."""
@@ -389,7 +443,7 @@ class DynamicServiceIntentHandler(IntentHandler):
     """
 
     slot_schema = {
-        vol.Any("name", "area"): cv.string,
+        vol.Any("name", "area", "floor"): cv.string,
         vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
     }
@@ -439,7 +493,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         self, intent_obj: Intent, state: State
     ) -> tuple[str, str]:
         """Get the domain and service name to call."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_handle(self, intent_obj: Intent) -> IntentResponse:
         """Handle the hass intent."""
@@ -453,7 +507,7 @@ class DynamicServiceIntentHandler(IntentHandler):
             # Don't match on name if targeting all entities
             entity_name = None
 
-        # Look up area first to fail early
+        # Look up area to fail early
         area_slot = slots.get("area", {})
         area_id = area_slot.get("value")
         area_name = area_slot.get("text")
@@ -463,6 +517,17 @@ class DynamicServiceIntentHandler(IntentHandler):
             area = areas.async_get_area(area_id)
             if area is None:
                 raise IntentHandleError(f"No area named {area_name}")
+
+        # Look up floor to fail early
+        floor_slot = slots.get("floor", {})
+        floor_id = floor_slot.get("value")
+        floor_name = floor_slot.get("text")
+        floor: floor_registry.FloorEntry | None = None
+        if floor_id is not None:
+            floors = floor_registry.async_get(hass)
+            floor = floors.async_get_floor(floor_id)
+            if floor is None:
+                raise IntentHandleError(f"No floor named {floor_name}")
 
         # Optional domain/device class filters.
         # Convert to sets for speed.
@@ -480,6 +545,7 @@ class DynamicServiceIntentHandler(IntentHandler):
                 hass,
                 name=entity_name,
                 area=area,
+                floor=floor,
                 domains=domains,
                 device_classes=device_classes,
                 assistant=intent_obj.assistant,
@@ -491,6 +557,7 @@ class DynamicServiceIntentHandler(IntentHandler):
             raise NoStatesMatchedError(
                 name=entity_text or entity_name,
                 area=area_name or area_id,
+                floor=floor_name or floor_id,
                 domains=domains,
                 device_classes=device_classes,
             )
@@ -543,7 +610,9 @@ class DynamicServiceIntentHandler(IntentHandler):
 
         # Handle service calls in parallel, noting failures as they occur.
         failed_results: list[IntentResponseTarget] = []
-        for state, service_coro in zip(states, asyncio.as_completed(service_coros)):
+        for state, service_coro in zip(
+            states, asyncio.as_completed(service_coros), strict=False
+        ):
             target = IntentResponseTarget(
                 type=IntentResponseTargetType.ENTITY,
                 name=state.name,
