@@ -894,6 +894,12 @@ class MQTT:
         import paho.mqtt.client as mqtt
 
         if result_code != mqtt.CONNACK_ACCEPTED:
+            if result_code in (
+                mqtt.CONNACK_REFUSED_BAD_USERNAME_PASSWORD,
+                mqtt.CONNACK_REFUSED_NOT_AUTHORIZED,
+            ):
+                self.hass.async_create_task(self.async_disconnect())
+                self.config_entry.async_start_reauth(self.hass)
             _LOGGER.error(
                 "Unable to connect to the MQTT broker: %s",
                 mqtt.connack_string(result_code),

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import queue
 from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
 from types import MappingProxyType
@@ -164,7 +164,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    entry: ConfigEntry | None
     _hassio_discovery: dict[str, Any] | None = None
+    _reauth_config_entry: ConfigEntry | None = None
 
     @staticmethod
     @callback
@@ -182,6 +184,61 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         return await self.async_step_broker()
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-authentication with Aladdin Connect."""
+
+        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm re-authentication with MQTT broker."""
+        errors: dict[str, str] = {}
+
+        assert self.entry is not None
+        if user_input:
+            new_entry_data = {
+                **self.entry.data,
+                CONF_USERNAME: user_input.get(CONF_USERNAME),
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+            }
+            if await self.hass.async_add_executor_job(
+                try_connection,
+                new_entry_data,
+            ):
+                self.hass.config_entries.async_update_entry(
+                    self.entry,
+                    data=new_entry_data,
+                )
+                await self.hass.config_entries.async_reload(self.entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+            errors["base"] = "invalid_auth"
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_USERNAME,
+                        description={
+                            "suggested_value": self.entry.data.get(CONF_USERNAME)
+                        },
+                    ): TEXT_SELECTOR,
+                    vol.Optional(
+                        CONF_PASSWORD,
+                        description={
+                            "suggested_value": self.entry.data.get(CONF_PASSWORD)
+                        },
+                    ): PASSWORD_SELECTOR,
+                }
+            ),
+            errors=errors,
+        )
 
     async def async_step_broker(
         self, user_input: dict[str, Any] | None = None
