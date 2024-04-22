@@ -96,10 +96,11 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
         Add _# for partition 2 and beyond.
         """
         if partition_id == 1:
-            self._attr_name = self.device.name
+            self._attr_name = None
             self._attr_unique_id = str(location.location_id)
         else:
-            self._attr_name = f"{self.device.name} partition {partition_id}"
+            self._attr_translation_key = "partition"
+            self._attr_translation_placeholders = {"partition_id": str(partition_id)}
             self._attr_unique_id = f"{location.location_id}_{partition_id}"
 
     @property
