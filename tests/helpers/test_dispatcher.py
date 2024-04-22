@@ -252,7 +252,10 @@ async def test_thread_safety_checks(hass: HomeAssistant) -> None:
 
     async_dispatcher_connect(hass, "test", _dispatcher)
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls async_dispatcher_send from a thread.",
+    ):
         await hass.async_add_executor_job(async_dispatcher_send, hass, "test", 3)
 
     async_dispatcher_send(hass, "test", 4)

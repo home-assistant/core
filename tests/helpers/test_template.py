@@ -5738,7 +5738,10 @@ async def test_template_thread_safety_checks(hass: HomeAssistant) -> None:
     template_obj.hass = hass
     hass.config.debug = True
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls async_render_to_info from a thread.",
+    ):
         await hass.async_add_executor_job(template_obj.async_render_to_info)
 
     assert template_obj.async_render_to_info().result() == 23
