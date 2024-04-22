@@ -37,6 +37,7 @@ from aioesphomeapi import (
     TextSensorInfo,
     TimeInfo,
     UserService,
+    ValveInfo,
     build_unique_id,
 )
 from aioesphomeapi.model import ButtonInfo
@@ -80,6 +81,7 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     TextInfo: Platform.TEXT,
     TextSensorInfo: Platform.SENSOR,
     TimeInfo: Platform.TIME,
+    ValveInfo: Platform.VALVE,
 }
 
 
