@@ -41,7 +41,7 @@ class EsphomeDateTime(EsphomeEntity[DateTimeInfo, DateTimeState], DateTimeEntity
         state = self._state
         if state.missing_state:
             return None
-        return datetime.fromtimestamp(state.epoch_seconds, dt_util.UTC)
+        return dt_util.utc_from_timestamp(state.epoch_seconds)
 
     async def async_set_value(self, value: datetime) -> None:
         """Update the current datetime."""
