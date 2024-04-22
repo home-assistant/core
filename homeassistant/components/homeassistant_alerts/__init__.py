@@ -104,9 +104,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             refresh_debouncer.async_schedule_call()
 
         await coordinator.async_refresh()
-        hass.bus.async_listen(
-            EVENT_COMPONENT_LOADED, _component_loaded, run_immediately=True
-        )
+        hass.bus.async_listen(EVENT_COMPONENT_LOADED, _component_loaded)
 
     async_at_start(hass, initial_refresh)
 

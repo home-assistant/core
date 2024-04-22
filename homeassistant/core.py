@@ -36,7 +36,6 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Generic,
-    Literal,
     NotRequired,
     ParamSpec,
     Self,
@@ -86,6 +85,7 @@ from .exceptions import (
     InvalidStateError,
     MaxLengthExceeded,
     ServiceNotFound,
+    ServiceValidationError,
     Unauthorized,
 )
 from .helpers.deprecation import (
@@ -136,6 +136,7 @@ _P = ParamSpec("_P")
 _Ts = TypeVarTuple("_Ts")
 # Internal; not helpers.typing.UNDEFINED due to circular dependency
 _UNDEF: dict[Any, Any] = {}
+_SENTINEL = object()
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 _DataT = TypeVar("_DataT", bound=Mapping[str, Any], default=Mapping[str, Any])
 CALLBACK_TYPE = Callable[[], None]
@@ -277,17 +278,24 @@ def async_get_hass() -> HomeAssistant:
     return _hass.hass
 
 
+class ReleaseChannel(enum.StrEnum):
+    BETA = "beta"
+    DEV = "dev"
+    NIGHTLY = "nightly"
+    STABLE = "stable"
+
+
 @callback
-def get_release_channel() -> Literal["beta", "dev", "nightly", "stable"]:
+def get_release_channel() -> ReleaseChannel:
     """Find release channel based on version number."""
     version = __version__
     if "dev0" in version:
-        return "dev"
+        return ReleaseChannel.DEV
     if "dev" in version:
-        return "nightly"
+        return ReleaseChannel.NIGHTLY
     if "b" in version:
-        return "beta"
-    return "stable"
+        return ReleaseChannel.BETA
+    return ReleaseChannel.STABLE
 
 
 @enum.unique
@@ -1355,7 +1363,6 @@ def _event_repr(
 _FilterableJobType = tuple[
     HassJob[[Event[_DataT]], Coroutine[Any, Any, None] | None],  # job
     Callable[[_DataT], bool] | None,  # event_filter
-    bool,  # run_immediately
 ]
 
 
@@ -1399,9 +1406,7 @@ class EventBus:
         self._listeners[MATCH_ALL] = self._match_all_listeners
         self._hass = hass
         self._async_logging_changed()
-        self.async_listen(
-            EVENT_LOGGING_CHANGED, self._async_logging_changed, run_immediately=True
-        )
+        self.async_listen(EVENT_LOGGING_CHANGED, self._async_logging_changed)
 
     @callback
     def _async_logging_changed(self, event: Event | None = None) -> None:
@@ -1486,7 +1491,7 @@ class EventBus:
 
         event: Event[_DataT] | None = None
 
-        for job, event_filter, run_immediately in listeners:
+        for job, event_filter in listeners:
             if event_filter is not None:
                 try:
                     if event_data is None or not event_filter(event_data):
@@ -1504,14 +1509,10 @@ class EventBus:
                     context,
                 )
 
-            if run_immediately:
-                try:
-                    self._hass.async_run_hass_job(job, event)
-                except Exception:  # pylint: disable=broad-except
-                    _LOGGER.exception("Error running job: %s", job)
-            else:
-                # pylint: disable-next=protected-access
-                self._hass._async_add_hass_job(job, event)
+            try:
+                self._hass.async_run_hass_job(job, event)
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Error running job: %s", job)
 
     def listen(
         self,
@@ -1539,7 +1540,7 @@ class EventBus:
         event_type: EventType[_DataT] | str,
         listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
         event_filter: Callable[[_DataT], bool] | None = None,
-        run_immediately: bool = True,
+        run_immediately: bool | object = _SENTINEL,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
@@ -1556,6 +1557,16 @@ class EventBus:
 
         This method must be run in the event loop.
         """
+        if run_immediately in (True, False):
+            # late import to avoid circular imports
+            from .helpers import frame  # pylint: disable=import-outside-toplevel
+
+            frame.report(
+                "calls `async_listen` with run_immediately, which is"
+                " deprecated and will be removed in Home Assistant 2025.5",
+                error_if_core=False,
+            )
+
         if event_filter is not None and not is_callback_check_partial(event_filter):
             raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
         if event_type == EVENT_STATE_REPORTED:
@@ -1563,16 +1574,11 @@ class EventBus:
                 raise HomeAssistantError(
                     f"Event filter is required for event {event_type}"
                 )
-            if not run_immediately:
-                raise HomeAssistantError(
-                    f"Run immediately must be set to True for event {event_type}"
-                )
         return self._async_listen_filterable_job(
             event_type,
             (
                 HassJob(listener, f"listen {event_type}"),
                 event_filter,
-                run_immediately,
             ),
         )
 
@@ -1614,7 +1620,7 @@ class EventBus:
         self,
         event_type: EventType[_DataT] | str,
         listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
-        run_immediately: bool = True,
+        run_immediately: bool | object = _SENTINEL,
     ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
@@ -1625,6 +1631,16 @@ class EventBus:
 
         This method must be run in the event loop.
         """
+        if run_immediately in (True, False):
+            # late import to avoid circular imports
+            from .helpers import frame  # pylint: disable=import-outside-toplevel
+
+            frame.report(
+                "calls `async_listen_once` with run_immediately, which is "
+                "deprecated and will be removed in Home Assistant 2025.5",
+                error_if_core=False,
+            )
+
         one_time_listener: _OneTimeListener[_DataT] = _OneTimeListener(
             self._hass, HassJob(listener)
         )
@@ -1637,7 +1653,6 @@ class EventBus:
                     job_type=HassJobType.Callback,
                 ),
                 None,
-                run_immediately,
             ),
         )
         one_time_listener.remove = remove
@@ -2563,16 +2578,27 @@ class ServiceRegistry:
 
         if return_response:
             if not blocking:
-                raise ValueError(
-                    "Invalid argument return_response=True when blocking=False"
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="service_should_be_blocking",
+                    translation_placeholders={
+                        "return_response": "return_response=True",
+                        "non_blocking_argument": "blocking=False",
+                    },
                 )
             if handler.supports_response is SupportsResponse.NONE:
-                raise ValueError(
-                    "Invalid argument return_response=True when handler does not support responses"
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="service_does_not_support_response",
+                    translation_placeholders={
+                        "return_response": "return_response=True"
+                    },
                 )
         elif handler.supports_response is SupportsResponse.ONLY:
-            raise ValueError(
-                "Service call requires responses but caller did not ask for responses"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="service_lacks_response_request",
+                translation_placeholders={"return_response": "return_response=True"},
             )
 
         if target:
@@ -2620,7 +2646,11 @@ class ServiceRegistry:
             return None
         if not isinstance(response_data, dict):
             raise HomeAssistantError(
-                f"Service response data expected a dictionary, was {type(response_data)}"
+                translation_domain=DOMAIN,
+                translation_key="service_reponse_invalid",
+                translation_placeholders={
+                    "response_data_type": str(type(response_data))
+                },
             )
         return response_data
 
@@ -2662,6 +2692,41 @@ class ServiceRegistry:
         return await self._hass.async_add_executor_job(target, service_call)
 
 
+class _ComponentSet(set[str]):
+    """Set of loaded components.
+
+    This set contains both top level components and platforms.
+
+    Examples:
+    `light`, `switch`, `hue`, `mjpeg.camera`, `universal.media_player`,
+    `homeassistant.scene`
+
+    The top level components set only contains the top level components.
+
+    """
+
+    def __init__(self, top_level_components: set[str]) -> None:
+        """Initialize the component set."""
+        self._top_level_components = top_level_components
+
+    def add(self, component: str) -> None:
+        """Add a component to the store."""
+        if "." not in component:
+            self._top_level_components.add(component)
+        return super().add(component)
+
+    def remove(self, component: str) -> None:
+        """Remove a component from the store."""
+        if "." in component:
+            raise ValueError("_ComponentSet does not support removing sub-components")
+        self._top_level_components.remove(component)
+        return super().remove(component)
+
+    def discard(self, component: str) -> None:
+        """Remove a component from the store."""
+        raise NotImplementedError("_ComponentSet does not support discard, use remove")
+
+
 class Config:
     """Configuration settings for Home Assistant."""
 
@@ -2694,8 +2759,13 @@ class Config:
         # List of packages to skip when installing requirements on startup
         self.skip_pip_packages: list[str] = []
 
-        # List of loaded components
-        self.components: set[str] = set()
+        # Set of loaded top level components
+        # This set is updated by _ComponentSet
+        # and should not be modified directly
+        self.top_level_components: set[str] = set()
+
+        # Set of loaded components
+        self.components: _ComponentSet = _ComponentSet(self.top_level_components)
 
         # API (HTTP) server configuration
         self.api: ApiConfig | None = None

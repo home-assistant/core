@@ -8,6 +8,7 @@ from typing import Any, Literal, TypedDict, cast
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
+from homeassistant.util.event_type import EventType
 
 from . import device_registry as dr, entity_registry as er
 from .normalized_name_base_registry import (
@@ -20,7 +21,9 @@ from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
 DATA_REGISTRY = "area_registry"
-EVENT_AREA_REGISTRY_UPDATED = "area_registry_updated"
+EVENT_AREA_REGISTRY_UPDATED: EventType[EventAreaRegistryUpdatedData] = EventType(
+    "area_registry_updated"
+)
 STORAGE_KEY = "core.area_registry"
 STORAGE_VERSION_MAJOR = 1
 STORAGE_VERSION_MINOR = 6
@@ -219,7 +222,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         self.areas[area.id] = area
         self.async_schedule_save()
         self.hass.bus.async_fire(
-            EVENT_AREA_REGISTRY_UPDATED, {"action": "create", "area_id": area.id}
+            EVENT_AREA_REGISTRY_UPDATED,
+            EventAreaRegistryUpdatedData(action="create", area_id=area.id),
         )
         return area
 
@@ -234,7 +238,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         del self.areas[area_id]
 
         self.hass.bus.async_fire(
-            EVENT_AREA_REGISTRY_UPDATED, {"action": "remove", "area_id": area_id}
+            EVENT_AREA_REGISTRY_UPDATED,
+            EventAreaRegistryUpdatedData(action="remove", area_id=area_id),
         )
 
         self.async_schedule_save()
@@ -262,7 +267,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             picture=picture,
         )
         self.hass.bus.async_fire(
-            EVENT_AREA_REGISTRY_UPDATED, {"action": "update", "area_id": area_id}
+            EVENT_AREA_REGISTRY_UPDATED,
+            EventAreaRegistryUpdatedData(action="update", area_id=area_id),
         )
         return updated
 
@@ -379,32 +385,26 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         def _handle_floor_registry_update(event: fr.EventFloorRegistryUpdated) -> None:
             """Update areas that are associated with a floor that has been removed."""
             floor_id = event.data["floor_id"]
-            for area_id, area in self.areas.items():
-                if floor_id == area.floor_id:
-                    self.async_update(area_id, floor_id=None)
+            for area in self.areas.get_areas_for_floor(floor_id):
+                self.async_update(area.id, floor_id=None)
 
         self.hass.bus.async_listen(
             event_type=fr.EVENT_FLOOR_REGISTRY_UPDATED,
             event_filter=_removed_from_registry_filter,
             listener=_handle_floor_registry_update,
-            run_immediately=True,
         )
 
         @callback
         def _handle_label_registry_update(event: lr.EventLabelRegistryUpdated) -> None:
             """Update areas that have a label that has been removed."""
             label_id = event.data["label_id"]
-            for area_id, area in self.areas.items():
-                if label_id in area.labels:
-                    labels = area.labels.copy()
-                    labels.remove(label_id)
-                    self.async_update(area_id, labels=labels)
+            for area in self.areas.get_areas_for_label(label_id):
+                self.async_update(area.id, labels=area.labels - {label_id})
 
         self.hass.bus.async_listen(
             event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
             event_filter=_removed_from_registry_filter,
             listener=_handle_label_registry_update,
-            run_immediately=True,
         )
 
 
