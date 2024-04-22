@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from functools import partial
+from typing import cast
 
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.clients import Clients
@@ -238,6 +239,42 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         supported_fn=lambda hub, obj_id: bool(hub.api.ports[obj_id].port_poe),
         unique_id_fn=lambda hub, obj_id: f"poe_power-{obj_id}",
         value_fn=lambda _, obj: obj.poe_power if obj.poe_mode != "off" else "0",
+    ),
+    UnifiSensorEntityDescription[Ports, Port](
+        key="Port Bandwidth sensor RX",
+        device_class=SensorDeviceClass.DATA_RATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        icon="mdi:download",
+        allowed_fn=lambda hub, _: hub.config.option_allow_bandwidth_sensors,
+        api_handler_fn=lambda api: api.ports,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        name_fn=lambda port: f"{port.name} RX",
+        object_fn=lambda api, obj_id: api.ports[obj_id],
+        unique_id_fn=lambda hub, obj_id: f"port_rx-{obj_id}",
+        value_fn=lambda hub, port: cast(float, port.raw.get("rx_bytes-r", 0)),
+    ),
+    UnifiSensorEntityDescription[Ports, Port](
+        key="Port Bandwidth sensor TX",
+        device_class=SensorDeviceClass.DATA_RATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        icon="mdi:upload",
+        allowed_fn=lambda hub, _: hub.config.option_allow_bandwidth_sensors,
+        api_handler_fn=lambda api: api.ports,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        name_fn=lambda port: f"{port.name} TX",
+        object_fn=lambda api, obj_id: api.ports[obj_id],
+        unique_id_fn=lambda hub, obj_id: f"port_tx-{obj_id}",
+        value_fn=lambda hub, port: cast(float, port.raw.get("tx_bytes-r", 0)),
     ),
     UnifiSensorEntityDescription[Clients, Client](
         key="Client uptime",
