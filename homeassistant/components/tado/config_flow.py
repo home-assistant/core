@@ -179,10 +179,10 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             user_input[CONF_USERNAME] = self.config_entry.data[CONF_USERNAME]
             try:
-                validated = await validate_input(self.hass, user_input)
+                await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
+            except PyTado.exceptions.TadoWrongCredentialsException:
                 errors["base"] = "invalid_auth"
             except NoHomes:
                 errors["base"] = "no_homes"
