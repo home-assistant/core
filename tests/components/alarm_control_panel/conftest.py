@@ -16,6 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .common import MockAlarm
+
 from tests.common import (
     MockConfigEntry,
     MockModule,
@@ -25,9 +27,8 @@ from tests.common import (
     mock_platform,
 )
 
-from .common import MockAlarm
-
 TEST_DOMAIN = "test"
+
 
 @pytest.fixture
 def mock_alarm_control_panel_entities() -> dict[str, MockAlarm]:
@@ -44,6 +45,7 @@ def mock_alarm_control_panel_entities() -> dict[str, MockAlarm]:
             unique_id="unique_no_arm_code",
         ),
     }
+
 
 class MockAlarmControlPanel(AlarmControlPanelEntity):
     """Mocked alarm control entity."""
