@@ -128,11 +128,9 @@ class WS66iConfigFlow(ConfigFlow, domain=DOMAIN):
 
 @callback
 def _key_for_source(index, source, previous_sources):
-    key = vol.Required(
+    return vol.Required(
         source, description={"suggested_value": previous_sources[str(index)]}
     )
-
-    return key
 
 
 class Ws66iOptionsFlowHandler(OptionsFlow):

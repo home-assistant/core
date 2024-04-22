@@ -206,7 +206,7 @@ def create_climate_entity(
         cool_max_temp = float(cool_temperatures["celsius"]["max"])
         cool_step = cool_temperatures["celsius"].get("step", PRECISION_TENTHS)
 
-    entity = TadoClimate(
+    return TadoClimate(
         tado,
         name,
         zone_id,
@@ -222,7 +222,6 @@ def create_climate_entity(
         cool_step,
         supported_fan_modes,
     )
-    return entity
 
 
 class TadoClimate(TadoZoneEntity, ClimateEntity):

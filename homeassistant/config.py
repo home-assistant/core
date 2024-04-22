@@ -329,8 +329,7 @@ def _validate_currency(data: Any) -> Any:
         return cv.currency(data)
     except vol.InInvalid:
         with suppress(vol.InInvalid):
-            currency = cv.historic_currency(data)
-            return currency
+            return cv.historic_currency(data)
         raise
 
 
@@ -464,14 +463,12 @@ def _write_default_config(config_dir: str) -> bool:
         if not os.path.isfile(scene_yaml_path):
             with open(scene_yaml_path, "w", encoding="utf8"):
                 pass
-
-        return True
-
     except OSError:
         print(  # noqa: T201
             f"Unable to create default configuration file {config_path}"
         )
         return False
+    return True
 
 
 async def async_hass_config_yaml(hass: HomeAssistant) -> dict:
