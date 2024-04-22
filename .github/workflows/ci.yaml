@@ -97,7 +97,8 @@ jobs:
             hashFiles('requirements_test.txt', 'requirements_test_pre_commit.txt') }}-${{
             hashFiles('requirements.txt') }}-${{
             hashFiles('requirements_all.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}" >> $GITHUB_OUTPUT
+            hashFiles('homeassistant/package_constraints.txt') }}-${{
+            hashFiles('script/gen_requirements_all.py') }}" >> $GITHUB_OUTPUT
       - name: Generate partial pre-commit restore key
         id: generate_pre-commit_cache_key
         run: >-
@@ -497,8 +498,9 @@ jobs:
           python --version
           pip install "$(grep '^uv' < requirements_test.txt)"
           uv pip install -U "pip>=21.3.1" setuptools wheel
-          uv pip install -r requirements_all.txt
-          uv pip install "$(grep 'python-gammu' < requirements_all.txt | sed -e 's|# python-gammu|python-gammu|g')"
+          uv pip install -r requirements.txt
+          python -m script.gen_requirements_all ci
+          uv pip install -r requirements_all_pytest.txt
           uv pip install -r requirements_test.txt
           uv pip install -e . --config-settings editable_mode=compat
 
