@@ -243,7 +243,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==24.1.0
+aioesphomeapi==24.2.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -806,6 +806,9 @@ env-canada==0.6.0
 # homeassistant.components.season
 ephem==4.1.5
 
+# homeassistant.components.epic_games_store
+epicstore-api==0.1.7
+
 # homeassistant.components.epion
 epion==0.0.3
 
@@ -1113,7 +1116,7 @@ ibmiotf==0.3.4
 # homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==7.0.3
+ical==8.0.0
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -2731,7 +2734,7 @@ tololib==1.1.0
 toonapi==0.3.0
 
 # homeassistant.components.totalconnect
-total-connect-client==2023.2
+total-connect-client==2023.12.1
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4
