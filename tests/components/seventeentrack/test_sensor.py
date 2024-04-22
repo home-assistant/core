@@ -304,7 +304,7 @@ async def test_summary_error(
 
     await init_integration(hass, mock_config_entry)
 
-    assert len(hass.states.async_entity_ids()) == 1
+    assert len(hass.states.async_entity_ids()) == 0
 
     assert (
         hass.states.get("sensor.seventeentrack_packages_ready_to_be_picked_up") is None

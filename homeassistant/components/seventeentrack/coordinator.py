@@ -9,7 +9,7 @@ from py17track.package import Package
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify
 
 from .const import (
@@ -51,9 +51,7 @@ class SeventeenTrackCoordinator(DataUpdateCoordinator[SeventeenTrackData]):
     async def _async_update_data(self) -> SeventeenTrackData:
         """Fetch data from 17Track API."""
 
-        summary = {}
         summary_dict = {}
-        live_packages = set()
         live_packages_dict = {}
 
         try:
@@ -62,7 +60,7 @@ class SeventeenTrackCoordinator(DataUpdateCoordinator[SeventeenTrackData]):
             )
 
         except SeventeenTrackError as err:
-            LOGGER.error("There was an error retrieving the summary: %s", err)
+            raise UpdateFailed(err) from err
 
         for status, quantity in summary.items():
             summary_dict[slugify(status)] = {
@@ -76,7 +74,7 @@ class SeventeenTrackCoordinator(DataUpdateCoordinator[SeventeenTrackData]):
                 await self._client.profile.packages(show_archived=self._show_archived)
             )
         except SeventeenTrackError as err:
-            LOGGER.error("There was an error retrieving the packages: %s", err)
+            raise UpdateFailed(err) from err
 
         for package in live_packages:
             live_packages_dict[package.tracking_number] = package
