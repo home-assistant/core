@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from py17track.package import Package
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -109,44 +108,46 @@ async def async_setup_entry(
     """Set up a 17Track sensor entry."""
 
     coordinator: SeventeenTrackCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    current_packages: set[Package] = set()
+    previous_tracking_numbers: set[str] = set()
 
     @callback
     def _async_create_remove_entities():
-        old_packages = current_packages - set(coordinator.data.live_packages.values())
-        packages_to_add = (
-            set(coordinator.data.live_packages.values()) - current_packages
-        )
+        live_tracking_numbers = set(coordinator.data.live_packages.keys())
 
-        current_packages.clear() or current_packages.update(
-            (current_packages | packages_to_add) - old_packages
-        )
+        new_tracking_numbers = live_tracking_numbers - previous_tracking_numbers
+        old_tracking_numbers = previous_tracking_numbers - live_tracking_numbers
 
-        remove_packages(hass, coordinator.account_id, old_packages)
+        previous_tracking_numbers.update(live_tracking_numbers)
+
+        packages_to_add = [
+            coordinator.data.live_packages[tracking_number]
+            for tracking_number in new_tracking_numbers
+        ]
+
+        for package_data in coordinator.data.live_packages.values():
+            if (
+                package_data.status == VALUE_DELIVERED
+                and not coordinator.show_delivered
+            ):
+                old_tracking_numbers.add(package_data.tracking_number)
+                notify_delivered(
+                    hass,
+                    package_data.friendly_name,
+                    package_data.tracking_number,
+                )
+
+        remove_packages(hass, coordinator.account_id, old_tracking_numbers)
 
         async_add_entities(
             SeventeenTrackPackageSensor(
                 coordinator,
                 package_data.tracking_number,
-                package_data.friendly_name,
-                package_data.status,
             )
             for package_data in packages_to_add
             if not (
                 not coordinator.show_delivered and package_data.status == "Delivered"
             )
         )
-
-        for package_data in packages_to_add:
-            if (
-                package_data.status == VALUE_DELIVERED
-                and not coordinator.show_delivered
-            ):
-                notify_delivered(
-                    hass,
-                    package_data.friendly_name,
-                    package_data.tracking_number,
-                )
 
     async_add_entities(
         SeventeenTrackSummarySensor(status, summary_data["status_name"], coordinator)
@@ -222,19 +223,15 @@ class SeventeenTrackPackageSensor(
         self,
         coordinator: SeventeenTrackCoordinator,
         tracking_number: str,
-        friendly_name: str | None = None,
-        status: str | None = None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._tracking_number = tracking_number
-        self._status = status
+        self._previous_status = coordinator.data.live_packages[tracking_number].status
         self.entity_id = ENTITY_ID_TEMPLATE.format(tracking_number)
         self._attr_unique_id = UNIQUE_ID_TEMPLATE.format(
             coordinator.account_id, tracking_number
         )
-        name = friendly_name if friendly_name else tracking_number
-        self._name = f"Seventeentrack Package: {name}"
 
     @property
     def available(self) -> bool:
@@ -244,12 +241,15 @@ class SeventeenTrackPackageSensor(
     @property
     def name(self) -> str:
         """Return the name."""
-        return self._name
+        package = self.coordinator.data.live_packages.get(self._tracking_number)
+        if package is None or not (name := package.friendly_name):
+            name = self._tracking_number
+        return f"Seventeentrack Package: {name}"
 
     @property
     def native_value(self) -> StateType:
         """Return the state."""
-        return self._status
+        return self.coordinator.data.live_packages[self._tracking_number].status
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -267,16 +267,14 @@ class SeventeenTrackPackageSensor(
         }
 
 
-def remove_packages(
-    hass: HomeAssistant, account_id: str, packages: set[Package]
-) -> None:
+def remove_packages(hass: HomeAssistant, account_id: str, packages: set[str]) -> None:
     """Remove entity itself."""
     reg = er.async_get(hass)
     for package in packages:
         entity_id = reg.async_get_entity_id(
             "sensor",
             "seventeentrack",
-            UNIQUE_ID_TEMPLATE.format(account_id, package.tracking_number),
+            UNIQUE_ID_TEMPLATE.format(account_id, package),
         )
         if entity_id:
             reg.async_remove(entity_id)
