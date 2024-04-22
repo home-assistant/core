@@ -1,4 +1,5 @@
 """Adds config flow for Folder watcher."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -53,7 +54,7 @@ async def validate_import_setup(
         handler.parent_handler.hass,
         HOMEASSISTANT_DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2024.7.0",
+        breaks_in_ha_version="2024.11.0",
         is_fixable=False,
         is_persistent=False,
         issue_domain=DOMAIN,
