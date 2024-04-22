@@ -52,7 +52,10 @@ STORAGE_VERSION = 1
 STORAGE_KEY = "http.auth"
 CONTENT_USER_NAME = "Home Assistant Content"
 STRICT_CONNECTION_EXCLUDED_PATH = "/api/webhook/"
-STRICT_CONNECTION_STATIC_PAGE = "strict_connection_static_page"
+STRICT_CONNECTION_STATIC_PAGE_NAME = "strict_connection_static_page.html"
+STRICT_CONNECTION_STATIC_PAGE = os.path.join(
+    os.path.dirname(__file__), STRICT_CONNECTION_STATIC_PAGE_NAME
+)
 
 
 @callback
@@ -348,15 +351,12 @@ async def _async_perform_strict_connection_action(
     raise HTTPBadRequest
 
 
-@singleton.singleton(f"{DOMAIN}_{STRICT_CONNECTION_STATIC_PAGE}")
+@singleton.singleton(f"{DOMAIN}_{STRICT_CONNECTION_STATIC_PAGE_NAME}")
 async def _read_strict_connection_static_page(hass: HomeAssistant) -> str:
     """Read the strict connection static page from disk via executor."""
-    name = os.path.join(
-        os.path.dirname(__file__), f"{STRICT_CONNECTION_STATIC_PAGE}.html"
-    )
 
     def read_static_page() -> str:
-        with open(name, encoding="utf-8") as file:
+        with open(STRICT_CONNECTION_STATIC_PAGE, encoding="utf-8") as file:
             return file.read()
 
     return await hass.async_add_executor_job(read_static_page)
