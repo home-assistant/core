@@ -26,7 +26,7 @@ class TotalConnectLocationEntity(TotalConnectEntity):
         """Initialize the TotalConnect location."""
         super().__init__(coordinator)
         self._location = location
-        device = location.devices[location.security_device_id]
+        self.device = device = location.devices[location.security_device_id]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.serial_number)},
             name=device.name,

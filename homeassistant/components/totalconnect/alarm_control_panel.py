@@ -157,7 +157,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             ) from error
         except BadResultCodeError as error:
             raise HomeAssistantError(
-                f"TotalConnect failed to disarm {self.name}."
+                f"TotalConnect failed to disarm {self.device.name}."
             ) from error
         await self.coordinator.async_request_refresh()
 
@@ -176,7 +176,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             ) from error
         except BadResultCodeError as error:
             raise HomeAssistantError(
-                f"TotalConnect failed to arm home {self.name}."
+                f"TotalConnect failed to arm home {self.device.name}."
             ) from error
         await self.coordinator.async_request_refresh()
 
@@ -195,7 +195,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             ) from error
         except BadResultCodeError as error:
             raise HomeAssistantError(
-                f"TotalConnect failed to arm away {self.name}."
+                f"TotalConnect failed to arm away {self.device.name}."
             ) from error
         await self.coordinator.async_request_refresh()
 
@@ -214,7 +214,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             ) from error
         except BadResultCodeError as error:
             raise HomeAssistantError(
-                f"TotalConnect failed to arm night {self.name}."
+                f"TotalConnect failed to arm night {self.device.name}."
             ) from error
         await self.coordinator.async_request_refresh()
 
@@ -233,7 +233,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             ) from error
         except BadResultCodeError as error:
             raise HomeAssistantError(
-                f"TotalConnect failed to arm home instant {self.name}."
+                f"TotalConnect failed to arm home instant {self.device.name}."
             ) from error
         await self.coordinator.async_request_refresh()
 
@@ -252,7 +252,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             ) from error
         except BadResultCodeError as error:
             raise HomeAssistantError(
-                f"TotalConnect failed to arm away instant {self.name}."
+                f"TotalConnect failed to arm away instant {self.device.name}."
             ) from error
         await self.coordinator.async_request_refresh()
 
