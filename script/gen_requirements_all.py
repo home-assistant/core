@@ -549,6 +549,8 @@ def main(validate: bool, ci: bool) -> int:
         for action in OVERRIDDEN_REQUIREMENTS_ACTIONS
     }
     reqs_test_all_file = requirements_test_all_output(data)
+    # Always calling requirements_pre_commit_output is intentional to ensure
+    # the code is called by the pre-commit hooks.
     reqs_pre_commit_file = requirements_pre_commit_output()
     constraints = gather_constraints()
 
