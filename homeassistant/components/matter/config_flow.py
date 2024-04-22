@@ -17,6 +17,8 @@ from homeassistant.components.hassio import (
     HassioServiceInfo,
     is_hassio,
 )
+from homeassistant.components.onboarding import async_is_onboarded
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
@@ -222,6 +224,16 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="manual", data_schema=get_manual_schema(user_input), errors=errors
         )
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle zeroconf discovery."""
+        if not async_is_onboarded(self.hass) and is_hassio(self.hass):
+            return await self.async_step_on_supervisor(
+                user_input={CONF_USE_ADDON: True}
+            )
+        return await self._async_step_discovery_without_unique_id()
 
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
