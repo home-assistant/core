@@ -1,4 +1,5 @@
 """Tests for the Monzo integration."""
+
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry

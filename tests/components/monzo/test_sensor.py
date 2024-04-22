@@ -1,4 +1,5 @@
 """Tests for the Monzo component."""
+
 from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, PropertyMock, patch

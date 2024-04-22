@@ -1,4 +1,5 @@
 """Fixtures for tests."""
+
 import time
 from unittest.mock import AsyncMock, patch
 

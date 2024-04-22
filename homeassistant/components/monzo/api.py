@@ -1,4 +1,5 @@
 """API for Monzo bound to Home Assistant OAuth."""
+
 from aiohttp import ClientSession
 from monzopy import AbstractMonzoApi
 

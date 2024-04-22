@@ -1,4 +1,5 @@
 """Tests for config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.monzo.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
