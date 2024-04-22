@@ -627,7 +627,9 @@ def _setup_services(hass: HomeAssistant, conf: ConfData) -> None:
             )
 
         try:
-            url = get_url(hass, prefer_external=True, allow_internal=False)
+            url = get_url(
+                hass, prefer_external=True, allow_internal=False, allow_cloud=False
+            )
         except NoURLAvailableError as ex:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
