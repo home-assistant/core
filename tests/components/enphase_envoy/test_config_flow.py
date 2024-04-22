@@ -1,6 +1,7 @@
 """Test the Enphase Envoy config flow."""
 
 from ipaddress import ip_address
+import logging
 from unittest.mock import AsyncMock
 
 from pyenphase import EnvoyAuthenticationError, EnvoyError
@@ -14,6 +15,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def test_form(hass: HomeAssistant, config, setup_enphase_envoy) -> None:
@@ -329,6 +332,7 @@ async def test_zeroconf_serial_already_exists(
     hass: HomeAssistant, config_entry, setup_enphase_envoy
 ) -> None:
     """Test serial number already exists from zeroconf."""
+    _LOGGER.setLevel(logging.DEBUG)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
