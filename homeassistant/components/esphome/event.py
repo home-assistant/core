@@ -3,19 +3,14 @@
 from __future__ import annotations
 
 from aioesphomeapi import EntityInfo, Event, EventInfo
-import voluptuous as vol
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.enum import try_parse_enum
 
 from .entity import EsphomeEntity, platform_async_setup_entry
-
-CONF_EVENT_TYPES = "event_types"
-
-DEFAULT_NAME = "ESPHome Event"
-DEVICE_CLASS_SCHEMA = vol.All(vol.Lower, vol.Coerce(EventDeviceClass))
 
 
 async def async_setup_entry(
@@ -41,9 +36,12 @@ class EsphomeEvent(EsphomeEntity[EventInfo, Event], EventEntity):
         super()._on_static_info_update(static_info)
         if event_types := static_info.event_types:
             self._attr_event_types = event_types
+        self._attr_device_class = try_parse_enum(
+            EventDeviceClass, static_info.device_class
+        )
 
     @callback
     def _on_state_update(self) -> None:
-        super()._on_state_update()
+        self._update_state_from_entry_data()
         self._trigger_event(self._state.event_type)
         self.async_write_ha_state()
