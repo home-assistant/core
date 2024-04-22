@@ -1,4 +1,5 @@
 """Fixtures for Folder Watcher integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator

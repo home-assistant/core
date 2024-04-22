@@ -1,4 +1,5 @@
 """Test the Folder Watcher config flow."""
+
 from pathlib import Path
 from unittest.mock import patch
 
