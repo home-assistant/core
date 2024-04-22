@@ -42,6 +42,7 @@ from homeassistant.core import (
     CoreState,
     HassJob,
     HomeAssistant,
+    ReleaseChannel,
     ServiceCall,
     ServiceResponse,
     State,
@@ -1147,11 +1148,11 @@ async def test_eventbus_filtered_listener(hass: HomeAssistant) -> None:
         calls.append(event)
 
     @ha.callback
-    def filter(event_data):
+    def mock_filter(event_data):
         """Mock filter."""
         return not event_data["filtered"]
 
-    unsub = hass.bus.async_listen("test", listener, event_filter=filter)
+    unsub = hass.bus.async_listen("test", listener, event_filter=mock_filter)
 
     hass.bus.async_fire("test", {"filtered": True})
     await hass.async_block_till_done()
@@ -1802,9 +1803,9 @@ async def test_services_call_return_response_requires_blocking(
             blocking=False,
             return_response=True,
         )
-    assert (
-        str(exc.value)
-        == "A non blocking service call with argument blocking=False can't be used together with argument return_response=True"
+    assert str(exc.value) == (
+        "A non blocking service call with argument blocking=False "
+        "can't be used together with argument return_response=True"
     )
 
 
@@ -3060,13 +3061,15 @@ async def test_validate_state(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("version", "release_channel"),
     [
-        ("0.115.0.dev20200815", "nightly"),
-        ("0.115.0", "stable"),
-        ("0.115.0b4", "beta"),
-        ("0.115.0dev0", "dev"),
+        ("0.115.0.dev20200815", ReleaseChannel.NIGHTLY),
+        ("0.115.0", ReleaseChannel.STABLE),
+        ("0.115.0b4", ReleaseChannel.BETA),
+        ("0.115.0dev0", ReleaseChannel.DEV),
     ],
 )
-async def test_get_release_channel(version: str, release_channel: str) -> None:
+async def test_get_release_channel(
+    version: str, release_channel: ReleaseChannel
+) -> None:
     """Test if release channel detection works from Home Assistant version number."""
     with patch("homeassistant.core.__version__", f"{version}"):
         assert get_release_channel() == release_channel
@@ -3271,11 +3274,11 @@ async def test_eventbus_lazy_object_creation(hass: HomeAssistant) -> None:
         calls.append(event)
 
     @ha.callback
-    def filter(event_data):
+    def mock_filter(event_data):
         """Mock filter."""
         return not event_data["filtered"]
 
-    unsub = hass.bus.async_listen("test_1", listener, event_filter=filter)
+    unsub = hass.bus.async_listen("test_1", listener, event_filter=mock_filter)
 
     # Test lazy creation of Event objects
     with patch("homeassistant.core.Event") as mock_event:
@@ -3340,7 +3343,7 @@ async def test_statemachine_report_state(hass: HomeAssistant) -> None:
     """Test report state event."""
 
     @ha.callback
-    def filter(event_data):
+    def mock_filter(event_data):
         """Mock filter."""
         return True
 
@@ -3351,7 +3354,7 @@ async def test_statemachine_report_state(hass: HomeAssistant) -> None:
     hass.states.async_set("light.bowl", "on", {})
     state_changed_events = async_capture_events(hass, EVENT_STATE_CHANGED)
     state_reported_events = []
-    hass.bus.async_listen(EVENT_STATE_REPORTED, listener, event_filter=filter)
+    hass.bus.async_listen(EVENT_STATE_REPORTED, listener, event_filter=mock_filter)
 
     hass.states.async_set("light.bowl", "on")
     await hass.async_block_till_done()
@@ -3382,7 +3385,7 @@ async def test_report_state_listener_restrictions(hass: HomeAssistant) -> None:
         """Mock listener."""
 
     @ha.callback
-    def filter(event_data):
+    def mock_filter(event_data):
         """Mock filter."""
         return False
 
@@ -3391,7 +3394,7 @@ async def test_report_state_listener_restrictions(hass: HomeAssistant) -> None:
         hass.bus.async_listen(EVENT_STATE_REPORTED, listener)
 
     # Both filter and run_immediately
-    hass.bus.async_listen(EVENT_STATE_REPORTED, listener, event_filter=filter)
+    hass.bus.async_listen(EVENT_STATE_REPORTED, listener, event_filter=mock_filter)
 
 
 @pytest.mark.parametrize(
