@@ -41,6 +41,11 @@
         "name": "Outdoor humidity"
       }
     },
+    "switch": {
+      "emergency_heat": {
+        "name": "Emergency heat"
+      }
+    },
     "climate": {
       "honeywell": {
         "state_attributes": {
@@ -50,6 +55,60 @@
               "away": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::away%]",
               "none": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::none%]"
             }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "temp_failed": {
+      "message": "Honeywell set temperature failed"
+    },
+    "sys_mode_failed": {
+      "message": "Honeywell could not set system mode"
+    },
+    "fan_mode_failed": {
+      "message": "Honeywell could not set fan mode"
+    },
+    "away_mode_failed": {
+      "message": "Honeywell set away mode failed"
+    },
+    "temp_failed_value": {
+      "message": "Honeywell set temperature failed: invalid temperature {temperature}"
+    },
+    "temp_failed_range": {
+      "message": "Honeywell set temperature failed: temperature out of range. Mode: {mode}, Heat Temperuature: {heat}, Cool Temperature: {cool}"
+    },
+    "set_hold_failed": {
+      "message": "Honeywell could not set permanent hold"
+    },
+    "set_mode_failed": {
+      "message": "Honeywell invalid system mode returned {mode}"
+    },
+    "stop_hold_failed": {
+      "message": "Honeywell could not stop hold mode"
+    },
+    "set_aux_failed": {
+      "message": "Honeywell could not set system mode to aux heat"
+    },
+    "disable_aux_failed": {
+      "message": "Honeywell could turn off aux heat mode"
+    },
+    "switch_failed_off": {
+      "message": "Honeywell could turn off emergency heat mode."
+    },
+    "switch_failed_on": {
+      "message": "Honeywell could not set system mode to emergency heat mode."
+    }
+  },
+  "issues": {
+    "service_deprecation": {
+      "title": "Honeywell aux heat is being removed",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::honeywell::issues::service_deprecation::title%]",
+            "description": "Use `switch.{name}_emergency_heat` instead to change mode.\n\nPlease adjust your automations and scripts and select **submit** to fix this issue."
           }
         }
       }

@@ -14,7 +14,7 @@ from qbittorrentapi import (
 )
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
@@ -28,6 +28,13 @@ class QBittorrentDataCoordinator(DataUpdateCoordinator[SyncMainDataDictionary]):
     def __init__(self, hass: HomeAssistant, client: Client) -> None:
         """Initialize coordinator."""
         self.client = client
+        # self.main_data: dict[str, int] = {}
+        self.total_torrents: dict[str, int] = {}
+        self.active_torrents: dict[str, int] = {}
+        self.inactive_torrents: dict[str, int] = {}
+        self.paused_torrents: dict[str, int] = {}
+        self.seeding_torrents: dict[str, int] = {}
+        self.started_torrents: dict[str, int] = {}
 
         super().__init__(
             hass,
@@ -36,6 +43,7 @@ class QBittorrentDataCoordinator(DataUpdateCoordinator[SyncMainDataDictionary]):
             update_interval=timedelta(seconds=30),
         )
 
+
     async def _async_update_data(self) -> SyncMainDataDictionary:
         try:
             return await self.hass.async_add_executor_job(self.client.sync_maindata)
@@ -43,3 +51,16 @@ class QBittorrentDataCoordinator(DataUpdateCoordinator[SyncMainDataDictionary]):
             raise ConfigEntryError("Invalid authentication") from exc
         except APIConnectionError as exc:
             raise ConfigEntryError("Fail to connect to qBittorrentApi") from exc
+
+    async def get_torrents(self, torrent_filter: str) -> list[dict[str, Any]]:
+        """Async method to get QBittorrent torrents."""
+        try:
+            torrents = await self.hass.async_add_executor_job(
+                lambda: self.client.torrents(filter=torrent_filter)
+            )
+        except LoginRequired as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="login_error"
+            ) from exc
+
+        return torrents

@@ -18,6 +18,7 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.const import ATTR_ICON, EVENT_STATE_CHANGED
 from homeassistant.core import Context, Event, State, callback
+from homeassistant.util.event_type import EventType
 from homeassistant.util.json import json_loads
 from homeassistant.util.ulid import ulid_to_bytes
 
@@ -27,7 +28,8 @@ class LogbookConfig:
     """Configuration for the logbook integration."""
 
     external_events: dict[
-        str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
+        EventType[Any] | str,
+        tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]],
     ]
     sqlalchemy_filter: Filters | None = None
     entity_filter: Callable[[str], bool] | None = None
@@ -66,7 +68,7 @@ class LazyEventPartialState:
             )
 
     @cached_property
-    def event_type(self) -> str | None:
+    def event_type(self) -> EventType[Any] | str | None:
         """Return the event type."""
         return self.row.event_type
 
@@ -110,7 +112,7 @@ class EventAsRow:
     icon: str | None = None
     context_user_id_bin: bytes | None = None
     context_parent_id_bin: bytes | None = None
-    event_type: str | None = None
+    event_type: EventType[Any] | str | None = None
     state: str | None = None
     context_only: None = None
 

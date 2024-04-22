@@ -1487,6 +1487,7 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
         await async_start(hass, "homeassistant", entry)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     assert ("comp/discovery/#", 0) in help_all_subscribe_calls(mqtt_client_mock)
     assert not mqtt_client_mock.unsubscribe.called
@@ -1535,6 +1536,7 @@ async def test_mqtt_discovery_unsubscribe_once(
         return_value={"comp": ["comp/discovery/#"]},
     ):
         await async_start(hass, "homeassistant", entry)
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 

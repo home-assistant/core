@@ -20,6 +20,7 @@ from aioesphomeapi import (
     ClimateInfo,
     CoverInfo,
     DateInfo,
+    DateTimeInfo,
     DeviceInfo,
     EntityInfo,
     EntityState,
@@ -36,6 +37,7 @@ from aioesphomeapi import (
     TextSensorInfo,
     TimeInfo,
     UserService,
+    ValveInfo,
     build_unique_id,
 )
 from aioesphomeapi.model import ButtonInfo
@@ -67,6 +69,7 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     ClimateInfo: Platform.CLIMATE,
     CoverInfo: Platform.COVER,
     DateInfo: Platform.DATE,
+    DateTimeInfo: Platform.DATETIME,
     FanInfo: Platform.FAN,
     LightInfo: Platform.LIGHT,
     LockInfo: Platform.LOCK,
@@ -78,6 +81,7 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     TextInfo: Platform.TEXT,
     TextSensorInfo: Platform.SENSOR,
     TimeInfo: Platform.TIME,
+    ValveInfo: Platform.VALVE,
 }
 
 
@@ -257,7 +261,9 @@ class RuntimeEntryData:
         if async_get_dashboard(hass):
             needed_platforms.add(Platform.UPDATE)
 
-        if self.device_info and self.device_info.voice_assistant_version:
+        if self.device_info and self.device_info.voice_assistant_feature_flags_compat(
+            self.api_version
+        ):
             needed_platforms.add(Platform.BINARY_SENSOR)
             needed_platforms.add(Platform.SELECT)
 
