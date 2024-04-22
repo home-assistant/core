@@ -55,6 +55,8 @@ async def test_if_fires_on_telegram(
                         "group_value_write": True,
                         "group_value_response": True,
                         "group_value_read": True,
+                        "incoming": True,
+                        "outgoing": True,
                     },
                     "action": {
                         "service": "test.automation",
@@ -79,6 +81,8 @@ async def test_if_fires_on_telegram(
                         "group_value_write": True,
                         "group_value_response": False,
                         "group_value_read": False,
+                        "incoming": True,
+                        "outgoing": False,
                     },
                     "action": {
                         "service": "test.automation",
@@ -116,14 +120,16 @@ async def test_if_fires_on_telegram(
     assert test_call.data["id"] == 0
 
 
-async def test_legacy_if_fires_on_telegram(
+async def test_default_if_fires_on_telegram(
     hass: HomeAssistant,
     calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
     knx: KNXTestKit,
 ) -> None:
-    """Test legacy telegram device triggers firing."""
-    # pre 2024.2 device triggers did only support "destination" field
+    """Test default telegram device triggers firing."""
+    # by default (without a user changing any) extra_fields are not added to the trigger and
+    # pre 2024.2 device triggers did only support "destination" field so they didn't have
+    # "group_value_write", "group_value_response", "group_value_read", "incoming", "outgoing"
     await knx.setup_integration({})
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
@@ -264,11 +270,6 @@ async def test_get_triggers(
         "device_id": device_entry.id,
         "type": "telegram",
         "metadata": {},
-        "group_value_write": True,
-        "group_value_response": True,
-        "group_value_read": True,
-        "incoming": True,
-        "outgoing": True,
     }
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
@@ -294,11 +295,6 @@ async def test_get_trigger_capabilities(
             "domain": DOMAIN,
             "device_id": device_entry.id,
             "type": "telegram",
-            "group_value_write": True,
-            "group_value_response": True,
-            "group_value_read": True,
-            "incoming": True,
-            "outgoing": True,
         },
     )
     assert capabilities and "extra_fields" in capabilities
@@ -321,69 +317,33 @@ async def test_get_trigger_capabilities(
         },
         {
             "name": "group_value_write",
-            "required": True,
-            "selector": {"boolean": {}},
+            "optional": True,
+            "default": True,
+            "type": "boolean",
         },
         {
             "name": "group_value_response",
-            "required": True,
-            "selector": {"boolean": {}},
+            "optional": True,
+            "default": True,
+            "type": "boolean",
         },
         {
             "name": "group_value_read",
-            "required": True,
-            "selector": {"boolean": {}},
+            "optional": True,
+            "default": True,
+            "type": "boolean",
         },
         {
             "name": "incoming",
-            "required": True,
-            "selector": {"boolean": {}},
+            "optional": True,
+            "default": True,
+            "type": "boolean",
         },
         {
             "name": "outgoing",
-            "required": True,
-            "selector": {"boolean": {}},
-        },
-    ]
-
-
-async def test_legacy_get_trigger_capabilities(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    knx: KNXTestKit,
-) -> None:
-    """Test we get the expected capabilities telegram device trigger."""
-    await knx.setup_integration({})
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
-    )
-
-    capabilities = await device_trigger.async_get_trigger_capabilities(
-        hass,
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "device_id": device_entry.id,
-            "type": "telegram",
-        },
-    )
-    assert capabilities and "extra_fields" in capabilities
-
-    assert voluptuous_serialize.convert(
-        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-    ) == [
-        {
-            "name": "destination",
             "optional": True,
-            "selector": {
-                "select": {
-                    "custom_value": True,
-                    "mode": "dropdown",
-                    "multiple": True,
-                    "options": [],
-                    "sort": False,
-                },
-            },
+            "default": True,
+            "type": "boolean",
         },
     ]
 

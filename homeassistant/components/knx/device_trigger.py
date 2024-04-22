@@ -12,7 +12,7 @@ from homeassistant.components.device_automation.exceptions import (
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.helpers import selector
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
@@ -57,12 +57,6 @@ async def async_get_triggers(
                 CONF_DOMAIN: DOMAIN,
                 CONF_DEVICE_ID: device_id,
                 CONF_TYPE: TRIGGER_TELEGRAM,
-                # Set default values for trigger options here
-                CONF_KNX_GROUP_VALUE_WRITE: True,
-                CONF_KNX_GROUP_VALUE_RESPONSE: True,
-                CONF_KNX_GROUP_VALUE_READ: True,
-                CONF_KNX_INCOMING: True,
-                CONF_KNX_OUTGOING: True,
             }
         )
 
@@ -78,39 +72,24 @@ async def async_get_trigger_capabilities(
         selector.SelectOptionDict(value=ga.address, label=f"{ga.address} - {ga.name}")
         for ga in project.group_addresses.values()
     ]
-    is_legacy_config = not all(
-        key in config
-        for key in (
-            CONF_KNX_GROUP_VALUE_WRITE,
-            CONF_KNX_GROUP_VALUE_RESPONSE,
-            CONF_KNX_GROUP_VALUE_READ,
-            CONF_KNX_INCOMING,
-            CONF_KNX_OUTGOING,
-        )
-    )
-    default_selectors = {
-        vol.Optional(CONF_KNX_DESTINATION): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                mode=selector.SelectSelectorMode.DROPDOWN,
-                multiple=True,
-                custom_value=True,
-                options=options,
-            ),
-        ),
-    }
-    additional_selectors = {
-        # need to be set in async_get_triggers to have proper default values
-        vol.Required(CONF_KNX_GROUP_VALUE_WRITE): selector.BooleanSelector(),
-        vol.Required(CONF_KNX_GROUP_VALUE_RESPONSE): selector.BooleanSelector(),
-        vol.Required(CONF_KNX_GROUP_VALUE_READ): selector.BooleanSelector(),
-        vol.Required(CONF_KNX_INCOMING): selector.BooleanSelector(),
-        vol.Required(CONF_KNX_OUTGOING): selector.BooleanSelector(),
-    }
+
     return {
         "extra_fields": vol.Schema(
             {
-                **default_selectors,
-                **(additional_selectors if not is_legacy_config else {}),
+                vol.Optional(CONF_KNX_DESTINATION): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                        multiple=True,
+                        custom_value=True,
+                        options=options,
+                    ),
+                ),
+                # these shall have matching default values as in TELEGRAM_TRIGGER_SCHEMA
+                vol.Optional(CONF_KNX_GROUP_VALUE_WRITE, default=True): cv.boolean,
+                vol.Optional(CONF_KNX_GROUP_VALUE_RESPONSE, default=True): cv.boolean,
+                vol.Optional(CONF_KNX_GROUP_VALUE_READ, default=True): cv.boolean,
+                vol.Optional(CONF_KNX_INCOMING, default=True): cv.boolean,
+                vol.Optional(CONF_KNX_OUTGOING, default=True): cv.boolean,
             }
         )
     }
