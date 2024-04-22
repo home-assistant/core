@@ -132,6 +132,7 @@ class Group(Entity):
 
     _attr_should_poll = False
     active_domains: set[str]
+    single_active_domain: str | None
     tracking: tuple[str, ...]
     trackable: tuple[str, ...]
 
@@ -289,6 +290,7 @@ class Group(Entity):
             self.tracking = ()
             self.trackable = ()
             self.active_domains = set()
+            self.single_active_domain = None
             return
 
         registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
@@ -308,6 +310,10 @@ class Group(Entity):
         self.trackable = tuple(trackable)
         self.tracking = tuple(tracking)
         self.active_domains = active_domains
+        if len(active_domains) == 1:
+            self.single_active_domain = list(active_domains)[0]
+        else:
+            self.single_active_domain = None
 
     @callback
     def _async_start(self, _: HomeAssistant | None = None) -> None:
@@ -432,32 +438,29 @@ class Group(Entity):
 
         registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
 
-        def _update_active_on_off_states() -> tuple[set[str], set[str]]:
-            active_on_states: set[str] = set()
-            active_off_states: set[str] = set()
-            for entity_id in self.tracking:
-                if (state := self.hass.states.get(entity_id)) is not None:
-                    value = state.state
-                    domain = split_entity_id(entity_id)[0]
-                    if (
-                        domain in registry.on_states_by_domain
-                        and value in registry.on_states_by_domain[domain]
-                    ):
-                        active_on_states.add(value)
-                        # If we have more than on state, the group state
-                        # will result in STATE_ON and we can stop checking
-                        if len(active_on_states) > 1:
-                            break
-                        continue
-                    if value in registry.off_on_mapping:
-                        active_off_states.add(value)
-            return active_on_states, active_off_states
+        active_on_states: set[str] = set()
+        active_off_states: set[str] = set()
+        for entity_id in self.tracking:
+            if (state := self.hass.states.get(entity_id)) is None:
+                continue
+            current_state = state.state
+            domain = state.domain
+            if (
+                domain_on_states := registry.on_states_by_domain.get(domain)
+            ) and current_state in domain_on_states:
+                active_on_states.add(current_state)
+                # If we have more than on state, the group state
+                # will result in STATE_ON and we can stop checking
+                if len(active_on_states) > 1:
+                    break
+                continue
+            if current_state in registry.off_on_mapping:
+                active_off_states.add(current_state)
 
         num_on_states = len(self._on_states)
         # If all the entity domains we are tracking
         # have the same on state we use this state
         # and its hass.data[REG_KEY].on_off_mapping to off
-        active_on_states, active_off_states = _update_active_on_off_states()
         if num_on_states == 1:
             on_state = list(self._on_states)[0]
         # If we do not have an on state for any domains
@@ -468,23 +471,23 @@ class Group(Entity):
         # If the entity domains have more than one
         # on state, we use STATE_ON/STATE_OFF, unless there is
         # only one specific `on` state in use for one specific domain
-        elif len(self.active_domains) == 1 and len(active_on_states) == 1:
+        elif self.single_active_domain and len(active_on_states) == 1:
             on_state = list(active_on_states)[0]
         else:
             on_state = STATE_ON
+
         group_is_on = self.mode(self._on_off.values())
+
         if group_is_on:
             self._state = on_state
         elif len(active_off_states) == 1:
             # If there is one off state in use then return the specific one
             self._state = list(active_off_states)[0]
         elif (
-            len(self.active_domains) == 1
-            and (domain := list(self.active_domains)[0])
-            and domain in registry.off_state_by_domain
-        ):
+            active_domain := self.single_active_domain
+        ) and active_domain in registry.off_state_by_domain:
             # If there is only one domain used, then return the off state for that domain
-            self._state = registry.off_state_by_domain[domain]
+            self._state = registry.off_state_by_domain[active_domain]
         else:
             # Default to STATE_OFF
             self._state = STATE_OFF
