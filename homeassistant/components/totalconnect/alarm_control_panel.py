@@ -107,7 +107,6 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
     def state(self) -> str | None:
         """Return the state of the device."""
         attr = {
-            "location_name": self.device.name,
             "location_id": self._location.location_id,
             "partition": self._partition_id,
             "ac_loss": self._location.ac_loss,
@@ -116,6 +115,11 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             "triggered_source": None,
             "triggered_zone": None,
         }
+
+        if self._partition_id == 1:
+            attr["location_name"] = self.device.name
+        else:
+            attr["location_name"] = f"{self.device.name} partition {self._partition_id}"
 
         state: str | None = None
         if self._partition.arming_state.is_disarmed():
