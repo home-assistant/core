@@ -1465,7 +1465,9 @@ class EventBus:
 
             frame.report("calls async_fire from a thread")
         _verify_event_type_length_or_raise(event_type)
-        return self.async_fire_internal(event_type, event_data, origin, context, time_fired)
+        return self.async_fire_internal(
+            event_type, event_data, origin, context, time_fired
+        )
 
     @callback
     def async_fire_internal(
