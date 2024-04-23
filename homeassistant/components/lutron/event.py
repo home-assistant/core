@@ -91,7 +91,6 @@ class LutronEventEntity(LutronKeypad, EventEntity):
         elif event == Button.Event.PRESSED:
             action = LutronEventType.SINGLE_PRESS
 
-        # Event bus events are deprecated in 2024.5 and will be removed in 2024.11
         if action:
             data = {
                 ATTR_ID: self._id,
