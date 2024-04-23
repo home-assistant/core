@@ -356,7 +356,7 @@ aiotankerkoenig==0.4.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==75
+aiounifi==76
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -874,7 +874,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.46
+holidays==0.47
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240404.2
