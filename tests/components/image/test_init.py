@@ -482,6 +482,7 @@ async def test_snapshot_service_os_error(hass: HomeAssistant) -> None:
     with (
         patch.object(hass.config, "is_allowed_path", return_value=True),
         patch("os.makedirs", side_effect=OSError),
+        pytest.raises(HomeAssistantError),
     ):
         await hass.services.async_call(
             image.DOMAIN,
