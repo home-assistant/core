@@ -2338,6 +2338,11 @@ def relative_time(hass: HomeAssistant, value: Any) -> Any:
             is_fixable=False,
             severity=issue_registry.IssueSeverity.WARNING,
             translation_key=issue_id,
+            translation_placeholders={
+                "relative_time": "relative_time()",
+                "time_since": "time_since()",
+                "time_until": "time_until()",
+            }
         )
         _LOGGER.warning("Template function 'relative_time' is deprecated")
 
@@ -2359,7 +2364,7 @@ def time_since(hass: HomeAssistant, value: Any | datetime, precision: int = 1) -
 
     The age can be in seconds, minutes, hours, days, months and year.
 
-    precision is the number of units will be returned, with the last unit rounded.
+    precision is the number of units to return, with the last unit rounded.
 
     If the value not a datetime object the input will be returned unmodified.
     """
