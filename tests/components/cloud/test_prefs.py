@@ -196,4 +196,4 @@ async def test_strict_connection_convertion(
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
 
-    assert cloud.client.prefs.strict_connection == mode
+    assert cloud.client.prefs.strict_connection is mode
