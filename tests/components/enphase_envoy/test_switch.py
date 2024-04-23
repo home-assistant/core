@@ -169,9 +169,9 @@ async def test_switch_relay_operation(
     entity_base = f"{Platform.SWITCH}."
 
     if mock_envoy.data.dry_contact_status:
-        for id, dry_contact in mock_envoy.data.dry_contact_status.items():
+        for contact_id, dry_contact in mock_envoy.data.dry_contact_status.items():
             name = (
-                mock_envoy.data.dry_contact_settings[id]
+                mock_envoy.data.dry_contact_settings[contact_id]
                 .load_name.lower()
                 .replace(" ", "_")
             )

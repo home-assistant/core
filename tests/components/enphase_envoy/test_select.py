@@ -69,7 +69,7 @@ async def test_select_relay_actions(
     entity_base = f"{Platform.SELECT}."
 
     if mock_envoy.data.dry_contact_settings:
-        for id, dry_contact in mock_envoy.data.dry_contact_settings.items():
+        for contact_id, dry_contact in mock_envoy.data.dry_contact_settings.items():
             name = dry_contact.load_name.lower().replace(" ", "_")
             targets = []
             targets.extend(
@@ -96,7 +96,7 @@ async def test_select_relay_actions(
                     )
                     mock_update_dry_contact.assert_awaited_once()
                     mock_update_dry_contact.assert_called_with(
-                        {"id": id, target[0]: REVERSE_RELAY_ACTION_MAP[mode]}
+                        {"id": contact_id, target[0]: REVERSE_RELAY_ACTION_MAP[mode]}
                     )
                     mock_update_dry_contact.reset_mock()
 
@@ -114,7 +114,7 @@ async def test_select_relay_modes(
     entity_base = f"{Platform.SELECT}."
 
     if mock_envoy.data.dry_contact_settings:
-        for id, dry_contact in mock_envoy.data.dry_contact_settings.items():
+        for contact_id, dry_contact in mock_envoy.data.dry_contact_settings.items():
             name = dry_contact.load_name.lower().replace(" ", "_")
             test_entity = f"{entity_base}{name}_mode"
             assert RELAY_MODE_MAP[dry_contact.mode] == (
@@ -132,7 +132,7 @@ async def test_select_relay_modes(
                 )
                 mock_update_dry_contact.assert_awaited_once()
                 mock_update_dry_contact.assert_called_with(
-                    {"id": id, "mode": REVERSE_RELAY_MODE_MAP[mode]}
+                    {"id": contact_id, "mode": REVERSE_RELAY_MODE_MAP[mode]}
                 )
                 mock_update_dry_contact.reset_mock()
 
