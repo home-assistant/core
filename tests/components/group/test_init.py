@@ -663,9 +663,9 @@ async def test_is_on(hass: HomeAssistant) -> None:
 )
 async def test_is_on_and_state_mixed_domains(
     hass: HomeAssistant,
-    domains: tuple[str,],
-    states_old: tuple[str,],
-    states_new: tuple[str,],
+    domains: tuple[str, ...],
+    states_old: tuple[str, ...],
+    states_new: tuple[str, ...],
     state_ison_group_old: tuple[str, bool],
     state_ison_group_new: tuple[str, bool],
 ) -> None:

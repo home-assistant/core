@@ -222,7 +222,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==24.2.0
+aioesphomeapi==24.3.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -572,7 +572,7 @@ dbus-fast==2.21.1
 debugpy==1.8.1
 
 # homeassistant.components.ecovacs
-deebot-client==6.0.2
+deebot-client==7.0.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1074,7 +1074,7 @@ motionblindsble==0.0.9
 motioneye-client==0.3.14
 
 # homeassistant.components.bang_olufsen
-mozart-api==3.2.1.150.6
+mozart-api==3.4.1.8.5
 
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
@@ -1432,7 +1432,7 @@ pyforked-daapd==0.1.14
 pyfreedompro==1.1.0
 
 # homeassistant.components.fritzbox
-pyfritzhome==0.6.10
+pyfritzhome==0.6.11
 
 # homeassistant.components.ifttt
 pyfttt==0.3
