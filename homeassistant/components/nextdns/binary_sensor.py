@@ -19,8 +19,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CoordinatorDataT, NextDnsConnectionUpdateCoordinator
 from .const import ATTR_CONNECTION, DOMAIN
+from .coordinator import CoordinatorDataT, NextDnsConnectionUpdateCoordinator
 
 PARALLEL_UPDATES = 1
 
