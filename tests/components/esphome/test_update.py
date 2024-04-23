@@ -1,10 +1,16 @@
 """Test ESPHome update entities."""
 
 from collections.abc import Awaitable, Callable
-import dataclasses
 from unittest.mock import Mock, patch
 
-from aioesphomeapi import APIClient, EntityInfo, EntityState, UserService
+from aioesphomeapi import (
+    APIClient,
+    EntityInfo,
+    EntityState,
+    SensorInfo,
+    SensorState,
+    UserService,
+)
 import pytest
 
 from homeassistant.components.esphome.dashboard import async_get_dashboard
@@ -18,7 +24,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .conftest import MockESPHomeDevice
 
@@ -176,9 +181,11 @@ async def test_update_entity(
 
 async def test_update_static_info(
     hass: HomeAssistant,
-    stub_reconnect,
-    mock_config_entry,
-    mock_device_info,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
     mock_dashboard,
 ) -> None:
     """Test ESPHome update entity."""
@@ -190,32 +197,36 @@ async def test_update_static_info(
     ]
     await async_get_dashboard(hass).async_refresh()
 
-    signal_static_info_updated = f"esphome_{mock_config_entry.entry_id}_on_list"
-    runtime_data = Mock(
-        available=True,
-        device_info=mock_device_info,
-        signal_static_info_updated=signal_static_info_updated,
-    )
-
-    with patch(
-        "homeassistant.components.esphome.update.DomainData.get_entry_data",
-        return_value=runtime_data,
-    ):
-        assert await hass.config_entries.async_forward_entry_setup(
-            mock_config_entry, "update"
+    entity_info = [
+        SensorInfo(
+            object_id="mysensor",
+            key=1,
+            name="my sensor",
+            unique_id="my_sensor",
+            unit_of_measurement="",
         )
-
-    state = hass.states.get("update.none_firmware")
-    assert state is not None
-    assert state.state == "on"
-
-    runtime_data.device_info = dataclasses.replace(
-        runtime_data.device_info, esphome_version="1.2.3"
+    ]
+    states = [SensorState(key=1, state=123, missing_state=False)]
+    user_service = []
+    mock_device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
     )
-    async_dispatcher_send(hass, signal_static_info_updated, [])
 
-    state = hass.states.get("update.none_firmware")
-    assert state.state == "off"
+    state = hass.states.get("update.test_firmware")
+    assert state is not None
+    assert state.state == STATE_ON
+
+    object.__setattr__(mock_device.device_info, "esphome_version", "1.2.3")
+    await mock_device.mock_disconnect(True)
+    await mock_device.mock_connect()
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("update.test_firmware")
+    assert state.state == STATE_OFF
 
 
 @pytest.mark.parametrize(
