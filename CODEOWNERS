@@ -398,6 +398,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/environment_canada/ @gwww @michaeldavie
 /tests/components/environment_canada/ @gwww @michaeldavie
 /homeassistant/components/ephember/ @ttroy50
+/homeassistant/components/epic_games_store/ @hacf-fr @Quentame
+/tests/components/epic_games_store/ @hacf-fr @Quentame
 /homeassistant/components/epion/ @lhgravendeel
 /tests/components/epion/ @lhgravendeel
 /homeassistant/components/epson/ @pszafer
@@ -875,8 +877,8 @@ build.json @home-assistant/supervisor
 /tests/components/motioneye/ @dermotduffy
 /homeassistant/components/motionmount/ @RJPoelstra
 /tests/components/motionmount/ @RJPoelstra
-/homeassistant/components/mqtt/ @emontnemery @jbouwh
-/tests/components/mqtt/ @emontnemery @jbouwh
+/homeassistant/components/mqtt/ @emontnemery @jbouwh @bdraco
+/tests/components/mqtt/ @emontnemery @jbouwh @bdraco
 /homeassistant/components/msteams/ @peroyvind
 /homeassistant/components/mullvad/ @meichthys
 /tests/components/mullvad/ @meichthys
