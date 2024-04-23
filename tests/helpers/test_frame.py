@@ -207,8 +207,11 @@ async def test_report_missing_integration_frame(
         assert caplog.text == ""
 
 
+@pytest.mark.parametrize("run_count", [1, 2])
+# Run this twice to make sure the flood check does not
+# kick in when error_if_integration=True
 async def test_report_error_if_integration(
-    caplog: pytest.LogCaptureFixture,
+    caplog: pytest.LogCaptureFixture, run_count: int
 ) -> None:
     """Test RuntimeError is raised if error_if_integration is set."""
     frames = extract_stack_to_frame(
