@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .api import AsyncConfigEntryAuth
+from .api import OAuthMonzoAPI
 from .const import ACCOUNTS, CONF_COORDINATOR, DOMAIN, POTS
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -35,9 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
-    externalapi = AsyncConfigEntryAuth(
-        aiohttp_client.async_get_clientsession(hass), session
-    )
+    externalapi = OAuthMonzoAPI(aiohttp_client.async_get_clientsession(hass), session)
 
     coordinator = DataUpdateCoordinator(
         hass,
