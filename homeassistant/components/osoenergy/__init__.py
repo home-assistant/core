@@ -82,13 +82,13 @@ class OSOEnergyEntity(Entity, Generic[_OSOEnergyT]):
 
     _attr_has_entity_name = True
 
-    def __init__(self, osoenergy: OSOEnergy, device: _OSOEnergyT) -> None:
+    def __init__(self, osoenergy: OSOEnergy, entity_data: _OSOEnergyT) -> None:
         """Initialize the instance."""
         self.osoenergy = osoenergy
-        self.device = device
+        self.entity_data = entity_data
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.device_id)},
+            identifiers={(DOMAIN, entity_data.device_id)},
             manufacturer=MANUFACTURER,
-            model=device.device_type,
-            name=device.device_name,
+            model=entity_data.device_type,
+            name=entity_data.device_name,
         )

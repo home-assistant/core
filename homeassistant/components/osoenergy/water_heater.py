@@ -59,26 +59,26 @@ class OSOEnergyWaterHeater(
     def __init__(
         self,
         instance: OSOEnergy,
-        device: OSOEnergyWaterHeaterData,
+        entity_data: OSOEnergyWaterHeaterData,
     ) -> None:
         """Initialize the OSO Energy water heater."""
-        super().__init__(instance, device)
-        self._attr_unique_id = device.device_id
+        super().__init__(instance, entity_data)
+        self._attr_unique_id = entity_data.device_id
 
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return self.device.available
+        return self.entity_data.available
 
     @property
     def current_operation(self) -> str:
         """Return current operation."""
-        status = self.device.current_operation
+        status = self.entity_data.current_operation
         if status == "off":
             return STATE_OFF
 
-        optimization_mode = self.device.optimization_mode.lower()
-        heater_mode = self.device.heater_mode.lower()
+        optimization_mode = self.entity_data.optimization_mode.lower()
+        heater_mode = self.entity_data.heater_mode.lower()
         if optimization_mode in CURRENT_OPERATION_MAP:
             return CURRENT_OPERATION_MAP[optimization_mode].get(
                 heater_mode, STATE_ELECTRIC
@@ -89,49 +89,51 @@ class OSOEnergyWaterHeater(
     @property
     def current_temperature(self) -> float:
         """Return the current temperature of the heater."""
-        return self.device.current_temperature
+        return self.entity_data.current_temperature
 
     @property
     def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
-        return self.device.target_temperature
+        return self.entity_data.target_temperature
 
     @property
     def target_temperature_high(self) -> float:
         """Return the temperature we try to reach."""
-        return self.device.target_temperature_high
+        return self.entity_data.target_temperature_high
 
     @property
     def target_temperature_low(self) -> float:
         """Return the temperature we try to reach."""
-        return self.device.target_temperature_low
+        return self.entity_data.target_temperature_low
 
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        return self.device.min_temperature
+        return self.entity_data.min_temperature
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        return self.device.max_temperature
+        return self.entity_data.max_temperature
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on hotwater."""
-        await self.osoenergy.hotwater.turn_on(self.device, True)
+        await self.osoenergy.hotwater.turn_on(self.entity_data, True)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off hotwater."""
-        await self.osoenergy.hotwater.turn_off(self.device, True)
+        await self.osoenergy.hotwater.turn_off(self.entity_data, True)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temperature = int(kwargs.get("temperature", self.target_temperature))
         profile = [target_temperature] * 24
 
-        await self.osoenergy.hotwater.set_profile(self.device, profile)
+        await self.osoenergy.hotwater.set_profile(self.entity_data, profile)
 
     async def async_update(self) -> None:
         """Update all Node data from Hive."""
         await self.osoenergy.session.update_data()
-        self.device = await self.osoenergy.hotwater.get_water_heater(self.device)
+        self.entity_data = await self.osoenergy.hotwater.get_water_heater(
+            self.entity_data
+        )
