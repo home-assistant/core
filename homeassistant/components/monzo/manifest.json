@@ -1,7 +1,6 @@
 {
   "domain": "monzo",
   "name": "Monzo",
-  "after_dependencies": ["cloud"],
   "codeowners": ["@jakemartin-icl"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
