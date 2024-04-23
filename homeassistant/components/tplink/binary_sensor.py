@@ -1,7 +1,8 @@
 """Support for TPLink binary sensors."""
+
 from __future__ import annotations
 
-from kasa import Feature, FeatureType, SmartDevice
+from kasa import Feature, SmartDevice
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -12,7 +13,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import legacy_device_id
 from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkEntity
@@ -25,12 +25,11 @@ def _async_sensors_for_device(
     parent: SmartDevice = None,
 ) -> list[BinarySensor]:
     """Generate the sensors for the device."""
-    sensors = [
-        BinarySensor(device, coordinator, id_, feat, parent=parent)
+    return [
+        BinarySensor(device, coordinator, feat, parent=parent)
         for id_, feat in device.features.items()
-        if feat.type == FeatureType.BinarySensor
+        if feat.type == Feature.BinarySensor
     ]
-    return sensors
 
 
 async def async_setup_entry(
@@ -61,19 +60,18 @@ class BinarySensor(CoordinatedTPLinkEntity, BinarySensorEntity):
         self,
         device: SmartDevice,
         coordinator: TPLinkDataUpdateCoordinator,
-        id_: str,
         feature: Feature,
         parent: SmartDevice = None,
     ) -> None:
         """Initialize the sensor."""
         # TODO: feature-based entities could be generalized
-        super().__init__(device, coordinator, parent=parent)
-        self._device = device
-        self._feature = feature
-        self._attr_unique_id = f"{legacy_device_id(device)}_new_{id_}"
+        super().__init__(device, coordinator, feature=feature, parent=parent)
         _ = BinarySensorDeviceClass  # TODO: no-op to avoid pre-commit removing the import
         self.entity_description = BinarySensorEntityDescription(
-            key=id_, translation_key=id_, name=feature.name, icon=feature.icon
+            key=feature.id,
+            translation_key=feature.id,
+            name=feature.name,
+            icon=feature.icon,
         )
 
     @callback

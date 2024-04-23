@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import cast
 
-from kasa import Feature, FeatureType, SmartDevice
+from kasa import Feature, SmartDevice
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -122,9 +122,9 @@ def _async_sensors_for_device(
             if async_emeter_from_device(device, description) is not None
         ]
     new_sensors = [
-        Sensor(device, coordinator, id_, desc, parent=parent)
-        for id_, desc in device.features.items()
-        if desc.type == FeatureType.Sensor
+        Sensor(device, coordinator, feat, parent=parent)
+        for feat in device.features.values()
+        if feat.type == Feature.Sensor
     ]
     return sensors + new_sensors
 
@@ -168,17 +168,16 @@ class Sensor(CoordinatedTPLinkEntity, SensorEntity):
         self,
         device: SmartDevice,
         coordinator: TPLinkDataUpdateCoordinator,
-        id_: str,
         feature: Feature,
         parent: SmartDevice = None,
     ):
         """Initialize the sensor."""
-        super().__init__(device, coordinator, parent=parent)
-        self._device = device
-        self._feature = feature
-        self._attr_unique_id = f"{legacy_device_id(device)}_new_{id_}"
+        super().__init__(device, coordinator, feature=feature, parent=parent)
         self.entity_description = SensorEntityDescription(
-            key=id_, translation_key=id_, name=feature.name, icon=feature.icon
+            key=feature.id,
+            translation_key=feature.id,
+            name=feature.name,
+            icon=feature.icon,
         )
 
     @callback
@@ -200,9 +199,10 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
         parent: SmartDevice = None,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(device, coordinator, parent=parent)
         self.entity_description = description
         self._attr_unique_id = f"{legacy_device_id(device)}_{description.key}"
+        super().__init__(device, coordinator, parent=parent)
+
         if parent is not None:
             assert device.alias
             self._attr_translation_placeholders = {"device_name": device.alias}

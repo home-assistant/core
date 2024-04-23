@@ -4,20 +4,24 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable, Coroutine
-from typing import Any, Concatenate, ParamSpec, TypeVar
 import logging
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from kasa import (
     AuthenticationException,
+    Feature,
     SmartDevice,
     SmartDeviceException,
     TimeoutException,
 )
 
+from homeassistant.const import EntityCategory
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import legacy_device_id
 from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
 
@@ -26,6 +30,7 @@ _P = ParamSpec("_P")
 
 
 _LOGGER = logging.getLogger(__name__)
+
 
 def async_refresh_after(
     func: Callable[Concatenate[_T, _P], Awaitable[None]],
@@ -77,12 +82,21 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         self,
         device: SmartDevice,
         coordinator: TPLinkDataUpdateCoordinator,
+        feature: Feature = None,
         parent: SmartDevice = None,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self.device: SmartDevice = device
-        self._attr_unique_id = device.device_id
+        self._device = device  # TODO: duplicate device.
+        if feature is None:
+            self._attr_unique_id = legacy_device_id(device)
+            _LOGGER.warning("Got empty feature: %s %s", self, type(self))
+        else:
+            self._attr_unique_id = f"{legacy_device_id(device)}_new_{feature.id}"
+            self._attr_entity_category = self._category_for_feature(feature)
+        self._feature = feature
+
         self._attr_device_info = DeviceInfo(
             # TODO: find out if connections have any use and/or if it should
             #  still be set for the main device. if set for child devices, all
@@ -99,10 +113,21 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         if parent is not None:
             self._attr_device_info["via_device"] = (DOMAIN, parent.device_id)
 
+    def _category_for_feature(self, feature: Feature):
+        match feature.category:
+            case Feature.Category.Primary:  # Main controls have no category
+                return None
+            case Feature.Category.Info:
+                return None
+            case Feature.Category.Debug:
+                return EntityCategory.DIAGNOSTIC
+            case Feature.Category.Config:
+                return EntityCategory.CONFIG
+
     @abstractmethod
     def _async_update_attrs(self):
-        """Callback to update the entity internals."""
-        raise NotImplementedError()
+        """Implement to update the entity internals."""
+        raise NotImplementedError
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -111,7 +136,12 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
             self._async_update_attrs()
             self._attr_available = True
         except Exception as ex:
-            _LOGGER.warning("Unable to read data for %s: %s", self.entity_description, ex)
+            _LOGGER.warning(
+                "Unable to read data for %s %s: %s",
+                self.device,
+                self.entity_description,
+                ex,
+            )
             self._attr_available = False
 
         super()._handle_coordinator_update()

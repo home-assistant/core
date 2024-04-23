@@ -5,15 +5,13 @@ from __future__ import annotations
 import logging
 from typing import Any, cast
 
-from kasa import Feature, FeatureType, SmartDevice, SmartPlug
+from kasa import Feature, SmartDevice, SmartPlug
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import legacy_device_id
 from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkEntity, async_refresh_after
@@ -34,14 +32,13 @@ async def async_setup_entry(
     entities: list = []
 
     def _switches_for_device(dev, parent: SmartDevice = None) -> list[Switch]:
-        switches = [
-            Switch(dev, data.parent_coordinator, id_, feat, parent=parent)
-            for id_, feat in dev.features.items()
-            if feat.type == FeatureType.Switch
+        return [
+            Switch(dev, data.parent_coordinator, feat, parent=parent)
+            for feat in dev.features.values()
+            if feat.type == Feature.Switch
         ]
         # TODO: a way to filter state switch for platforms with their own main controls:
         #  lights and fans?
-        return switches
 
     if device.children:
         _LOGGER.debug("Initializing device with %s children", len(device.children))
@@ -60,23 +57,16 @@ class Switch(CoordinatedTPLinkEntity, SwitchEntity):
         self,
         device: SmartDevice,
         coordinator: TPLinkDataUpdateCoordinator,
-        id_: str,
         feature: Feature,
         parent: SmartDevice = None,
     ):
         """Initialize the switch."""
-        super().__init__(device, coordinator, parent=parent)
-        self._device = device
-        self._feature = feature
-        self._attr_unique_id = f"{legacy_device_id(device)}_new_{id_}"
-        self._attr_entity_category = (
-            EntityCategory.CONFIG
-        )  # TODO: read from the feature
-        if feature.name == "State":  # Main switch of the device has no category.
-            self._attr_entity_category = None
-
+        super().__init__(device, coordinator, feature=feature, parent=parent)
         self.entity_description = SwitchEntityDescription(
-            key=id_, translation_key=id_, name=feature.name, icon=feature.icon
+            key=feature.id,
+            translation_key=feature.id,
+            name=feature.name,
+            icon=feature.icon,
         )
 
     @async_refresh_after
@@ -92,4 +82,4 @@ class Switch(CoordinatedTPLinkEntity, SwitchEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
-        is_on = self._feature.value
+        self._attr_is_on = self._feature.value
