@@ -156,7 +156,7 @@ def get_url(
                     require_standard_port=require_standard_port,
                 )
 
-        if allow_external and url_type == TYPE_URL_EXTERNAL:
+        if require_cloud or (allow_external and url_type == TYPE_URL_EXTERNAL):
             with suppress(NoURLAvailableError):
                 return _get_external_url(
                     hass,
@@ -168,6 +168,8 @@ def get_url(
                     require_standard_port=require_standard_port,
                     require_cloud=require_cloud,
                 )
+            if require_cloud:
+                raise NoURLAvailableError
 
     # For current request, we accept loopback interfaces (e.g., 127.0.0.1),
     # the Supervisor hostname and localhost transparently
