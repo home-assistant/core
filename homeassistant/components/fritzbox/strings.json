@@ -26,6 +26,15 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "reconfigure_confirm": {
+        "description": "Update your configuration information for {name}.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your FRITZ!Box router."
+        }
       }
     },
     "abort": {
