@@ -10,7 +10,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.monzo.api import OAuthMonzoAPI
+from homeassistant.components.monzo.api import AuthenticatedMonzoAPI
 from homeassistant.components.monzo.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -90,7 +90,7 @@ def polling_config_entry(expires_at: int) -> MockConfigEntry:
 def mock_basic_monzo():
     """Mock monzo with one pot."""
 
-    mock = AsyncMock(spec=OAuthMonzoAPI)
+    mock = AsyncMock(spec=AuthenticatedMonzoAPI)
     mock_user_account = AsyncMock(spec=UserAccount)
 
     mock_user_account.accounts.return_value = []
@@ -100,7 +100,7 @@ def mock_basic_monzo():
     mock.user_account = mock_user_account
 
     with patch(
-        "homeassistant.components.monzo.AsyncConfigEntryAuth",
+        "homeassistant.components.monzo.AuthenticatedMonzoAPI",
         return_value=mock,
     ):
         yield mock
@@ -110,7 +110,7 @@ def mock_basic_monzo():
 def mock_monzo():
     """Mock monzo."""
 
-    mock = AsyncMock(spec=OAuthMonzoAPI)
+    mock = AsyncMock(spec=AuthenticatedMonzoAPI)
     mock_user_account = AsyncMock(spec=UserAccount)
 
     mock_user_account.accounts.return_value = TEST_ACCOUNTS
@@ -119,7 +119,7 @@ def mock_monzo():
     mock.user_account = mock_user_account
 
     with patch(
-        "homeassistant.components.monzo.AsyncConfigEntryAuth",
+        "homeassistant.components.monzo.AuthenticatedMonzoAPI",
         return_value=mock,
     ):
         yield mock

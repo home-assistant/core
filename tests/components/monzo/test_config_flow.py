@@ -2,7 +2,11 @@
 
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.monzo.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from homeassistant.components.monzo.application_credentials import (
+    OAUTH2_AUTHORIZE,
+    OAUTH2_TOKEN,
+)
+from homeassistant.components.monzo.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType

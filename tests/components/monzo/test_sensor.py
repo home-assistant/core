@@ -84,7 +84,7 @@ async def test_sensor_default_enabled_entities(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_failure(
+async def test_unavailable_entity(
     hass: HomeAssistant,
     basic_monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
