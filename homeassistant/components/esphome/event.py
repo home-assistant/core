@@ -34,6 +34,7 @@ class EsphomeEvent(EsphomeEntity[EventInfo, Event], EventEntity):
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
+        static_info = self._static_info
         if event_types := static_info.event_types:
             self._attr_event_types = event_types
         self._attr_device_class = try_parse_enum(
