@@ -15,13 +15,13 @@ from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 from tqdm import tqdm
 
 import homeassistant.util.package as pkg_util
-from script.gen_requirements_all import COMMENT_REQUIREMENTS, normalize_package_name
+from script.gen_requirements_all import (
+    EXCLUDED_REQUIREMENTS_ALL,
+    normalize_package_name,
+)
 
 from .model import Config, Integration
 
-IGNORE_PACKAGES = {
-    commented.lower().replace("_", "-") for commented in COMMENT_REQUIREMENTS
-}
 PACKAGE_REGEX = re.compile(
     r"^(?:--.+\s)?([-_,\.\w\d\[\]]+)(==|>=|<=|~=|!=|<|>|===)*(.*)$"
 )
@@ -116,7 +116,7 @@ def validate_requirements(integration: Integration) -> None:
                 f"Failed to normalize package name from requirement {req}",
             )
             return
-        if package in IGNORE_PACKAGES:
+        if package in EXCLUDED_REQUIREMENTS_ALL:
             continue
         integration_requirements.add(req)
         integration_packages.add(package)
