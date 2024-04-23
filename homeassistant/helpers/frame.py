@@ -174,7 +174,7 @@ def _report_integration(
     """
     # Keep track of integrations already reported to prevent flooding
     key = f"{integration_frame.filename}:{integration_frame.line_number}"
-    if key in _REPORTED_INTEGRATIONS:
+    if not error and key in _REPORTED_INTEGRATIONS:
         return
     _REPORTED_INTEGRATIONS.add(key)
 
