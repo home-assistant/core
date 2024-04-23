@@ -27,6 +27,13 @@ CONF_KNX_GROUP_VALUE_RESPONSE: Final = "group_value_response"
 CONF_KNX_INCOMING: Final = "incoming"
 CONF_KNX_OUTGOING: Final = "outgoing"
 
+TELEGRAM_TRIGGER_OPTIONS: Final = {
+    vol.Optional(CONF_KNX_GROUP_VALUE_WRITE, default=True): cv.boolean,
+    vol.Optional(CONF_KNX_GROUP_VALUE_RESPONSE, default=True): cv.boolean,
+    vol.Optional(CONF_KNX_GROUP_VALUE_READ, default=True): cv.boolean,
+    vol.Optional(CONF_KNX_INCOMING, default=True): cv.boolean,
+    vol.Optional(CONF_KNX_OUTGOING, default=True): cv.boolean,
+}
 TELEGRAM_TRIGGER_SCHEMA: Final = {
     vol.Optional(CONF_KNX_DESTINATION): vol.Maybe(
         vol.All(
@@ -34,11 +41,7 @@ TELEGRAM_TRIGGER_SCHEMA: Final = {
             [ga_validator],
         )
     ),
-    vol.Optional(CONF_KNX_GROUP_VALUE_WRITE, default=True): cv.boolean,
-    vol.Optional(CONF_KNX_GROUP_VALUE_RESPONSE, default=True): cv.boolean,
-    vol.Optional(CONF_KNX_GROUP_VALUE_READ, default=True): cv.boolean,
-    vol.Optional(CONF_KNX_INCOMING, default=True): cv.boolean,
-    vol.Optional(CONF_KNX_OUTGOING, default=True): cv.boolean,
+    **TELEGRAM_TRIGGER_OPTIONS,
 }
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(

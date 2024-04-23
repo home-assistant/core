@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from copy import copy
 from typing import Any, Final
 
 import voluptuous as vol
@@ -23,6 +22,7 @@ from .project import KNXProject
 from .trigger import (
     CONF_KNX_DESTINATION,
     PLATFORM_TYPE_TRIGGER_TELEGRAM,
+    TELEGRAM_TRIGGER_OPTIONS,
     TELEGRAM_TRIGGER_SCHEMA,
     TRIGGER_SCHEMA as TRIGGER_TRIGGER_SCHEMA,
 )
@@ -68,17 +68,21 @@ async def async_get_trigger_capabilities(
         selector.SelectOptionDict(value=ga.address, label=f"{ga.address} - {ga.name}")
         for ga in project.group_addresses.values()
     ]
-    # replace "destination" with a dropdown selector for extra fields UI
-    extra_fields = copy(TELEGRAM_TRIGGER_SCHEMA)
-    extra_fields[vol.Optional(CONF_KNX_DESTINATION)] = selector.SelectSelector(
-        selector.SelectSelectorConfig(
-            mode=selector.SelectSelectorMode.DROPDOWN,
-            multiple=True,
-            custom_value=True,
-            options=options,
-        ),
-    )
-    return {"extra_fields": vol.Schema(extra_fields)}
+    return {
+        "extra_fields": vol.Schema(
+            {
+                vol.Optional(CONF_KNX_DESTINATION): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                        multiple=True,
+                        custom_value=True,
+                        options=options,
+                    ),
+                ),
+                **TELEGRAM_TRIGGER_OPTIONS,
+            }
+        )
+    }
 
 
 async def async_attach_trigger(
