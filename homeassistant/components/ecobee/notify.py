@@ -71,8 +71,7 @@ async def async_setup_entry(
         [
             EcobeeNotifyEntity(data, index)
             for index in range(len(data.ecobee.thermostats))
-        ],
-        True,
+        ]
     )
 
 
