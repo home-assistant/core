@@ -106,6 +106,33 @@ PLATFORMS = (
 )
 
 
+async def validate_input(
+    hass: HomeAssistant, hass_data_in: dict[str, Any]
+) -> dict[str, Any]:
+    """Validate the user input allows us to connect.
+
+    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
+    """
+    hass_data = dict(hass_data_in)
+    if CONF_HOST in hass_data:
+        args = (hass_data.pop(CONF_HOST),)
+    else:
+        args = (hass_data.pop(CONF_TOKEN),)
+
+    hub_uid = hass_data.pop(CONF_MAC, None)
+
+    client = GeniusHub(*args, **hass_data, session=async_get_clientsession(hass))
+
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN]["broker"] = GeniusBroker(hass, client, hub_uid)
+
+    await client.update()
+
+    _LOGGER.debug("config_flow.py:validate_input: ", extra=hass_data)
+
+    return {"title": args}
+
+
 async def do_setup(hass: HomeAssistant, kwargs):
     """Create a Genius Hub client and broker."""
     if CONF_HOST in kwargs:
