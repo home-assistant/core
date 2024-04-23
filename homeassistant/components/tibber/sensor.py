@@ -724,9 +724,16 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=has
                         None,
                         {"sum"},
                     )
-                    first_stat = stat[statistic_id][0]
-                    _sum = cast(float, first_stat["sum"])
-                    last_stats_time = first_stat["start"]
+                    if statistic_id in stat:
+                        first_stat = stat[statistic_id][0]
+                        _sum = cast(float, first_stat["sum"])
+                        last_stats_time = first_stat["start"]
+                    else:
+                        hourly_data = await home.get_historic_data(
+                            5 * 365 * 24, production=is_production
+                        )
+                        _sum = 0.0
+                        last_stats_time = None
 
                 statistics = []
 
