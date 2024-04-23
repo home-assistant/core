@@ -690,7 +690,10 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     CONF_PORT: user_input[CONF_PORT],
                 }
                 return self.async_update_reload_and_abort(
-                    entry, options=new_options, reason="reconfigure_successful"
+                    entry,
+                    options=new_options,
+                    reason="reconfigure_successful",
+                    reload_on_entry_update=False,
                 )
 
         return self.async_show_form(

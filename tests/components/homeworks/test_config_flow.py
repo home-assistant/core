@@ -1,7 +1,6 @@
 """Test Lutron Homeworks Series 4 and 8 config flow."""
 
-from collections.abc import Generator
-from unittest.mock import ANY, MagicMock, patch
+from unittest.mock import ANY, MagicMock
 
 import pytest
 from pytest_unordered import unordered
@@ -27,15 +26,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def mock_async_schedule_reload(hass: HomeAssistant) -> Generator[None, MagicMock]:
-    """Mock reloading the config entry."""
-    with patch.object(
-        hass.config_entries, "async_schedule_reload", MagicMock()
-    ) as mock_async_schedule_reload:
-        yield mock_async_schedule_reload
 
 
 async def test_user_flow(
@@ -344,7 +334,6 @@ async def test_reconfigure_flow_flow_no_change(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_homeworks: MagicMock,
-    mock_async_schedule_reload: MagicMock,
 ) -> None:
     """Test reconfigure flow."""
     mock_config_entry.add_to_hass(hass)

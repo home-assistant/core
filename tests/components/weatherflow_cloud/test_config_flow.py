@@ -1,7 +1,5 @@
 """Test the WeatherflowCloud config flow."""
 
-from unittest.mock import MagicMock, patch
-
 import pytest
 
 from homeassistant import config_entries
@@ -106,11 +104,7 @@ async def test_reauth(hass: HomeAssistant, mock_get_stations_401_error) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch.object(
-        hass.config_entries, "async_schedule_reload", MagicMock()
-    ) as mock_async_schedule_reload:
-        assert not await hass.config_entries.async_setup(entry.entry_id)
-        mock_async_schedule_reload.assert_called()
+    assert not await hass.config_entries.async_setup(entry.entry_id)
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
@@ -118,15 +112,11 @@ async def test_reauth(hass: HomeAssistant, mock_get_stations_401_error) -> None:
         DOMAIN, context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id}, data=None
     )
     assert result["type"] is FlowResultType.FORM
-    with patch.object(
-        hass.config_entries, "async_schedule_reload", MagicMock()
-    ) as mock_async_schedule_reload:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
-            data={CONF_API_TOKEN: "SAME_SAME"},
-        )
-        mock_async_schedule_reload.assert_called()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
+        data={CONF_API_TOKEN: "SAME_SAME"},
+    )
 
     assert result["reason"] == "reauth_successful"
     assert result["type"] is FlowResultType.ABORT
