@@ -105,7 +105,6 @@ async def test_reauth(hass: HomeAssistant, mock_get_stations_401_error) -> None:
     entry.add_to_hass(hass)
 
     assert not await hass.config_entries.async_setup(entry.entry_id)
-
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
     result = await hass.config_entries.flow.async_init(
