@@ -10,7 +10,7 @@ from typing import Any, Protocol, cast
 
 import voluptuous as vol
 
-from homeassistant.components.rasc.decorator import rasc_push_event
+from homeassistant.components.rasc.decorator import rasc_push_event, rasc_target_state
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -615,6 +615,7 @@ class GroupEntity(Entity):
         """Return expected state when action is complete."""
 
         def _target_complete_state(current: str) -> Callable[[str], bool]:
+            @rasc_target_state(current)
             def match(value: str | None) -> bool:
                 if value is None:
                     return False

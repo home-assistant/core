@@ -9,6 +9,8 @@ import json
 import time
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
+import numpy as np
+
 from homeassistant.components import notify
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -18,7 +20,6 @@ from homeassistant.const import (
     CONF_SERVICE_DATA,
 )
 from homeassistant.core import (
-    CALLBACK_TYPE,
     HassJobType,
     HomeAssistant,
     Service,
@@ -35,14 +36,7 @@ from homeassistant.helpers.template import device_entities
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.dt as dt_util
 
-from .const import (
-    CHANGE_TIMEOUT,
-    DEFAULT_FAILURE_TIMEOUT,
-    LOGGER,
-    RASC_ACK,
-    RASC_COMPLETE,
-    RASC_START,
-)
+from .const import DEFAULT_FAILURE_TIMEOUT, LOGGER, RASC_ACK, RASC_COMPLETE, RASC_START
 from .helpers import fire
 
 _R = TypeVar("_R")
@@ -291,12 +285,14 @@ class StateDetector:
         history: list[float] | None,
         complete_state: dict[str, Any] | None = None,
         worst_Q: float = 2.0,
+        failure_callback: Any = None,
     ) -> None:
         """Init State Detector."""
         # for failure detection
         self._complete_state: dict[str, Any] = complete_state or {}
         self._progress: dict[str, Any] = {}
         self._next_q: float = 1
+        self._check_failure = False
 
         self._worst_Q = worst_Q
         # no history is found, polling statically
@@ -317,17 +313,62 @@ class StateDetector:
         dist = get_best_distribution(history)
         self._attr_upper_bound = dist.ppf(0.99)
         self._polls = get_polls(dist, worst_case_delta=worst_Q)
+        self._last_updated = None
+        self._failure_callback = failure_callback
 
     @property
     def upper_bound(self) -> float | None:
         """Return upper bound."""
         return self._attr_upper_bound
 
-    def add_progress(self, key: str, state: Any):
+    @property
+    def check_failure(self):
+        """Return true if checking failure."""
+        return self._check_failure
+
+    @check_failure.setter
+    def check_failure(self, value: bool):
+        """Set checking failure."""
+        self._check_failure = value
+
+    async def add_progress(self, progress):
         """Add progress."""
-        if key not in self._progress:
-            self._progress[key] = []
-        self._progress[key].append((state, time.time()))
+        if not self.check_failure:
+            return
+        if not bool(self._progress):
+            self._last_updated = time.time()
+        for key, state in progress.items():
+            if key not in self._progress:
+                self._progress[key] = []
+            self._progress[key].append((state, time.time()))
+        await self._update_next_q()
+
+    async def _update_next_q(self):
+        next_q = self._next_q
+        modified = False
+        for key, progress in self._progress.items():
+            if len(progress) > 1 and progress[-1][0] != progress[-2][0]:
+                self._last_updated = time.time()
+            if len({p[0] for p in progress}) > 2:
+                x = [item[0] for item in progress]
+                y = [item[1] for item in progress]
+                z = np.polyfit(x, y, 2)
+                p = np.poly1d(z)
+                predicted_time = p(self._complete_state[key].value)
+                time_diff = predicted_time - progress[0][1]
+                if time_diff > next_q:
+                    modified = True
+                    next_q = time_diff
+
+        # check failure
+        if time.time() - self._last_updated > self._worst_Q * 2 + 1:
+            if self._failure_callback:
+                await self._failure_callback()
+
+        if modified:
+            self._next_q = min(next_q, self._worst_Q)
+        else:
+            self._next_q = min(2 * self._next_q, self._worst_Q)
 
     def next_interval(self) -> timedelta:
         """Get next interval."""
@@ -340,9 +381,7 @@ class StateDetector:
                 return timedelta(seconds=self._polls[cur])
             return timedelta(seconds=(self._polls[cur] - self._polls[cur - 1]))
 
-        next_q = self._next_q
-        self._next_q = min(self._worst_Q, 2 * self._next_q)
-        return timedelta(seconds=next_q)
+        return timedelta(seconds=self._next_q)
 
 
 class RASCHistory:
@@ -400,9 +439,6 @@ class RASCState:
         # polling component
         self._platform: EntityPlatform | DataUpdateCoordinator | None = None
         # failure detection
-        self._last_changed: datetime.datetime | None = None
-        self._checking_failure = False
-        self._check_listener: CALLBACK_TYPE | None = None
         self._current_state = entity.__dict__
 
     @property
@@ -441,24 +477,20 @@ class RASCState:
         await self._track()
 
     async def _check_failure(self, _: datetime.datetime) -> None:
-        self._checking_failure = True
-        self._last_changed = dt_util.utcnow()
+        if self._c_detector is not None:
+            self._c_detector.check_failure = True
 
-        if self._check_listener:
-            self._check_listener()
-        self._check_listener = async_track_point_in_time(
-            self.hass,
-            self._check_no_progress,
-            dt_util.utcnow() + timedelta(seconds=CHANGE_TIMEOUT),
-        )
+    async def on_failure_detected(self) -> None:
+        """Call when StateDetector detects a failure."""
+        await self.set_failed()
 
-    async def _check_no_progress(self, now: datetime.datetime):
-        if self.completed:
-            return
-        if not self._last_changed:
-            return
-        if (now - self._last_changed).total_seconds() > CHANGE_TIMEOUT:
-            await self.set_failed()
+    # async def _check_no_progress(self, now: datetime.datetime):
+    #     if self.completed:
+    #         return
+    #     if not self._last_changed:
+    #         return
+    #     if (now - self._last_changed).total_seconds() > CHANGE_TIMEOUT:
+    #         await self.set_failed()
 
     def _match_target_state(self, target_state: dict[str, Any]) -> bool:
         matched = True
@@ -477,8 +509,10 @@ class RASCState:
                 break
         return matched
 
-    def _update_current_state(self) -> None:
+    async def _update_current_state(self) -> None:
+        progress: dict[str, Any] = {}
         for attr in self._complete_state:
+            progress[attr] = getattr(self._entity, attr)
             curr_value = getattr(self._entity, attr)
             prev_value = self._current_state.get(attr)
             if curr_value is None:
@@ -487,20 +521,11 @@ class RASCState:
                 )
                 continue
 
-            if self._c_detector is not None:
-                self._c_detector.add_progress(attr, curr_value)
             if curr_value != prev_value:
-                self._last_changed = dt_util.utcnow()
                 self._current_state[attr] = curr_value
-                if self._checking_failure:
-                    if self._check_listener:
-                        self._check_listener()
-                    self._check_listener = async_track_point_in_time(
-                        self.hass,
-                        self._check_no_progress,
-                        self._last_changed + timedelta(seconds=CHANGE_TIMEOUT),
-                    )
-                break
+
+        if self._c_detector is not None:
+            await self._c_detector.add_progress(progress)
 
     def _update_store(self, tts: bool = False, ttc: bool = False):
         key = ",".join(
@@ -565,9 +590,6 @@ class RASCState:
                 LOGGER,
                 self._service_call.data,
             )
-            # cancel failure checker
-            if self._check_listener:
-                self._check_listener()
 
             return
 
@@ -584,8 +606,8 @@ class RASCState:
             await self.set_started()
             self._update_store(tts=True)
 
-        # update _last_changed
-        self._update_current_state()
+        # update current state
+        await self._update_current_state()
 
     def start_tracking(self, platform: EntityPlatform | DataUpdateCoordinator) -> None:
         """Start tracking the state."""
@@ -608,7 +630,11 @@ class RASCState:
         )
         history = self._store.histories.get(key, RASCHistory())
         self._s_detector = StateDetector(history.st_history)
-        self._c_detector = StateDetector(history.ct_history, self._complete_state)
+        self._c_detector = StateDetector(
+            history.ct_history,
+            self._complete_state,
+            failure_callback=self.on_failure_detected,
+        )
         # fire failure if exceed upper_bound
         if self._s_detector.upper_bound and self._c_detector.upper_bound:
             upper_bound = self._s_detector.upper_bound + self._c_detector.upper_bound

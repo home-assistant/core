@@ -10,6 +10,7 @@ from typing import Any, final
 
 import voluptuous as vol
 
+from homeassistant.components.rasc.decorator import rasc_target_state
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -602,6 +603,7 @@ class ClimateEntity(Entity):
         def _target_start_state(
             current: float | None, target_complete_state: float
         ) -> Callable[[float], bool]:
+            @rasc_target_state(target_complete_state)
             def match(value: float) -> bool:
                 if current is None:
                     if target_complete_state > self._attr_min_temp:
@@ -618,6 +620,7 @@ class ClimateEntity(Entity):
         def _target_complete_state(
             target_complete_state: bool | float,
         ) -> Callable[[bool | float], bool]:
+            @rasc_target_state(target_complete_state)
             def match(value: bool | float) -> bool:
                 return value == target_complete_state
 

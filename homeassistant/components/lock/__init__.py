@@ -12,6 +12,7 @@ from typing import Any, final
 
 import voluptuous as vol
 
+from homeassistant.components.rasc.decorator import rasc_target_state
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CODE,
@@ -295,6 +296,7 @@ class LockEntity(Entity):
         def _target_state(
             target_complete_state: bool,
         ) -> Callable[[bool], bool]:
+            @rasc_target_state(target_complete_state)
             def match(value: bool) -> bool:
                 return value == target_complete_state
 

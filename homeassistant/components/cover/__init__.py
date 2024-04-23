@@ -11,6 +11,7 @@ from typing import Any, ParamSpec, TypeVar, final
 
 import voluptuous as vol
 
+from homeassistant.components.rasc.decorator import rasc_target_state
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EVENT,
@@ -453,6 +454,7 @@ class CoverEntity(Entity):
         def _target_state(
             target_complete_state: bool | int,
         ) -> Callable[[bool | int], bool]:
+            @rasc_target_state(target_complete_state)
             def match(value: bool | int) -> bool:
                 return value == target_complete_state
 
