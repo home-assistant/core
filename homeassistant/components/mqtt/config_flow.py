@@ -164,6 +164,7 @@ REAUTH_SCHEMA = vol.Schema(
         vol.Optional(CONF_PASSWORD): PASSWORD_SELECTOR,
     }
 )
+PWD_NOT_CHANGED = "__**password_not_changed**__"
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
@@ -208,10 +209,14 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         assert self.entry is not None
         if user_input:
+            password_changed = (user_password := user_input.get(CONF_PASSWORD)) == (
+                entry_password := self.entry.data.get(CONF_PASSWORD)
+            )
+            password = user_password if password_changed else entry_password
             new_entry_data = {
                 **self.entry.data,
                 CONF_USERNAME: user_input.get(CONF_USERNAME),
-                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+                CONF_PASSWORD: password,
             }
             if await self.hass.async_add_executor_job(
                 try_connection,
@@ -223,7 +228,13 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
             errors["base"] = "invalid_auth"
 
-        schema = self.add_suggested_values_to_schema(REAUTH_SCHEMA, self.entry.data)
+        schema = self.add_suggested_values_to_schema(
+            REAUTH_SCHEMA,
+            {
+                CONF_USERNAME: self.entry.data.get(CONF_USERNAME),
+                CONF_PASSWORD: PWD_NOT_CHANGED,
+            },
+        )
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=schema,
