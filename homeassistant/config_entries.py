@@ -2397,16 +2397,18 @@ class ConfigFlow(ConfigEntryBaseFlow):
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         reason: str = "reauth_successful",
+        reload_on_entry_update: bool = True,
     ) -> ConfigFlowResult:
         """Update config entry, reload config entry and finish config flow."""
-        self.hass.config_entries.async_update_entry(
+        result = self.hass.config_entries.async_update_entry(
             entry=entry,
             unique_id=unique_id,
             title=title,
             data=data,
             options=options,
         )
-        self.hass.config_entries.async_schedule_reload(entry.entry_id)
+        if reload_on_entry_update or result:
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
         return self.async_abort(reason=reason)
 
 
