@@ -426,10 +426,11 @@ class Group(Entity):
             if (state := self.hass.states.get(entity_id)) is None:
                 continue
             current_state = state.state
-            domain = state.domain
             if (
-                domain_on_states := registry.on_states_by_domain.get(domain)
-            ) and current_state in domain_on_states:
+                group_is_on
+                and (domain_on_states := registry.on_states_by_domain.get(state.domain))
+                and current_state in domain_on_states
+            ):
                 active_on_states.add(current_state)
                 # If we have more than one on state, the group state
                 # will result in STATE_ON and we can stop checking
