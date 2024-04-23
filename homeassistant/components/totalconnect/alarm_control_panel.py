@@ -92,17 +92,17 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
         Add _# for partition 2 and beyond.
         """
         if partition_id == 1:
-            self._attr_name = self.device.name
+            self._attr_name = None
             self._attr_unique_id = str(location.location_id)
         else:
-            self._attr_name = f"{self.device.name} partition {partition_id}"
+            self._attr_translation_key = "partition"
+            self._attr_translation_placeholders = {"partition_id": str(partition_id)}
             self._attr_unique_id = f"{location.location_id}_{partition_id}"
 
     @property
     def state(self) -> str | None:
         """Return the state of the device."""
         attr = {
-            "location_name": self.name,
             "location_id": self._location.location_id,
             "partition": self._partition_id,
             "ac_loss": self._location.ac_loss,
@@ -111,6 +111,11 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             "triggered_source": None,
             "triggered_zone": None,
         }
+
+        if self._partition_id == 1:
+            attr["location_name"] = self.device.name
+        else:
+            attr["location_name"] = f"{self.device.name} partition {self._partition_id}"
 
         state: str | None = None
         if self._partition.arming_state.is_disarmed():
@@ -152,7 +157,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             ) from error
         except BadResultCodeError as error:
             raise HomeAssistantError(
-                f"TotalConnect failed to disarm {self.name}."
+                f"TotalConnect failed to disarm {self.device.name}."
             ) from error
         await self.coordinator.async_request_refresh()
 
@@ -171,7 +176,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             ) from error
         except BadResultCodeError as error:
             raise HomeAssistantError(
-                f"TotalConnect failed to arm home {self.name}."
+                f"TotalConnect failed to arm home {self.device.name}."
             ) from error
         await self.coordinator.async_request_refresh()
 
@@ -190,7 +195,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             ) from error
         except BadResultCodeError as error:
             raise HomeAssistantError(
-                f"TotalConnect failed to arm away {self.name}."
+                f"TotalConnect failed to arm away {self.device.name}."
             ) from error
         await self.coordinator.async_request_refresh()
 
@@ -209,7 +214,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             ) from error
         except BadResultCodeError as error:
             raise HomeAssistantError(
-                f"TotalConnect failed to arm night {self.name}."
+                f"TotalConnect failed to arm night {self.device.name}."
             ) from error
         await self.coordinator.async_request_refresh()
 
@@ -228,7 +233,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             ) from error
         except BadResultCodeError as error:
             raise HomeAssistantError(
-                f"TotalConnect failed to arm home instant {self.name}."
+                f"TotalConnect failed to arm home instant {self.device.name}."
             ) from error
         await self.coordinator.async_request_refresh()
 
@@ -247,7 +252,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             ) from error
         except BadResultCodeError as error:
             raise HomeAssistantError(
-                f"TotalConnect failed to arm away instant {self.name}."
+                f"TotalConnect failed to arm away instant {self.device.name}."
             ) from error
         await self.coordinator.async_request_refresh()
 
