@@ -429,6 +429,20 @@ class HomeAssistant:
             max_workers=1, thread_name_prefix="ImportExecutor"
         )
 
+    def verify_event_loop_thread(self, what: str) -> None:
+        """Check if we are not running in the event loop thread."""
+        if (
+            loop_thread_ident := self.loop.__dict__.get("_thread_ident")
+        ) and loop_thread_ident != threading.get_ident():
+            from .helpers import frame  # pylint: disable=import-outside-toplevel
+
+            # frame is a circular import, so we import it here
+            frame.report(
+                f"calls {what} from a thread",
+                error_if_core=True,
+                error_if_integration=True,
+            )
+
     @property
     def _active_tasks(self) -> set[asyncio.Future[Any]]:
         """Return all active tasks.
@@ -1457,14 +1471,8 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        if (
-            loop_thread_ident := self._hass.loop.__dict__.get("_thread_ident")
-        ) and loop_thread_ident != threading.get_ident():
-            # late import to avoid circular imports
-            from .helpers import frame  # pylint: disable=import-outside-toplevel
-
-            frame.report("calls async_fire from a thread")
         _verify_event_type_length_or_raise(event_type)
+        self._hass.verify_event_loop_thread("async_fire")
         return self.async_fire_internal(
             event_type, event_data, origin, context, time_fired
         )
