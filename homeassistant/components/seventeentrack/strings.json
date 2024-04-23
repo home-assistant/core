@@ -66,5 +66,21 @@
         "name": "Package {name}"
       }
     }
+  },
+  "services": {
+    "get_packages": {
+      "name": "Get packages",
+      "description": "Get packages from 17Track",
+      "fields": {
+        "package_state": {
+          "name": "Package states",
+          "description": "Comma seperated list of package states."
+        },
+        "config_entry_id": {
+          "name": "17Track service",
+          "description": "The packages will be retrieved for the selected service."
+        }
+      }
+    }
   }
 }

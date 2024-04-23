@@ -1,0 +1,11 @@
+get_packages:
+  fields:
+    package_state:
+      example: "In Transit,Delivered"
+      selector:
+        text:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: seventeentrack
