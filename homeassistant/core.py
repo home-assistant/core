@@ -437,7 +437,11 @@ class HomeAssistant:
             from .helpers import frame  # pylint: disable=import-outside-toplevel
 
             # frame is a circular import, so we import it here
-            frame.report(f"calls {what} from a thread")
+            frame.report(
+                f"calls {what} from a thread",
+                error_if_core=True,
+                error_if_integration=True,
+            )
 
     @property
     def _active_tasks(self) -> set[asyncio.Future[Any]]:
