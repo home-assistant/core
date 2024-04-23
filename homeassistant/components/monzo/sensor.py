@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -26,7 +26,7 @@ from .entity import MonzoBaseEntity
 class MonzoSensorEntityDescription(SensorEntityDescription):
     """Describes Monzo sensor entity."""
 
-    value_fn: Callable[[dict[str, Any]], Any]
+    value_fn: Callable[[dict[str, Any]], StateType]
 
 
 ACCOUNT_SENSORS = (
@@ -118,4 +118,4 @@ class MonzoSensor(MonzoBaseEntity, SensorEntity):
         except (KeyError, ValueError):
             return None
 
-        return cast(StateType, state)
+        return state
