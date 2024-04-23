@@ -1,4 +1,5 @@
 """Tests for Shelly switch platform."""
+
 from copy import deepcopy
 from unittest.mock import AsyncMock, Mock
 
@@ -97,7 +98,7 @@ async def test_block_set_state_auth_error(
     )
     entry = await init_integration(hass, 1)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -107,7 +108,7 @@ async def test_block_set_state_auth_error(
     )
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -241,7 +242,7 @@ async def test_rpc_auth_error(
     )
     entry = await init_integration(hass, 2)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -251,7 +252,7 @@ async def test_rpc_auth_error(
     )
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -317,39 +318,35 @@ async def test_block_device_gas_valve(
     assert state.state == STATE_ON  # valve is open
 
 
-async def test_wall_display_thermostat_mode(
-    hass: HomeAssistant,
-    mock_rpc_device: Mock,
-) -> None:
-    """Test Wall Display in thermostat mode."""
-    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
-
-    # the switch entity should not be created, only the climate entity
-    assert hass.states.get("switch.test_name") is None
-    assert hass.states.get("climate.test_name")
-
-
 async def test_wall_display_relay_mode(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test Wall Display in thermostat mode."""
-    entity_id = register_entity(
-        hass,
-        CLIMATE_DOMAIN,
-        "test_name",
-        "thermostat:0",
-    )
+    """Test Wall Display in relay mode."""
+    climate_entity_id = "climate.test_name"
+    switch_entity_id = "switch.test_switch_0"
 
-    new_shelly = deepcopy(mock_rpc_device.shelly)
-    new_shelly["relay_in_thermostat"] = False
-    monkeypatch.setattr(mock_rpc_device, "shelly", new_shelly)
+    new_status = deepcopy(mock_rpc_device.status)
+    new_status["sys"]["relay_in_thermostat"] = False
+    monkeypatch.setattr(mock_rpc_device, "status", new_status)
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
     # the climate entity should be removed
-    assert hass.states.get(entity_id) is None
+    assert hass.states.get(climate_entity_id) is None
+    assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 0
+
+    # the switch entity should be created
+    state = hass.states.get(switch_entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+
+    entry = entity_registry.async_get(switch_entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-switch:0"
 
 
 async def test_create_issue_valve_switch(

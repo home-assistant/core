@@ -1,4 +1,5 @@
 """Fixtures for Time & Date integration tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 

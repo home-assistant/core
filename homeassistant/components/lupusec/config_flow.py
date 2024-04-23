@@ -1,4 +1,4 @@
-""""Config flow for Lupusec integration."""
+"""Config flow for Lupusec integration."""
 
 from json import JSONDecodeError
 import logging
@@ -7,7 +7,7 @@ from typing import Any
 import lupupy
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_IP_ADDRESS,
@@ -16,7 +16,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
@@ -32,12 +31,12 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class LupusecConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Lupusec config flow."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -67,7 +66,7 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Import the yaml config."""
         self._async_abort_entries_match(
             {

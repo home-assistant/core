@@ -1,4 +1,5 @@
 """Define fixtures for PurpleAir tests."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiopurpleair.endpoints.sensors import NearbySensorResult
@@ -73,9 +74,10 @@ def get_sensors_response_fixture():
 @pytest.fixture(name="mock_aiopurpleair")
 async def mock_aiopurpleair_fixture(api):
     """Define a fixture to patch aiopurpleair."""
-    with patch(
-        "homeassistant.components.purpleair.config_flow.API", return_value=api
-    ), patch("homeassistant.components.purpleair.coordinator.API", return_value=api):
+    with (
+        patch("homeassistant.components.purpleair.config_flow.API", return_value=api),
+        patch("homeassistant.components.purpleair.coordinator.API", return_value=api),
+    ):
         yield api
 
 

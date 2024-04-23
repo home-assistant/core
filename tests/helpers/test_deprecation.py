@@ -1,4 +1,5 @@
 """Test deprecation helpers."""
+
 from enum import StrEnum
 import logging
 import sys
@@ -9,6 +10,7 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.deprecation import (
+    DeprecatedAlias,
     DeprecatedConstant,
     DeprecatedConstantEnum,
     check_if_deprecated_constant,
@@ -20,7 +22,7 @@ from homeassistant.helpers.deprecation import (
 )
 from homeassistant.helpers.frame import MissingIntegrationFrame
 
-from tests.common import MockModule, mock_integration
+from tests.common import MockModule, extract_stack_to_frame, mock_integration
 
 
 class MockBaseClassDeprecatedProperty:
@@ -177,25 +179,33 @@ def test_deprecated_function_called_from_built_in_integration(
     def mock_deprecated_function():
         pass
 
-    with patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
+    with (
+        patch(
+            "homeassistant.helpers.frame.linecache.getline",
+            return_value="await session.close()",
+        ),
+        patch(
+            "homeassistant.helpers.frame.get_current_frame",
+            return_value=extract_stack_to_frame(
+                [
+                    Mock(
+                        filename="/home/paulus/homeassistant/core.py",
+                        lineno="23",
+                        line="do_something()",
+                    ),
+                    Mock(
+                        filename="/home/paulus/homeassistant/components/hue/light.py",
+                        lineno="23",
+                        line="await session.close()",
+                    ),
+                    Mock(
+                        filename="/home/paulus/aiohue/lights.py",
+                        lineno="2",
+                        line="something()",
+                    ),
+                ]
             ),
-            Mock(
-                filename="/home/paulus/homeassistant/components/hue/light.py",
-                lineno="23",
-                line="await session.close()",
-            ),
-            Mock(
-                filename="/home/paulus/aiohue/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
+        ),
     ):
         mock_deprecated_function()
     assert (
@@ -229,25 +239,33 @@ def test_deprecated_function_called_from_custom_integration(
     def mock_deprecated_function():
         pass
 
-    with patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
+    with (
+        patch(
+            "homeassistant.helpers.frame.linecache.getline",
+            return_value="await session.close()",
+        ),
+        patch(
+            "homeassistant.helpers.frame.get_current_frame",
+            return_value=extract_stack_to_frame(
+                [
+                    Mock(
+                        filename="/home/paulus/homeassistant/core.py",
+                        lineno="23",
+                        line="do_something()",
+                    ),
+                    Mock(
+                        filename="/home/paulus/config/custom_components/hue/light.py",
+                        lineno="23",
+                        line="await session.close()",
+                    ),
+                    Mock(
+                        filename="/home/paulus/aiohue/lights.py",
+                        lineno="2",
+                        line="something()",
+                    ),
+                ]
             ),
-            Mock(
-                filename="/home/paulus/config/custom_components/hue/light.py",
-                lineno="23",
-                line="await session.close()",
-            ),
-            Mock(
-                filename="/home/paulus/aiohue/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
+        ),
     ):
         mock_deprecated_function()
     assert (
@@ -266,38 +284,59 @@ class TestDeprecatedConstantEnum(StrEnum):
     TEST = "value"
 
 
-def _get_value(obj: DeprecatedConstant | DeprecatedConstantEnum | tuple) -> Any:
-    if isinstance(obj, tuple):
-        if len(obj) == 2:
-            return obj[0].value
-
-        return obj[0]
-
+def _get_value(
+    obj: DeprecatedConstant
+    | DeprecatedConstantEnum
+    | DeprecatedAlias
+    | tuple[Any, ...],
+) -> Any:
     if isinstance(obj, DeprecatedConstant):
         return obj.value
 
     if isinstance(obj, DeprecatedConstantEnum):
         return obj.enum.value
 
+    if isinstance(obj, DeprecatedAlias):
+        return obj.value
+
+    if len(obj) == 2:
+        return obj[0].value
+
+    return obj[0]
+
 
 @pytest.mark.parametrize(
-    ("deprecated_constant", "extra_msg"),
+    ("deprecated_constant", "extra_msg", "description"),
     [
         (
             DeprecatedConstant("value", "NEW_CONSTANT", None),
             ". Use NEW_CONSTANT instead",
+            "constant",
         ),
         (
             DeprecatedConstant(1, "NEW_CONSTANT", "2099.1"),
             " which will be removed in HA Core 2099.1. Use NEW_CONSTANT instead",
+            "constant",
         ),
         (
             DeprecatedConstantEnum(TestDeprecatedConstantEnum.TEST, None),
             ". Use TestDeprecatedConstantEnum.TEST instead",
+            "constant",
         ),
         (
             DeprecatedConstantEnum(TestDeprecatedConstantEnum.TEST, "2099.1"),
             " which will be removed in HA Core 2099.1. Use TestDeprecatedConstantEnum.TEST instead",
+            "constant",
+        ),
+        (
+            DeprecatedAlias(1, "new_alias", None),
+            ". Use new_alias instead",
+            "alias",
+        ),
+        (
+            DeprecatedAlias(1, "new_alias", "2099.1"),
+            " which will be removed in HA Core 2099.1. Use new_alias instead",
+            "alias",
         ),
     ],
 )
@@ -313,10 +352,14 @@ def _get_value(obj: DeprecatedConstant | DeprecatedConstantEnum | tuple) -> Any:
 )
 def test_check_if_deprecated_constant(
     caplog: pytest.LogCaptureFixture,
-    deprecated_constant: DeprecatedConstant | DeprecatedConstantEnum | tuple,
+    deprecated_constant: DeprecatedConstant
+    | DeprecatedConstantEnum
+    | DeprecatedAlias
+    | tuple,
     extra_msg: str,
     module_name: str,
     extra_extra_msg: str,
+    description: str,
 ) -> None:
     """Test check_if_deprecated_constant."""
     module_globals = {
@@ -326,25 +369,34 @@ def test_check_if_deprecated_constant(
     filename = f"/home/paulus/{module_name.replace('.', '/')}.py"
 
     # mock sys.modules for homeassistant/helpers/frame.py#get_integration_frame
-    with patch.dict(sys.modules, {module_name: Mock(__file__=filename)}), patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
+    with (
+        patch.dict(sys.modules, {module_name: Mock(__file__=filename)}),
+        patch(
+            "homeassistant.helpers.frame.linecache.getline",
+            return_value="await session.close()",
+        ),
+        patch(
+            "homeassistant.helpers.frame.get_current_frame",
+            return_value=extract_stack_to_frame(
+                [
+                    Mock(
+                        filename="/home/paulus/homeassistant/core.py",
+                        lineno="23",
+                        line="do_something()",
+                    ),
+                    Mock(
+                        filename=filename,
+                        lineno="23",
+                        line="await session.close()",
+                    ),
+                    Mock(
+                        filename="/home/paulus/aiohue/lights.py",
+                        lineno="2",
+                        line="something()",
+                    ),
+                ]
             ),
-            Mock(
-                filename=filename,
-                lineno="23",
-                line="await session.close()",
-            ),
-            Mock(
-                filename="/home/paulus/aiohue/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
+        ),
     ):
         value = check_if_deprecated_constant("TEST_CONSTANT", module_globals)
         assert value == _get_value(deprecated_constant)
@@ -352,28 +404,42 @@ def test_check_if_deprecated_constant(
     assert (
         module_name,
         logging.WARNING,
-        f"TEST_CONSTANT was used from hue, this is a deprecated constant{extra_msg}{extra_extra_msg}",
+        f"TEST_CONSTANT was used from hue, this is a deprecated {description}{extra_msg}{extra_extra_msg}",
     ) in caplog.record_tuples
 
 
 @pytest.mark.parametrize(
-    ("deprecated_constant", "extra_msg"),
+    ("deprecated_constant", "extra_msg", "description"),
     [
         (
             DeprecatedConstant("value", "NEW_CONSTANT", None),
             ". Use NEW_CONSTANT instead",
+            "constant",
         ),
         (
             DeprecatedConstant(1, "NEW_CONSTANT", "2099.1"),
             " which will be removed in HA Core 2099.1. Use NEW_CONSTANT instead",
+            "constant",
         ),
         (
             DeprecatedConstantEnum(TestDeprecatedConstantEnum.TEST, None),
             ". Use TestDeprecatedConstantEnum.TEST instead",
+            "constant",
         ),
         (
             DeprecatedConstantEnum(TestDeprecatedConstantEnum.TEST, "2099.1"),
             " which will be removed in HA Core 2099.1. Use TestDeprecatedConstantEnum.TEST instead",
+            "constant",
+        ),
+        (
+            DeprecatedAlias(1, "new_alias", None),
+            ". Use new_alias instead",
+            "alias",
+        ),
+        (
+            DeprecatedAlias(1, "new_alias", "2099.1"),
+            " which will be removed in HA Core 2099.1. Use new_alias instead",
+            "alias",
         ),
     ],
 )
@@ -386,9 +452,13 @@ def test_check_if_deprecated_constant(
 )
 def test_check_if_deprecated_constant_integration_not_found(
     caplog: pytest.LogCaptureFixture,
-    deprecated_constant: DeprecatedConstant | DeprecatedConstantEnum | tuple,
+    deprecated_constant: DeprecatedConstant
+    | DeprecatedConstantEnum
+    | DeprecatedAlias
+    | tuple,
     extra_msg: str,
     module_name: str,
+    description: str,
 ) -> None:
     """Test check_if_deprecated_constant."""
     module_globals = {
@@ -397,7 +467,8 @@ def test_check_if_deprecated_constant_integration_not_found(
     }
 
     with patch(
-        "homeassistant.helpers.frame.extract_stack", side_effect=MissingIntegrationFrame
+        "homeassistant.helpers.frame.get_current_frame",
+        side_effect=MissingIntegrationFrame,
     ):
         value = check_if_deprecated_constant("TEST_CONSTANT", module_globals)
         assert value == _get_value(deprecated_constant)
@@ -405,7 +476,7 @@ def test_check_if_deprecated_constant_integration_not_found(
     assert (
         module_name,
         logging.WARNING,
-        f"TEST_CONSTANT is a deprecated constant{extra_msg}",
+        f"TEST_CONSTANT is a deprecated {description}{extra_msg}",
     ) not in caplog.record_tuples
 
 

@@ -1,4 +1,5 @@
 """The tests for the Alexa component."""
+
 from http import HTTPStatus
 import json
 

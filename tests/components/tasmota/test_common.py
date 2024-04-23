@@ -1,4 +1,5 @@
 """Common test objects."""
+
 import copy
 import json
 from unittest.mock import ANY
@@ -162,7 +163,7 @@ async def help_test_availability_when_connection_lost(
 
     # Disconnected from MQTT server -> state changed to unavailable
     mqtt_mock.connected = False
-    await hass.async_add_executor_job(mqtt_client_mock.on_disconnect, None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -171,7 +172,7 @@ async def help_test_availability_when_connection_lost(
 
     # Reconnected to MQTT server -> state still unavailable
     mqtt_mock.connected = True
-    await hass.async_add_executor_job(mqtt_client_mock.on_connect, None, None, None, 0)
+    mqtt_client_mock.on_connect(None, None, None, 0)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -223,7 +224,7 @@ async def help_test_deep_sleep_availability_when_connection_lost(
 
     # Disconnected from MQTT server -> state changed to unavailable
     mqtt_mock.connected = False
-    await hass.async_add_executor_job(mqtt_client_mock.on_disconnect, None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -232,7 +233,7 @@ async def help_test_deep_sleep_availability_when_connection_lost(
 
     # Reconnected to MQTT server -> state no longer unavailable
     mqtt_mock.connected = True
-    await hass.async_add_executor_job(mqtt_client_mock.on_connect, None, None, None, 0)
+    mqtt_client_mock.on_connect(None, None, None, 0)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -475,7 +476,7 @@ async def help_test_availability_poll_state(
 
     # Disconnected from MQTT server
     mqtt_mock.connected = False
-    await hass.async_add_executor_job(mqtt_client_mock.on_disconnect, None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -483,7 +484,7 @@ async def help_test_availability_poll_state(
 
     # Reconnected to MQTT server
     mqtt_mock.connected = True
-    await hass.async_add_executor_job(mqtt_client_mock.on_connect, None, None, None, 0)
+    mqtt_client_mock.on_connect(None, None, None, 0)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     await hass.async_block_till_done()

@@ -1,4 +1,5 @@
 """Sensor for Home Assistant analytics."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -64,7 +65,7 @@ async def async_setup_entry(
 ) -> None:
     """Initialize the entries."""
 
-    analytics_data: AnalyticsInsightsData = hass.data[DOMAIN][entry.entry_id]
+    analytics_data: AnalyticsInsightsData = hass.data[DOMAIN]
     coordinator: HomeassistantAnalyticsDataUpdateCoordinator = (
         analytics_data.coordinator
     )

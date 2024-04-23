@@ -1,4 +1,5 @@
 """Config flow to configure the LaMetric integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -28,9 +29,9 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_SERIAL,
     SsdpServiceInfo,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_DEVICE, CONF_HOST, CONF_MAC
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 from homeassistant.helpers.device_registry import format_mac
@@ -72,11 +73,13 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         return await self.async_step_choice_enter_manual_or_fetch_cloud()
 
-    async def async_step_ssdp(self, discovery_info: SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by SSDP discovery."""
         url = URL(discovery_info.ssdp_location or "")
         if url.host is None or not (
@@ -106,7 +109,9 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self.discovered_serial = serial
         return await self.async_step_choice_enter_manual_or_fetch_cloud()
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle initiation of re-authentication with LaMetric."""
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -115,7 +120,7 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_step_choice_enter_manual_or_fetch_cloud(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user's choice.
 
         Either enter the manual credentials or fetch the cloud credentials.
@@ -127,7 +132,7 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_step_manual_entry(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user's choice of entering the device manually."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -142,8 +147,8 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 return await self._async_step_create_entry(
                     host, user_input[CONF_API_KEY]
                 )
-            except AbortFlow as ex:
-                raise ex
+            except AbortFlow:
+                raise
             except LaMetricConnectionError as ex:
                 LOGGER.error("Error connecting to LaMetric: %s", ex)
                 errors["base"] = "cannot_connect"
@@ -166,7 +171,9 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_cloud_fetch_devices(self, data: dict[str, Any]) -> FlowResult:
+    async def async_step_cloud_fetch_devices(
+        self, data: dict[str, Any]
+    ) -> ConfigFlowResult:
         """Fetch information about devices from the cloud."""
         lametric = LaMetricCloud(
             token=data["token"]["access_token"],
@@ -184,7 +191,7 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_step_cloud_select_device(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle device selection from devices offered by the cloud."""
         if self.discovered:
             user_input = {CONF_DEVICE: self.discovered_serial}
@@ -202,8 +209,8 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 return await self._async_step_create_entry(
                     str(device.ip), device.api_key
                 )
-            except AbortFlow as ex:
-                raise ex
+            except AbortFlow:
+                raise
             except LaMetricConnectionError as ex:
                 LOGGER.error("Error connecting to LaMetric: %s", ex)
                 errors["base"] = "cannot_connect"
@@ -232,7 +239,9 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _async_step_create_entry(self, host: str, api_key: str) -> FlowResult:
+    async def _async_step_create_entry(
+        self, host: str, api_key: str
+    ) -> ConfigFlowResult:
         """Create entry."""
         lametric = LaMetricDevice(
             host=host,
@@ -287,7 +296,9 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             },
         )
 
-    async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle dhcp discovery to update existing entries."""
         mac = format_mac(discovery_info.macaddress)
         for entry in self._async_current_entries():

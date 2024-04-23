@@ -1,0 +1,15 @@
+clean_room:
+  target:
+    entity:
+      integration: "sharkiq"
+      domain: "vacuum"
+
+  fields:
+    rooms:
+      required: true
+      advanced: false
+      example: "Kitchen"
+      default: ""
+      selector:
+        area:
+          multiple: true

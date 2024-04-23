@@ -3,6 +3,7 @@
 The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
 """
+
 from pysmartthings import Attribute, Capability
 from pysmartthings.device import Status
 import pytest

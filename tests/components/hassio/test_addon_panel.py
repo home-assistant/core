@@ -1,4 +1,5 @@
 """Test add-on panel."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 

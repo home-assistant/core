@@ -1,4 +1,5 @@
 """iCloud account."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -149,9 +150,9 @@ class IcloudAccount:
         self._family_members_fullname = {}
         if user_info.get("membersInfo") is not None:
             for prs_id, member in user_info["membersInfo"].items():
-                self._family_members_fullname[
-                    prs_id
-                ] = f"{member['firstName']} {member['lastName']}"
+                self._family_members_fullname[prs_id] = (
+                    f"{member['firstName']} {member['lastName']}"
+                )
 
         self._devices = {}
         self.update_devices()
@@ -318,11 +319,12 @@ class IcloudAccount:
 
     def get_devices_with_name(self, name: str) -> list[Any]:
         """Get devices by name."""
-        result = []
         name_slug = slugify(name.replace(" ", "", 99))
-        for device in self.devices.values():
-            if slugify(device.name.replace(" ", "", 99)) == name_slug:
-                result.append(device)
+        result = [
+            device
+            for device in self.devices.values()
+            if slugify(device.name.replace(" ", "", 99)) == name_slug
+        ]
         if not result:
             raise ValueError(f"No device with name {name}")
         return result

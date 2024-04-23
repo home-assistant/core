@@ -1,7 +1,7 @@
 """Support for exposing Home Assistant via Zeroconf."""
+
 from __future__ import annotations
 
-import asyncio
 import contextlib
 from contextlib import suppress
 from dataclasses import dataclass
@@ -24,7 +24,11 @@ from zeroconf.asyncio import AsyncServiceBrowser, AsyncServiceInfo
 
 from homeassistant import config_entries
 from homeassistant.components import network
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, __version__
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_HOMEASSISTANT_STOP,
+    __version__,
+)
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow, instance_id
@@ -163,7 +167,9 @@ async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> HaAsyncZero
         """Stop Zeroconf."""
         await aio_zc.ha_async_close()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_zeroconf)
+    # Wait to the close event to shutdown zeroconf to give
+    # integrations time to send a good bye message
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_stop_zeroconf)
     hass.data[DOMAIN] = aio_zc
 
     return aio_zc
@@ -215,9 +221,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     aio_zc = await _async_get_instance(hass, **zc_args)
     zeroconf = cast(HaZeroconf, aio_zc.zeroconf)
-    zeroconf_types, homekit_models = await asyncio.gather(
-        async_get_zeroconf(hass), async_get_homekit(hass)
-    )
+    zeroconf_types = await async_get_zeroconf(hass)
+    homekit_models = await async_get_homekit(hass)
     homekit_model_lookup, homekit_model_matchers = _build_homekit_model_lookups(
         homekit_models
     )
@@ -364,9 +369,11 @@ class ZeroconfDiscovery:
         # We want to make sure we know about other HomeAssistant
         # instances as soon as possible to avoid name conflicts
         # so we always browse for ZEROCONF_TYPE
-        for hk_type in (ZEROCONF_TYPE, *HOMEKIT_TYPES):
-            if hk_type not in self.zeroconf_types:
-                types.append(hk_type)
+        types.extend(
+            hk_type
+            for hk_type in (ZEROCONF_TYPE, *HOMEKIT_TYPES)
+            if hk_type not in self.zeroconf_types
+        )
         _LOGGER.debug("Starting Zeroconf browser for: %s", types)
         self.async_service_browser = AsyncServiceBrowser(
             self.zeroconf, types, handlers=[self.async_service_update]
@@ -416,10 +423,11 @@ class ZeroconfDiscovery:
         if async_service_info.load_from_cache(zeroconf):
             self._async_process_service_update(async_service_info, service_type, name)
         else:
-            self.hass.async_create_task(
+            self.hass.async_create_background_task(
                 self._async_lookup_and_process_service_update(
                     zeroconf, async_service_info, service_type, name
-                )
+                ),
+                name=f"zeroconf lookup {name}.{service_type}",
             )
 
     async def _async_lookup_and_process_service_update(

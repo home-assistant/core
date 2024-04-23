@@ -1,4 +1,5 @@
 """Config Flow to configure UniFi Protect Integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -13,8 +14,15 @@ from pyunifiprotect.exceptions import ClientError, NotAuthorized
 from unifi_discovery import async_console_is_alive
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import dhcp, ssdp
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
@@ -24,7 +32,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import (
     async_create_clientsession,
     async_get_clientsession,
@@ -54,8 +61,8 @@ from .utils import _async_resolve, _async_short_mac, _async_unifi_mac_from_hass
 _LOGGER = logging.getLogger(__name__)
 
 ENTRY_FAILURE_STATES = (
-    config_entries.ConfigEntryState.SETUP_ERROR,
-    config_entries.ConfigEntryState.SETUP_RETRY,
+    ConfigEntryState.SETUP_ERROR,
+    ConfigEntryState.SETUP_RETRY,
 )
 
 
@@ -72,7 +79,7 @@ def _host_is_direct_connect(host: str) -> bool:
 
 async def _async_console_is_offline(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: ConfigEntry,
 ) -> bool:
     """Check if a console is offline.
 
@@ -89,7 +96,7 @@ async def _async_console_is_offline(
     )
 
 
-class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a UniFi Protect config flow."""
 
     VERSION = 2
@@ -97,20 +104,24 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Init the config flow."""
         super().__init__()
-        self.entry: config_entries.ConfigEntry | None = None
+        self.entry: ConfigEntry | None = None
         self._discovered_device: dict[str, str] = {}
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle discovery via dhcp."""
         _LOGGER.debug("Starting discovery via: %s", discovery_info)
         return await self._async_discovery_handoff()
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a discovered UniFi device."""
         _LOGGER.debug("Starting discovery via: %s", discovery_info)
         return await self._async_discovery_handoff()
 
-    async def _async_discovery_handoff(self) -> FlowResult:
+    async def _async_discovery_handoff(self) -> ConfigFlowResult:
         """Ensure discovery is active."""
         # Discovery requires an additional check so we use
         # SSDP and DHCP to tell us to start it so it only
@@ -120,7 +131,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle integration discovery."""
         self._discovered_device = discovery_info
         mac = _async_unifi_mac_from_hass(discovery_info["hw_addr"])
@@ -128,7 +139,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         source_ip = discovery_info["source_ip"]
         direct_connect_domain = discovery_info["direct_connect_domain"]
         for entry in self._async_current_entries():
-            if entry.source == config_entries.SOURCE_IGNORE:
+            if entry.source == SOURCE_IGNORE:
                 if entry.unique_id == mac:
                     return self.async_abort(reason="already_configured")
                 continue
@@ -164,7 +175,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm discovery."""
         errors: dict[str, str] = {}
         discovery_info = self._discovered_device
@@ -212,13 +223,13 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
     @callback
-    def _async_create_entry(self, title: str, data: dict[str, Any]) -> FlowResult:
+    def _async_create_entry(self, title: str, data: dict[str, Any]) -> ConfigFlowResult:
         return self.async_create_entry(
             title=title,
             data={**data, CONF_ID: title},
@@ -250,13 +261,15 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             username=user_input[CONF_USERNAME],
             password=user_input[CONF_PASSWORD],
             verify_ssl=verify_ssl,
-            cache_dir=Path(self.hass.config.path(STORAGE_DIR, "unifiprotect_cache")),
+            cache_dir=Path(self.hass.config.path(STORAGE_DIR, "unifiprotect")),
+            config_dir=Path(self.hass.config.path(STORAGE_DIR, "unifiprotect")),
         )
 
         errors = {}
         nvr_data = None
         try:
-            nvr_data = await protect.get_nvr()
+            bootstrap = await protect.get_bootstrap()
+            nvr_data = bootstrap.nvr
         except NotAuthorized as ex:
             _LOGGER.debug(ex)
             errors[CONF_PASSWORD] = "invalid_auth"
@@ -272,9 +285,15 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 errors["base"] = "protect_version"
 
+            auth_user = bootstrap.users.get(bootstrap.auth_user_id)
+            if auth_user and auth_user.cloud_account:
+                errors["base"] = "cloud_user"
+
         return nvr_data, errors
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
 
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
@@ -282,7 +301,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth."""
         errors: dict[str, str] = {}
         assert self.entry is not None
@@ -316,7 +335,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
 
         errors: dict[str, str] = {}
@@ -357,16 +376,16 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Handle options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

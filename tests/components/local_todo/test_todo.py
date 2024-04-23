@@ -5,6 +5,7 @@ import textwrap
 from typing import Any
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
 from homeassistant.core import HomeAssistant
@@ -184,7 +185,7 @@ async def test_bulk_remove(
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
 ) -> None:
     """Test removing multiple todo items."""
-    for i in range(0, 5):
+    for i in range(5):
         await hass.services.async_call(
             TODO_DOMAIN,
             "add_item",
@@ -628,13 +629,87 @@ async def test_move_item_previous_unknown(
             ),
             "1",
         ),
+        (
+            textwrap.dedent(
+                """\
+                    BEGIN:VCALENDAR
+                    PRODID:-//homeassistant.io//local_todo 1.0//EN
+                    VERSION:2.0
+                    BEGIN:VTODO
+                    DTSTAMP:20231024T014011
+                    UID:077cb7f2-6c89-11ee-b2a9-0242ac110002
+                    CREATED:20231017T010348
+                    LAST-MODIFIED:20231024T014011
+                    SEQUENCE:1
+                    STATUS:NEEDS-ACTION
+                    SUMMARY:Task
+                    DUE:20231023
+                    END:VTODO
+                    END:VCALENDAR
+                """
+            ),
+            "1",
+        ),
+        (
+            textwrap.dedent(
+                """\
+                    BEGIN:VCALENDAR
+                    PRODID:-//homeassistant.io//local_todo 2.0//EN
+                    VERSION:2.0
+                    BEGIN:VTODO
+                    DTSTAMP:20231024T014011
+                    UID:077cb7f2-6c89-11ee-b2a9-0242ac110002
+                    CREATED:20231017T010348
+                    LAST-MODIFIED:20231024T014011
+                    SEQUENCE:1
+                    STATUS:NEEDS-ACTION
+                    SUMMARY:Task
+                    DUE:20231024
+                    END:VTODO
+                    END:VCALENDAR
+                """
+            ),
+            "1",
+        ),
+        (
+            textwrap.dedent(
+                """\
+                    BEGIN:VCALENDAR
+                    PRODID:-//homeassistant.io//local_todo 2.0//EN
+                    VERSION:2.0
+                    BEGIN:VTODO
+                    DTSTAMP:20231024T014011
+                    UID:077cb7f2-6c89-11ee-b2a9-0242ac110002
+                    CREATED:20231017T010348
+                    LAST-MODIFIED:20231024T014011
+                    SEQUENCE:1
+                    STATUS:NEEDS-ACTION
+                    SUMMARY:Task
+                    DUE:20231024T113000
+                    DTSTART;TZID=CST:20231024T113000
+                    END:VTODO
+                    END:VCALENDAR
+                """
+            ),
+            "1",
+        ),
     ],
-    ids=("empty", "not_exists", "completed", "needs_action"),
+    ids=(
+        "empty",
+        "not_exists",
+        "completed",
+        "needs_action",
+        "migrate_legacy_due",
+        "due",
+        "invalid_dtstart_tzname",
+    ),
 )
 async def test_parse_existing_ics(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     setup_integration: None,
+    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    snapshot: SnapshotAssertion,
     expected_state: str,
 ) -> None:
     """Test parsing ics content."""
@@ -642,6 +717,9 @@ async def test_parse_existing_ics(
     state = hass.states.get(TEST_ENTITY)
     assert state
     assert state.state == expected_state
+
+    items = await ws_get_items()
+    assert items == snapshot
 
 
 async def test_susbcribe(
