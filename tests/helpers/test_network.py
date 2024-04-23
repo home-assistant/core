@@ -365,9 +365,6 @@ async def test_get_url_external(hass: HomeAssistant) -> None:
     with pytest.raises(NoURLAvailableError):
         _get_external_url(hass, require_cloud=True)
 
-    with pytest.raises(NoURLAvailableError):
-        _get_external_url(hass, require_cloud=True, allow_cloud=False)
-
     with patch(
         "homeassistant.components.cloud.async_remote_ui_url",
         return_value="https://example.nabu.casa",

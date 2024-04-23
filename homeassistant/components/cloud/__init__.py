@@ -439,9 +439,7 @@ def _setup_services(hass: HomeAssistant, prefs: CloudPreferences) -> None:
             )
 
         try:
-            url = get_url(
-                hass, prefer_cloud=True, prefer_external=True, require_cloud=True
-            )
+            url = get_url(hass, require_cloud=True)
         except NoURLAvailableError as ex:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,

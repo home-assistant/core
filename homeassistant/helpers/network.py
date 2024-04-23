@@ -269,8 +269,6 @@ def _get_external_url(
 ) -> str:
     """Get external URL of this instance."""
     if require_cloud:
-        if not allow_cloud:
-            raise NoURLAvailableError
         return _get_cloud_url(hass, require_current_request=require_current_request)
 
     if prefer_cloud and allow_cloud:
