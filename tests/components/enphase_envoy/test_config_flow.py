@@ -329,7 +329,10 @@ async def test_form_host_already_exists(
 
 
 async def test_zeroconf_serial_already_exists(
-    hass: HomeAssistant, config_entry, setup_enphase_envoy
+    hass: HomeAssistant,
+    config_entry,
+    setup_enphase_envoy,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test serial number already exists from zeroconf."""
     _LOGGER.setLevel(logging.DEBUG)
@@ -351,6 +354,7 @@ async def test_zeroconf_serial_already_exists(
     assert result["reason"] == "already_configured"
 
     assert config_entry.data["host"] == "4.4.4.4"
+    assert "Zeroconf ip 4 processing 4.4.4.4, current hosts: {'1.1.1.1'}" in caplog.text
 
 
 async def test_zeroconf_serial_already_exists_ignores_ipv6(
