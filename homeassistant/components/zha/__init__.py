@@ -1,9 +1,9 @@
 """Support for Zigbee Home Automation devices."""
+
 import asyncio
 import contextlib
 import copy
 import logging
-import os
 import re
 
 import voluptuous as vol
@@ -18,7 +18,6 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
 from . import repairs, websocket_api
@@ -125,18 +124,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     zha_data = get_zha_data(hass)
 
     if zha_data.yaml_config.get(CONF_ENABLE_QUIRKS, True):
-        setup_quirks(
-            custom_quirks_path=zha_data.yaml_config.get(CONF_CUSTOM_QUIRKS_PATH)
+        await hass.async_add_import_executor_job(
+            setup_quirks, zha_data.yaml_config.get(CONF_CUSTOM_QUIRKS_PATH)
         )
-
-    # temporary code to remove the ZHA storage file from disk.
-    # this will be removed in 2022.10.0
-    storage_path = hass.config.path(STORAGE_DIR, "zha.storage")
-    if os.path.isfile(storage_path):
-        _LOGGER.debug("removing ZHA storage file")
-        await hass.async_add_executor_job(os.remove, storage_path)
-    else:
-        _LOGGER.debug("ZHA storage file does not exist or was already removed")
 
     # Load and cache device trigger information early
     device_registry = dr.async_get(hass)
@@ -272,8 +262,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         if data[CONF_RADIO_TYPE] != RadioType.deconz and baudrate in BAUD_RATES:
             data[CONF_DEVICE][CONF_BAUDRATE] = baudrate
 
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, data=data)
+        hass.config_entries.async_update_entry(config_entry, data=data, version=2)
 
     if config_entry.version == 2:
         data = {**config_entry.data}
@@ -281,8 +270,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         if data[CONF_RADIO_TYPE] == "ti_cc":
             data[CONF_RADIO_TYPE] = "znp"
 
-        config_entry.version = 3
-        hass.config_entries.async_update_entry(config_entry, data=data)
+        hass.config_entries.async_update_entry(config_entry, data=data, version=3)
 
     if config_entry.version == 3:
         data = {**config_entry.data}
@@ -299,8 +287,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         if not data[CONF_DEVICE].get(CONF_FLOW_CONTROL):
             data[CONF_DEVICE][CONF_FLOW_CONTROL] = None
 
-        config_entry.version = 4
-        hass.config_entries.async_update_entry(config_entry, data=data)
+        hass.config_entries.async_update_entry(config_entry, data=data, version=4)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
     return True

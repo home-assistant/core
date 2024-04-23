@@ -1,4 +1,5 @@
 """Sensor support for Wireless Sensor Tags platform."""
+
 from __future__ import annotations
 
 import logging

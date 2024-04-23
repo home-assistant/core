@@ -1,4 +1,5 @@
 """The Forecast.Solar integration."""
+
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
@@ -28,10 +29,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             CONF_DAMPING_EVENING: new_options.pop(CONF_DAMPING, 0.0),
         }
 
-        entry.version = 2
-
         hass.config_entries.async_update_entry(
-            entry, data=entry.data, options=new_options
+            entry, data=entry.data, options=new_options, version=2
         )
 
     return True

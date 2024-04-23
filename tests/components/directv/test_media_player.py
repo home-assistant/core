@@ -1,4 +1,5 @@
 """The tests for the DirecTV Media player platform."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -172,7 +173,8 @@ async def test_supported_features(
     # Features supported for main DVR
     state = hass.states.get(MAIN_ENTITY_ID)
     assert (
-        MediaPlayerEntityFeature.PAUSE
+        state.attributes.get("supported_features")
+        == MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.PLAY_MEDIA
@@ -180,19 +182,18 @@ async def test_supported_features(
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.PLAY
-        == state.attributes.get("supported_features")
     )
 
     # Feature supported for clients.
     state = hass.states.get(CLIENT_ENTITY_ID)
     assert (
-        MediaPlayerEntityFeature.PAUSE
+        state.attributes.get("supported_features")
+        == MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.PLAY
-        == state.attributes.get("supported_features")
     )
 
 

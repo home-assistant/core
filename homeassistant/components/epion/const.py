@@ -1,4 +1,5 @@
 """Constants for the Epion API."""
+
 from datetime import timedelta
 
 DOMAIN = "epion"

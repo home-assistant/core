@@ -1,4 +1,5 @@
 """Data update coordinator for Tailwind."""
+
 from datetime import timedelta
 
 from gotailwind import (

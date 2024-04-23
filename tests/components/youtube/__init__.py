@@ -1,4 +1,5 @@
 """Tests for the YouTube integration."""
+
 from collections.abc import AsyncGenerator
 import json
 

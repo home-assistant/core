@@ -1,12 +1,13 @@
 """DataUpdateCoordinator for the Bring! integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 import logging
 
-from python_bring_api.bring import Bring
-from python_bring_api.exceptions import BringParseException, BringRequestException
-from python_bring_api.types import BringItemsResponse, BringList
+from bring_api.bring import Bring
+from bring_api.exceptions import BringParseException, BringRequestException
+from bring_api.types import BringList, BringPurchase
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -20,7 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 class BringData(BringList):
     """Coordinator data class."""
 
-    items: list[BringItemsResponse]
+    purchase_items: list[BringPurchase]
+    recently_items: list[BringPurchase]
 
 
 class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
@@ -40,9 +42,7 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
 
     async def _async_update_data(self) -> dict[str, BringData]:
         try:
-            lists_response = await self.hass.async_add_executor_job(
-                self.bring.loadLists
-            )
+            lists_response = await self.bring.load_lists()
         except BringRequestException as e:
             raise UpdateFailed("Unable to connect and retrieve data from bring") from e
         except BringParseException as e:
@@ -51,16 +51,15 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
         list_dict = {}
         for lst in lists_response["lists"]:
             try:
-                items = await self.hass.async_add_executor_job(
-                    self.bring.getItems, lst["listUuid"]
-                )
+                items = await self.bring.get_list(lst["listUuid"])
             except BringRequestException as e:
                 raise UpdateFailed(
                     "Unable to connect and retrieve data from bring"
                 ) from e
             except BringParseException as e:
                 raise UpdateFailed("Unable to parse response from bring") from e
-            lst["items"] = items["purchase"]
+            lst["purchase_items"] = items["purchase"]
+            lst["recently_items"] = items["recently"]
             list_dict[lst["listUuid"]] = lst
 
         return list_dict

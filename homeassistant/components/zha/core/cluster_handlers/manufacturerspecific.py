@@ -1,4 +1,5 @@
 """Manufacturer specific cluster handlers module for Zigbee Home Automation."""
+
 from __future__ import annotations
 
 import logging
@@ -159,6 +160,14 @@ class OppleRemoteClusterHandler(ClusterHandler):
                 "switch_type": True,
                 "startup_on_off": True,
                 "decoupled_mode": True,
+            }
+        elif self.cluster.endpoint.model == "lumi.curtain.agl001":
+            self.ZCL_INIT_ATTRS = {
+                "hooks_state": True,
+                "hooks_lock": True,
+                "positions_stored": True,
+                "light_level": True,
+                "hand_open": True,
             }
 
     async def async_initialize_cluster_handler_specific(self, from_cache: bool) -> None:

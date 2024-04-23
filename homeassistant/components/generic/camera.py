@@ -1,4 +1,5 @@
 """Support for IP Cameras."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,6 +9,7 @@ import logging
 from typing import Any
 
 import httpx
+import voluptuous as vol
 import yarl
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
@@ -138,6 +140,12 @@ class GenericCamera(Camera):
             url = self._still_image_url.async_render(parse_result=False)
         except TemplateError as err:
             _LOGGER.error("Error parsing template %s: %s", self._still_image_url, err)
+            return self._last_image
+
+        try:
+            vol.Schema(vol.Url())(url)
+        except vol.Invalid as err:
+            _LOGGER.warning("Invalid URL '%s': %s, returning last image", url, err)
             return self._last_image
 
         if url == self._last_url and self._limit_refetch:

@@ -1,4 +1,5 @@
 """Support for getting temperature from TEMPer devices."""
+
 from __future__ import annotations
 
 import logging
@@ -65,7 +66,7 @@ def reset_devices():
     This assumes the same sensor devices are present in the same order.
     """
     temper_devices = get_temper_devices()
-    for sensor, device in zip(TEMPER_SENSORS, temper_devices):
+    for sensor, device in zip(TEMPER_SENSORS, temper_devices, strict=False):
         sensor.set_temper_device(device)
 
 

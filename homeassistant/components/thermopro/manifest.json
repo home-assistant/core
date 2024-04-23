@@ -13,6 +13,10 @@
     {
       "local_name": "TP96*",
       "connectable": false
+    },
+    {
+      "local_name": "TP97*",
+      "connectable": false
     }
   ],
   "codeowners": ["@bdraco", "@h3ss"],
@@ -20,5 +24,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/thermopro",
   "iot_class": "local_push",
-  "requirements": ["thermopro-ble==0.9.0"]
+  "requirements": ["thermopro-ble==0.10.0"]
 }

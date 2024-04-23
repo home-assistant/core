@@ -1,4 +1,5 @@
 """Test the Aladdin Connect Sensors."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -52,7 +53,7 @@ async def test_sensors(
         assert entry.disabled
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
         update_entry = entity_registry.async_update_entity(
-            entry.entity_id, **{"disabled_by": None}
+            entry.entity_id, disabled_by=None
         )
         await hass.async_block_till_done()
         assert update_entry != entry
@@ -74,7 +75,7 @@ async def test_sensors(
         assert entry.disabled
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
         update_entry = entity_registry.async_update_entity(
-            entry.entity_id, **{"disabled_by": None}
+            entry.entity_id, disabled_by=None
         )
         await hass.async_block_till_done()
         assert update_entry != entry
@@ -83,7 +84,7 @@ async def test_sensors(
         assert state is None
 
         update_entry = entity_registry.async_update_entity(
-            entry.entity_id, **{"disabled_by": None}
+            entry.entity_id, disabled_by=None
         )
         await hass.async_block_till_done()
         async_fire_time_changed(
@@ -134,7 +135,7 @@ async def test_sensors_model_01(
         assert entry.disabled
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
         update_entry = entity_registry.async_update_entity(
-            entry.entity_id, **{"disabled_by": None}
+            entry.entity_id, disabled_by=None
         )
         await hass.async_block_till_done()
         assert update_entry != entry
@@ -143,7 +144,7 @@ async def test_sensors_model_01(
         assert state is None
 
         update_entry = entity_registry.async_update_entity(
-            entry.entity_id, **{"disabled_by": None}
+            entry.entity_id, disabled_by=None
         )
         await hass.async_block_till_done()
         async_fire_time_changed(

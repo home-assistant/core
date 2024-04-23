@@ -1,4 +1,5 @@
 """Websocekt API handlers for the hassio integration."""
+
 import logging
 from numbers import Number
 import re
@@ -21,7 +22,6 @@ from .const import (
     ATTR_DATA,
     ATTR_ENDPOINT,
     ATTR_METHOD,
-    ATTR_RESULT,
     ATTR_SESSION_DATA_USER_ID,
     ATTR_TIMEOUT,
     ATTR_WS_EVENT,
@@ -46,7 +46,7 @@ WS_NO_ADMIN_ENDPOINTS = re.compile(
     r"^(?:"
     r"|/ingress/(session|validate_session)"
     r"|/addons/[^/]+/info"
-    r")$" # noqa: ISC001
+    r")$"
 )
 # fmt: on
 
@@ -61,10 +61,10 @@ def async_load_websocket_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_subscribe)
 
 
+@callback
 @websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required(WS_TYPE): WS_TYPE_SUBSCRIBE})
-@websocket_api.async_response
-async def websocket_subscribe(
+def websocket_subscribe(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Subscribe to supervisor events."""
@@ -80,14 +80,14 @@ async def websocket_subscribe(
     connection.send_message(websocket_api.result_message(msg[WS_ID]))
 
 
+@callback
 @websocket_api.websocket_command(
     {
         vol.Required(WS_TYPE): WS_TYPE_EVENT,
         vol.Required(ATTR_DATA): SCHEMA_WEBSOCKET_EVENT,
     }
 )
-@websocket_api.async_response
-async def websocket_supervisor_event(
+def websocket_supervisor_event(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Publish events from the Supervisor."""
@@ -112,7 +112,7 @@ async def websocket_supervisor_api(
     if not connection.user.is_admin and not WS_NO_ADMIN_ENDPOINTS.match(
         msg[ATTR_ENDPOINT]
     ):
-        raise Unauthorized()
+        raise Unauthorized
     supervisor: HassIO = hass.data[DOMAIN]
 
     command = msg[ATTR_ENDPOINT]
@@ -131,9 +131,6 @@ async def websocket_supervisor_api(
             payload=payload,
             source="core.websocket_api",
         )
-
-        if result.get(ATTR_RESULT) == "error":
-            raise HassioAPIError(result.get("message"))
     except HassioAPIError as err:
         _LOGGER.error("Failed to to call %s - %s", msg[ATTR_ENDPOINT], err)
         connection.send_error(

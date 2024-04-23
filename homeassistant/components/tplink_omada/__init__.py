@@ -1,13 +1,14 @@
 """The TP-Link Omada integration."""
+
 from __future__ import annotations
 
+from tplink_omada_client import OmadaSite
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
     LoginFailed,
     OmadaClientException,
     UnsupportedControllerVersion,
 )
-from tplink_omada_client.omadaclient import OmadaSite
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -18,7 +19,7 @@ from .config_flow import CONF_SITE, create_omada_client
 from .const import DOMAIN
 from .controller import OmadaSiteController
 
-PLATFORMS: list[Platform] = [Platform.SWITCH, Platform.UPDATE, Platform.BINARY_SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SWITCH, Platform.UPDATE]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -46,6 +47,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     site_client = await client.get_site_client(OmadaSite("", entry.data[CONF_SITE]))
     controller = OmadaSiteController(hass, site_client)
+    gateway_coordinator = await controller.get_gateway_coordinator()
+    if gateway_coordinator:
+        await gateway_coordinator.async_config_entry_first_refresh()
+
     hass.data[DOMAIN][entry.entry_id] = controller
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

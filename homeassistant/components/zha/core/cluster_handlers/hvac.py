@@ -3,6 +3,7 @@
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -146,6 +147,7 @@ class ThermostatClusterHandler(ClusterHandler):
         Thermostat.AttributeDefs.min_cool_setpoint_limit.name: True,
         Thermostat.AttributeDefs.min_heat_setpoint_limit.name: True,
         Thermostat.AttributeDefs.local_temperature_calibration.name: True,
+        Thermostat.AttributeDefs.setpoint_change_source.name: True,
     }
 
     @property
@@ -341,3 +343,5 @@ class ThermostatClusterHandler(ClusterHandler):
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(UserInterface.cluster_id)
 class UserInterfaceClusterHandler(ClusterHandler):
     """User interface (thermostat) cluster handler."""
+
+    ZCL_INIT_ATTRS = {UserInterface.AttributeDefs.keypad_lockout.name: True}

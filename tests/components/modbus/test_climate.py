@@ -1,4 +1,5 @@
 """The tests for the Modbus climate component."""
+
 import pytest
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
@@ -7,6 +8,8 @@ from homeassistant.components.climate.const import (
     ATTR_FAN_MODES,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
+    ATTR_SWING_MODE,
+    ATTR_SWING_MODES,
     FAN_AUTO,
     FAN_DIFFUSE,
     FAN_FOCUS,
@@ -17,6 +20,11 @@ from homeassistant.components.climate.const import (
     FAN_OFF,
     FAN_ON,
     FAN_TOP,
+    SWING_BOTH,
+    SWING_HORIZONTAL,
+    SWING_OFF,
+    SWING_ON,
+    SWING_VERTICAL,
     HVACMode,
 )
 from homeassistant.components.modbus.const import (
@@ -42,6 +50,15 @@ from homeassistant.components.modbus.const import (
     CONF_HVAC_MODE_REGISTER,
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
+    CONF_MAX_TEMP,
+    CONF_MIN_TEMP,
+    CONF_SWING_MODE_REGISTER,
+    CONF_SWING_MODE_SWING_BOTH,
+    CONF_SWING_MODE_SWING_HORIZ,
+    CONF_SWING_MODE_SWING_OFF,
+    CONF_SWING_MODE_SWING_ON,
+    CONF_SWING_MODE_SWING_VERT,
+    CONF_SWING_MODE_VALUES,
     CONF_TARGET_TEMP,
     CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_WRITE_REGISTERS,
@@ -55,6 +72,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
@@ -127,7 +145,7 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
             CONF_CLIMATES: [
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
-                    CONF_TARGET_TEMP: 117,
+                    CONF_TARGET_TEMP: [130, 131, 132, 133, 135, 128, 129],
                     CONF_ADDRESS: 117,
                     CONF_SLAVE: 10,
                     CONF_HVAC_ONOFF_REGISTER: 12,
@@ -167,6 +185,30 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                             "state_auto": 6,
                         },
                     },
+                }
+            ],
+        },
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
+                    CONF_MIN_TEMP: 23,
+                    CONF_MAX_TEMP: 57,
+                }
+            ],
+        },
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
+                    CONF_MIN_TEMP: -57,
+                    CONF_MAX_TEMP: -23,
                 }
             ],
         },
@@ -265,6 +307,41 @@ async def test_config_fan_mode_register(hass: HomeAssistant, mock_modbus) -> Non
                     CONF_TARGET_TEMP: 117,
                     CONF_ADDRESS: 117,
                     CONF_SLAVE: 10,
+                    CONF_SWING_MODE_REGISTER: {
+                        CONF_ADDRESS: 11,
+                        CONF_SWING_MODE_VALUES: {
+                            CONF_SWING_MODE_SWING_ON: 0,
+                            CONF_SWING_MODE_SWING_OFF: 1,
+                            CONF_SWING_MODE_SWING_BOTH: 2,
+                            CONF_SWING_MODE_SWING_HORIZ: 3,
+                            CONF_SWING_MODE_SWING_VERT: 4,
+                        },
+                    },
+                }
+            ],
+        },
+    ],
+)
+async def test_config_swing_mode_register(hass: HomeAssistant, mock_modbus) -> None:
+    """Run configuration test for Fan mode register."""
+    state = hass.states.get(ENTITY_ID)
+    assert SWING_ON in state.attributes[ATTR_SWING_MODES]
+    assert SWING_OFF in state.attributes[ATTR_SWING_MODES]
+    assert SWING_BOTH in state.attributes[ATTR_SWING_MODES]
+    assert SWING_HORIZONTAL in state.attributes[ATTR_SWING_MODES]
+    assert SWING_VERTICAL in state.attributes[ATTR_SWING_MODES]
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
                     CONF_HVAC_ONOFF_REGISTER: 11,
                 }
             ],
@@ -348,7 +425,7 @@ async def test_temperature_error(hass: HomeAssistant, expected, mock_do_cycle) -
                 CONF_CLIMATES: [
                     {
                         CONF_NAME: TEST_ENTITY_NAME,
-                        CONF_TARGET_TEMP: 117,
+                        CONF_TARGET_TEMP: [130, 131, 132, 133, 134, 135, 136],
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
                         CONF_SCAN_INTERVAL: 0,
@@ -372,7 +449,7 @@ async def test_temperature_error(hass: HomeAssistant, expected, mock_do_cycle) -
                 CONF_CLIMATES: [
                     {
                         CONF_NAME: TEST_ENTITY_NAME,
-                        CONF_TARGET_TEMP: 117,
+                        CONF_TARGET_TEMP: 119,
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
                         CONF_SCAN_INTERVAL: 0,
@@ -396,7 +473,7 @@ async def test_temperature_error(hass: HomeAssistant, expected, mock_do_cycle) -
                 CONF_CLIMATES: [
                     {
                         CONF_NAME: TEST_ENTITY_NAME,
-                        CONF_TARGET_TEMP: 117,
+                        CONF_TARGET_TEMP: 120,
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
                         CONF_SCAN_INTERVAL: 0,
@@ -419,10 +496,10 @@ async def test_temperature_error(hass: HomeAssistant, expected, mock_do_cycle) -
     ],
 )
 async def test_service_climate_update(
-    hass: HomeAssistant, mock_modbus, mock_ha, result, register_words
+    hass: HomeAssistant, mock_modbus_ha, result, register_words
 ) -> None:
     """Run test for service homeassistant.update_entity."""
-    mock_modbus.read_holding_registers.return_value = ReadResult(register_words)
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(register_words)
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
@@ -438,7 +515,7 @@ async def test_service_climate_update(
                 CONF_CLIMATES: [
                     {
                         CONF_NAME: TEST_ENTITY_NAME,
-                        CONF_TARGET_TEMP: 117,
+                        CONF_TARGET_TEMP: 116,
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
                         CONF_SCAN_INTERVAL: 0,
@@ -462,7 +539,7 @@ async def test_service_climate_update(
                 CONF_CLIMATES: [
                     {
                         CONF_NAME: TEST_ENTITY_NAME,
-                        CONF_TARGET_TEMP: 117,
+                        CONF_TARGET_TEMP: 116,
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
                         CONF_SCAN_INTERVAL: 0,
@@ -486,7 +563,7 @@ async def test_service_climate_update(
                 CONF_CLIMATES: [
                     {
                         CONF_NAME: TEST_ENTITY_NAME,
-                        CONF_TARGET_TEMP: 117,
+                        CONF_TARGET_TEMP: 116,
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
                         CONF_SCAN_INTERVAL: 0,
@@ -534,15 +611,155 @@ async def test_service_climate_update(
     ],
 )
 async def test_service_climate_fan_update(
-    hass: HomeAssistant, mock_modbus, mock_ha, result, register_words
+    hass: HomeAssistant, mock_modbus_ha, result, register_words
 ) -> None:
     """Run test for service homeassistant.update_entity."""
-    mock_modbus.read_holding_registers.return_value = ReadResult(register_words)
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(register_words)
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).attributes[ATTR_FAN_MODE] == result
+
+
+@pytest.mark.parametrize(
+    ("do_config", "result", "register_words"),
+    [
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 116,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_DATA_TYPE: DataType.INT32,
+                        CONF_SWING_MODE_REGISTER: {
+                            CONF_ADDRESS: [118],
+                            CONF_SWING_MODE_VALUES: {
+                                CONF_SWING_MODE_SWING_OFF: 0,
+                                CONF_SWING_MODE_SWING_ON: 1,
+                                CONF_SWING_MODE_SWING_BOTH: 2,
+                            },
+                        },
+                    },
+                ]
+            },
+            SWING_BOTH,
+            [0x02],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 116,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_DATA_TYPE: DataType.INT32,
+                        CONF_SWING_MODE_REGISTER: {
+                            CONF_ADDRESS: [118],
+                            CONF_SWING_MODE_VALUES: {
+                                CONF_SWING_MODE_SWING_OFF: 0,
+                                CONF_SWING_MODE_SWING_ON: 1,
+                                CONF_SWING_MODE_SWING_VERT: 2,
+                            },
+                        },
+                    },
+                ]
+            },
+            SWING_ON,
+            [0x01],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 116,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_DATA_TYPE: DataType.INT32,
+                        CONF_SWING_MODE_REGISTER: {
+                            CONF_ADDRESS: [118],
+                            CONF_SWING_MODE_VALUES: {
+                                CONF_SWING_MODE_SWING_OFF: 0,
+                                CONF_SWING_MODE_SWING_ON: 1,
+                                CONF_SWING_MODE_SWING_HORIZ: 3,
+                            },
+                        },
+                        CONF_HVAC_ONOFF_REGISTER: 119,
+                    },
+                ]
+            },
+            SWING_HORIZONTAL,
+            [0x03],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 116,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_DATA_TYPE: DataType.INT32,
+                        CONF_SWING_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_SWING_MODE_VALUES: {
+                                CONF_SWING_MODE_SWING_OFF: 0,
+                                CONF_SWING_MODE_SWING_ON: 1,
+                                CONF_SWING_MODE_SWING_VERT: 2,
+                                CONF_SWING_MODE_SWING_BOTH: 3,
+                            },
+                        },
+                    },
+                ]
+            },
+            SWING_OFF,
+            [0x00],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 116,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_DATA_TYPE: DataType.INT32,
+                        CONF_SWING_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_SWING_MODE_VALUES: {
+                                CONF_SWING_MODE_SWING_OFF: 0,
+                                CONF_SWING_MODE_SWING_ON: 1,
+                                CONF_SWING_MODE_SWING_VERT: 2,
+                                CONF_SWING_MODE_SWING_BOTH: 3,
+                            },
+                        },
+                    },
+                ]
+            },
+            STATE_UNKNOWN,
+            [0x05],
+        ),
+    ],
+)
+async def test_service_climate_swing_update(
+    hass: HomeAssistant, mock_modbus_ha, result, register_words
+) -> None:
+    """Run test for service homeassistant.update_entity."""
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(register_words)
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_SWING_MODE] == result
 
 
 @pytest.mark.parametrize(
@@ -615,7 +832,7 @@ async def test_service_climate_fan_update(
                 CONF_CLIMATES: [
                     {
                         CONF_NAME: TEST_ENTITY_NAME,
-                        CONF_TARGET_TEMP: 117,
+                        CONF_TARGET_TEMP: [150, 151, 152, 153, 154, 155, 156],
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
                         CONF_DATA_TYPE: DataType.INT16,
@@ -627,10 +844,10 @@ async def test_service_climate_fan_update(
     ],
 )
 async def test_service_climate_set_temperature(
-    hass: HomeAssistant, temperature, result, mock_modbus, mock_ha
+    hass: HomeAssistant, temperature, result, mock_modbus_ha
 ) -> None:
     """Test set_temperature."""
-    mock_modbus.read_holding_registers.return_value = ReadResult(result)
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(result)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         "set_temperature",
@@ -737,10 +954,11 @@ async def test_service_climate_set_temperature(
     ],
 )
 async def test_service_set_hvac_mode(
-    hass: HomeAssistant, hvac_mode, result, mock_modbus, mock_ha
+    hass: HomeAssistant, hvac_mode, result, mock_modbus_ha
 ) -> None:
     """Test set HVAC mode."""
-    mock_modbus.read_holding_registers.return_value = ReadResult(result)
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(result)
+
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         "set_hvac_mode",
@@ -800,16 +1018,79 @@ async def test_service_set_hvac_mode(
     ],
 )
 async def test_service_set_fan_mode(
-    hass: HomeAssistant, fan_mode, result, mock_modbus, mock_ha
+    hass: HomeAssistant, fan_mode, result, mock_modbus_ha
 ) -> None:
     """Test set Fan mode."""
-    mock_modbus.read_holding_registers.return_value = ReadResult(result)
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(result)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         "set_fan_mode",
         {
             "entity_id": ENTITY_ID,
             ATTR_FAN_MODE: fan_mode,
+        },
+        blocking=True,
+    )
+
+
+@pytest.mark.parametrize(
+    ("swing_mode", "result", "do_config"),
+    [
+        (
+            SWING_OFF,
+            [0x00],
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SWING_MODE_REGISTER: {
+                            CONF_ADDRESS: [118],
+                            CONF_SWING_MODE_VALUES: {
+                                CONF_SWING_MODE_SWING_ON: 1,
+                                CONF_SWING_MODE_SWING_OFF: 0,
+                            },
+                        },
+                    }
+                ]
+            },
+        ),
+        (
+            SWING_ON,
+            [0x01],
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SWING_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_SWING_MODE_VALUES: {
+                                CONF_SWING_MODE_SWING_ON: 1,
+                                CONF_SWING_MODE_SWING_OFF: 0,
+                            },
+                        },
+                    }
+                ]
+            },
+        ),
+    ],
+)
+async def test_service_set_swing_mode(
+    hass: HomeAssistant, swing_mode, result, mock_modbus_ha
+) -> None:
+    """Test set Swing mode."""
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(result)
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        "set_swing_mode",
+        {
+            "entity_id": ENTITY_ID,
+            ATTR_SWING_MODE: swing_mode,
         },
         blocking=True,
     )

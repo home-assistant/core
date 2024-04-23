@@ -7,5 +7,6 @@
       "other4": { "name": "Other 4" },
       "outlet": { "name": "Outlet {placeholder}" }
     }
-  }
+  },
+  "something": "else"
 }

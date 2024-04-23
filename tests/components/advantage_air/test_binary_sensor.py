@@ -1,4 +1,5 @@
 """Test the Advantage Air Binary Sensor Platform."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
@@ -75,8 +76,8 @@ async def test_binary_sensor_async_setup_entry(
         hass,
         dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
-    await hass.async_block_till_done()
-    assert len(mock_get.mock_calls) == 2
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert len(mock_get.mock_calls) == 1
 
     state = hass.states.get(entity_id)
     assert state
@@ -99,7 +100,7 @@ async def test_binary_sensor_async_setup_entry(
         hass,
         dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert len(mock_get.mock_calls) == 2
 
     state = hass.states.get(entity_id)

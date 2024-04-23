@@ -1,4 +1,5 @@
 """Support for Z-Wave cover devices."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -378,12 +379,11 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
                     assert self._attr_supported_features
                     self._attr_supported_features ^= set_position_feature
 
-        additional_info: list[str] = []
-        for value in (self._current_position_value, self._current_tilt_value):
-            if value and value.property_key_name:
-                additional_info.append(
-                    value.property_key_name.removesuffix(f" {NO_POSITION_SUFFIX}")
-                )
+        additional_info: list[str] = [
+            value.property_key_name.removesuffix(f" {NO_POSITION_SUFFIX}")
+            for value in (self._current_position_value, self._current_tilt_value)
+            if value and value.property_key_name
+        ]
         self._attr_name = self.generate_name(additional_info=additional_info)
         self._attr_device_class = CoverDeviceClass.WINDOW
 

@@ -1,6 +1,7 @@
 """The Flexit Nordic (BACnet) integration."""
+
 import asyncio.exceptions
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -27,14 +28,17 @@ class FlexitSwitchEntityDescription(SwitchEntityDescription):
     """Describes a Flexit switch entity."""
 
     is_on_fn: Callable[[FlexitBACnet], bool]
+    turn_on_fn: Callable[[FlexitBACnet], Awaitable[None]]
+    turn_off_fn: Callable[[FlexitBACnet], Awaitable[None]]
 
 
 SWITCHES: tuple[FlexitSwitchEntityDescription, ...] = (
     FlexitSwitchEntityDescription(
         key="electric_heater",
         translation_key="electric_heater",
-        icon="mdi:radiator",
         is_on_fn=lambda data: data.electric_heater,
+        turn_on_fn=lambda data: data.enable_electric_heater(),
+        turn_off_fn=lambda data: data.disable_electric_heater(),
     ),
 )
 
@@ -80,7 +84,7 @@ class FlexitSwitch(FlexitEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn electric heater on."""
         try:
-            await self.device.enable_electric_heater()
+            await self.entity_description.turn_on_fn(self.coordinator.data)
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
             raise HomeAssistantError from exc
         finally:
@@ -89,7 +93,7 @@ class FlexitSwitch(FlexitEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn electric heater off."""
         try:
-            await self.device.disable_electric_heater()
+            await self.entity_description.turn_off_fn(self.coordinator.data)
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
             raise HomeAssistantError from exc
         finally:

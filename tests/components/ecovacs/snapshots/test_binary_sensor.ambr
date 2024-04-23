@@ -16,6 +16,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -25,39 +27,21 @@
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'mop_attached',
-    'unique_id': 'E1234567890000000001_mop_attached',
+    'translation_key': 'water_mop_attached',
+    'unique_id': 'E1234567890000000001_water_mop_attached',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_mop_attached[binary_sensor.ozmo_950_mop_attached-state]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ozmo 950 Mop attached',
     }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'context': <ANY>,
     'entity_id': 'binary_sensor.ozmo_950_mop_attached',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Mop attached',
-    'platform': 'ecovacs',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'mop_attached',
-    'unique_id': 'E1234567890000000001_mop_attached',
-    'unit_of_measurement': None,
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---

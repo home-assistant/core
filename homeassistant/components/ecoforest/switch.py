@@ -1,4 +1,5 @@
 """Switch platform for Ecoforest."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -17,19 +18,12 @@ from .coordinator import EcoforestCoordinator
 from .entity import EcoforestEntity
 
 
-@dataclass(frozen=True)
-class EcoforestSwitchRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EcoforestSwitchEntityDescription(SwitchEntityDescription):
+    """Describes an Ecoforest switch entity."""
 
     value_fn: Callable[[Device], bool]
     switch_fn: Callable[[EcoforestApi, bool], Awaitable[Device]]
-
-
-@dataclass(frozen=True)
-class EcoforestSwitchEntityDescription(
-    SwitchEntityDescription, EcoforestSwitchRequiredKeysMixin
-):
-    """Describes an Ecoforest switch entity."""
 
 
 SWITCH_TYPES: tuple[EcoforestSwitchEntityDescription, ...] = (

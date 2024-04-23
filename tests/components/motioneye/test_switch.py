@@ -1,4 +1,5 @@
 """Tests for the motionEye switch platform."""
+
 import copy
 from datetime import timedelta
 from unittest.mock import AsyncMock, call, patch

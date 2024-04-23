@@ -1,4 +1,6 @@
 """Support for Lupusec Home Security system."""
+
+from json import JSONDecodeError
 import logging
 
 import lupupy
@@ -77,12 +79,12 @@ async def handle_async_init_result(hass: HomeAssistant, domain: str, conf: dict)
         async_create_issue(
             hass,
             DOMAIN,
-            f"deprecated_yaml_import_issue_${result['reason']}",
+            f"deprecated_yaml_import_issue_{result['reason']}",
             breaks_in_ha_version="2024.8.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_${result['reason']}",
+            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
             translation_placeholders=ISSUE_PLACEHOLDER,
         )
 
@@ -111,16 +113,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         lupusec_system = await hass.async_add_executor_job(
             lupupy.Lupusec, username, password, host
         )
-
     except LupusecException:
         _LOGGER.error("Failed to connect to Lupusec device at %s", host)
         return False
-    except Exception as ex:  # pylint: disable=broad-except
-        _LOGGER.error(
-            "Unknown error while trying to connect to Lupusec device at %s: %s",
-            host,
-            ex,
-        )
+    except JSONDecodeError:
+        _LOGGER.error("Failed to connect to Lupusec device at %s", host)
         return False
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = lupusec_system

@@ -1,4 +1,5 @@
 """Test the DuckDNS component."""
+
 from datetime import timedelta
 import logging
 

@@ -1,8 +1,10 @@
 """Event parser and human readable log generator."""
+
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from functools import cached_property
 from typing import TYPE_CHECKING, Any, cast
 
 from sqlalchemy.engine.row import Row
@@ -16,13 +18,9 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.const import ATTR_ICON, EVENT_STATE_CHANGED
 from homeassistant.core import Context, Event, State, callback
+from homeassistant.util.event_type import EventType
 from homeassistant.util.json import json_loads
 from homeassistant.util.ulid import ulid_to_bytes
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 
 @dataclass(slots=True)
@@ -30,7 +28,8 @@ class LogbookConfig:
     """Configuration for the logbook integration."""
 
     external_events: dict[
-        str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
+        EventType[Any] | str,
+        tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]],
     ]
     sqlalchemy_filter: Filters | None = None
     entity_filter: Callable[[str], bool] | None = None
@@ -50,7 +49,7 @@ class LazyEventPartialState:
         self._event_data_cache = event_data_cache
         # We need to explicitly check for the row is EventAsRow as the unhappy path
         # to fetch row.data for Row is very expensive
-        if type(row) is EventAsRow:  # noqa: E721
+        if type(row) is EventAsRow:
             # If its an EventAsRow we can avoid the whole
             # json decode process as we already have the data
             self.data = row.data
@@ -69,7 +68,7 @@ class LazyEventPartialState:
             )
 
     @cached_property
-    def event_type(self) -> str | None:
+    def event_type(self) -> EventType[Any] | str | None:
         """Return the event type."""
         return self.row.event_type
 
@@ -103,7 +102,7 @@ class LazyEventPartialState:
 class EventAsRow:
     """Convert an event to a row."""
 
-    data: dict[str, Any]
+    data: Mapping[str, Any]
     context: Context
     context_id_bin: bytes
     time_fired_ts: float
@@ -113,7 +112,7 @@ class EventAsRow:
     icon: str | None = None
     context_user_id_bin: bytes | None = None
     context_parent_id_bin: bytes | None = None
-    event_type: str | None = None
+    event_type: EventType[Any] | str | None = None
     state: str | None = None
     context_only: None = None
 

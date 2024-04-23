@@ -1,4 +1,5 @@
 """The tests for the MQTT eventstream component."""
+
 import json
 from unittest.mock import ANY, patch
 
@@ -103,13 +104,14 @@ async def test_state_changed_event_sends_message(
     event = {}
     event["event_type"] = EVENT_STATE_CHANGED
     new_state = {
+        "attributes": {},
+        "entity_id": e_id,
+        "last_changed": now.isoformat(),
+        "last_reported": now.isoformat(),
         "last_updated": now.isoformat(),
         "state": "on",
-        "entity_id": e_id,
-        "attributes": {},
-        "last_changed": now.isoformat(),
     }
-    event["event_data"] = {"new_state": new_state, "entity_id": e_id}
+    event["event_data"] = {"new_state": new_state, "entity_id": e_id, "old_state": None}
 
     # Verify that the message received was that expected
     result = json.loads(msg)

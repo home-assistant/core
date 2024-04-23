@@ -1,4 +1,5 @@
 """Support for the AccuWeather service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -27,13 +28,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AccuWeatherDataUpdateCoordinator
+from . import AccuWeatherData
 from .const import (
     API_METRIC,
     ATTR_CATEGORY,
     ATTR_DIRECTION,
     ATTR_ENGLISH,
-    ATTR_FORECAST,
     ATTR_LEVEL,
     ATTR_SPEED,
     ATTR_VALUE,
@@ -41,30 +41,32 @@ from .const import (
     DOMAIN,
     MAX_FORECAST_DAYS,
 )
+from .coordinator import (
+    AccuWeatherDailyForecastDataUpdateCoordinator,
+    AccuWeatherObservationDataUpdateCoordinator,
+)
 
 PARALLEL_UPDATES = 1
 
 
-@dataclass(frozen=True)
-class AccuWeatherSensorDescriptionMixin:
-    """Mixin for AccuWeather sensor."""
-
-    value_fn: Callable[[dict[str, Any]], str | int | float | None]
-
-
-@dataclass(frozen=True)
-class AccuWeatherSensorDescription(
-    SensorEntityDescription, AccuWeatherSensorDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class AccuWeatherSensorDescription(SensorEntityDescription):
     """Class describing AccuWeather sensor entities."""
 
+    value_fn: Callable[[dict[str, Any]], str | int | float | None]
     attr_fn: Callable[[dict[str, Any]], dict[str, Any]] = lambda _: {}
-    day: int | None = None
 
 
-FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
+@dataclass(frozen=True, kw_only=True)
+class AccuWeatherForecastSensorDescription(AccuWeatherSensorDescription):
+    """Class describing AccuWeather sensor entities."""
+
+    day: int
+
+
+FORECAST_SENSOR_TYPES: tuple[AccuWeatherForecastSensorDescription, ...] = (
     *(
-        AccuWeatherSensorDescription(
+        AccuWeatherForecastSensorDescription(
             key="AirQuality",
             icon="mdi:air-filter",
             value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
@@ -76,7 +78,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         for day in range(MAX_FORECAST_DAYS + 1)
     ),
     *(
-        AccuWeatherSensorDescription(
+        AccuWeatherForecastSensorDescription(
             key="CloudCoverDay",
             icon="mdi:weather-cloudy",
             entity_registry_enabled_default=False,
@@ -88,7 +90,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         for day in range(MAX_FORECAST_DAYS + 1)
     ),
     *(
-        AccuWeatherSensorDescription(
+        AccuWeatherForecastSensorDescription(
             key="CloudCoverNight",
             icon="mdi:weather-cloudy",
             entity_registry_enabled_default=False,
@@ -100,7 +102,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         for day in range(MAX_FORECAST_DAYS + 1)
     ),
     *(
-        AccuWeatherSensorDescription(
+        AccuWeatherForecastSensorDescription(
             key="Grass",
             icon="mdi:grass",
             entity_registry_enabled_default=False,
@@ -113,7 +115,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         for day in range(MAX_FORECAST_DAYS + 1)
     ),
     *(
-        AccuWeatherSensorDescription(
+        AccuWeatherForecastSensorDescription(
             key="HoursOfSun",
             icon="mdi:weather-partly-cloudy",
             native_unit_of_measurement=UnitOfTime.HOURS,
@@ -124,7 +126,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         for day in range(MAX_FORECAST_DAYS + 1)
     ),
     *(
-        AccuWeatherSensorDescription(
+        AccuWeatherForecastSensorDescription(
             key="LongPhraseDay",
             value_fn=lambda data: cast(str, data),
             translation_key=f"condition_day_{day}d",
@@ -133,7 +135,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         for day in range(MAX_FORECAST_DAYS + 1)
     ),
     *(
-        AccuWeatherSensorDescription(
+        AccuWeatherForecastSensorDescription(
             key="LongPhraseNight",
             value_fn=lambda data: cast(str, data),
             translation_key=f"condition_night_{day}d",
@@ -142,7 +144,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         for day in range(MAX_FORECAST_DAYS + 1)
     ),
     *(
-        AccuWeatherSensorDescription(
+        AccuWeatherForecastSensorDescription(
             key="Mold",
             icon="mdi:blur",
             entity_registry_enabled_default=False,
@@ -155,7 +157,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         for day in range(MAX_FORECAST_DAYS + 1)
     ),
     *(
-        AccuWeatherSensorDescription(
+        AccuWeatherForecastSensorDescription(
             key="Ragweed",
             icon="mdi:sprout",
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
@@ -168,7 +170,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         for day in range(MAX_FORECAST_DAYS + 1)
     ),
     *(
-        AccuWeatherSensorDescription(
+        AccuWeatherForecastSensorDescription(
             key="RealFeelTemperatureMax",
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -179,7 +181,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         for day in range(MAX_FORECAST_DAYS + 1)
     ),
     *(
-        AccuWeatherSensorDescription(
+        AccuWeatherForecastSensorDescription(
             key="RealFeelTemperatureMin",
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -190,7 +192,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         for day in range(MAX_FORECAST_DAYS + 1)
     ),
     *(
-        AccuWeatherSensorDescription(
+        AccuWeatherForecastSensorDescription(
             key="RealFeelTemperatureShadeMax",
             device_class=SensorDeviceClass.TEMPERATURE,
             entity_registry_enabled_default=False,
@@ -202,7 +204,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         for day in range(MAX_FORECAST_DAYS + 1)
     ),
     *(
-        AccuWeatherSensorDescription(
+        AccuWeatherForecastSensorDescription(
             key="RealFeelTemperatureShadeMin",
             device_class=SensorDeviceClass.TEMPERATURE,
             entity_registry_enabled_default=False,
@@ -214,7 +216,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         for day in range(MAX_FORECAST_DAYS + 1)
     ),
     *(
-        AccuWeatherSensorDescription(
+        AccuWeatherForecastSensorDescription(
             key="SolarIrradianceDay",
             icon="mdi:weather-sunny",
             entity_registry_enabled_default=False,
@@ -226,7 +228,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         for day in range(MAX_FORECAST_DAYS + 1)
     ),
     *(
-        AccuWeatherSensorDescription(
+        AccuWeatherForecastSensorDescription(
             key="SolarIrradianceNight",
             icon="mdi:weather-sunny",
             entity_registry_enabled_default=False,
@@ -238,7 +240,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         for day in range(MAX_FORECAST_DAYS + 1)
     ),
     *(
-        AccuWeatherSensorDescription(
+        AccuWeatherForecastSensorDescription(
             key="ThunderstormProbabilityDay",
             icon="mdi:weather-lightning",
             native_unit_of_measurement=PERCENTAGE,
@@ -249,7 +251,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         for day in range(MAX_FORECAST_DAYS + 1)
     ),
     *(
-        AccuWeatherSensorDescription(
+        AccuWeatherForecastSensorDescription(
             key="ThunderstormProbabilityNight",
             icon="mdi:weather-lightning",
             native_unit_of_measurement=PERCENTAGE,
@@ -260,7 +262,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         for day in range(MAX_FORECAST_DAYS + 1)
     ),
     *(
-        AccuWeatherSensorDescription(
+        AccuWeatherForecastSensorDescription(
             key="Tree",
             icon="mdi:tree-outline",
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
@@ -273,7 +275,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         for day in range(MAX_FORECAST_DAYS + 1)
     ),
     *(
-        AccuWeatherSensorDescription(
+        AccuWeatherForecastSensorDescription(
             key="UVIndex",
             icon="mdi:weather-sunny",
             native_unit_of_measurement=UV_INDEX,
@@ -285,7 +287,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         for day in range(MAX_FORECAST_DAYS + 1)
     ),
     *(
-        AccuWeatherSensorDescription(
+        AccuWeatherForecastSensorDescription(
             key="WindGustDay",
             device_class=SensorDeviceClass.WIND_SPEED,
             entity_registry_enabled_default=False,
@@ -298,7 +300,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         for day in range(MAX_FORECAST_DAYS + 1)
     ),
     *(
-        AccuWeatherSensorDescription(
+        AccuWeatherForecastSensorDescription(
             key="WindGustNight",
             device_class=SensorDeviceClass.WIND_SPEED,
             entity_registry_enabled_default=False,
@@ -311,7 +313,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         for day in range(MAX_FORECAST_DAYS + 1)
     ),
     *(
-        AccuWeatherSensorDescription(
+        AccuWeatherForecastSensorDescription(
             key="WindDay",
             device_class=SensorDeviceClass.WIND_SPEED,
             native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
@@ -323,7 +325,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         for day in range(MAX_FORECAST_DAYS + 1)
     ),
     *(
-        AccuWeatherSensorDescription(
+        AccuWeatherForecastSensorDescription(
             key="WindNight",
             device_class=SensorDeviceClass.WIND_SPEED,
             native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
@@ -460,25 +462,33 @@ async def async_setup_entry(
 ) -> None:
     """Add AccuWeather entities from a config_entry."""
 
-    coordinator: AccuWeatherDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    accuweather_data: AccuWeatherData = hass.data[DOMAIN][entry.entry_id]
 
-    sensors = [
-        AccuWeatherSensor(coordinator, description) for description in SENSOR_TYPES
+    observation_coordinator: AccuWeatherObservationDataUpdateCoordinator = (
+        accuweather_data.coordinator_observation
+    )
+    forecast_daily_coordinator: AccuWeatherDailyForecastDataUpdateCoordinator = (
+        accuweather_data.coordinator_daily_forecast
+    )
+
+    sensors: list[AccuWeatherSensor | AccuWeatherForecastSensor] = [
+        AccuWeatherSensor(observation_coordinator, description)
+        for description in SENSOR_TYPES
     ]
 
-    if coordinator.forecast:
-        for description in FORECAST_SENSOR_TYPES:
-            # Some air quality/allergy sensors are only available for certain
-            # locations.
-            if description.key not in coordinator.data[ATTR_FORECAST][description.day]:
-                continue
-            sensors.append(AccuWeatherSensor(coordinator, description))
+    sensors.extend(
+        [
+            AccuWeatherForecastSensor(forecast_daily_coordinator, description)
+            for description in FORECAST_SENSOR_TYPES
+            if description.key in forecast_daily_coordinator.data[description.day]
+        ]
+    )
 
     async_add_entities(sensors)
 
 
 class AccuWeatherSensor(
-    CoordinatorEntity[AccuWeatherDataUpdateCoordinator], SensorEntity
+    CoordinatorEntity[AccuWeatherObservationDataUpdateCoordinator], SensorEntity
 ):
     """Define an AccuWeather entity."""
 
@@ -488,22 +498,15 @@ class AccuWeatherSensor(
 
     def __init__(
         self,
-        coordinator: AccuWeatherDataUpdateCoordinator,
+        coordinator: AccuWeatherObservationDataUpdateCoordinator,
         description: AccuWeatherSensorDescription,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self.forecast_day = description.day
+
         self.entity_description = description
-        self._sensor_data = _get_sensor_data(
-            coordinator.data, description.key, self.forecast_day
-        )
-        if self.forecast_day is not None:
-            self._attr_unique_id = f"{coordinator.location_key}-{description.key}-{self.forecast_day}".lower()
-        else:
-            self._attr_unique_id = (
-                f"{coordinator.location_key}-{description.key}".lower()
-            )
+        self._sensor_data = self._get_sensor_data(coordinator.data, description.key)
+        self._attr_unique_id = f"{coordinator.location_key}-{description.key}".lower()
         self._attr_device_info = coordinator.device_info
 
     @property
@@ -514,30 +517,78 @@ class AccuWeatherSensor(
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        if self.forecast_day is not None:
-            return self.entity_description.attr_fn(self._sensor_data)
-
         return self.entity_description.attr_fn(self.coordinator.data)
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle data update."""
-        self._sensor_data = _get_sensor_data(
+        self._sensor_data = self._get_sensor_data(
+            self.coordinator.data, self.entity_description.key
+        )
+        self.async_write_ha_state()
+
+    @staticmethod
+    def _get_sensor_data(
+        sensors: dict[str, Any],
+        kind: str,
+    ) -> Any:
+        """Get sensor data."""
+        if kind == "Precipitation":
+            return sensors["PrecipitationSummary"]["PastHour"]
+
+        return sensors[kind]
+
+
+class AccuWeatherForecastSensor(
+    CoordinatorEntity[AccuWeatherDailyForecastDataUpdateCoordinator], SensorEntity
+):
+    """Define an AccuWeather entity."""
+
+    _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
+    entity_description: AccuWeatherForecastSensorDescription
+
+    def __init__(
+        self,
+        coordinator: AccuWeatherDailyForecastDataUpdateCoordinator,
+        description: AccuWeatherForecastSensorDescription,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator)
+
+        self.forecast_day = description.day
+        self.entity_description = description
+        self._sensor_data = self._get_sensor_data(
+            coordinator.data, description.key, self.forecast_day
+        )
+        self._attr_unique_id = (
+            f"{coordinator.location_key}-{description.key}-{self.forecast_day}".lower()
+        )
+        self._attr_device_info = coordinator.device_info
+
+    @property
+    def native_value(self) -> str | int | float | None:
+        """Return the state."""
+        return self.entity_description.value_fn(self._sensor_data)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes."""
+        return self.entity_description.attr_fn(self._sensor_data)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle data update."""
+        self._sensor_data = self._get_sensor_data(
             self.coordinator.data, self.entity_description.key, self.forecast_day
         )
         self.async_write_ha_state()
 
-
-def _get_sensor_data(
-    sensors: dict[str, Any],
-    kind: str,
-    forecast_day: int | None = None,
-) -> Any:
-    """Get sensor data."""
-    if forecast_day is not None:
-        return sensors[ATTR_FORECAST][forecast_day][kind]
-
-    if kind == "Precipitation":
-        return sensors["PrecipitationSummary"]["PastHour"]
-
-    return sensors[kind]
+    @staticmethod
+    def _get_sensor_data(
+        sensors: list[dict[str, Any]],
+        kind: str,
+        forecast_day: int,
+    ) -> Any:
+        """Get sensor data."""
+        return sensors[forecast_day][kind]

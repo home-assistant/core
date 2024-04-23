@@ -1,9 +1,11 @@
 """Test the Litter-Robot vacuum entity."""
+
 from __future__ import annotations
 
 from typing import Any
 from unittest.mock import MagicMock
 
+from pylitterbot import Robot
 import pytest
 
 from homeassistant.components.litterrobot import DOMAIN
@@ -15,6 +17,7 @@ from homeassistant.components.vacuum import (
     SERVICE_STOP,
     STATE_DOCKED,
     STATE_ERROR,
+    STATE_PAUSED,
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -93,6 +96,30 @@ async def test_vacuum_with_error(
     vacuum = hass.states.get(VACUUM_ENTITY_ID)
     assert vacuum
     assert vacuum.state == STATE_ERROR
+
+
+@pytest.mark.parametrize(
+    ("robot_data", "expected_state"),
+    [
+        ({"displayCode": "DC_CAT_DETECT"}, STATE_DOCKED),
+        ({"isDFIFull": True}, STATE_ERROR),
+        ({"robotCycleState": "CYCLE_STATE_CAT_DETECT"}, STATE_PAUSED),
+    ],
+)
+async def test_vacuum_states(
+    hass: HomeAssistant,
+    mock_account_with_litterrobot_4: MagicMock,
+    robot_data: dict[str, str | bool],
+    expected_state: str,
+) -> None:
+    """Test sending commands to the switch."""
+    await setup_integration(hass, mock_account_with_litterrobot_4, PLATFORM_DOMAIN)
+    robot: Robot = mock_account_with_litterrobot_4.robots[0]
+    robot._update_data(robot_data, partial=True)
+
+    vacuum = hass.states.get(VACUUM_ENTITY_ID)
+    assert vacuum
+    assert vacuum.state == expected_state
 
 
 @pytest.mark.parametrize(

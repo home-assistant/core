@@ -1,4 +1,5 @@
 """General cluster handlers module for Zigbee Home Automation."""
+
 from __future__ import annotations
 
 from collections.abc import Coroutine
@@ -202,6 +203,9 @@ class BasicClusterHandler(ClusterHandler):
         ):
             self.ZCL_INIT_ATTRS = self.ZCL_INIT_ATTRS.copy()
             self.ZCL_INIT_ATTRS["transmit_power"] = True
+        elif self.cluster.endpoint.model == "lumi.curtain.agl001":
+            self.ZCL_INIT_ATTRS = self.ZCL_INIT_ATTRS.copy()
+            self.ZCL_INIT_ATTRS["power_source"] = True
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(BinaryInput.cluster_id)
@@ -523,26 +527,65 @@ class OnOffConfigurationClusterHandler(ClusterHandler):
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(Ota.cluster_id)
-@registries.CLIENT_CLUSTER_HANDLER_REGISTRY.register(Ota.cluster_id)
-class OtaClientClusterHandler(ClientClusterHandler):
+class OtaClusterHandler(ClusterHandler):
     """OTA cluster handler."""
 
     BIND: bool = False
+
+    # Some devices have this cluster in the wrong collection (e.g. Third Reality)
+    ZCL_INIT_ATTRS = {
+        Ota.AttributeDefs.current_file_version.name: True,
+    }
+
+    @property
+    def current_file_version(self) -> int | None:
+        """Return cached value of current_file_version attribute."""
+        return self.cluster.get(Ota.AttributeDefs.current_file_version.name)
+
+
+@registries.CLIENT_CLUSTER_HANDLER_REGISTRY.register(Ota.cluster_id)
+class OtaClientClusterHandler(ClientClusterHandler):
+    """OTA client cluster handler."""
+
+    BIND: bool = False
+
+    ZCL_INIT_ATTRS = {
+        Ota.AttributeDefs.current_file_version.name: True,
+    }
+
+    @callback
+    def attribute_updated(self, attrid: int, value: Any, timestamp: Any) -> None:
+        """Handle an attribute updated on this cluster."""
+        # We intentionally avoid the `ClientClusterHandler` attribute update handler:
+        # it emits a logbook event on every update, which pollutes the logbook
+        ClusterHandler.attribute_updated(self, attrid, value, timestamp)
+
+    @property
+    def current_file_version(self) -> int | None:
+        """Return cached value of current_file_version attribute."""
+        return self.cluster.get(Ota.AttributeDefs.current_file_version.name)
 
     @callback
     def cluster_command(
         self, tsn: int, command_id: int, args: list[Any] | None
     ) -> None:
         """Handle OTA commands."""
-        if command_id in self.cluster.server_commands:
-            cmd_name = self.cluster.server_commands[command_id].name
-        else:
-            cmd_name = command_id
+        if command_id not in self.cluster.server_commands:
+            return
 
         signal_id = self._endpoint.unique_id.split("-")[0]
-        if cmd_name == "query_next_image":
+        cmd_name = self.cluster.server_commands[command_id].name
+
+        if cmd_name == Ota.ServerCommandDefs.query_next_image.name:
             assert args
-            self.async_send_signal(SIGNAL_UPDATE_DEVICE.format(signal_id), args[3])
+
+            current_file_version = args[3]
+            self.cluster.update_attribute(
+                Ota.AttributeDefs.current_file_version.id, current_file_version
+            )
+            self.async_send_signal(
+                SIGNAL_UPDATE_DEVICE.format(signal_id), current_file_version
+            )
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(Partition.cluster_id)

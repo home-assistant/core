@@ -1,10 +1,12 @@
 """Device for Zigbee Home Automation."""
+
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 from enum import Enum
+from functools import cached_property
 import logging
 import random
 import time
@@ -15,24 +17,25 @@ from zigpy.device import Device as ZigpyDevice
 import zigpy.exceptions
 from zigpy.profiles import PROFILES
 import zigpy.quirks
+from zigpy.quirks.v2 import CustomDeviceV2
 from zigpy.types.named import EUI64, NWK
 from zigpy.zcl.clusters import Cluster
 from zigpy.zcl.clusters.general import Groups, Identify
 from zigpy.zcl.foundation import Status as ZclStatus, ZCLCommandDef
 import zigpy.zdo.types as zdo_types
 
-from homeassistant.backports.functools import cached_property
 from homeassistant.const import ATTR_COMMAND, ATTR_DEVICE_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.event import async_track_time_interval
 
-from . import const
+from . import const, discovery
 from .cluster_handlers import ClusterHandler, ZDOClusterHandler
 from .const import (
     ATTR_ACTIVE_COORDINATOR,
@@ -406,6 +409,15 @@ class ZHADevice(LogMixin):
             ATTR_MODEL: self.model,
         }
 
+    @property
+    def sw_version(self) -> str | None:
+        """Return the software version for this device."""
+        device_registry = dr.async_get(self.hass)
+        reg_device: DeviceEntry | None = device_registry.async_get(self.device_id)
+        if reg_device is None:
+            return None
+        return reg_device.sw_version
+
     @classmethod
     def new(
         cls,
@@ -422,6 +434,7 @@ class ZHADevice(LogMixin):
                 zha_dev.async_update_sw_build_id,
             )
         )
+        discovery.PROBE.discover_device_entities(zha_dev)
         return zha_dev
 
     @callback
@@ -571,6 +584,9 @@ class ZHADevice(LogMixin):
         await asyncio.gather(
             *(endpoint.async_configure() for endpoint in self._endpoints.values())
         )
+        if isinstance(self._zigpy_device, CustomDeviceV2):
+            self.debug("applying quirks v2 custom device configuration")
+            await self._zigpy_device.apply_custom_configuration()
         async_dispatcher_send(
             self.hass,
             const.ZHA_CLUSTER_HANDLER_MSG,
@@ -773,15 +789,6 @@ class ZHADevice(LogMixin):
             response = await cluster.write_attributes(
                 {attribute: value}, manufacturer=manufacturer
             )
-            self.debug(
-                "set: %s for attr: %s to cluster: %s for ept: %s - res: %s",
-                value,
-                attribute,
-                cluster_id,
-                endpoint_id,
-                response,
-            )
-            return response
         except zigpy.exceptions.ZigbeeException as exc:
             raise HomeAssistantError(
                 f"Failed to set attribute: "
@@ -790,6 +797,16 @@ class ZHADevice(LogMixin):
                 f"{ATTR_CLUSTER_ID}: {cluster_id} "
                 f"{ATTR_ENDPOINT_ID}: {endpoint_id}"
             ) from exc
+
+        self.debug(
+            "set: %s for attr: %s to cluster: %s for ept: %s - res: %s",
+            value,
+            attribute,
+            cluster_id,
+            endpoint_id,
+            response,
+        )
+        return response
 
     async def issue_cluster_command(
         self,
@@ -860,7 +877,7 @@ class ZHADevice(LogMixin):
             # store it, so we cannot rely on it existing after being written. This is
             # only done to make the ZCL command valid.
             await self._zigpy_device.add_to_group(group_id, name=f"0x{group_id:04X}")
-        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
+        except (zigpy.exceptions.ZigbeeException, TimeoutError) as ex:
             self.debug(
                 "Failed to add device '%s' to group: 0x%04x ex: %s",
                 self._zigpy_device.ieee,
@@ -872,7 +889,7 @@ class ZHADevice(LogMixin):
         """Remove this device from the provided zigbee group."""
         try:
             await self._zigpy_device.remove_from_group(group_id)
-        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
+        except (zigpy.exceptions.ZigbeeException, TimeoutError) as ex:
             self.debug(
                 "Failed to remove device '%s' from group: 0x%04x ex: %s",
                 self._zigpy_device.ieee,
@@ -888,7 +905,7 @@ class ZHADevice(LogMixin):
             await self._zigpy_device.endpoints[endpoint_id].add_to_group(
                 group_id, name=f"0x{group_id:04X}"
             )
-        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
+        except (zigpy.exceptions.ZigbeeException, TimeoutError) as ex:
             self.debug(
                 "Failed to add endpoint: %s for device: '%s' to group: 0x%04x ex: %s",
                 endpoint_id,
@@ -903,7 +920,7 @@ class ZHADevice(LogMixin):
         """Remove the device endpoint from the provided zigbee group."""
         try:
             await self._zigpy_device.endpoints[endpoint_id].remove_from_group(group_id)
-        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
+        except (zigpy.exceptions.ZigbeeException, TimeoutError) as ex:
             self.debug(
                 (
                     "Failed to remove endpoint: %s for device '%s' from group: 0x%04x"
@@ -979,7 +996,7 @@ class ZHADevice(LogMixin):
                     )
                 )
         res = await asyncio.gather(*(t[0] for t in tasks), return_exceptions=True)
-        for outcome, log_msg in zip(res, tasks):
+        for outcome, log_msg in zip(res, tasks, strict=False):
             if isinstance(outcome, Exception):
                 fmt = f"{log_msg[1]} failed: %s"
             else:
@@ -989,5 +1006,5 @@ class ZHADevice(LogMixin):
     def log(self, level: int, msg: str, *args: Any, **kwargs: Any) -> None:
         """Log a message."""
         msg = f"[%s](%s): {msg}"
-        args = (self.nwk, self.model) + args
+        args = (self.nwk, self.model, *args)
         _LOGGER.log(level, msg, *args, **kwargs)
