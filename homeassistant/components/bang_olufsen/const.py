@@ -13,24 +13,24 @@ from homeassistant.components.media_player import MediaPlayerState, MediaType
 class BangOlufsenSource(StrEnum):
     """Enum used for associating device source ids with friendly names. May not include all sources."""
 
-    URI_STREAMER = "Audio Streamer"
-    BLUETOOTH = "Bluetooth"
-    AIR_PLAY = "AirPlay"
-    CHROMECAST = "Chromecast built-in"
-    SPOTIFY = "Spotify Connect"
-    GENERATOR = "Tone Generator"
-    LINE_IN = "Line-In"
-    SPDIF = "Optical"
-    NET_RADIO = "B&O Radio"
-    LOCAL = "Local"
-    DLNA = "DLNA"
-    QPLAY = "QPlay"
-    WPL = "Wireless Powerlink"
-    PL = "Powerlink"
-    TV = "TV"
-    DEEZER = "Deezer"
-    BEOLINK = "Networklink"
-    TIDAL_CONNECT = "Tidal Connect"
+    uriStreamer = "Audio Streamer"  # noqa: N815
+    bluetooth = "Bluetooth"
+    airPlay = "AirPlay"  # noqa: N815
+    chromeCast = "Chromecast built-in"  # noqa: N815
+    spotify = "Spotify Connect"
+    generator = "Tone Generator"
+    lineIn = "Line-In"  # noqa: N815
+    spdif = "Optical"
+    netRadio = "B&O Radio"  # noqa: N815
+    local = "Local"
+    dlna = "DLNA"
+    qplay = "QPlay"
+    wpl = "Wireless Powerlink"
+    pl = "Powerlink"
+    tv = "TV"
+    deezer = "Deezer"
+    beolink = "Networklink"
+    tidalConnect = "Tidal Connect"  # noqa: N815
 
 
 BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
