@@ -8,6 +8,7 @@ from homeassistant.components.notify import (
     SERVICE_SEND_MESSAGE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
 from .common import setup_platform
 
