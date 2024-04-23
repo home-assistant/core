@@ -14,7 +14,6 @@ import logging
 import math
 from operator import attrgetter
 import sys
-import threading
 from timeit import default_timer as timer
 from types import FunctionType
 from typing import (
@@ -67,7 +66,7 @@ from homeassistant.loader import async_suggest_report_issue, bind_hass
 from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.frozen_dataclass_compat import FrozenOrThawed
 
-from . import device_registry as dr, entity_registry as er, frame
+from . import device_registry as dr, entity_registry as er
 from .device_registry import DeviceInfo, EventDeviceRegistryUpdatedData
 from .event import (
     async_track_device_registry_updated_event,
@@ -1005,12 +1004,8 @@ class Entity(
     def async_write_ha_state(self) -> None:
         """Write the state to the state machine."""
         self._async_verify_state_writable()
-        if (
-            (self._is_custom_component or self.hass.config.debug)
-            and (loop_thread_ident := self.hass.loop.__dict__.get("_thread_ident"))
-            and loop_thread_ident != threading.get_ident()
-        ):
-            frame.report("calls async_write_ha_state from a thread")
+        if self._is_custom_component or self.hass.config.debug:
+            self.hass.verify_event_loop_thread("async_write_ha_state")
         self._async_write_ha_state()
 
     def _stringify_state(self, available: bool) -> str:

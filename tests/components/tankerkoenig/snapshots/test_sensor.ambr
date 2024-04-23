@@ -1,0 +1,52 @@
+# serializer version: 1
+# name: test_sensor
+  ReadOnlyDict({
+    'attribution': 'Data provided by https://www.tankerkoenig.de',
+    'brand': 'Station',
+    'city': 'Somewhere',
+    'friendly_name': 'Station Somewhere Street 1 Super E10',
+    'fuel_type': <GasType.E10: 'e10'>,
+    'house_number': '1',
+    'latitude': 51.1,
+    'longitude': 13.1,
+    'postcode': 1234,
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'station_name': 'Station ABC',
+    'street': 'Somewhere Street',
+    'unit_of_measurement': '€',
+  })
+# ---
+# name: test_sensor.1
+  ReadOnlyDict({
+    'attribution': 'Data provided by https://www.tankerkoenig.de',
+    'brand': 'Station',
+    'city': 'Somewhere',
+    'friendly_name': 'Station Somewhere Street 1 Super',
+    'fuel_type': <GasType.E5: 'e5'>,
+    'house_number': '1',
+    'latitude': 51.1,
+    'longitude': 13.1,
+    'postcode': 1234,
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'station_name': 'Station ABC',
+    'street': 'Somewhere Street',
+    'unit_of_measurement': '€',
+  })
+# ---
+# name: test_sensor.2
+  ReadOnlyDict({
+    'attribution': 'Data provided by https://www.tankerkoenig.de',
+    'brand': 'Station',
+    'city': 'Somewhere',
+    'friendly_name': 'Station Somewhere Street 1 Diesel',
+    'fuel_type': <GasType.DIESEL: 'diesel'>,
+    'house_number': '1',
+    'latitude': 51.1,
+    'longitude': 13.1,
+    'postcode': 1234,
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'station_name': 'Station ABC',
+    'street': 'Somewhere Street',
+    'unit_of_measurement': '€',
+  })
+# ---

@@ -33,7 +33,7 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 7
+  CACHE_VERSION: 8
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 8
   HA_SHORT_VERSION: "2024.5"
@@ -452,8 +452,10 @@ jobs:
           check-latest: true
       - name: Generate partial uv restore key
         id: generate-uv-key
-        run: >-
-          echo "key=uv-${{ env.UV_CACHE_VERSION }}-${{
+        run: |
+          uv_version=$(cat requirements_test.txt | grep uv | cut -d '=' -f 3)
+          echo "version=${uv_version}" >> $GITHUB_OUTPUT
+          echo "key=uv-${{ env.UV_CACHE_VERSION }}-${uv_version}-${{
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore base Python virtual environment
         id: cache-venv
@@ -473,7 +475,9 @@ jobs:
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             steps.generate-uv-key.outputs.key }}
           restore-keys: |
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-uv-${{ env.UV_CACHE_VERSION }}-${{ env.HA_SHORT_VERSION }}-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-uv-${{
+            env.UV_CACHE_VERSION }}-${{ steps.generate-uv-key.outputs.version }}-${{
+            env.HA_SHORT_VERSION }}-
       - name: Install additional OS dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
