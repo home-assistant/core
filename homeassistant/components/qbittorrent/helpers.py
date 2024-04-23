@@ -1,10 +1,9 @@
 """Helper functions for qBittorrent."""
-import qbittorrentapi
 
 from datetime import UTC, datetime
 from typing import Any
 
-from qbittorrent.client import Client
+import qbittorrentapi
 
 
 def setup_client(
@@ -35,23 +34,25 @@ def format_unix_timestamp(timestamp) -> str:
     return dt_object.isoformat()
 
 
-def format_progress(torrent) -> str:
+def format_progress(torrent: qbittorrentapi.TorrentDictionary) -> str:
     """Format the progress of a torrent."""
     progress = torrent["progress"]
-    progress = float(progress) * 100
+    progress = float(progress) * 100  # type: ignore[arg-type,assignment]
     return f"{progress:.2f}"
 
 
-def format_torrents(torrents: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+def format_torrents(
+    torrents: qbittorrentapi.TorrentInfoList,
+) -> dict[str, dict[str, Any]]:
     """Format a list of torrents."""
     value = {}
     for torrent in torrents:
-        value[torrent["name"]] = format_torrent(torrent)
+        value[str(torrent["name"])] = format_torrent(torrent)
 
     return value
 
 
-def format_torrent(torrent) -> dict[str, Any]:
+def format_torrent(torrent: qbittorrentapi.TorrentDictionary) -> dict[str, Any]:
     """Format a single torrent."""
     value = {}
     value["id"] = torrent["hash"]
@@ -59,6 +60,6 @@ def format_torrent(torrent) -> dict[str, Any]:
     value["percent_done"] = format_progress(torrent)
     value["status"] = torrent["state"]
     value["eta"] = seconds_to_hhmmss(torrent["eta"])
-    value["ratio"] = "{:.2f}".format(float(torrent["ratio"]))
+    value["ratio"] = f"{float(torrent["ratio"]):.2f}"  # type: ignore[arg-type]
 
     return value

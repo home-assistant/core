@@ -11,6 +11,7 @@ from qbittorrentapi import (
     Forbidden403Error,
     LoginFailed,
     SyncMainDataDictionary,
+    TorrentInfoList,
 )
 
 from homeassistant.core import HomeAssistant
@@ -43,22 +44,25 @@ class QBittorrentDataCoordinator(DataUpdateCoordinator[SyncMainDataDictionary]):
             update_interval=timedelta(seconds=30),
         )
 
-
     async def _async_update_data(self) -> SyncMainDataDictionary:
         try:
             return await self.hass.async_add_executor_job(self.client.sync_maindata)
         except (LoginFailed, Forbidden403Error) as exc:
-            raise ConfigEntryError("Invalid authentication") from exc
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="login_error"
+            ) from exc
         except APIConnectionError as exc:
-            raise ConfigEntryError("Fail to connect to qBittorrentApi") from exc
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
+            ) from exc
 
-    async def get_torrents(self, torrent_filter: str) -> list[dict[str, Any]]:
+    async def get_torrents(self, torrent_filter: str) -> TorrentInfoList:
         """Async method to get QBittorrent torrents."""
         try:
             torrents = await self.hass.async_add_executor_job(
-                lambda: self.client.torrents(filter=torrent_filter)
+                lambda: self.client.torrents_info(torrent_filter)  # type: ignore[arg-type]
             )
-        except LoginRequired as exc:
+        except (LoginFailed, Forbidden403Error) as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="login_error"
             ) from exc
