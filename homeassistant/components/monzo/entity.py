@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -34,6 +34,7 @@ class MonzoBaseEntity(CoordinatorEntity[DataUpdateCoordinator[MonzoSensorData]])
         self._data_accessor = data_accessor
 
         self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, str(self.data["id"]))},
             manufacturer="Monzo",
             model=device_model,
