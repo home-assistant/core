@@ -1,4 +1,5 @@
 """Support for the Escea Fireplace."""
+
 from __future__ import annotations
 
 from collections.abc import Coroutine
@@ -31,7 +32,6 @@ from .const import (
     DOMAIN,
     ESCEA_FIREPLACE,
     ESCEA_MANUFACTURER,
-    ICON,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,7 +78,7 @@ class ControllerEntity(ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
-    _attr_icon = ICON
+    _attr_translation_key = "fireplace"
     _attr_precision = PRECISION_WHOLE
     _attr_should_poll = False
     _attr_supported_features = (

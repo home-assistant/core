@@ -1,4 +1,5 @@
 """Fixtures for tests."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest

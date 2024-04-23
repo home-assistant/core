@@ -1,4 +1,5 @@
 """Support for thermopro ble sensors."""
+
 from __future__ import annotations
 
 from thermopro_ble import (

@@ -16,16 +16,18 @@
     'domain': 'light',
     'entity_category': None,
     'entity_id': 'light.bathroom_light',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Bathroom light',
+    'original_name': None,
     'platform': 'netatmo',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -48,6 +50,7 @@
     'context': <ANY>,
     'entity_id': 'light.bathroom_light',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -73,6 +76,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -100,6 +105,7 @@
     'context': <ANY>,
     'entity_id': 'light.front',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -121,16 +127,18 @@
     'domain': 'light',
     'entity_category': None,
     'entity_id': 'light.unknown_00_11_22_33_00_11_45_fe',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Unknown 00:11:22:33:00:11:45:fe',
+    'original_name': None,
     'platform': 'netatmo',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -154,6 +162,7 @@
     'context': <ANY>,
     'entity_id': 'light.unknown_00_11_22_33_00_11_45_fe',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })

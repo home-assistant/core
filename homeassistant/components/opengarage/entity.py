@@ -1,4 +1,5 @@
 """Entity for the opengarage.io component."""
+
 from __future__ import annotations
 
 from homeassistant.core import callback

@@ -1,4 +1,5 @@
 """Tests for the Switch as X."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -69,14 +70,14 @@ async def test_config_entry_unregistered_uuid(
 
 @pytest.mark.parametrize(
     ("target_domain", "state_on", "state_off"),
-    (
+    [
         (Platform.COVER, STATE_OPEN, STATE_CLOSED),
         (Platform.FAN, STATE_ON, STATE_OFF),
         (Platform.LIGHT, STATE_ON, STATE_OFF),
         (Platform.LOCK, STATE_UNLOCKED, STATE_LOCKED),
         (Platform.SIREN, STATE_ON, STATE_OFF),
         (Platform.VALVE, STATE_OPEN, STATE_CLOSED),
-    ),
+    ],
 )
 async def test_entity_registry_events(
     hass: HomeAssistant, target_domain: str, state_on: str, state_off: str
@@ -406,10 +407,10 @@ async def test_setup_and_remove_config_entry(
 
 @pytest.mark.parametrize(
     ("hidden_by_before", "hidden_by_after"),
-    (
+    [
         (er.RegistryEntryHider.USER, er.RegistryEntryHider.USER),
         (er.RegistryEntryHider.INTEGRATION, None),
-    ),
+    ],
 )
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
 async def test_reset_hidden_by(
@@ -948,7 +949,7 @@ async def test_migrate(
     await hass.async_block_till_done()
 
     # Check migration was successful and added invert option
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.options == {
         CONF_ENTITY_ID: "switch.test",
         CONF_INVERT: False,
@@ -987,7 +988,7 @@ async def test_migrate_from_future(
     await hass.async_block_till_done()
 
     # Check migration was not successful and did not add invert option
-    assert config_entry.state == ConfigEntryState.MIGRATION_ERROR
+    assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
     assert config_entry.options == {
         CONF_ENTITY_ID: "switch.test",
         CONF_TARGET_DOMAIN: target_domain,

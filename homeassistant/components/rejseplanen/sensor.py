@@ -3,6 +3,7 @@
 For more info on the API see:
 https://help.rejseplanen.dk/hc/en-us/articles/214174465-Rejseplanen-s-API
 """
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -238,9 +239,9 @@ class PublicTransportData:
                 }
 
                 if real_time_date is not None and real_time_time is not None:
-                    departure_data[
-                        ATTR_REAL_TIME_AT
-                    ] = f"{real_time_date} {real_time_time}"
+                    departure_data[ATTR_REAL_TIME_AT] = (
+                        f"{real_time_date} {real_time_time}"
+                    )
                 if item.get("rtTrack") is not None:
                     departure_data[ATTR_TRACK] = item.get("rtTrack")
 

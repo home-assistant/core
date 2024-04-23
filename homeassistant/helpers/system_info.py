@@ -1,4 +1,5 @@
 """Helper to gather system info."""
+
 from __future__ import annotations
 
 from functools import cache
@@ -6,12 +7,14 @@ from getpass import getuser
 import logging
 import os
 import platform
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import __version__ as current_version
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass
 from homeassistant.util.package import is_docker_env, is_virtual_env
+
+from .importlib import async_import_module
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +33,17 @@ cached_get_user = cache(getuser)
 @bind_hass
 async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
     """Return info about the system."""
-    is_hassio = hass.components.hassio.is_hassio()
+    # Local import to avoid circular dependencies
+    # We use the import helper because hassio
+    # may not be loaded yet and we don't want to
+    # do blocking I/O in the event loop to import it.
+    if TYPE_CHECKING:
+        # pylint: disable-next=import-outside-toplevel
+        from homeassistant.components import hassio
+    else:
+        hassio = await async_import_module(hass, "homeassistant.components.hassio")
+
+    is_hassio = hassio.is_hassio(hass)
 
     info_object = {
         "installation_type": "Unknown",
@@ -68,11 +81,11 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
 
     # Enrich with Supervisor information
     if is_hassio:
-        if not (info := hass.components.hassio.get_info()):
+        if not (info := hassio.get_info(hass)):
             _LOGGER.warning("No Home Assistant Supervisor info available")
             info = {}
 
-        host = hass.components.hassio.get_host_info() or {}
+        host = hassio.get_host_info(hass) or {}
         info_object["supervisor"] = info.get("supervisor")
         info_object["host_os"] = host.get("operating_system")
         info_object["docker_version"] = info.get("docker")

@@ -1,4 +1,5 @@
 """Tests of the climate entity of the balboa integration."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock

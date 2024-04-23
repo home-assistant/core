@@ -17,11 +17,11 @@ async def test_sensor_states(
     """Test sensor state."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.f730_cu_3x400v_average_outdoor_temp_bt1")
+    state = hass.states.get("sensor.gotham_city_average_outdoor_temp_bt1")
     assert state is not None
     assert state.state == "-12.2"
     assert state.attributes == {
-        "friendly_name": "F730 CU 3x400V Average outdoor temp (BT1)",
+        "friendly_name": "Gotham City Average outdoor temp (BT1)",
         "device_class": "temperature",
         "state_class": "measurement",
         "unit_of_measurement": "°C",

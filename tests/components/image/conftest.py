@@ -1,4 +1,5 @@
 """Test helpers for image."""
+
 from collections.abc import Generator
 
 import pytest

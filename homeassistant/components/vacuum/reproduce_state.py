@@ -1,4 +1,5 @@
 """Reproduce an Vacuum state."""
+
 from __future__ import annotations
 
 import asyncio

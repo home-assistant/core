@@ -4,6 +4,7 @@
     'attributes': ReadOnlyDict({
       'current_temperature': 19.0,
       'friendly_name': 'Device Name',
+      'hvac_action': <HVACAction.HEATING: 'heating'>,
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -23,6 +24,7 @@
     'context': <ANY>,
     'entity_id': 'climate.device_name',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'fan_only',
   })
@@ -57,6 +59,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),

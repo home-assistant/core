@@ -1,4 +1,5 @@
 """Test Subaru diagnostics."""
+
 import json
 from unittest.mock import patch
 

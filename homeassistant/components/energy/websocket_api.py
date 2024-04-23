@@ -1,4 +1,5 @@
 """The Energy websocket API."""
+
 from __future__ import annotations
 
 import asyncio
@@ -30,7 +31,7 @@ from .data import (
     EnergyPreferencesUpdate,
     async_get_manager,
 )
-from .types import EnergyPlatform, GetSolarForecastType
+from .types import EnergyPlatform, GetSolarForecastType, SolarForecastType
 from .validate import async_validate
 
 EnergyWebSocketCommandHandler = Callable[
@@ -61,7 +62,8 @@ async def async_get_energy_platforms(
     """Get energy platforms."""
     platforms: dict[str, GetSolarForecastType] = {}
 
-    async def _process_energy_platform(
+    @callback
+    def _process_energy_platform(
         hass: HomeAssistant, domain: str, platform: ModuleType
     ) -> None:
         """Process energy platforms."""
@@ -70,7 +72,9 @@ async def async_get_energy_platforms(
 
         platforms[domain] = cast(EnergyPlatform, platform).async_get_solar_forecast
 
-    await async_process_integration_platforms(hass, DOMAIN, _process_energy_platform)
+    await async_process_integration_platforms(
+        hass, DOMAIN, _process_energy_platform, wait_for_platforms=True
+    )
 
     return platforms
 
@@ -199,19 +203,18 @@ async def ws_solar_forecast(
     for source in manager.data["energy_sources"]:
         if (
             source["type"] != "solar"
-            or source.get("config_entry_solar_forecast") is None
+            or (solar_forecast := source.get("config_entry_solar_forecast")) is None
         ):
             continue
 
-        # typing is not catching the above guard for config_entry_solar_forecast being none
-        for config_entry in source["config_entry_solar_forecast"]:  # type: ignore[union-attr]
-            config_entries[config_entry] = None
+        for entry in solar_forecast:
+            config_entries[entry] = None
 
     if not config_entries:
         connection.send_result(msg["id"], {})
         return
 
-    forecasts = {}
+    forecasts: dict[str, SolarForecastType] = {}
 
     forecast_platforms = await async_get_energy_platforms(hass)
 

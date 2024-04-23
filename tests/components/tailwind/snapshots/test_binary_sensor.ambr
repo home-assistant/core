@@ -4,11 +4,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Door 1 Operational problem',
-      'icon': 'mdi:garage-alert',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.door_1_operational_problem',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -30,11 +30,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': 'mdi:garage-alert',
+    'original_icon': None,
     'original_name': 'Operational problem',
     'platform': 'tailwind',
     'previous_unique_id': None,
@@ -62,6 +64,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Tailwind',
     'model': 'iQ3',
     'name': 'Door 1',
@@ -77,11 +81,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Door 2 Operational problem',
-      'icon': 'mdi:garage-alert',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.door_2_operational_problem',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -103,11 +107,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': 'mdi:garage-alert',
+    'original_icon': None,
     'original_name': 'Operational problem',
     'platform': 'tailwind',
     'previous_unique_id': None,
@@ -135,6 +141,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Tailwind',
     'model': 'iQ3',
     'name': 'Door 2',

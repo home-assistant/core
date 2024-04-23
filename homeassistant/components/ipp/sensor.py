@@ -1,4 +1,5 @@
 """Support for IPP sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -37,19 +38,11 @@ from .coordinator import IPPDataUpdateCoordinator
 from .entity import IPPEntity
 
 
-@dataclass(frozen=True)
-class IPPSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
-
-    value_fn: Callable[[Printer], StateType | datetime]
-
-
-@dataclass(frozen=True)
-class IPPSensorEntityDescription(
-    SensorEntityDescription, IPPSensorEntityDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class IPPSensorEntityDescription(SensorEntityDescription):
     """Describes IPP sensor entity."""
 
+    value_fn: Callable[[Printer], StateType | datetime]
     attributes_fn: Callable[[Printer], dict[Any, StateType]] = lambda _: {}
 
 
@@ -70,7 +63,6 @@ PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
         key="printer",
         name=None,
         translation_key="printer",
-        icon="mdi:printer",
         device_class=SensorDeviceClass.ENUM,
         options=["idle", "printing", "stopped"],
         attributes_fn=lambda printer: {
@@ -87,7 +79,6 @@ PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
     IPPSensorEntityDescription(
         key="uptime",
         translation_key="uptime",
-        icon="mdi:clock-outline",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -118,7 +109,7 @@ async def async_setup_entry(
                 IPPSensorEntityDescription(
                     key=f"marker_{index}",
                     name=marker.name,
-                    icon="mdi:water",
+                    translation_key="marker",
                     native_unit_of_measurement=PERCENTAGE,
                     state_class=SensorStateClass.MEASUREMENT,
                     attributes_fn=_get_marker_attributes_fn(
@@ -129,7 +120,10 @@ async def async_setup_entry(
                             ATTR_MARKER_TYPE: marker.marker_type,
                         },
                     ),
-                    value_fn=_get_marker_value_fn(index, lambda marker: marker.level),
+                    value_fn=_get_marker_value_fn(
+                        index,
+                        lambda marker: marker.level if marker.level >= 0 else None,
+                    ),
                 ),
             )
         )

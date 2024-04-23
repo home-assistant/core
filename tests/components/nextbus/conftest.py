@@ -1,4 +1,5 @@
 """Test helpers for NextBus tests."""
+
 from typing import Any
 from unittest.mock import MagicMock
 

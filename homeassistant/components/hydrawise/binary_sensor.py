@@ -1,21 +1,17 @@
 """Support for Hydrawise sprinkler binary sensors."""
+
 from __future__ import annotations
 
 from pydrawise.schema import Zone
-import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 from .coordinator import HydrawiseDataUpdateCoordinator
@@ -38,27 +34,6 @@ BINARY_SENSOR_KEYS: list[str] = [
     desc.key for desc in (BINARY_SENSOR_STATUS, *BINARY_SENSOR_TYPES)
 ]
 
-# Deprecated since Home Assistant 2023.10.0
-# Can be removed completely in 2024.4.0
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=BINARY_SENSOR_KEYS): vol.All(
-            cv.ensure_list, [vol.In(BINARY_SENSOR_KEYS)]
-        )
-    }
-)
-
-
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up a sensor for a Hydrawise device."""
-    # We don't need to trigger import flow from here as it's triggered from `__init__.py`
-    return  # pragma: no cover
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -74,11 +49,11 @@ async def async_setup_entry(
         entities.append(
             HydrawiseBinarySensor(coordinator, BINARY_SENSOR_STATUS, controller)
         )
-        for zone in controller.zones:
-            for description in BINARY_SENSOR_TYPES:
-                entities.append(
-                    HydrawiseBinarySensor(coordinator, description, controller, zone)
-                )
+        entities.extend(
+            HydrawiseBinarySensor(coordinator, description, controller, zone)
+            for zone in controller.zones
+            for description in BINARY_SENSOR_TYPES
+        )
     async_add_entities(entities)
 
 

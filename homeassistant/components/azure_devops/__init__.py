@@ -1,4 +1,5 @@
 """Support for Azure DevOps."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -15,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
@@ -42,7 +44,8 @@ class AzureDevOpsEntityDescription(EntityDescription):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Azure DevOps from a config entry."""
-    client = DevOpsClient()
+    aiohttp_session = async_get_clientsession(hass)
+    client = DevOpsClient(session=aiohttp_session)
 
     if entry.data.get(CONF_PAT) is not None:
         await client.authorize(entry.data[CONF_PAT], entry.data[CONF_ORG])
@@ -61,13 +64,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Fetch data from Azure DevOps."""
 
         try:
-            return await client.get_builds(
+            builds = await client.get_builds(
                 entry.data[CONF_ORG],
                 entry.data[CONF_PROJECT],
                 BUILDS_QUERY,
             )
         except aiohttp.ClientError as exception:
             raise UpdateFailed from exception
+
+        if builds is None:
+            raise UpdateFailed("No builds found")
+
+        return builds
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -98,6 +106,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class AzureDevOpsEntity(CoordinatorEntity[DataUpdateCoordinator[list[DevOpsBuild]]]):
     """Defines a base Azure DevOps entity."""
 
+    _attr_has_entity_name = True
+
     entity_description: AzureDevOpsEntityDescription
 
     def __init__(
@@ -108,8 +118,8 @@ class AzureDevOpsEntity(CoordinatorEntity[DataUpdateCoordinator[list[DevOpsBuild
         """Initialize the Azure DevOps entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_unique_id: str = "_".join(
-            [entity_description.organization, entity_description.key]
+        self._attr_unique_id: str = (
+            f"{entity_description.organization}_{entity_description.key}"
         )
         self._organization: str = entity_description.organization
         self._project_name: str = entity_description.project.name

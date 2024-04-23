@@ -1,4 +1,5 @@
 """Provides diagnostics for Z-Wave JS."""
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -150,7 +151,8 @@ async def async_get_device_diagnostics(
     client: Client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
     identifiers = get_home_and_node_id_from_device_entry(device)
     node_id = identifiers[1] if identifiers else None
-    assert (driver := client.driver)
+    driver = client.driver
+    assert driver
     if node_id is None or node_id not in driver.controller.nodes:
         raise ValueError(f"Node for device {device.id} can't be found")
     node = driver.controller.nodes[node_id]

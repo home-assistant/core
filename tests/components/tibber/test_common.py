@@ -1,4 +1,5 @@
 """Test common."""
+
 import datetime as dt
 from unittest.mock import AsyncMock
 

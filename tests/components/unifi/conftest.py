@@ -1,4 +1,5 @@
 """Fixtures for UniFi Network methods."""
+
 from __future__ import annotations
 
 import asyncio
@@ -9,14 +10,14 @@ from aiounifi.models.message import MessageKey
 import pytest
 
 from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
-from homeassistant.components.unifi.controller import RETRY_TIMER
+from homeassistant.components.unifi.hub.websocket import RETRY_TIMER
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.unifi.test_controller import DEFAULT_CONFIG_ENTRY_ID
+from tests.components.unifi.test_hub import DEFAULT_CONFIG_ENTRY_ID
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -43,12 +44,12 @@ class WebsocketStateManager(asyncio.Event):
         Mock api calls done by 'await self.api.login'.
         Fail will make 'await self.api.start_websocket' return immediately.
         """
-        controller = self.hass.data[UNIFI_DOMAIN][DEFAULT_CONFIG_ENTRY_ID]
+        hub = self.hass.data[UNIFI_DOMAIN][DEFAULT_CONFIG_ENTRY_ID]
         self.aioclient_mock.get(
-            f"https://{controller.host}:1234", status=302
+            f"https://{hub.config.host}:1234", status=302
         )  # Check UniFi OS
         self.aioclient_mock.post(
-            f"https://{controller.host}:1234/api/login",
+            f"https://{hub.config.host}:1234/api/login",
             json={"data": "login successful", "meta": {"rc": "ok"}},
             headers={"content-type": CONTENT_TYPE_JSON},
         )
@@ -79,13 +80,13 @@ def mock_unifi_websocket(hass):
         data: list[dict] | dict | None = None,
     ):
         """Generate a websocket call."""
-        controller = hass.data[UNIFI_DOMAIN][DEFAULT_CONFIG_ENTRY_ID]
+        hub = hass.data[UNIFI_DOMAIN][DEFAULT_CONFIG_ENTRY_ID]
         if data and not message:
-            controller.api.messages.handler(data)
+            hub.api.messages.handler(data)
         elif data and message:
             if not isinstance(data, list):
                 data = [data]
-            controller.api.messages.handler(
+            hub.api.messages.handler(
                 {
                     "meta": {"message": message.value},
                     "data": data,
@@ -108,9 +109,8 @@ def mock_discovery():
 
 
 @pytest.fixture
-def mock_device_registry(hass):
+def mock_device_registry(hass, device_registry: dr.DeviceRegistry):
     """Mock device registry."""
-    dev_reg = dr.async_get(hass)
     config_entry = MockConfigEntry(domain="something_else")
     config_entry.add_to_hass(hass)
 
@@ -126,7 +126,7 @@ def mock_device_registry(hass):
             "00:00:00:00:02:02",
         )
     ):
-        dev_reg.async_get_or_create(
+        device_registry.async_get_or_create(
             name=f"Device {idx}",
             config_entry_id=config_entry.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, device)},

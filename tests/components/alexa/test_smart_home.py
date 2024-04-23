@@ -1,11 +1,12 @@
 """Test for smart home alexa support."""
+
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from homeassistant.components import camera
 from homeassistant.components.alexa import smart_home, state_report
-import homeassistant.components.camera as camera
 from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
 from homeassistant.components.media_player import MediaPlayerEntityFeature
@@ -5463,9 +5464,8 @@ async def test_camera_discovery(hass: HomeAssistant, mock_stream: None) -> None:
     )
 
     hass.config.components.add("cloud")
-    with patch.object(
-        hass.components.cloud,
-        "async_remote_ui_url",
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_url",
         return_value="https://example.nabu.casa",
     ):
         appliance = await discovery_test(device, hass)
@@ -5494,9 +5494,8 @@ async def test_camera_discovery_without_stream(hass: HomeAssistant) -> None:
     )
 
     hass.config.components.add("cloud")
-    with patch.object(
-        hass.components.cloud,
-        "async_remote_ui_url",
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_url",
         return_value="https://example.nabu.casa",
     ):
         appliance = await discovery_test(device, hass)

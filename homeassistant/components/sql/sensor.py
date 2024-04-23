@@ -1,4 +1,5 @@
 """Sensor from an SQL Query."""
+
 from __future__ import annotations
 
 from datetime import date
@@ -184,10 +185,14 @@ async def async_setup_sensor(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SQL sensor."""
-    instance = get_instance(hass)
+    try:
+        instance = get_instance(hass)
+    except KeyError:  # No recorder loaded
+        uses_recorder_db = False
+    else:
+        uses_recorder_db = db_url == instance.db_url
     sessmaker: scoped_session | None
     sql_data = _async_get_or_init_domain_data(hass)
-    uses_recorder_db = db_url == instance.db_url
     use_database_executor = False
     if uses_recorder_db and instance.dialect_name == SupportedDialect.SQLITE:
         use_database_executor = True

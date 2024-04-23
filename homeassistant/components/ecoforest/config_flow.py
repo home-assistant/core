@@ -1,4 +1,5 @@
 """Config flow for Ecoforest integration."""
+
 from __future__ import annotations
 
 import logging
@@ -9,9 +10,8 @@ from pyecoforest.api import EcoforestApi
 from pyecoforest.exceptions import EcoforestAuthenticationRequired
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN, MANUFACTURER
 
@@ -26,14 +26,14 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class EcoForestConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ecoforest."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
 

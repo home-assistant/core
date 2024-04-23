@@ -1,4 +1,6 @@
 """Hass.io const variables."""
+
+from datetime import timedelta
 from enum import StrEnum
 
 DOMAIN = "hassio"
@@ -19,6 +21,7 @@ ATTR_HOMEASSISTANT = "homeassistant"
 ATTR_HOMEASSISTANT_EXCLUDE_DATABASE = "homeassistant_exclude_database"
 ATTR_INPUT = "input"
 ATTR_ISSUES = "issues"
+ATTR_MESSAGE = "message"
 ATTR_METHOD = "method"
 ATTR_PANELS = "panels"
 ATTR_PASSWORD = "password"
@@ -57,6 +60,22 @@ EVENT_ISSUE_CHANGED = "issue_changed"
 EVENT_ISSUE_REMOVED = "issue_removed"
 
 UPDATE_KEY_SUPERVISOR = "supervisor"
+
+ADDONS_COORDINATOR = "hassio_addons_coordinator"
+
+
+DATA_CORE_INFO = "hassio_core_info"
+DATA_CORE_STATS = "hassio_core_stats"
+DATA_HOST_INFO = "hassio_host_info"
+DATA_STORE = "hassio_store"
+DATA_INFO = "hassio_info"
+DATA_OS_INFO = "hassio_os_info"
+DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
+DATA_SUPERVISOR_STATS = "hassio_supervisor_stats"
+DATA_ADDONS_CHANGELOGS = "hassio_addons_changelogs"
+DATA_ADDONS_INFO = "hassio_addons_info"
+DATA_ADDONS_STATS = "hassio_addons_stats"
+HASSIO_UPDATE_INTERVAL = timedelta(minutes=5)
 
 ATTR_AUTO_UPDATE = "auto_update"
 ATTR_VERSION = "version"

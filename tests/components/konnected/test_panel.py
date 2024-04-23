@@ -1,4 +1,5 @@
 """Test Konnected setup process."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
