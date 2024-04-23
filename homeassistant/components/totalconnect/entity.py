@@ -12,6 +12,8 @@ from . import DOMAIN, TotalConnectDataUpdateCoordinator
 class TotalConnectEntity(CoordinatorEntity[TotalConnectDataUpdateCoordinator]):
     """Represent a TotalConnect entity."""
 
+    _attr_has_entity_name = True
+
 
 class TotalConnectLocationEntity(TotalConnectEntity):
     """Represent a TotalConnect location."""
@@ -24,11 +26,11 @@ class TotalConnectLocationEntity(TotalConnectEntity):
         """Initialize the TotalConnect location."""
         super().__init__(coordinator)
         self._location = location
-        self.device = location.devices[location.security_device_id]
+        self.device = device = location.devices[location.security_device_id]
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.device.serial_number)},
-            name=self.device.name,
-            serial_number=self.device.serial_number,
+            identifiers={(DOMAIN, device.serial_number)},
+            name=device.name,
+            serial_number=device.serial_number,
         )
 
 
