@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from copy import copy
 from typing import Any, Final
 
 import voluptuous as vol
@@ -12,7 +13,7 @@ from homeassistant.components.device_automation.exceptions import (
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import selector
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
@@ -21,11 +22,6 @@ from .const import DOMAIN
 from .project import KNXProject
 from .trigger import (
     CONF_KNX_DESTINATION,
-    CONF_KNX_GROUP_VALUE_READ,
-    CONF_KNX_GROUP_VALUE_RESPONSE,
-    CONF_KNX_GROUP_VALUE_WRITE,
-    CONF_KNX_INCOMING,
-    CONF_KNX_OUTGOING,
     PLATFORM_TYPE_TRIGGER_TELEGRAM,
     TELEGRAM_TRIGGER_SCHEMA,
     TRIGGER_SCHEMA as TRIGGER_TRIGGER_SCHEMA,
@@ -33,7 +29,7 @@ from .trigger import (
 
 TRIGGER_TELEGRAM: Final = "telegram"
 
-TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA: Final = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): TRIGGER_TELEGRAM,
         **TELEGRAM_TRIGGER_SCHEMA,
@@ -72,27 +68,17 @@ async def async_get_trigger_capabilities(
         selector.SelectOptionDict(value=ga.address, label=f"{ga.address} - {ga.name}")
         for ga in project.group_addresses.values()
     ]
-
-    return {
-        "extra_fields": vol.Schema(
-            {
-                vol.Optional(CONF_KNX_DESTINATION): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                        multiple=True,
-                        custom_value=True,
-                        options=options,
-                    ),
-                ),
-                # these shall have matching default values as in TELEGRAM_TRIGGER_SCHEMA
-                vol.Optional(CONF_KNX_GROUP_VALUE_WRITE, default=True): cv.boolean,
-                vol.Optional(CONF_KNX_GROUP_VALUE_RESPONSE, default=True): cv.boolean,
-                vol.Optional(CONF_KNX_GROUP_VALUE_READ, default=True): cv.boolean,
-                vol.Optional(CONF_KNX_INCOMING, default=True): cv.boolean,
-                vol.Optional(CONF_KNX_OUTGOING, default=True): cv.boolean,
-            }
-        )
-    }
+    # replace "destination" with a dropdown selector for extra fields UI
+    extra_fields = copy(TELEGRAM_TRIGGER_SCHEMA)
+    extra_fields[vol.Optional(CONF_KNX_DESTINATION)] = selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            mode=selector.SelectSelectorMode.DROPDOWN,
+            multiple=True,
+            custom_value=True,
+            options=options,
+        ),
+    )
+    return {"extra_fields": vol.Schema(extra_fields)}
 
 
 async def async_attach_trigger(

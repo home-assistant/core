@@ -18,16 +18,16 @@ from .telegrams import TelegramDict
 
 TRIGGER_TELEGRAM: Final = "telegram"
 
-PLATFORM_TYPE_TRIGGER_TELEGRAM = f"{DOMAIN}.{TRIGGER_TELEGRAM}"
+PLATFORM_TYPE_TRIGGER_TELEGRAM: Final = f"{DOMAIN}.{TRIGGER_TELEGRAM}"
 
-CONF_KNX_DESTINATION = "destination"
-CONF_KNX_GROUP_VALUE_WRITE = "group_value_write"
-CONF_KNX_GROUP_VALUE_READ = "group_value_read"
-CONF_KNX_GROUP_VALUE_RESPONSE = "group_value_response"
-CONF_KNX_INCOMING = "incoming"
-CONF_KNX_OUTGOING = "outgoing"
+CONF_KNX_DESTINATION: Final = "destination"
+CONF_KNX_GROUP_VALUE_WRITE: Final = "group_value_write"
+CONF_KNX_GROUP_VALUE_READ: Final = "group_value_read"
+CONF_KNX_GROUP_VALUE_RESPONSE: Final = "group_value_response"
+CONF_KNX_INCOMING: Final = "incoming"
+CONF_KNX_OUTGOING: Final = "outgoing"
 
-TELEGRAM_TRIGGER_SCHEMA = {
+TELEGRAM_TRIGGER_SCHEMA: Final = {
     vol.Optional(CONF_KNX_DESTINATION): vol.Maybe(
         vol.All(
             cv.ensure_list,
