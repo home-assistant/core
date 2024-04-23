@@ -9,7 +9,8 @@ from typing import TYPE_CHECKING
 
 from deebot_client.capabilities import Capabilities
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.util import slugify
 
 from .entity import (
     EcovacsCapabilityEntityDescription,
@@ -21,8 +22,11 @@ if TYPE_CHECKING:
     from .controller import EcovacsController
 
 
-def get_client_device_id() -> str:
+def get_client_device_id(hass: HomeAssistant, self_hosted: bool) -> str:
     """Get client device id."""
+    if self_hosted:
+        return f"HA-{slugify(hass.config.location_name)}"
+
     return "".join(
         random.choice(string.ascii_uppercase + string.digits) for _ in range(8)
     )
