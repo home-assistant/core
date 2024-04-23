@@ -1,4 +1,4 @@
-"""Base entity for Withings."""
+"""Base entity for Monzo."""
 
 from __future__ import annotations
 
