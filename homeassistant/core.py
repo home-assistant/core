@@ -430,7 +430,7 @@ class HomeAssistant:
         )
 
     def verify_event_loop_thread(self, what: str) -> None:
-        """Raise and report if we are not running in the event loop thread."""
+        """Report and raise if we are not running in the event loop thread."""
         if (
             loop_thread_ident := self.loop.__dict__.get("_thread_ident")
         ) and loop_thread_ident != threading.get_ident():
