@@ -557,6 +557,9 @@ async def test_zeroconf_already_configured_no_reload_same_host(
     with (
         _patch_async_setup_entry() as mock_setup_entry,
         patch_bond_token(return_value={"token": "correct-token"}),
+        patch.object(
+            hass.config_entries, "async_schedule_reload", MagicMock()
+        ) as mock_async_schedule_reload,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -572,6 +575,7 @@ async def test_zeroconf_already_configured_no_reload_same_host(
             ),
         )
         await hass.async_block_till_done()
+        mock_async_schedule_reload.assert_called()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

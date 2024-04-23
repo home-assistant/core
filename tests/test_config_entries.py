@@ -4517,9 +4517,8 @@ async def test_update_entry_and_reload(
     )
     entry.add_to_hass(hass)
 
-    mock_integration(
-        hass, MockModule("comp", async_setup_entry=AsyncMock(return_value=True))
-    )
+    comp = MockModule("comp", async_setup_entry=AsyncMock(return_value=True))
+    mock_integration(hass, comp)
     mock_platform(hass, "comp.config_flow", None)
 
     class MockFlowHandler(config_entries.ConfigFlow):
@@ -4548,6 +4547,8 @@ async def test_update_entry_and_reload(
         assert entry.state == config_entries.ConfigEntryState.LOADED
         assert task["type"] == FlowResultType.ABORT
         assert task["reason"] == "reauth_successful"
+        # Assert entry was reloaded
+        comp.async_setup_entry.assert_awaited_once()
 
 
 @pytest.mark.parametrize("unique_id", [["blah", "bleh"], {"key": "value"}])
