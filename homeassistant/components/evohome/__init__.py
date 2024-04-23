@@ -19,7 +19,10 @@ from evohomeasync2.schema.const import (
     SZ_ALLOWED_SYSTEM_MODES,
     SZ_AUTO_WITH_RESET,
     SZ_CAN_BE_TEMPORARY,
+    SZ_GATEWAY_ID,
+    SZ_GATEWAY_INFO,
     SZ_HEAT_SETPOINT,
+    SZ_LOCATION_ID,
     SZ_LOCATION_INFO,
     SZ_SETPOINT_STATUS,
     SZ_STATE_STATUS,
@@ -261,14 +264,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return False
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
-        _config: dict[str, Any] = {
-            SZ_LOCATION_INFO: {SZ_TIME_ZONE: None},
-            GWS: [{TCS: None}],
+        loc_info = {
+            SZ_LOCATION_ID: loc_config[SZ_LOCATION_INFO][SZ_LOCATION_ID],
+            SZ_TIME_ZONE: loc_config[SZ_LOCATION_INFO][SZ_TIME_ZONE],
         }
-        _config[SZ_LOCATION_INFO][SZ_TIME_ZONE] = loc_config[SZ_LOCATION_INFO][
-            SZ_TIME_ZONE
-        ]
-        _config[GWS][0][TCS] = loc_config[GWS][0][TCS]
+        gwy_info = {
+            SZ_GATEWAY_ID: loc_config[GWS][0][SZ_GATEWAY_INFO][SZ_GATEWAY_ID],
+            TCS: loc_config[GWS][0][TCS],
+        }
+        _config = {
+            SZ_LOCATION_INFO: loc_info,
+            GWS: [{SZ_GATEWAY_INFO: gwy_info, TCS: loc_config[GWS][0][TCS]}],
+        }
         _LOGGER.debug("Config = %s", _config)
 
     client_v1 = ev1.EvohomeClient(

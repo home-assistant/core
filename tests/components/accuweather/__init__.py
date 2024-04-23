@@ -11,14 +11,8 @@ from tests.common import (
 )
 
 
-async def init_integration(
-    hass, forecast=False, unsupported_icon=False
-) -> MockConfigEntry:
+async def init_integration(hass, unsupported_icon=False) -> MockConfigEntry:
     """Set up the AccuWeather integration in Home Assistant."""
-    options = {}
-    if forecast:
-        options["forecast"] = True
-
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Home",
@@ -29,7 +23,6 @@ async def init_integration(
             "longitude": 122.12,
             "name": "Home",
         },
-        options=options,
     )
 
     current = load_json_object_fixture("accuweather/current_conditions_data.json")

@@ -34,6 +34,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
 
@@ -234,6 +235,18 @@ async def async_modbus_setup(
 
     async def async_restart_hub(service: ServiceCall) -> None:
         """Restart Modbus hub."""
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_restart",
+            breaks_in_ha_version="2024.11.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_restart",
+        )
+        _LOGGER.warning(
+            "`modbus.restart`: is deprecated and will be removed in version 2024.11"
+        )
         async_dispatcher_send(hass, SIGNAL_START_ENTITY)
         hub = hub_collect[service.data[ATTR_HUB]]
         await hub.async_restart()
