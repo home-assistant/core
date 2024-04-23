@@ -401,9 +401,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             if not auth_failed and self._listeners and not self.hass.is_stopping:
                 self._schedule_refresh()
 
-        if not self.last_update_success and not previous_update_success:
-            return
-
         if (
             self.always_update
             or self.last_update_success != previous_update_success
