@@ -18,7 +18,7 @@
         "title": "Model Configuration",
         "data": {
           "use_knowledgebase": "Activate Knowledgebase",
-          "model_id": "Model ID",
+          "model_id": "Model",
           "prompt_context": "Prompt Context",
           "knowledgebase_id": "Knowledge Base"
         }
@@ -37,9 +37,9 @@
     "step": {
       "init": {
         "data": {
-          "model_id": "Model ID",
+          "model_id": "Model",
           "prompt_context": "Prompt Context",
-          "knowledgebase_id": "Knowledge Base ID"
+          "knowledgebase_id": "Knowledge Base"
         }
       }
     }

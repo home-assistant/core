@@ -222,7 +222,11 @@ class OptionsFlowHandler(OptionsFlow):
                 vol.Required(
                     CONST_PROMPT_CONTEXT,
                     default=self.config_entry.options.get(CONST_PROMPT_CONTEXT),
-                ): str,
+                ): selector.TextSelector(
+                    selector.TextSelectorConfig(
+                        type=selector.TextSelectorType.TEXT, multiline=True
+                    )
+                ),
                 vol.Required(
                     CONST_MODEL_ID,
                     default=self.config_entry.options.get(CONST_MODEL_ID),
