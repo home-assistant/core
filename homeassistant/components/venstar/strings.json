@@ -26,6 +26,7 @@
   "entity": {
     "sensor": {
       "schedule_part": {
+        "name": "Schedule Part",
         "state": {
           "morning": "Morning",
           "day": "Day",
@@ -35,6 +36,7 @@
         }
       },
       "active_stage": {
+        "name": "Active stage",
         "state": {
           "idle": "Idle",
           "first_stage": "First stage",
