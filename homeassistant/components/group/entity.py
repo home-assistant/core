@@ -302,9 +302,9 @@ class Group(Entity):
         for ent_id in entity_ids:
             ent_id_lower = ent_id.lower()
             domain = split_entity_id(ent_id_lower)[0]
-            active_domains.add(domain)
             tracking.append(ent_id_lower)
             if domain not in excluded_domains:
+                active_domains.add(domain)
                 trackable.append(ent_id_lower)
 
         self.trackable = tuple(trackable)
