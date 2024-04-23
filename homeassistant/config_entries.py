@@ -2399,15 +2399,14 @@ class ConfigFlow(ConfigEntryBaseFlow):
         reason: str = "reauth_successful",
     ) -> ConfigFlowResult:
         """Update config entry, reload config entry and finish config flow."""
-        result = self.hass.config_entries.async_update_entry(
+        self.hass.config_entries.async_update_entry(
             entry=entry,
             unique_id=unique_id,
             title=title,
             data=data,
             options=options,
         )
-        if result:
-            self.hass.config_entries.async_schedule_reload(entry.entry_id)
+        self.hass.config_entries.async_schedule_reload(entry.entry_id)
         return self.async_abort(reason=reason)
 
 
