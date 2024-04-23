@@ -1,4 +1,5 @@
 """Support for Alexa skill service end point."""
+
 import enum
 import logging
 from typing import Any
@@ -49,7 +50,6 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
     Right now this module does not expose any, but the intent component breaks
     without it.
     """
-    pass  # pylint: disable=unnecessary-pass
 
 
 class UnknownRequest(HomeAssistantError):
@@ -94,8 +94,8 @@ class AlexaIntentsView(http.HomeAssistantView):
                 )
             )
 
-        except intent.IntentError as err:
-            _LOGGER.exception(str(err))
+        except intent.IntentError:
+            _LOGGER.exception("Error handling intent")
             return self.json(
                 intent_error_response(hass, message, "Error handling intent.")
             )

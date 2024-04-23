@@ -43,8 +43,9 @@
     'context': <ANY>,
     'entity_id': 'sensor.192_168_1_1_load_15m',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.0',
+    'state': '1.37',
   })
 # ---
 # name: test_sensor[sensor.192_168_1_1_load_1m-entry]
@@ -91,8 +92,9 @@
     'context': <ANY>,
     'entity_id': 'sensor.192_168_1_1_load_1m',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.98',
+    'state': '1.29',
   })
 # ---
 # name: test_sensor[sensor.192_168_1_1_load_5m-entry]
@@ -139,8 +141,9 @@
     'context': <ANY>,
     'entity_id': 'sensor.192_168_1_1_load_5m',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.02',
+    'state': '1.36',
   })
 # ---
 # name: test_sensor[sensor.192_168_1_1_memory_free-entry]
@@ -195,8 +198,9 @@
     'context': <ANY>,
     'entity_id': 'sensor.192_168_1_1_memory_free',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '24.9505462646484',
+    'state': '27.2087860107422',
   })
 # ---
 # name: test_sensor[sensor.192_168_1_1_memory_total-entry]
@@ -251,8 +255,9 @@
     'context': <ANY>,
     'entity_id': 'sensor.192_168_1_1_memory_total',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '31.2490539550781',
+    'state': '31.248420715332',
   })
 # ---
 # name: test_sensor[sensor.192_168_1_1_swap_free-entry]
@@ -307,8 +312,9 @@
     'context': <ANY>,
     'entity_id': 'sensor.192_168_1_1_swap_free',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.86260986328125',
+    'state': '1.85430908203125',
   })
 # ---
 # name: test_sensor[sensor.192_168_1_1_swap_total-entry]
@@ -363,6 +369,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.192_168_1_1_swap_total',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.86260986328125',
   })

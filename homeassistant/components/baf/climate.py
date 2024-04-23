@@ -1,4 +1,5 @@
 """Support for Big Ass Fans auto comfort."""
+
 from __future__ import annotations
 
 from typing import Any

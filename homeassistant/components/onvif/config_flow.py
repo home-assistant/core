@@ -1,4 +1,5 @@
 """Config flow for ONVIF."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -310,7 +311,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
                         self.device_id = interface.Info.HwAddress
                 except Fault as fault:
                     if "not implemented" not in fault.message:
-                        raise fault
+                        raise
                     LOGGER.debug(
                         "%s: Could not get network interfaces: %s",
                         self.onvif_config[CONF_NAME],

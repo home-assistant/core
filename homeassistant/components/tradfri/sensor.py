@@ -1,4 +1,5 @@
 """Support for IKEA Tradfri sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -37,19 +38,11 @@ from .const import (
 from .coordinator import TradfriDeviceDataUpdateCoordinator
 
 
-@dataclass(frozen=True)
-class TradfriSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class TradfriSensorEntityDescription(SensorEntityDescription):
+    """Class describing Tradfri sensor entities."""
 
     value: Callable[[Device], Any | None]
-
-
-@dataclass(frozen=True)
-class TradfriSensorEntityDescription(
-    SensorEntityDescription,
-    TradfriSensorEntityDescriptionMixin,
-):
-    """Class describing Tradfri sensor entities."""
 
 
 def _get_air_quality(device: Device) -> int | None:

@@ -1,4 +1,5 @@
 """Sensor support for Skybell Doorbells."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -22,18 +23,11 @@ from homeassistant.helpers.typing import StateType
 from .entity import DOMAIN, SkybellEntity
 
 
-@dataclass(frozen=True)
-class SkybellSensorEntityDescriptionMixIn:
-    """Mixin for Skybell sensor."""
+@dataclass(frozen=True, kw_only=True)
+class SkybellSensorEntityDescription(SensorEntityDescription):
+    """Class to describe a Skybell sensor."""
 
     value_fn: Callable[[SkybellDevice], StateType | datetime]
-
-
-@dataclass(frozen=True)
-class SkybellSensorEntityDescription(
-    SensorEntityDescription, SkybellSensorEntityDescriptionMixIn
-):
-    """Class to describe a Skybell sensor."""
 
 
 SENSOR_TYPES: tuple[SkybellSensorEntityDescription, ...] = (

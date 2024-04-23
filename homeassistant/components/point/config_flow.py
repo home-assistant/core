@@ -1,4 +1,5 @@
 """Config flow for Minut Point."""
+
 import asyncio
 from collections import OrderedDict
 import logging

@@ -1,4 +1,5 @@
 """Support for the AirNow sensor service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

@@ -1,4 +1,5 @@
 """Config flow for Homeassistant Analytics integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -52,7 +53,6 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        self._async_abort_entries_match()
         errors: dict[str, str] = {}
         if user_input is not None:
             if not user_input.get(CONF_TRACKED_INTEGRATIONS) and not user_input.get(

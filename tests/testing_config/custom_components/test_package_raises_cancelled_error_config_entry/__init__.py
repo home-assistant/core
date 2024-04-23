@@ -1,4 +1,5 @@
 """Provide a mock package component."""
+
 import asyncio
 
 

@@ -1,4 +1,5 @@
 """The tests for the emulated Hue component."""
+
 from http import HTTPStatus
 import json
 import unittest

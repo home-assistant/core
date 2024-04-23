@@ -1,4 +1,5 @@
 """Component to configure Home Assistant via an API."""
+
 from __future__ import annotations
 
 import asyncio

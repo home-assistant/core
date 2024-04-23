@@ -1,4 +1,5 @@
 """Test the Nina binary sensor."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -64,7 +65,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(conf_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert conf_entry.state == ConfigEntryState.LOADED
+        assert conf_entry.state is ConfigEntryState.LOADED
 
         state_w1 = hass.states.get("binary_sensor.warning_aach_stadt_1")
         entry_w1 = entity_registry.async_get("binary_sensor.warning_aach_stadt_1")
@@ -180,7 +181,7 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(conf_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert conf_entry.state == ConfigEntryState.LOADED
+        assert conf_entry.state is ConfigEntryState.LOADED
 
         state_w1 = hass.states.get("binary_sensor.warning_aach_stadt_1")
         entry_w1 = entity_registry.async_get("binary_sensor.warning_aach_stadt_1")
@@ -308,7 +309,7 @@ async def test_sensors_with_area_filter(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(conf_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert conf_entry.state == ConfigEntryState.LOADED
+        assert conf_entry.state is ConfigEntryState.LOADED
 
         state_w1 = hass.states.get("binary_sensor.warning_aach_stadt_1")
         entry_w1 = entity_registry.async_get("binary_sensor.warning_aach_stadt_1")

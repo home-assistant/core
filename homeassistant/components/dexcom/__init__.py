@@ -1,8 +1,9 @@
 """The Dexcom integration."""
+
 from datetime import timedelta
 import logging
 
-from pydexcom import AccountError, Dexcom, SessionError
+from pydexcom import AccountError, Dexcom, GlucoseReading, SessionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME
@@ -42,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except SessionError as error:
             raise UpdateFailed(error) from error
 
-    coordinator = DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator[GlucoseReading](
         hass,
         _LOGGER,
         name=DOMAIN,

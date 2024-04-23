@@ -1,4 +1,5 @@
 """Config flow for Nobø Ecohub integration."""
+
 from __future__ import annotations
 
 import socket

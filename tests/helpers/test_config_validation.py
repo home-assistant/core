@@ -1,4 +1,5 @@
 """Test config validators."""
+
 from collections import OrderedDict
 from datetime import date, datetime, timedelta
 import enum
@@ -96,8 +97,9 @@ def test_isfile() -> None:
 
     # patching methods that allow us to fake a file existing
     # with write access
-    with patch("os.path.isfile", Mock(return_value=True)), patch(
-        "os.access", Mock(return_value=True)
+    with (
+        patch("os.path.isfile", Mock(return_value=True)),
+        patch("os.access", Mock(return_value=True)),
     ):
         schema("test.txt")
 
@@ -542,7 +544,7 @@ def test_string(hass: HomeAssistant) -> None:
 
     # Test subclasses of str are returned
     class MyString(str):
-        pass
+        __slots__ = ()
 
     my_string = MyString("hello")
     assert schema(my_string) is my_string
@@ -1396,7 +1398,7 @@ def test_key_value_schemas_with_default() -> None:
 
 @pytest.mark.parametrize(
     ("config", "error"),
-    (
+    [
         ({"delay": "{{ invalid"}, "should be format 'HH:MM'"),
         ({"wait_template": "{{ invalid"}, "invalid template"),
         ({"condition": "invalid"}, "Unexpected value for condition: 'invalid'"),
@@ -1431,7 +1433,7 @@ def test_key_value_schemas_with_default() -> None:
             },
             "not allowed to add a response to an error stop action",
         ),
-    ),
+    ],
 )
 def test_script(caplog: pytest.LogCaptureFixture, config: dict, error: str) -> None:
     """Test script validation is user friendly."""
@@ -1590,7 +1592,7 @@ def test_config_entry_only_schema_cant_find_module() -> None:
 def test_config_entry_only_schema_no_hass(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test if the the hass context is not set in our context."""
+    """Test if the hass context is not set in our context."""
     with patch(
         "homeassistant.helpers.config_validation.async_get_hass",
         side_effect=HomeAssistantError,
@@ -1670,3 +1672,25 @@ def test_color_hex() -> None:
 
     with pytest.raises(vol.Invalid, match=msg):
         cv.color_hex(123456)
+
+
+def test_determine_script_action_ambiguous():
+    """Test determine script action with ambiguous actions."""
+    assert (
+        cv.determine_script_action(
+            {
+                "type": "is_power",
+                "condition": "device",
+                "device_id": "9c2bda81bc7997c981f811c32cafdb22",
+                "entity_id": "2ee287ec70dd0c6db187b539bee429b7",
+                "domain": "sensor",
+                "below": "15",
+            }
+        )
+        == "condition"
+    )
+
+
+def test_determine_script_action_non_ambiguous():
+    """Test determine script action with a non ambiguous action."""
+    assert cv.determine_script_action({"delay": "00:00:05"}) == "delay"

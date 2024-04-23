@@ -1,4 +1,5 @@
 """Config flow to configure the LG Soundbar integration."""
+
 import logging
 from queue import Empty, Full, Queue
 

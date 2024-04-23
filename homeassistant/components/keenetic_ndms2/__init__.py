@@ -1,4 +1,5 @@
 """The keenetic_ndms2 component."""
+
 from __future__ import annotations
 
 import logging

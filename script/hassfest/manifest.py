@@ -1,4 +1,5 @@
 """Manifest validation."""
+
 from __future__ import annotations
 
 from enum import IntEnum
@@ -265,7 +266,6 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("loggers"): [str],
         vol.Optional("disabled"): str,
         vol.Optional("iot_class"): vol.In(SUPPORTED_IOT_CLASSES),
-        vol.Optional("import_executor"): bool,
         vol.Optional("single_config_entry"): bool,
     }
 )
@@ -293,6 +293,7 @@ def manifest_schema(value: dict[str, Any]) -> vol.Schema:
 CUSTOM_INTEGRATION_MANIFEST_SCHEMA = INTEGRATION_MANIFEST_SCHEMA.extend(
     {
         vol.Optional("version"): vol.All(str, verify_version),
+        vol.Optional("import_executor"): bool,
     }
 )
 
@@ -397,8 +398,15 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
                 manifests_resorted.append(integration.manifest_path)
     if config.action == "generate" and manifests_resorted:
         subprocess.run(
-            ["pre-commit", "run", "--hook-stage", "manual", "prettier", "--files"]
-            + manifests_resorted,
+            [
+                "pre-commit",
+                "run",
+                "--hook-stage",
+                "manual",
+                "prettier",
+                "--files",
+                *manifests_resorted,
+            ],
             stdout=subprocess.DEVNULL,
             check=True,
         )

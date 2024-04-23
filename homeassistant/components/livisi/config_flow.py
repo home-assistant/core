@@ -1,4 +1,5 @@
 """Config flow for Livisi Home Assistant."""
+
 from __future__ import annotations
 
 from contextlib import suppress

@@ -1,9 +1,11 @@
 """The System Bridge integration."""
+
 from __future__ import annotations
 
 import asyncio
 from dataclasses import asdict
 import logging
+from typing import Any
 
 from systembridgeconnector.exceptions import (
     AuthenticationException,
@@ -13,6 +15,7 @@ from systembridgeconnector.exceptions import (
 from systembridgeconnector.version import Version
 from systembridgemodels.keyboard_key import KeyboardKey
 from systembridgemodels.keyboard_text import KeyboardText
+from systembridgemodels.modules.processes import Process
 from systembridgemodels.open_path import OpenPath
 from systembridgemodels.open_url import OpenUrl
 import voluptuous as vol
@@ -23,6 +26,7 @@ from homeassistant.const import (
     CONF_COMMAND,
     CONF_ENTITY_ID,
     CONF_HOST,
+    CONF_ID,
     CONF_NAME,
     CONF_PATH,
     CONF_PORT,
@@ -36,7 +40,11 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    ServiceValidationError,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -63,6 +71,8 @@ CONF_BRIDGE = "bridge"
 CONF_KEY = "key"
 CONF_TEXT = "text"
 
+SERVICE_GET_PROCESS_BY_ID = "get_process_by_id"
+SERVICE_GET_PROCESSES_BY_NAME = "get_processes_by_name"
 SERVICE_OPEN_PATH = "open_path"
 SERVICE_POWER_COMMAND = "power_command"
 SERVICE_OPEN_URL = "open_url"
@@ -201,6 +211,52 @@ async def async_setup_entry(
                 raise vol.Invalid(f"Could not find device {device}") from exception
         raise vol.Invalid(f"Device {device} does not exist")
 
+    async def handle_get_process_by_id(service_call: ServiceCall) -> ServiceResponse:
+        """Handle the get process by id service call."""
+        _LOGGER.debug("Get process by id: %s", service_call.data)
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            service_call.data[CONF_BRIDGE]
+        ]
+        processes: list[Process] = coordinator.data.processes
+
+        # Find process.id from list, raise ServiceValidationError if not found
+        try:
+            return asdict(
+                next(
+                    process
+                    for process in processes
+                    if process.id == service_call.data[CONF_ID]
+                )
+            )
+        except StopIteration as exception:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="process_not_found",
+                translation_placeholders={"id": service_call.data[CONF_ID]},
+            ) from exception
+
+    async def handle_get_processes_by_name(
+        service_call: ServiceCall,
+    ) -> ServiceResponse:
+        """Handle the get process by name service call."""
+        _LOGGER.debug("Get process by name: %s", service_call.data)
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            service_call.data[CONF_BRIDGE]
+        ]
+        processes: list[Process] = coordinator.data.processes
+        # Find processes from list
+        items: list[dict[str, Any]] = [
+            asdict(process)
+            for process in processes
+            if process.name is not None
+            and service_call.data[CONF_NAME].lower() in process.name.lower()
+        ]
+
+        return {
+            "count": len(items),
+            "processes": list(items),
+        }
+
     async def handle_open_path(service_call: ServiceCall) -> ServiceResponse:
         """Handle the open path service call."""
         _LOGGER.debug("Open path: %s", service_call.data)
@@ -254,6 +310,32 @@ async def async_setup_entry(
             KeyboardText(text=service_call.data[CONF_TEXT])
         )
         return asdict(response)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_PROCESS_BY_ID,
+        handle_get_process_by_id,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_ID): cv.positive_int,
+            },
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_PROCESSES_BY_NAME,
+        handle_get_processes_by_name,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_NAME): cv.string,
+            },
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
 
     hass.services.async_register(
         DOMAIN,

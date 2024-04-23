@@ -1,4 +1,5 @@
 """Test the File Upload integration."""
+
 from contextlib import contextmanager
 from pathlib import Path
 from random import getrandbits
@@ -20,11 +21,14 @@ async def uploaded_file_dir(hass: HomeAssistant, hass_client) -> Path:
     assert await async_setup_component(hass, "file_upload", {})
     client = await hass_client()
 
-    with patch(
-        # Patch temp dir name to avoid tests fail running in parallel
-        "homeassistant.components.file_upload.TEMP_DIR_NAME",
-        file_upload.TEMP_DIR_NAME + f"-{getrandbits(10):03x}",
-    ), TEST_IMAGE.open("rb") as fp:
+    with (
+        patch(
+            # Patch temp dir name to avoid tests fail running in parallel
+            "homeassistant.components.file_upload.TEMP_DIR_NAME",
+            file_upload.TEMP_DIR_NAME + f"-{getrandbits(10):03x}",
+        ),
+        TEST_IMAGE.open("rb") as fp,
+    ):
         res = await client.post("/api/file_upload", data={"file": fp})
 
     assert res.status == 200
@@ -79,14 +83,17 @@ async def test_upload_large_file(
     assert await async_setup_component(hass, "file_upload", {})
     client = await hass_client()
 
-    with patch(
-        # Patch temp dir name to avoid tests fail running in parallel
-        "homeassistant.components.file_upload.TEMP_DIR_NAME",
-        file_upload.TEMP_DIR_NAME + f"-{getrandbits(10):03x}",
-    ), patch(
-        # Patch one megabyte to 8 bytes to prevent having to use big files in tests
-        "homeassistant.components.file_upload.ONE_MEGABYTE",
-        8,
+    with (
+        patch(
+            # Patch temp dir name to avoid tests fail running in parallel
+            "homeassistant.components.file_upload.TEMP_DIR_NAME",
+            file_upload.TEMP_DIR_NAME + f"-{getrandbits(10):03x}",
+        ),
+        patch(
+            # Patch one megabyte to 50 bytes to prevent having to use big files in tests
+            "homeassistant.components.file_upload.ONE_MEGABYTE",
+            50,
+        ),
     ):
         res = await client.post("/api/file_upload", data={"file": large_file_io})
 
@@ -138,16 +145,20 @@ async def test_upload_large_file_fails(
         def write(self, data: bytes) -> None:
             raise OSError("Boom")
 
-    with patch(
-        # Patch temp dir name to avoid tests fail running in parallel
-        "homeassistant.components.file_upload.TEMP_DIR_NAME",
-        file_upload.TEMP_DIR_NAME + f"-{getrandbits(10):03x}",
-    ), patch(
-        # Patch one megabyte to 8 bytes to prevent having to use big files in tests
-        "homeassistant.components.file_upload.ONE_MEGABYTE",
-        8,
-    ), patch(
-        "homeassistant.components.file_upload.Path.open", return_value=_mock_open()
+    with (
+        patch(
+            # Patch temp dir name to avoid tests fail running in parallel
+            "homeassistant.components.file_upload.TEMP_DIR_NAME",
+            file_upload.TEMP_DIR_NAME + f"-{getrandbits(10):03x}",
+        ),
+        patch(
+            # Patch one megabyte to 50 bytes to prevent having to use big files in tests
+            "homeassistant.components.file_upload.ONE_MEGABYTE",
+            50,
+        ),
+        patch(
+            "homeassistant.components.file_upload.Path.open", return_value=_mock_open()
+        ),
     ):
         res = await client.post("/api/file_upload", data={"file": large_file_io})
 

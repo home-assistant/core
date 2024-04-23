@@ -1,4 +1,5 @@
 """Config flow utilities."""
+
 from collections import OrderedDict
 
 from pyvesync import VeSync

@@ -1,4 +1,5 @@
 """Integrate with FreeDNS Dynamic DNS service at freedns.afraid.org."""
+
 import asyncio
 from datetime import datetime, timedelta
 import logging

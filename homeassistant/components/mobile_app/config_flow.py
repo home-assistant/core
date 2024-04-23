@@ -1,4 +1,5 @@
 """Config flow for Mobile App."""
+
 import uuid
 
 from homeassistant.components import person

@@ -3,6 +3,7 @@
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
+
 from __future__ import annotations
 
 import binascii
@@ -13,7 +14,7 @@ from dataclasses import dataclass
 import enum
 import logging
 import re
-from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar, overload
 
 import voluptuous as vol
 import zigpy.exceptions
@@ -23,8 +24,33 @@ import zigpy.zcl
 from zigpy.zcl.foundation import CommandSchema
 import zigpy.zdo.types as zdo_types
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.number import NumberDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import (
+    Platform,
+    UnitOfApparentPower,
+    UnitOfDataRate,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfFrequency,
+    UnitOfInformation,
+    UnitOfIrradiance,
+    UnitOfLength,
+    UnitOfMass,
+    UnitOfPower,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSoundPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfTime,
+    UnitOfVolume,
+    UnitOfVolumeFlowRate,
+    UnitOfVolumetricFlux,
+)
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
@@ -33,14 +59,10 @@ from .const import CLUSTER_TYPE_IN, CLUSTER_TYPE_OUT, CUSTOM_CONFIGURATION, DATA
 from .registries import BINDABLE_CLUSTERS
 
 if TYPE_CHECKING:
-    from .cluster_handlers import ClusterHandler
     from .device import ZHADevice
     from .gateway import ZHAGateway
 
-_ClusterHandlerT = TypeVar("_ClusterHandlerT", bound="ClusterHandler")
 _T = TypeVar("_T")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -76,9 +98,9 @@ async def safe_read(
             only_cache=only_cache,
             manufacturer=manufacturer,
         )
-        return result
     except Exception:  # pylint: disable=broad-except
         return {}
+    return result
 
 
 async def get_matched_clusters(
@@ -217,7 +239,7 @@ def async_get_zha_config_value(
     )
 
 
-def async_cluster_exists(hass, cluster_id, skip_coordinator=True):
+def async_cluster_exists(hass: HomeAssistant, cluster_id, skip_coordinator=True):
     """Determine if a device containing the specified in cluster is paired."""
     zha_gateway = get_zha_gateway(hass)
     zha_devices = zha_gateway.devices.values()
@@ -270,7 +292,7 @@ def mean_int(*args):
 
 def mean_tuple(*args):
     """Return the mean values along the columns of the supplied values."""
-    return tuple(sum(x) / len(x) for x in zip(*args))
+    return tuple(sum(x) / len(x) for x in zip(*args, strict=False))
 
 
 def reduce_attribute(
@@ -423,3 +445,80 @@ def get_zha_gateway(hass: HomeAssistant) -> ZHAGateway:
         raise ValueError("No gateway object exists")
 
     return zha_gateway
+
+
+UNITS_OF_MEASURE = {
+    UnitOfApparentPower.__name__: UnitOfApparentPower,
+    UnitOfPower.__name__: UnitOfPower,
+    UnitOfEnergy.__name__: UnitOfEnergy,
+    UnitOfElectricCurrent.__name__: UnitOfElectricCurrent,
+    UnitOfElectricPotential.__name__: UnitOfElectricPotential,
+    UnitOfTemperature.__name__: UnitOfTemperature,
+    UnitOfTime.__name__: UnitOfTime,
+    UnitOfLength.__name__: UnitOfLength,
+    UnitOfFrequency.__name__: UnitOfFrequency,
+    UnitOfPressure.__name__: UnitOfPressure,
+    UnitOfSoundPressure.__name__: UnitOfSoundPressure,
+    UnitOfVolume.__name__: UnitOfVolume,
+    UnitOfVolumeFlowRate.__name__: UnitOfVolumeFlowRate,
+    UnitOfMass.__name__: UnitOfMass,
+    UnitOfIrradiance.__name__: UnitOfIrradiance,
+    UnitOfVolumetricFlux.__name__: UnitOfVolumetricFlux,
+    UnitOfPrecipitationDepth.__name__: UnitOfPrecipitationDepth,
+    UnitOfSpeed.__name__: UnitOfSpeed,
+    UnitOfInformation.__name__: UnitOfInformation,
+    UnitOfDataRate.__name__: UnitOfDataRate,
+}
+
+
+def validate_unit(quirks_unit: enum.Enum) -> enum.Enum:
+    """Validate and return a unit of measure."""
+    return UNITS_OF_MEASURE[type(quirks_unit).__name__](quirks_unit.value)
+
+
+@overload
+def validate_device_class(
+    device_class_enum: type[BinarySensorDeviceClass],
+    metadata_value,
+    platform: str,
+    logger: logging.Logger,
+) -> BinarySensorDeviceClass | None: ...
+
+
+@overload
+def validate_device_class(
+    device_class_enum: type[SensorDeviceClass],
+    metadata_value,
+    platform: str,
+    logger: logging.Logger,
+) -> SensorDeviceClass | None: ...
+
+
+@overload
+def validate_device_class(
+    device_class_enum: type[NumberDeviceClass],
+    metadata_value,
+    platform: str,
+    logger: logging.Logger,
+) -> NumberDeviceClass | None: ...
+
+
+def validate_device_class(
+    device_class_enum: type[
+        BinarySensorDeviceClass | SensorDeviceClass | NumberDeviceClass
+    ],
+    metadata_value: enum.Enum,
+    platform: str,
+    logger: logging.Logger,
+) -> BinarySensorDeviceClass | SensorDeviceClass | NumberDeviceClass | None:
+    """Validate and return a device class."""
+    try:
+        return device_class_enum(metadata_value.value)
+    except ValueError as ex:
+        logger.warning(
+            "Quirks provided an invalid device class: %s for platform %s: %s",
+            metadata_value,
+            platform,
+            ex,
+        )
+        return None

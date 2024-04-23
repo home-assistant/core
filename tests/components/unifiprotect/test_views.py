@@ -37,7 +37,7 @@ async def test_thumbnail_bad_nvr_id(
     response = cast(ClientResponse, await http_client.get(url))
 
     assert response.status == 404
-    ufp.api.get_event_thumbnail.assert_not_called
+    ufp.api.get_event_thumbnail.assert_not_called()
 
 
 @pytest.mark.parametrize(("width", "height"), [("test", None), (None, "test")])
@@ -62,7 +62,7 @@ async def test_thumbnail_bad_params(
     response = cast(ClientResponse, await http_client.get(url))
 
     assert response.status == 400
-    ufp.api.get_event_thumbnail.assert_not_called
+    ufp.api.get_event_thumbnail.assert_not_called()
 
 
 async def test_thumbnail_bad_event(
@@ -259,7 +259,7 @@ async def test_video_bad_nvr_id(
     response = cast(ClientResponse, await http_client.get(url))
 
     assert response.status == 404
-    ufp.api.request.assert_not_called
+    ufp.api.request.assert_not_called()
 
 
 async def test_video_bad_camera_id(
@@ -293,7 +293,7 @@ async def test_video_bad_camera_id(
     response = cast(ClientResponse, await http_client.get(url))
 
     assert response.status == 404
-    ufp.api.request.assert_not_called
+    ufp.api.request.assert_not_called()
 
 
 async def test_video_bad_camera_perms(
@@ -329,7 +329,7 @@ async def test_video_bad_camera_perms(
     response = cast(ClientResponse, await http_client.get(url))
 
     assert response.status == 403
-    ufp.api.request.assert_not_called
+    ufp.api.request.assert_not_called()
 
 
 @pytest.mark.parametrize(("start", "end"), [("test", None), (None, "test")])
@@ -369,7 +369,7 @@ async def test_video_bad_params(
     response = cast(ClientResponse, await http_client.get(url))
 
     assert response.status == 400
-    ufp.api.request.assert_not_called
+    ufp.api.request.assert_not_called()
 
 
 async def test_video_bad_video(
@@ -403,7 +403,7 @@ async def test_video_bad_video(
     response = cast(ClientResponse, await http_client.get(url))
 
     assert response.status == 404
-    ufp.api.request.assert_called_once
+    ufp.api.request.assert_called_once()
 
 
 async def test_video(
@@ -446,7 +446,7 @@ async def test_video(
     assert await response.content.read() == b"testtest"
 
     assert response.status == 200
-    ufp.api.request.assert_called_once
+    ufp.api.request.assert_called_once()
 
 
 async def test_video_entity_id(
@@ -483,11 +483,11 @@ async def test_video_entity_id(
     )
 
     url = async_generate_event_video_url(event)
-    url = url.replace(camera.id, "camera.test_camera_high")
+    url = url.replace(camera.id, "camera.test_camera_high_resolution_channel")
 
     http_client = await hass_client()
     response = cast(ClientResponse, await http_client.get(url))
     assert await response.content.read() == b"testtest"
 
     assert response.status == 200
-    ufp.api.request.assert_called_once
+    ufp.api.request.assert_called_once()

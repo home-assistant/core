@@ -1,4 +1,5 @@
 """Config flow flow LIFX."""
+
 from __future__ import annotations
 
 import socket

@@ -1,4 +1,5 @@
 """The tests for the Home Assistant HTTP component."""
+
 from http import HTTPStatus
 from ipaddress import ip_address
 import os
@@ -9,13 +10,12 @@ from aiohttp.web_exceptions import HTTPUnauthorized
 from aiohttp.web_middlewares import middleware
 import pytest
 
-import homeassistant.components.http as http
+from homeassistant.components import http
 from homeassistant.components.http import KEY_AUTHENTICATED, KEY_HASS
 from homeassistant.components.http.ban import (
     IP_BANS_FILE,
     KEY_BAN_MANAGER,
     KEY_FAILED_LOGIN_ATTEMPTS,
-    IpBanManager,
     process_success_login,
     setup_bans,
 )
@@ -30,16 +30,20 @@ from tests.typing import ClientSessionGenerator
 
 SUPERVISOR_IP = "1.2.3.4"
 BANNED_IPS = ["200.201.202.203", "100.64.0.2"]
-BANNED_IPS_WITH_SUPERVISOR = BANNED_IPS + [SUPERVISOR_IP]
+BANNED_IPS_WITH_SUPERVISOR = [*BANNED_IPS, SUPERVISOR_IP]
 
 
 @pytest.fixture(name="hassio_env")
 def hassio_env_fixture():
     """Fixture to inject hassio env."""
-    with patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}), patch(
-        "homeassistant.components.hassio.HassIO.is_connected",
-        return_value={"result": "ok", "data": {}},
-    ), patch.dict(os.environ, {"SUPERVISOR_TOKEN": "123456"}):
+    with (
+        patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
+        patch(
+            "homeassistant.components.hassio.HassIO.is_connected",
+            return_value={"result": "ok", "data": {}},
+        ),
+        patch.dict(os.environ, {"SUPERVISOR_TOKEN": "123456"}),
+    ):
         yield
 
 
@@ -186,6 +190,7 @@ async def test_ip_ban_manager_never_started(
             BANNED_IPS_WITH_SUPERVISOR,
             [1, 1, 0],
             [HTTPStatus.FORBIDDEN, HTTPStatus.FORBIDDEN, HTTPStatus.UNAUTHORIZED],
+            strict=False,
         )
     ),
 )
@@ -215,7 +220,7 @@ async def test_access_from_supervisor_ip(
     ):
         client = await aiohttp_client(app)
 
-    manager: IpBanManager = app[KEY_BAN_MANAGER]
+    manager = app[KEY_BAN_MANAGER]
 
     with patch(
         "homeassistant.components.hassio.HassIO.get_resolution_info",
@@ -231,8 +236,9 @@ async def test_access_from_supervisor_ip(
 
     m_open = mock_open()
 
-    with patch.dict(os.environ, {"SUPERVISOR": SUPERVISOR_IP}), patch(
-        "homeassistant.components.http.ban.open", m_open, create=True
+    with (
+        patch.dict(os.environ, {"SUPERVISOR": SUPERVISOR_IP}),
+        patch("homeassistant.components.http.ban.open", m_open, create=True),
     ):
         resp = await client.get("/")
         assert resp.status == HTTPStatus.UNAUTHORIZED
@@ -288,7 +294,7 @@ async def test_ip_bans_file_creation(
     ):
         client = await aiohttp_client(app)
 
-    manager: IpBanManager = app[KEY_BAN_MANAGER]
+    manager = app[KEY_BAN_MANAGER]
     m_open = mock_open()
 
     with patch("homeassistant.components.http.ban.open", m_open, create=True):
@@ -408,7 +414,7 @@ async def test_single_ban_file_entry(
     setup_bans(hass, app, 2)
     mock_real_ip(app)("200.201.202.204")
 
-    manager: IpBanManager = app[KEY_BAN_MANAGER]
+    manager = app[KEY_BAN_MANAGER]
     m_open = mock_open()
 
     with patch("homeassistant.components.http.ban.open", m_open, create=True):

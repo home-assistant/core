@@ -1,4 +1,5 @@
 """Config flow for Airzone Cloud."""
+
 from __future__ import annotations
 
 from typing import Any

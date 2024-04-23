@@ -1,4 +1,5 @@
 """Support for Denon Network Receivers."""
+
 from __future__ import annotations
 
 import logging

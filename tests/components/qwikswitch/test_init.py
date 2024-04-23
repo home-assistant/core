@@ -1,4 +1,5 @@
 """Test qwikswitch sensors."""
+
 import asyncio
 from typing import Any
 from unittest.mock import Mock
@@ -173,6 +174,7 @@ async def test_switch_device(
     await hass.services.async_call(
         "switch", "turn_off", {"entity_id": "switch.switch_1"}, blocking=True
     )
+    await hass.async_block_till_done()
     assert (
         "GET",
         URL("http://127.0.0.1:2020/@a00001=0"),
@@ -253,6 +255,7 @@ async def test_light_device(
     await hass.services.async_call(
         "light", "turn_on", {"entity_id": "light.dim_3"}, blocking=True
     )
+    await hass.async_block_till_done()
     assert (
         "GET",
         URL("http://127.0.0.1:2020/@a00003=100"),

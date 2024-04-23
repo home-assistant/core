@@ -1,4 +1,5 @@
 """Platform to control a Renson ventilation unit."""
+
 from __future__ import annotations
 
 import logging

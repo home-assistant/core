@@ -37,6 +37,18 @@
       "jvc_power": {
         "name": "[%key:component::sensor::entity_component::power::name%]"
       }
+    },
+    "sensor": {
+      "jvc_power_status": {
+        "name": "Power status",
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "on": "[%key:common::state::on%]",
+          "warming": "Warming",
+          "cooling": "Cooling",
+          "error": "Error"
+        }
+      }
     }
   }
 }

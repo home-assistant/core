@@ -1,4 +1,5 @@
 """Support for a ScreenLogic number entity."""
+
 from dataclasses import dataclass
 import logging
 
@@ -27,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ScreenLogicNumberDescription(
     NumberEntityDescription,
     ScreenLogicEntityDescription,
@@ -111,7 +112,7 @@ class ScreenLogicNumber(ScreenLogicEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class ScreenLogicSCGNumber(ScreenLogicNumber):

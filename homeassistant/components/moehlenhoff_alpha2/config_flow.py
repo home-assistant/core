@@ -1,4 +1,5 @@
 """Alpha2 config flow."""
+
 import logging
 from typing import Any
 
