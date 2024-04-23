@@ -83,7 +83,7 @@ def help_all_subscribe_calls(mqtt_client_mock: MqttMockPahoClient) -> list[Any]:
 def help_custom_config(
     mqtt_entity_domain: str,
     mqtt_base_config: ConfigType,
-    mqtt_entity_configs: Iterable[ConfigType,],
+    mqtt_entity_configs: Iterable[ConfigType],
 ) -> ConfigType:
     """Tweak a default config for parametrization.
 
