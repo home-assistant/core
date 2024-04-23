@@ -1312,6 +1312,184 @@ async def test_wait_timeout(
 
 
 @pytest.mark.parametrize(
+    "timeout_param", [0, "{{ 0 }}", {"minutes": 0}, {"minutes": "{{ 0 }}"}]
+)
+async def test_wait_trigger_with_zero_timeout(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, timeout_param: int | str
+) -> None:
+    """Test the wait trigger with zero timeout option."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    action = {
+        "wait_for_trigger": {
+            "platform": "state",
+            "entity_id": "switch.test",
+            "to": "off",
+        }
+    }
+    action["timeout"] = timeout_param
+    action["continue_on_timeout"] = True
+    sequence = cv.SCRIPT_SCHEMA([action, {"event": event}])
+    sequence = await script.async_validate_actions_config(hass, sequence)
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    wait_started_flag = async_watch_for_action(script_obj, "wait")
+    hass.states.async_set("switch.test", "on")
+    hass.async_create_task(script_obj.async_run(context=Context()))
+
+    try:
+        await asyncio.wait_for(wait_started_flag.wait(), 1)
+    except (AssertionError, TimeoutError):
+        await script_obj.async_stop()
+        raise
+
+    assert not script_obj.is_running
+    assert len(events) == 1
+    assert "(timeout: 0:00:00)" in caplog.text
+
+    variable_wait = {"wait": {"trigger": None, "remaining": 0.0}}
+    expected_trace = {
+        "0": [
+            {
+                "result": variable_wait,
+                "variables": variable_wait,
+            }
+        ],
+        "1": [{"result": {"event": "test_event", "event_data": {}}}],
+    }
+    assert_action_trace(expected_trace)
+
+
+@pytest.mark.parametrize(
+    "timeout_param", [0, "{{ 0 }}", {"minutes": 0}, {"minutes": "{{ 0 }}"}]
+)
+async def test_wait_trigger_matches_with_zero_timeout(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, timeout_param: int | str
+) -> None:
+    """Test the wait trigger that matches with zero timeout option."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    action = {
+        "wait_for_trigger": {
+            "platform": "state",
+            "entity_id": "switch.test",
+            "to": "off",
+        }
+    }
+    action["timeout"] = timeout_param
+    action["continue_on_timeout"] = True
+    sequence = cv.SCRIPT_SCHEMA([action, {"event": event}])
+    sequence = await script.async_validate_actions_config(hass, sequence)
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    wait_started_flag = async_watch_for_action(script_obj, "wait")
+    hass.states.async_set("switch.test", "off")
+    hass.async_create_task(script_obj.async_run(context=Context()))
+
+    try:
+        await asyncio.wait_for(wait_started_flag.wait(), 1)
+    except (AssertionError, TimeoutError):
+        await script_obj.async_stop()
+        raise
+
+    assert not script_obj.is_running
+    assert len(events) == 1
+    assert "(timeout: 0:00:00)" in caplog.text
+
+    variable_wait = {"wait": {"trigger": None, "remaining": 0.0}}
+    expected_trace = {
+        "0": [
+            {
+                "result": variable_wait,
+                "variables": variable_wait,
+            }
+        ],
+        "1": [{"result": {"event": "test_event", "event_data": {}}}],
+    }
+    assert_action_trace(expected_trace)
+
+
+@pytest.mark.parametrize(
+    "timeout_param", [0, "{{ 0 }}", {"minutes": 0}, {"minutes": "{{ 0 }}"}]
+)
+async def test_wait_template_with_zero_timeout(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, timeout_param: int | str
+) -> None:
+    """Test the wait template with zero timeout option."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    action = {"wait_template": "{{ states.switch.test.state == 'off' }}"}
+    action["timeout"] = timeout_param
+    action["continue_on_timeout"] = True
+    sequence = cv.SCRIPT_SCHEMA([action, {"event": event}])
+    sequence = await script.async_validate_actions_config(hass, sequence)
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    wait_started_flag = async_watch_for_action(script_obj, "wait")
+    hass.states.async_set("switch.test", "on")
+    hass.async_create_task(script_obj.async_run(context=Context()))
+
+    try:
+        await asyncio.wait_for(wait_started_flag.wait(), 1)
+    except (AssertionError, TimeoutError):
+        await script_obj.async_stop()
+        raise
+
+    assert not script_obj.is_running
+    assert len(events) == 1
+    assert "(timeout: 0:00:00)" in caplog.text
+    variable_wait = {"wait": {"completed": False, "remaining": 0.0}}
+    expected_trace = {
+        "0": [
+            {
+                "result": variable_wait,
+                "variables": variable_wait,
+            }
+        ],
+        "1": [{"result": {"event": "test_event", "event_data": {}}}],
+    }
+    assert_action_trace(expected_trace)
+
+
+@pytest.mark.parametrize(
+    "timeout_param", [0, "{{ 0 }}", {"minutes": 0}, {"minutes": "{{ 0 }}"}]
+)
+async def test_wait_template_matches_with_zero_timeout(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, timeout_param: int | str
+) -> None:
+    """Test the wait template that matches with zero timeout option."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    action = {"wait_template": "{{ states.switch.test.state == 'off' }}"}
+    action["timeout"] = timeout_param
+    action["continue_on_timeout"] = True
+    sequence = cv.SCRIPT_SCHEMA([action, {"event": event}])
+    sequence = await script.async_validate_actions_config(hass, sequence)
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    wait_started_flag = async_watch_for_action(script_obj, "wait")
+    hass.states.async_set("switch.test", "off")
+    hass.async_create_task(script_obj.async_run(context=Context()))
+
+    try:
+        await asyncio.wait_for(wait_started_flag.wait(), 1)
+    except (AssertionError, TimeoutError):
+        await script_obj.async_stop()
+        raise
+
+    assert not script_obj.is_running
+    assert len(events) == 1
+    assert "(timeout: 0:00:00)" in caplog.text
+    variable_wait = {"wait": {"completed": True, "remaining": 0.0}}
+    expected_trace = {
+        "0": [
+            {
+                "result": variable_wait,
+                "variables": variable_wait,
+            }
+        ],
+        "1": [{"result": {"event": "test_event", "event_data": {}}}],
+    }
+    assert_action_trace(expected_trace)
+
+
+@pytest.mark.parametrize(
     ("continue_on_timeout", "n_events"), [(False, 0), (True, 1), (None, 1)]
 )
 @pytest.mark.parametrize("action_type", ["template", "trigger"])

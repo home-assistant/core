@@ -4,7 +4,7 @@ aiodhcpwatcher==1.0.0
 aiodiscover==2.0.0
 aiohttp-fast-url-dispatcher==0.3.0
 aiohttp-zlib-ng==0.3.1
-aiohttp==3.9.4
+aiohttp==3.9.5
 aiohttp_cors==0.7.0
 astral==2.2
 async-interrupt==1.1.1
@@ -40,7 +40,7 @@ mutagen==1.47.0
 orjson==3.9.15
 packaging>=23.1
 paho-mqtt==1.6.1
-Pillow==10.2.0
+Pillow==10.3.0
 pip>=21.3.1
 psutil-home-assistant==0.0.1
 PyJWT==2.8.0
@@ -60,7 +60,7 @@ voluptuous-serialize==2.6.0
 voluptuous==0.13.1
 webrtc-noise-gain==1.2.3
 yarl==1.9.4
-zeroconf==0.132.0
+zeroconf==0.132.2
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
@@ -107,7 +107,7 @@ regex==2021.8.28
 # requirements so we can directly link HA versions to these library versions.
 anyio==4.3.0
 h11==0.14.0
-httpcore==1.0.4
+httpcore==1.0.5
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
