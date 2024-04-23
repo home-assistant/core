@@ -51,16 +51,20 @@ class SeventeenTrackCoordinator(DataUpdateCoordinator[SeventeenTrackData]):
     async def _async_update_data(self) -> SeventeenTrackData:
         """Fetch data from 17Track API."""
 
-        summary_dict = {}
-        live_packages_dict = {}
-
         try:
             summary = await self._client.profile.summary(
                 show_archived=self._show_archived
             )
 
+            live_packages = set(
+                await self._client.profile.packages(show_archived=self._show_archived)
+            )
+
         except SeventeenTrackError as err:
             raise UpdateFailed(err) from err
+
+        summary_dict = {}
+        live_packages_dict = {}
 
         for status, quantity in summary.items():
             summary_dict[slugify(status)] = {
@@ -68,13 +72,6 @@ class SeventeenTrackCoordinator(DataUpdateCoordinator[SeventeenTrackData]):
                 "packages": [],
                 "status_name": status,
             }
-
-        try:
-            live_packages = set(
-                await self._client.profile.packages(show_archived=self._show_archived)
-            )
-        except SeventeenTrackError as err:
-            raise UpdateFailed(err) from err
 
         for package in live_packages:
             live_packages_dict[package.tracking_number] = package
