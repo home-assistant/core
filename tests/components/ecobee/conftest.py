@@ -30,7 +30,7 @@ def mock_ecobee() -> Generator[None, MagicMock]:
     ecobee = MagicMock()
     ecobee.request_pin.return_value = True
     ecobee.refresh_tokens.return_value = True
-    ecobee.thermostats = json.loads(load_fixture("ecobee/ecobee-data.json"))[
+    ecobee.thermostats = load_json_object_fixture("ecobee-data.json", "ecobee"))[
         "thermostatList"
     ]
     ecobee.get_thermostat = lambda index: ecobee.thermostats[index]
