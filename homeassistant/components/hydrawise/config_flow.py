@@ -27,8 +27,8 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _create_or_update_entry(
         self,
-        username: str | None = None,
-        password: str | None = None,
+        username: str,
+        password: str,
         *,
         on_failure: Callable[[str], ConfigFlowResult],
     ) -> ConfigFlowResult:

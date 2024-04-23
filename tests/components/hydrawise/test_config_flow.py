@@ -28,7 +28,7 @@ async def test_form(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -39,7 +39,7 @@ async def test_form(
     mock_pydrawise.get_user.return_value = user
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Hydrawise"
     assert result2["data"] == {
         CONF_USERNAME: "asdf@asdf.com",
@@ -62,13 +62,13 @@ async def test_form_api_error(
     result = await hass.config_entries.flow.async_configure(
         init_result["flow_id"], data
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
     mock_pydrawise.get_user.reset_mock(side_effect=True)
     mock_pydrawise.get_user.return_value = user
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_connect_timeout(
@@ -84,13 +84,13 @@ async def test_form_connect_timeout(
         init_result["flow_id"], data
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "timeout_connect"}
 
     mock_pydrawise.get_user.reset_mock(side_effect=True)
     mock_pydrawise.get_user.return_value = user
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_not_authorized_error(
@@ -106,13 +106,13 @@ async def test_form_not_authorized_error(
     result = await hass.config_entries.flow.async_configure(
         init_result["flow_id"], data
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
     mock_pydrawise.get_user.reset_mock(side_effect=True)
     mock_pydrawise.get_user.return_value = user
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth(
@@ -146,5 +146,5 @@ async def test_reauth(
     mock_pydrawise.get_user.return_value = user
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
