@@ -1,7 +1,8 @@
 """Tests for the Senziio integration."""
 
 from ipaddress import ip_address
-from typing import Optional
+
+from senziio import Senziio
 
 from homeassistant.components import zeroconf
 from homeassistant.components.senziio import DOMAIN
@@ -54,13 +55,15 @@ ZEROCONF_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
 )
 
 
-class FakeSenziioDevice:
+class FakeSenziioDevice(Senziio):
     """Fake Senziio device for testing."""
 
-    def __init__(self, device_info: Optional[dict] = None) -> None:
+    def __init__(self, device_info: dict | None = None) -> None:
         """Initialize with expected info."""
+        super().__init__(
+            device_info.get("serial-number", ""), device_info.get("model", ""), None
+        )
         self._device_info = device_info or {}
-        self.device_id = self._device_info.get("serial-number")
 
     async def get_info(self) -> dict[str, str]:
         """Get device info."""

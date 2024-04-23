@@ -10,7 +10,7 @@ from senziio import Senziio, SenziioMQTT
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import async_publish, async_subscribe
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MODEL, CONF_UNIQUE_ID, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -29,9 +29,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("MQTT integration is not available")
         return False
 
-    device_id = entry.data[CONF_UNIQUE_ID]
-    device_model = entry.data[CONF_MODEL]
+    device_id = entry.data["serial-number"]
+    device_model = entry.data["model"]
     device = Senziio(device_id, device_model, mqtt=SenziioHAMQTT(hass))
+
+    if info := await device.get_info():
+        hass.config_entries.async_update_entry(entry, data=info)
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = device

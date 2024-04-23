@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from senziio import Senziio
+
 from homeassistant.components.mqtt import async_subscribe
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -91,7 +93,7 @@ class SenziioSensorEntity(SenziioEntity, SensorEntity):
         hass: HomeAssistant,
         entity_description: SenziioSensorEntityDescription,
         entry: ConfigEntry,
-        device,
+        device: Senziio,
     ) -> None:
         """Initialize entity."""
         super().__init__(entry)

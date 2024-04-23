@@ -20,7 +20,7 @@ class SenziioEntity(Entity):
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self.entry.data["unique_id"])},
+            identifiers={(DOMAIN, self.entry.data["serial-number"])},
             name=self.entry.title,
             manufacturer=MANUFACTURER,
             model=self.entry.data["model"],

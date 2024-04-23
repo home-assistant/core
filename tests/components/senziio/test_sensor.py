@@ -13,7 +13,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import assert_entity_state_is, when_message_received_is
+from . import (
+    DEVICE_INFO,
+    FakeSenziioDevice,
+    assert_entity_state_is,
+    when_message_received_is,
+)
 
 from tests.common import MockConfigEntry
 from tests.typing import MqttMockHAClient
@@ -32,9 +37,15 @@ async def test_loading_sensor_entities(
     """Test creation of sensor entities."""
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.mqtt.async_wait_for_mqtt_client",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.mqtt.async_wait_for_mqtt_client",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.senziio.Senziio",
+            return_value=FakeSenziioDevice(DEVICE_INFO),
+        ),
     ):
         result = await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
