@@ -21,6 +21,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_FRIENDLY_NAME): str,
+        vol.Required(CONF_HOST): str,
+    }
+)
+
 
 class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Lektrico config flow."""
@@ -47,13 +54,9 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # obtain serial number
         try:
-            await self._get_lektrico_device_settings_and_treat_unique_id(
-                raise_on_progress=True
-            )
+            await self._get_lektrico_device_settings_and_treat_unique_id()
         except DeviceConnectionError:
-            return self._async_show_setup_form(
-                {"base": "cannot_connect"}, {CONF_HOST: "cannot_connect"}
-            )
+            return self._async_show_setup_form(errors={CONF_HOST: "cannot_connect"})
 
         return self._async_create_entry()
 
@@ -67,17 +70,11 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             user_input = {}
 
+        schema = self.add_suggested_values_to_schema(STEP_USER_DATA_SCHEMA, user_input)
+
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_FRIENDLY_NAME,
-                        default=user_input.get(CONF_FRIENDLY_NAME, ""),
-                    ): str,
-                    vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
-                }
-            ),
+            data_schema=schema,
             errors=errors or {},
         )
 
@@ -116,15 +113,11 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
         else:
             self._friendly_name = _id[:_index]  # it's the type
 
-        # read from device its settings
+        # read settings from the device
         try:
-            await self._get_lektrico_device_settings_and_treat_unique_id(
-                raise_on_progress=True
-            )
+            await self._get_lektrico_device_settings_and_treat_unique_id()
         except DeviceConnectionError:
-            return self._async_show_setup_form(
-                {"base": "cannot_connect"}, {CONF_HOST: "cannot_connect"}
-            )
+            return self._async_show_setup_form(errors={CONF_HOST: "cannot_connect"})
 
         self.context["title_placeholders"] = {
             "serial_number": self._serial_number,
@@ -133,9 +126,7 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_confirm()
 
-    async def _get_lektrico_device_settings_and_treat_unique_id(
-        self, raise_on_progress: bool = True
-    ) -> None:
+    async def _get_lektrico_device_settings_and_treat_unique_id(self) -> None:
         """Get device's serial number from a Lektrico device."""
         session = async_get_clientsession(self.hass)
         device = Device(
@@ -150,9 +141,7 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Check if already configured
         # Set unique id
-        await self.async_set_unique_id(
-            self._serial_number, raise_on_progress=raise_on_progress
-        )
+        await self.async_set_unique_id(self._serial_number, raise_on_progress=True)
         # Abort if already configured, but update the last-known host
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: self._host}, reload_on_update=True

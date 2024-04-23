@@ -16,7 +16,7 @@ SCAN_INTERVAL = timedelta(seconds=10)
 
 
 class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator):
-    """The device class for Lektrico device."""
+    """Data update coordinator for Lektrico device."""
 
     def __init__(
         self,
