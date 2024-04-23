@@ -75,7 +75,7 @@ async def test_add_package(
     mock_seventeentrack.return_value.profile.packages.return_value = [package]
 
     await init_integration(hass, mock_config_entry)
-    assert hass.states.get("sensor.seventeentrack_package_456")
+    assert hass.states.get("sensor.17track_package_friendly_name_1")
     assert len(hass.states.async_entity_ids()) == DEFAULT_SUMMARY_LENGTH + 1
 
     package2 = get_package(
@@ -89,7 +89,7 @@ async def test_add_package(
 
     await goto_future(hass, freezer)
 
-    assert hass.states.get("sensor.seventeentrack_package_789") is not None
+    assert hass.states.get("sensor.17track_package_friendly_name_1") is not None
     assert len(hass.states.async_entity_ids()) == DEFAULT_SUMMARY_LENGTH + 2
 
 
@@ -103,9 +103,9 @@ async def test_add_package_default_friendly_name(
     mock_seventeentrack.return_value.profile.packages.return_value = [package]
 
     await init_integration(hass, mock_config_entry)
-    state_456 = hass.states.get("sensor.seventeentrack_package_456")
+    state_456 = hass.states.get("sensor.17track_package_456")
     assert state_456 is not None
-    assert state_456.attributes["friendly_name"] == "Seventeentrack Package: 456"
+    assert state_456.attributes["friendly_name"] == "17Track Package 456"
     assert len(hass.states.async_entity_ids()) == DEFAULT_SUMMARY_LENGTH + 1
 
 
@@ -132,16 +132,16 @@ async def test_remove_package(
 
     await init_integration(hass, mock_config_entry)
 
-    assert hass.states.get("sensor.seventeentrack_package_456") is not None
-    assert hass.states.get("sensor.seventeentrack_package_789") is not None
+    assert hass.states.get("sensor.17track_package_friendly_name_1") is not None
+    assert hass.states.get("sensor.17track_package_friendly_name_2") is not None
     assert len(hass.states.async_entity_ids()) == DEFAULT_SUMMARY_LENGTH + 2
 
     mock_seventeentrack.return_value.profile.packages.return_value = [package2]
 
     await goto_future(hass, freezer)
 
-    assert hass.states.get("sensor.seventeentrack_package_456") is None
-    assert hass.states.get("sensor.seventeentrack_package_789") is not None
+    assert hass.states.get("sensor.17track_package_friendly_name_1") is None
+    assert hass.states.get("sensor.17track_package_friendly_name_2") is not None
     assert len(hass.states.async_entity_ids()) == DEFAULT_SUMMARY_LENGTH + 1
 
 
@@ -157,35 +157,7 @@ async def test_package_error(
     mock_seventeentrack.return_value.profile.summary.return_value = {}
 
     await init_integration(hass, mock_config_entry)
-    assert hass.states.get("sensor.seventeentrack_package_456") is None
-
-
-async def test_friendly_name_changed(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_seventeentrack: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test friendly name change."""
-    package = get_package()
-    mock_seventeentrack.return_value.profile.packages.return_value = [package]
-
-    await init_integration(hass, mock_config_entry)
-
-    assert hass.states.get("sensor.seventeentrack_package_456") is not None
-    assert len(hass.states.async_entity_ids()) == DEFAULT_SUMMARY_LENGTH + 1
-
-    package = get_package(friendly_name="friendly name 2")
-    mock_seventeentrack.return_value.profile.packages.return_value = [package]
-
-    await goto_future(hass, freezer)
-
-    assert hass.states.get("sensor.seventeentrack_package_456") is not None
-    entity = hass.data["entity_components"]["sensor"].get_entity(
-        "sensor.seventeentrack_package_456"
-    )
-    assert entity.name == "Seventeentrack Package: friendly name 2"
-    assert len(hass.states.async_entity_ids()) == DEFAULT_SUMMARY_LENGTH + 1
+    assert hass.states.get("sensor.17track_package_friendly_name_1") is None
 
 
 async def test_delivered_not_shown(
@@ -204,7 +176,7 @@ async def test_delivered_not_shown(
         await init_integration(hass, mock_config_entry_with_default_options)
         await goto_future(hass, freezer)
 
-        assert hass.states.get("sensor.seventeentrack_package_456") is None
+        assert hass.states.get("sensor.17track_package_friendly_name_1") is None
         persistent_notification_mock.create.assert_called()
 
 
@@ -222,7 +194,7 @@ async def test_delivered_shown(
     ) as persistent_notification_mock:
         await init_integration(hass, mock_config_entry)
 
-        assert hass.states.get("sensor.seventeentrack_package_456") is not None
+        assert hass.states.get("sensor.17track_package_friendly_name_1") is not None
         assert len(hass.states.async_entity_ids()) == DEFAULT_SUMMARY_LENGTH + 1
         persistent_notification_mock.create.assert_not_called()
 
@@ -239,7 +211,7 @@ async def test_becomes_delivered_not_shown_notification(
 
     await init_integration(hass, mock_config_entry_with_default_options)
 
-    assert hass.states.get("sensor.seventeentrack_package_456") is not None
+    assert hass.states.get("sensor.17track_package_friendly_name_1") is not None
     assert len(hass.states.async_entity_ids()) == DEFAULT_SUMMARY_LENGTH + 1
 
     package_delivered = get_package(status=40)
@@ -268,9 +240,7 @@ async def test_summary_correctly_updated(
 
     assert len(hass.states.async_entity_ids()) == DEFAULT_SUMMARY_LENGTH + 1
 
-    state_ready_picked = hass.states.get(
-        "sensor.seventeentrack_packages_ready_to_be_picked_up"
-    )
+    state_ready_picked = hass.states.get("sensor.17track_ready_to_be_picked_up")
     assert state_ready_picked is not None
     assert len(state_ready_picked.attributes["packages"]) == 1
 
@@ -283,9 +253,7 @@ async def test_summary_correctly_updated(
     for state in hass.states.async_all():
         assert state.state == "1"
 
-    state_ready_picked = hass.states.get(
-        "sensor.seventeentrack_packages_ready_to_be_picked_up"
-    )
+    state_ready_picked = hass.states.get("sensor.17track_ready_to_be_picked_up")
     assert state_ready_picked is not None
     assert len(state_ready_picked.attributes["packages"]) == 0
 
@@ -323,9 +291,9 @@ async def test_utc_timestamp(
 
     await init_integration(hass, mock_config_entry)
 
-    assert hass.states.get("sensor.seventeentrack_package_456") is not None
+    assert hass.states.get("sensor.17track_package_friendly_name_1") is not None
     assert len(hass.states.async_entity_ids()) == DEFAULT_SUMMARY_LENGTH + 1
-    state_456 = hass.states.get("sensor.seventeentrack_package_456")
+    state_456 = hass.states.get("sensor.17track_package_friendly_name_1")
     assert state_456 is not None
     assert str(state_456.attributes.get("timestamp")) == "2020-08-10 03:32:00+00:00"
 

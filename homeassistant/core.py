@@ -505,8 +505,8 @@ class HomeAssistant:
         _LOGGER.info("Starting Home Assistant")
 
         self.set_state(CoreState.starting)
-        self.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
-        self.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        self.bus.async_fire_internal(EVENT_CORE_CONFIG_UPDATE)
+        self.bus.async_fire_internal(EVENT_HOMEASSISTANT_START)
 
         if not self._tasks:
             pending: set[asyncio.Future[Any]] | None = None
@@ -539,8 +539,8 @@ class HomeAssistant:
             return
 
         self.set_state(CoreState.running)
-        self.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
-        self.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        self.bus.async_fire_internal(EVENT_CORE_CONFIG_UPDATE)
+        self.bus.async_fire_internal(EVENT_HOMEASSISTANT_STARTED)
 
     def add_job(
         self, target: Callable[[*_Ts], Any] | Coroutine[Any, Any, Any], *args: *_Ts
@@ -1114,7 +1114,7 @@ class HomeAssistant:
         self.exit_code = exit_code
 
         self.set_state(CoreState.stopping)
-        self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        self.bus.async_fire_internal(EVENT_HOMEASSISTANT_STOP)
         try:
             async with self.timeout.async_timeout(STOP_STAGE_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
@@ -1127,7 +1127,7 @@ class HomeAssistant:
 
         # Stage 3 - Final write
         self.set_state(CoreState.final_write)
-        self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+        self.bus.async_fire_internal(EVENT_HOMEASSISTANT_FINAL_WRITE)
         try:
             async with self.timeout.async_timeout(FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
@@ -1140,7 +1140,7 @@ class HomeAssistant:
 
         # Stage 4 - Close
         self.set_state(CoreState.not_running)
-        self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
+        self.bus.async_fire_internal(EVENT_HOMEASSISTANT_CLOSE)
 
         # Make a copy of running_tasks since a task can finish
         # while we are awaiting canceled tasks to get their result
@@ -1389,7 +1389,7 @@ class _OneTimeListener(Generic[_DataT]):
         return f"<_OneTimeListener {self.listener_job.target}>"
 
 
-# Empty list, used by EventBus._async_fire
+# Empty list, used by EventBus.async_fire_internal
 EMPTY_LIST: list[Any] = []
 
 
@@ -1465,10 +1465,10 @@ class EventBus:
 
             frame.report("calls async_fire from a thread")
         _verify_event_type_length_or_raise(event_type)
-        return self._async_fire(event_type, event_data, origin, context, time_fired)
+        return self.async_fire_internal(event_type, event_data, origin, context, time_fired)
 
     @callback
-    def _async_fire(
+    def async_fire_internal(
         self,
         event_type: EventType[_DataT] | str,
         event_data: _DataT | None = None,
@@ -1476,7 +1476,12 @@ class EventBus:
         context: Context | None = None,
         time_fired: float | None = None,
     ) -> None:
-        """Fire an event.
+        """Fire an event, for internal use only.
+
+        This method is intended to only be used by core internally
+        and should not be considered a stable API. We will make
+        breaking change to this function in the future and it
+        should not be used in integrations.
 
         This method must be run in the event loop.
         """
@@ -2122,7 +2127,7 @@ class StateMachine:
             "old_state": old_state,
             "new_state": None,
         }
-        self._bus._async_fire(  # pylint: disable=protected-access
+        self._bus.async_fire_internal(
             EVENT_STATE_CHANGED,
             state_changed_data,
             context=context,
@@ -2235,7 +2240,7 @@ class StateMachine:
             # mypy does not understand this is only possible if old_state is not None
             old_last_reported = old_state.last_reported  # type: ignore[union-attr]
             old_state.last_reported = now  # type: ignore[union-attr]
-            self._bus._async_fire(  # pylint: disable=protected-access
+            self._bus.async_fire_internal(
                 EVENT_STATE_REPORTED,
                 {
                     "entity_id": entity_id,
@@ -2278,7 +2283,7 @@ class StateMachine:
             "old_state": old_state,
             "new_state": state,
         }
-        self._bus._async_fire(  # pylint: disable=protected-access
+        self._bus.async_fire_internal(
             EVENT_STATE_CHANGED,
             state_changed_data,
             context=context,
@@ -2632,7 +2637,7 @@ class ServiceRegistry:
             domain, service, processed_data, context, return_response
         )
 
-        self._hass.bus._async_fire(  # pylint: disable=protected-access
+        self._hass.bus.async_fire_internal(
             EVENT_CALL_SERVICE,
             {
                 ATTR_DOMAIN: domain,
@@ -2960,7 +2965,7 @@ class Config:
 
         self._update(source=ConfigSource.STORAGE, **kwargs)
         await self._async_store()
-        self.hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE, kwargs)
+        self.hass.bus.async_fire_internal(EVENT_CORE_CONFIG_UPDATE, kwargs)
 
         _raise_issue_if_historic_currency(self.hass, self.currency)
         _raise_issue_if_no_country(self.hass, self.country)
