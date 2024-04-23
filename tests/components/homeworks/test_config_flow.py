@@ -331,7 +331,7 @@ async def test_reconfigure_flow_flow_duplicate(
 
 
 async def test_reconfigure_flow_flow_no_change(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_homeworks: MagicMock,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_homeworks: MagicMock
 ) -> None:
     """Test reconfigure flow."""
     mock_config_entry.add_to_hass(hass)
