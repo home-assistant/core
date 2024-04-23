@@ -36,7 +36,6 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Generic,
-    Literal,
     NotRequired,
     ParamSpec,
     Self,
@@ -279,17 +278,24 @@ def async_get_hass() -> HomeAssistant:
     return _hass.hass
 
 
+class ReleaseChannel(enum.StrEnum):
+    BETA = "beta"
+    DEV = "dev"
+    NIGHTLY = "nightly"
+    STABLE = "stable"
+
+
 @callback
-def get_release_channel() -> Literal["beta", "dev", "nightly", "stable"]:
+def get_release_channel() -> ReleaseChannel:
     """Find release channel based on version number."""
     version = __version__
     if "dev0" in version:
-        return "dev"
+        return ReleaseChannel.DEV
     if "dev" in version:
-        return "nightly"
+        return ReleaseChannel.NIGHTLY
     if "b" in version:
-        return "beta"
-    return "stable"
+        return ReleaseChannel.BETA
+    return ReleaseChannel.STABLE
 
 
 @enum.unique
@@ -2583,7 +2589,7 @@ class ServiceRegistry:
             if handler.supports_response is SupportsResponse.NONE:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
-                    translation_key="service_does_not_supports_reponse",
+                    translation_key="service_does_not_support_response",
                     translation_placeholders={
                         "return_response": "return_response=True"
                     },

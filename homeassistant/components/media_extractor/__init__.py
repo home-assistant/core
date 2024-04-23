@@ -278,9 +278,9 @@ def get_best_stream_youtube(formats: list[dict[str, Any]]) -> str:
 
     return get_best_stream(
         [
-            format
-            for format in formats
-            if format.get("acodec", "none") != "none"
-            and format.get("vcodec", "none") != "none"
+            stream_format
+            for stream_format in formats
+            if stream_format.get("acodec", "none") != "none"
+            and stream_format.get("vcodec", "none") != "none"
         ]
     )
