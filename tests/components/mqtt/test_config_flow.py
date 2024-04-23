@@ -1110,6 +1110,16 @@ async def test_step_reauth(
     )
     await mqtt_mock_entry()
 
+    # Start reauth flow
+    config_entry.async_start_reauth(hass)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    result = flows[0]
+    assert result["step_id"] == "reauth_confirm"
+    assert result["context"]["source"] == "reauth"
+
     # Show the form
     result = await hass.config_entries.flow.async_init(
         mqtt.DOMAIN,
@@ -1126,7 +1136,7 @@ async def test_step_reauth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    # simulate Try re-auth fails
+    # Simulate re-auth fails
     mock_try_connection.return_value = False
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=user_input
@@ -1134,7 +1144,7 @@ async def test_step_reauth(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
-    # simulate Try re-auth succeeds
+    # Simulate re-auth succeeds
     mock_try_connection.return_value = True
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=user_input

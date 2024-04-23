@@ -2056,14 +2056,12 @@ async def test_triggers_reauth_flow_if_auth_fails(
 ) -> None:
     """Test re-auth is triggered if authentication is failing."""
     await mqtt_mock_entry()
-    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     # test with rc = 4 -> CONNACK_REFUSED_NOT_AUTHORIZED and 5 -> CONNACK_REFUSED_BAD_USERNAME_PASSWORD
-    with patch.object(
-        config_entry, "async_start_reauth", MagicMock()
-    ) as mock_async_start_reauth:
-        mqtt_client_mock.on_connect(mqtt_client_mock, None, None, return_code)
-        mock_async_start_reauth.assert_called_once()
+    mqtt_client_mock.on_connect(mqtt_client_mock, None, None, return_code)
     await hass.async_block_till_done()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
 
 
 @patch("homeassistant.components.mqtt.client.TIMEOUT_ACK", 0.3)
