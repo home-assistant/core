@@ -22,7 +22,7 @@ async def test_notify_entity_service(
     await setup_platform(hass, NOTIFY_DOMAIN)
 
     entity_id = "notify.ecobee"
-    state = hass.states.get("notify.ecobee")
+    state = hass.states.get(entity_id)
     assert state is not None
     assert hass.services.has_service(NOTIFY_DOMAIN, SERVICE_SEND_MESSAGE)
     await hass.services.async_call(
@@ -38,6 +38,7 @@ async def test_notify_entity_service(
 async def test_legacy_notify_service(
     hass: HomeAssistant,
     mock_ecobee: MagicMock,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the legacy notify service."""
     await setup_platform(hass, NOTIFY_DOMAIN)
@@ -52,3 +53,4 @@ async def test_legacy_notify_service(
     await hass.async_block_till_done()
     mock_ecobee.send_message.assert_called_with(THERMOSTAT_ID, "It is too cold!")
     mock_ecobee.send_message.reset_mock()
+    assert len(issue_registry.issues) == 1
