@@ -2046,6 +2046,24 @@ async def test_logs_error_if_no_connect_broker(
     )
 
 
+@pytest.mark.parametrize("return_code", [4, 5])
+async def test_triggers_reauth_flow_if_auth_fails(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    mqtt_client_mock: MqttMockPahoClient,
+    return_code: int,
+) -> None:
+    """Test re-auth is triggered if authentication is failing."""
+    await mqtt_mock_entry()
+    # test with rc = 4 -> CONNACK_REFUSED_NOT_AUTHORIZED and 5 -> CONNACK_REFUSED_BAD_USERNAME_PASSWORD
+    mqtt_client_mock.on_connect(mqtt_client_mock, None, None, return_code)
+    await hass.async_block_till_done()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
+
+
 @patch("homeassistant.components.mqtt.client.TIMEOUT_ACK", 0.3)
 async def test_handle_mqtt_on_callback(
     hass: HomeAssistant,
