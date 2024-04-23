@@ -243,7 +243,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==24.2.0
+aioesphomeapi==24.3.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -694,7 +694,7 @@ debugpy==1.8.1
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==6.0.2
+deebot-client==7.0.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1836,7 +1836,7 @@ pyforked-daapd==0.1.14
 pyfreedompro==1.1.0
 
 # homeassistant.components.fritzbox
-pyfritzhome==0.6.10
+pyfritzhome==0.6.11
 
 # homeassistant.components.ifttt
 pyfttt==0.3
