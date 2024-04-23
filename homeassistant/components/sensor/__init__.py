@@ -752,10 +752,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         assert self.registry_entry
         sensor_options = self.registry_entry.options.get(DOMAIN)
         for option in ("display_precision", "suggested_display_precision"):
-            if (
-                sensor_options
-                and (precision := sensor_options.get(option)) is not None
-            ):
+            if sensor_options and (precision := sensor_options.get(option)) is not None:
                 return cast(int, precision)
         return None
 
