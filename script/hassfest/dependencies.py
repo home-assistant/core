@@ -32,7 +32,11 @@ class ImportCollector(ast.NodeVisitor):
 
             self._cur_fil_dir = fil.relative_to(self.integration.path)
             self.referenced[self._cur_fil_dir] = set()
-            self.visit(ast.parse(fil.read_text()))
+            try:
+                self.visit(ast.parse(fil.read_text()))
+            except SyntaxError as e:
+                e.add_note(f"File: {fil}")
+                raise
             self._cur_fil_dir = None
 
     def _add_reference(self, reference_domain: str) -> None:
