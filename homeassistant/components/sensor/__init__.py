@@ -747,21 +747,16 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         return value
 
-    def _suggested_precision_or_none(self) -> int | None:
-        """Return suggested display precision, or None if not set."""
+    def _display_precision_or_none(self) -> int | None:
+        """Return display precision, or None if not set."""
         assert self.registry_entry
         sensor_options = self.registry_entry.options.get(DOMAIN)
-        if (
-            sensor_options
-            and (precision := sensor_options.get("display_precision")) is not None
-        ):
-            return cast(int, precision)
-        if (
-            sensor_options
-            and (precision := sensor_options.get("suggested_display_precision"))
-            is not None
-        ):
-            return cast(int, precision)
+        for option in ("display_precision", "suggested_display_precision"):
+            if (
+                sensor_options
+                and (precision := sensor_options.get(option)) is not None
+            ):
+                return cast(int, precision)
         return None
 
     def _update_suggested_precision(self) -> None:
