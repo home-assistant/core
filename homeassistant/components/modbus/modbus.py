@@ -245,7 +245,7 @@ async def async_modbus_setup(
             translation_key="deprecated_restart",
         )
         _LOGGER.warning(
-            "`modbus:restart`: is deprecated and will be removed in version 2024.10"
+            "`modbus.restart`: is deprecated and will be removed in version 2024.11"
         )
         async_dispatcher_send(hass, SIGNAL_START_ENTITY)
         hub = hub_collect[service.data[ATTR_HUB]]
