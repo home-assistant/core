@@ -5,7 +5,7 @@ from typing import Any
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .api import OAuthMonzoAPI
+from .api import AuthenticatedMonzoAPI
 
 
 @dataclass(kw_only=True)
@@ -20,5 +20,5 @@ class MonzoSensorData:
 class MonzoData(MonzoSensorData):
     """A dataclass for holding data stored in hass.data."""
 
-    external_api: OAuthMonzoAPI
+    external_api: AuthenticatedMonzoAPI
     coordinator: DataUpdateCoordinator[MonzoSensorData]

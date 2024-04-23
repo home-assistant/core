@@ -6,7 +6,7 @@ from monzopy import AbstractMonzoApi
 from homeassistant.helpers import config_entry_oauth2_flow
 
 
-class OAuthMonzoAPI(AbstractMonzoApi):
+class AuthenticatedMonzoAPI(AbstractMonzoApi):
     """A Monzo API instance with authentication tied to an OAuth2 based config entry."""
 
     def __init__(
