@@ -693,7 +693,7 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     entry,
                     options=new_options,
                     reason="reconfigure_successful",
-                    reload_on_entry_update=False,
+                    always_reload=False,
                 )
 
         return self.async_show_form(

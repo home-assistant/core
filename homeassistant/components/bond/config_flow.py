@@ -116,7 +116,7 @@ class BondConfigFlow(ConfigFlow, domain=DOMAIN):
                 entry,
                 data={**entry.data, **updates},
                 reason="already_configured",
-                reload_on_entry_update=False,
+                always_reload=False,
             )
 
         self._discovered = {CONF_HOST: host, CONF_NAME: bond_id}
