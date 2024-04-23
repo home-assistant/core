@@ -7,8 +7,8 @@ import dataclasses
 from datetime import datetime, timedelta
 from typing import Final
 
+from ovoenergy import OVOEnergy
 from ovoenergy.models import OVODailyUsage
-from ovoenergy.ovoenergy import OVOEnergy
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
