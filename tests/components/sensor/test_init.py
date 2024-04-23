@@ -1146,6 +1146,14 @@ async def test_unit_conversion_priority_precision(
         suggested_display_precision=suggested_precision,
         suggested_unit_of_measurement=suggested_unit,
     )
+    entity4 = MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        suggested_display_precision=None,
+        unique_id="very_unique_4",
+    )
     setup_test_component_platform(
         hass,
         sensor.DOMAIN,
@@ -1154,18 +1162,9 @@ async def test_unit_conversion_priority_precision(
             entity1,
             entity2,
             entity3,
+            entity4,
         ],
     )
-
-    platform.ENTITIES["4"] = platform.MockSensor(
-        name="Test",
-        device_class=device_class,
-        native_unit_of_measurement=native_unit,
-        native_value=str(native_value),
-        suggested_display_precision=None,
-        unique_id="very_unique_4",
-    )
-    entity4 = platform.ENTITIES["4"]
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
