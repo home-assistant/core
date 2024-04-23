@@ -13,7 +13,13 @@ import attr
 from yarl import URL
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback, get_release_channel
+from homeassistant.core import (
+    Event,
+    HomeAssistant,
+    ReleaseChannel,
+    callback,
+    get_release_channel,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util.event_type import EventType
@@ -608,7 +614,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         try:
             return name.format(**translation_placeholders)
         except KeyError as err:
-            if get_release_channel() != "stable":
+            if get_release_channel() is not ReleaseChannel.STABLE:
                 raise HomeAssistantError("Missing placeholder %s" % err) from err
             report_issue = async_suggest_report_issue(
                 self.hass, integration_domain=domain
@@ -963,12 +969,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                         tuple(conn)  # type: ignore[misc]
                         for conn in device["connections"]
                     },
-                    disabled_by=DeviceEntryDisabler(device["disabled_by"])
-                    if device["disabled_by"]
-                    else None,
-                    entry_type=DeviceEntryType(device["entry_type"])
-                    if device["entry_type"]
-                    else None,
+                    disabled_by=(
+                        DeviceEntryDisabler(device["disabled_by"])
+                        if device["disabled_by"]
+                        else None
+                    ),
+                    entry_type=(
+                        DeviceEntryType(device["entry_type"])
+                        if device["entry_type"]
+                        else None
+                    ),
                     hw_version=device["hw_version"],
                     id=device["id"],
                     identifiers={
