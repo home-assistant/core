@@ -2334,7 +2334,7 @@ def relative_time(hass: HomeAssistant, value: Any) -> Any:
             hass,
             HA_DOMAIN,
             issue_id,
-            breaks_in_ha_version="2024.9.0",
+            breaks_in_ha_version="2024.11.0",
             is_fixable=False,
             severity=issue_registry.IssueSeverity.WARNING,
             translation_key=issue_id,
