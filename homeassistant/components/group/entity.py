@@ -298,21 +298,25 @@ class Group(Entity):
 
         tracking: list[str] = []
         trackable: list[str] = []
-        active_domains: set[str] = set()
+        self.single_active_domain = None
+        multiple_domains: bool = False
         for ent_id in entity_ids:
             ent_id_lower = ent_id.lower()
             domain = split_entity_id(ent_id_lower)[0]
             tracking.append(ent_id_lower)
-            if domain not in excluded_domains:
-                active_domains.add(domain)
-                trackable.append(ent_id_lower)
+            if domain in excluded_domains:
+                continue
+
+            trackable.append(ent_id_lower)
+
+            if not multiple_domains and self.single_active_domain is None:
+                self.single_active_domain = domain
+            if self.single_active_domain != domain:
+                multiple_domains = True
+                self.single_active_domain = None
 
         self.trackable = tuple(trackable)
         self.tracking = tuple(tracking)
-        if len(active_domains) == 1:
-            self.single_active_domain = list(active_domains)[0]
-        else:
-            self.single_active_domain = None
 
     @callback
     def _async_start(self, _: HomeAssistant | None = None) -> None:
