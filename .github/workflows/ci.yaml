@@ -33,7 +33,7 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 7
+  CACHE_VERSION: 8
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 8
   HA_SHORT_VERSION: "2024.5"
