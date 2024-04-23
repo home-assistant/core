@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from enum import Enum
 import random
 import string
 from typing import TYPE_CHECKING
 
 from deebot_client.capabilities import Capabilities
+
+from homeassistant.core import callback
 
 from .entity import (
     EcovacsCapabilityEntityDescription,
@@ -38,3 +41,9 @@ def get_supported_entitites(
         if isinstance(device.capabilities, description.device_capabilities)
         if (capability := description.capability_fn(device.capabilities))
     ]
+
+
+@callback
+def get_name_key(enum: Enum) -> str:
+    """Return the lower case name of the enum."""
+    return enum.name.lower()
