@@ -1,4 +1,5 @@
 """The tests for the Restore component."""
+
 from collections.abc import Coroutine
 from datetime import datetime, timedelta
 import logging
@@ -57,9 +58,12 @@ async def test_caching_data(hass: HomeAssistant) -> None:
     # Emulate a fresh load
     hass.data.pop(DATA_RESTORE_STATE)
 
-    with patch(
-        "homeassistant.helpers.restore_state.Store.async_load",
-        side_effect=HomeAssistantError,
+    with (
+        patch(
+            "homeassistant.helpers.restore_state.Store.async_load",
+            side_effect=HomeAssistantError,
+        ),
+        patch("homeassistant.helpers.restore_state.Store.async_save"),
     ):
         # Failure to load should not be treated as fatal
         await async_load(hass)
@@ -67,7 +71,13 @@ async def test_caching_data(hass: HomeAssistant) -> None:
     data = async_get(hass)
     assert data.last_states == {}
 
-    await async_load(hass)
+    # Mock that only b1 is present this run
+    with patch(
+        "homeassistant.helpers.restore_state.Store.async_save"
+    ) as mock_write_data:
+        await async_load(hass)
+        await hass.async_block_till_done()
+
     data = async_get(hass)
 
     entity = RestoreEntity()
@@ -75,11 +85,7 @@ async def test_caching_data(hass: HomeAssistant) -> None:
     entity.entity_id = "input_boolean.b1"
 
     # Mock that only b1 is present this run
-    with patch(
-        "homeassistant.helpers.restore_state.Store.async_save"
-    ) as mock_write_data:
-        state = await entity.async_get_last_state()
-        await hass.async_block_till_done()
+    state = await entity.async_get_last_state()
 
     assert state is not None
     assert state.entity_id == "input_boolean.b1"
@@ -109,17 +115,17 @@ async def test_periodic_write(hass: HomeAssistant) -> None:
     await data.store.async_save([])
 
     # Emulate a fresh load
-    hass.data.pop(DATA_RESTORE_STATE)
-    await async_load(hass)
-    data = async_get(hass)
-
-    entity = RestoreEntity()
-    entity.hass = hass
-    entity.entity_id = "input_boolean.b1"
-
     with patch(
         "homeassistant.helpers.restore_state.Store.async_save"
     ) as mock_write_data:
+        hass.data.pop(DATA_RESTORE_STATE)
+        await async_load(hass)
+        data = async_get(hass)
+
+        entity = RestoreEntity()
+        entity.hass = hass
+        entity.entity_id = "input_boolean.b1"
+
         await entity.async_get_last_state()
         await hass.async_block_till_done()
 
@@ -157,17 +163,17 @@ async def test_save_persistent_states(hass: HomeAssistant) -> None:
     await data.store.async_save([])
 
     # Emulate a fresh load
-    hass.data.pop(DATA_RESTORE_STATE)
-    await async_load(hass)
-    data = async_get(hass)
-
-    entity = RestoreEntity()
-    entity.hass = hass
-    entity.entity_id = "input_boolean.b1"
-
     with patch(
         "homeassistant.helpers.restore_state.Store.async_save"
     ) as mock_write_data:
+        hass.data.pop(DATA_RESTORE_STATE)
+        await async_load(hass)
+        data = async_get(hass)
+
+        entity = RestoreEntity()
+        entity.hass = hass
+        entity.entity_id = "input_boolean.b1"
+
         await entity.async_get_last_state()
         await hass.async_block_till_done()
 

@@ -1,4 +1,5 @@
 """The tests for the Flux switch platform."""
+
 from unittest.mock import patch
 
 from freezegun import freeze_time
@@ -21,7 +22,9 @@ from tests.common import (
     async_fire_time_changed,
     async_mock_service,
     mock_restore_cache,
+    setup_test_component_platform,
 )
+from tests.components.light.common import MockLight
 
 
 @pytest.fixture(autouse=True)
@@ -135,17 +138,18 @@ async def test_invalid_config_no_lights(hass: HomeAssistant) -> None:
 
 
 async def test_flux_when_switch_is_off(
-    hass: HomeAssistant, enable_custom_integrations: None
+    hass: HomeAssistant,
+    mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux switch when it is off."""
-    platform = getattr(hass.components, "test.light")
-    platform.init()
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
+
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
     await hass.async_block_till_done()
 
-    ent1 = platform.ENTITIES[0]
+    ent1 = mock_light_entities[0]
 
     # Verify initial state of light
     state = hass.states.get(ent1.entity_id)
@@ -162,9 +166,12 @@ async def test_flux_when_switch_is_off(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         turn_on_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
         assert await async_setup_component(
@@ -186,17 +193,18 @@ async def test_flux_when_switch_is_off(
 
 
 async def test_flux_before_sunrise(
-    hass: HomeAssistant, enable_custom_integrations: None
+    hass: HomeAssistant,
+    mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux switch before sunrise."""
-    platform = getattr(hass.components, "test.light")
-    platform.init()
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
+
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
     await hass.async_block_till_done()
 
-    ent1 = platform.ENTITIES[0]
+    ent1 = mock_light_entities[0]
 
     # Verify initial state of light
     state = hass.states.get(ent1.entity_id)
@@ -214,9 +222,12 @@ async def test_flux_before_sunrise(
         return sunset_time
 
     await hass.async_block_till_done()
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -245,17 +256,18 @@ async def test_flux_before_sunrise(
 
 
 async def test_flux_before_sunrise_known_location(
-    hass: HomeAssistant, enable_custom_integrations: None
+    hass: HomeAssistant,
+    mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux switch before sunrise."""
-    platform = getattr(hass.components, "test.light")
-    platform.init()
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
+
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
     await hass.async_block_till_done()
 
-    ent1 = platform.ENTITIES[0]
+    ent1 = mock_light_entities[0]
 
     # Verify initial state of light
     state = hass.states.get(ent1.entity_id)
@@ -303,17 +315,18 @@ async def test_flux_before_sunrise_known_location(
 
 
 async def test_flux_after_sunrise_before_sunset(
-    hass: HomeAssistant, enable_custom_integrations: None
+    hass: HomeAssistant,
+    mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux switch after sunrise and before sunset."""
-    platform = getattr(hass.components, "test.light")
-    platform.init()
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
+
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
     await hass.async_block_till_done()
 
-    ent1 = platform.ENTITIES[0]
+    ent1 = mock_light_entities[0]
 
     # Verify initial state of light
     state = hass.states.get(ent1.entity_id)
@@ -330,9 +343,12 @@ async def test_flux_after_sunrise_before_sunset(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -361,17 +377,18 @@ async def test_flux_after_sunrise_before_sunset(
 
 
 async def test_flux_after_sunset_before_stop(
-    hass: HomeAssistant, enable_custom_integrations: None
+    hass: HomeAssistant,
+    mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux switch after sunset and before stop."""
-    platform = getattr(hass.components, "test.light")
-    platform.init()
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
+
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
     await hass.async_block_till_done()
 
-    ent1 = platform.ENTITIES[0]
+    ent1 = mock_light_entities[0]
 
     # Verify initial state of light
     state = hass.states.get(ent1.entity_id)
@@ -388,9 +405,12 @@ async def test_flux_after_sunset_before_stop(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -420,17 +440,18 @@ async def test_flux_after_sunset_before_stop(
 
 
 async def test_flux_after_stop_before_sunrise(
-    hass: HomeAssistant, enable_custom_integrations: None
+    hass: HomeAssistant,
+    mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux switch after stop and before sunrise."""
-    platform = getattr(hass.components, "test.light")
-    platform.init()
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
+
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
     await hass.async_block_till_done()
 
-    ent1 = platform.ENTITIES[0]
+    ent1 = mock_light_entities[0]
 
     # Verify initial state of light
     state = hass.states.get(ent1.entity_id)
@@ -447,9 +468,12 @@ async def test_flux_after_stop_before_sunrise(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -478,17 +502,18 @@ async def test_flux_after_stop_before_sunrise(
 
 
 async def test_flux_with_custom_start_stop_times(
-    hass: HomeAssistant, enable_custom_integrations: None
+    hass: HomeAssistant,
+    mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux with custom start and stop times."""
-    platform = getattr(hass.components, "test.light")
-    platform.init()
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
+
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
     await hass.async_block_till_done()
 
-    ent1 = platform.ENTITIES[0]
+    ent1 = mock_light_entities[0]
 
     # Verify initial state of light
     state = hass.states.get(ent1.entity_id)
@@ -505,9 +530,12 @@ async def test_flux_with_custom_start_stop_times(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -538,20 +566,21 @@ async def test_flux_with_custom_start_stop_times(
 
 
 async def test_flux_before_sunrise_stop_next_day(
-    hass: HomeAssistant, enable_custom_integrations: None
+    hass: HomeAssistant,
+    mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux switch before sunrise.
 
     This test has the stop_time on the next day (after midnight).
     """
-    platform = getattr(hass.components, "test.light")
-    platform.init()
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
+
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
     await hass.async_block_till_done()
 
-    ent1 = platform.ENTITIES[0]
+    ent1 = mock_light_entities[0]
 
     # Verify initial state of light
     state = hass.states.get(ent1.entity_id)
@@ -568,9 +597,12 @@ async def test_flux_before_sunrise_stop_next_day(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -600,20 +632,21 @@ async def test_flux_before_sunrise_stop_next_day(
 
 
 async def test_flux_after_sunrise_before_sunset_stop_next_day(
-    hass: HomeAssistant, enable_custom_integrations: None
+    hass: HomeAssistant,
+    mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux switch after sunrise and before sunset.
 
     This test has the stop_time on the next day (after midnight).
     """
-    platform = getattr(hass.components, "test.light")
-    platform.init()
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
+
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
     await hass.async_block_till_done()
 
-    ent1 = platform.ENTITIES[0]
+    ent1 = mock_light_entities[0]
 
     # Verify initial state of light
     state = hass.states.get(ent1.entity_id)
@@ -630,9 +663,12 @@ async def test_flux_after_sunrise_before_sunset_stop_next_day(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -663,20 +699,22 @@ async def test_flux_after_sunrise_before_sunset_stop_next_day(
 
 @pytest.mark.parametrize("x", [0, 1])
 async def test_flux_after_sunset_before_midnight_stop_next_day(
-    hass: HomeAssistant, x, enable_custom_integrations: None
+    hass: HomeAssistant,
+    x,
+    mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux switch after sunset and before stop.
 
     This test has the stop_time on the next day (after midnight).
     """
-    platform = getattr(hass.components, "test.light")
-    platform.init()
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
+
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
     await hass.async_block_till_done()
 
-    ent1 = platform.ENTITIES[0]
+    ent1 = mock_light_entities[0]
 
     # Verify initial state of light
     state = hass.states.get(ent1.entity_id)
@@ -693,9 +731,12 @@ async def test_flux_after_sunset_before_midnight_stop_next_day(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -725,20 +766,21 @@ async def test_flux_after_sunset_before_midnight_stop_next_day(
 
 
 async def test_flux_after_sunset_after_midnight_stop_next_day(
-    hass: HomeAssistant, enable_custom_integrations: None
+    hass: HomeAssistant,
+    mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux switch after sunset and before stop.
 
     This test has the stop_time on the next day (after midnight).
     """
-    platform = getattr(hass.components, "test.light")
-    platform.init()
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
+
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
     await hass.async_block_till_done()
 
-    ent1 = platform.ENTITIES[0]
+    ent1 = mock_light_entities[0]
 
     # Verify initial state of light
     state = hass.states.get(ent1.entity_id)
@@ -755,9 +797,12 @@ async def test_flux_after_sunset_after_midnight_stop_next_day(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -787,20 +832,21 @@ async def test_flux_after_sunset_after_midnight_stop_next_day(
 
 
 async def test_flux_after_stop_before_sunrise_stop_next_day(
-    hass: HomeAssistant, enable_custom_integrations: None
+    hass: HomeAssistant,
+    mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux switch after stop and before sunrise.
 
     This test has the stop_time on the next day (after midnight).
     """
-    platform = getattr(hass.components, "test.light")
-    platform.init()
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
+
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
     await hass.async_block_till_done()
 
-    ent1 = platform.ENTITIES[0]
+    ent1 = mock_light_entities[0]
 
     # Verify initial state of light
     state = hass.states.get(ent1.entity_id)
@@ -817,9 +863,12 @@ async def test_flux_after_stop_before_sunrise_stop_next_day(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -849,17 +898,18 @@ async def test_flux_after_stop_before_sunrise_stop_next_day(
 
 
 async def test_flux_with_custom_colortemps(
-    hass: HomeAssistant, enable_custom_integrations: None
+    hass: HomeAssistant,
+    mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux with custom start and stop colortemps."""
-    platform = getattr(hass.components, "test.light")
-    platform.init()
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
+
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
     await hass.async_block_till_done()
 
-    ent1 = platform.ENTITIES[0]
+    ent1 = mock_light_entities[0]
 
     # Verify initial state of light
     state = hass.states.get(ent1.entity_id)
@@ -876,9 +926,12 @@ async def test_flux_with_custom_colortemps(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -910,17 +963,18 @@ async def test_flux_with_custom_colortemps(
 
 
 async def test_flux_with_custom_brightness(
-    hass: HomeAssistant, enable_custom_integrations: None
+    hass: HomeAssistant,
+    mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux with custom start and stop colortemps."""
-    platform = getattr(hass.components, "test.light")
-    platform.init()
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
+
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
     await hass.async_block_till_done()
 
-    ent1 = platform.ENTITIES[0]
+    ent1 = mock_light_entities[0]
 
     # Verify initial state of light
     state = hass.states.get(ent1.entity_id)
@@ -937,9 +991,12 @@ async def test_flux_with_custom_brightness(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -970,17 +1027,18 @@ async def test_flux_with_custom_brightness(
 
 
 async def test_flux_with_multiple_lights(
-    hass: HomeAssistant, enable_custom_integrations: None
+    hass: HomeAssistant,
+    mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux switch with multiple light entities."""
-    platform = getattr(hass.components, "test.light")
-    platform.init()
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
+
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
     await hass.async_block_till_done()
 
-    ent1, ent2, ent3 = platform.ENTITIES
+    ent1, ent2, ent3 = mock_light_entities
 
     await hass.services.async_call(
         light.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ent2.entity_id}, blocking=True
@@ -1014,9 +1072,12 @@ async def test_flux_with_multiple_lights(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -1051,17 +1112,18 @@ async def test_flux_with_multiple_lights(
 
 
 async def test_flux_with_mired(
-    hass: HomeAssistant, enable_custom_integrations: None
+    hass: HomeAssistant,
+    mock_light_entities: list[MockLight],
 ) -> None:
-    """Test the flux switch´s mode mired."""
-    platform = getattr(hass.components, "test.light")
-    platform.init()
+    """Test the flux switch's mode mired."""
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
+
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
     await hass.async_block_till_done()
 
-    ent1 = platform.ENTITIES[0]
+    ent1 = mock_light_entities[0]
 
     # Verify initial state of light
     state = hass.states.get(ent1.entity_id)
@@ -1077,9 +1139,12 @@ async def test_flux_with_mired(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,
@@ -1108,17 +1173,18 @@ async def test_flux_with_mired(
 
 
 async def test_flux_with_rgb(
-    hass: HomeAssistant, enable_custom_integrations: None
+    hass: HomeAssistant,
+    mock_light_entities: list[MockLight],
 ) -> None:
-    """Test the flux switch´s mode rgb."""
-    platform = getattr(hass.components, "test.light")
-    platform.init()
+    """Test the flux switch's mode rgb."""
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
+
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
     await hass.async_block_till_done()
 
-    ent1 = platform.ENTITIES[0]
+    ent1 = mock_light_entities[0]
 
     # Verify initial state of light
     state = hass.states.get(ent1.entity_id)
@@ -1134,9 +1200,12 @@ async def test_flux_with_rgb(
             return sunrise_time
         return sunset_time
 
-    with freeze_time(test_time), patch(
-        "homeassistant.components.flux.switch.get_astral_event_date",
-        side_effect=event_date,
+    with (
+        freeze_time(test_time),
+        patch(
+            "homeassistant.components.flux.switch.get_astral_event_date",
+            side_effect=event_date,
+        ),
     ):
         assert await async_setup_component(
             hass,

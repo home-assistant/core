@@ -1,4 +1,5 @@
 """Component providing Switches for UniFi Protect."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -73,6 +74,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         name="HDR Mode",
         icon="mdi:brightness-7",
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
         ufp_required_field="feature_flags.has_hdr",
         ufp_value="hdr_mode",
         ufp_set_method="set_hdr",
@@ -298,6 +300,16 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_set_method="set_glass_break_detection",
         ufp_perm=PermRequired.WRITE,
     ),
+    ProtectSwitchEntityDescription(
+        key="track_person",
+        name="Tracking: Person",
+        icon="mdi:walk",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="is_ptz",
+        ufp_value="is_person_tracking_enabled",
+        ufp_set_method="set_person_track",
+        ufp_perm=PermRequired.WRITE,
+    ),
 )
 
 PRIVACY_MODE_SWITCH = ProtectSwitchEntityDescription[Camera](
@@ -442,7 +454,8 @@ async def async_setup_entry(
     """Set up sensors for UniFi Protect integration."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
-    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         entities = async_all_device_entities(
             data,
             ProtectSwitch,

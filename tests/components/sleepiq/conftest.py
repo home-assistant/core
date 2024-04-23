@@ -1,4 +1,5 @@
 """Common methods for SleepIQ."""
+
 from __future__ import annotations
 
 from collections.abc import Generator

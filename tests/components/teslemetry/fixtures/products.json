@@ -71,28 +71,50 @@
       "release_notes_supported": true
     },
     {
-      "energy_site_id": 2345,
-      "resource_type": "wall_connector",
-      "id": "ID1234",
-      "asset_site_id": "abcdef",
-      "warp_site_number": "ID1234",
+      "energy_site_id": 123456,
+      "resource_type": "battery",
+      "site_name": "Energy Site",
+      "id": "ABC123",
+      "gateway_id": "ABC123",
+      "asset_site_id": "c0ffee",
+      "warp_site_number": "GA123456",
+      "energy_left": 23286.105263157893,
+      "total_pack_energy": 40804,
+      "percentage_charged": 57.068192488868476,
+      "battery_type": "ac_powerwall",
+      "backup_capable": true,
+      "battery_power": 14990,
       "go_off_grid_test_banner_enabled": null,
-      "storm_mode_enabled": null,
-      "powerwall_onboarding_settings_set": null,
+      "storm_mode_enabled": true,
+      "powerwall_onboarding_settings_set": true,
       "powerwall_tesla_electric_interested_in": null,
       "vpp_tour_enabled": null,
-      "sync_grid_alert_enabled": false,
-      "breaker_alert_enabled": false,
+      "sync_grid_alert_enabled": true,
+      "breaker_alert_enabled": true,
       "components": {
-        "battery": false,
-        "solar": false,
-        "grid": false,
-        "load_meter": false,
+        "battery": true,
+        "battery_type": "ac_powerwall",
+        "solar": true,
+        "solar_type": "pv_panel",
+        "grid": true,
+        "load_meter": true,
+        "market_type": "residential",
         "wall_connectors": [
-          { "device_id": "abcdef", "din": "12345", "is_active": true }
+          {
+            "device_id": "abc-123",
+            "din": "123-abc",
+            "is_active": true
+          },
+          {
+            "device_id": "bcd-234",
+            "din": "234-bcd",
+            "is_active": true
+          }
         ]
       },
-      "features": {}
+      "features": {
+        "rate_plan_manager_no_pricing_constraint": true
+      }
     }
   ],
   "count": 2

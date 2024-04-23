@@ -1,4 +1,5 @@
 """Generate mypy config."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -31,9 +32,10 @@ HEADER: Final = """
 
 GENERAL_SETTINGS: Final[dict[str, str]] = {
     "python_version": ".".join(str(x) for x in REQUIRED_PYTHON_VER[:2]),
-    "plugins": ", ".join(["pydantic.mypy"]),
+    "platform": "linux",
+    "plugins": "pydantic.mypy",
     "show_error_codes": "true",
-    "follow_imports": "silent",
+    "follow_imports": "normal",
     # Enable some checks globally.
     "local_partial_types": "true",
     "strict_equality": "true",
@@ -42,14 +44,14 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "warn_redundant_casts": "true",
     "warn_unused_configs": "true",
     "warn_unused_ignores": "true",
-    "enable_error_code": ", ".join(
+    "enable_error_code": ", ".join(  # noqa: FLY002
         [
             "ignore-without-code",
             "redundant-self",
             "truthy-iterable",
         ]
     ),
-    "disable_error_code": ", ".join(
+    "disable_error_code": ", ".join(  # noqa: FLY002
         [
             "annotation-unchecked",
             "import-not-found",

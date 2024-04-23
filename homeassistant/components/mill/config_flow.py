@@ -1,16 +1,17 @@
 """Adds config flow for Mill integration."""
+
 from mill import Mill
 from mill_local import Mill as MillLocal
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CLOUD, CONNECTION_TYPE, DOMAIN, LOCAL
 
 
-class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class MillConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Mill integration."""
 
     VERSION = 1

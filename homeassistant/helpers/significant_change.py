@@ -26,6 +26,7 @@ The following cases will never be passed to your function:
 - if either state is unknown/unavailable
 - state adding/removing
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -82,7 +83,8 @@ async def _initialize(hass: HomeAssistant) -> None:
 
     functions = hass.data[DATA_FUNCTIONS] = {}
 
-    async def process_platform(
+    @callback
+    def process_platform(
         hass: HomeAssistant, component_name: str, platform: Any
     ) -> None:
         """Process a significant change platform."""
@@ -97,9 +99,9 @@ def either_one_none(val1: Any | None, val2: Any | None) -> bool:
 
 
 def _check_numeric_change(
-    old_state: int | float | None,
-    new_state: int | float | None,
-    change: int | float,
+    old_state: float | None,
+    new_state: float | None,
+    change: float,
     metric: Callable[[int | float, int | float], int | float],
 ) -> bool:
     """Check if two numeric values have changed."""
@@ -119,9 +121,9 @@ def _check_numeric_change(
 
 
 def check_absolute_change(
-    val1: int | float | None,
-    val2: int | float | None,
-    change: int | float,
+    val1: float | None,
+    val2: float | None,
+    change: float,
 ) -> bool:
     """Check if two numeric values have changed."""
     return _check_numeric_change(
@@ -130,13 +132,13 @@ def check_absolute_change(
 
 
 def check_percentage_change(
-    old_state: int | float | None,
-    new_state: int | float | None,
-    change: int | float,
+    old_state: float | None,
+    new_state: float | None,
+    change: float,
 ) -> bool:
     """Check if two numeric values have changed."""
 
-    def percentage_change(old_state: int | float, new_state: int | float) -> float:
+    def percentage_change(old_state: float, new_state: float) -> float:
         if old_state == new_state:
             return 0
         try:
@@ -147,7 +149,7 @@ def check_percentage_change(
     return _check_numeric_change(old_state, new_state, change, percentage_change)
 
 
-def check_valid_float(value: str | int | float) -> bool:
+def check_valid_float(value: str | float) -> bool:
     """Check if given value is a valid float."""
     try:
         float(value)

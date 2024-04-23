@@ -1,14 +1,14 @@
 """Custom loader."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator
-from contextlib import suppress
 import fnmatch
 from io import StringIO, TextIOWrapper
 import logging
 import os
 from pathlib import Path
-from typing import Any, TextIO, TypeVar, overload
+from typing import Any, TextIO, overload
 
 import yaml
 
@@ -22,6 +22,8 @@ except ImportError:
         SafeLoader as FastestAvailableSafeLoader,
     )
 
+from functools import cached_property
+
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.frame import report
 
@@ -31,7 +33,6 @@ from .objects import Input, NodeDictClass, NodeListClass, NodeStrClass
 # mypy: allow-untyped-calls, no-warn-return-any
 
 JSON_TYPE = list | dict | str
-_DictT = TypeVar("_DictT", bound=dict)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -113,10 +114,12 @@ class _LoaderMixin:
     name: str
     stream: Any
 
+    @cached_property
     def get_name(self) -> str:
         """Get the name of the loader."""
         return self.name
 
+    @cached_property
     def get_stream_name(self) -> str:
         """Get the name of the stream."""
         return getattr(self.stream, "name", "")
@@ -272,7 +275,7 @@ def _parse_yaml_python(
 
 
 def _parse_yaml(
-    loader: type[FastSafeLoader] | type[PythonSafeLoader],
+    loader: type[FastSafeLoader | PythonSafeLoader],
     content: str | TextIO,
     secrets: Secrets | None = None,
 ) -> JSON_TYPE:
@@ -282,38 +285,39 @@ def _parse_yaml(
 
 @overload
 def _add_reference(
-    obj: list | NodeListClass,
-    loader: LoaderType,
-    node: yaml.nodes.Node,
-) -> NodeListClass:
-    ...
+    obj: list | NodeListClass, loader: LoaderType, node: yaml.nodes.Node
+) -> NodeListClass: ...
 
 
 @overload
 def _add_reference(
-    obj: str | NodeStrClass,
-    loader: LoaderType,
-    node: yaml.nodes.Node,
-) -> NodeStrClass:
-    ...
+    obj: str | NodeStrClass, loader: LoaderType, node: yaml.nodes.Node
+) -> NodeStrClass: ...
 
 
 @overload
-def _add_reference(obj: _DictT, loader: LoaderType, node: yaml.nodes.Node) -> _DictT:
-    ...
+def _add_reference(
+    obj: dict | NodeDictClass, loader: LoaderType, node: yaml.nodes.Node
+) -> NodeDictClass: ...
 
 
-def _add_reference(  # type: ignore[no-untyped-def]
-    obj, loader: LoaderType, node: yaml.nodes.Node
-):
+def _add_reference(
+    obj: dict | list | str | NodeDictClass | NodeListClass | NodeStrClass,
+    loader: LoaderType,
+    node: yaml.nodes.Node,
+) -> NodeDictClass | NodeListClass | NodeStrClass:
     """Add file reference information to an object."""
     if isinstance(obj, list):
         obj = NodeListClass(obj)
-    if isinstance(obj, str):
+    elif isinstance(obj, str):
         obj = NodeStrClass(obj)
-    with suppress(AttributeError):
-        setattr(obj, "__config_file__", loader.get_name())
-        setattr(obj, "__line__", node.start_mark.line + 1)
+    elif isinstance(obj, dict):
+        obj = NodeDictClass(obj)
+    try:  # suppress is much slower
+        obj.__config_file__ = loader.get_name
+        obj.__line__ = node.start_mark.line + 1
+    except AttributeError:
+        pass
     return obj
 
 
@@ -324,7 +328,7 @@ def _include_yaml(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
         device_tracker: !include device_tracker.yaml
 
     """
-    fname = os.path.join(os.path.dirname(loader.get_name()), node.value)
+    fname = os.path.join(os.path.dirname(loader.get_name), node.value)
     try:
         loaded_yaml = load_yaml(fname, loader.secrets)
         if loaded_yaml is None:
@@ -354,7 +358,7 @@ def _find_files(directory: str, pattern: str) -> Iterator[str]:
 def _include_dir_named_yaml(loader: LoaderType, node: yaml.nodes.Node) -> NodeDictClass:
     """Load multiple files from directory as a dictionary."""
     mapping = NodeDictClass()
-    loc = os.path.join(os.path.dirname(loader.get_name()), node.value)
+    loc = os.path.join(os.path.dirname(loader.get_name), node.value)
     for fname in _find_files(loc, "*.yaml"):
         filename = os.path.splitext(os.path.basename(fname))[0]
         if os.path.basename(fname) == SECRET_YAML:
@@ -373,7 +377,7 @@ def _include_dir_merge_named_yaml(
 ) -> NodeDictClass:
     """Load multiple files from directory as a merged dictionary."""
     mapping = NodeDictClass()
-    loc = os.path.join(os.path.dirname(loader.get_name()), node.value)
+    loc = os.path.join(os.path.dirname(loader.get_name), node.value)
     for fname in _find_files(loc, "*.yaml"):
         if os.path.basename(fname) == SECRET_YAML:
             continue
@@ -387,7 +391,7 @@ def _include_dir_list_yaml(
     loader: LoaderType, node: yaml.nodes.Node
 ) -> list[JSON_TYPE]:
     """Load multiple files from directory as a list."""
-    loc = os.path.join(os.path.dirname(loader.get_name()), node.value)
+    loc = os.path.join(os.path.dirname(loader.get_name), node.value)
     return [
         loaded_yaml
         for f in _find_files(loc, "*.yaml")
@@ -400,7 +404,7 @@ def _include_dir_merge_list_yaml(
     loader: LoaderType, node: yaml.nodes.Node
 ) -> JSON_TYPE:
     """Load multiple files from directory as a merged list."""
-    loc: str = os.path.join(os.path.dirname(loader.get_name()), node.value)
+    loc: str = os.path.join(os.path.dirname(loader.get_name), node.value)
     merged_list: list[JSON_TYPE] = []
     for fname in _find_files(loc, "*.yaml"):
         if os.path.basename(fname) == SECRET_YAML:
@@ -419,13 +423,13 @@ def _handle_mapping_tag(
     nodes = loader.construct_pairs(node)
 
     seen: dict = {}
-    for (key, _), (child_node, _) in zip(nodes, node.value):
+    for (key, _), (child_node, _) in zip(nodes, node.value, strict=False):
         line = child_node.start_mark.line
 
         try:
             hash(key)
         except TypeError as exc:
-            fname = loader.get_stream_name()
+            fname = loader.get_stream_name
             raise yaml.MarkedYAMLError(
                 context=f'invalid key: "{key}"',
                 context_mark=yaml.Mark(
@@ -439,7 +443,7 @@ def _handle_mapping_tag(
             ) from exc
 
         if key in seen:
-            fname = loader.get_stream_name()
+            fname = loader.get_stream_name
             _LOGGER.warning(
                 'YAML file %s contains duplicate key "%s". Check lines %d and %d',
                 fname,
@@ -462,7 +466,7 @@ def _handle_scalar_tag(
     loader: LoaderType, node: yaml.nodes.ScalarNode
 ) -> str | int | float | None:
     """Add line number and file name to Load YAML sequence."""
-    obj = loader.construct_scalar(node)
+    obj = node.value
     if not isinstance(obj, str):
         return obj
     return _add_reference(obj, loader, node)
@@ -486,7 +490,7 @@ def secret_yaml(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
     if loader.secrets is None:
         raise HomeAssistantError("Secrets not supported in this YAML file")
 
-    return loader.secrets.get(loader.get_name(), node.value)
+    return loader.secrets.get(loader.get_name, node.value)
 
 
 def add_constructor(tag: Any, constructor: Any) -> None:

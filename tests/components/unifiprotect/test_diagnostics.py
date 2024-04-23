@@ -1,4 +1,5 @@
 """Test UniFi Protect diagnostics."""
+
 from pyunifiprotect.data import NVR, Light
 
 from homeassistant.components.unifiprotect.const import CONF_ALLOW_EA

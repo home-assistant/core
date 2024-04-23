@@ -21,7 +21,7 @@
       },
       "user_auth_confirm": {
         "title": "Authenticate",
-        "description": "The device requires authentication, please input your credentials below.",
+        "description": "The device requires authentication, please input your TP-Link credentials below.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -29,7 +29,7 @@
       },
       "discovery_auth_confirm": {
         "title": "Authenticate",
-        "description": "The device requires authentication, please input your credentials below.",
+        "description": "[%key:component::tplink::config::step::user_auth_confirm::description%]",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -37,11 +37,11 @@
       },
       "reauth": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The device needs updated credentials, please input your credentials below."
+        "description": "[%key:component::tplink::config::step::user_auth_confirm::description%]"
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The device needs updated credentials, please input your credentials below.",
+        "description": "[%key:component::tplink::config::step::user_auth_confirm::description%]",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -49,7 +49,8 @@
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "Connection error: {error}",
+      "invalid_auth": "Invalid authentication: {error}"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -182,6 +183,17 @@
           "description": "Random seed."
         }
       }
+    }
+  },
+  "exceptions": {
+    "device_timeout": {
+      "message": "Timeout communicating with the device {func}: {exc}"
+    },
+    "device_error": {
+      "message": "Unable to communicate with the device {func}: {exc}"
+    },
+    "device_authentication": {
+      "message": "Device authentication error {func}: {exc}"
     }
   }
 }

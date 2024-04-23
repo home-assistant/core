@@ -1,11 +1,12 @@
 """Support for Ecovacs Ecovacs Vacuums."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
 from typing import Any
 
-from deebot_client.capabilities import Capabilities
+from deebot_client.capabilities import VacuumCapabilities
 from deebot_client.device import Device
 from deebot_client.events import BatteryEvent, FanSpeedEvent, RoomsEvent, StateEvent
 from deebot_client.models import CleanAction, CleanMode, Room, State
@@ -32,6 +33,7 @@ from homeassistant.util import slugify
 from .const import DOMAIN
 from .controller import EcovacsController
 from .entity import EcovacsEntity
+from .util import get_name_key
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,13 +47,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Ecovacs vacuums."""
-    vacuums: list[EcovacsVacuum | EcovacsLegacyVacuum] = []
     controller: EcovacsController = hass.data[DOMAIN][config_entry.entry_id]
+    vacuums: list[EcovacsVacuum | EcovacsLegacyVacuum] = [
+        EcovacsVacuum(device) for device in controller.devices(VacuumCapabilities)
+    ]
     for device in controller.legacy_devices:
         await hass.async_add_executor_job(device.connect_and_wait_until_ready)
         vacuums.append(EcovacsLegacyVacuum(device))
-    for device in controller.devices:
-        vacuums.append(EcovacsVacuum(device))
     _LOGGER.debug("Adding Ecovacs Vacuums to Home Assistant: %s", vacuums)
     async_add_entities(vacuums)
 
@@ -95,7 +97,7 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
         This will not change the entity's state. If the error caused the state
         to change, that will come through as a separate on_status event
         """
-        if error == "no_error":
+        if error in ["no_error", sucks.ERROR_CODES["100"]]:
             self.error = None
         else:
             self.error = error
@@ -210,7 +212,7 @@ _ATTR_ROOMS = "rooms"
 
 
 class EcovacsVacuum(
-    EcovacsEntity[Capabilities],
+    EcovacsEntity[VacuumCapabilities, VacuumCapabilities],
     StateVacuumEntity,
 ):
     """Ecovacs vacuum."""
@@ -233,7 +235,7 @@ class EcovacsVacuum(
         key="vacuum", translation_key="vacuum", name=None
     )
 
-    def __init__(self, device: Device) -> None:
+    def __init__(self, device: Device[VacuumCapabilities]) -> None:
         """Initialize the vacuum."""
         capabilities = device.capabilities
         super().__init__(device, capabilities)
@@ -241,7 +243,7 @@ class EcovacsVacuum(
         self._rooms: list[Room] = []
 
         self._attr_fan_speed_list = [
-            level.display_name for level in capabilities.fan_speed.types
+            get_name_key(level) for level in capabilities.fan_speed.types
         ]
 
     async def async_added_to_hass(self) -> None:
@@ -253,7 +255,7 @@ class EcovacsVacuum(
             self.async_write_ha_state()
 
         async def on_fan_speed(event: FanSpeedEvent) -> None:
-            self._attr_fan_speed = event.speed.display_name
+            self._attr_fan_speed = get_name_key(event.speed)
             self.async_write_ha_state()
 
         async def on_rooms(event: RoomsEvent) -> None:
@@ -336,7 +338,6 @@ class EcovacsVacuum(
             params = {}
         elif isinstance(params, list):
             raise ServiceValidationError(
-                "Params must be a dict!",
                 translation_domain=DOMAIN,
                 translation_key="vacuum_send_command_params_dict",
             )
@@ -344,10 +345,17 @@ class EcovacsVacuum(
         if command in ["spot_area", "custom_area"]:
             if params is None:
                 raise ServiceValidationError(
-                    f"Params are required for {command}!",
                     translation_domain=DOMAIN,
                     translation_key="vacuum_send_command_params_required",
                     translation_placeholders={"command": command},
+                )
+            if self._capability.clean.action.area is None:
+                info = self._device.device_info
+                name = info.get("nick", info["name"])
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="vacuum_send_command_area_not_supported",
+                    translation_placeholders={"name": name},
                 )
 
             if command in "spot_area":

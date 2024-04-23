@@ -1,4 +1,5 @@
 """Tests for the Sonos Media Player platform."""
+
 import json
 from unittest.mock import Mock, patch
 
@@ -27,12 +28,16 @@ async def test_plex_play_media(hass: HomeAssistant, async_autosetup_sonos) -> No
         '{"library_name": "Music", "artist_name": "Artist", "album_name": "Album"}'
     )
 
-    with patch(
-        "homeassistant.components.plex.services.get_plex_server",
-        return_value=mock_plex_server,
-    ), patch("soco.plugins.plex.PlexPlugin.add_to_queue") as mock_add_to_queue, patch(
-        "homeassistant.components.sonos.media_player.SonosMediaPlayerEntity.set_shuffle"
-    ) as mock_shuffle:
+    with (
+        patch(
+            "homeassistant.components.plex.services.get_plex_server",
+            return_value=mock_plex_server,
+        ),
+        patch("soco.plugins.plex.PlexPlugin.add_to_queue") as mock_add_to_queue,
+        patch(
+            "homeassistant.components.sonos.media_player.SonosMediaPlayerEntity.set_shuffle"
+        ) as mock_shuffle,
+    ):
         # Test successful Plex service call
         await hass.services.async_call(
             MP_DOMAIN,

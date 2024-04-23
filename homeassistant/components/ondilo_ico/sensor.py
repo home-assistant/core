@@ -1,4 +1,5 @@
 """Platform for sensor integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -43,20 +44,17 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="orp",
         translation_key="oxydo_reduction_potential",
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
-        icon="mdi:pool",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="ph",
         translation_key="ph",
-        icon="mdi:pool",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="tds",
         translation_key="tds",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        icon="mdi:pool",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -68,7 +66,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="rssi",
         translation_key="rssi",
-        icon="mdi:wifi",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -76,7 +73,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="salt",
         translation_key="salt",
         native_unit_of_measurement="mg/L",
-        icon="mdi:pool",
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )

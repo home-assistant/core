@@ -1,4 +1,5 @@
 """Test different accessory types: HumidifierDehumidifier."""
+
 from pyhap.accessory_driver import AccessoryDriver
 from pyhap.const import (
     CATEGORY_HUMIDIFIER,
@@ -59,7 +60,7 @@ async def test_humidifier(hass: HomeAssistant, hk_driver, events) -> None:
     )
     hk_driver.add_accessory(acc)
 
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 1
@@ -144,7 +145,7 @@ async def test_dehumidifier(hass: HomeAssistant, hk_driver, events) -> None:
     )
     hk_driver.add_accessory(acc)
 
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 1
@@ -234,7 +235,7 @@ async def test_hygrostat_power_state(hass: HomeAssistant, hk_driver, events) -> 
     )
     hk_driver.add_accessory(acc)
 
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.char_current_humidifier_dehumidifier.value == 2
@@ -314,7 +315,7 @@ async def test_hygrostat_get_humidity_range(
     )
     hk_driver.add_accessory(acc)
 
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     # Set from HomeKit
@@ -390,7 +391,7 @@ async def test_humidifier_with_linked_humidity_sensor(
     )
     hk_driver.add_accessory(acc)
 
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.char_current_humidity.value == 42.0
@@ -444,7 +445,7 @@ async def test_humidifier_with_a_missing_linked_humidity_sensor(
     )
     hk_driver.add_accessory(acc)
 
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.char_current_humidity.value == 0
@@ -465,7 +466,7 @@ async def test_humidifier_as_dehumidifier(
     )
     hk_driver.add_accessory(acc)
 
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.char_target_humidifier_dehumidifier.value == 1
@@ -508,7 +509,7 @@ async def test_dehumidifier_as_humidifier(
     )
     hk_driver.add_accessory(acc)
 
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.char_target_humidifier_dehumidifier.value == 2
@@ -553,7 +554,7 @@ async def test_humidifier_that_reports_current_humidity(
     )
     hk_driver.add_accessory(acc)
 
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.char_current_humidity.value == 42.0

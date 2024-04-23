@@ -1,11 +1,17 @@
 """Platform to control a Renson ventilation unit."""
+
 from __future__ import annotations
 
 import logging
 import math
 from typing import Any
 
-from renson_endura_delta.field_enum import CURRENT_LEVEL_FIELD, DataType
+from renson_endura_delta.field_enum import (
+    BREEZE_LEVEL_FIELD,
+    BREEZE_TEMPERATURE_FIELD,
+    CURRENT_LEVEL_FIELD,
+    DataType,
+)
 from renson_endura_delta.renson import Level, RensonVentilation
 import voluptuous as vol
 
@@ -38,6 +44,7 @@ CMD_MAPPING = {
 SPEED_MAPPING = {
     Level.OFF.value: 0,
     Level.HOLIDAY.value: 0,
+    Level.BREEZE.value: 0,
     Level.LEVEL1.value: 1,
     Level.LEVEL2.value: 2,
     Level.LEVEL3.value: 3,
@@ -111,9 +118,9 @@ async def async_setup_entry(
 class RensonFan(RensonEntity, FanEntity):
     """Representation of the Renson fan platform."""
 
-    _attr_icon = "mdi:air-conditioner"
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = "fan"
     _attr_supported_features = FanEntityFeature.SET_SPEED
 
     def __init__(self, api: RensonVentilation, coordinator: RensonCoordinator) -> None:
@@ -128,6 +135,21 @@ class RensonFan(RensonEntity, FanEntity):
             self.api.get_field_value(self.coordinator.data, CURRENT_LEVEL_FIELD.name),
             DataType.LEVEL,
         )
+
+        if level == Level.BREEZE:
+            level = self.api.parse_value(
+                self.api.get_field_value(
+                    self.coordinator.data, BREEZE_LEVEL_FIELD.name
+                ),
+                DataType.LEVEL,
+            )
+        else:
+            level = self.api.parse_value(
+                self.api.get_field_value(
+                    self.coordinator.data, CURRENT_LEVEL_FIELD.name
+                ),
+                DataType.LEVEL,
+            )
 
         self._attr_percentage = ranged_value_to_percentage(
             SPEED_RANGE, SPEED_MAPPING[level]
@@ -155,13 +177,25 @@ class RensonFan(RensonEntity, FanEntity):
         """Set fan speed percentage."""
         _LOGGER.debug("Changing fan speed percentage to %s", percentage)
 
+        level = self.api.parse_value(
+            self.api.get_field_value(self.coordinator.data, CURRENT_LEVEL_FIELD.name),
+            DataType.LEVEL,
+        )
+
         if percentage == 0:
             cmd = Level.HOLIDAY
         else:
             speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
             cmd = CMD_MAPPING[speed]
 
-        await self.hass.async_add_executor_job(self.api.set_manual_level, cmd)
+        if level == Level.BREEZE.value:
+            all_data = self.coordinator.data
+            breeze_temp = self.api.get_field_value(all_data, BREEZE_TEMPERATURE_FIELD)
+            await self.hass.async_add_executor_job(
+                self.api.set_breeze, cmd.name, breeze_temp, True
+            )
+        else:
+            await self.hass.async_add_executor_job(self.api.set_manual_level, cmd)
 
         await self.coordinator.async_request_refresh()
 

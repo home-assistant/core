@@ -1,4 +1,5 @@
 """Test the Ruckus Unleashed config flow."""
+
 from unittest.mock import AsyncMock
 
 from aioruckus.const import ERROR_CONNECT_TIMEOUT, ERROR_LOGIN_INCORRECT

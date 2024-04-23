@@ -1,4 +1,5 @@
 """Support for Lutron Caseta scenes."""
+
 from typing import Any
 
 from pylutron_caseta.smartbridge import Smartbridge

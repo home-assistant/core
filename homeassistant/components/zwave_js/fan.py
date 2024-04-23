@@ -1,4 +1,5 @@
 """Support for Z-Wave fans."""
+
 from __future__ import annotations
 
 import math

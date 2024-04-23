@@ -1,4 +1,5 @@
 """Tests for the LaMetric sensor platform."""
+
 import pytest
 
 from homeassistant.components.lametric.const import DOMAIN
@@ -6,7 +7,6 @@ from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     EntityCategory,
@@ -29,7 +29,6 @@ async def test_wifi_signal(
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck's LaMetric Wi-Fi signal"
-    assert state.attributes.get(ATTR_ICON) == "mdi:wifi"
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "21"

@@ -1,4 +1,5 @@
 """Config flow for Elvia integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -7,17 +8,14 @@ from typing import TYPE_CHECKING, Any
 from elvia import Elvia, error as ElviaError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_METERING_POINT_ID, DOMAIN, LOGGER
 
-if TYPE_CHECKING:
-    from homeassistant.data_entry_flow import FlowResult
 
-
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ElviaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Elvia."""
 
     def __init__(self) -> None:
@@ -28,7 +26,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -77,7 +75,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_select_meter(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle selecting a metering point ID."""
         if TYPE_CHECKING:
             assert self._metering_point_ids is not None
@@ -105,7 +103,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self,
         api_token: str,
         metering_point_id: str,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Store metering point ID and API token."""
         if (await self.async_set_unique_id(metering_point_id)) is not None:
             return self.async_abort(

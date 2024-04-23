@@ -1,4 +1,5 @@
 """The Twinkly light component."""
+
 from __future__ import annotations
 
 import logging
@@ -64,7 +65,9 @@ async def async_setup_entry(
 class TwinklyLight(LightEntity):
     """Implementation of the light for the Twinkly service."""
 
-    _attr_icon = "mdi:string-lights"
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_translation_key = "light"
 
     def __init__(
         self,
@@ -92,7 +95,7 @@ class TwinklyLight(LightEntity):
         # Those are saved in the config entry in order to have meaningful values even
         # if the device is currently offline.
         # They are expected to be updated using the device_info.
-        self._name = conf.data[CONF_NAME]
+        self._name = conf.data[CONF_NAME] or "Twinkly light"
         self._model = conf.data[CONF_MODEL]
 
         self._client = client
@@ -107,18 +110,13 @@ class TwinklyLight(LightEntity):
         self._attr_supported_features = LightEntityFeature.EFFECT
 
     @property
-    def name(self) -> str:
-        """Name of the device."""
-        return self._name if self._name else "Twinkly light"
-
-    @property
     def device_info(self) -> DeviceInfo | None:
         """Get device specific attributes."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="LEDWORKS",
             model=self._model,
-            name=self.name,
+            name=self._name,
             sw_version=self._software_version,
         )
 
@@ -132,10 +130,7 @@ class TwinklyLight(LightEntity):
     @property
     def effect_list(self) -> list[str]:
         """Return the list of saved effects."""
-        effect_list = []
-        for movie in self._movies:
-            effect_list.append(f"{movie['id']} {movie['name']}")
-        return effect_list
+        return [f"{movie['id']} {movie['name']}" for movie in self._movies]
 
     async def async_added_to_hass(self) -> None:
         """Device is added to hass."""
@@ -270,6 +265,15 @@ class TwinklyLight(LightEntity):
                         CONF_MODEL: self._model,
                     },
                 )
+
+                device_registry = dr.async_get(self.hass)
+                device_entry = device_registry.async_get_device(
+                    {(DOMAIN, self._attr_unique_id)}
+                )
+                if device_entry:
+                    device_registry.async_update_device(
+                        device_entry.id, name=self._name, model=self._model
+                    )
 
             if LightEntityFeature.EFFECT & self.supported_features:
                 await self.async_update_movies()

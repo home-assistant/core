@@ -1,0 +1,16 @@
+{
+  "entity": {
+    "switch": {
+      "led": {
+        "default": "mdi:led-off",
+        "state": {
+          "on": "mdi:led-on"
+        }
+      }
+    }
+  },
+  "services": {
+    "sequence_effect": "mdi:playlist-play",
+    "random_effect": "mdi:shuffle-variant"
+  }
+}
