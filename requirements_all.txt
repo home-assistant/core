@@ -243,7 +243,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==24.2.0
+aioesphomeapi==24.3.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -383,7 +383,7 @@ aiotankerkoenig==0.4.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==75
+aiounifi==76
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
