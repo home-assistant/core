@@ -1,4 +1,5 @@
 """Fixtures for testing qBittorrent component."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 

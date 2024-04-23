@@ -1,4 +1,5 @@
 """Ecovacs constants."""
+
 from enum import StrEnum
 
 from deebot_client.events import LifeSpan

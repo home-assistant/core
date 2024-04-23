@@ -1,4 +1,5 @@
 """Test the Insteon All-Link Database APIs."""
+
 import json
 from unittest.mock import patch
 

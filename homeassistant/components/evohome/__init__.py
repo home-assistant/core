@@ -2,6 +2,7 @@
 
 Such systems include evohome, Round Thermostat, and others.
 """
+
 from __future__ import annotations
 
 from collections.abc import Awaitable
@@ -18,7 +19,10 @@ from evohomeasync2.schema.const import (
     SZ_ALLOWED_SYSTEM_MODES,
     SZ_AUTO_WITH_RESET,
     SZ_CAN_BE_TEMPORARY,
+    SZ_GATEWAY_ID,
+    SZ_GATEWAY_INFO,
     SZ_HEAT_SETPOINT,
+    SZ_LOCATION_ID,
     SZ_LOCATION_INFO,
     SZ_SETPOINT_STATUS,
     SZ_STATE_STATUS,
@@ -29,7 +33,7 @@ from evohomeasync2.schema.const import (
     SZ_TIMING_MODE,
     SZ_UNTIL,
 )
-import voluptuous as vol  # type: ignore[import-untyped]
+import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -260,14 +264,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return False
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
-        _config: dict[str, Any] = {
-            SZ_LOCATION_INFO: {SZ_TIME_ZONE: None},
-            GWS: [{TCS: None}],
+        loc_info = {
+            SZ_LOCATION_ID: loc_config[SZ_LOCATION_INFO][SZ_LOCATION_ID],
+            SZ_TIME_ZONE: loc_config[SZ_LOCATION_INFO][SZ_TIME_ZONE],
         }
-        _config[SZ_LOCATION_INFO][SZ_TIME_ZONE] = loc_config[SZ_LOCATION_INFO][
-            SZ_TIME_ZONE
-        ]
-        _config[GWS][0][TCS] = loc_config[GWS][0][TCS]
+        gwy_info = {
+            SZ_GATEWAY_ID: loc_config[GWS][0][SZ_GATEWAY_INFO][SZ_GATEWAY_ID],
+            TCS: loc_config[GWS][0][TCS],
+        }
+        _config = {
+            SZ_LOCATION_INFO: loc_info,
+            GWS: [{SZ_GATEWAY_INFO: gwy_info, TCS: loc_config[GWS][0][TCS]}],
+        }
         _LOGGER.debug("Config = %s", _config)
 
     client_v1 = ev1.EvohomeClient(
@@ -454,7 +462,7 @@ class EvoBroker:
             self.client.access_token_expires  # type: ignore[arg-type]
         )
 
-        app_storage = {
+        app_storage: dict[str, Any] = {
             CONF_USERNAME: self.client.username,
             REFRESH_TOKEN: self.client.refresh_token,
             ACCESS_TOKEN: self.client.access_token,
@@ -462,11 +470,11 @@ class EvoBroker:
         }
 
         if self.client_v1:
-            app_storage[USER_DATA] = {  # type: ignore[assignment]
+            app_storage[USER_DATA] = {
                 SZ_SESSION_ID: self.client_v1.broker.session_id,
             }  # this is the schema for STORAGE_VER == 1
         else:
-            app_storage[USER_DATA] = {}  # type: ignore[assignment]
+            app_storage[USER_DATA] = {}
 
         await self._store.async_save(app_storage)
 

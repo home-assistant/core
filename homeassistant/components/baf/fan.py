@@ -1,4 +1,5 @@
 """Support for Big Ass Fans fan."""
+
 from __future__ import annotations
 
 import math

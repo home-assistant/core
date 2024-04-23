@@ -1,4 +1,5 @@
 """Tests for Renault selects."""
+
 from collections.abc import Generator
 from unittest.mock import patch
 

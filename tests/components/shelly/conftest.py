@@ -1,4 +1,5 @@
 """Test configuration for Shelly."""
+
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from aioshelly.block_device import BlockDevice, BlockUpdateType
@@ -168,6 +169,11 @@ MOCK_CONFIG = {
     "input:1": {"id": 1, "type": "analog", "enable": True},
     "input:2": {"id": 2, "name": "Gas", "type": "count", "enable": True},
     "light:0": {"name": "test light_0"},
+    "light:1": {"name": "test light_1"},
+    "light:2": {"name": "test light_2"},
+    "light:3": {"name": "test light_3"},
+    "rgb:0": {"name": "test rgb_0"},
+    "rgbw:0": {"name": "test rgbw_0"},
     "switch:0": {"name": "test switch_0"},
     "cover:0": {"name": "test cover_0"},
     "thermostat:0": {
@@ -179,7 +185,7 @@ MOCK_CONFIG = {
         "ui_data": {},
         "device": {"name": "Test name"},
     },
-    "wifi": {"sta": {"enable": True}},
+    "wifi": {"sta": {"enable": True}, "sta1": {"enable": False}},
 }
 
 MOCK_SHELLY_COAP = {
@@ -222,6 +228,11 @@ MOCK_STATUS_RPC = {
     "input:1": {"id": 1, "percent": 89, "xpercent": 8.9},
     "input:2": {"id": 2, "counts": {"total": 56174, "xtotal": 561.74}},
     "light:0": {"output": True, "brightness": 53.0},
+    "light:1": {"output": True, "brightness": 53.0},
+    "light:2": {"output": True, "brightness": 53.0},
+    "light:3": {"output": True, "brightness": 53.0},
+    "rgb:0": {"output": True, "brightness": 53.0, "rgb": [45, 55, 65]},
+    "rgbw:0": {"output": True, "brightness": 53.0, "rgb": [21, 22, 23], "white": 120},
     "cloud": {"connected": False},
     "cover:0": {
         "state": "stopped",
@@ -308,6 +319,11 @@ async def mock_block_device():
                 {}, BlockUpdateType.COAP_REPLY
             )
 
+        def online():
+            block_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, BlockUpdateType.ONLINE
+            )
+
         device = Mock(
             spec=BlockDevice,
             blocks=MOCK_BLOCKS,
@@ -326,6 +342,7 @@ async def mock_block_device():
         block_device_mock.return_value.mock_update_reply = Mock(
             side_effect=update_reply
         )
+        block_device_mock.return_value.mock_online = Mock(side_effect=online)
 
         yield block_device_mock.return_value
 
@@ -350,8 +367,9 @@ def _mock_rpc_device(version: str | None = None):
 @pytest.fixture
 async def mock_rpc_device():
     """Mock rpc (Gen2, Websocket) device with BLE support."""
-    with patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock, patch(
-        "homeassistant.components.shelly.bluetooth.async_start_scanner"
+    with (
+        patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock,
+        patch("homeassistant.components.shelly.bluetooth.async_start_scanner"),
     ):
 
         def update():
@@ -364,9 +382,19 @@ async def mock_rpc_device():
                 {}, RpcUpdateType.EVENT
             )
 
+        def online():
+            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, RpcUpdateType.ONLINE
+            )
+
         def disconnected():
             rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
                 {}, RpcUpdateType.DISCONNECTED
+            )
+
+        def initialized():
+            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, RpcUpdateType.INITIALIZED
             )
 
         device = _mock_rpc_device()
@@ -374,6 +402,8 @@ async def mock_rpc_device():
         rpc_device_mock.return_value.mock_disconnected = Mock(side_effect=disconnected)
         rpc_device_mock.return_value.mock_update = Mock(side_effect=update)
         rpc_device_mock.return_value.mock_event = Mock(side_effect=event)
+        rpc_device_mock.return_value.mock_online = Mock(side_effect=online)
+        rpc_device_mock.return_value.mock_initialized = Mock(side_effect=initialized)
 
         yield rpc_device_mock.return_value
 

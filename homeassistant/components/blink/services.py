@@ -1,4 +1,5 @@
 """Services for the Blink integration."""
+
 from __future__ import annotations
 
 import voluptuous as vol

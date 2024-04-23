@@ -1,4 +1,5 @@
 """Button entities for Tami4Edge."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -27,7 +28,6 @@ BUTTONS: tuple[Tami4EdgeButtonEntityDescription] = (
     Tami4EdgeButtonEntityDescription(
         key="boil_water",
         translation_key="boil_water",
-        icon="mdi:kettle-steam",
         press_fn=lambda api: api.boil_water(),
     ),
 )

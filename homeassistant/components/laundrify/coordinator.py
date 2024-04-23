@@ -1,4 +1,5 @@
 """Custom DataUpdateCoordinator for the laundrify integration."""
+
 import asyncio
 from datetime import timedelta
 import logging

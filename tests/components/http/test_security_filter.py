@@ -1,4 +1,5 @@
 """Test security filter middleware."""
+
 import asyncio
 from http import HTTPStatus
 

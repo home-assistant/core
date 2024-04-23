@@ -23,7 +23,7 @@ from tests.components.bluetooth import (
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x3A\x00\x3A\x01\x3A\x03",
+                b"\x40\x3a\x00\x3a\x01\x3a\x03",
             ),
             None,
             [
@@ -43,7 +43,7 @@ from tests.components.bluetooth import (
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x3A\x04",
+                b"\x40\x3a\x04",
             ),
             None,
             [

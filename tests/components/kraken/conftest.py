@@ -1,4 +1,5 @@
 """Provide common pytest fixtures for kraken tests."""
+
 from unittest.mock import patch
 
 import pytest

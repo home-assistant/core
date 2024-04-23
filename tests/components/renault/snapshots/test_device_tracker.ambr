@@ -18,6 +18,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
       'name': 'REG-NUMBER',
@@ -47,11 +49,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:car',
+      'original_icon': None,
       'original_name': 'Location',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -67,12 +71,12 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Location',
-        'icon': 'mdi:car',
         'source_type': <SourceType.GPS: 'gps'>,
       }),
       'context': <ANY>,
       'entity_id': 'device_tracker.reg_number_location',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -97,6 +101,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
       'name': 'REG-NUMBER',
@@ -126,11 +132,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:car',
+      'original_icon': None,
       'original_name': 'Location',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -146,12 +154,12 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Location',
-        'icon': 'mdi:car',
         'source_type': <SourceType.GPS: 'gps'>,
       }),
       'context': <ANY>,
       'entity_id': 'device_tracker.reg_number_location',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -176,6 +184,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
       'name': 'REG-NUMBER',
@@ -214,6 +224,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
       'name': 'REG-NUMBER',
@@ -243,11 +255,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:car',
+      'original_icon': None,
       'original_name': 'Location',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -263,12 +277,12 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Location',
-        'icon': 'mdi:car',
         'source_type': <SourceType.GPS: 'gps'>,
       }),
       'context': <ANY>,
       'entity_id': 'device_tracker.reg_number_location',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -293,6 +307,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
       'name': 'REG-NUMBER',
@@ -322,11 +338,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:car',
+      'original_icon': None,
       'original_name': 'Location',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -343,7 +361,6 @@
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Location',
         'gps_accuracy': 0,
-        'icon': 'mdi:car',
         'latitude': 48.1234567,
         'longitude': 11.1234567,
         'source_type': <SourceType.GPS: 'gps'>,
@@ -351,6 +368,7 @@
       'context': <ANY>,
       'entity_id': 'device_tracker.reg_number_location',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'not_home',
     }),
@@ -375,6 +393,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
       'name': 'REG-NUMBER',
@@ -404,11 +424,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:car',
+      'original_icon': None,
       'original_name': 'Location',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -425,7 +447,6 @@
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Location',
         'gps_accuracy': 0,
-        'icon': 'mdi:car',
         'latitude': 48.1234567,
         'longitude': 11.1234567,
         'source_type': <SourceType.GPS: 'gps'>,
@@ -433,6 +454,7 @@
       'context': <ANY>,
       'entity_id': 'device_tracker.reg_number_location',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'not_home',
     }),
@@ -457,6 +479,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
       'name': 'REG-NUMBER',
@@ -495,6 +519,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
       'name': 'REG-NUMBER',
@@ -524,11 +550,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:car',
+      'original_icon': None,
       'original_name': 'Location',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -545,7 +573,6 @@
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Location',
         'gps_accuracy': 0,
-        'icon': 'mdi:car',
         'latitude': 48.1234567,
         'longitude': 11.1234567,
         'source_type': <SourceType.GPS: 'gps'>,
@@ -553,6 +580,7 @@
       'context': <ANY>,
       'entity_id': 'device_tracker.reg_number_location',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'not_home',
     }),

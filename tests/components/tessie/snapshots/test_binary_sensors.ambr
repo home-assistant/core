@@ -16,6 +16,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -38,6 +40,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_auto_seat_climate_left',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -59,6 +62,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -81,6 +86,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_auto_seat_climate_right',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -102,6 +108,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -124,6 +132,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_auto_steering_wheel_heater',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -145,6 +154,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -154,8 +165,8 @@
     'platform': 'tessie',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'charge_state_battery_heater_on',
-    'unique_id': 'VINVINVIN-charge_state_battery_heater_on',
+    'translation_key': 'climate_state_battery_heater',
+    'unique_id': 'VINVINVIN-climate_state_battery_heater',
     'unit_of_measurement': None,
   })
 # ---
@@ -168,6 +179,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_battery_heater',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -189,6 +201,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -212,6 +226,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_cabin_overheat_protection',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -233,6 +248,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -256,6 +273,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_cabin_overheat_protection_actively_cooling',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -277,6 +295,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -300,6 +320,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_charge_cable',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -321,6 +342,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -344,6 +367,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_charging',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -365,6 +389,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -388,6 +414,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_dashcam',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -409,6 +436,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -432,6 +461,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_front_driver_door',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -453,6 +483,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -476,6 +508,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_front_driver_window',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -497,6 +530,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -520,6 +555,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_front_passenger_door',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -541,6 +577,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -564,6 +602,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_front_passenger_window',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -585,6 +624,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -607,6 +648,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_preconditioning_enabled',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -628,6 +670,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -651,6 +695,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_rear_driver_door',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -672,6 +717,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -695,6 +742,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_rear_driver_window',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -716,6 +764,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -739,6 +789,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_rear_passenger_door',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -760,6 +811,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -783,6 +836,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_rear_passenger_window',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -804,6 +858,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -826,6 +882,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_scheduled_charging_pending',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -847,6 +904,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -870,6 +929,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_status',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -891,6 +951,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -914,6 +976,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_tire_pressure_warning_front_left',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -935,6 +998,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -958,6 +1023,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_tire_pressure_warning_front_right',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -979,6 +1045,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1002,6 +1070,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_tire_pressure_warning_rear_left',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -1023,6 +1092,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1046,6 +1117,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_tire_pressure_warning_rear_right',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -1067,6 +1139,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1089,6 +1163,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_trip_charging',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -1110,10 +1185,12 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.PRESENCE: 'presence'>,
+    'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
     'original_icon': None,
     'original_name': 'User present',
     'platform': 'tessie',
@@ -1127,12 +1204,13 @@
 # name: test_binary_sensors[binary_sensor.test_user_present-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'presence',
+      'device_class': 'occupancy',
       'friendly_name': 'Test User present',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_user_present',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })

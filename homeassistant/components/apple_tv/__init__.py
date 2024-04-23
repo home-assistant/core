@@ -1,4 +1,5 @@
 """The Apple TV integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -53,6 +54,25 @@ SIGNAL_DISCONNECTED = "apple_tv_disconnected"
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
+AUTH_EXCEPTIONS = (
+    exceptions.AuthenticationError,
+    exceptions.InvalidCredentialsError,
+    exceptions.NoCredentialsError,
+)
+CONNECTION_TIMEOUT_EXCEPTIONS = (
+    asyncio.CancelledError,
+    TimeoutError,
+    exceptions.ConnectionLostError,
+    exceptions.ConnectionFailedError,
+)
+DEVICE_EXCEPTIONS = (
+    exceptions.ProtocolError,
+    exceptions.NoServiceError,
+    exceptions.PairingError,
+    exceptions.BackOffError,
+    exceptions.DeviceIdMissingError,
+)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry for Apple TV."""
@@ -63,27 +83,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         try:
             await manager.async_first_connect()
-        except (
-            exceptions.AuthenticationError,
-            exceptions.InvalidCredentialsError,
-            exceptions.NoCredentialsError,
-        ) as ex:
+        except AUTH_EXCEPTIONS as ex:
             raise ConfigEntryAuthFailed(
                 f"{address}: Authentication failed, try reconfiguring device: {ex}"
             ) from ex
-        except (
-            asyncio.CancelledError,
-            exceptions.ConnectionLostError,
-            exceptions.ConnectionFailedError,
-        ) as ex:
+        except CONNECTION_TIMEOUT_EXCEPTIONS as ex:
             raise ConfigEntryNotReady(f"{address}: {ex}") from ex
-        except (
-            exceptions.ProtocolError,
-            exceptions.NoServiceError,
-            exceptions.PairingError,
-            exceptions.BackOffError,
-            exceptions.DeviceIdMissingError,
-        ) as ex:
+        except DEVICE_EXCEPTIONS as ex:
             _LOGGER.debug(
                 "Error setting up apple_tv at %s: %s", address, ex, exc_info=ex
             )
@@ -246,7 +252,12 @@ class AppleTVManager(DeviceListener):
     def _start_connect_loop(self) -> None:
         """Start background connect loop to device."""
         if not self._task and self.atv is None and self.is_on:
-            self._task = asyncio.create_task(self._connect_loop())
+            self._task = self.config_entry.async_create_background_task(
+                self.hass,
+                self._connect_loop(),
+                name=f"apple_tv connect loop {self.config_entry.title}",
+                eager_start=True,
+            )
         else:
             _LOGGER.debug(
                 "Not starting connect loop (%s, %s)", self.atv is None, self.is_on

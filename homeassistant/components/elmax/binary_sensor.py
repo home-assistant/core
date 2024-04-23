@@ -1,4 +1,5 @@
 """Elmax sensor platform."""
+
 from __future__ import annotations
 
 from elmax_api.model.panel import PanelStatus
@@ -38,7 +39,6 @@ async def async_setup_entry(
             if zone.endpoint_id in known_devices:
                 continue
             entity = ElmaxSensor(
-                panel=coordinator.panel_entry,
                 elmax_device=zone,
                 panel_version=panel_status.release,
                 coordinator=coordinator,

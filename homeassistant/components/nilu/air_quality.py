@@ -1,4 +1,5 @@
 """Sensor for checking the air quality around Norway."""
+
 from __future__ import annotations
 
 from datetime import timedelta

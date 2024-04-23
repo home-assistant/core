@@ -1,4 +1,5 @@
 """Support for Azure DevOps sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -17,23 +18,15 @@ from . import AzureDevOpsDeviceEntity, AzureDevOpsEntityDescription
 from .const import CONF_ORG, DOMAIN
 
 
-@dataclass(frozen=True)
-class AzureDevOpsSensorEntityDescriptionMixin:
-    """Mixin class for required Azure DevOps sensor description keys."""
-
-    build_key: int
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class AzureDevOpsSensorEntityDescription(
-    AzureDevOpsEntityDescription,
-    SensorEntityDescription,
-    AzureDevOpsSensorEntityDescriptionMixin,
+    AzureDevOpsEntityDescription, SensorEntityDescription
 ):
     """Class describing Azure DevOps sensor entities."""
 
-    attrs: Callable[[DevOpsBuild], Any] = round
-    value: Callable[[DevOpsBuild], StateType] = round
+    build_key: int
+    attrs: Callable[[DevOpsBuild], Any]
+    value: Callable[[DevOpsBuild], StateType]
 
 
 async def async_setup_entry(
@@ -46,19 +39,23 @@ async def async_setup_entry(
         AzureDevOpsSensor(
             coordinator,
             AzureDevOpsSensorEntityDescription(
-                key=f"{build.project.id}_{build.definition.id}_latest_build",
-                name=f"{build.project.name} {build.definition.name} Latest Build",
-                icon="mdi:pipe",
+                key=f"{build.project.project_id}_{build.definition.build_id}_latest_build",
+                translation_key="latest_build",
+                translation_placeholders={"definition_name": build.definition.name},
                 attrs=lambda build: {
-                    "definition_id": build.definition.id,
-                    "definition_name": build.definition.name,
-                    "id": build.id,
+                    "definition_id": (
+                        build.definition.build_id if build.definition else None
+                    ),
+                    "definition_name": (
+                        build.definition.name if build.definition else None
+                    ),
+                    "id": build.build_id,
                     "reason": build.reason,
                     "result": build.result,
                     "source_branch": build.source_branch,
                     "source_version": build.source_version,
                     "status": build.status,
-                    "url": build.links.web,
+                    "url": build.links.web if build.links else None,
                     "queue_time": build.queue_time,
                     "start_time": build.start_time,
                     "finish_time": build.finish_time,

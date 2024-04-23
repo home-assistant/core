@@ -1,4 +1,5 @@
 """Tests for the Flexit Nordic (BACnet) climate entity."""
+
 from unittest.mock import AsyncMock
 
 from syrupy.assertion import SnapshotAssertion

@@ -1,4 +1,5 @@
 """The tests for the VoiceRSS speech platform."""
+
 from http import HTTPStatus
 
 import pytest

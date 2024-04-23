@@ -1,4 +1,5 @@
 """Flume binary sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -39,18 +40,11 @@ BINARY_SENSOR_DESCRIPTION_CONNECTED = BinarySensorEntityDescription(
 )
 
 
-@dataclass(frozen=True)
-class FlumeBinarySensorRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class FlumeBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes a binary sensor entity."""
 
     event_rule: str
-
-
-@dataclass(frozen=True)
-class FlumeBinarySensorEntityDescription(
-    BinarySensorEntityDescription, FlumeBinarySensorRequiredKeysMixin
-):
-    """Describes a binary sensor entity."""
 
 
 FLUME_BINARY_NOTIFICATION_SENSORS: tuple[FlumeBinarySensorEntityDescription, ...] = (
@@ -59,14 +53,12 @@ FLUME_BINARY_NOTIFICATION_SENSORS: tuple[FlumeBinarySensorEntityDescription, ...
         translation_key="leak",
         entity_category=EntityCategory.DIAGNOSTIC,
         event_rule=NOTIFICATION_LEAK_DETECTED,
-        icon="mdi:pipe-leak",
     ),
     FlumeBinarySensorEntityDescription(
         key="flow",
         translation_key="flow",
         entity_category=EntityCategory.DIAGNOSTIC,
         event_rule=NOTIFICATION_HIGH_FLOW,
-        icon="mdi:waves",
     ),
     FlumeBinarySensorEntityDescription(
         key="low_battery",

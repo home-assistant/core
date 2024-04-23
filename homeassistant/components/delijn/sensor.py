@@ -1,4 +1,5 @@
 """Support for De Lijn (Flemish public transport) information."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -63,9 +64,8 @@ async def async_setup_platform(
 
     session = async_get_clientsession(hass)
 
-    sensors = []
-    for nextpassage in config[CONF_NEXT_DEPARTURE]:
-        sensors.append(
+    async_add_entities(
+        (
             DeLijnPublicTransportSensor(
                 Passages(
                     nextpassage[CONF_STOP_ID],
@@ -75,9 +75,10 @@ async def async_setup_platform(
                     True,
                 )
             )
-        )
-
-    async_add_entities(sensors, True)
+            for nextpassage in config[CONF_NEXT_DEPARTURE]
+        ),
+        True,
+    )
 
 
 class DeLijnPublicTransportSensor(SensorEntity):

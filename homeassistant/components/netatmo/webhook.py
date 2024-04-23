@@ -1,4 +1,5 @@
 """The Netatmo integration."""
+
 import logging
 
 from aiohttp.web import Request
