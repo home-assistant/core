@@ -1311,7 +1311,7 @@ pyElectra==1.2.0
 pyRFXtrx==0.31.0
 
 # homeassistant.components.tibber
-pyTibber==0.28.2
+pyTibber==0.29.1
 
 # homeassistant.components.dlink
 pyW215==0.7.0
