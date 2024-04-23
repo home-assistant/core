@@ -1,4 +1,5 @@
 """The tests for the Mikrotik device tracker platform."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -7,8 +8,7 @@ from typing import Any
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components import mikrotik
-import homeassistant.components.device_tracker as device_tracker
+from homeassistant.components import device_tracker, mikrotik
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -87,7 +87,7 @@ async def test_device_trackers(
         WIRELESS_DATA.append(DEVICE_2_WIRELESS)
 
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         device_2 = hass.states.get("device_tracker.device_2")
         assert device_2
@@ -100,7 +100,7 @@ async def test_device_trackers(
         del WIRELESS_DATA[1]  # device 2 is removed from wireless list
         with freeze_time(utcnow() + timedelta(minutes=4)):
             async_fire_time_changed(hass, utcnow() + timedelta(minutes=4))
-            await hass.async_block_till_done()
+            await hass.async_block_till_done(wait_background_tasks=True)
 
         device_2 = hass.states.get("device_tracker.device_2")
         assert device_2
@@ -109,7 +109,7 @@ async def test_device_trackers(
         # test state changes to away if last_seen past consider_home_interval
         with freeze_time(utcnow() + timedelta(minutes=6)):
             async_fire_time_changed(hass, utcnow() + timedelta(minutes=6))
-            await hass.async_block_till_done()
+            await hass.async_block_till_done(wait_background_tasks=True)
 
         device_2 = hass.states.get("device_tracker.device_2")
         assert device_2
@@ -265,7 +265,7 @@ async def test_update_failed(hass: HomeAssistant, mock_device_registry_devices) 
         mikrotik.hub.MikrotikData, "command", side_effect=mikrotik.errors.CannotConnect
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1

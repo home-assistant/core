@@ -1,4 +1,5 @@
 """The test for the Facebook notify module."""
+
 from http import HTTPStatus
 
 import pytest

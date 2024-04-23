@@ -1,4 +1,5 @@
 """Tests for the AsusWrt sensor."""
+
 from datetime import timedelta
 
 from pyasuswrt.exceptions import AsusWrtError, AsusWrtNotAvailableInfoError

@@ -1,4 +1,5 @@
 """The Bond integration."""
+
 from http import HTTPStatus
 import logging
 from typing import Any

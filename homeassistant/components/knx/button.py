@@ -1,4 +1,5 @@
 """Support for KNX/IP buttons."""
+
 from __future__ import annotations
 
 from xknx import XKNX

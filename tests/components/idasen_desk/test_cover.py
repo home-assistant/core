@@ -1,4 +1,5 @@
 """Test the IKEA Idasen Desk cover."""
+
 from typing import Any
 from unittest.mock import MagicMock
 

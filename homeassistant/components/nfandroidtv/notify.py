@@ -1,4 +1,5 @@
 """Notifications for Android TV notification service."""
+
 from __future__ import annotations
 
 from io import BufferedReader

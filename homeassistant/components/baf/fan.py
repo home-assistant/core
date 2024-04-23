@@ -1,4 +1,5 @@
 """Support for Big Ass Fans fan."""
+
 from __future__ import annotations
 
 import math
@@ -47,6 +48,7 @@ class BAFFan(BAFEntity, FanEntity):
     _attr_preset_modes = [PRESET_MODE_AUTO]
     _attr_speed_count = SPEED_COUNT
     _attr_name = None
+    _attr_translation_key = "baf"
 
     @callback
     def _async_update_attrs(self) -> None:

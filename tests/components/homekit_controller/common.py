@@ -1,4 +1,5 @@
 """Code to support homekit_controller tests."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -194,8 +195,7 @@ async def setup_accessories_from_file(hass: HomeAssistant, path: str) -> Accesso
         load_fixture, os.path.join("homekit_controller", path)
     )
     accessories_json = hkloads(accessories_fixture)
-    accessories = Accessories.from_list(accessories_json)
-    return accessories
+    return Accessories.from_list(accessories_json)
 
 
 async def setup_platform(hass):
@@ -306,7 +306,7 @@ async def setup_test_component(
 
     config_entry, pairing = await setup_test_accessories(hass, [accessory], connection)
     entity = "testdevice" if suffix is None else f"testdevice_{suffix}"
-    return Helper(hass, ".".join((domain, entity)), pairing, accessory, config_entry)
+    return Helper(hass, f"{domain}.{entity}", pairing, accessory, config_entry)
 
 
 async def assert_devices_and_entities_created(

@@ -1,4 +1,5 @@
 """Husqvarna Automower lawn mower entity."""
+
 import logging
 
 from aioautomower.exceptions import ApiException
@@ -16,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerBaseEntity
+from .entity import AutomowerControlEntity
 
 SUPPORT_STATE_SERVICES = (
     LawnMowerEntityFeature.DOCK
@@ -25,20 +26,6 @@ SUPPORT_STATE_SERVICES = (
 )
 
 DOCKED_ACTIVITIES = (MowerActivities.PARKED_IN_CS, MowerActivities.CHARGING)
-ERROR_ACTIVITIES = (
-    MowerActivities.STOPPED_IN_GARDEN,
-    MowerActivities.UNKNOWN,
-    MowerActivities.NOT_APPLICABLE,
-)
-ERROR_STATES = [
-    MowerStates.FATAL_ERROR,
-    MowerStates.ERROR,
-    MowerStates.ERROR_AT_POWER_UP,
-    MowerStates.NOT_APPLICABLE,
-    MowerStates.UNKNOWN,
-    MowerStates.STOPPED,
-    MowerStates.OFF,
-]
 MOWING_ACTIVITIES = (
     MowerActivities.MOWING,
     MowerActivities.LEAVING,
@@ -64,7 +51,7 @@ async def async_setup_entry(
     )
 
 
-class AutomowerLawnMowerEntity(AutomowerBaseEntity, LawnMowerEntity):
+class AutomowerLawnMowerEntity(AutomowerControlEntity, LawnMowerEntity):
     """Defining each mower Entity."""
 
     _attr_name = None
@@ -78,11 +65,6 @@ class AutomowerLawnMowerEntity(AutomowerBaseEntity, LawnMowerEntity):
         """Set up HusqvarnaAutomowerEntity."""
         super().__init__(mower_id, coordinator)
         self._attr_unique_id = mower_id
-
-    @property
-    def available(self) -> bool:
-        """Return True if the device is available."""
-        return super().available and self.mower_attributes.metadata.connected
 
     @property
     def activity(self) -> LawnMowerActivity:

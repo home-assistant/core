@@ -1,4 +1,5 @@
 """Common test objects."""
+
 import asyncio
 from datetime import timedelta
 import math
@@ -202,7 +203,7 @@ async def async_test_rejoin(hass, zigpy_device, clusters, report_counts, ep_id=1
     zha_gateway = get_zha_gateway(hass)
     await zha_gateway.async_device_initialized(zigpy_device)
     await hass.async_block_till_done()
-    for cluster, reports in zip(clusters, report_counts):
+    for cluster, reports in zip(clusters, report_counts, strict=False):
         assert cluster.bind.call_count == 1
         assert cluster.bind.await_count == 1
         if reports:
@@ -243,10 +244,7 @@ def patch_zha_config(component: str, overrides: dict[tuple[str, str], Any]):
     def new_get_config(config_entry, section, config_key, default):
         if (section, config_key) in overrides:
             return overrides[section, config_key]
-        else:
-            return async_get_zha_config_value(
-                config_entry, section, config_key, default
-            )
+        return async_get_zha_config_value(config_entry, section, config_key, default)
 
     return patch(
         f"homeassistant.components.zha.{component}.async_get_zha_config_value",

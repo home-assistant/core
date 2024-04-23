@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/vscode/devcontainers/python:0-3.11
+FROM mcr.microsoft.com/devcontainers/python:1-3.12
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -22,6 +22,7 @@ RUN \
         libavcodec-dev \
         libavdevice-dev \
         libavutil-dev \
+        libgammu-dev \
         libswscale-dev \
         libswresample-dev \
         libavfilter-dev \

@@ -1,4 +1,5 @@
 """Test service helpers."""
+
 import asyncio
 from collections.abc import Iterable
 from copy import deepcopy
@@ -6,12 +7,17 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_unordered import unordered
 import voluptuous as vol
 
 # To prevent circular import when running just this file
 from homeassistant import exceptions
 from homeassistant.auth.permissions import PolicyPermissions
 import homeassistant.components  # noqa: F401
+from homeassistant.components.group import DOMAIN as DOMAIN_GROUP, Group
+from homeassistant.components.logger import DOMAIN as DOMAIN_LOGGER
+from homeassistant.components.shell_command import DOMAIN as DOMAIN_SHELL_COMMAND
+from homeassistant.components.system_health import DOMAIN as DOMAIN_SYSTEM_HEALTH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
@@ -28,18 +34,21 @@ from homeassistant.core import (
     SupportsResponse,
 )
 from homeassistant.helpers import (
+    area_registry as ar,
     device_registry as dr,
     entity_registry as er,
     service,
     template,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockEntity,
     MockUser,
     async_mock_service,
+    mock_area_registry,
     mock_device_registry,
     mock_registry,
 )
@@ -97,11 +106,37 @@ def mock_entities(hass: HomeAssistant) -> dict[str, MockEntity]:
 
 
 @pytest.fixture
-def area_mock(hass):
-    """Mock including area info."""
+def floor_area_mock(hass: HomeAssistant) -> None:
+    """Mock including floor and area info."""
     hass.states.async_set("light.Bowl", STATE_ON)
     hass.states.async_set("light.Ceiling", STATE_OFF)
     hass.states.async_set("light.Kitchen", STATE_OFF)
+
+    area_in_floor = ar.AreaEntry(
+        id="test-area",
+        name="Test area",
+        aliases={},
+        normalized_name="test-area",
+        floor_id="test-floor",
+        icon=None,
+        picture=None,
+    )
+    area_in_floor_a = ar.AreaEntry(
+        id="area-a",
+        name="Area A",
+        aliases={},
+        normalized_name="area-a",
+        floor_id="floor-a",
+        icon=None,
+        picture=None,
+    )
+    mock_area_registry(
+        hass,
+        {
+            area_in_floor.id: area_in_floor,
+            area_in_floor_a.id: area_in_floor_a,
+        },
+    )
 
     device_in_area = dr.DeviceEntry(area_id="test-area")
     device_no_area = dr.DeviceEntry(id="device-no-area-id")
@@ -233,6 +268,120 @@ def area_mock(hass):
     )
 
 
+@pytest.fixture
+def label_mock(hass: HomeAssistant) -> None:
+    """Mock including label info."""
+    hass.states.async_set("light.bowl", STATE_ON)
+    hass.states.async_set("light.ceiling", STATE_OFF)
+    hass.states.async_set("light.kitchen", STATE_OFF)
+
+    area_with_labels = ar.AreaEntry(
+        id="area-with-labels",
+        name="Area with labels",
+        aliases={},
+        normalized_name="with_labels",
+        floor_id=None,
+        icon=None,
+        labels={"label_area"},
+        picture=None,
+    )
+    area_without_labels = ar.AreaEntry(
+        id="area-no-labels",
+        name="Area without labels",
+        aliases={},
+        normalized_name="without_labels",
+        floor_id=None,
+        icon=None,
+        labels=set(),
+        picture=None,
+    )
+    mock_area_registry(
+        hass,
+        {
+            area_with_labels.id: area_with_labels,
+            area_without_labels.id: area_without_labels,
+        },
+    )
+
+    device_has_label1 = dr.DeviceEntry(labels={"label1"})
+    device_has_label2 = dr.DeviceEntry(labels={"label2"})
+    device_has_labels = dr.DeviceEntry(
+        labels={"label1", "label2"}, area_id=area_with_labels.id
+    )
+    device_no_labels = dr.DeviceEntry(
+        id="device-no-labels", area_id=area_without_labels.id
+    )
+
+    mock_device_registry(
+        hass,
+        {
+            device_has_label1.id: device_has_label1,
+            device_has_label2.id: device_has_label2,
+            device_has_labels.id: device_has_labels,
+            device_no_labels.id: device_no_labels,
+        },
+    )
+
+    entity_with_my_label = er.RegistryEntry(
+        entity_id="light.with_my_label",
+        unique_id="with_my_label",
+        platform="test",
+        labels={"my-label"},
+    )
+    hidden_entity_with_my_label = er.RegistryEntry(
+        entity_id="light.hidden_with_my_label",
+        unique_id="hidden_with_my_label",
+        platform="test",
+        labels={"my-label"},
+        hidden_by=er.RegistryEntryHider.USER,
+    )
+    config_entity_with_my_label = er.RegistryEntry(
+        entity_id="light.config_with_my_label",
+        unique_id="config_with_my_label",
+        platform="test",
+        labels={"my-label"},
+        entity_category=EntityCategory.CONFIG,
+    )
+    entity_with_label1_from_device = er.RegistryEntry(
+        entity_id="light.with_label1_from_device",
+        unique_id="with_label1_from_device",
+        platform="test",
+        device_id=device_has_label1.id,
+    )
+    entity_with_label1_and_label2_from_device = er.RegistryEntry(
+        entity_id="light.with_label1_and_label2_from_device",
+        unique_id="with_label1_and_label2_from_device",
+        platform="test",
+        labels={"label1"},
+        device_id=device_has_label2.id,
+    )
+    entity_with_labels_from_device = er.RegistryEntry(
+        entity_id="light.with_labels_from_device",
+        unique_id="with_labels_from_device",
+        platform="test",
+        device_id=device_has_labels.id,
+    )
+    entity_with_no_labels = er.RegistryEntry(
+        entity_id="light.no_labels",
+        unique_id="no_labels",
+        platform="test",
+        device_id=device_no_labels.id,
+    )
+
+    mock_registry(
+        hass,
+        {
+            config_entity_with_my_label.entity_id: config_entity_with_my_label,
+            entity_with_label1_and_label2_from_device.entity_id: entity_with_label1_and_label2_from_device,
+            entity_with_label1_from_device.entity_id: entity_with_label1_from_device,
+            entity_with_labels_from_device.entity_id: entity_with_labels_from_device,
+            entity_with_my_label.entity_id: entity_with_my_label,
+            entity_with_no_labels.entity_id: entity_with_no_labels,
+            hidden_entity_with_my_label.entity_id: hidden_entity_with_my_label,
+        },
+    )
+
+
 async def test_call_from_config(hass: HomeAssistant) -> None:
     """Test the sync wrapper of service.async_call_from_config."""
     calls = async_mock_service(hass, "test_domain", "test_service")
@@ -259,7 +408,11 @@ async def test_service_call(hass: HomeAssistant) -> None:
             "effect": {"value": "{{ 'complex' }}", "simple": "simple"},
         },
         "data_template": {"list": ["{{ 'list' }}", "2"]},
-        "target": {"area_id": "test-area-id", "entity_id": "will.be_overridden"},
+        "target": {
+            "area_id": "test-area-id",
+            "entity_id": "will.be_overridden",
+            "floor_id": "test-floor-id",
+        },
     }
 
     await service.async_call_from_config(hass, config)
@@ -274,6 +427,7 @@ async def test_service_call(hass: HomeAssistant) -> None:
         "list": ["list", "2"],
         "entity_id": ["hello.world"],
         "area_id": ["test-area-id"],
+        "floor_id": ["test-floor-id"],
     }
 
     config = {
@@ -282,6 +436,7 @@ async def test_service_call(hass: HomeAssistant) -> None:
             "area_id": ["area-42", "{{ 'area-51' }}"],
             "device_id": ["abcdef", "{{ 'fedcba' }}"],
             "entity_id": ["light.static", "{{ 'light.dynamic' }}"],
+            "floor_id": ["floor-first", "{{ 'floor-second' }}"],
         },
     }
 
@@ -292,6 +447,7 @@ async def test_service_call(hass: HomeAssistant) -> None:
         "area_id": ["area-42", "area-51"],
         "device_id": ["abcdef", "fedcba"],
         "entity_id": ["light.static", "light.dynamic"],
+        "floor_id": ["floor-first", "floor-second"],
     }
 
     config = {
@@ -447,7 +603,7 @@ async def test_service_call_entry_id(
     assert dict(calls[0].data) == {"entity_id": ["hello.world"]}
 
 
-@pytest.mark.parametrize("target", ("all", "none"))
+@pytest.mark.parametrize("target", ["all", "none"])
 async def test_service_call_all_none(hass: HomeAssistant, target) -> None:
     """Test service call targeting all."""
     calls = async_mock_service(hass, "test_domain", "test_service")
@@ -471,7 +627,7 @@ async def test_extract_entity_ids(hass: HomeAssistant) -> None:
 
     assert await async_setup_component(hass, "group", {})
     await hass.async_block_till_done()
-    await hass.components.group.Group.async_create_group(
+    await Group.async_create_group(
         hass,
         "test",
         created_by_service=False,
@@ -505,7 +661,9 @@ async def test_extract_entity_ids(hass: HomeAssistant) -> None:
     )
 
 
-async def test_extract_entity_ids_from_area(hass: HomeAssistant, area_mock) -> None:
+async def test_extract_entity_ids_from_area(
+    hass: HomeAssistant, floor_area_mock
+) -> None:
     """Test extract_entity_ids method with areas."""
     call = ServiceCall("light", "turn_on", {"area_id": "own-area"})
 
@@ -536,7 +694,9 @@ async def test_extract_entity_ids_from_area(hass: HomeAssistant, area_mock) -> N
     )
 
 
-async def test_extract_entity_ids_from_devices(hass: HomeAssistant, area_mock) -> None:
+async def test_extract_entity_ids_from_devices(
+    hass: HomeAssistant, floor_area_mock
+) -> None:
     """Test extract_entity_ids method with devices."""
     assert await service.async_extract_entity_ids(
         hass, ServiceCall("light", "turn_on", {"device_id": "device-no-area-id"})
@@ -559,20 +719,100 @@ async def test_extract_entity_ids_from_devices(hass: HomeAssistant, area_mock) -
     )
 
 
+@pytest.mark.usefixtures("floor_area_mock")
+async def test_extract_entity_ids_from_floor(hass: HomeAssistant) -> None:
+    """Test extract_entity_ids method with floors."""
+    call = ServiceCall("light", "turn_on", {"floor_id": "test-floor"})
+
+    assert {
+        "light.in_area",
+        "light.assigned_to_area",
+    } == await service.async_extract_entity_ids(hass, call)
+
+    call = ServiceCall("light", "turn_on", {"floor_id": ["test-floor", "floor-a"]})
+
+    assert {
+        "light.in_area",
+        "light.assigned_to_area",
+        "light.in_area_a",
+    } == await service.async_extract_entity_ids(hass, call)
+
+    assert (
+        await service.async_extract_entity_ids(
+            hass, ServiceCall("light", "turn_on", {"floor_id": ENTITY_MATCH_NONE})
+        )
+        == set()
+    )
+
+
+@pytest.mark.usefixtures("label_mock")
+async def test_extract_entity_ids_from_labels(hass: HomeAssistant) -> None:
+    """Test extract_entity_ids method with labels."""
+    call = ServiceCall("light", "turn_on", {"label_id": "my-label"})
+
+    assert {
+        "light.with_my_label",
+    } == await service.async_extract_entity_ids(hass, call)
+
+    call = ServiceCall("light", "turn_on", {"label_id": "label1"})
+
+    assert {
+        "light.with_label1_from_device",
+        "light.with_labels_from_device",
+        "light.with_label1_and_label2_from_device",
+    } == await service.async_extract_entity_ids(hass, call)
+
+    call = ServiceCall("light", "turn_on", {"label_id": ["label2"]})
+
+    assert {
+        "light.with_labels_from_device",
+        "light.with_label1_and_label2_from_device",
+    } == await service.async_extract_entity_ids(hass, call)
+
+    call = ServiceCall("light", "turn_on", {"label_id": ["label_area"]})
+
+    assert {
+        "light.with_labels_from_device",
+    } == await service.async_extract_entity_ids(hass, call)
+
+    assert (
+        await service.async_extract_entity_ids(
+            hass, ServiceCall("light", "turn_on", {"label_id": ENTITY_MATCH_NONE})
+        )
+        == set()
+    )
+
+
 async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
     """Test async_get_all_descriptions."""
-    group = hass.components.group
-    group_config = {group.DOMAIN: {}}
-    await async_setup_component(hass, group.DOMAIN, group_config)
-    descriptions = await service.async_get_all_descriptions(hass)
+    group_config = {DOMAIN_GROUP: {}}
+    assert await async_setup_component(hass, DOMAIN_GROUP, group_config)
+    assert await async_setup_component(hass, DOMAIN_SYSTEM_HEALTH, {})
 
-    assert len(descriptions) == 1
+    with patch(
+        "homeassistant.helpers.service._load_services_files",
+        side_effect=service._load_services_files,
+    ) as proxy_load_services_files:
+        descriptions = await service.async_get_all_descriptions(hass)
 
-    assert "description" in descriptions["group"]["reload"]
-    assert "fields" in descriptions["group"]["reload"]
+    # Test we only load services.yaml for integrations with services.yaml
+    # And system_health has no services
+    assert proxy_load_services_files.mock_calls[0][1][1] == unordered(
+        [
+            await async_get_integration(hass, DOMAIN_GROUP),
+            await async_get_integration(hass, "http"),  # system_health requires http
+        ]
+    )
 
-    logger = hass.components.logger
-    logger_config = {logger.DOMAIN: {}}
+    assert len(descriptions) == 2
+    assert DOMAIN_GROUP in descriptions
+    assert "description" in descriptions[DOMAIN_GROUP]["reload"]
+    assert "fields" in descriptions[DOMAIN_GROUP]["reload"]
+
+    # Does not have services
+    assert DOMAIN_SYSTEM_HEALTH not in descriptions
+
+    logger_config = {DOMAIN_LOGGER: {}}
 
     async def async_get_translations(
         hass: HomeAssistant,
@@ -582,7 +822,7 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
         config_flow: bool | None = None,
     ) -> dict[str, Any]:
         """Return all backend translations."""
-        translation_key_prefix = f"component.{logger.DOMAIN}.services.set_default_level"
+        translation_key_prefix = f"component.{DOMAIN_LOGGER}.services.set_default_level"
         return {
             f"{translation_key_prefix}.name": "Translated name",
             f"{translation_key_prefix}.description": "Translated description",
@@ -595,58 +835,58 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
         "homeassistant.helpers.service.translation.async_get_translations",
         side_effect=async_get_translations,
     ):
-        await async_setup_component(hass, logger.DOMAIN, logger_config)
+        await async_setup_component(hass, DOMAIN_LOGGER, logger_config)
         descriptions = await service.async_get_all_descriptions(hass)
 
-    assert len(descriptions) == 2
-
-    assert descriptions[logger.DOMAIN]["set_default_level"]["name"] == "Translated name"
+    assert len(descriptions) == 3
+    assert DOMAIN_LOGGER in descriptions
+    assert descriptions[DOMAIN_LOGGER]["set_default_level"]["name"] == "Translated name"
     assert (
-        descriptions[logger.DOMAIN]["set_default_level"]["description"]
+        descriptions[DOMAIN_LOGGER]["set_default_level"]["description"]
         == "Translated description"
     )
     assert (
-        descriptions[logger.DOMAIN]["set_default_level"]["fields"]["level"]["name"]
+        descriptions[DOMAIN_LOGGER]["set_default_level"]["fields"]["level"]["name"]
         == "Field name"
     )
     assert (
-        descriptions[logger.DOMAIN]["set_default_level"]["fields"]["level"][
+        descriptions[DOMAIN_LOGGER]["set_default_level"]["fields"]["level"][
             "description"
         ]
         == "Field description"
     )
     assert (
-        descriptions[logger.DOMAIN]["set_default_level"]["fields"]["level"]["example"]
+        descriptions[DOMAIN_LOGGER]["set_default_level"]["fields"]["level"]["example"]
         == "Field example"
     )
 
-    hass.services.async_register(logger.DOMAIN, "new_service", lambda x: None, None)
+    hass.services.async_register(DOMAIN_LOGGER, "new_service", lambda x: None, None)
     service.async_set_service_schema(
-        hass, logger.DOMAIN, "new_service", {"description": "new service"}
+        hass, DOMAIN_LOGGER, "new_service", {"description": "new service"}
     )
     descriptions = await service.async_get_all_descriptions(hass)
-    assert "description" in descriptions[logger.DOMAIN]["new_service"]
-    assert descriptions[logger.DOMAIN]["new_service"]["description"] == "new service"
+    assert "description" in descriptions[DOMAIN_LOGGER]["new_service"]
+    assert descriptions[DOMAIN_LOGGER]["new_service"]["description"] == "new service"
 
     hass.services.async_register(
-        logger.DOMAIN, "another_new_service", lambda x: None, None
+        DOMAIN_LOGGER, "another_new_service", lambda x: None, None
     )
     hass.services.async_register(
-        logger.DOMAIN,
+        DOMAIN_LOGGER,
         "service_with_optional_response",
         lambda x: None,
         None,
         SupportsResponse.OPTIONAL,
     )
     hass.services.async_register(
-        logger.DOMAIN,
+        DOMAIN_LOGGER,
         "service_with_only_response",
         lambda x: None,
         None,
         SupportsResponse.ONLY,
     )
     hass.services.async_register(
-        logger.DOMAIN,
+        DOMAIN_LOGGER,
         "another_service_with_response",
         lambda x: None,
         None,
@@ -654,22 +894,22 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
     )
     service.async_set_service_schema(
         hass,
-        logger.DOMAIN,
+        DOMAIN_LOGGER,
         "another_service_with_response",
         {"description": "response service"},
     )
     descriptions = await service.async_get_all_descriptions(hass)
-    assert "another_new_service" in descriptions[logger.DOMAIN]
-    assert "service_with_optional_response" in descriptions[logger.DOMAIN]
-    assert descriptions[logger.DOMAIN]["service_with_optional_response"][
+    assert "another_new_service" in descriptions[DOMAIN_LOGGER]
+    assert "service_with_optional_response" in descriptions[DOMAIN_LOGGER]
+    assert descriptions[DOMAIN_LOGGER]["service_with_optional_response"][
         "response"
     ] == {"optional": True}
-    assert "service_with_only_response" in descriptions[logger.DOMAIN]
-    assert descriptions[logger.DOMAIN]["service_with_only_response"]["response"] == {
+    assert "service_with_only_response" in descriptions[DOMAIN_LOGGER]
+    assert descriptions[DOMAIN_LOGGER]["service_with_only_response"]["response"] == {
         "optional": False
     }
-    assert "another_service_with_response" in descriptions[logger.DOMAIN]
-    assert descriptions[logger.DOMAIN]["another_service_with_response"]["response"] == {
+    assert "another_service_with_response" in descriptions[DOMAIN_LOGGER]
+    assert descriptions[DOMAIN_LOGGER]["another_service_with_response"]["response"] == {
         "optional": True
     }
 
@@ -681,9 +921,8 @@ async def test_async_get_all_descriptions_failing_integration(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test async_get_all_descriptions when async_get_integrations returns an exception."""
-    group = hass.components.group
-    group_config = {group.DOMAIN: {}}
-    await async_setup_component(hass, group.DOMAIN, group_config)
+    group_config = {DOMAIN_GROUP: {}}
+    await async_setup_component(hass, DOMAIN_GROUP, group_config)
     descriptions = await service.async_get_all_descriptions(hass)
 
     assert len(descriptions) == 1
@@ -691,15 +930,17 @@ async def test_async_get_all_descriptions_failing_integration(
     assert "description" in descriptions["group"]["reload"]
     assert "fields" in descriptions["group"]["reload"]
 
-    logger = hass.components.logger
-    logger_config = {logger.DOMAIN: {}}
-    await async_setup_component(hass, logger.DOMAIN, logger_config)
-    with patch(
-        "homeassistant.helpers.service.async_get_integrations",
-        return_value={"logger": ImportError},
-    ), patch(
-        "homeassistant.helpers.service.translation.async_get_translations",
-        return_value={},
+    logger_config = {DOMAIN_LOGGER: {}}
+    await async_setup_component(hass, DOMAIN_LOGGER, logger_config)
+    with (
+        patch(
+            "homeassistant.helpers.service.async_get_integrations",
+            return_value={"logger": ImportError},
+        ),
+        patch(
+            "homeassistant.helpers.service.translation.async_get_translations",
+            return_value={},
+        ),
     ):
         descriptions = await service.async_get_all_descriptions(hass)
 
@@ -708,32 +949,32 @@ async def test_async_get_all_descriptions_failing_integration(
 
     # Services are empty defaults if the load fails but should
     # not raise
-    assert descriptions[logger.DOMAIN]["set_level"] == {
+    assert descriptions[DOMAIN_LOGGER]["set_level"] == {
         "description": "",
         "fields": {},
         "name": "",
     }
 
-    hass.services.async_register(logger.DOMAIN, "new_service", lambda x: None, None)
+    hass.services.async_register(DOMAIN_LOGGER, "new_service", lambda x: None, None)
     service.async_set_service_schema(
-        hass, logger.DOMAIN, "new_service", {"description": "new service"}
+        hass, DOMAIN_LOGGER, "new_service", {"description": "new service"}
     )
     descriptions = await service.async_get_all_descriptions(hass)
-    assert "description" in descriptions[logger.DOMAIN]["new_service"]
-    assert descriptions[logger.DOMAIN]["new_service"]["description"] == "new service"
+    assert "description" in descriptions[DOMAIN_LOGGER]["new_service"]
+    assert descriptions[DOMAIN_LOGGER]["new_service"]["description"] == "new service"
 
     hass.services.async_register(
-        logger.DOMAIN, "another_new_service", lambda x: None, None
+        DOMAIN_LOGGER, "another_new_service", lambda x: None, None
     )
     hass.services.async_register(
-        logger.DOMAIN,
+        DOMAIN_LOGGER,
         "service_with_optional_response",
         lambda x: None,
         None,
         SupportsResponse.OPTIONAL,
     )
     hass.services.async_register(
-        logger.DOMAIN,
+        DOMAIN_LOGGER,
         "service_with_only_response",
         lambda x: None,
         None,
@@ -741,13 +982,13 @@ async def test_async_get_all_descriptions_failing_integration(
     )
 
     descriptions = await service.async_get_all_descriptions(hass)
-    assert "another_new_service" in descriptions[logger.DOMAIN]
-    assert "service_with_optional_response" in descriptions[logger.DOMAIN]
-    assert descriptions[logger.DOMAIN]["service_with_optional_response"][
+    assert "another_new_service" in descriptions[DOMAIN_LOGGER]
+    assert "service_with_optional_response" in descriptions[DOMAIN_LOGGER]
+    assert descriptions[DOMAIN_LOGGER]["service_with_optional_response"][
         "response"
     ] == {"optional": True}
-    assert "service_with_only_response" in descriptions[logger.DOMAIN]
-    assert descriptions[logger.DOMAIN]["service_with_only_response"]["response"] == {
+    assert "service_with_only_response" in descriptions[DOMAIN_LOGGER]
+    assert descriptions[DOMAIN_LOGGER]["service_with_only_response"]["response"] == {
         "optional": False
     }
 
@@ -759,9 +1000,8 @@ async def test_async_get_all_descriptions_dynamically_created_services(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test async_get_all_descriptions when async_get_integrations when services are dynamic."""
-    group = hass.components.group
-    group_config = {group.DOMAIN: {}}
-    await async_setup_component(hass, group.DOMAIN, group_config)
+    group_config = {DOMAIN_GROUP: {}}
+    await async_setup_component(hass, DOMAIN_GROUP, group_config)
     descriptions = await service.async_get_all_descriptions(hass)
 
     assert len(descriptions) == 1
@@ -769,13 +1009,12 @@ async def test_async_get_all_descriptions_dynamically_created_services(
     assert "description" in descriptions["group"]["reload"]
     assert "fields" in descriptions["group"]["reload"]
 
-    shell_command = hass.components.shell_command
-    shell_command_config = {shell_command.DOMAIN: {"test_service": "ls /bin"}}
-    await async_setup_component(hass, shell_command.DOMAIN, shell_command_config)
+    shell_command_config = {DOMAIN_SHELL_COMMAND: {"test_service": "ls /bin"}}
+    await async_setup_component(hass, DOMAIN_SHELL_COMMAND, shell_command_config)
     descriptions = await service.async_get_all_descriptions(hass)
 
     assert len(descriptions) == 2
-    assert descriptions[shell_command.DOMAIN]["test_service"] == {
+    assert descriptions[DOMAIN_SHELL_COMMAND]["test_service"] == {
         "description": "",
         "fields": {},
         "name": "",
@@ -787,9 +1026,8 @@ async def test_async_get_all_descriptions_new_service_added_while_loading(
     hass: HomeAssistant,
 ) -> None:
     """Test async_get_all_descriptions when a new service is added while loading translations."""
-    group = hass.components.group
-    group_config = {group.DOMAIN: {}}
-    await async_setup_component(hass, group.DOMAIN, group_config)
+    group_config = {DOMAIN_GROUP: {}}
+    await async_setup_component(hass, DOMAIN_GROUP, group_config)
     descriptions = await service.async_get_all_descriptions(hass)
 
     assert len(descriptions) == 1
@@ -797,8 +1035,7 @@ async def test_async_get_all_descriptions_new_service_added_while_loading(
     assert "description" in descriptions["group"]["reload"]
     assert "fields" in descriptions["group"]["reload"]
 
-    logger = hass.components.logger
-    logger_domain = logger.DOMAIN
+    logger_domain = DOMAIN_LOGGER
     logger_config = {logger_domain: {}}
 
     translations_called = asyncio.Event()
@@ -867,9 +1104,8 @@ async def test_register_with_mixed_case(hass: HomeAssistant) -> None:
     For backwards compatibility, we have historically allowed mixed case,
     and automatically converted it to lowercase.
     """
-    logger = hass.components.logger
-    logger_config = {logger.DOMAIN: {}}
-    await async_setup_component(hass, logger.DOMAIN, logger_config)
+    logger_config = {DOMAIN_LOGGER: {}}
+    await async_setup_component(hass, DOMAIN_LOGGER, logger_config)
     logger_domain_mixed = "LoGgEr"
     hass.services.async_register(
         logger_domain_mixed, "NeW_SeRVICE", lambda x: None, None
@@ -878,8 +1114,8 @@ async def test_register_with_mixed_case(hass: HomeAssistant) -> None:
         hass, logger_domain_mixed, "NeW_SeRVICE", {"description": "new service"}
     )
     descriptions = await service.async_get_all_descriptions(hass)
-    assert "description" in descriptions[logger.DOMAIN]["new_service"]
-    assert descriptions[logger.DOMAIN]["new_service"]["description"] == "new service"
+    assert "description" in descriptions[DOMAIN_LOGGER]["new_service"]
+    assert descriptions[DOMAIN_LOGGER]["new_service"]["description"] == "new service"
 
 
 async def test_call_with_required_features(hass: HomeAssistant, mock_entities) -> None:
@@ -1066,9 +1302,12 @@ async def test_call_context_target_specific_no_auth(
     hass: HomeAssistant, mock_handle_entity_call, mock_entities
 ) -> None:
     """Check targeting specific entities without auth."""
-    with pytest.raises(exceptions.Unauthorized) as err, patch(
-        "homeassistant.auth.AuthManager.async_get_user",
-        return_value=Mock(permissions=PolicyPermissions({}, None), is_admin=False),
+    with (
+        pytest.raises(exceptions.Unauthorized) as err,
+        patch(
+            "homeassistant.auth.AuthManager.async_get_user",
+            return_value=Mock(permissions=PolicyPermissions({}, None), is_admin=False),
+        ),
     ):
         await service.entity_service_call(
             hass,
@@ -1465,7 +1704,9 @@ async def test_extract_from_service_filter_out_non_existing_entities(
     ]
 
 
-async def test_extract_from_service_area_id(hass: HomeAssistant, area_mock) -> None:
+async def test_extract_from_service_area_id(
+    hass: HomeAssistant, floor_area_mock
+) -> None:
     """Test the extraction using area ID as reference."""
     entities = [
         MockEntity(name="in_area", entity_id="light.in_area"),
@@ -1500,6 +1741,49 @@ async def test_extract_from_service_area_id(hass: HomeAssistant, area_mock) -> N
     ]
 
 
+@pytest.mark.usefixtures("label_mock")
+async def test_extract_from_service_label_id(hass: HomeAssistant) -> None:
+    """Test the extraction using label ID as reference."""
+    entities = [
+        MockEntity(name="with_my_label", entity_id="light.with_my_label"),
+        MockEntity(name="no_labels", entity_id="light.no_labels"),
+        MockEntity(
+            name="with_labels_from_device", entity_id="light.with_labels_from_device"
+        ),
+    ]
+
+    call = ServiceCall("light", "turn_on", {"label_id": "label_area"})
+    extracted = await service.async_extract_entities(hass, entities, call)
+    assert len(extracted) == 1
+    assert extracted[0].entity_id == "light.with_labels_from_device"
+
+    call = ServiceCall("light", "turn_on", {"label_id": "my-label"})
+    extracted = await service.async_extract_entities(hass, entities, call)
+    assert len(extracted) == 1
+    assert extracted[0].entity_id == "light.with_my_label"
+
+    call = ServiceCall("light", "turn_on", {"label_id": ["my-label", "label1"]})
+    extracted = await service.async_extract_entities(hass, entities, call)
+    assert len(extracted) == 2
+    assert sorted(ent.entity_id for ent in extracted) == [
+        "light.with_labels_from_device",
+        "light.with_my_label",
+    ]
+
+    call = ServiceCall(
+        "light",
+        "turn_on",
+        {"label_id": ["my-label", "label1"], "device_id": "device-no-labels"},
+    )
+    extracted = await service.async_extract_entities(hass, entities, call)
+    assert len(extracted) == 3
+    assert sorted(ent.entity_id for ent in extracted) == [
+        "light.no_labels",
+        "light.with_labels_from_device",
+        "light.with_my_label",
+    ]
+
+
 async def test_entity_service_call_warn_referenced(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1511,12 +1795,15 @@ async def test_entity_service_call_warn_referenced(
             "area_id": "non-existent-area",
             "entity_id": "non.existent",
             "device_id": "non-existent-device",
+            "floor_id": "non-existent-floor",
+            "label_id": "non-existent-label",
         },
     )
     await service.entity_service_call(hass, {}, "", call)
     assert (
-        "Referenced areas non-existent-area, devices non-existent-device, "
-        "entities non.existent are missing or not currently available"
+        "Referenced floors non-existent-floor, areas non-existent-area, "
+        "devices non-existent-device, entities non.existent, "
+        "labels non-existent-label are missing or not currently available"
     ) in caplog.text
 
 
@@ -1531,13 +1818,16 @@ async def test_async_extract_entities_warn_referenced(
             "area_id": "non-existent-area",
             "entity_id": "non.existent",
             "device_id": "non-existent-device",
+            "floor_id": "non-existent-floor",
+            "label_id": "non-existent-label",
         },
     )
     extracted = await service.async_extract_entities(hass, {}, call)
     assert len(extracted) == 0
     assert (
-        "Referenced areas non-existent-area, devices non-existent-device, "
-        "entities non.existent are missing or not currently available"
+        "Referenced floors non-existent-floor, areas non-existent-area, "
+        "devices non-existent-device, entities non.existent, "
+        "labels non-existent-label are missing or not currently available"
     ) in caplog.text
 
 
@@ -1562,3 +1852,139 @@ async def test_async_extract_config_entry_ids(hass: HomeAssistant) -> None:
     )
 
     assert await service.async_extract_config_entry_ids(hass, call) == {"abc"}
+
+
+async def test_reload_service_helper(hass: HomeAssistant) -> None:
+    """Test the reload service helper."""
+
+    active_reload_calls = 0
+    reloaded = []
+
+    async def reload_service_handler(service_call: ServiceCall) -> None:
+        """Remove all automations and load new ones from config."""
+        nonlocal active_reload_calls
+        # Assert the reload helper prevents parallel reloads
+        assert not active_reload_calls
+        active_reload_calls += 1
+        if not (target := service_call.data.get("target")):
+            reloaded.append("all")
+        else:
+            reloaded.append(target)
+        await asyncio.sleep(0.01)
+        active_reload_calls -= 1
+
+    def reload_targets(service_call: ServiceCall) -> set[str | None]:
+        if target_id := service_call.data.get("target"):
+            return {target_id}
+        return {"target1", "target2", "target3", "target4"}
+
+    # Test redundant reload of single targets
+    reloader = service.ReloadServiceHelper(reload_service_handler, reload_targets)
+    tasks = [
+        # This reload task will start executing first, (target1)
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        # These reload tasks will be deduplicated to (target2, target3, target4, target1)
+        # while the first task is reloaded, note that target1 can't be deduplicated
+        # because it's already being reloaded.
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+    ]
+    await asyncio.gather(*tasks)
+    assert reloaded == unordered(
+        ["target1", "target2", "target3", "target4", "target1"]
+    )
+
+    # Test redundant reload of multiple targets + single target
+    reloaded.clear()
+    tasks = [
+        # This reload task will start executing first, (target1)
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        # These reload tasks will be deduplicated to (target2, target3, target4, all)
+        # while the first task is reloaded.
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+        reloader.execute_service(ServiceCall("test", "test")),
+    ]
+    await asyncio.gather(*tasks)
+    assert reloaded == unordered(["target1", "target2", "target3", "target4", "all"])
+
+    # Test redundant reload of multiple targets + single target
+    reloaded.clear()
+    tasks = [
+        # This reload task will start executing first, (all)
+        reloader.execute_service(ServiceCall("test", "test")),
+        # These reload tasks will be deduplicated to (target1, target2, target3, target4)
+        # while the first task is reloaded.
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+    ]
+    await asyncio.gather(*tasks)
+    assert reloaded == unordered(["all", "target1", "target2", "target3", "target4"])
+
+    # Test redundant reload of single targets
+    reloaded.clear()
+    tasks = [
+        # This reload task will start executing first, (target1)
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        # These reload tasks will be deduplicated to (target2, target3, target4, target1)
+        # while the first task is reloaded, note that target1 can't be deduplicated
+        # because it's already being reloaded.
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+    ]
+    await asyncio.gather(*tasks)
+    assert reloaded == unordered(
+        ["target1", "target2", "target3", "target4", "target1"]
+    )
+
+    # Test redundant reload of multiple targets + single target
+    reloaded.clear()
+    tasks = [
+        # This reload task will start executing first, (target1)
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        # These reload tasks will be deduplicated to (target2, target3, target4, all)
+        # while the first task is reloaded.
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+        reloader.execute_service(ServiceCall("test", "test")),
+        reloader.execute_service(ServiceCall("test", "test")),
+    ]
+    await asyncio.gather(*tasks)
+    assert reloaded == unordered(["target1", "target2", "target3", "target4", "all"])
+
+    # Test redundant reload of multiple targets + single target
+    reloaded.clear()
+    tasks = [
+        # This reload task will start executing first, (all)
+        reloader.execute_service(ServiceCall("test", "test")),
+        # These reload tasks will be deduplicated to (target1, target2, target3, target4)
+        # while the first task is reloaded.
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+    ]
+    await asyncio.gather(*tasks)
+    assert reloaded == unordered(["all", "target1", "target2", "target3", "target4"])

@@ -5,10 +5,12 @@
       "user": {
         "description": "Before setup, battery-powered devices must be woken up, you can now wake the device up using a button on it.",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of the Shelly device to connect to."
+          "host": "The hostname or IP address of the Shelly device to connect to.",
+          "port": "The TCP port of the Shelly device to connect to (Gen2+)."
         }
       },
       "credentials": {
@@ -31,11 +33,11 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "firmware_not_fully_provisioned": "Device not fully provisioned. Please contact Shelly support"
+      "firmware_not_fully_provisioned": "Device not fully provisioned. Please contact Shelly support",
+      "custom_port_not_supported": "Gen1 device does not support custom port."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "unsupported_firmware": "The device is using an unsupported firmware version.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again."
     }

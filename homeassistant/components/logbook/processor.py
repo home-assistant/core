@@ -1,4 +1,5 @@
 """Event parser and human readable log generator."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Generator, Sequence
@@ -37,6 +38,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
+from homeassistant.util.event_type import EventType
 
 from .const import (
     ATTR_MESSAGE,
@@ -74,7 +76,8 @@ class LogbookRun:
 
     context_lookup: dict[bytes | None, Row | EventAsRow | None]
     external_events: dict[
-        str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
+        EventType[Any] | str,
+        tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]],
     ]
     event_cache: EventCache
     entity_name_cache: EntityNameCache
@@ -89,7 +92,7 @@ class EventProcessor:
     def __init__(
         self,
         hass: HomeAssistant,
-        event_types: tuple[str, ...],
+        event_types: tuple[EventType[Any] | str, ...],
         entity_ids: list[str] | None = None,
         device_ids: list[str] | None = None,
         context_id: str | None = None,
@@ -427,7 +430,7 @@ class EventCache:
 
     def get(self, row: EventAsRow | Row) -> LazyEventPartialState:
         """Get the event from the row."""
-        if type(row) is EventAsRow:  # noqa: E721 - this is never subclassed
+        if type(row) is EventAsRow:  # - this is never subclassed
             return LazyEventPartialState(row, self._event_data_cache)
         if event := self.event_cache.get(row):
             return event

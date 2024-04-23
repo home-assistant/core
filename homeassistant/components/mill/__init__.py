@@ -1,4 +1,5 @@
 """The mill component."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -65,8 +66,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         key = entry.data[CONF_USERNAME]
         conn_type = CLOUD
 
-    if not await mill_data_connection.connect():
-        raise ConfigEntryNotReady
+    try:
+        if not await mill_data_connection.connect():
+            raise ConfigEntryNotReady
+    except TimeoutError as error:
+        raise ConfigEntryNotReady from error
     data_coordinator = MillDataUpdateCoordinator(
         hass,
         mill_data_connection=mill_data_connection,

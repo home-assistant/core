@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+from deebot_client.capabilities import Capabilities
 from deebot_client.command import Command
 from deebot_client.commands.json import SetVolume
 from deebot_client.events import Event, VolumeEvent
@@ -65,7 +66,7 @@ async def test_number_entities(
     tests: list[NumberTestCase],
 ) -> None:
     """Test that number entity snapshots match."""
-    device = controller.devices[0]
+    device = next(controller.devices(Capabilities))
     event_bus = device.events
 
     assert sorted(hass.states.async_entity_ids()) == sorted(
@@ -88,7 +89,7 @@ async def test_number_entities(
 
         assert entity_entry.device_id
         assert (device_entry := device_registry.async_get(entity_entry.device_id))
-        assert device_entry.identifiers == {(DOMAIN, device.device_info.did)}
+        assert device_entry.identifiers == {(DOMAIN, device.device_info["did"])}
 
         device._execute_command.reset_mock()
         await hass.services.async_call(
@@ -130,7 +131,7 @@ async def test_volume_maximum(
     controller: EcovacsController,
 ) -> None:
     """Test volume maximum."""
-    device = controller.devices[0]
+    device = next(controller.devices(Capabilities))
     event_bus = device.events
     entity_id = "number.ozmo_950_volume"
     assert (state := hass.states.get(entity_id))
