@@ -391,7 +391,7 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "description": "The KNX `notify` service has been migrated. New `notify` entities are available now.\n\nUpdate any automations to use the new `notify.send_message` exposed by these new entities. When is this done, fix this issue and restart Home Assistant.",
+            "description": "The KNX `notify` service has been migrated. New `notify` entities are available now.\n\nUpdate any automations to use the new `notify.send_message` exposed by these new entities. When this is done, fix this issue and restart Home Assistant.",
             "title": "Disable legacy KNX notify service"
           }
         }
