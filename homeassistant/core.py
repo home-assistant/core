@@ -2765,7 +2765,7 @@ class Config:
         self.elevation: int = 0
         """Elevation (always in meters regardless of the unit system)."""
 
-        self.debug: bool = False
+        self.debug: bool = True
         self.location_name: str = "Home"
         self.time_zone: str = "UTC"
         self.units: UnitSystem = METRIC_SYSTEM
