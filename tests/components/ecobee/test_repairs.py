@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 
 from homeassistant.components.ecobee import DOMAIN
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.components.repairs.issue_handler import (
     async_process_repairs_platforms,
 )
@@ -14,11 +13,11 @@ from homeassistant.components.repairs.websocket_api import (
     RepairsFlowResourceView,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers import issue_registry as ir
 
 from .common import setup_platform
 
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
+from tests.typing import ClientSessionGenerator
 
 THERMOSTAT_ID = 0
 
@@ -27,14 +26,12 @@ async def test_ecobee_repair_flow(
     hass: HomeAssistant,
     mock_ecobee: MagicMock,
     hass_client: ClientSessionGenerator,
-    hass_ws_client: WebSocketGenerator,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the ecobee notify service repair flow is triggered."""
-    assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
     await setup_platform(hass, NOTIFY_DOMAIN)
     await async_process_repairs_platforms(hass)
 
-    ws_client = await hass_ws_client(hass)
     http_client = await hass_client()
 
     # Simulate legacy service being used
@@ -50,12 +47,11 @@ async def test_ecobee_repair_flow(
     mock_ecobee.send_message.reset_mock()
 
     # Assert the issue is present
-    await ws_client.send_json_auto_id({"type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    assert len(msg["result"]["issues"]) == 1
-    issue = msg["result"]["issues"][0]
-    assert issue["issue_id"] == "migrate_notify"
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id="migrate_notify",
+    )
+    assert len(issue_registry.issues) == 1
 
     url = RepairsFlowIndexView.url
     resp = await http_client.post(
@@ -76,7 +72,8 @@ async def test_ecobee_repair_flow(
     await hass.async_block_till_done()
 
     # Assert the issue is no longer present
-    await ws_client.send_json_auto_id({"type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    assert len(msg["result"]["issues"]) == 0
+    assert not issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id="migrate_notify",
+    )
+    assert len(issue_registry.issues) == 0
