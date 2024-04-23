@@ -14,7 +14,7 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "Hostname or IP address of your Vallox device."
+          "host": "[%key:component::vallox::config::step::user::data_description::host%]"
         }
       }
     },
