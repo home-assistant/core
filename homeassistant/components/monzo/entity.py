@@ -12,9 +12,10 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import DOMAIN
+from .data import MonzoSensorData
 
 
-class MonzoBaseEntity(CoordinatorEntity):
+class MonzoBaseEntity(CoordinatorEntity[DataUpdateCoordinator[MonzoSensorData]]):
     """Common base for Monzo entities."""
 
     _attr_attribution = "Data provided by Monzo"
@@ -22,12 +23,10 @@ class MonzoBaseEntity(CoordinatorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[MonzoSensorData],
         index: int,
         device_model: str,
-        data_accessor: Callable[
-            [dict[str, list[dict[str, Any]]]], list[dict[str, Any]]
-        ],
+        data_accessor: Callable[[MonzoSensorData], list[dict[str, Any]]],
     ) -> None:
         """Initialize sensor."""
         super().__init__(coordinator)

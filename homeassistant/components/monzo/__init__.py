@@ -4,16 +4,16 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_AUTHENTICATION, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .api import OAuthMonzoAPI
-from .const import ACCOUNTS, CONF_COORDINATOR, DOMAIN, POTS
+from .const import DOMAIN
+from .data import MonzoData, MonzoSensorData
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -26,16 +26,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    async def async_get_monzo_api_data() -> dict[str, Any]:
-        accounts = await externalapi.user_account.accounts()
-        pots = await externalapi.user_account.pots()
-        hass.data[DOMAIN][entry.entry_id][ACCOUNTS] = accounts
-        hass.data[DOMAIN][entry.entry_id][POTS] = pots
-        return {ACCOUNTS: accounts, POTS: pots}
+    async def async_get_monzo_api_data() -> MonzoSensorData:
+        accounts = await external_api.user_account.accounts()
+        pots = await external_api.user_account.pots()
+        hass.data[DOMAIN][entry.entry_id].accounts = accounts
+        hass.data[DOMAIN][entry.entry_id].pots = pots
+        return MonzoSensorData(accounts=accounts, pots=pots)
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
-    externalapi = OAuthMonzoAPI(aiohttp_client.async_get_clientsession(hass), session)
+    external_api = OAuthMonzoAPI(aiohttp_client.async_get_clientsession(hass), session)
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -45,10 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=timedelta(minutes=1),
     )
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        CONF_AUTHENTICATION: externalapi,
-        CONF_COORDINATOR: coordinator,
-    }
+    hass.data[DOMAIN][entry.entry_id] = MonzoData(external_api, coordinator)
 
     await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
