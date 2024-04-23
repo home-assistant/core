@@ -1441,7 +1441,7 @@ class EventBus:
         """Fire an event."""
         _verify_event_type_length_or_raise(event_type)
         self._hass.loop.call_soon_threadsafe(
-            self._async_fire, event_type, event_data, origin, context
+            self.async_fire_internal, event_type, event_data, origin, context
         )
 
     @callback
