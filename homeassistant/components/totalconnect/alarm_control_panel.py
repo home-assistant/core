@@ -38,21 +38,17 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up TotalConnect alarm panels based on a config entry."""
-    alarms: list[TotalConnectAlarm] = []
-
     coordinator: TotalConnectDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    for location in coordinator.client.locations.values():
-        alarms.extend(
-            TotalConnectAlarm(
-                coordinator,
-                location,
-                partition_id,
-            )
-            for partition_id in location.partitions
+    async_add_entities(
+        TotalConnectAlarm(
+            coordinator,
+            location,
+            partition_id,
         )
-
-    async_add_entities(alarms)
+        for location in coordinator.client.locations.values()
+        for partition_id in location.partitions
+    )
 
     # Set up services
     platform = entity_platform.async_get_current_platform()
