@@ -8,6 +8,7 @@
         "menu_options": {
           "binary_sensor": "Binary sensor group",
           "button": "Button group",
+          "climate": "Climate group",
           "cover": "Cover group",
           "event": "Event group",
           "fan": "Fan group",
