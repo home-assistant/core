@@ -1,4 +1,5 @@
 """Tests for iAqualink integration utility functions."""
+
 from iaqualink.exception import AqualinkServiceException
 import pytest
 
@@ -14,9 +15,10 @@ async def test_await_or_reraise(hass: HomeAssistant) -> None:
     async_noop = async_returns(None)
     await await_or_reraise(async_noop())
 
-    with pytest.raises(Exception):
-        async_ex = async_raises(Exception)
+    with pytest.raises(Exception) as exc_info:
+        async_ex = async_raises(Exception("Test exception"))
         await await_or_reraise(async_ex())
+    assert str(exc_info.value) == "Test exception"
 
     with pytest.raises(HomeAssistantError):
         async_ex = async_raises(AqualinkServiceException)

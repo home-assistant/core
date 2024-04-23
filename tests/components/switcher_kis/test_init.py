@@ -1,4 +1,5 @@
 """Test cases for the switcher_kis component."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -86,8 +87,9 @@ async def test_update_fail(
     mock_bridge.mock_callbacks(DUMMY_SWITCHER_DEVICES)
     await hass.async_block_till_done()
     async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=MAX_UPDATE_INTERVAL_SEC - 1)
+        hass, dt_util.utcnow() + timedelta(seconds=MAX_UPDATE_INTERVAL_SEC - 2)
     )
+    await hass.async_block_till_done()
 
     for device in DUMMY_SWITCHER_DEVICES:
         entity_id = f"switch.{slugify(device.name)}"

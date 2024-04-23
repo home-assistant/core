@@ -1,4 +1,5 @@
 """The Twitch component."""
+
 from __future__ import annotations
 
 from typing import cast
@@ -16,7 +17,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 
-from .const import DOMAIN, OAUTH_SCOPES, PLATFORMS
+from .const import CLIENT, DOMAIN, OAUTH_SCOPES, PLATFORMS, SESSION
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -45,7 +46,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client.auto_refresh_auth = False
     await client.set_user_authentication(access_token, scope=OAUTH_SCOPES)
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = client
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        CLIENT: client,
+        SESSION: session,
+    }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

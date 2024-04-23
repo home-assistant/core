@@ -1,4 +1,5 @@
 """The tests for the Vacuum entity integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.vacuum import StateVacuumEntity, VacuumEntityFeature

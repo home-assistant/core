@@ -1,4 +1,5 @@
 """Button for Shelly."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -31,18 +32,11 @@ _ShellyCoordinatorT = TypeVar(
 )
 
 
-@dataclass(frozen=True)
-class ShellyButtonDescriptionMixin(Generic[_ShellyCoordinatorT]):
-    """Mixin to describe a Button entity."""
+@dataclass(frozen=True, kw_only=True)
+class ShellyButtonDescription(ButtonEntityDescription, Generic[_ShellyCoordinatorT]):
+    """Class to describe a Button entity."""
 
     press_action: Callable[[_ShellyCoordinatorT], Coroutine[Any, Any, None]]
-
-
-@dataclass(frozen=True)
-class ShellyButtonDescription(
-    ButtonEntityDescription, ShellyButtonDescriptionMixin[_ShellyCoordinatorT]
-):
-    """Class to describe a Button entity."""
 
     supported: Callable[[_ShellyCoordinatorT], bool] = lambda _: True
 

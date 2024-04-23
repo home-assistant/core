@@ -6,11 +6,13 @@ Component design guidelines:
   format "<DOMAIN>.<OBJECT_ID>".
 - Each component should publish services only under its own domain.
 """
+
 from __future__ import annotations
 
 import logging
 
 from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.helpers.frame import report
 from homeassistant.helpers.group import expand_entity_ids
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,6 +23,15 @@ def is_on(hass: HomeAssistant, entity_id: str | None = None) -> bool:
 
     If there is no entity id given we will check all.
     """
+    report(
+        (
+            "uses homeassistant.components.is_on."
+            " This is deprecated and will stop working in Home Assistant 2024.9, it"
+            " should be updated to use the function of the platform directly."
+        ),
+        error_if_core=True,
+    )
+
     if entity_id:
         entity_ids = expand_entity_ids(hass, [entity_id])
     else:

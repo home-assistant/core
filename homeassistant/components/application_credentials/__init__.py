@@ -5,6 +5,7 @@ of other integrations. Integrations register an authorization server, and then
 the APIs are used to add one or more client credentials. Integrations may also
 provide credentials from yaml for backwards compatibility.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -291,7 +292,7 @@ async def _get_platform(
         _LOGGER.debug("Integration '%s' does not exist: %s", integration_domain, err)
         return None
     try:
-        platform = integration.get_platform("application_credentials")
+        platform = await integration.async_get_platform("application_credentials")
     except ImportError as err:
         _LOGGER.debug(
             "Integration '%s' does not provide application_credentials: %s",

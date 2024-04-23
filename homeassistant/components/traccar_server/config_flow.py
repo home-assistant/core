@@ -1,4 +1,5 @@
 """Config flow for Traccar Server integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,6 +9,7 @@ from pytraccar import ApiClient, ServerModel, TraccarException
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -17,7 +19,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
@@ -111,7 +112,7 @@ OPTIONS_FLOW = {
 }
 
 
-class TraccarServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class TraccarServerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Traccar Server."""
 
     async def _get_server_info(self, user_input: dict[str, Any]) -> ServerModel:
@@ -130,7 +131,7 @@ class TraccarServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -160,7 +161,9 @@ class TraccarServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_info: Mapping[str, Any]) -> FlowResult:
+    async def async_step_import(
+        self, import_info: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Import an entry."""
         configured_port = str(import_info[CONF_PORT])
         self._async_abort_entries_match(

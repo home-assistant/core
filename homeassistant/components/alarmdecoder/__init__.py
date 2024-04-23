@@ -1,4 +1,5 @@
 """Support for AlarmDecoder devices."""
+
 from datetime import timedelta
 import logging
 

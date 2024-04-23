@@ -1,4 +1,5 @@
 """The tests for the folder sensor."""
+
 import os
 
 from homeassistant.components.folder.sensor import CONF_FOLDER_PATHS

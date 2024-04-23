@@ -3,6 +3,7 @@
 Get data from 'Usage Summary' page:
 https://www.fido.ca/pages/#/my-account/wireless
 """
+
 from __future__ import annotations
 
 from datetime import timedelta

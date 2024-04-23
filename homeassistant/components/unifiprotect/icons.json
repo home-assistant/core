@@ -1,0 +1,9 @@
+{
+  "services": {
+    "add_doorbell_text": "mdi:message-plus",
+    "remove_doorbell_text": "mdi:message-minus",
+    "set_default_doorbell_text": "mdi:message-processing",
+    "set_chime_paired_doorbells": "mdi:bell-cog",
+    "remove_privacy_zone": "mdi:eye-minus"
+  }
+}

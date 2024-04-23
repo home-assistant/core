@@ -1,4 +1,5 @@
 """Support for KNX/IP notification services."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -27,21 +28,16 @@ async def async_get_service(
     if platform_config := hass.data[DATA_KNX_CONFIG].get(NotifySchema.PLATFORM):
         xknx: XKNX = hass.data[DOMAIN].xknx
 
-        notification_devices = []
-        for device_config in platform_config:
-            notification_devices.append(
-                XknxNotification(
-                    xknx,
-                    name=device_config[CONF_NAME],
-                    group_address=device_config[KNX_ADDRESS],
-                    value_type=device_config[CONF_TYPE],
-                )
+        notification_devices = [
+            XknxNotification(
+                xknx,
+                name=device_config[CONF_NAME],
+                group_address=device_config[KNX_ADDRESS],
+                value_type=device_config[CONF_TYPE],
             )
-        return (
-            KNXNotificationService(notification_devices)
-            if notification_devices
-            else None
-        )
+            for device_config in platform_config
+        ]
+        return KNXNotificationService(notification_devices)
 
     return None
 

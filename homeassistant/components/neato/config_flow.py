@@ -1,12 +1,12 @@
 """Config flow for Neato Botvac."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
 from typing import Any
 
-from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import NEATO_DOMAIN
@@ -26,7 +26,7 @@ class OAuth2FlowHandler(
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Create an entry for the flow."""
         current_entries = self._async_current_entries()
         if self.source != SOURCE_REAUTH and current_entries:
@@ -35,19 +35,21 @@ class OAuth2FlowHandler(
 
         return await super().async_step_user(user_input=user_input)
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon migration of old entries."""
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth upon migration of old entries."""
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
 
-    async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow. Update an entry if one already exist."""
         current_entries = self._async_current_entries()
         if self.source == SOURCE_REAUTH and current_entries:
