@@ -85,10 +85,10 @@ def handle_errors_and_zip(
                 return data
 
             if isinstance(data, dict):
-                return dict(zip(keys, list(data.values())))
+                return dict(zip(keys, list(data.values()), strict=False))
             if not isinstance(data, (list, tuple)):
                 raise UpdateFailed("Received invalid data type")
-            return dict(zip(keys, data))
+            return dict(zip(keys, data, strict=False))
 
         return _wrapper
 

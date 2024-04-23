@@ -11,7 +11,7 @@ from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant, ReleaseChannel
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
@@ -2390,7 +2390,7 @@ async def test_device_name_translation_placeholders(
                 },
             },
             {"placeholder": "special"},
-            "stable",
+            ReleaseChannel.STABLE,
             nullcontext(),
             (
                 "has translation placeholders '{'placeholder': 'special'}' which do "
@@ -2405,7 +2405,7 @@ async def test_device_name_translation_placeholders(
                 },
             },
             {"placeholder": "special"},
-            "beta",
+            ReleaseChannel.BETA,
             pytest.raises(
                 HomeAssistantError, match="Missing placeholder '2ndplaceholder'"
             ),
@@ -2419,7 +2419,7 @@ async def test_device_name_translation_placeholders(
                 },
             },
             None,
-            "stable",
+            ReleaseChannel.STABLE,
             nullcontext(),
             (
                 "has translation placeholders '{}' which do "
@@ -2434,7 +2434,7 @@ async def test_device_name_translation_placeholders_errors(
     translation_key: str | None,
     translations: dict[str, str] | None,
     placeholders: dict[str, str] | None,
-    release_channel: str,
+    release_channel: ReleaseChannel,
     expectation: AbstractContextManager,
     expected_error: str,
     caplog: pytest.LogCaptureFixture,
