@@ -727,9 +727,7 @@ def test_add(hass: HomeAssistant) -> None:
 
     for inp, out in tests.items():
         assert (
-            template.Template(
-                "{{ %s | add(32) | round }}" % inp, hass
-            ).async_render()
+            template.Template("{{ %s | add(32) | round }}" % inp, hass).async_render()
             == out
         )
 
