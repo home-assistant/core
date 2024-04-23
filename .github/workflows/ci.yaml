@@ -452,7 +452,7 @@ jobs:
           check-latest: true
       - name: Generate partial uv restore key
         id: generate-uv-key
-        run: >-
+        run: |
           uv_version=$(cat requirements_test.txt | grep uv | cut -d '=' -f 3)
           echo "version=${uv_version}" >> $GITHUB_OUTPUT
           echo "key=uv-${{ env.UV_CACHE_VERSION }}-${uv_version}-${{
