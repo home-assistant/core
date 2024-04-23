@@ -899,6 +899,7 @@ class MQTT:
                 mqtt.CONNACK_REFUSED_BAD_USERNAME_PASSWORD,
                 mqtt.CONNACK_REFUSED_NOT_AUTHORIZED,
             ):
+                self._should_reconnect = False
                 self.hass.async_create_task(self.async_disconnect())
                 self.config_entry.async_start_reauth(self.hass)
             _LOGGER.error(
