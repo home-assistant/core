@@ -3,14 +3,7 @@
 from collections.abc import Awaitable, Callable
 from unittest.mock import Mock, patch
 
-from aioesphomeapi import (
-    APIClient,
-    EntityInfo,
-    EntityState,
-    SensorInfo,
-    SensorState,
-    UserService,
-)
+from aioesphomeapi import APIClient, EntityInfo, EntityState, UserService
 import pytest
 
 from homeassistant.components.esphome.dashboard import async_get_dashboard
@@ -197,22 +190,11 @@ async def test_update_static_info(
     ]
     await async_get_dashboard(hass).async_refresh()
 
-    entity_info = [
-        SensorInfo(
-            object_id="mysensor",
-            key=1,
-            name="my sensor",
-            unique_id="my_sensor",
-            unit_of_measurement="",
-        )
-    ]
-    states = [SensorState(key=1, state=123, missing_state=False)]
-    user_service = []
     mock_device: MockESPHomeDevice = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=entity_info,
-        user_service=user_service,
-        states=states,
+        entity_info=[],
+        user_service=[],
+        states=[],
     )
 
     state = hass.states.get("update.test_firmware")
