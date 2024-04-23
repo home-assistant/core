@@ -68,10 +68,8 @@ async def async_setup_entry(
     """Set up the ecobee thermostat."""
     data: EcobeeData = hass.data[DOMAIN]
     async_add_entities(
-        [
-            EcobeeNotifyEntity(data, index)
-            for index in range(len(data.ecobee.thermostats))
-        ]
+        EcobeeNotifyEntity(data, index)
+        for index in range(len(data.ecobee.thermostats))
     )
 
 
