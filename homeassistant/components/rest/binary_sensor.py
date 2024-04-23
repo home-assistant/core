@@ -159,8 +159,8 @@ class RestBinarySensor(ManualTriggerEntity, RestEntity, BinarySensorEntity):
             )
 
         try:
-            if response is not None:
-                self._attr_is_on = bool(int(response))
+            if raw_value != self.rest.data:
+                self._attr_is_on = bool(int(str(response)))
             else:
                 self._attr_is_on = False
                 return
