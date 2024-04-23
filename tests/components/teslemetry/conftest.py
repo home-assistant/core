@@ -8,6 +8,7 @@ from unittest.mock import patch
 import pytest
 
 from .const import (
+    COMMAND_OK,
     LIVE_STATUS,
     METADATA,
     PRODUCTS,

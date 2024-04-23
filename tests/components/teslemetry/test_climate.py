@@ -25,7 +25,13 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, setup_platform
-from .const import COMMAND_ERRORS, VEHICLE_DATA_ALT, WAKE_UP_ASLEEP, WAKE_UP_ONLINE
+from .const import (
+    COMMAND_ERRORS,
+    METADATA_NOSCOPE,
+    VEHICLE_DATA_ALT,
+    WAKE_UP_ASLEEP,
+    WAKE_UP_ONLINE,
+)
 
 from tests.common import async_fire_time_changed
 
