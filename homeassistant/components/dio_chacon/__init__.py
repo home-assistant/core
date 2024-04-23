@@ -1,4 +1,5 @@
 """The dio_chacon integration."""
+
 import logging
 from typing import Any
 
@@ -30,6 +31,8 @@ PLATFORMS: list[Platform] = [Platform.COVER, Platform.SWITCH]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up dio_chacon from a config entry."""
 
+    _LOGGER.debug("Start of async_setup_entry for dio_chacon integration")
+
     hass.data.setdefault(DOMAIN, {})
 
     config = entry.data
@@ -51,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = dio_chacon_client
 
     # Disconnects the permanent websocket connection of home assistant shutdown
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, dio_chacon_client.disconnect())
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, dio_chacon_client.disconnect)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -63,13 +66,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
-    hass.services.async_remove(DOMAIN, SERVICE_RELOAD_STATE)
+    _LOGGER.debug("Start of async_unload_entry for dio_chacon integration")
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
+    hass.services.async_remove(DOMAIN, SERVICE_RELOAD_STATE)
 
     dio_chacon_client = hass.data[DOMAIN][entry.entry_id]
     await dio_chacon_client.disconnect()
+
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 

@@ -1,4 +1,5 @@
 """Cover Platform for Dio Chacon REV-SHUTTER devices."""
+
 import logging
 from typing import Any
 
@@ -151,6 +152,10 @@ class DioChaconShade(RestoreEntity, CoverEntity):
 
         _LOGGER.debug("Stop cover %s , %s", self._target_id, self._attr_name)
 
+        self._attr_is_opening = False
+        self._attr_is_closing = False
+        self.async_write_ha_state()
+
         await self.dio_chacon_client.move_shutter_direction(
             self._target_id, ShutterMoveEnum.STOP
         )
@@ -193,7 +198,8 @@ class DioChaconShade(RestoreEntity, CoverEntity):
 
     def _on_device_state_reload(self, event):
         # Simply launches a forced update calling async_update
-        self.async_schedule_update_ha_state(force_refresh=True)
+        _LOGGER.debug("On _on_device_state_reload")
+        self.schedule_update_ha_state(True)
 
     def _effectively_update_entity_state(self, data: dict[str, Any]) -> None:
         self._attr_available = data["connected"]
@@ -202,8 +208,10 @@ class DioChaconShade(RestoreEntity, CoverEntity):
         self._attr_is_closed = openlevel == 0
         movement = data["movement"]
         if movement == ShutterMoveEnum.DOWN.value:
+            self._attr_is_opening = False
             self._attr_is_closing = True
         elif movement == ShutterMoveEnum.UP.value:
+            self._attr_is_closing = False
             self._attr_is_opening = True
         elif movement == ShutterMoveEnum.STOP.value:
             self._attr_is_closing = False

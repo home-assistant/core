@@ -1,4 +1,5 @@
 """Switch Platform for Dio Chacon REV-LIGHT and switch plug devices."""
+
 import logging
 from typing import Any
 
@@ -138,7 +139,7 @@ class DioChaconShade(RestoreEntity, SwitchEntity):
 
     def _on_device_state_reload(self, event):
         # Simply launches a forced update calling async_update
-        self.async_schedule_update_ha_state(force_refresh=True)
+        self.schedule_update_ha_state(True)
 
     def _effectively_update_entity_state(self, data: dict[str, Any]) -> None:
         self._attr_available = data["connected"]
