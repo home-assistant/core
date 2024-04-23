@@ -30,8 +30,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, entry, session
     )
 
-    await data_update_coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data_update_coordinator
+    await data_update_coordinator.async_config_entry_first_refresh()
 
     return True
 

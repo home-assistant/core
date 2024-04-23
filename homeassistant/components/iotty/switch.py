@@ -2,14 +2,16 @@
 import logging
 from typing import Any
 
+from iottycloud.device import Device
 from iottycloud.lightswitch import LightSwitch
 from iottycloud.verbs import LS_DEVICE_TYPE_UID
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .api import IottyProxy
 from .const import DOMAIN
@@ -18,7 +20,7 @@ from .coordinator import IottyDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-class IottyLightSwitch(SwitchEntity):
+class IottyLightSwitch(SwitchEntity, CoordinatorEntity[Device]):
     """Haas entity class for iotty LightSwitch."""
 
     _attr_has_entity_name = True
@@ -27,9 +29,14 @@ class IottyLightSwitch(SwitchEntity):
     _iotty_cloud: IottyProxy
     _iotty_device: LightSwitch
 
-    def __init__(self, iotty_cloud: IottyProxy, iotty_device: LightSwitch) -> None:
+    def __init__(
+        self,
+        coordinator: IottyDataUpdateCoordinator,
+        iotty_cloud: IottyProxy,
+        iotty_device: LightSwitch,
+    ) -> None:
         """Initialize the LightSwitch device."""
-        super().__init__()
+        super().__init__(coordinator=coordinator)
 
         _LOGGER.debug(
             "Creating new SWITCH (%s) %s",
@@ -66,6 +73,7 @@ class IottyLightSwitch(SwitchEntity):
         await self._iotty_cloud.command(
             self._iotty_device.device_id, self._iotty_device.cmd_turn_on()
         )
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the LightSwitch off."""
@@ -73,6 +81,18 @@ class IottyLightSwitch(SwitchEntity):
         await self._iotty_cloud.command(
             self._iotty_device.device_id, self._iotty_device.cmd_turn_off()
         )
+        await self.coordinator.async_request_refresh()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        device: LightSwitch = next(
+            device
+            for device in self.coordinator.data.devices
+            if device.device_id == self._iotty_device.device_id
+        )
+        self._iotty_device.is_on = device.is_on
+        self.async_write_ha_state()
 
 
 async def async_setup_entry(
@@ -88,7 +108,9 @@ async def async_setup_entry(
     coordinator: IottyDataUpdateCoordinator = hass_data[config_entry.entry_id]
 
     entities = [
-        IottyLightSwitch(iotty_cloud=coordinator.iotty, iotty_device=d)
+        IottyLightSwitch(
+            coordinator=coordinator, iotty_cloud=coordinator.iotty, iotty_device=d
+        )
         for d in coordinator.data.devices
         if d.device_type == LS_DEVICE_TYPE_UID
     ]

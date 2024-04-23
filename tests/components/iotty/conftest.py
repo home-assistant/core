@@ -169,6 +169,16 @@ def mock_get_devices_twodevices() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
+def mock_get_devices_twolightswitches() -> Generator[AsyncMock, None, None]:
+    """Mock for get_devices, returning two objects."""
+
+    with patch(
+        "iottycloud.cloudapi.CloudApi.get_devices", return_value=test_ls
+    ) as mock_fn:
+        yield mock_fn
+
+
+@pytest.fixture
 def mock_get_status_empty() -> Generator[AsyncMock, None, None]:
     """Mock setting up a config entry."""
     with patch("iottycloud.cloudapi.CloudApi.get_status") as mock_fn:
@@ -216,4 +226,13 @@ def mock_schedule_update_ha_state() -> Generator[None, MagicMock, None]:
 def mock_async_add_entities() -> Generator[None, MagicMock, None]:
     """Mock Hass add_entities."""
     with patch("homeassistant.helpers.entity_platform.AddEntitiesCallback") as mock_fn:
+        yield mock_fn
+
+
+@pytest.fixture
+def mock_async_write_ha_state() -> Generator[None, MagicMock, None]:
+    """Mock IottyLightswitch async_write_ha_state."""
+    with patch(
+        "homeassistant.components.iotty.switch.IottyLightSwitch.async_write_ha_state"
+    ) as mock_fn:
         yield mock_fn

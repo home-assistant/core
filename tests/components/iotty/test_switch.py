@@ -21,30 +21,38 @@ from .conftest import test_ls
 from tests.common import MockConfigEntry
 
 
-async def test_creation_ok(mock_iotty: IottyProxy) -> None:
+async def test_creation_ok(
+    mock_iotty: IottyProxy, mock_coordinator: IottyDataUpdateCoordinator
+) -> None:
     """Create a hass Switch from existing LS."""
 
-    sut = IottyLightSwitch(mock_iotty, test_ls[0])
+    sut = IottyLightSwitch(mock_coordinator, mock_iotty, test_ls[0])
     assert sut is not None
 
 
-async def test_device_id_ok(mock_iotty: IottyProxy) -> None:
+async def test_device_id_ok(
+    mock_iotty: IottyProxy, mock_coordinator: IottyDataUpdateCoordinator
+) -> None:
     """Retrieve the nested device_id."""
-    sut = IottyLightSwitch(mock_iotty, test_ls[0])
+    sut = IottyLightSwitch(mock_coordinator, mock_iotty, test_ls[0])
 
     assert sut.device_id == test_ls[0].device_id
 
 
-async def test_name_ok(mock_iotty: IottyProxy) -> None:
+async def test_name_ok(
+    mock_iotty: IottyProxy, mock_coordinator: IottyDataUpdateCoordinator
+) -> None:
     """Retrieve the nested device name."""
-    sut = IottyLightSwitch(mock_iotty, test_ls[0])
+    sut = IottyLightSwitch(mock_coordinator, mock_iotty, test_ls[0])
 
     assert sut.name == test_ls[0].name
 
 
-async def test_is_on_ok(mock_iotty: IottyProxy) -> None:
+async def test_is_on_ok(
+    mock_iotty: IottyProxy, mock_coordinator: IottyDataUpdateCoordinator
+) -> None:
     """Retrieve the nested status."""
-    sut = IottyLightSwitch(mock_iotty, test_ls[0])
+    sut = IottyLightSwitch(mock_coordinator, mock_iotty, test_ls[0])
 
     test_ls[0].is_on = True
 
@@ -52,11 +60,14 @@ async def test_is_on_ok(mock_iotty: IottyProxy) -> None:
 
 
 async def test_turn_on_ok(
-    hass: HomeAssistant, mock_iotty: IottyProxy, mock_iotty_command_fn
+    hass: HomeAssistant,
+    mock_iotty: IottyProxy,
+    mock_coordinator: IottyDataUpdateCoordinator,
+    mock_iotty_command_fn,
 ) -> None:
     """Issue a turnon command."""
     mock_iotty.command = AsyncMock()
-    sut = IottyLightSwitch(mock_iotty, test_ls[0])
+    sut = IottyLightSwitch(mock_coordinator, mock_iotty, test_ls[0])
     await sut.async_turn_on()
     await hass.async_block_till_done()
 
@@ -66,11 +77,14 @@ async def test_turn_on_ok(
 
 
 async def test_turn_off_ok(
-    hass: HomeAssistant, mock_iotty: IottyProxy, mock_iotty_command_fn
+    hass: HomeAssistant,
+    mock_iotty: IottyProxy,
+    mock_coordinator: IottyDataUpdateCoordinator,
+    mock_iotty_command_fn,
 ) -> None:
     """Issue a turnoff command."""
     mock_iotty.command = AsyncMock()
-    sut = IottyLightSwitch(mock_iotty, test_ls[0])
+    sut = IottyLightSwitch(mock_coordinator, mock_iotty, test_ls[0])
     await sut.async_turn_off()
     await hass.async_block_till_done()
 

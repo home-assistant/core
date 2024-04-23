@@ -13,4 +13,4 @@ IOTTYAPI_BASE = "https://homeassistant.iotty.com/"
 
 
 LOGGER = logging.getLogger(__package__)
-UPDATE_INTERVAL = timedelta(seconds=10)
+UPDATE_INTERVAL = timedelta(seconds=30)

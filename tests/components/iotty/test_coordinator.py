@@ -10,7 +10,7 @@ from homeassistant.components.iotty.switch import IottyLightSwitch
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .conftest import test_devices, test_ls
+from .conftest import test_ls
 
 from tests.common import MockConfigEntry
 
@@ -36,14 +36,14 @@ async def test_store_entity_double_id_only_one(
     assert sut_coordinator is not None
 
     sut_coordinator.store_entity(
-        test_ls[0].device_id, IottyLightSwitch(mock_iotty, test_ls[0])
+        test_ls[0].device_id, IottyLightSwitch(sut_coordinator, mock_iotty, test_ls[0])
     )
 
     assert len(sut_coordinator._entities) == 1
 
     # Other device, same ID
     sut_coordinator.store_entity(
-        test_ls[0].device_id, IottyLightSwitch(mock_iotty, test_ls[1])
+        test_ls[0].device_id, IottyLightSwitch(sut_coordinator, mock_iotty, test_ls[1])
     )
 
     assert len(sut_coordinator._entities) == 1
@@ -70,12 +70,12 @@ async def test_store_entity_two_devices_ok(
     assert sut_coordinator is not None
 
     sut_coordinator.store_entity(
-        test_ls[0].device_id, IottyLightSwitch(mock_iotty, test_ls[0])
+        test_ls[0].device_id, IottyLightSwitch(sut_coordinator, mock_iotty, test_ls[0])
     )
 
     # Other device
     sut_coordinator.store_entity(
-        test_ls[1].device_id, IottyLightSwitch(mock_iotty, test_ls[1])
+        test_ls[1].device_id, IottyLightSwitch(sut_coordinator, mock_iotty, test_ls[1])
     )
 
     assert len(sut_coordinator._entities) == 2
@@ -189,11 +189,13 @@ async def test_async_update_data_twodevices_withstatus(
     local_oauth_impl: ClientSession,
     mock_get_status_filled,
     mock_schedule_update_ha_state,
-    mock_get_devices_twodevices,
+    mock_get_devices_twolightswitches,
     # To avoid first call to update_data
     mock_async_first_refresh,
     mock_update_status,
     mock_config_entries_async_forward_entry_setup,
+    # mock_handle_coordinator_update
+    mock_async_write_ha_state,
 ) -> None:
     """Get status and store it."""
 
@@ -211,14 +213,19 @@ async def test_async_update_data_twodevices_withstatus(
     await sut_coordinator.async_config_entry_first_refresh()
     await hass.async_block_till_done()
 
-    sut_coordinator.store_entity(
-        test_devices[0].device_id,
-        IottyLightSwitch(sut_coordinator.iotty, test_devices[0]),
-    )
-    sut_coordinator.store_entity(
-        test_devices[1].device_id,
-        IottyLightSwitch(sut_coordinator.iotty, test_devices[1]),
-    )
-    await sut_coordinator._async_update_data()
+    test_device_1 = IottyLightSwitch(sut_coordinator, sut_coordinator.iotty, test_ls[0])
+    sut_coordinator.store_entity(test_ls[0].device_id, test_device_1)
 
-    assert len(mock_schedule_update_ha_state.mock_calls) == 2
+    test_device_2 = IottyLightSwitch(sut_coordinator, sut_coordinator.iotty, test_ls[1])
+    sut_coordinator.store_entity(
+        test_ls[1].device_id,
+        test_device_2,
+    )
+
+    await sut_coordinator._async_update_data()
+    await sut_coordinator._async_refresh()
+    await hass.async_block_till_done()
+    test_device_1._handle_coordinator_update()
+    test_device_2._handle_coordinator_update()
+
+    assert len(mock_async_write_ha_state.mock_calls) == 2

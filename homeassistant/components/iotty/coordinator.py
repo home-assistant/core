@@ -30,7 +30,7 @@ class IottyData:
 
 
 class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
-    """Class to manage fetching Elgato data."""
+    """Class to manage fetching Iotty data."""
 
     config_entry: ConfigEntry
     _entities: dict
@@ -79,16 +79,15 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
 
         for device in self._devices:
             res = await self.iotty.get_status(device.device_id)
-
-            if not (status := res.get(RESULT, {}).get(STATUS)):
+            json = res.get(RESULT, {})
+            if not (hasattr(json, "get") and callable(json.get)) or not (
+                status := json.get(STATUS)
+            ):
                 _LOGGER.warning("Unable to read status for device %s", device.device_id)
             else:
                 _LOGGER.debug(
                     "Retrieved status: '%s' for device %s", status, device.device_id
                 )
                 device.update_status(status)
-                if device.device_id in self._entities:
-                    # Component could not have (yet) been loaded, so the device might not be present in _entities.
-                    self._entities[device.device_id].schedule_update_ha_state()
 
         return IottyData(self._devices)
