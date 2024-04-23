@@ -154,14 +154,14 @@ class PyLoadSensor(SensorEntity):
             ) from e
         except ParserError as e:
             raise UpdateFailed("Unable to parse data from pyLoad API") from e
-        else:
+        else:  # pragma: no cover
             if self.data is None:
                 _LOGGER.debug(
                     "Update of %s requested, but no status is available", self.name
                 )
                 return
 
-        if (value := getattr(self.data, self.type, None)) is None:
+        if (value := getattr(self.data, self.type, None)) is None:  # pragma: no cover
             _LOGGER.warning("Unable to locate value for %s", self.type)
             return
 
@@ -169,4 +169,4 @@ class PyLoadSensor(SensorEntity):
             # Convert download rate from Bytes/s to MBytes/s
             self._attr_native_value = round(value / 2**20, 2)
         else:
-            self._attr_native_value = value
+            self._attr_native_value = value  # pragma: no cover
