@@ -131,9 +131,6 @@ class Group(Entity):
     _unrecorded_attributes = frozenset({ATTR_ENTITY_ID, ATTR_ORDER, ATTR_AUTO})
 
     _attr_should_poll = False
-    # Holds the a set of used domains for the tracked entities
-    # used determine to use a specific or generic ON or OFF state
-    active_domains: set[str]
     # In case there is only one active domain we use specific ON or OFF
     # values, if all ON or OFF states are equal
     single_active_domain: str | None
@@ -293,7 +290,6 @@ class Group(Entity):
         if not entity_ids:
             self.tracking = ()
             self.trackable = ()
-            self.active_domains = set()
             self.single_active_domain = None
             return
 
@@ -313,7 +309,6 @@ class Group(Entity):
 
         self.trackable = tuple(trackable)
         self.tracking = tuple(tracking)
-        self.active_domains = active_domains
         if len(active_domains) == 1:
             self.single_active_domain = list(active_domains)[0]
         else:
@@ -410,8 +405,7 @@ class Group(Entity):
             self._on_off[entity_id] = state in registry.on_off_mapping
         else:
             entity_on_state = registry.on_states_by_domain[domain]
-            if domain in registry.on_states_by_domain:
-                self._on_states.update(entity_on_state)
+            self._on_states.update(entity_on_state)
             self._on_off[entity_id] = state in entity_on_state
 
     def _detect_specific_on_off_state(self, group_is_on: bool) -> set[str]:
@@ -422,7 +416,7 @@ class Group(Entity):
         registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
         active_on_states: set[str] = set()
         active_off_states: set[str] = set()
-        for entity_id in self.tracking:
+        for entity_id in self.trackable:
             if (state := self.hass.states.get(entity_id)) is None:
                 continue
             current_state = state.state
@@ -436,8 +430,7 @@ class Group(Entity):
                 # will result in STATE_ON and we can stop checking
                 if len(active_on_states) > 1:
                     break
-                continue
-            if current_state in registry.off_on_mapping:
+            elif current_state in registry.off_on_mapping:
                 active_off_states.add(current_state)
 
         return active_on_states if group_is_on else active_off_states
