@@ -340,6 +340,9 @@ aioskybell==22.7.0
 # homeassistant.components.slimproto
 aioslimproto==3.0.0
 
+# homeassistant.components.solaredge
+aiosolaredge==0.2.0
+
 # homeassistant.components.steamist
 aiosteamist==0.3.2
 
@@ -1989,9 +1992,6 @@ snapcast==2.3.6
 
 # homeassistant.components.sonos
 soco==0.30.3
-
-# homeassistant.components.solaredge
-solaredge==0.0.2
 
 # homeassistant.components.solax
 solax==3.1.0
