@@ -158,6 +158,13 @@ CERT_UPLOAD_SELECTOR = FileSelector(
 )
 KEY_UPLOAD_SELECTOR = FileSelector(FileSelectorConfig(accept=".key,application/pkcs8"))
 
+REAUTH_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_USERNAME): TEXT_SELECTOR,
+        vol.Optional(CONF_PASSWORD): PASSWORD_SELECTOR,
+    }
+)
+
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
@@ -210,33 +217,16 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 try_connection,
                 new_entry_data,
             ):
-                self.hass.config_entries.async_update_entry(
-                    self.entry,
-                    data=new_entry_data,
+                return self.async_update_reload_and_abort(
+                    self.entry, data=new_entry_data
                 )
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
             errors["base"] = "invalid_auth"
 
+        schema = self.add_suggested_values_to_schema(REAUTH_SCHEMA, self.entry.data)
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_USERNAME,
-                        description={
-                            "suggested_value": self.entry.data.get(CONF_USERNAME)
-                        },
-                    ): TEXT_SELECTOR,
-                    vol.Optional(
-                        CONF_PASSWORD,
-                        description={
-                            "suggested_value": self.entry.data.get(CONF_PASSWORD)
-                        },
-                    ): PASSWORD_SELECTOR,
-                }
-            ),
+            data_schema=schema,
             errors=errors,
         )
 

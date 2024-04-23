@@ -905,6 +905,7 @@ class MQTT:
                 "Unable to connect to the MQTT broker: %s",
                 mqtt.connack_string(result_code),
             )
+            self._async_connection_result(False)
             return
 
         self.connected = True
