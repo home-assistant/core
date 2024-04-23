@@ -43,7 +43,7 @@ def websocket_list_floors(
         vol.Required("name"): str,
         vol.Optional("aliases"): list,
         vol.Optional("icon"): vol.Any(str, None),
-        vol.Optional("level"): int,
+        vol.Optional("level"): vol.Any(int, None),
     }
 )
 @websocket_api.require_admin
@@ -98,7 +98,7 @@ def websocket_delete_floor(
         vol.Required("floor_id"): str,
         vol.Optional("aliases"): list,
         vol.Optional("icon"): vol.Any(str, None),
-        vol.Optional("level"): int,
+        vol.Optional("level"): vol.Any(int, None),
         vol.Optional("name"): str,
     }
 )

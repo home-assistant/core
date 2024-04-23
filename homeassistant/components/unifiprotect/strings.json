@@ -91,6 +91,36 @@
         }
       }
     },
+    "rtsp_disabled_readonly": {
+      "title": "RTSPS is disabled on camera {camera}",
+      "fix_flow": {
+        "step": {
+          "start": {
+            "title": "RTSPS is disabled on camera {camera}",
+            "description": "RTSPS is disabled on the camera {camera}. RTSPS is required to be able to live stream your camera within Home Assistant. If you do not enable RTSPS, it may create an additional load on your UniFi Protect NVR, as any live video players will default to rapidly pulling snapshots from the camera.\n\nPlease [enable RTSPS]({learn_more}) on the camera and then come back and confirm this repair."
+          },
+          "confirm": {
+            "title": "[%key:component::unifiprotect::issues::rtsp_disabled_readonly::fix_flow::step::start::title%]",
+            "description": "Are you sure you want to leave RTSPS disabled for {camera}?"
+          }
+        }
+      }
+    },
+    "rtsp_disabled_writable": {
+      "title": "RTSPS is disabled on camera {camera}",
+      "fix_flow": {
+        "step": {
+          "start": {
+            "title": "[%key:component::unifiprotect::issues::rtsp_disabled_readonly::fix_flow::step::start::title%]",
+            "description": "RTSPS is disabled on the camera {camera}. RTSPS is required to live stream your camera within Home Assistant. If you do not enable RTSPS, it may create an additional load on your UniFi Protect NVR as any live video players will default to rapidly pulling snapshots from the camera.\n\nYou may manually [enable RTSPS]({learn_more}) on your selected camera quality channel or Home Assistant can automatically enable the highest quality channel for you. Confirm this repair once you have enabled the RTSPS channel or if you want Home Assistant to enable the highest quality automatically."
+          },
+          "confirm": {
+            "title": "[%key:component::unifiprotect::issues::rtsp_disabled_readonly::fix_flow::step::start::title%]",
+            "description": "[%key:component::unifiprotect::issues::rtsp_disabled_readonly::fix_flow::step::confirm::description%]"
+          }
+        }
+      }
+    },
     "deprecate_hdr_switch": {
       "title": "HDR Mode Switch Deprecated",
       "description": "UniFi Protect v3 added a new state for HDR (auto). As a result, the HDR Mode Switch has been replaced with an HDR Mode Select, and it is deprecated.\n\nBelow are the detected automations or scripts that use one or more of the deprecated entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly."

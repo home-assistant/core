@@ -261,7 +261,7 @@ async def test_scrape_sensor_no_data_refresh(hass: HomeAssistant) -> None:
 
         mocker.payload = "test_scrape_sensor_no_data"
         async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.ha_version")
     assert state is not None
@@ -541,7 +541,7 @@ async def test_templates_with_yaml(hass: HomeAssistant) -> None:
         hass,
         dt_util.utcnow() + timedelta(minutes=10),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.get_values_with_template")
     assert state.state == "Current Version: 2021.12.10"
@@ -555,7 +555,7 @@ async def test_templates_with_yaml(hass: HomeAssistant) -> None:
         hass,
         dt_util.utcnow() + timedelta(minutes=20),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.get_values_with_template")
     assert state.state == STATE_UNAVAILABLE
@@ -568,7 +568,7 @@ async def test_templates_with_yaml(hass: HomeAssistant) -> None:
         hass,
         dt_util.utcnow() + timedelta(minutes=30),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.get_values_with_template")
     assert state.state == "Current Version: 2021.12.10"
@@ -608,7 +608,7 @@ async def test_availability(
     hass.states.async_set("sensor.input1", "on")
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.current_version")
     assert state.state == "2021.12.10"
@@ -618,7 +618,7 @@ async def test_availability(
 
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.current_version")
     assert state.state == STATE_UNAVAILABLE

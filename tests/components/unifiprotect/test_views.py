@@ -483,7 +483,7 @@ async def test_video_entity_id(
     )
 
     url = async_generate_event_video_url(event)
-    url = url.replace(camera.id, "camera.test_camera_high")
+    url = url.replace(camera.id, "camera.test_camera_high_resolution_channel")
 
     http_client = await hass_client()
     response = cast(ClientResponse, await http_client.get(url))

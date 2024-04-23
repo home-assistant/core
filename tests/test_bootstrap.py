@@ -17,8 +17,10 @@ from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
 from homeassistant.core import CoreState, HomeAssistant, async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.translation import async_translations_loaded
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration
+from homeassistant.setup import BASE_PLATFORMS
 
 from .common import (
     MockConfigEntry,
@@ -45,9 +47,10 @@ async def apply_stop_hass(stop_hass: None) -> None:
 @pytest.fixture(scope="session", autouse=True)
 def mock_http_start_stop() -> Generator[None, None, None]:
     """Mock HTTP start and stop."""
-    with patch(
-        "homeassistant.components.http.start_http_server_and_save_config"
-    ), patch("homeassistant.components.http.HomeAssistantHTTP.stop"):
+    with (
+        patch("homeassistant.components.http.start_http_server_and_save_config"),
+        patch("homeassistant.components.http.HomeAssistantHTTP.stop"),
+    ):
         yield
 
 
@@ -65,11 +68,15 @@ async def test_async_enable_logging(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test to ensure logging is migrated to the queue handlers."""
-    with patch("logging.getLogger"), patch(
-        "homeassistant.bootstrap.async_activate_log_queue_handler"
-    ) as mock_async_activate_log_queue_handler, patch(
-        "homeassistant.bootstrap.logging.handlers.RotatingFileHandler.doRollover",
-        side_effect=OSError,
+    with (
+        patch("logging.getLogger"),
+        patch(
+            "homeassistant.bootstrap.async_activate_log_queue_handler"
+        ) as mock_async_activate_log_queue_handler,
+        patch(
+            "homeassistant.bootstrap.logging.handlers.RotatingFileHandler.doRollover",
+            side_effect=OSError,
+        ),
     ):
         bootstrap.async_enable_logging(hass)
         mock_async_activate_log_queue_handler.assert_called_once()
@@ -103,6 +110,16 @@ async def test_empty_setup(hass: HomeAssistant) -> None:
     await bootstrap.async_from_config_dict({}, hass)
     for domain in bootstrap.CORE_INTEGRATIONS:
         assert domain in hass.config.components, domain
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_preload_translations(hass: HomeAssistant) -> None:
+    """Test translations are preloaded for all frontend deps and base platforms."""
+    await bootstrap.async_from_config_dict({}, hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    frontend = await loader.async_get_integration(hass, "frontend")
+    assert async_translations_loaded(hass, set(frontend.all_dependencies))
+    assert async_translations_loaded(hass, BASE_PLATFORMS)
 
 
 async def test_core_failure_loads_recovery_mode(
@@ -625,11 +642,13 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
         await asyncio.sleep(0.6)
         return True
 
-    with patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.3), patch.object(
-        bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.05
-    ), patch(
-        "homeassistant.components.frontend.async_setup",
-        side_effect=_async_setup_that_blocks_startup,
+    with (
+        patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.3),
+        patch.object(bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.05),
+        patch(
+            "homeassistant.components.frontend.async_setup",
+            side_effect=_async_setup_that_blocks_startup,
+        ),
     ):
         await bootstrap.async_setup_hass(
             runner.RuntimeConfig(
@@ -707,9 +726,12 @@ async def test_setup_hass_recovery_mode(
     mock_process_ha_config_upgrade: Mock,
 ) -> None:
     """Test it works."""
-    with patch("homeassistant.components.browser.setup") as browser_setup, patch(
-        "homeassistant.config_entries.ConfigEntries.async_domains",
-        return_value=["browser"],
+    with (
+        patch("homeassistant.components.browser.setup") as browser_setup,
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_domains",
+            return_value=["browser"],
+        ),
     ):
         hass = await bootstrap.async_setup_hass(
             runner.RuntimeConfig(
@@ -741,9 +763,12 @@ async def test_setup_hass_safe_mode(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test it works."""
-    with patch("homeassistant.components.browser.setup"), patch(
-        "homeassistant.config_entries.ConfigEntries.async_domains",
-        return_value=["browser"],
+    with (
+        patch("homeassistant.components.browser.setup"),
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_domains",
+            return_value=["browser"],
+        ),
     ):
         hass = await bootstrap.async_setup_hass(
             runner.RuntimeConfig(
@@ -773,9 +798,12 @@ async def test_setup_hass_recovery_mode_and_safe_mode(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test it works."""
-    with patch("homeassistant.components.browser.setup"), patch(
-        "homeassistant.config_entries.ConfigEntries.async_domains",
-        return_value=["browser"],
+    with (
+        patch("homeassistant.components.browser.setup"),
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_domains",
+            return_value=["browser"],
+        ),
     ):
         hass = await bootstrap.async_setup_hass(
             runner.RuntimeConfig(
@@ -993,10 +1021,12 @@ async def test_tasks_logged_that_block_stage_1(
     )
 
     original_stage_1 = bootstrap.STAGE_1_INTEGRATIONS
-    with patch.object(bootstrap, "STAGE_1_TIMEOUT", 0), patch.object(
-        bootstrap, "COOLDOWN_TIME", 0
-    ), patch.object(
-        bootstrap, "STAGE_1_INTEGRATIONS", [*original_stage_1, "normal_integration"]
+    with (
+        patch.object(bootstrap, "STAGE_1_TIMEOUT", 0),
+        patch.object(bootstrap, "COOLDOWN_TIME", 0),
+        patch.object(
+            bootstrap, "STAGE_1_INTEGRATIONS", [*original_stage_1, "normal_integration"]
+        ),
     ):
         await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
         await hass.async_block_till_done()
@@ -1032,8 +1062,9 @@ async def test_tasks_logged_that_block_stage_2(
         ),
     )
 
-    with patch.object(bootstrap, "STAGE_2_TIMEOUT", 0), patch.object(
-        bootstrap, "COOLDOWN_TIME", 0
+    with (
+        patch.object(bootstrap, "STAGE_2_TIMEOUT", 0),
+        patch.object(bootstrap, "COOLDOWN_TIME", 0),
     ):
         await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
         await hass.async_block_till_done()
@@ -1180,12 +1211,15 @@ async def test_bootstrap_dependencies(
         """Mock integrations."""
         return {domain: integrations[domain]["integration"] for domain in domains}
 
-    with patch(
-        "homeassistant.setup.loader.async_get_integrations",
-        side_effect=mock_async_get_integrations,
-    ), patch(
-        "homeassistant.config.async_process_component_config",
-        return_value=config_util.IntegrationConfigInfo({}, []),
+    with (
+        patch(
+            "homeassistant.setup.loader.async_get_integrations",
+            side_effect=mock_async_get_integrations,
+        ),
+        patch(
+            "homeassistant.config.async_process_component_config",
+            return_value=config_util.IntegrationConfigInfo({}, []),
+        ),
     ):
         bootstrap.async_set_domains_to_be_loaded(hass, {integration})
         await bootstrap.async_setup_multi_components(hass, {integration}, {})
@@ -1364,3 +1398,13 @@ async def test_setup_does_base_platforms_first(hass: HomeAssistant) -> None:
     # only that they are setup before other integrations.
     assert set(order[1:3]) == {"sensor", "binary_sensor"}
     assert order[3:] == ["root", "first_dep", "second_dep"]
+
+
+def test_should_rollover_is_always_false():
+    """Test that shouldRollover always returns False."""
+    assert (
+        bootstrap._RotatingFileHandlerWithoutShouldRollOver(
+            "any.log", delay=True
+        ).shouldRollover(Mock())
+        is False
+    )

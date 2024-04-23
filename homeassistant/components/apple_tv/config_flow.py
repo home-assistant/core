@@ -76,9 +76,9 @@ async def device_scan(
             return None
         try:
             ip_address(identifier)
-            return [identifier]
         except ValueError:
             return None
+        return [identifier]
 
     # If we have an address, only probe that address to avoid
     # broadcast traffic on the network
@@ -380,9 +380,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
                 if entry.source != SOURCE_IGNORE:
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(entry.entry_id)
-                    )
+                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
             if not allow_exist:
                 raise DeviceAlreadyConfigured
 

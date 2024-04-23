@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from tplink_omada_client.definitions import GatewayPortMode, LinkStatus, PoEMode
 from tplink_omada_client.devices import (
     OmadaDevice,
-    OmadaGateway,
     OmadaGatewayPortConfig,
     OmadaGatewayPortStatus,
 )
@@ -95,7 +94,9 @@ GATEWAY_PORT_SENSORS: list[GatewayPortBinarySensorEntityDescription] = [
 ]
 
 
-class OmadaGatewayPortBinarySensor(OmadaDeviceEntity[OmadaGateway], BinarySensorEntity):
+class OmadaGatewayPortBinarySensor(
+    OmadaDeviceEntity[OmadaGatewayCoordinator], BinarySensorEntity
+):
     """Binary status of a property on an internet gateway."""
 
     entity_description: GatewayPortBinarySensorEntityDescription
