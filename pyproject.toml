@@ -251,7 +251,7 @@ disable = [
     "nested-min-max", # PLW3301
     "pointless-statement", # B018
     "raise-missing-from", # B904
-    # "redefined-builtin", # A001, ruff is way more stricter, needs work
+    "redefined-builtin", # A001
     "try-except-raise", # TRY302
     "unused-argument", # ARG001, we don't use it
     "unused-format-string-argument", #F507
@@ -659,10 +659,11 @@ filterwarnings = [
 ]
 
 [tool.ruff]
-required-version = ">=0.3.7"
+required-version = ">=0.4.1"
 
 [tool.ruff.lint]
 select = [
+    "A001", # Variable {name} is shadowing a Python builtin
     "B002", # Python does not support the unary prefix increment
     "B005", # Using .strip() with multi-character strings is misleading
     "B007", # Loop control variable {name} not used within loop body

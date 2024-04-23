@@ -442,7 +442,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
                 )
             ):
                 # Tell frontend to reload the flow state.
-                self.hass.bus.async_fire(
+                self.hass.bus.async_fire_internal(
                     EVENT_DATA_ENTRY_FLOW_PROGRESSED,
                     {"handler": flow.handler, "flow_id": flow_id, "refresh": True},
                 )

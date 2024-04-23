@@ -36,7 +36,10 @@ def create_mock_api_discovery(aioclient_mock, bridges):
     """Patch aiohttp responses with fake data for bridge discovery."""
     aioclient_mock.get(
         URL_NUPNP,
-        json=[{"internalipaddress": host, "id": id} for (host, id) in bridges],
+        json=[
+            {"internalipaddress": host, "id": bridge_id}
+            for (host, bridge_id) in bridges
+        ],
     )
     for host, bridge_id in bridges:
         aioclient_mock.get(
