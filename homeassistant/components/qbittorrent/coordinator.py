@@ -66,5 +66,9 @@ class QBittorrentDataCoordinator(DataUpdateCoordinator[SyncMainDataDictionary]):
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="login_error"
             ) from exc
+        except APIConnectionError as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
+            ) from exc
 
         return torrents
