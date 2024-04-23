@@ -3,10 +3,20 @@
 from typing import Any
 from unittest.mock import patch
 
+from aiounifi.models.message import MessageKey
+
+from homeassistant import loader
 from homeassistant.components import unifi
-from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
+from homeassistant.components.unifi.const import (
+    CONF_ALLOW_BANDWIDTH_SENSORS,
+    CONF_ALLOW_UPTIME_SENSORS,
+    CONF_TRACK_CLIENTS,
+    CONF_TRACK_DEVICES,
+    DOMAIN as UNIFI_DOMAIN,
+)
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .test_hub import DEFAULT_CONFIG_ENTRY_ID, setup_unifi_integration
@@ -103,3 +113,91 @@ async def test_wireless_clients(
         "00:00:00:00:00:01",
         "00:00:00:00:00:02",
     ]
+
+
+async def test_remove_config_entry_device(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    aioclient_mock: AiohttpClientMocker,
+    device_registry: dr.DeviceRegistry,
+    mock_unifi_websocket,
+) -> None:
+    """Verify removing a device manually."""
+    client_1 = {
+        "hostname": "Wired client",
+        "is_wired": True,
+        "mac": "00:00:00:00:00:01",
+        "oui": "Producer",
+        "wired-rx_bytes": 1234000000,
+        "wired-tx_bytes": 5678000000,
+        "uptime": 1600094505,
+    }
+    client_2 = {
+        "is_wired": False,
+        "mac": "00:00:00:00:00:02",
+        "name": "Wireless client",
+        "oui": "Producer",
+        "rx_bytes": 2345000000,
+        "tx_bytes": 6789000000,
+        "uptime": 60,
+    }
+    device_1 = {
+        "board_rev": 3,
+        "device_id": "mock-id",
+        "has_fan": True,
+        "fan_level": 0,
+        "ip": "10.0.1.1",
+        "last_seen": 1562600145,
+        "mac": "00:00:00:00:01:01",
+        "model": "US16P150",
+        "name": "Device 1",
+        "next_interval": 20,
+        "overheating": True,
+        "state": 1,
+        "type": "usw",
+        "upgradable": True,
+        "version": "4.0.42.10433",
+    }
+    options = {
+        CONF_ALLOW_BANDWIDTH_SENSORS: True,
+        CONF_ALLOW_UPTIME_SENSORS: True,
+        CONF_TRACK_CLIENTS: True,
+        CONF_TRACK_DEVICES: True,
+    }
+
+    config_entry = await setup_unifi_integration(
+        hass,
+        aioclient_mock,
+        options=options,
+        clients_response=[client_1, client_2],
+        devices_response=[device_1],
+    )
+
+    integration = await loader.async_get_integration(hass, config_entry.domain)
+    component = await integration.async_get_component()
+
+    # Remove a client
+    mock_unifi_websocket(message=MessageKey.CLIENT_REMOVED, data=[client_2])
+    await hass.async_block_till_done()
+
+    # Try to remove an active client: not allowed
+    device_entry = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, client_1["mac"])}
+    )
+    assert not await component.async_remove_config_entry_device(
+        hass, config_entry, device_entry
+    )
+    # Try to remove an active device: not allowed
+    device_entry = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, device_1["mac"])}
+    )
+    assert not await component.async_remove_config_entry_device(
+        hass, config_entry, device_entry
+    )
+    # Try to remove an inactive client: allowed
+    device_entry = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, client_2["mac"])}
+    )
+    assert await component.async_remove_config_entry_device(
+        hass, config_entry, device_entry
+    )

@@ -52,6 +52,7 @@ from homeassistant.core import (
     Event,
     HassJobType,
     HomeAssistant,
+    ReleaseChannel,
     callback,
     get_hassjob_callable_job_type,
     get_release_channel,
@@ -657,7 +658,7 @@ class Entity(
             return name.format(**self.translation_placeholders)
         except KeyError as err:
             if not self._name_translation_placeholders_reported:
-                if get_release_channel() != "stable":
+                if get_release_channel() is not ReleaseChannel.STABLE:
                     raise HomeAssistantError("Missing placeholder %s" % err) from err
                 report_issue = self._suggest_report_issue()
                 _LOGGER.warning(
