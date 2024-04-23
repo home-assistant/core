@@ -1393,6 +1393,12 @@ class _OneTimeListener(Generic[_DataT]):
 EMPTY_LIST: list[Any] = []
 
 
+def _verify_event_type_length_or_raise(event_type: EventType[_DataT] | str) -> None:
+    """Verify the length of the event type and raise if too long."""
+    if len(event_type) > MAX_LENGTH_EVENT_EVENT_TYPE:
+        raise MaxLengthExceeded(event_type, "event_type", MAX_LENGTH_EVENT_EVENT_TYPE)
+
+
 class EventBus:
     """Allow the firing of and listening for events."""
 
@@ -1433,8 +1439,9 @@ class EventBus:
         context: Context | None = None,
     ) -> None:
         """Fire an event."""
+        _verify_event_type_length_or_raise(event_type)
         self._hass.loop.call_soon_threadsafe(
-            self.async_fire, event_type, event_data, origin, context
+            self._async_fire, event_type, event_data, origin, context
         )
 
     @callback
@@ -1451,19 +1458,13 @@ class EventBus:
         This method must be run in the event loop.
         """
         if (
-            self._hass.config.debug
-            and (loop_thread_ident := self._hass.loop.__dict__.get("_thread_ident"))
-            and loop_thread_ident != threading.get_ident()
-        ):
+            loop_thread_ident := self._hass.loop.__dict__.get("_thread_ident")
+        ) and loop_thread_ident != threading.get_ident():
             # late import to avoid circular imports
             from .helpers import frame  # pylint: disable=import-outside-toplevel
 
             frame.report("calls async_fire from a thread")
-
-        if len(event_type) > MAX_LENGTH_EVENT_EVENT_TYPE:
-            raise MaxLengthExceeded(
-                event_type, "event_type", MAX_LENGTH_EVENT_EVENT_TYPE
-            )
+        _verify_event_type_length_or_raise(event_type)
         return self._async_fire(event_type, event_data, origin, context, time_fired)
 
     @callback
