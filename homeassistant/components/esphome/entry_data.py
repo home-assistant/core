@@ -348,8 +348,7 @@ class RuntimeEntryData:
         if (
             current_state == state
             and subscription_key not in stale_state
-            and state_type is not CameraState
-            and state_type is not Event
+            and state_type not in (CameraState, Event)
             and not (
                 state_type is SensorState
                 and (platform_info := self.info.get(SensorInfo))
