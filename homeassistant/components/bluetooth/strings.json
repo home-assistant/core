@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "{name}",
+    "flow_title": "{name} {manufacturer} {model}",
     "step": {
       "user": {
         "description": "Choose a device to set up",
@@ -18,7 +18,7 @@
         }
       },
       "single_adapter": {
-        "description": "Do you want to set up the Bluetooth adapter {name}?"
+        "description": "Do you want to set up the Bluetooth adapter {name} {manufacturer} {model}?"
       }
     },
     "abort": {
