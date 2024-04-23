@@ -219,6 +219,45 @@ def two_adapters_fixture():
         yield
 
 
+@pytest.fixture(name="crashed_adapter")
+def crashed_adapter_fixture():
+    """Fixture that mocks one crashed adapter on Linux."""
+    with (
+        patch(
+            "homeassistant.components.bluetooth.platform.system",
+            return_value="Linux",
+        ),
+        patch(
+            "habluetooth.scanner.platform.system",
+            return_value="Linux",
+        ),
+        patch(
+            "bluetooth_adapters.systems.platform.system",
+            return_value="Linux",
+        ),
+        patch("habluetooth.scanner.SYSTEM", "Linux"),
+        patch(
+            "bluetooth_adapters.systems.linux.LinuxAdapters.refresh",
+        ),
+        patch(
+            "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
+            {
+                "hci0": {
+                    "address": "00:00:00:00:00:00",
+                    "hw_version": "usb:v1D6Bp0246d053F",
+                    "passive_scan": True,
+                    "sw_version": "homeassistant",
+                    "manufacturer": None,
+                    "product": None,
+                    "product_id": None,
+                    "vendor_id": None,
+                },
+            },
+        ),
+    ):
+        yield
+
+
 @pytest.fixture(name="one_adapter_old_bluez")
 def one_adapter_old_bluez():
     """Fixture that mocks two adapters on Linux."""
