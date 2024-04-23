@@ -25,14 +25,22 @@ from homeassistant.config_entries import (
     OptionsFlow,
     OptionsFlowWithConfigEntry,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+)
 from homeassistant.core import callback
 
 from .const import (
     CONF_OLD_DISCOVERY,
     DEFAULT_CONF_OLD_DISCOVERY,
     DEFAULT_HOST,
-    DEFAULT_PORT,
+    DEFAULT_HTTP_PORT,
+    DEFAULT_HTTPS_PORT,
+    DEFAULT_SSL,
     DOMAIN,
     ERROR_AUTH_INVALID,
     ERROR_CANNOT_CONNECT,
@@ -61,6 +69,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._entry: ConfigEntry | None = None
         self._name: str = ""
         self._password: str = ""
+        self._use_tls: bool = False
         self._port: int | None = None
         self._username: str = ""
         self._model: str = ""
@@ -74,6 +83,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 port=self._port,
                 user=self._username,
                 password=self._password,
+                use_tls=self._use_tls,
                 timeout=60.0,
                 pool_maxsize=30,
             )
@@ -120,6 +130,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: self._password,
                 CONF_PORT: self._port,
                 CONF_USERNAME: self._username,
+                CONF_SSL: self._use_tls,
             },
             options={
                 CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.total_seconds(),
@@ -133,7 +144,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by discovery."""
         ssdp_location: ParseResult = urlparse(discovery_info.ssdp_location or "")
         self._host = ssdp_location.hostname
-        self._port = ssdp_location.port
         self._name = (
             discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
             or discovery_info.upnp[ssdp.ATTR_UPNP_MODEL_NAME]
@@ -178,6 +188,8 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
+        self._use_tls = user_input[CONF_SSL]
+        self._port = DEFAULT_HTTPS_PORT if self._use_tls else DEFAULT_HTTP_PORT
 
         error = await self.hass.async_add_executor_job(self.fritz_tools_init)
 
@@ -191,14 +203,22 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self, errors: dict[str, str] | None = None
     ) -> ConfigFlowResult:
         """Show the setup form to the user."""
+
+        advanced_data_schema = {}
+        if self.show_advanced_options:
+            advanced_data_schema = {
+                vol.Optional(CONF_PORT): vol.Coerce(int),
+            }
+
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
-                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
+                    **advanced_data_schema,
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
+                    vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
                 }
             ),
             errors=errors or {},
@@ -214,6 +234,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
+                    vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
                 }
             ),
             description_placeholders={"name": self._name},
@@ -227,9 +248,14 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self._show_setup_form_init()
         self._host = user_input[CONF_HOST]
-        self._port = user_input[CONF_PORT]
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
+        self._use_tls = user_input[CONF_SSL]
+
+        if (port := user_input.get(CONF_PORT)) is None:
+            self._port = DEFAULT_HTTPS_PORT if self._use_tls else DEFAULT_HTTP_PORT
+        else:
+            self._port = port
 
         if not (error := await self.hass.async_add_executor_job(self.fritz_tools_init)):
             self._name = self._model
@@ -251,6 +277,8 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._port = entry_data[CONF_PORT]
         self._username = entry_data[CONF_USERNAME]
         self._password = entry_data[CONF_PASSWORD]
+        self._use_tls = entry_data[CONF_SSL]
+
         return await self.async_step_reauth_confirm()
 
     def _show_setup_form_reauth_confirm(
@@ -295,6 +323,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: self._password,
                 CONF_PORT: self._port,
                 CONF_USERNAME: self._username,
+                CONF_SSL: self._use_tls,
             },
         )
         await self.hass.config_entries.async_reload(self._entry.entry_id)

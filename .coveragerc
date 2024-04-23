@@ -6,11 +6,12 @@
 source = homeassistant
 omit =
     homeassistant/__main__.py
+    homeassistant/helpers/backports/aiohttp_resolver.py
     homeassistant/helpers/signal.py
     homeassistant/scripts/__init__.py
+    homeassistant/scripts/benchmark/__init__.py
     homeassistant/scripts/check_config.py
     homeassistant/scripts/ensure_config.py
-    homeassistant/scripts/benchmark/__init__.py
     homeassistant/scripts/macos/__init__.py
 
     # omit pieces of code that rely on external devices being present
@@ -360,12 +361,13 @@ omit =
     homeassistant/components/environment_canada/weather.py
     homeassistant/components/envisalink/*
     homeassistant/components/ephember/climate.py
+    homeassistant/components/epic_games_store/__init__.py
+    homeassistant/components/epic_games_store/coordinator.py
     homeassistant/components/epion/__init__.py
     homeassistant/components/epion/coordinator.py
     homeassistant/components/epion/sensor.py
     homeassistant/components/epson/__init__.py
     homeassistant/components/epson/media_player.py
-    homeassistant/components/epsonworkforce/sensor.py
     homeassistant/components/eq3btsmart/__init__.py
     homeassistant/components/eq3btsmart/climate.py
     homeassistant/components/eq3btsmart/const.py
@@ -542,12 +544,9 @@ omit =
     homeassistant/components/hko/weather.py
     homeassistant/components/hlk_sw16/__init__.py
     homeassistant/components/hlk_sw16/switch.py
-    homeassistant/components/home_connect/__init__.py
-    homeassistant/components/home_connect/api.py
     homeassistant/components/home_connect/binary_sensor.py
     homeassistant/components/home_connect/entity.py
     homeassistant/components/home_connect/light.py
-    homeassistant/components/home_connect/sensor.py
     homeassistant/components/home_connect/switch.py
     homeassistant/components/homematic/__init__.py
     homeassistant/components/homematic/binary_sensor.py
@@ -742,6 +741,7 @@ omit =
     homeassistant/components/lutron/binary_sensor.py
     homeassistant/components/lutron/cover.py
     homeassistant/components/lutron/entity.py
+    homeassistant/components/lutron/event.py
     homeassistant/components/lutron/fan.py
     homeassistant/components/lutron/light.py
     homeassistant/components/lutron/switch.py

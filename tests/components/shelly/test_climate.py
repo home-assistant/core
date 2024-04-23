@@ -64,7 +64,7 @@ async def test_climate_hvac_mode(
     await init_integration(hass, 1, sleep_period=1000, model=MODEL_VALVE)
 
     # Make device online
-    mock_block_device.mock_update()
+    mock_block_device.mock_online()
     await hass.async_block_till_done()
 
     # Test initial hvac mode - off
@@ -125,7 +125,7 @@ async def test_climate_set_temperature(
     await init_integration(hass, 1, sleep_period=1000)
 
     # Make device online
-    mock_block_device.mock_update()
+    mock_block_device.mock_online()
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -192,7 +192,7 @@ async def test_climate_set_preset_mode(
     await init_integration(hass, 1, sleep_period=1000, model=MODEL_VALVE)
 
     # Make device online
-    mock_block_device.mock_update()
+    mock_block_device.mock_online()
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -278,7 +278,7 @@ async def test_block_restored_climate(
 
     # Make device online
     monkeypatch.setattr(mock_block_device, "initialized", True)
-    mock_block_device.mock_update()
+    mock_block_device.mock_online()
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == HVACMode.OFF
@@ -349,7 +349,7 @@ async def test_block_restored_climate_us_customery(
     monkeypatch.setattr(mock_block_device, "initialized", True)
     monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "targetTemp", 4.0)
     monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "temp", 18.2)
-    mock_block_device.mock_update()
+    mock_block_device.mock_online()
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == HVACMode.OFF
@@ -451,7 +451,7 @@ async def test_block_set_mode_connection_error(
     await init_integration(hass, 1, sleep_period=1000)
 
     # Make device online
-    mock_block_device.mock_update()
+    mock_block_device.mock_online()
     await hass.async_block_till_done()
 
     with pytest.raises(HomeAssistantError):
@@ -476,7 +476,7 @@ async def test_block_set_mode_auth_error(
     entry = await init_integration(hass, 1, sleep_period=1000)
 
     # Make device online
-    mock_block_device.mock_update()
+    mock_block_device.mock_online()
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
@@ -534,7 +534,7 @@ async def test_block_restored_climate_auth_error(
     type(mock_block_device).settings = PropertyMock(
         return_value={}, side_effect=InvalidAuthError
     )
-    mock_block_device.mock_update()
+    mock_block_device.mock_online()
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
@@ -561,7 +561,7 @@ async def test_device_not_calibrated(
     await init_integration(hass, 1, sleep_period=1000, model=MODEL_VALVE)
 
     # Make device online
-    mock_block_device.mock_update()
+    mock_block_device.mock_online()
     await hass.async_block_till_done()
 
     mock_status = MOCK_STATUS_COAP.copy()

@@ -10,7 +10,7 @@ timer.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Hashable, Iterable, KeysView, Mapping
+from collections.abc import Callable, Container, Hashable, KeysView, Mapping
 from datetime import datetime, timedelta
 from enum import StrEnum
 from functools import cached_property
@@ -47,11 +47,15 @@ from homeassistant.core import (
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import slugify, uuid as uuid_util
+from homeassistant.util.event_type import EventType
 from homeassistant.util.json import format_unserializable_data
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from . import device_registry as dr, storage
-from .device_registry import EVENT_DEVICE_REGISTRY_UPDATED
+from .device_registry import (
+    EVENT_DEVICE_REGISTRY_UPDATED,
+    EventDeviceRegistryUpdatedData,
+)
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
 from .registry import BaseRegistry, BaseRegistryItems
 from .typing import UNDEFINED, UndefinedType
@@ -62,7 +66,9 @@ if TYPE_CHECKING:
 T = TypeVar("T")
 
 DATA_REGISTRY = "entity_registry"
-EVENT_ENTITY_REGISTRY_UPDATED = "entity_registry_updated"
+EVENT_ENTITY_REGISTRY_UPDATED: EventType[EventEntityRegistryUpdatedData] = EventType(
+    "entity_registry_updated"
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -677,7 +683,6 @@ class EntityRegistry(BaseRegistry):
         self.hass.bus.async_listen(
             EVENT_DEVICE_REGISTRY_UPDATED,
             self.async_device_modified,
-            run_immediately=True,
         )
 
     @callback
@@ -709,7 +714,7 @@ class EntityRegistry(BaseRegistry):
         return list(self.entities.get_device_ids())
 
     def _entity_id_available(
-        self, entity_id: str, known_object_ids: Iterable[str] | None
+        self, entity_id: str, known_object_ids: Container[str] | None
     ) -> bool:
         """Return True if the entity_id is available.
 
@@ -735,7 +740,7 @@ class EntityRegistry(BaseRegistry):
         self,
         domain: str,
         suggested_object_id: str,
-        known_object_ids: Iterable[str] | None = None,
+        known_object_ids: Container[str] | None = None,
     ) -> str:
         """Generate an entity ID that does not conflict.
 
@@ -748,7 +753,7 @@ class EntityRegistry(BaseRegistry):
 
         test_string = preferred_string[:MAX_LENGTH_STATE_ENTITY_ID]
         if known_object_ids is None:
-            known_object_ids = {}
+            known_object_ids = set()
 
         tries = 1
         while not self._entity_id_available(test_string, known_object_ids):
@@ -768,7 +773,7 @@ class EntityRegistry(BaseRegistry):
         unique_id: str,
         *,
         # To influence entity ID generation
-        known_object_ids: Iterable[str] | None = None,
+        known_object_ids: Container[str] | None = None,
         suggested_object_id: str | None = None,
         # To disable or hide an entity if it gets created
         disabled_by: RegistryEntryDisabler | None = None,
@@ -876,7 +881,10 @@ class EntityRegistry(BaseRegistry):
         self.async_schedule_save()
 
         self.hass.bus.async_fire(
-            EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "entity_id": entity_id}
+            EVENT_ENTITY_REGISTRY_UPDATED,
+            _EventEntityRegistryUpdatedData_CreateRemove(
+                action="create", entity_id=entity_id
+            ),
         )
 
         return entry
@@ -898,12 +906,17 @@ class EntityRegistry(BaseRegistry):
             unique_id=entity.unique_id,
         )
         self.hass.bus.async_fire(
-            EVENT_ENTITY_REGISTRY_UPDATED, {"action": "remove", "entity_id": entity_id}
+            EVENT_ENTITY_REGISTRY_UPDATED,
+            _EventEntityRegistryUpdatedData_CreateRemove(
+                action="remove", entity_id=entity_id
+            ),
         )
         self.async_schedule_save()
 
     @callback
-    def async_device_modified(self, event: Event) -> None:
+    def async_device_modified(
+        self, event: Event[EventDeviceRegistryUpdatedData]
+    ) -> None:
         """Handle the removal or update of a device.
 
         Remove entities from the registry that are associated to a device when
@@ -1077,7 +1090,7 @@ class EntityRegistry(BaseRegistry):
 
         self.async_schedule_save()
 
-        data: dict[str, str | dict[str, Any]] = {
+        data: _EventEntityRegistryUpdatedData_Update = {
             "action": "update",
             "entity_id": entity_id,
             "changes": old_values,
@@ -1316,11 +1329,8 @@ class EntityRegistry(BaseRegistry):
     @callback
     def async_clear_label_id(self, label_id: str) -> None:
         """Clear label from registry entries."""
-        for entity_id, entry in self.entities.items():
-            if label_id in entry.labels:
-                labels = entry.labels.copy()
-                labels.remove(label_id)
-                self.async_update_entity(entity_id, labels=labels)
+        for entry in self.entities.get_entries_for_label(label_id):
+            self.async_update_entity(entry.entity_id, labels=entry.labels - {label_id})
 
     @callback
     def async_clear_config_entry(self, config_entry_id: str) -> None:
@@ -1478,7 +1488,6 @@ def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
         event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
         event_filter=_removed_from_registry_filter,
         listener=_handle_label_registry_update,
-        run_immediately=True,
     )
 
     @callback
@@ -1492,7 +1501,6 @@ def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
         event_type=cr.EVENT_CATEGORY_REGISTRY_UPDATED,
         event_filter=_removed_from_registry_filter,
         listener=_handle_category_registry_update,
-        run_immediately=True,
     )
 
     @callback
@@ -1511,9 +1519,7 @@ def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
         """Cancel cleanup."""
         cancel()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop)
 
 
 @callback
@@ -1526,7 +1532,7 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
         return bool(event_data["action"] == "remove")
 
     @callback
-    def cleanup_restored_states(event: Event) -> None:
+    def cleanup_restored_states(event: Event[EventEntityRegistryUpdatedData]) -> None:
         """Clean up restored states."""
         state = hass.states.get(event.data["entity_id"])
 
@@ -1539,7 +1545,6 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
         EVENT_ENTITY_REGISTRY_UPDATED,
         cleanup_restored_states,
         event_filter=cleanup_restored_states_filter,
-        run_immediately=True,
     )
 
     if hass.is_running:
@@ -1556,9 +1561,7 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
 
             entry.write_unavailable_state(hass)
 
-    hass.bus.async_listen(
-        EVENT_HOMEASSISTANT_START, _write_unavailable_states, run_immediately=True
-    )
+    hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _write_unavailable_states)
 
 
 async def async_migrate_entries(
