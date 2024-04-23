@@ -385,9 +385,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         def _handle_floor_registry_update(event: fr.EventFloorRegistryUpdated) -> None:
             """Update areas that are associated with a floor that has been removed."""
             floor_id = event.data["floor_id"]
-            for area_id, area in self.areas.items():
-                if floor_id == area.floor_id:
-                    self.async_update(area_id, floor_id=None)
+            for area in self.areas.get_areas_for_floor(floor_id):
+                self.async_update(area.id, floor_id=None)
 
         self.hass.bus.async_listen(
             event_type=fr.EVENT_FLOOR_REGISTRY_UPDATED,
@@ -399,11 +398,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         def _handle_label_registry_update(event: lr.EventLabelRegistryUpdated) -> None:
             """Update areas that have a label that has been removed."""
             label_id = event.data["label_id"]
-            for area_id, area in self.areas.items():
-                if label_id in area.labels:
-                    labels = area.labels.copy()
-                    labels.remove(label_id)
-                    self.async_update(area_id, labels=labels)
+            for area in self.areas.get_areas_for_label(label_id):
+                self.async_update(area.id, labels=area.labels - {label_id})
 
         self.hass.bus.async_listen(
             event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
