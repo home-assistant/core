@@ -10,7 +10,7 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.components.monzo.const import DOMAIN
 from homeassistant.components.monzo.sensor import (
-    ACC_SENSORS,
+    ACCOUNT_SENSORS,
     POT_SENSORS,
     MonzoSensorEntityDescription,
 )
@@ -72,7 +72,7 @@ async def test_sensor_default_enabled_entities(
     entity_registry: EntityRegistry = er.async_get(hass)
 
     for acc in TEST_ACCOUNTS:
-        for sensor_description in ACC_SENSORS:
+        for sensor_description in ACCOUNT_SENSORS:
             entity_id = await async_get_entity_id(hass, acc["id"], sensor_description)
             assert entity_id
             assert entity_registry.async_is_registered(entity_id)
@@ -116,7 +116,7 @@ async def test_all_entities(
     await setup_integration(hass, polling_config_entry)
 
     for acc in TEST_ACCOUNTS:
-        for sensor in ACC_SENSORS:
+        for sensor in ACCOUNT_SENSORS:
             entity_id = await async_get_entity_id(hass, acc["id"], sensor)
             assert hass.states.get(entity_id) == snapshot
 
@@ -136,7 +136,9 @@ async def test_update_failed(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    entity_id = await async_get_entity_id(hass, TEST_ACCOUNTS[0]["id"], ACC_SENSORS[0])
+    entity_id = await async_get_entity_id(
+        hass, TEST_ACCOUNTS[0]["id"], ACCOUNT_SENSORS[0]
+    )
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE

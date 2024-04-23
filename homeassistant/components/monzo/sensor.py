@@ -29,7 +29,7 @@ class MonzoSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[dict[str, Any]], Any]
 
 
-ACC_SENSORS = (
+ACCOUNT_SENSORS = (
     MonzoSensorEntityDescription(
         key="balance",
         translation_key="balance",
@@ -76,7 +76,7 @@ async def async_setup_entry(
             account["name"],
             lambda x: x.accounts,
         )
-        for entity_description in ACC_SENSORS
+        for entity_description in ACCOUNT_SENSORS
         for index, account in enumerate(
             hass.data[DOMAIN][config_entry.entry_id].accounts
         )
