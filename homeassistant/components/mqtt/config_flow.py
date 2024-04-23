@@ -160,8 +160,8 @@ KEY_UPLOAD_SELECTOR = FileSelector(FileSelectorConfig(accept=".key,application/p
 
 REAUTH_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_USERNAME): TEXT_SELECTOR,
-        vol.Optional(CONF_PASSWORD): PASSWORD_SELECTOR,
+        vol.Required(CONF_USERNAME): TEXT_SELECTOR,
+        vol.Required(CONF_PASSWORD): PASSWORD_SELECTOR,
     }
 )
 PWD_NOT_CHANGED = "__**password_not_changed**__"
@@ -209,9 +209,10 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         assert self.entry is not None
         if user_input:
-            password_changed = (user_password := user_input.get(CONF_PASSWORD)) == (
-                entry_password := self.entry.data.get(CONF_PASSWORD)
-            )
+            password_changed = (
+                user_password := user_input[CONF_PASSWORD]
+            ) != PWD_NOT_CHANGED
+            entry_password = self.entry.data.get(CONF_PASSWORD)
             password = user_password if password_changed else entry_password
             new_entry_data = {
                 **self.entry.data,

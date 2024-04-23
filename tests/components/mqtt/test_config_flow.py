@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import mqtt
 from homeassistant.components.hassio import HassioServiceInfo
+from homeassistant.components.mqtt.config_flow import PWD_NOT_CHANGED
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -1058,6 +1059,92 @@ async def test_skipping_advanced_options(
         user_input=test_input,
     )
     assert result["step_id"] == step_id
+
+
+@pytest.mark.parametrize(
+    ("test_input", "user_input", "new_password"),
+    [
+        (
+            {
+                mqtt.CONF_BROKER: "test-broker",
+                mqtt.CONF_USERNAME: "username",
+                mqtt.CONF_PASSWORD: "verysecret",
+            },
+            {
+                mqtt.CONF_USERNAME: "username",
+                mqtt.CONF_PASSWORD: "newpassword",
+            },
+            "newpassword",
+        ),
+        (
+            {
+                mqtt.CONF_BROKER: "test-broker",
+                mqtt.CONF_USERNAME: "username",
+                mqtt.CONF_PASSWORD: "verysecret",
+            },
+            {
+                mqtt.CONF_USERNAME: "username",
+                mqtt.CONF_PASSWORD: PWD_NOT_CHANGED,
+            },
+            "verysecret",
+        ),
+    ],
+)
+async def test_step_reauth(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    mqtt_client_mock: MqttMockPahoClient,
+    mock_try_connection: MagicMock,
+    mock_reload_after_entry_update: MagicMock,
+    test_input: dict[str, Any],
+    user_input: dict[str, Any],
+    new_password: str,
+) -> None:
+    """Test that the reauth step works."""
+
+    # Prepare the config entry
+    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data=test_input,
+    )
+    await mqtt_mock_entry()
+
+    # Show the form
+    result = await hass.config_entries.flow.async_init(
+        mqtt.DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": config_entry.entry_id,
+        },
+        data=config_entry.data,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    # simulate Try re-auth fails
+    mock_try_connection.return_value = False
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    # simulate Try re-auth succeeds
+    mock_try_connection.return_value = True
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    assert len(hass.config_entries.async_entries()) == 1
+    assert config_entry.data.get(mqtt.CONF_PASSWORD) == new_password
+    await hass.async_block_till_done()
 
 
 async def test_options_user_connection_fails(
