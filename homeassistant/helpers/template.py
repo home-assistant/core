@@ -2386,7 +2386,7 @@ def time_until(hass: HomeAssistant, value: Any | datetime, precision: int = 1) -
 
     The time until can be in seconds, minutes, hours, days, months and years.
 
-    precision is the number of units will be returned, with the last unit rounded.
+    precision is the number of units to return, with the last unit rounded.
 
     If the value not a datetime object the input will be returned unmodified.
     """
