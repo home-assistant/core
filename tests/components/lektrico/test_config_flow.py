@@ -34,15 +34,12 @@ from .conftest import (
     MOCKED_DEVICE_ZEROCONF_DATA,
     MOCKED_DEVICE_ZEROCONF_DATA_FOR_3EM,
     MOCKED_DEVICE_ZEROCONF_DATA_FOR_EM,
-    patch_device_config,
-    patch_device_config_for_3em,
-    patch_device_config_for_em,
 )
 
 from tests.common import MockConfigEntry
 
 
-async def test_user_setup(hass: HomeAssistant) -> None:
+async def test_user_setup(hass: HomeAssistant, mock_device_config) -> None:
     """Test manually setting up."""
 
     result = await hass.config_entries.flow.async_init(
@@ -55,7 +52,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
     assert "flow_id" in result
 
     with (
-        patch_device_config(),
+        mock_device_config,
         patch(
             "homeassistant.components.lektrico.async_setup_entry", return_value=True
         ) as mock_setup_entry,
@@ -85,7 +82,9 @@ async def test_user_setup(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_setup_already_exists(hass: HomeAssistant) -> None:
+async def test_user_setup_already_exists(
+    hass: HomeAssistant, mock_device_config
+) -> None:
     """Test manually setting up when the device already exists."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -103,7 +102,7 @@ async def test_user_setup_already_exists(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    with patch_device_config():
+    with mock_device_config:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -117,7 +116,9 @@ async def test_user_setup_already_exists(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_user_setup_device_offline(hass: HomeAssistant) -> None:
+async def test_user_setup_device_offline(
+    hass: HomeAssistant, mock_device_config
+) -> None:
     """Test manually setting up when device is offline."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -126,7 +127,8 @@ async def test_user_setup_device_offline(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    with patch_device_config(exception=DeviceConnectionError):
+    with mock_device_config:
+        mock_device_config.side_effect = DeviceConnectionError
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -140,11 +142,11 @@ async def test_user_setup_device_offline(hass: HomeAssistant) -> None:
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
 
 
-async def test_discovered_zeroconf(hass: HomeAssistant) -> None:
+async def test_discovered_zeroconf(hass: HomeAssistant, mock_device_config) -> None:
     """Test we can setup when discovered from zeroconf."""
 
     with (
-        patch_device_config(),
+        mock_device_config,
         patch("homeassistant.components.lektrico.async_setup_entry", return_value=True),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -201,10 +203,13 @@ async def test_discovered_zeroconf(hass: HomeAssistant) -> None:
         assert result["reason"] == "missing_id"
 
 
-async def test_discovered_zeroconf_device_connection_error(hass: HomeAssistant) -> None:
+async def test_discovered_zeroconf_device_connection_error(
+    hass: HomeAssistant, mock_device_config
+) -> None:
     """Test we can setup when discovered from zeroconf but device went offline."""
 
-    with patch_device_config(exception=DeviceConnectionError):
+    with mock_device_config:
+        mock_device_config.side_effect = DeviceConnectionError
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
@@ -214,11 +219,13 @@ async def test_discovered_zeroconf_device_connection_error(hass: HomeAssistant) 
         assert result["errors"] == {CONF_HOST: "cannot_connect"}
 
 
-async def test_discovered_zeroconf_EM(hass: HomeAssistant) -> None:
+async def test_discovered_zeroconf_EM(
+    hass: HomeAssistant, mock_device_config_for_em
+) -> None:
     """Test we can setup when EM discovered from zeroconf."""
 
     with (
-        patch_device_config_for_em(),
+        mock_device_config_for_em,
         patch("homeassistant.components.lektrico.async_setup_entry", return_value=True),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -244,11 +251,13 @@ async def test_discovered_zeroconf_EM(hass: HomeAssistant) -> None:
         )
 
 
-async def test_discovered_zeroconf_3EM(hass: HomeAssistant) -> None:
+async def test_discovered_zeroconf_3EM(
+    hass: HomeAssistant, mock_device_config_for_3em
+) -> None:
     """Test we can setup when 3EM discovered from zeroconf."""
 
     with (
-        patch_device_config_for_3em(),
+        mock_device_config_for_3em,
         patch("homeassistant.components.lektrico.async_setup_entry", return_value=True),
     ):
         result = await hass.config_entries.flow.async_init(
