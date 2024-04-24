@@ -107,23 +107,26 @@ async def test_extract_frame_integration_with_excluded_integration(
 
 async def test_extract_frame_no_integration(caplog: pytest.LogCaptureFixture) -> None:
     """Test extracting the current frame without integration context."""
-    with patch(
-        "homeassistant.helpers.frame.get_current_frame",
-        return_value=extract_stack_to_frame(
-            [
-                Mock(
-                    filename="/home/paulus/homeassistant/core.py",
-                    lineno="23",
-                    line="do_something()",
-                ),
-                Mock(
-                    filename="/home/paulus/aiohue/lights.py",
-                    lineno="2",
-                    line="something()",
-                ),
-            ]
+    with (
+        patch(
+            "homeassistant.helpers.frame.get_current_frame",
+            return_value=extract_stack_to_frame(
+                [
+                    Mock(
+                        filename="/home/paulus/homeassistant/core.py",
+                        lineno="23",
+                        line="do_something()",
+                    ),
+                    Mock(
+                        filename="/home/paulus/aiohue/lights.py",
+                        lineno="2",
+                        line="something()",
+                    ),
+                ]
+            ),
         ),
-    ), pytest.raises(frame.MissingIntegrationFrame):
+        pytest.raises(frame.MissingIntegrationFrame),
+    ):
         frame.get_integration_frame()
 
 
@@ -202,3 +205,45 @@ async def test_report_missing_integration_frame(
 
         frame.report(what, error_if_core=False, log_custom_component_only=True)
         assert caplog.text == ""
+
+
+@pytest.mark.parametrize("run_count", [1, 2])
+# Run this twice to make sure the flood check does not
+# kick in when error_if_integration=True
+async def test_report_error_if_integration(
+    caplog: pytest.LogCaptureFixture, run_count: int
+) -> None:
+    """Test RuntimeError is raised if error_if_integration is set."""
+    frames = extract_stack_to_frame(
+        [
+            Mock(
+                filename="/home/paulus/homeassistant/core.py",
+                lineno="23",
+                line="do_something()",
+            ),
+            Mock(
+                filename="/home/paulus/homeassistant/components/hue/light.py",
+                lineno="23",
+                line="self.light.is_on",
+            ),
+            Mock(
+                filename="/home/paulus/aiohue/lights.py",
+                lineno="2",
+                line="something()",
+            ),
+        ]
+    )
+    with (
+        patch(
+            "homeassistant.helpers.frame.get_current_frame",
+            return_value=frames,
+        ),
+        pytest.raises(
+            RuntimeError,
+            match=(
+                "Detected that integration 'hue' did a bad"
+                " thing at homeassistant/components/hue/light.py"
+            ),
+        ),
+    ):
+        frame.report("did a bad thing", error_if_integration=True)

@@ -125,12 +125,15 @@ def mock_fitbit_config_setup(
 ) -> Generator[None, None, None]:
     """Fixture to mock out fitbit.conf file data loading and persistence."""
     has_config = fitbit_config_yaml is not None
-    with patch(
-        "homeassistant.components.fitbit.sensor.os.path.isfile",
-        return_value=has_config,
-    ), patch(
-        "homeassistant.components.fitbit.sensor.load_json_object",
-        return_value=fitbit_config_yaml,
+    with (
+        patch(
+            "homeassistant.components.fitbit.sensor.os.path.isfile",
+            return_value=has_config,
+        ),
+        patch(
+            "homeassistant.components.fitbit.sensor.load_json_object",
+            return_value=fitbit_config_yaml,
+        ),
     ):
         yield
 

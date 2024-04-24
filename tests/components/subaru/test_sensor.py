@@ -35,8 +35,9 @@ async def test_sensors_ev_imperial(hass: HomeAssistant, ev_entry) -> None:
     """Test sensors supporting imperial units."""
     hass.config.units = US_CUSTOMARY_SYSTEM
 
-    with patch(MOCK_API_FETCH), patch(
-        MOCK_API_GET_DATA, return_value=VEHICLE_STATUS_EV
+    with (
+        patch(MOCK_API_FETCH),
+        patch(MOCK_API_GET_DATA, return_value=VEHICLE_STATUS_EV),
     ):
         advance_time_to_next_fetch(hass)
         await hass.async_block_till_done()

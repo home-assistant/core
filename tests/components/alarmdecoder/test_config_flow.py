@@ -5,7 +5,7 @@ from unittest.mock import patch
 from alarmdecoder.util import NoDeviceError
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.alarmdecoder import config_flow
 from homeassistant.components.alarmdecoder.const import (
     CONF_ALT_NIGHT_MODE,
@@ -31,6 +31,7 @@ from homeassistant.components.alarmdecoder.const import (
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -63,7 +64,7 @@ async def test_setups(hass: HomeAssistant, protocol, connection, title) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
@@ -71,19 +72,21 @@ async def test_setups(hass: HomeAssistant, protocol, connection, title) -> None:
         {CONF_PROTOCOL: protocol},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "protocol"
 
-    with patch("homeassistant.components.alarmdecoder.config_flow.AdExt.open"), patch(
-        "homeassistant.components.alarmdecoder.config_flow.AdExt.close"
-    ), patch(
-        "homeassistant.components.alarmdecoder.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("homeassistant.components.alarmdecoder.config_flow.AdExt.open"),
+        patch("homeassistant.components.alarmdecoder.config_flow.AdExt.close"),
+        patch(
+            "homeassistant.components.alarmdecoder.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], connection
         )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == title
         assert result["data"] == {
             **connection,
@@ -106,7 +109,7 @@ async def test_setup_connection_error(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
@@ -114,27 +117,33 @@ async def test_setup_connection_error(hass: HomeAssistant) -> None:
         {CONF_PROTOCOL: protocol},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "protocol"
 
-    with patch(
-        "homeassistant.components.alarmdecoder.config_flow.AdExt.open",
-        side_effect=NoDeviceError,
-    ), patch("homeassistant.components.alarmdecoder.config_flow.AdExt.close"):
+    with (
+        patch(
+            "homeassistant.components.alarmdecoder.config_flow.AdExt.open",
+            side_effect=NoDeviceError,
+        ),
+        patch("homeassistant.components.alarmdecoder.config_flow.AdExt.close"),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], connection_settings
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "cannot_connect"}
 
-    with patch(
-        "homeassistant.components.alarmdecoder.config_flow.AdExt.open",
-        side_effect=Exception,
-    ), patch("homeassistant.components.alarmdecoder.config_flow.AdExt.close"):
+    with (
+        patch(
+            "homeassistant.components.alarmdecoder.config_flow.AdExt.open",
+            side_effect=Exception,
+        ),
+        patch("homeassistant.components.alarmdecoder.config_flow.AdExt.close"),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], connection_settings
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "unknown"}
 
 
@@ -153,7 +162,7 @@ async def test_options_arm_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -161,7 +170,7 @@ async def test_options_arm_flow(hass: HomeAssistant) -> None:
         user_input={"edit_selection": "Arming Settings"},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "arm_settings"
 
     with patch(
@@ -172,7 +181,7 @@ async def test_options_arm_flow(hass: HomeAssistant) -> None:
             user_input=user_input,
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options == {
         OPTIONS_ARM: user_input,
         OPTIONS_ZONES: DEFAULT_ZONE_OPTIONS,
@@ -194,7 +203,7 @@ async def test_options_zone_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -202,7 +211,7 @@ async def test_options_zone_flow(hass: HomeAssistant) -> None:
         user_input={"edit_selection": "Zones"},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zone_select"
 
     result = await hass.config_entries.options.async_configure(
@@ -218,7 +227,7 @@ async def test_options_zone_flow(hass: HomeAssistant) -> None:
             user_input=zone_settings,
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options == {
         OPTIONS_ARM: DEFAULT_ARM_OPTIONS,
         OPTIONS_ZONES: {zone_number: zone_settings},
@@ -227,7 +236,7 @@ async def test_options_zone_flow(hass: HomeAssistant) -> None:
     # Make sure zone can be removed...
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -235,7 +244,7 @@ async def test_options_zone_flow(hass: HomeAssistant) -> None:
         user_input={"edit_selection": "Zones"},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zone_select"
 
     result = await hass.config_entries.options.async_configure(
@@ -251,7 +260,7 @@ async def test_options_zone_flow(hass: HomeAssistant) -> None:
             user_input={},
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options == {
         OPTIONS_ARM: DEFAULT_ARM_OPTIONS,
         OPTIONS_ZONES: {},
@@ -273,7 +282,7 @@ async def test_options_zone_flow_validation(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -281,7 +290,7 @@ async def test_options_zone_flow_validation(hass: HomeAssistant) -> None:
         user_input={"edit_selection": "Zones"},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zone_select"
 
     # Zone Number must be int
@@ -290,7 +299,7 @@ async def test_options_zone_flow_validation(hass: HomeAssistant) -> None:
         user_input={CONF_ZONE_NUMBER: "asd"},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zone_select"
     assert result["errors"] == {CONF_ZONE_NUMBER: "int"}
 
@@ -299,7 +308,7 @@ async def test_options_zone_flow_validation(hass: HomeAssistant) -> None:
         user_input={CONF_ZONE_NUMBER: zone_number},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zone_details"
 
     # CONF_RELAY_ADDR & CONF_RELAY_CHAN are inclusive
@@ -308,7 +317,7 @@ async def test_options_zone_flow_validation(hass: HomeAssistant) -> None:
         user_input={**zone_settings, CONF_RELAY_ADDR: "1"},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zone_details"
     assert result["errors"] == {"base": "relay_inclusive"}
 
@@ -317,7 +326,7 @@ async def test_options_zone_flow_validation(hass: HomeAssistant) -> None:
         user_input={**zone_settings, CONF_RELAY_CHAN: "1"},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zone_details"
     assert result["errors"] == {"base": "relay_inclusive"}
 
@@ -327,7 +336,7 @@ async def test_options_zone_flow_validation(hass: HomeAssistant) -> None:
         user_input={**zone_settings, CONF_RELAY_ADDR: "abc", CONF_RELAY_CHAN: "abc"},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zone_details"
     assert result["errors"] == {
         CONF_RELAY_ADDR: "int",
@@ -340,7 +349,7 @@ async def test_options_zone_flow_validation(hass: HomeAssistant) -> None:
         user_input={**zone_settings, CONF_ZONE_LOOP: "1"},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zone_details"
     assert result["errors"] == {CONF_ZONE_LOOP: "loop_rfid"}
 
@@ -350,7 +359,7 @@ async def test_options_zone_flow_validation(hass: HomeAssistant) -> None:
         user_input={**zone_settings, CONF_ZONE_RFID: "rfid123", CONF_ZONE_LOOP: "ab"},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zone_details"
     assert result["errors"] == {CONF_ZONE_LOOP: "int"}
 
@@ -360,7 +369,7 @@ async def test_options_zone_flow_validation(hass: HomeAssistant) -> None:
         user_input={**zone_settings, CONF_ZONE_RFID: "rfid123", CONF_ZONE_LOOP: "5"},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zone_details"
     assert result["errors"] == {CONF_ZONE_LOOP: "loop_range"}
 
@@ -379,7 +388,7 @@ async def test_options_zone_flow_validation(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options == {
         OPTIONS_ARM: DEFAULT_ARM_OPTIONS,
         OPTIONS_ZONES: {
@@ -427,7 +436,7 @@ async def test_one_device_allowed(hass: HomeAssistant, protocol, connection) -> 
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
@@ -435,11 +444,11 @@ async def test_one_device_allowed(hass: HomeAssistant, protocol, connection) -> 
         {CONF_PROTOCOL: protocol},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "protocol"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], connection
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

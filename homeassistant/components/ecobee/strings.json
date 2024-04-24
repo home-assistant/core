@@ -20,6 +20,17 @@
     }
   },
   "entity": {
+    "climate": {
+      "ecobee": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "away_indefinitely": "Away Indefinitely"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "ventilator_min_type_home": {
         "name": "Ventilator min time home"
@@ -149,6 +160,19 @@
         "follow_me": {
           "name": "Follow me",
           "description": "Enable Follow Me mode."
+        }
+      }
+    }
+  },
+  "issues": {
+    "migrate_notify": {
+      "title": "Migration of Ecobee notify service",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The Ecobee `notify` service has been migrated. A new `notify` entity per Thermostat is available now.\n\nUpdate any automations to use the new `notify.send_message` exposed by these new entities. When this is done, fix this issue and restart Home Assistant.",
+            "title": "Disable legacy Ecobee notify service"
+          }
         }
       }
     }

@@ -363,7 +363,9 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     def is_volume_muted(self) -> bool | None:
         """Boolean if volume is currently muted."""
         if self._volume.muted and self._volume.muted.muted:
-            return self._volume.muted.muted
+            # The any return here is side effect of pydantic v2 compatibility
+            # This will be fixed in the future.
+            return self._volume.muted.muted  # type: ignore[no-any-return]
         return None
 
     @property

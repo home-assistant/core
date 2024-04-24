@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "water_tank_empty": {
+        "default": "mdi:cup-outline",
+        "state": {
+          "off": "mdi:cup-water",
+          "on": "mdi:cup-outline"
+        }
+      },
+      "dustbin_present": {
+        "default": "mdi:basket-check",
+        "state": {
+          "off": "mdi:basket-remove",
+          "on": "mdi:basket-check"
+        }
+      }
+    }
+  }
+}

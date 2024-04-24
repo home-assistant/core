@@ -15,6 +15,7 @@ TO_EXCLUDE = {
     "via_device_id",
     "last_updated",
     "last_changed",
+    "last_reported",
 }
 
 

@@ -148,7 +148,9 @@ class CreateDevice:
         self.data = {"traits": {}}
 
     def create(
-        self, raw_traits: dict[str, Any] = None, raw_data: dict[str, Any] = None
+        self,
+        raw_traits: dict[str, Any] | None = None,
+        raw_data: dict[str, Any] | None = None,
     ) -> None:
         """Create a new device with the specifeid traits."""
         data = copy.deepcopy(self.data)

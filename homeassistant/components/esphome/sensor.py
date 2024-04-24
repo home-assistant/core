@@ -52,15 +52,15 @@ async def async_setup_entry(
     )
 
 
-_STATE_CLASSES: EsphomeEnumMapper[
-    EsphomeSensorStateClass, SensorStateClass | None
-] = EsphomeEnumMapper(
-    {
-        EsphomeSensorStateClass.NONE: None,
-        EsphomeSensorStateClass.MEASUREMENT: SensorStateClass.MEASUREMENT,
-        EsphomeSensorStateClass.TOTAL_INCREASING: SensorStateClass.TOTAL_INCREASING,
-        EsphomeSensorStateClass.TOTAL: SensorStateClass.TOTAL,
-    }
+_STATE_CLASSES: EsphomeEnumMapper[EsphomeSensorStateClass, SensorStateClass | None] = (
+    EsphomeEnumMapper(
+        {
+            EsphomeSensorStateClass.NONE: None,
+            EsphomeSensorStateClass.MEASUREMENT: SensorStateClass.MEASUREMENT,
+            EsphomeSensorStateClass.TOTAL_INCREASING: SensorStateClass.TOTAL_INCREASING,
+            EsphomeSensorStateClass.TOTAL: SensorStateClass.TOTAL,
+        }
+    )
 )
 
 

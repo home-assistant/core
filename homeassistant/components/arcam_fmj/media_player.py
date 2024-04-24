@@ -257,7 +257,7 @@ class ArcamFmj(MediaPlayerEntity):
             for preset in presets.values()
         ]
 
-        root = BrowseMedia(
+        return BrowseMedia(
             title="Arcam FMJ Receiver",
             media_class=MediaClass.DIRECTORY,
             media_content_id="root",
@@ -266,8 +266,6 @@ class ArcamFmj(MediaPlayerEntity):
             can_expand=True,
             children=radio,
         )
-
-        return root
 
     @convert_exception
     async def async_play_media(
