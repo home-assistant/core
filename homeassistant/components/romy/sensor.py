@@ -39,6 +39,7 @@ SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="dustbin_sensor",
         translation_key="dustbin_sensor",
+        entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
