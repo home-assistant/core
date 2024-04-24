@@ -1199,6 +1199,35 @@ def test_as_datetime_from_timestamp(
 
 
 @pytest.mark.parametrize(
+    ("input", "output"),
+    [
+        (
+            "{% set dt = as_datetime('2024-01-01 16:00:00-08:00') %}",
+            "2024-01-01 16:00:00-08:00",
+        ),
+        (
+            "{% set dt = as_datetime('2024-01-29').date() %}",
+            "2024-01-29 00:00:00",
+        ),
+    ],
+)
+def test_as_datetime_from_datetime(
+    hass: HomeAssistant, input: str, output: str
+) -> None:
+    """Test using datetime.datetime or datetime.date objects as input."""
+
+    assert (
+        template.Template(f"{input}{{{{ dt | as_datetime }}}}", hass).async_render()
+        == output
+    )
+
+    assert (
+        template.Template(f"{input}{{{{ as_datetime(dt) }}}}", hass).async_render()
+        == output
+    )
+
+
+@pytest.mark.parametrize(
     ("input", "default", "output"),
     [
         (1469119144, 123, "2016-07-21 16:39:04+00:00"),
@@ -2050,12 +2079,7 @@ async def test_state_translated(
     ):
         if category == "entity":
             return {
-                "component.hue.entity.light.translation_key.state.on": "state_is_on"
-            }
-        if category == "state":
-            return {
-                "component.some_domain.state.some_device_class.off": "state_is_off",
-                "component.some_domain.state._.foo": "state_is_foo",
+                "component.hue.entity.light.translation_key.state.on": "state_is_on",
             }
         return {}
 
@@ -2065,16 +2089,6 @@ async def test_state_translated(
     ):
         tpl8 = template.Template('{{ state_translated("light.hue_5678") }}', hass)
         assert tpl8.async_render() == "state_is_on"
-
-        tpl9 = template.Template(
-            '{{ state_translated("some_domain.with_device_class_1") }}', hass
-        )
-        assert tpl9.async_render() == "state_is_off"
-
-        tpl10 = template.Template(
-            '{{ state_translated("some_domain.with_device_class_2") }}', hass
-        )
-        assert tpl10.async_render() == "state_is_foo"
 
     tpl11 = template.Template('{{ state_translated("domain.is_unavailable") }}', hass)
     assert tpl11.async_render() == "unavailable"
@@ -5743,3 +5757,20 @@ async def test_label_areas(
     info = render_to_info(hass, f"{{{{ '{label.name}' | label_areas }}}}")
     assert_result_info(info, [master_bedroom.id])
     assert info.rate_limit is None
+
+
+async def test_template_thread_safety_checks(hass: HomeAssistant) -> None:
+    """Test template thread safety checks."""
+    hass.states.async_set("sensor.test", "23")
+    template_str = "{{ states('sensor.test') }}"
+    template_obj = template.Template(template_str, None)
+    template_obj.hass = hass
+    hass.config.debug = True
+
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls async_render_to_info from a thread.",
+    ):
+        await hass.async_add_executor_job(template_obj.async_render_to_info)
+
+    assert template_obj.async_render_to_info().result() == 23

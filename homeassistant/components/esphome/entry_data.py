@@ -20,9 +20,12 @@ from aioesphomeapi import (
     ClimateInfo,
     CoverInfo,
     DateInfo,
+    DateTimeInfo,
     DeviceInfo,
     EntityInfo,
     EntityState,
+    Event,
+    EventInfo,
     FanInfo,
     LightInfo,
     LockInfo,
@@ -36,6 +39,7 @@ from aioesphomeapi import (
     TextSensorInfo,
     TimeInfo,
     UserService,
+    ValveInfo,
     build_unique_id,
 )
 from aioesphomeapi.model import ButtonInfo
@@ -67,6 +71,8 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     ClimateInfo: Platform.CLIMATE,
     CoverInfo: Platform.COVER,
     DateInfo: Platform.DATE,
+    DateTimeInfo: Platform.DATETIME,
+    EventInfo: Platform.EVENT,
     FanInfo: Platform.FAN,
     LightInfo: Platform.LIGHT,
     LockInfo: Platform.LOCK,
@@ -78,6 +84,7 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     TextInfo: Platform.TEXT,
     TextSensorInfo: Platform.SENSOR,
     TimeInfo: Platform.TIME,
+    ValveInfo: Platform.VALVE,
 }
 
 
@@ -341,7 +348,7 @@ class RuntimeEntryData:
         if (
             current_state == state
             and subscription_key not in stale_state
-            and state_type is not CameraState
+            and state_type not in (CameraState, Event)
             and not (
                 state_type is SensorState
                 and (platform_info := self.info.get(SensorInfo))

@@ -1,6 +1,5 @@
 """Test the fyta config flow."""
 
-from datetime import datetime
 from unittest.mock import AsyncMock
 
 from fyta_cli.fyta_exceptions import (
@@ -20,8 +19,6 @@ from tests.common import MockConfigEntry
 
 USERNAME = "fyta_user"
 PASSWORD = "fyta_pass"
-ACCESS_TOKEN = "123xyz"
-EXPIRATION = datetime.now()
 
 
 async def test_user_flow(
@@ -121,3 +118,65 @@ async def test_duplicate_entry(hass: HomeAssistant, mock_fyta: AsyncMock) -> Non
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (FytaConnectionError, {"base": "cannot_connect"}),
+        (FytaAuthentificationError, {"base": "invalid_auth"}),
+        (FytaPasswordError, {"base": "invalid_auth", CONF_PASSWORD: "password_error"}),
+        (Exception, {"base": "unknown"}),
+    ],
+)
+async def test_reauth(
+    hass: HomeAssistant,
+    exception: Exception,
+    error: dict[str, str],
+    mock_fyta: AsyncMock,
+    mock_setup_entry,
+) -> None:
+    """Test reauth-flow works."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=USERNAME,
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
+        data=entry.data,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_fyta.return_value.login.side_effect = exception
+
+    # tests with connection error
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == error
+
+    mock_fyta.return_value.login.side_effect = None
+
+    # tests with all information provided
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "other_username", CONF_PASSWORD: "other_password"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_USERNAME] == "other_username"
+    assert entry.data[CONF_PASSWORD] == "other_password"
+
+    assert len(mock_setup_entry.mock_calls) == 1

@@ -40,7 +40,7 @@ async def test_islamic_prayer_times_sensors(
 
     with (
         patch(
-            "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
+            "prayer_times_calculator_offline.PrayerTimesCalculator.fetch_prayer_times",
             return_value=PRAYER_TIMES,
         ),
         freeze_time(NOW),

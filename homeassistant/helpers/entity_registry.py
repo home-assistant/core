@@ -10,7 +10,7 @@ timer.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Hashable, Iterable, KeysView, Mapping
+from collections.abc import Callable, Container, Hashable, KeysView, Mapping
 from datetime import datetime, timedelta
 from enum import StrEnum
 from functools import cached_property
@@ -714,7 +714,7 @@ class EntityRegistry(BaseRegistry):
         return list(self.entities.get_device_ids())
 
     def _entity_id_available(
-        self, entity_id: str, known_object_ids: Iterable[str] | None
+        self, entity_id: str, known_object_ids: Container[str] | None
     ) -> bool:
         """Return True if the entity_id is available.
 
@@ -740,7 +740,7 @@ class EntityRegistry(BaseRegistry):
         self,
         domain: str,
         suggested_object_id: str,
-        known_object_ids: Iterable[str] | None = None,
+        known_object_ids: Container[str] | None = None,
     ) -> str:
         """Generate an entity ID that does not conflict.
 
@@ -753,7 +753,7 @@ class EntityRegistry(BaseRegistry):
 
         test_string = preferred_string[:MAX_LENGTH_STATE_ENTITY_ID]
         if known_object_ids is None:
-            known_object_ids = {}
+            known_object_ids = set()
 
         tries = 1
         while not self._entity_id_available(test_string, known_object_ids):
@@ -773,7 +773,7 @@ class EntityRegistry(BaseRegistry):
         unique_id: str,
         *,
         # To influence entity ID generation
-        known_object_ids: Iterable[str] | None = None,
+        known_object_ids: Container[str] | None = None,
         suggested_object_id: str | None = None,
         # To disable or hide an entity if it gets created
         disabled_by: RegistryEntryDisabler | None = None,
@@ -1329,11 +1329,8 @@ class EntityRegistry(BaseRegistry):
     @callback
     def async_clear_label_id(self, label_id: str) -> None:
         """Clear label from registry entries."""
-        for entity_id, entry in self.entities.items():
-            if label_id in entry.labels:
-                labels = entry.labels.copy()
-                labels.remove(label_id)
-                self.async_update_entity(entity_id, labels=labels)
+        for entry in self.entities.get_entries_for_label(label_id):
+            self.async_update_entity(entry.entity_id, labels=entry.labels - {label_id})
 
     @callback
     def async_clear_config_entry(self, config_entry_id: str) -> None:

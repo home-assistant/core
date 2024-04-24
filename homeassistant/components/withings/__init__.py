@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any, cast
 
+from aiohttp import ClientError
 from aiohttp.hdrs import METH_POST
 from aiohttp.web import Request, Response
 from aiowithings import NotificationCategory, WithingsClient
@@ -274,7 +275,11 @@ class WithingsWebhookManager:
 
 async def async_unsubscribe_webhooks(client: WithingsClient) -> None:
     """Unsubscribe to all Withings webhooks."""
-    current_webhooks = await client.list_notification_configurations()
+    try:
+        current_webhooks = await client.list_notification_configurations()
+    except ClientError:
+        LOGGER.exception("Error when unsubscribing webhooks")
+        return
 
     for webhook_configuration in current_webhooks:
         LOGGER.debug(
