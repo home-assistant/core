@@ -1,0 +1,61 @@
+{
+  "Body": {
+    "Data": {
+      "0": {
+        "Current_AC_Phase_1": 7.7549999999999999,
+        "Current_AC_Phase_2": 6.6799999999999997,
+        "Current_AC_Phase_3": 10.102,
+        "Details": {
+          "Manufacturer": "Fronius",
+          "Model": "Smart Meter 63A",
+          "Serial": "12345678"
+        },
+        "Enable": 1,
+        "EnergyReactive_VArAC_Sum_Consumed": 59960790,
+        "EnergyReactive_VArAC_Sum_Produced": 723160,
+        "EnergyReal_WAC_Minus_Absolute": 35623065,
+        "EnergyReal_WAC_Plus_Absolute": 15303334,
+        "EnergyReal_WAC_Sum_Consumed": 15303334,
+        "EnergyReal_WAC_Sum_Produced": 35623065,
+        "Frequency_Phase_Average": 50,
+        "Meter_Location_Current": 0,
+        "PowerApparent_S_Phase_1": 1772.7929999999999,
+        "PowerApparent_S_Phase_2": 1527.048,
+        "PowerApparent_S_Phase_3": 2333.5619999999999,
+        "PowerApparent_S_Sum": 5592.5699999999997,
+        "PowerFactor_Phase_1": -0.98999999999999999,
+        "PowerFactor_Phase_2": -0.98999999999999999,
+        "PowerFactor_Phase_3": 0.98999999999999999,
+        "PowerFactor_Sum": 1,
+        "PowerReactive_Q_Phase_1": 51.479999999999997,
+        "PowerReactive_Q_Phase_2": 115.63,
+        "PowerReactive_Q_Phase_3": -164.24000000000001,
+        "PowerReactive_Q_Sum": 2.8700000000000001,
+        "PowerReal_P_Phase_1": 1765.55,
+        "PowerReal_P_Phase_2": 1515.8,
+        "PowerReal_P_Phase_3": 2311.2199999999998,
+        "PowerReal_P_Sum": 5592.5699999999997,
+        "TimeStamp": 1633977078,
+        "Visible": 1,
+        "Voltage_AC_PhaseToPhase_12": 395.89999999999998,
+        "Voltage_AC_PhaseToPhase_23": 398,
+        "Voltage_AC_PhaseToPhase_31": 398,
+        "Voltage_AC_Phase_1": 228.59999999999999,
+        "Voltage_AC_Phase_2": 228.59999999999999,
+        "Voltage_AC_Phase_3": 231
+      }
+    }
+  },
+  "Head": {
+    "RequestArguments": {
+      "DeviceClass": "Meter",
+      "Scope": "System"
+    },
+    "Status": {
+      "Code": 0,
+      "Reason": "",
+      "UserMessage": ""
+    },
+    "Timestamp": "2021-10-11T20:31:18+02:00"
+  }
+}

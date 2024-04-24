@@ -1,0 +1,5 @@
+binary_sensor:
+  - platform: trend
+    sensors:
+      second_test_trend_sensor:
+        entity_id: sensor.test_state

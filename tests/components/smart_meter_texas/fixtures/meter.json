@@ -1,0 +1,21 @@
+{
+  "data": [
+    {
+      "customer": "X",
+      "email": "Y",
+      "description": "123 Main St",
+      "address": "123 MAIN ST",
+      "city": "DALLAS",
+      "state": "TX",
+      "zip": "75001-0.00",
+      "esiid": "12345678901234567",
+      "meterNumber": "123456789",
+      "meterMultiplier": 1,
+      "fullAddress": "123 MAIN ST, DALLAS, TX, 75001-0.00",
+      "errmsg": "Success",
+      "recordStatus": "ESIID-RECORD-EXISTS",
+      "statusIndicator": true,
+      "dunsNumber": "NO_DUNS"
+    }
+  ]
+}

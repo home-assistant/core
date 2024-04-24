@@ -1,0 +1,116 @@
+{
+  "id": 0,
+  "title": "string",
+  "originalTitle": "string",
+  "alternateTitles": [
+    {
+      "sourceType": "tmdb",
+      "movieId": 1,
+      "title": "string",
+      "sourceId": 0,
+      "votes": 0,
+      "voteCount": 0,
+      "language": {
+        "id": 1,
+        "name": "English"
+      },
+      "id": 1
+    }
+  ],
+  "sortTitle": "string",
+  "sizeOnDisk": 0,
+  "overview": "string",
+  "inCinemas": "2020-11-06T00:00:00Z",
+  "physicalRelease": "2019-03-19T00:00:00Z",
+  "images": [
+    {
+      "coverType": "poster",
+      "url": "string",
+      "remoteUrl": "string"
+    }
+  ],
+  "website": "string",
+  "year": 0,
+  "hasFile": true,
+  "youTubeTrailerId": "string",
+  "studio": "string",
+  "path": "string",
+  "rootFolderPath": "string",
+  "qualityProfileId": 0,
+  "monitored": true,
+  "minimumAvailability": "announced",
+  "isAvailable": true,
+  "folderName": "string",
+  "runtime": 0,
+  "cleanTitle": "string",
+  "imdbId": "string",
+  "tmdbId": 0,
+  "titleSlug": "string",
+  "certification": "string",
+  "genres": ["string"],
+  "tags": [0],
+  "added": "2018-12-28T05:56:49Z",
+  "ratings": {
+    "votes": 0,
+    "value": 0
+  },
+  "movieFile": {
+    "movieId": 0,
+    "relativePath": "string",
+    "path": "string",
+    "size": 916662234,
+    "dateAdded": "2020-11-26T02:00:35Z",
+    "indexerFlags": 1,
+    "quality": {
+      "quality": {
+        "id": 14,
+        "name": "WEBRip-720p",
+        "source": "webrip",
+        "resolution": 720,
+        "modifier": "none"
+      },
+      "revision": {
+        "version": 1,
+        "real": 0,
+        "isRepack": false
+      }
+    },
+    "mediaInfo": {
+      "audioBitrate": 0,
+      "audioChannels": 2,
+      "audioCodec": "AAC",
+      "audioLanguages": "",
+      "audioStreamCount": 1,
+      "videoBitDepth": 8,
+      "videoBitrate": 1000000,
+      "videoCodec": "x264",
+      "videoFps": 25.0,
+      "resolution": "1280x534",
+      "runTime": "1:49:06",
+      "scanType": "Progressive",
+      "subtitles": ""
+    },
+    "originalFilePath": "string",
+    "qualityCutoffNotMet": true,
+    "languages": [
+      {
+        "id": 26,
+        "name": "Hindi"
+      }
+    ],
+    "edition": "",
+    "id": 35361
+  },
+  "collection": {
+    "name": "string",
+    "tmdbId": 0,
+    "images": [
+      {
+        "coverType": "poster",
+        "url": "string",
+        "remoteUrl": "string"
+      }
+    ]
+  },
+  "status": "deleted"
+}

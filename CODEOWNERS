@@ -1019,7 +1019,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/rapt_ble/ @sairon
 /tests/components/rapt_ble/ @sairon
 /homeassistant/components/rasc/ @kwang1012
-/homeassistant/components/rascalscheduler/ @home-assistant/core
 /homeassistant/components/raspberry_pi/ @home-assistant/core
 /tests/components/raspberry_pi/ @home-assistant/core
 /homeassistant/components/rdw/ @frenck @joostlek

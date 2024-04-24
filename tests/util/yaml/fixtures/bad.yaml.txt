@@ -1,0 +1,26 @@
+- id: '1658085239190'
+  alias: Config validation test
+  description: ''
+  trigger:
+  - platform: time
+    at: 00:02:03
+  condition: []
+  action:
+  - service: script.notify_admin
+    data:
+      title: 'Here's something that does not work...!'
+      message: failing
+  mode: single
+- id: '165808523911590'
+  alias: Config validation test FIXED
+  description: ''
+  trigger:
+  - platform: time
+    at: 00:02:03
+  condition: []
+  action:
+  - service: script.notify_admin
+    data:
+      title: 'Here is something that should work...!'
+      message: fixed?
+  mode: single

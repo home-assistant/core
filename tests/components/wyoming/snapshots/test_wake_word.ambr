@@ -1,0 +1,13 @@
+# serializer version: 1
+# name: test_streaming_audio
+  dict({
+    'queued_audio': list([
+      tuple(
+        b'chunk',
+        1,
+      ),
+    ]),
+    'timestamp': 0,
+    'ww_id': 'Test Model',
+  })
+# ---

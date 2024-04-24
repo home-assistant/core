@@ -1,0 +1,1257 @@
+{
+  "nodeId": 102,
+  "index": 0,
+  "installerIcon": 1792,
+  "userIcon": 1792,
+  "status": 4,
+  "ready": true,
+  "deviceClass": {
+    "basic": { "key": 4, "label": "Routing Slave" },
+    "generic": { "key": 16, "label": "Binary Switch" },
+    "specific": { "key": 1, "label": "Binary Power Switch" },
+    "mandatorySupportedCCs": [],
+    "mandatoryControlledCCs": []
+  },
+  "isListening": true,
+  "isFrequentListening": false,
+  "isRouting": true,
+  "maxBaudRate": 40000,
+  "isSecure": true,
+  "version": 4,
+  "isBeaming": true,
+  "manufacturerId": 134,
+  "productId": 96,
+  "productType": 3,
+  "firmwareVersion": "1.1",
+  "zwavePlusVersion": 1,
+  "nodeType": 0,
+  "roleType": 5,
+  "deviceConfig": {
+    "manufacturerId": 134,
+    "manufacturer": "AEON Labs",
+    "label": "ZW096",
+    "description": "Smart Switch 6",
+    "devices": [
+      { "productType": "0x0003", "productId": "0x0060" },
+      { "productType": "0x0103", "productId": "0x0060" },
+      { "productType": "0x0203", "productId": "0x0060" },
+      { "productType": "0x1d03", "productId": "0x0060" }
+    ],
+    "firmwareVersion": { "min": "0.0", "max": "255.255" },
+    "associations": {},
+    "paramInformation": { "_map": {} }
+  },
+  "label": "ZW096",
+  "neighbors": [1, 63, 90, 117],
+  "interviewAttempts": 1,
+  "interviewStage": 7,
+  "endpoints": [
+    {
+      "nodeId": 102,
+      "index": 0,
+      "installerIcon": 1792,
+      "userIcon": 1792,
+      "commandClasses": [
+        {
+          "id": 50,
+          "name": "Meter",
+          "version": 3,
+          "isSecure": false
+        }
+      ]
+    }
+  ],
+  "values": [
+    {
+      "endpoint": 0,
+      "commandClass": 37,
+      "commandClassName": "Binary Switch",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value"
+      },
+      "value": true
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 37,
+      "commandClassName": "Binary Switch",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "valueChangeOptions": ["transitionDuration"]
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "min": 0,
+        "max": 99,
+        "label": "Target value"
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "duration",
+      "propertyName": "duration",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "duration",
+        "readable": true,
+        "writeable": true,
+        "label": "Transition duration"
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 99,
+        "label": "Current value"
+      },
+      "value": 99
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Up",
+      "propertyName": "Up",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Perform a level change (Up)",
+        "ccSpecific": { "switchType": 2 }
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Down",
+      "propertyName": "Down",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Perform a level change (Down)",
+        "ccSpecific": { "switchType": 2 }
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "value",
+      "propertyKey": 65537,
+      "propertyName": "value",
+      "propertyKeyName": "Electric_kWh_Consumed",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric Consumed [kWh]",
+        "unit": "kWh",
+        "ccSpecific": { "meterType": 1, "rateType": 1, "scale": 0 }
+      },
+      "value": 659.813
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "previousValue",
+      "propertyKey": 65537,
+      "propertyName": "previousValue",
+      "propertyKeyName": "Electric_kWh_Consumed",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric Consumed [kWh] (prev. value)",
+        "unit": "kWh",
+        "ccSpecific": { "meterType": 1, "rateType": 1, "scale": 0 }
+      },
+      "value": 659.813
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "deltaTime",
+      "propertyKey": 65537,
+      "propertyName": "deltaTime",
+      "propertyKeyName": "Electric_kWh_Consumed",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric Consumed [kWh] (prev. time delta)",
+        "unit": "s",
+        "ccSpecific": { "meterType": 1, "rateType": 1, "scale": 0 }
+      },
+      "value": 1200
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "value",
+      "propertyKey": 66049,
+      "propertyName": "value",
+      "propertyKeyName": "Electric_W_Consumed",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric Consumed [W]",
+        "unit": "W",
+        "ccSpecific": { "meterType": 1, "rateType": 1, "scale": 2 }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "deltaTime",
+      "propertyKey": 66049,
+      "propertyName": "deltaTime",
+      "propertyKeyName": "Electric_W_Consumed",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric Consumed [W] (prev. time delta)",
+        "unit": "s",
+        "ccSpecific": { "meterType": 1, "rateType": 1, "scale": 2 }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "value",
+      "propertyKey": 66561,
+      "propertyName": "value",
+      "propertyKeyName": "Electric_V_Consumed",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric Consumed [V]",
+        "unit": "V",
+        "ccSpecific": { "meterType": 1, "rateType": 1, "scale": 4 }
+      },
+      "value": 229.935
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "deltaTime",
+      "propertyKey": 66561,
+      "propertyName": "deltaTime",
+      "propertyKeyName": "Electric_V_Consumed",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric Consumed [V] (prev. time delta)",
+        "unit": "s",
+        "ccSpecific": { "meterType": 1, "rateType": 1, "scale": 4 }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "value",
+      "propertyKey": 66817,
+      "propertyName": "value",
+      "propertyKeyName": "Electric_A_Consumed",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric Consumed [A]",
+        "unit": "A",
+        "ccSpecific": { "meterType": 1, "rateType": 1, "scale": 5 }
+      },
+      "value": 9.699
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "deltaTime",
+      "propertyKey": 66817,
+      "propertyName": "deltaTime",
+      "propertyKeyName": "Electric_A_Consumed",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric Consumed [A] (prev. time delta)",
+        "unit": "s",
+        "ccSpecific": { "meterType": 1, "rateType": 1, "scale": 5 }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "reset",
+      "propertyName": "reset",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Reset accumulated values"
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "previousValue",
+      "propertyKey": 66049,
+      "propertyName": "previousValue",
+      "propertyKeyName": "Electric_W_Consumed",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric Consumed [W] (prev. value)",
+        "unit": "W",
+        "ccSpecific": { "meterType": 1, "rateType": 1, "scale": 2 }
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "previousValue",
+      "propertyKey": 66561,
+      "propertyName": "previousValue",
+      "propertyKeyName": "Electric_V_Consumed",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric Consumed [V] (prev. value)",
+        "unit": "V",
+        "ccSpecific": { "meterType": 1, "rateType": 1, "scale": 4 }
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "previousValue",
+      "propertyKey": 66817,
+      "propertyName": "previousValue",
+      "propertyKeyName": "Electric_A_Consumed",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric Consumed [A] (prev. value)",
+        "unit": "A",
+        "ccSpecific": { "meterType": 1, "rateType": 1, "scale": 5 }
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "duration",
+      "propertyName": "duration",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "duration",
+        "readable": true,
+        "writeable": true,
+        "label": "Remaining duration"
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "currentColor",
+      "propertyKey": 2,
+      "propertyName": "currentColor",
+      "propertyKeyName": "Red",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 255,
+        "label": "Current value (Red)",
+        "description": "The current value of the Red color."
+      },
+      "value": 27
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "hexColor",
+      "propertyName": "hexColor",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "color",
+        "readable": true,
+        "writeable": true,
+        "minLength": 6,
+        "maxLength": 7,
+        "label": "RGB Color"
+      },
+      "value": "1b141b"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "currentColor",
+      "propertyKey": 3,
+      "propertyName": "currentColor",
+      "propertyKeyName": "Green",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 255,
+        "label": "Current value (Green)",
+        "description": "The current value of the Green color."
+      },
+      "value": 20
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "currentColor",
+      "propertyKey": 4,
+      "propertyName": "currentColor",
+      "propertyKeyName": "Blue",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 255,
+        "label": "Current value (Blue)",
+        "description": "The current value of the Blue color."
+      },
+      "value": 27
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "targetColor",
+      "propertyKey": 2,
+      "propertyName": "targetColor",
+      "propertyKeyName": "Red",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "min": 0,
+        "max": 255,
+        "label": "Target value (Red)",
+        "description": "The target value of the Red color."
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "targetColor",
+      "propertyKey": 3,
+      "propertyName": "targetColor",
+      "propertyKeyName": "Green",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "min": 0,
+        "max": 255,
+        "label": "Target value (Green)",
+        "description": "The target value of the Green color."
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 51,
+      "commandClassName": "Color Switch",
+      "property": "targetColor",
+      "propertyKey": 4,
+      "propertyName": "targetColor",
+      "propertyKeyName": "Blue",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "min": 0,
+        "max": 255,
+        "label": "Target value (Blue)",
+        "description": "The target value of the Blue color."
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 3,
+      "propertyName": "Current overload protection enable",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 1,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": { "0": "disabled", "1": "enabled" },
+        "label": "Current overload protection enable",
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 20,
+      "propertyName": "Output load after re-power",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 2,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": {
+          "0": "last status",
+          "1": "always on",
+          "2": "always off"
+        },
+        "label": "Output load after re-power",
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 80,
+      "propertyName": "Enable send to associated devices",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 2,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": {
+          "0": "nothing",
+          "1": "hail CC",
+          "2": "basic CC report"
+        },
+        "label": "Enable send to associated devices",
+        "description": "Enable to send notifications to Group 1",
+        "isFromConfig": true
+      },
+      "value": 2
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 81,
+      "propertyName": "Configure LED state",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 2,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": {
+          "0": "LED follows load",
+          "1": "LED follows load for 5 seconds",
+          "2": "Night light mode"
+        },
+        "label": "Configure LED state",
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 90,
+      "propertyName": "Enable items 91 and 92",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 1,
+        "default": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": { "0": "disabled", "1": "enabled" },
+        "label": "Enable items 91 and 92",
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 91,
+      "propertyName": "Wattage Threshold",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 2,
+        "min": 0,
+        "max": 60000,
+        "default": 25,
+        "format": 1,
+        "allowManualEntry": true,
+        "label": "Wattage Threshold",
+        "description": "minimum change in wattage to trigger",
+        "isFromConfig": true
+      },
+      "value": 100
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 92,
+      "propertyName": "Wattage Percent Change",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 100,
+        "default": 5,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Wattage Percent Change",
+        "description": "minimum change in wattage percent",
+        "isFromConfig": true
+      },
+      "value": 100
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 101,
+      "propertyName": "Values to send to group 1",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 4,
+        "min": 0,
+        "max": 15,
+        "default": 4,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": {
+          "0": "Nothing",
+          "1": "Voltage",
+          "2": "Current",
+          "4": "Wattage",
+          "8": "kWh",
+          "15": "All Values"
+        },
+        "label": "Values to send to group 1",
+        "description": "Which reports need to send in Report group 1",
+        "isFromConfig": true
+      },
+      "value": 8
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 102,
+      "propertyName": "Values to send to group 2",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 4,
+        "min": 0,
+        "max": 15,
+        "default": 8,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": {
+          "0": "Nothing",
+          "1": "Voltage",
+          "2": "Current",
+          "4": "Wattage",
+          "8": "kWh",
+          "15": "All Values"
+        },
+        "label": "Values to send to group 2",
+        "description": "Which reports need to send in Report group 2",
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 103,
+      "propertyName": "Values to send to group 3",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 4,
+        "min": 0,
+        "max": 15,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": {
+          "0": "Nothing",
+          "1": "Voltage",
+          "2": "Current",
+          "4": "Wattage",
+          "8": "kWh",
+          "15": "All Values"
+        },
+        "label": "Values to send to group 3",
+        "description": "Which reports need to send in Report group 3",
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 111,
+      "propertyName": "Time interval for sending to group 1",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 4,
+        "min": 1,
+        "max": 2147483647,
+        "default": 3,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Time interval for sending to group 1",
+        "description": "Group 1 automatic update interval",
+        "isFromConfig": true
+      },
+      "value": 1200
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 112,
+      "propertyName": "Time interval for sending to group 2",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 4,
+        "min": 1,
+        "max": 2147483647,
+        "default": 600,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Time interval for sending to group 2",
+        "description": "Group 2 automatic update interval",
+        "isFromConfig": true
+      },
+      "value": 120
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 113,
+      "propertyName": "Time interval for sending to group 3",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 4,
+        "min": 1,
+        "max": 2147483647,
+        "default": 600,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Time interval for sending to group 3",
+        "description": "Group 3 automatic update interval",
+        "isFromConfig": true
+      },
+      "value": 65460
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 252,
+      "propertyName": "Configuration Locked",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 1,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": { "0": "disabled", "1": "enabled" },
+        "label": "Configuration Locked",
+        "description": "Enable/disable Configuration Locked (0 =disable, 1 = enable).",
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 83,
+      "propertyKey": 255,
+      "propertyName": "Blue night light color value",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 3,
+        "min": 0,
+        "max": 255,
+        "default": 221,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Blue night light color value",
+        "isFromConfig": true
+      },
+      "value": 27
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 83,
+      "propertyKey": 65280,
+      "propertyName": "Green night light color value",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 3,
+        "min": 0,
+        "max": 255,
+        "default": 160,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Green night light color value",
+        "isFromConfig": true
+      },
+      "value": 20
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 83,
+      "propertyKey": 16711680,
+      "propertyName": "Red night light color value",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 3,
+        "min": 0,
+        "max": 255,
+        "default": 221,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Red night light color value",
+        "description": "Configure the RGB value when it is in Night light mode",
+        "isFromConfig": true
+      },
+      "value": 27
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 84,
+      "propertyKey": 255,
+      "propertyName": "Green brightness in energy mode (%)",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 3,
+        "min": 0,
+        "max": 100,
+        "default": 50,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Green brightness in energy mode (%)",
+        "isFromConfig": true
+      },
+      "value": 50
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 84,
+      "propertyKey": 65280,
+      "propertyName": "Yellow brightness in energy mode (%)",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 3,
+        "min": 0,
+        "max": 100,
+        "default": 50,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Yellow brightness in energy mode (%)",
+        "isFromConfig": true
+      },
+      "value": 50
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 84,
+      "propertyKey": 16711680,
+      "propertyName": "Red brightness in energy mode (%)",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 3,
+        "min": 0,
+        "max": 100,
+        "default": 50,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Red brightness in energy mode (%)",
+        "isFromConfig": true
+      },
+      "value": 50
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 33,
+      "propertyName": "RGB LED color testing",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": false,
+        "writeable": true,
+        "valueSize": 4,
+        "min": 0,
+        "max": 0,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "RGB LED color testing",
+        "isFromConfig": true
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 100,
+      "propertyName": "Set 101\u2010103 to default.",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": false,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 1,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": { "0": "False", "1": "True" },
+        "label": "Set 101\u2010103 to default.",
+        "isFromConfig": true
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 110,
+      "propertyName": "Set 111\u2010113 to default.",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": false,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 1,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": { "0": "False", "1": "True" },
+        "label": "Set 111\u2010113 to default.",
+        "isFromConfig": true
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 255,
+      "propertyName": "RESET",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": false,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 1,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "RESET",
+        "description": "Reset the device to defaults",
+        "isFromConfig": true
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "manufacturerId",
+      "propertyName": "manufacturerId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 65535,
+        "label": "Manufacturer ID"
+      },
+      "value": 134
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productType",
+      "propertyName": "productType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 65535,
+        "label": "Product type"
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productId",
+      "propertyName": "productId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 65535,
+        "label": "Product ID"
+      },
+      "value": 96
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type"
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version"
+      },
+      "value": "4.54"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions"
+      },
+      "value": ["1.1"]
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hardwareVersion",
+      "propertyName": "hardwareVersion",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip hardware version"
+      }
+    }
+  ],
+  "isControllerNode": false
+}

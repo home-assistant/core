@@ -1,0 +1,10 @@
+{
+  "firmware": {
+    "mainProcessor": {
+      "name": "PowerView Hub",
+      "revision": 1,
+      "subRevision": 1,
+      "build": 857
+    }
+  }
+}

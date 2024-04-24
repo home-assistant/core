@@ -1,0 +1,61 @@
+{
+  "Body": {
+    "Data": {
+      "0": {
+        "Current_AC_Phase_1": 1.7010000000000001,
+        "Current_AC_Phase_2": 1.8320000000000001,
+        "Current_AC_Phase_3": 0.64500000000000002,
+        "Current_AC_Sum": 4.1780000000000008,
+        "Details": {
+          "Manufacturer": "Fronius",
+          "Model": "Smart Meter TS 65A-3",
+          "Serial": "1234567890"
+        },
+        "Enable": 1,
+        "EnergyReactive_VArAC_Sum_Consumed": 5482.0,
+        "EnergyReactive_VArAC_Sum_Produced": 3266105.0,
+        "EnergyReal_WAC_Minus_Absolute": 1705128.0,
+        "EnergyReal_WAC_Plus_Absolute": 1247204.0,
+        "EnergyReal_WAC_Sum_Consumed": 1247204.0,
+        "EnergyReal_WAC_Sum_Produced": 1705128.0,
+        "Frequency_Phase_Average": 49.899999999999999,
+        "Meter_Location_Current": 0.0,
+        "PowerApparent_S_Phase_1": 319.5,
+        "PowerApparent_S_Phase_2": 383.89999999999998,
+        "PowerApparent_S_Phase_3": 118.40000000000001,
+        "PowerApparent_S_Sum": 821.89999999999998,
+        "PowerFactor_Phase_1": 0.995,
+        "PowerFactor_Phase_2": 0.38900000000000001,
+        "PowerFactor_Phase_3": 0.16300000000000001,
+        "PowerFactor_Sum": 0.69799999999999995,
+        "PowerReactive_Q_Phase_1": -31.300000000000001,
+        "PowerReactive_Q_Phase_2": -353.39999999999998,
+        "PowerReactive_Q_Phase_3": -116.7,
+        "PowerReactive_Q_Sum": -501.5,
+        "PowerReal_P_Phase_1": 317.89999999999998,
+        "PowerReal_P_Phase_2": 150.0,
+        "PowerReal_P_Phase_3": 19.600000000000001,
+        "PowerReal_P_Sum": 487.69999999999999,
+        "TimeStamp": 1638104813.0,
+        "Visible": 1.0,
+        "Voltage_AC_PhaseToPhase_12": 396.0,
+        "Voltage_AC_PhaseToPhase_23": 393.0,
+        "Voltage_AC_PhaseToPhase_31": 394.30000000000001,
+        "Voltage_AC_Phase_1": 229.40000000000001,
+        "Voltage_AC_Phase_2": 225.59999999999999,
+        "Voltage_AC_Phase_3": 228.30000000000001
+      }
+    }
+  },
+  "Head": {
+    "RequestArguments": {
+      "Scope": "System"
+    },
+    "Status": {
+      "Code": 0,
+      "Reason": "",
+      "UserMessage": ""
+    },
+    "Timestamp": "2021-11-28T13:06:54+00:00"
+  }
+}

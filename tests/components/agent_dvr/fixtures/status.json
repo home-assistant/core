@@ -1,0 +1,10 @@
+{
+  "armed": false,
+  "devices": 4,
+  "active": 4,
+  "recording": 0,
+  "remoteAccess": true,
+  "unique": "c0715bba-c2d0-48ef-9e3e-bc81c9ea4447",
+  "name": "DESKTOP",
+  "version": "2.6.1.0"
+}

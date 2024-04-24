@@ -1,0 +1,52 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'data': dict({
+      'city': '**REDACTED**',
+      'country': '**REDACTED**',
+      'current': dict({
+        'pollution': dict({
+          'aqicn': 18,
+          'aqius': 52,
+          'maincn': 'p2',
+          'mainus': 'p2',
+          'ts': '2021-09-04T00:00:00.000Z',
+        }),
+        'weather': dict({
+          'hu': 45,
+          'ic': '10d',
+          'pr': 999,
+          'tp': 23,
+          'ts': '2021-09-03T21:00:00.000Z',
+          'wd': 252,
+          'ws': 0.45,
+        }),
+      }),
+      'location': dict({
+        'coordinates': '**REDACTED**',
+        'type': 'Point',
+      }),
+      'state': '**REDACTED**',
+    }),
+    'entry': dict({
+      'data': dict({
+        'api_key': '**REDACTED**',
+        'integration_type': 'Geographical Location by Latitude/Longitude',
+        'latitude': '**REDACTED**',
+        'longitude': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'domain': 'airvisual',
+      'entry_id': '3bd2acb0e4f0476d40865546d0d91921',
+      'options': dict({
+        'show_on_map': True,
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 3,
+    }),
+  })
+# ---

@@ -1,0 +1,27 @@
+<MediaContainer size="25" allowCameraUpload="1" allowChannelAccess="1" allowMediaDeletion="1" allowSharing="1" allowSync="1" allowTuners="1" backgroundProcessing="1" certificate="1" companionProxy="1" countryCode="usa" diagnostics="logs,databases,streaminglogs" eventStream="1" friendlyName="{name}" hubSearch="1" itemClusters="1" livetv="7" machineIdentifier="{machine_identifier}" mediaProviders="1" multiuser="1" myPlex="1" myPlexMappingState="mapped" myPlexSigninState="ok" myPlexSubscription="1" myPlexUsername="myplexusername@email.com" offlineTranscode="1" ownerFeatures="adaptive_bitrate,camera_upload,cloudsync,collections,content_filter,download_certificates,dvr,federated-auth,hardware_transcoding,home,hwtranscode,item_clusters,kevin-bacon,livetv,loudness,lyrics,music_videos,news,pass,photo_autotags,photos-v5,photosV6-edit,photosV6-tv-albums,premium_music_metadata,radio,server-manager,session_bandwidth_restrictions,session_kick,shared-radio,sync,trailers,tuner-sharing,type-first,unsupportedtuners,webhooks" photoAutoTag="1" platform="Linux" platformVersion="20.04.1 LTS (Focal Fossa)" pluginHost="1" pushNotifications="0" readOnlyLibraries="0" requestParametersInCookie="1" streamingBrainABRVersion="3" streamingBrainVersion="2" sync="1" transcoderActiveVideoSessions="0" transcoderAudio="1" transcoderLyrics="1" transcoderPhoto="1" transcoderSubtitles="1" transcoderVideo="1" transcoderVideoBitrates="64,96,208,320,720,1500,2000,3000,4000,8000,10000,12000,20000" transcoderVideoQualities="0,1,2,3,4,5,6,7,8,9,10,11,12" transcoderVideoResolutions="128,128,160,240,320,480,768,720,720,1080,1080,1080,1080" updatedAt="1605463238" updater="1" version="1.20.4.3517-ab5e1197c" voiceSearch="1">
+<Directory count="1" key="activities" title="activities" />
+<Directory count="1" key="butler" title="butler" />
+<Directory count="1" key="channels" title="channels" />
+<Directory count="1" key="clients" title="clients" />
+<Directory count="1" key="devices" title="devices" />
+<Directory count="1" key="diagnostics" title="diagnostics" />
+<Directory count="1" key="hubs" title="hubs" />
+<Directory count="3" key="library" title="library" />
+<Directory count="3" key="livetv" title="livetv" />
+<Directory count="3" key="media" title="media" />
+<Directory count="2" key="metadata" title="metadata" />
+<Directory count="1" key="neighborhood" title="neighborhood" />
+<Directory count="1" key="playQueues" title="playQueues" />
+<Directory count="1" key="player" title="player" />
+<Directory count="1" key="playlists" title="playlists" />
+<Directory count="1" key="resources" title="resources" />
+<Directory count="1" key="search" title="search" />
+<Directory count="1" key="server" title="server" />
+<Directory count="1" key="servers" title="servers" />
+<Directory count="1" key="statistics" title="statistics" />
+<Directory count="1" key="system" title="system" />
+<Directory count="1" key="transcode" title="transcode" />
+<Directory count="2" key="tv%2Eplex%2Eproviders%2Eepg%2Ecloud%3A2" title="tv.plex.providers.epg.cloud:2" />
+<Directory count="1" key="updater" title="updater" />
+<Directory count="1" key="user" title="user" />
+</MediaContainer>

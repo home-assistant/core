@@ -1,0 +1,28 @@
+# serializer version: 1
+# name: test_setup_config_entry[config_entry_extra_options0]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'My template',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_template',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30.0',
+  })
+# ---
+# name: test_setup_config_entry[config_entry_extra_options1]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'My template',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_template',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30.0',
+  })
+# ---

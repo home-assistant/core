@@ -1,0 +1,25 @@
+{
+  "success": true,
+  "result": {
+    "is_activated_by_activation_code": 0,
+    "can_receive_notifications": true,
+    "can_manage_locks": true,
+    "can_control_automations": true,
+    "_links": {
+      "child": [
+        {
+          "data": {
+            "name": "House",
+            "postal_code": "12345",
+            "id": 123456
+          }
+        }
+      ],
+      "self": {
+        "href": "https://www.mynexia.com/mobile/session"
+      }
+    },
+    "can_view_videos": true
+  },
+  "error": null
+}

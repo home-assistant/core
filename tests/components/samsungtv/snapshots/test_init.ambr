@@ -1,0 +1,55 @@
+# serializer version: 1
+# name: test_setup_updates_from_ssdp
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'tv',
+      'friendly_name': 'any',
+      'is_volume_muted': False,
+      'source_list': list([
+        'TV',
+        'HDMI',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 20413>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.any',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_updates_from_ssdp.1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'source_list': list([
+        'TV',
+        'HDMI',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.any',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.TV: 'tv'>,
+    'original_icon': None,
+    'original_name': 'any',
+    'platform': 'samsungtv',
+    'supported_features': <MediaPlayerEntityFeature: 20413>,
+    'translation_key': None,
+    'unique_id': 'sample-entry-id',
+    'unit_of_measurement': None,
+  })
+# ---

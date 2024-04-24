@@ -1,0 +1,22 @@
+{
+  "profiles": [
+    {
+      "appli": 50,
+      "callbackurl": "https://not.my.callback/url",
+      "expires": 2147483647,
+      "comment": null
+    },
+    {
+      "appli": 50,
+      "callbackurl": "http://example.local:8123/api/webhook/55a7335ea8dee830eed4ef8f84cda8f6d80b83af0847dc74032e86120bffed5e",
+      "expires": 2147483647,
+      "comment": null
+    },
+    {
+      "appli": 51,
+      "callbackurl": "http://example.local:8123/api/webhook/55a7335ea8dee830eed4ef8f84cda8f6d80b83af0847dc74032e86120bffed5e",
+      "expires": 2147483647,
+      "comment": null
+    }
+  ]
+}

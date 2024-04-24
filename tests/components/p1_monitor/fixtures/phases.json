@@ -1,0 +1,74 @@
+[
+  {
+    "LABEL": "Huidige KW verbruik L1 (21.7.0)",
+    "SECURITY": 0,
+    "STATUS": "0.315",
+    "STATUS_ID": 74
+  },
+  {
+    "LABEL": "Huidige KW verbruik L2 (41.7.0)",
+    "SECURITY": 0,
+    "STATUS": "0.0",
+    "STATUS_ID": 75
+  },
+  {
+    "LABEL": "Huidige KW verbruik L3 (61.7.0)",
+    "SECURITY": 0,
+    "STATUS": "0.624",
+    "STATUS_ID": 76
+  },
+  {
+    "LABEL": "Huidige KW levering L1 (22.7.0)",
+    "SECURITY": 0,
+    "STATUS": "0.0",
+    "STATUS_ID": 77
+  },
+  {
+    "LABEL": "Huidige KW levering L2 (42.7.0)",
+    "SECURITY": 0,
+    "STATUS": "0.0",
+    "STATUS_ID": 78
+  },
+  {
+    "LABEL": "Huidige KW levering L3 (62.7.0)",
+    "SECURITY": 0,
+    "STATUS": "0.0",
+    "STATUS_ID": 79
+  },
+  {
+    "LABEL": "Huidige Amperage L1 (31.7.0)",
+    "SECURITY": 0,
+    "STATUS": "1.6",
+    "STATUS_ID": 100
+  },
+  {
+    "LABEL": "Huidige Amperage L2 (51.7.0)",
+    "SECURITY": 0,
+    "STATUS": "4.44",
+    "STATUS_ID": 101
+  },
+  {
+    "LABEL": "Huidige Amperage L2 (71.7.0)",
+    "SECURITY": 0,
+    "STATUS": "3.51",
+    "STATUS_ID": 102
+  },
+  {
+    "LABEL": "Huidige Voltage L1 (32.7.0)",
+    "SECURITY": 0,
+    "STATUS": "233.6",
+    "STATUS_ID": 103
+  },
+  {
+    "LABEL": "Huidige Voltage L2 (52.7.0)",
+    "SECURITY": 0,
+    "STATUS": "0.0",
+    "STATUS_ID": 104
+  },
+  {
+    "LABEL": "Huidige Voltage L2 (72.7.0)",
+    "SECURITY": 0,
+    "STATUS": "233.0",
+    "STATUS_ID": 105
+  }
+]

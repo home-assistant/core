@@ -51,7 +51,7 @@ class BaseRoutineEntity:
         routine_id: str,
         actions: dict[str, ActionEntity],
         action_script: Sequence[dict[str, Any]],
-        # timeout: float,
+        timeout: float = 20.0,
     ) -> None:
         """Initialize a routine entity."""
         self._name = name
@@ -60,7 +60,7 @@ class BaseRoutineEntity:
         self.action_script = action_script
         self._start_time: float | None = None
         self._last_trigger_time: float | None = None
-        # self._timeout = timeout
+        self._timeout = timeout
 
     @property
     def name(self) -> str | None:
@@ -139,7 +139,7 @@ class BaseRoutineEntity:
             self._last_trigger_time = self._start_time
             self._start_time = time.time()
 
-        self.output(new_routine_id, routine_entity)
+        # self.output(new_routine_id, routine_entity)
 
         return RoutineEntity(
             name=self._name,
@@ -150,6 +150,13 @@ class BaseRoutineEntity:
             last_trigger_time=self._last_trigger_time,
             logger=_LOGGER,
         )
+
+    def abort_if_within_timeout(self) -> bool:
+        """Abort if the same routine is trigger frequently."""
+        if not self._last_trigger_time:
+            return False
+
+        return time.time() - self._last_trigger_time < self._timeout
 
     def output(self, routine_id: str, actions: dict[str, Any]) -> None:
         """Print the routine information."""

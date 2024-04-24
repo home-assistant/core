@@ -1,0 +1,660 @@
+{
+  "post_stream": {
+    "posts": [
+      {
+        "id": 1216212,
+        "name": "Franck Nijhof",
+        "username": "frenck",
+        "avatar_template": "/user_avatar/community.home-assistant.io/frenck/{size}/161777_2.png",
+        "created_at": "2020-12-10T09:20:58.974Z",
+        "cooked": "\u003cp\u003eThis is a blueprint for the IKEA five-button remotes (the round ones), specifically for use with ZHA.\u003c/p\u003e\n\u003cp\u003e\u003cdiv class=\"lightbox-wrapper\"\u003e\u003ca class=\"lightbox\" href=\"https://community-assets.home-assistant.io/original/3X/0/1/0100d04d2debf34eb11abdfee0707624f3961f80.jpeg\" data-download-href=\"/uploads/short-url/8SdGCUtkzOTNpMjggpBvSFs4WQ.jpeg?dl=1\" title=\"image\"\u003e\u003cimg src=\"https://community-assets.home-assistant.io/optimized/3X/0/1/0100d04d2debf34eb11abdfee0707624f3961f80_2_500x500.jpeg\" alt=\"image\" data-base62-sha1=\"8SdGCUtkzOTNpMjggpBvSFs4WQ\" width=\"500\" height=\"500\" srcset=\"https://community-assets.home-assistant.io/optimized/3X/0/1/0100d04d2debf34eb11abdfee0707624f3961f80_2_500x500.jpeg, https://community-assets.home-assistant.io/optimized/3X/0/1/0100d04d2debf34eb11abdfee0707624f3961f80_2_750x750.jpeg 1.5x, https://community-assets.home-assistant.io/optimized/3X/0/1/0100d04d2debf34eb11abdfee0707624f3961f80_2_1000x1000.jpeg 2x\" data-small-upload=\"https://community-assets.home-assistant.io/optimized/3X/0/1/0100d04d2debf34eb11abdfee0707624f3961f80_2_10x10.png\"\u003e\u003cdiv class=\"meta\"\u003e\u003csvg class=\"fa d-icon d-icon-far-image svg-icon\" aria-hidden=\"true\"\u003e\u003cuse xlink:href=\"#far-image\"\u003e\u003c/use\u003e\u003c/svg\u003e\u003cspan class=\"filename\"\u003eimage\u003c/span\u003e\u003cspan class=\"informations\"\u003e1400×1400 150 KB\u003c/span\u003e\u003csvg class=\"fa d-icon d-icon-discourse-expand svg-icon\" aria-hidden=\"true\"\u003e\u003cuse xlink:href=\"#discourse-expand\"\u003e\u003c/use\u003e\u003c/svg\u003e\u003c/div\u003e\u003c/a\u003e\u003c/div\u003e\u003c/p\u003e\n\u003cp\u003eIt was specially created for use with (any) light(s).  As the basic light controls are already mapped in this blueprint.\u003c/p\u003e\n\u003cp\u003eThe middle “on” button, toggle the lights on/off to the last set brightness (unless the force brightness is toggled on in the blueprint). Dim up/down buttons will change the brightness smoothly and can be pressed and hold until the brightness is satisfactory.\u003c/p\u003e\n\u003cp\u003eThe “left” and “right” buttons can be assigned to a short and long button press action. This allows you to assign, e.g., a scene or anything else.\u003c/p\u003e\n\u003cp\u003eThis is what the Blueprint looks like from the UI:\u003c/p\u003e\n\u003cp\u003e\u003cdiv class=\"lightbox-wrapper\"\u003e\u003ca class=\"lightbox\" href=\"https://community-assets.home-assistant.io/original/3X/9/b/9be4788b5358284d138c4304fb0b8068c18a2b83.png\" data-download-href=\"/uploads/short-url/mf5vhlKYe6yeuFayUzlCTBfveKf.png?dl=1\" title=\"image\"\u003e\u003cimg src=\"https://community-assets.home-assistant.io/optimized/3X/9/b/9be4788b5358284d138c4304fb0b8068c18a2b83_2_610x500.png\" alt=\"image\" data-base62-sha1=\"mf5vhlKYe6yeuFayUzlCTBfveKf\" width=\"610\" height=\"500\" srcset=\"https://community-assets.home-assistant.io/optimized/3X/9/b/9be4788b5358284d138c4304fb0b8068c18a2b83_2_610x500.png, https://community-assets.home-assistant.io/optimized/3X/9/b/9be4788b5358284d138c4304fb0b8068c18a2b83_2_915x750.png 1.5x, https://community-assets.home-assistant.io/original/3X/9/b/9be4788b5358284d138c4304fb0b8068c18a2b83.png 2x\" data-small-upload=\"https://community-assets.home-assistant.io/optimized/3X/9/b/9be4788b5358284d138c4304fb0b8068c18a2b83_2_10x10.png\"\u003e\u003cdiv class=\"meta\"\u003e\u003csvg class=\"fa d-icon d-icon-far-image svg-icon\" aria-hidden=\"true\"\u003e\u003cuse xlink:href=\"#far-image\"\u003e\u003c/use\u003e\u003c/svg\u003e\u003cspan class=\"filename\"\u003eimage\u003c/span\u003e\u003cspan class=\"informations\"\u003e975×799 64.1 KB\u003c/span\u003e\u003csvg class=\"fa d-icon d-icon-discourse-expand svg-icon\" aria-hidden=\"true\"\u003e\u003cuse xlink:href=\"#discourse-expand\"\u003e\u003c/use\u003e\u003c/svg\u003e\u003c/div\u003e\u003c/a\u003e\u003c/div\u003e\u003c/p\u003e\n\u003cp\u003eBlueprint, which you can import by using this forum topic URL:\u003c/p\u003e\n\u003cpre\u003e\u003ccode class=\"lang-yaml\"\u003eblueprint:\n  name: ZHA - IKEA five button remote for lights\n  description: |\n    Control lights with an IKEA five button remote (the round ones).\n\n    The middle \"on\" button, toggle the lights on/off to the last set brightness\n    (unless the force brightness is toggled on in the blueprint).\n\n    Dim up/down buttons will change the brightness smoothly and can be pressed\n    and hold until the brightness is satisfactory.\n\n    The \"left\" and \"right\" buttons can be assigned to a short and long button\n    press action. This allows you to assign, e.g., a scene or anything else.\n\n  domain: automation\n  input:\n    remote:\n      name: Remote\n      description: IKEA remote to use\n      selector:\n        device:\n          integration: zha\n          manufacturer: IKEA of Sweden\n          model: TRADFRI remote control\n    light:\n      name: Light(s)\n      description: The light(s) to control\n      selector:\n        target:\n          entity:\n            domain: light\n    force_brightness:\n      name: Force turn on brightness\n      description: \u0026gt;\n        Force the brightness to the set level below, when the \"on\" button on\n        the remote is pushed and lights turn on.\n      default: false\n      selector:\n        boolean:\n    brightness:\n      name: Brightness\n      description: Brightness of the light(s) when turning on\n      default: 50\n      selector:\n        number:\n          min: 0\n          max: 100\n          mode: slider\n          step: 1\n          unit_of_measurement: \"%\"\n    button_left_short:\n      name: Left button - short press\n      description: Action to run on short left button press\n      default: []\n      selector:\n        action:\n    button_left_long:\n      name: Left button - long press\n      description: Action to run on long left button press\n      default: []\n      selector:\n        action:\n    button_right_short:\n      name: Right button - short press\n      description: Action to run on short right button press\n      default: []\n      selector:\n        action:\n    button_right_long:\n      name: Right button - long press\n      description: Action to run on long right button press\n      default: []\n      selector:\n        action:\n\nmode: restart\nmax_exceeded: silent\n\nvariables:\n  force_brightness: !input force_brightness\n\ntrigger:\n  - platform: event\n    event_type: zha_event\n    event_data:\n      device_id: !input remote\n\naction:\n  - variables:\n      command: \"{{ trigger.event.data.command }}\"\n      cluster_id: \"{{ trigger.event.data.cluster_id }}\"\n      endpoint_id: \"{{ trigger.event.data.endpoint_id }}\"\n      args: \"{{ trigger.event.data.args }}\"\n  - choose:\n      - conditions:\n          - \"{{ command == 'toggle' }}\"\n          - \"{{ cluster_id == 6 }}\"\n          - \"{{ endpoint_id == 1 }}\"\n        sequence:\n          - choose:\n              - conditions: \"{{ force_brightness }}\"\n                sequence:\n                  - service: light.toggle\n                    target: !input light\n                    data:\n                      transition: 1\n                      brightness_pct: !input brightness\n            default:\n              - service: light.toggle\n                target: !input light\n                data:\n                  transition: 1\n\n      - conditions:\n          - \"{{ command == 'step_with_on_off' }}\"\n          - \"{{ cluster_id == 8 }}\"\n          - \"{{ endpoint_id == 1 }}\"\n          - \"{{ args == [0, 43, 5] }}\"\n        sequence:\n          - service: light.turn_on\n            target: !input light\n            data:\n              brightness_step_pct: 10\n              transition: 1\n\n      - conditions:\n          - \"{{ command == 'move_with_on_off' }}\"\n          - \"{{ cluster_id == 8 }}\"\n          - \"{{ endpoint_id == 1 }}\"\n          - \"{{ args == [0, 84] }}\"\n        sequence:\n          - repeat:\n              count: 10\n              sequence:\n                - service: light.turn_on\n                  target: !input light\n                  data:\n                    brightness_step_pct: 10\n                    transition: 1\n                - delay: 1\n\n      - conditions:\n          - \"{{ command == 'step' }}\"\n          - \"{{ cluster_id == 8 }}\"\n          - \"{{ endpoint_id == 1 }}\"\n          - \"{{ args == [1, 43, 5] }}\"\n        sequence:\n          - service: light.turn_on\n            target: !input light\n            data:\n              brightness_step_pct: -10\n              transition: 1\n\n      - conditions:\n          - \"{{ command == 'move' }}\"\n          - \"{{ cluster_id == 8 }}\"\n          - \"{{ endpoint_id == 1 }}\"\n          - \"{{ args == [1, 84] }}\"\n        sequence:\n          - repeat:\n              count: 10\n              sequence:\n                - service: light.turn_on\n                  target: !input light\n                  data:\n                    brightness_step_pct: -10\n                    transition: 1\n                - delay: 1\n\n      - conditions:\n          - \"{{ command == 'press' }}\"\n          - \"{{ cluster_id == 5 }}\"\n          - \"{{ endpoint_id == 1 }}\"\n          - \"{{ args == [257, 13, 0] }}\"\n        sequence: !input button_left_short\n\n      - conditions:\n          - \"{{ command == 'hold' }}\"\n          - \"{{ cluster_id == 5 }}\"\n          - \"{{ endpoint_id == 1 }}\"\n          - \"{{ args == [3329, 0] }}\"\n        sequence: !input button_left_long\n\n      - conditions:\n          - \"{{ command == 'press' }}\"\n          - \"{{ cluster_id == 5 }}\"\n          - \"{{ endpoint_id == 1 }}\"\n          - \"{{ args == [256, 13, 0] }}\"\n        sequence: !input button_right_short\n\n      - conditions:\n          - \"{{ command == 'hold' }}\"\n          - \"{{ cluster_id == 5 }}\"\n          - \"{{ endpoint_id == 1 }}\"\n          - \"{{ args == [3328, 0] }}\"\n        sequence: !input button_right_long\n\u003c/code\u003e\u003c/pre\u003e",
+        "post_number": 1,
+        "post_type": 1,
+        "updated_at": "2020-12-10T09:22:08.993Z",
+        "reply_count": 0,
+        "reply_to_post_number": null,
+        "quote_count": 0,
+        "incoming_link_count": 0,
+        "reads": 3,
+        "readers_count": 2,
+        "score": 0.6,
+        "yours": false,
+        "topic_id": 253804,
+        "topic_slug": "zha-ikea-five-button-remote-for-lights",
+        "display_username": "Franck Nijhof",
+        "primary_group_name": null,
+        "primary_group_flair_url": null,
+        "primary_group_flair_bg_color": null,
+        "primary_group_flair_color": null,
+        "version": 1,
+        "can_edit": true,
+        "can_delete": false,
+        "can_recover": false,
+        "can_wiki": true,
+        "link_counts": [
+          {
+            "url": "https://community-assets.home-assistant.io/original/3X/9/b/9be4788b5358284d138c4304fb0b8068c18a2b83.png",
+            "internal": false,
+            "reflection": false,
+            "title": "9be4788b5358284d138c4304fb0b8068c18a2b83.png",
+            "clicks": 0
+          },
+          {
+            "url": "https://community-assets.home-assistant.io/original/3X/0/1/0100d04d2debf34eb11abdfee0707624f3961f80.jpeg",
+            "internal": false,
+            "reflection": false,
+            "title": "0100d04d2debf34eb11abdfee0707624f3961f80.jpeg",
+            "clicks": 0
+          }
+        ],
+        "read": true,
+        "user_title": null,
+        "actions_summary": [
+          {
+            "id": 2,
+            "can_act": true
+          },
+          {
+            "id": 3,
+            "can_act": true
+          },
+          {
+            "id": 4,
+            "can_act": true
+          },
+          {
+            "id": 8,
+            "can_act": true
+          },
+          {
+            "id": 6,
+            "can_act": true
+          },
+          {
+            "id": 7,
+            "can_act": true
+          }
+        ],
+        "moderator": true,
+        "admin": true,
+        "staff": true,
+        "user_id": 10250,
+        "hidden": false,
+        "trust_level": 4,
+        "deleted_at": null,
+        "user_deleted": false,
+        "edit_reason": null,
+        "can_view_edit_history": true,
+        "wiki": false,
+        "reviewable_id": 0,
+        "reviewable_score_count": 0,
+        "reviewable_score_pending_count": 0,
+        "user_created_at": "2017-08-12T12:46:55.467Z",
+        "user_date_of_birth": null,
+        "user_signature": null,
+        "can_accept_answer": false,
+        "can_unaccept_answer": false,
+        "accepted_answer": false
+      }
+    ],
+    "stream": [1216212]
+  },
+  "timeline_lookup": [[1, 0]],
+  "suggested_topics": [
+    {
+      "id": 168593,
+      "title": "Dwains Dashboard - 1 CLICK install Lovelace Dashboard for desktop, tablet and mobile. v2.0.0",
+      "fancy_title": "Dwains Dashboard - 1 CLICK install Lovelace Dashboard for desktop, tablet and mobile. v2.0.0",
+      "slug": "dwains-dashboard-1-click-install-lovelace-dashboard-for-desktop-tablet-and-mobile-v2-0-0",
+      "posts_count": 1162,
+      "reply_count": 785,
+      "highest_post_number": 1185,
+      "image_url": "//community-assets.home-assistant.io/original/3X/a/0/a051e5940117bebcb70e8d8545ad4b65f63bd175.jpeg",
+      "created_at": "2020-02-03T13:15:24.364Z",
+      "last_posted_at": "2020-12-10T07:57:47.304Z",
+      "bumped": true,
+      "bumped_at": "2020-12-10T07:57:47.304Z",
+      "archetype": "regular",
+      "unseen": false,
+      "last_read_post_number": 81,
+      "unread": 0,
+      "new_posts": 1109,
+      "pinned": false,
+      "unpinned": null,
+      "visible": true,
+      "closed": false,
+      "archived": false,
+      "notification_level": 2,
+      "bookmarked": false,
+      "liked": false,
+      "thumbnails": [
+        {
+          "max_width": null,
+          "max_height": null,
+          "width": 296,
+          "height": 50,
+          "url": "//community-assets.home-assistant.io/original/3X/a/0/a051e5940117bebcb70e8d8545ad4b65f63bd175.jpeg"
+        }
+      ],
+      "tags": [],
+      "like_count": 1214,
+      "views": 71580,
+      "category_id": 34,
+      "featured_link": null,
+      "has_accepted_answer": false,
+      "posters": [
+        {
+          "extras": null,
+          "description": "Original Poster",
+          "user": {
+            "id": 36674,
+            "username": "dwains",
+            "name": "Dwain Scheeren",
+            "avatar_template": "/user_avatar/community.home-assistant.io/dwains/{size}/100261_2.png"
+          }
+        },
+        {
+          "extras": null,
+          "description": "Frequent Poster",
+          "user": {
+            "id": 16514,
+            "username": "jimpower",
+            "name": "",
+            "avatar_template": "/user_avatar/community.home-assistant.io/jimpower/{size}/66909_2.png"
+          }
+        },
+        {
+          "extras": null,
+          "description": "Frequent Poster",
+          "user": {
+            "id": 1473,
+            "username": "thundergreen",
+            "name": "Thundergreen",
+            "avatar_template": "/user_avatar/community.home-assistant.io/thundergreen/{size}/18379_2.png"
+          }
+        },
+        {
+          "extras": null,
+          "description": "Frequent Poster",
+          "user": {
+            "id": 64369,
+            "username": "MRobi",
+            "name": "Mike",
+            "avatar_template": "/user_avatar/community.home-assistant.io/mrobi/{size}/113127_2.png"
+          }
+        },
+        {
+          "extras": "latest",
+          "description": "Most Recent Poster",
+          "user": {
+            "id": 9646,
+            "username": "Freshhat",
+            "name": "Freshhat",
+            "avatar_template": "/user_avatar/community.home-assistant.io/freshhat/{size}/24797_2.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": 65981,
+      "title": "Lovelace: Button card",
+      "fancy_title": "Lovelace: Button card",
+      "slug": "lovelace-button-card",
+      "posts_count": 4775,
+      "reply_count": 3635,
+      "highest_post_number": 4858,
+      "image_url": null,
+      "created_at": "2018-08-28T00:18:19.312Z",
+      "last_posted_at": "2020-12-10T04:42:58.851Z",
+      "bumped": true,
+      "bumped_at": "2020-12-10T04:42:58.851Z",
+      "archetype": "regular",
+      "unseen": false,
+      "last_read_post_number": 1938,
+      "unread": 369,
+      "new_posts": 2551,
+      "pinned": false,
+      "unpinned": null,
+      "visible": true,
+      "closed": false,
+      "archived": false,
+      "notification_level": 2,
+      "bookmarked": false,
+      "liked": false,
+      "thumbnails": null,
+      "tags": [],
+      "like_count": 1740,
+      "views": 199965,
+      "category_id": 34,
+      "featured_link": null,
+      "has_accepted_answer": false,
+      "posters": [
+        {
+          "extras": null,
+          "description": "Original Poster",
+          "user": {
+            "id": 25984,
+            "username": "kuuji",
+            "name": "Alexandre",
+            "avatar_template": "/user_avatar/community.home-assistant.io/kuuji/{size}/41093_2.png"
+          }
+        },
+        {
+          "extras": null,
+          "description": "Frequent Poster",
+          "user": {
+            "id": 33228,
+            "username": "jimz011",
+            "name": "Jim",
+            "avatar_template": "/user_avatar/community.home-assistant.io/jimz011/{size}/62413_2.png"
+          }
+        },
+        {
+          "extras": null,
+          "description": "Frequent Poster",
+          "user": {
+            "id": 12475,
+            "username": "Mariusthvdb",
+            "name": "Marius",
+            "avatar_template": "/user_avatar/community.home-assistant.io/mariusthvdb/{size}/49008_2.png"
+          }
+        },
+        {
+          "extras": null,
+          "description": "Frequent Poster",
+          "user": {
+            "id": 4931,
+            "username": "petro",
+            "name": "Petro",
+            "avatar_template": "/user_avatar/community.home-assistant.io/petro/{size}/47791_2.png"
+          }
+        },
+        {
+          "extras": "latest",
+          "description": "Most Recent Poster",
+          "user": {
+            "id": 52090,
+            "username": "parautenbach",
+            "name": "Pieter Rautenbach",
+            "avatar_template": "/user_avatar/community.home-assistant.io/parautenbach/{size}/89345_2.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": 58639,
+      "title": "Echo Devices (Alexa) as Media Player - Testers Needed",
+      "fancy_title": "Echo Devices (Alexa) as Media Player - Testers Needed",
+      "slug": "echo-devices-alexa-as-media-player-testers-needed",
+      "posts_count": 4429,
+      "reply_count": 3009,
+      "highest_post_number": 4517,
+      "image_url": null,
+      "created_at": "2018-07-04T03:36:22.187Z",
+      "last_posted_at": "2020-12-10T04:26:11.298Z",
+      "bumped": true,
+      "bumped_at": "2020-12-10T04:26:11.298Z",
+      "archetype": "regular",
+      "unseen": false,
+      "last_read_post_number": 3219,
+      "unread": 0,
+      "new_posts": 1298,
+      "pinned": false,
+      "unpinned": null,
+      "visible": true,
+      "closed": false,
+      "archived": false,
+      "notification_level": 2,
+      "bookmarked": false,
+      "liked": false,
+      "thumbnails": null,
+      "tags": ["alexa"],
+      "like_count": 1092,
+      "views": 179580,
+      "category_id": 47,
+      "featured_link": null,
+      "has_accepted_answer": false,
+      "posters": [
+        {
+          "extras": null,
+          "description": "Original Poster",
+          "user": {
+            "id": 1084,
+            "username": "keatontaylor",
+            "name": "Keatontaylor",
+            "avatar_template": "/letter_avatar/keatontaylor/{size}/5_70a404e2c8e633b245e797a566d32dc7.png"
+          }
+        },
+        {
+          "extras": null,
+          "description": "Frequent Poster",
+          "user": {
+            "id": 24884,
+            "username": "h4nc",
+            "name": "",
+            "avatar_template": "/user_avatar/community.home-assistant.io/h4nc/{size}/68244_2.png"
+          }
+        },
+        {
+          "extras": null,
+          "description": "Frequent Poster",
+          "user": {
+            "id": 9191,
+            "username": "finity",
+            "name": "",
+            "avatar_template": "/letter_avatar/finity/{size}/5_70a404e2c8e633b245e797a566d32dc7.png"
+          }
+        },
+        {
+          "extras": null,
+          "description": "Frequent Poster",
+          "user": {
+            "id": 1269,
+            "username": "ReneTode",
+            "name": "",
+            "avatar_template": "/user_avatar/community.home-assistant.io/renetode/{size}/1533_2.png"
+          }
+        },
+        {
+          "extras": "latest",
+          "description": "Most Recent Poster",
+          "user": {
+            "id": 46136,
+            "username": "chirad",
+            "name": "Dinoj",
+            "avatar_template": "/letter_avatar/chirad/{size}/5_70a404e2c8e633b245e797a566d32dc7.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": 252336,
+      "title": "Unhealthy state",
+      "fancy_title": "Unhealthy state",
+      "slug": "unhealthy-state",
+      "posts_count": 89,
+      "reply_count": 69,
+      "highest_post_number": 91,
+      "image_url": null,
+      "created_at": "2020-12-05T20:32:00.864Z",
+      "last_posted_at": "2020-12-09T22:41:30.212Z",
+      "bumped": true,
+      "bumped_at": "2020-12-09T22:41:30.212Z",
+      "archetype": "regular",
+      "unseen": false,
+      "last_read_post_number": 75,
+      "unread": 0,
+      "new_posts": 16,
+      "pinned": false,
+      "unpinned": null,
+      "visible": true,
+      "closed": false,
+      "archived": false,
+      "notification_level": 2,
+      "bookmarked": false,
+      "liked": true,
+      "thumbnails": null,
+      "tags": [],
+      "like_count": 33,
+      "views": 946,
+      "category_id": 11,
+      "featured_link": null,
+      "has_accepted_answer": false,
+      "posters": [
+        {
+          "extras": null,
+          "description": "Original Poster",
+          "user": {
+            "id": 26121,
+            "username": "helgemor",
+            "name": "Helge",
+            "avatar_template": "/user_avatar/community.home-assistant.io/helgemor/{size}/42574_2.png"
+          }
+        },
+        {
+          "extras": null,
+          "description": "Frequent Poster",
+          "user": {
+            "id": 3204,
+            "username": "nickrout",
+            "name": "Nick Rout",
+            "avatar_template": "/user_avatar/community.home-assistant.io/nickrout/{size}/27020_2.png"
+          }
+        },
+        {
+          "extras": null,
+          "description": "Frequent Poster",
+          "user": {
+            "id": 28146,
+            "username": "123",
+            "name": "Taras",
+            "avatar_template": "/user_avatar/community.home-assistant.io/123/{size}/44349_2.png"
+          }
+        },
+        {
+          "extras": null,
+          "description": "Frequent Poster",
+          "user": {
+            "id": 8361,
+            "username": "kanga_who",
+            "name": "Jason",
+            "avatar_template": "/user_avatar/community.home-assistant.io/kanga_who/{size}/46427_2.png"
+          }
+        },
+        {
+          "extras": "latest",
+          "description": "Most Recent Poster",
+          "user": {
+            "id": 44704,
+            "username": "joselito1",
+            "name": "jose litomans",
+            "avatar_template": "/user_avatar/community.home-assistant.io/joselito1/{size}/75914_2.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": 130280,
+      "title": "Home Assistant Cast",
+      "fancy_title": "Home Assistant Cast",
+      "slug": "home-assistant-cast",
+      "posts_count": 282,
+      "reply_count": 206,
+      "highest_post_number": 289,
+      "image_url": null,
+      "created_at": "2019-08-06T15:59:00.183Z",
+      "last_posted_at": "2020-12-09T16:48:51.132Z",
+      "bumped": true,
+      "bumped_at": "2020-12-09T16:48:51.132Z",
+      "archetype": "regular",
+      "unseen": false,
+      "last_read_post_number": 88,
+      "unread": 0,
+      "new_posts": 201,
+      "pinned": false,
+      "unpinned": null,
+      "visible": true,
+      "closed": false,
+      "archived": false,
+      "notification_level": 3,
+      "bookmarked": false,
+      "liked": false,
+      "thumbnails": null,
+      "tags": [],
+      "like_count": 94,
+      "views": 29308,
+      "category_id": 30,
+      "featured_link": null,
+      "has_accepted_answer": false,
+      "posters": [
+        {
+          "extras": null,
+          "description": "Original Poster",
+          "user": {
+            "id": -1,
+            "username": "system",
+            "name": "system",
+            "avatar_template": "/user_avatar/community.home-assistant.io/system/{size}/13_2.png"
+          }
+        },
+        {
+          "extras": null,
+          "description": "Frequent Poster",
+          "user": {
+            "id": 11649,
+            "username": "DavidFW1960",
+            "name": "David",
+            "avatar_template": "/user_avatar/community.home-assistant.io/davidfw1960/{size}/66886_2.png"
+          }
+        },
+        {
+          "extras": null,
+          "description": "Frequent Poster",
+          "user": {
+            "id": 26084,
+            "username": "Yoinkz",
+            "name": "",
+            "avatar_template": "/letter_avatar/yoinkz/{size}/5_70a404e2c8e633b245e797a566d32dc7.png"
+          }
+        },
+        {
+          "extras": null,
+          "description": "Frequent Poster",
+          "user": {
+            "id": 3204,
+            "username": "nickrout",
+            "name": "Nick Rout",
+            "avatar_template": "/user_avatar/community.home-assistant.io/nickrout/{size}/27020_2.png"
+          }
+        },
+        {
+          "extras": "latest",
+          "description": "Most Recent Poster",
+          "user": {
+            "id": 45396,
+            "username": "Wetzel402",
+            "name": "Cody",
+            "avatar_template": "/user_avatar/community.home-assistant.io/wetzel402/{size}/76694_2.png"
+          }
+        }
+      ]
+    }
+  ],
+  "tags": ["blueprint", "zha"],
+  "id": 253804,
+  "title": "ZHA - IKEA five button remote for lights",
+  "fancy_title": "ZHA - IKEA five button remote for lights",
+  "posts_count": 1,
+  "created_at": "2020-12-10T09:20:58.681Z",
+  "views": 4,
+  "reply_count": 0,
+  "like_count": 0,
+  "last_posted_at": "2020-12-10T09:20:58.974Z",
+  "visible": true,
+  "closed": false,
+  "archived": false,
+  "has_summary": false,
+  "archetype": "regular",
+  "slug": "zha-ikea-five-button-remote-for-lights",
+  "category_id": 53,
+  "word_count": 633,
+  "deleted_at": null,
+  "user_id": 10250,
+  "featured_link": null,
+  "pinned_globally": false,
+  "pinned_at": null,
+  "pinned_until": null,
+  "image_url": "https://community-assets.home-assistant.io/original/3X/0/1/0100d04d2debf34eb11abdfee0707624f3961f80.jpeg",
+  "draft": null,
+  "draft_key": "topic_253804",
+  "draft_sequence": 0,
+  "posted": false,
+  "unpinned": null,
+  "pinned": false,
+  "current_post_number": 1,
+  "highest_post_number": 1,
+  "last_read_post_number": 1,
+  "last_read_post_id": 1216212,
+  "deleted_by": null,
+  "has_deleted": false,
+  "actions_summary": [
+    {
+      "id": 4,
+      "count": 0,
+      "hidden": false,
+      "can_act": true
+    },
+    {
+      "id": 8,
+      "count": 0,
+      "hidden": false,
+      "can_act": true
+    },
+    {
+      "id": 7,
+      "count": 0,
+      "hidden": false,
+      "can_act": true
+    }
+  ],
+  "chunk_size": 20,
+  "bookmarked": false,
+  "topic_timer": null,
+  "private_topic_timer": null,
+  "message_bus_last_id": 4,
+  "participant_count": 1,
+  "show_read_indicator": false,
+  "thumbnails": [
+    {
+      "max_width": null,
+      "max_height": null,
+      "width": 1400,
+      "height": 1400,
+      "url": "https://community-assets.home-assistant.io/original/3X/0/1/0100d04d2debf34eb11abdfee0707624f3961f80.jpeg"
+    }
+  ],
+  "can_vote": false,
+  "vote_count": null,
+  "user_voted": false,
+  "details": {
+    "notification_level": 1,
+    "notifications_reason_id": null,
+    "can_move_posts": true,
+    "can_edit": true,
+    "can_delete": true,
+    "can_remove_allowed_users": true,
+    "can_invite_to": true,
+    "can_invite_via_email": true,
+    "can_create_post": true,
+    "can_reply_as_new_topic": true,
+    "can_flag_topic": true,
+    "can_convert_topic": true,
+    "can_review_topic": true,
+    "can_remove_self_id": 3,
+    "participants": [
+      {
+        "id": 10250,
+        "username": "frenck",
+        "name": "Franck Nijhof",
+        "avatar_template": "/user_avatar/community.home-assistant.io/frenck/{size}/161777_2.png",
+        "post_count": 1,
+        "primary_group_name": null,
+        "primary_group_flair_url": null,
+        "primary_group_flair_color": null,
+        "primary_group_flair_bg_color": null
+      }
+    ],
+    "created_by": {
+      "id": 10250,
+      "username": "frenck",
+      "name": "Franck Nijhof",
+      "avatar_template": "/user_avatar/community.home-assistant.io/frenck/{size}/161777_2.png"
+    },
+    "last_poster": {
+      "id": 10250,
+      "username": "frenck",
+      "name": "Franck Nijhof",
+      "avatar_template": "/user_avatar/community.home-assistant.io/frenck/{size}/161777_2.png"
+    }
+  }
+}

@@ -1,0 +1,363 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'data': dict({
+      'allergy_average_forecasted': dict({
+        'ForecastDate': '2018-06-12T00:00:00-04:00',
+        'Location': dict({
+          'City': '**REDACTED**',
+          'DisplayLocation': '**REDACTED**',
+          'State': '**REDACTED**',
+          'ZIP': '**REDACTED**',
+          'periods': list([
+            dict({
+              'Index': 6.6,
+              'Period': '2018-06-12T13:47:12.897',
+            }),
+            dict({
+              'Index': 6.3,
+              'Period': '2018-06-13T13:47:12.897',
+            }),
+            dict({
+              'Index': 7.6,
+              'Period': '2018-06-14T13:47:12.897',
+            }),
+            dict({
+              'Index': 7.6,
+              'Period': '2018-06-15T13:47:12.897',
+            }),
+            dict({
+              'Index': 7.3,
+              'Period': '2018-06-16T13:47:12.897',
+            }),
+          ]),
+        }),
+        'Type': 'pollen',
+      }),
+      'allergy_index': dict({
+        'ForecastDate': '2018-06-12T00:00:00-04:00',
+        'Location': dict({
+          'City': '**REDACTED**',
+          'DisplayLocation': '**REDACTED**',
+          'State': '**REDACTED**',
+          'ZIP': '**REDACTED**',
+          'periods': list([
+            dict({
+              'Index': 7.2,
+              'Period': '0001-01-01T00:00:00',
+              'Triggers': list([
+                dict({
+                  'Genus': 'Juniperus',
+                  'LGID': 272,
+                  'Name': 'Juniper',
+                  'PlantType': 'Tree',
+                }),
+                dict({
+                  'Genus': 'Grasses',
+                  'LGID': 346,
+                  'Name': 'Grasses',
+                  'PlantType': 'Grass',
+                }),
+                dict({
+                  'Genus': 'Chenopods',
+                  'LGID': 63,
+                  'Name': 'Chenopods',
+                  'PlantType': 'Ragweed',
+                }),
+              ]),
+              'Type': 'Yesterday',
+            }),
+            dict({
+              'Index': 6.6,
+              'Period': '0001-01-01T00:00:00',
+              'Triggers': list([
+                dict({
+                  'Genus': 'Juniperus',
+                  'LGID': 272,
+                  'Name': 'Juniper',
+                  'PlantType': 'Tree',
+                }),
+                dict({
+                  'Genus': 'Grasses',
+                  'LGID': 346,
+                  'Name': 'Grasses',
+                  'PlantType': 'Grass',
+                }),
+                dict({
+                  'Genus': 'Chenopods',
+                  'LGID': 63,
+                  'Name': 'Chenopods',
+                  'PlantType': 'Ragweed',
+                }),
+              ]),
+              'Type': 'Today',
+            }),
+            dict({
+              'Index': 6.3,
+              'Period': '0001-01-01T00:00:00',
+              'Triggers': list([
+                dict({
+                  'Genus': 'Juniperus',
+                  'LGID': 272,
+                  'Name': 'Juniper',
+                  'PlantType': 'Tree',
+                }),
+                dict({
+                  'Genus': 'Grasses',
+                  'LGID': 346,
+                  'Name': 'Grasses',
+                  'PlantType': 'Grass',
+                }),
+                dict({
+                  'Genus': 'Chenopods',
+                  'LGID': 63,
+                  'Name': 'Chenopods',
+                  'PlantType': 'Ragweed',
+                }),
+              ]),
+              'Type': 'Tomorrow',
+            }),
+          ]),
+        }),
+        'Type': 'pollen',
+      }),
+      'allergy_outlook': dict({
+        'Market': '**REDACTED**',
+        'Outlook': 'The amount of pollen in the air for Wednesday...',
+        'Season': 'Tree',
+        'Trend': 'subsiding',
+        'TrendID': 4,
+        'ZIP': '**REDACTED**',
+      }),
+      'asthma_average_forecasted': dict({
+        'ForecastDate': '2018-10-28T00:00:00-04:00',
+        'Location': dict({
+          'City': '**REDACTED**',
+          'DisplayLocation': '**REDACTED**',
+          'State': '**REDACTED**',
+          'ZIP': '**REDACTED**',
+          'periods': list([
+            dict({
+              'Idx': '4.5',
+              'Index': 4.5,
+              'Period': '2018-10-28T05:45:01.45',
+            }),
+            dict({
+              'Idx': '4.7',
+              'Index': 4.7,
+              'Period': '2018-10-29T05:45:01.45',
+            }),
+            dict({
+              'Idx': '5.0',
+              'Index': 5,
+              'Period': '2018-10-30T05:45:01.45',
+            }),
+            dict({
+              'Idx': '5.2',
+              'Index': 5.2,
+              'Period': '2018-10-31T05:45:01.45',
+            }),
+            dict({
+              'Idx': '5.5',
+              'Index': 5.5,
+              'Period': '2018-11-01T05:45:01.45',
+            }),
+          ]),
+        }),
+        'Type': 'asthma',
+      }),
+      'asthma_index': dict({
+        'ForecastDate': '2018-10-29T00:00:00-04:00',
+        'Location': dict({
+          'City': '**REDACTED**',
+          'DisplayLocation': '**REDACTED**',
+          'State': '**REDACTED**',
+          'ZIP': '**REDACTED**',
+          'periods': list([
+            dict({
+              'Idx': '4.1',
+              'Index': 4.1,
+              'Period': '0001-01-01T00:00:00',
+              'Triggers': list([
+                dict({
+                  'Description': 'Ozone (O3) is a odorless, colorless ....',
+                  'LGID': 1,
+                  'Name': 'OZONE',
+                  'PPM': 42,
+                }),
+                dict({
+                  'Description': 'Fine particles (PM2.5) are 2.5 ...',
+                  'LGID': 1,
+                  'Name': 'PM2.5',
+                  'PPM': 30,
+                }),
+                dict({
+                  'Description': 'Coarse dust particles (PM10) are 2.5 ...',
+                  'LGID': 1,
+                  'Name': 'PM10',
+                  'PPM': 19,
+                }),
+              ]),
+              'Type': 'Yesterday',
+            }),
+            dict({
+              'Idx': '4.5',
+              'Index': 4.5,
+              'Period': '0001-01-01T00:00:00',
+              'Triggers': list([
+                dict({
+                  'Description': 'Fine particles (PM2.5) are 2.5 ...',
+                  'LGID': 3,
+                  'Name': 'PM2.5',
+                  'PPM': 105,
+                }),
+                dict({
+                  'Description': 'Coarse dust particles (PM10) are 2.5 ...',
+                  'LGID': 2,
+                  'Name': 'PM10',
+                  'PPM': 65,
+                }),
+                dict({
+                  'Description': 'Ozone (O3) is a odorless, colorless ...',
+                  'LGID': 1,
+                  'Name': 'OZONE',
+                  'PPM': 42,
+                }),
+              ]),
+              'Type': 'Today',
+            }),
+            dict({
+              'Idx': '4.6',
+              'Index': 4.6,
+              'Period': '0001-01-01T00:00:00',
+              'Triggers': list([
+              ]),
+              'Type': 'Tomorrow',
+            }),
+          ]),
+        }),
+        'Type': 'asthma',
+      }),
+      'disease_average_forecasted': dict({
+        'ForecastDate': '2018-06-12T00:00:00-04:00',
+        'Location': dict({
+          'City': '**REDACTED**',
+          'DisplayLocation': '**REDACTED**',
+          'State': '**REDACTED**',
+          'ZIP': '**REDACTED**',
+          'periods': list([
+            dict({
+              'Index': 2.4,
+              'Period': '2018-06-12T05:13:51.817',
+            }),
+            dict({
+              'Index': 2.5,
+              'Period': '2018-06-13T05:13:51.817',
+            }),
+            dict({
+              'Index': 2.5,
+              'Period': '2018-06-14T05:13:51.817',
+            }),
+            dict({
+              'Index': 2.5,
+              'Period': '2018-06-15T05:13:51.817',
+            }),
+          ]),
+        }),
+        'Type': 'cold',
+      }),
+      'disease_index': dict({
+        'ForecastDate': '2019-04-07T00:00:00-04:00',
+        'Location': dict({
+          'City': '**REDACTED**',
+          'DisplayLocation': '**REDACTED**',
+          'State': '**REDACTED**',
+          'ZIP': '**REDACTED**',
+          'periods': list([
+            dict({
+              'Idx': '6.8',
+              'Index': 6.8,
+              'Period': '2019-04-06T00:00:00',
+              'Triggers': list([
+                dict({
+                  'Description': 'Influenza',
+                  'Idx': '3.1',
+                  'Index': 3.1,
+                  'Name': 'Flu',
+                }),
+                dict({
+                  'Description': 'High Fever',
+                  'Idx': '6.2',
+                  'Index': 6.2,
+                  'Name': 'Fever',
+                }),
+                dict({
+                  'Description': 'Strep & Sore throat',
+                  'Idx': '5.2',
+                  'Index': 5.2,
+                  'Name': 'Strep',
+                }),
+                dict({
+                  'Description': 'Cough',
+                  'Idx': '7.8',
+                  'Index': 7.8,
+                  'Name': 'Cough',
+                }),
+              ]),
+              'Type': 'Yesterday',
+            }),
+            dict({
+              'Idx': '6.7',
+              'Index': 6.7,
+              'Period': '2019-04-07T03:52:58',
+              'Triggers': list([
+                dict({
+                  'Description': 'Influenza',
+                  'Idx': '3.1',
+                  'Index': 3.1,
+                  'Name': 'Flu',
+                }),
+                dict({
+                  'Description': 'High Fever',
+                  'Idx': '5.9',
+                  'Index': 5.9,
+                  'Name': 'Fever',
+                }),
+                dict({
+                  'Description': 'Strep & Sore throat',
+                  'Idx': '5.1',
+                  'Index': 5.1,
+                  'Name': 'Strep',
+                }),
+                dict({
+                  'Description': 'Cough',
+                  'Idx': '7.7',
+                  'Index': 7.7,
+                  'Name': 'Cough',
+                }),
+              ]),
+              'Type': 'Today',
+            }),
+          ]),
+        }),
+        'Type': 'cold',
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'zip_code': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'domain': 'iqvia',
+      'entry_id': '690ac4b7e99855fc5ee7b987a758d5cb',
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+  })
+# ---

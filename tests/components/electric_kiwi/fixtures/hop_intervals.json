@@ -1,0 +1,249 @@
+{
+  "data": {
+    "hop_duration": "60",
+    "type": "hop_intervals",
+    "intervals": {
+      "1": {
+        "active": 1,
+        "end_time": "1:00 AM",
+        "start_time": "12:00 AM"
+      },
+      "2": {
+        "active": 1,
+        "end_time": "1:30 AM",
+        "start_time": "12:30 AM"
+      },
+      "3": {
+        "active": 1,
+        "end_time": "2:00 AM",
+        "start_time": "1:00 AM"
+      },
+      "4": {
+        "active": 1,
+        "end_time": "2:30 AM",
+        "start_time": "1:30 AM"
+      },
+      "5": {
+        "active": 1,
+        "end_time": "3:00 AM",
+        "start_time": "2:00 AM"
+      },
+      "6": {
+        "active": 1,
+        "end_time": "3:30 AM",
+        "start_time": "2:30 AM"
+      },
+      "7": {
+        "active": 1,
+        "end_time": "4:00 AM",
+        "start_time": "3:00 AM"
+      },
+      "8": {
+        "active": 1,
+        "end_time": "4:30 AM",
+        "start_time": "3:30 AM"
+      },
+      "9": {
+        "active": 1,
+        "end_time": "5:00 AM",
+        "start_time": "4:00 AM"
+      },
+      "10": {
+        "active": 1,
+        "end_time": "5:30 AM",
+        "start_time": "4:30 AM"
+      },
+      "11": {
+        "active": 1,
+        "end_time": "6:00 AM",
+        "start_time": "5:00 AM"
+      },
+      "12": {
+        "active": 1,
+        "end_time": "6:30 AM",
+        "start_time": "5:30 AM"
+      },
+      "13": {
+        "active": 1,
+        "end_time": "7:00 AM",
+        "start_time": "6:00 AM"
+      },
+      "14": {
+        "active": 1,
+        "end_time": "7:30 AM",
+        "start_time": "6:30 AM"
+      },
+      "15": {
+        "active": 1,
+        "end_time": "8:00 AM",
+        "start_time": "7:00 AM"
+      },
+      "16": {
+        "active": 1,
+        "end_time": "8:30 AM",
+        "start_time": "7:30 AM"
+      },
+      "17": {
+        "active": 1,
+        "end_time": "9:00 AM",
+        "start_time": "8:00 AM"
+      },
+      "18": {
+        "active": 1,
+        "end_time": "9:30 AM",
+        "start_time": "8:30 AM"
+      },
+      "19": {
+        "active": 1,
+        "end_time": "10:00 AM",
+        "start_time": "9:00 AM"
+      },
+      "20": {
+        "active": 1,
+        "end_time": "10:30 AM",
+        "start_time": "9:30 AM"
+      },
+      "21": {
+        "active": 1,
+        "end_time": "11:00 AM",
+        "start_time": "10:00 AM"
+      },
+      "22": {
+        "active": 1,
+        "end_time": "11:30 AM",
+        "start_time": "10:30 AM"
+      },
+      "23": {
+        "active": 1,
+        "end_time": "12:00 PM",
+        "start_time": "11:00 AM"
+      },
+      "24": {
+        "active": 1,
+        "end_time": "12:30 PM",
+        "start_time": "11:30 AM"
+      },
+      "25": {
+        "active": 1,
+        "end_time": "1:00 PM",
+        "start_time": "12:00 PM"
+      },
+      "26": {
+        "active": 1,
+        "end_time": "1:30 PM",
+        "start_time": "12:30 PM"
+      },
+      "27": {
+        "active": 1,
+        "end_time": "2:00 PM",
+        "start_time": "1:00 PM"
+      },
+      "28": {
+        "active": 1,
+        "end_time": "2:30 PM",
+        "start_time": "1:30 PM"
+      },
+      "29": {
+        "active": 1,
+        "end_time": "3:00 PM",
+        "start_time": "2:00 PM"
+      },
+      "30": {
+        "active": 1,
+        "end_time": "3:30 PM",
+        "start_time": "2:30 PM"
+      },
+      "31": {
+        "active": 1,
+        "end_time": "4:00 PM",
+        "start_time": "3:00 PM"
+      },
+      "32": {
+        "active": 1,
+        "end_time": "4:30 PM",
+        "start_time": "3:30 PM"
+      },
+      "33": {
+        "active": 1,
+        "end_time": "5:00 PM",
+        "start_time": "4:00 PM"
+      },
+      "34": {
+        "active": 1,
+        "end_time": "5:30 PM",
+        "start_time": "4:30 PM"
+      },
+      "35": {
+        "active": 1,
+        "end_time": "6:00 PM",
+        "start_time": "5:00 PM"
+      },
+      "36": {
+        "active": 1,
+        "end_time": "6:30 PM",
+        "start_time": "5:30 PM"
+      },
+      "37": {
+        "active": 1,
+        "end_time": "7:00 PM",
+        "start_time": "6:00 PM"
+      },
+      "38": {
+        "active": 1,
+        "end_time": "7:30 PM",
+        "start_time": "6:30 PM"
+      },
+      "39": {
+        "active": 1,
+        "end_time": "8:00 PM",
+        "start_time": "7:00 PM"
+      },
+      "40": {
+        "active": 1,
+        "end_time": "8:30 PM",
+        "start_time": "7:30 PM"
+      },
+      "41": {
+        "active": 1,
+        "end_time": "9:00 PM",
+        "start_time": "8:00 PM"
+      },
+      "42": {
+        "active": 1,
+        "end_time": "9:30 PM",
+        "start_time": "8:30 PM"
+      },
+      "43": {
+        "active": 1,
+        "end_time": "10:00 PM",
+        "start_time": "9:00 PM"
+      },
+      "44": {
+        "active": 1,
+        "end_time": "10:30 PM",
+        "start_time": "9:30 PM"
+      },
+      "45": {
+        "active": 1,
+        "end_time": "11:00 AM",
+        "start_time": "10:00 PM"
+      },
+      "46": {
+        "active": 1,
+        "end_time": "11:30 PM",
+        "start_time": "10:30 PM"
+      },
+      "47": {
+        "active": 1,
+        "end_time": "12:00 AM",
+        "start_time": "11:00 PM"
+      },
+      "48": {
+        "active": 1,
+        "end_time": "12:30 AM",
+        "start_time": "11:30 PM"
+      }
+    }
+  },
+  "status": 1
+}

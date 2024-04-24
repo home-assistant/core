@@ -1,0 +1,195 @@
+{
+  "available": true,
+  "standby": false,
+  "info": {
+    "udn": "015e5555-9000-5555-5555-b0a555555dfb",
+    "serial-number": "YN00H5555555",
+    "device-id": "0S596H055555",
+    "advertising-id": "055555a9-d82b-5c75-b8fe-5555550cb7ee",
+    "vendor-name": "Onn",
+    "model-name": "100005844",
+    "model-number": "7820X",
+    "model-region": "US",
+    "is-tv": "true",
+    "is-stick": "false",
+    "screen-size": "58",
+    "panel-id": "2",
+    "tuner-type": "ATSC",
+    "supports-ethernet": "true",
+    "wifi-mac": "d8:13:99:f8:b0:c6",
+    "wifi-driver": "realtek",
+    "ethernet-mac": "d4:3a:2e:07:fd:cb",
+    "network-type": "wifi",
+    "network-name": "NetworkSSID",
+    "friendly-device-name": "58\" Onn Roku TV",
+    "friendly-model-name": "Onn Roku TV",
+    "default-device-name": "Onn Roku TV - YN00H5555555",
+    "user-device-name": "58\" Onn Roku TV",
+    "user-device-location": "Living room",
+    "build-number": "AT9.20E04502A",
+    "software-version": "9.2.0",
+    "software-build": "4502",
+    "secure-device": "true",
+    "language": "en",
+    "country": "US",
+    "locale": "en_US",
+    "time-zone-auto": "true",
+    "time-zone": "US/Central",
+    "time-zone-name": "United States/Central",
+    "time-zone-tz": "America/Chicago",
+    "time-zone-offset": "-300",
+    "clock-format": "12-hour",
+    "uptime": "264789",
+    "power-mode": "PowerOn",
+    "supports-suspend": "true",
+    "supports-find-remote": "true",
+    "find-remote-is-possible": "false",
+    "supports-audio-guide": "true",
+    "supports-rva": "true",
+    "developer-enabled": "false",
+    "keyed-developer-id": [],
+    "search-enabled": "true",
+    "search-channels-enabled": "true",
+    "voice-search-enabled": "true",
+    "notifications-enabled": "true",
+    "notifications-first-use": "false",
+    "supports-private-listening": "true",
+    "supports-private-listening-dtv": "true",
+    "supports-warm-standby": "true",
+    "headphones-connected": "false",
+    "expert-pq-enabled": "0.9",
+    "supports-ecs-textedit": "true",
+    "supports-ecs-microphone": "true",
+    "supports-wake-on-wlan": "true",
+    "supports-airplay": "true",
+    "has-play-on-roku": "true",
+    "has-mobile-screensaver": "true",
+    "support-url": "https://www.onntvsupport.com/",
+    "grandcentral-version": "2.9.57",
+    "trc-version": "3.0",
+    "trc-channel-version": "2.9.42",
+    "davinci-version": "2.8.20",
+    "has-wifi-extender": "false",
+    "has-wifi-5G-support": "true",
+    "can-use-wifi-extender": "true"
+  },
+  "app": {
+    "@id": "tvinput.dtv",
+    "@type": "tvin",
+    "@version": "1.0.0",
+    "#text": "Antenna TV"
+  },
+  "apps": [
+    {
+      "@id": "tvinput.hdmi2",
+      "@type": "tvin",
+      "@version": "1.0.0",
+      "#text": "Satellite TV"
+    },
+    {
+      "@id": "tvinput.hdmi1",
+      "@type": "tvin",
+      "@version": "1.0.0",
+      "#text": "Blu-ray player"
+    },
+    {
+      "@id": "tvinput.dtv",
+      "@type": "tvin",
+      "@version": "1.0.0",
+      "#text": "Antenna TV"
+    },
+    {
+      "@id": "11",
+      "#text": "Roku Channel Store"
+    },
+    {
+      "@id": "12",
+      "#text": "Netflix"
+    },
+    {
+      "@id": "13",
+      "#text": "Amazon Video on Demand"
+    },
+    {
+      "@id": "14",
+      "#text": "MLB.TV®"
+    },
+    {
+      "@id": "26",
+      "#text": "Free FrameChannel Service"
+    },
+    {
+      "@id": "27",
+      "#text": "Mediafly"
+    },
+    {
+      "@id": "28",
+      "#text": "Pandora"
+    },
+    {
+      "@id": "74519",
+      "@subtype": "rsga",
+      "@type": "appl",
+      "@version": "5.2.0",
+      "#text": "Pluto TV - It's Free TV"
+    }
+  ],
+  "channel": {
+    "number": "14.3",
+    "name": "getTV",
+    "type": "air-digital",
+    "user-hidden": "false",
+    "active-input": "true",
+    "signal-state": "valid",
+    "signal-mode": "480i",
+    "signal-quality": "20",
+    "signal-strength": "-75",
+    "program-title": "Airwolf",
+    "program-description": "The team will travel all around the world in order to shut down a global crime ring.",
+    "program-ratings": "TV-14-D-V",
+    "program-analog-audio": "none",
+    "program-digital-audio": "stereo",
+    "program-audio-languages": "eng",
+    "program-audio-formats": "AC3",
+    "program-audio-language": "eng",
+    "program-audio-format": "AC3",
+    "program-has-cc": "true"
+  },
+  "channels": [
+    {
+      "number": "1.1",
+      "name": "WhatsOn",
+      "type": "air-digital",
+      "user-hidden": "false"
+    },
+    {
+      "number": "1.3",
+      "name": "QVC",
+      "type": "air-digital",
+      "user-hidden": "false"
+    },
+    {
+      "number": "14.3",
+      "name": "getTV",
+      "type": "air-digital",
+      "user-hidden": "false"
+    },
+    {
+      "number": "99.1",
+      "name": "",
+      "type": "air-digital",
+      "user-hidden": "false"
+    }
+  ],
+  "media": {
+    "@error": "false",
+    "@state": "close",
+    "format": {
+      "@audio": "eac3",
+      "@captions": "none",
+      "@drm": "none",
+      "@video": "hevc_b"
+    },
+    "is_live": "false"
+  }
+}

@@ -1,0 +1,70 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'accounts': list([
+      dict({
+        'balance': dict({
+          'amount': '**REDACTED**',
+          'currency': 'BTC',
+        }),
+        'currency': 'BTC',
+        'id': '**REDACTED**',
+        'name': 'BTC Wallet',
+        'native_balance': dict({
+          'amount': '**REDACTED**',
+          'currency': 'USD',
+        }),
+        'type': 'wallet',
+      }),
+      dict({
+        'balance': dict({
+          'amount': '**REDACTED**',
+          'currency': 'BTC',
+        }),
+        'currency': 'BTC',
+        'id': '**REDACTED**',
+        'name': 'BTC Vault',
+        'native_balance': dict({
+          'amount': '**REDACTED**',
+          'currency': 'USD',
+        }),
+        'type': 'vault',
+      }),
+      dict({
+        'balance': dict({
+          'amount': '**REDACTED**',
+          'currency': 'USD',
+        }),
+        'currency': 'USD',
+        'id': '**REDACTED**',
+        'name': 'USD Wallet',
+        'native_balance': dict({
+          'amount': '**REDACTED**',
+          'currency': 'USD',
+        }),
+        'type': 'fiat',
+      }),
+    ]),
+    'entry': dict({
+      'data': dict({
+        'api_key': '**REDACTED**',
+        'api_token': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'domain': 'coinbase',
+      'entry_id': '080272b77a4f80c41b94d7cdc86fd826',
+      'options': dict({
+        'account_balance_currencies': list([
+        ]),
+        'exchange_rate_currencies': list([
+        ]),
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': '**REDACTED**',
+      'unique_id': None,
+      'version': 1,
+    }),
+  })
+# ---

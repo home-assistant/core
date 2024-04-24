@@ -1,0 +1,12 @@
+{
+  "filter": [
+    {
+      "label": "S Landwehr (Ramazan-Avci-Platz) - Rathausmarkt",
+      "serviceID": "HHA-B:606_HHA-B",
+      "serviceName": "606",
+      "stationIDs": ["Master:10047"]
+    }
+  ],
+  "offset": 10,
+  "realtime": true
+}

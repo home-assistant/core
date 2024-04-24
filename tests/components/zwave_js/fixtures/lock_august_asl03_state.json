@@ -1,0 +1,424 @@
+{
+  "nodeId": 6,
+  "index": 0,
+  "installerIcon": 768,
+  "userIcon": 768,
+  "status": 4,
+  "ready": true,
+  "deviceClass": {
+    "basic": { "key": 4, "label": "Routing Slave" },
+    "generic": { "key": 64, "label": "Entry Control" },
+    "specific": { "key": 3, "label": "Secure Keypad Door Lock" },
+    "mandatorySupportedCCs": [],
+    "mandatoryControlledCCs": []
+  },
+  "isListening": false,
+  "isFrequentListening": true,
+  "isRouting": true,
+  "maxBaudRate": 40000,
+  "isSecure": true,
+  "version": 4,
+  "isBeaming": true,
+  "manufacturerId": 831,
+  "productId": 1,
+  "productType": 1,
+  "firmwareVersion": "1.59",
+  "zwavePlusVersion": 1,
+  "nodeType": 0,
+  "roleType": 7,
+  "deviceConfig": {
+    "manufacturerId": 831,
+    "manufacturer": "August Smart Locks",
+    "label": "ASL-03",
+    "description": "August Smart Lock Pro 3rd Gen",
+    "devices": [
+      {
+        "productType": "0x0000",
+        "productId": "0x0594"
+      },
+      {
+        "productType": "0x0000",
+        "productId": "0xdf29"
+      },
+      {
+        "productType": "0x0001",
+        "productId": "0x0001"
+      }
+    ],
+    "firmwareVersion": {
+      "min": "0.0",
+      "max": "255.255"
+    }
+  },
+  "label": "ASL-03",
+  "neighbors": [1, 7, 8, 9],
+  "interviewAttempts": 1,
+  "endpoints": [
+    {
+      "nodeId": 6,
+      "index": 0,
+      "installerIcon": 768,
+      "userIcon": 768,
+      "commandClasses": []
+    }
+  ],
+  "values": [
+    {
+      "commandClassName": "Door Lock",
+      "commandClass": 98,
+      "endpoint": 0,
+      "property": "currentMode",
+      "propertyName": "currentMode",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 255,
+        "label": "Current lock mode",
+        "states": {
+          "0": "Unsecured",
+          "1": "UnsecuredWithTimeout",
+          "16": "InsideUnsecured",
+          "17": "InsideUnsecuredWithTimeout",
+          "32": "OutsideUnsecured",
+          "33": "OutsideUnsecuredWithTimeout",
+          "254": "Unknown",
+          "255": "Secured"
+        }
+      },
+      "value": 255
+    },
+    {
+      "commandClassName": "Door Lock",
+      "commandClass": 98,
+      "endpoint": 0,
+      "property": "targetMode",
+      "propertyName": "targetMode",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "min": 0,
+        "max": 255,
+        "label": "Target lock mode",
+        "states": {
+          "0": "Unsecured",
+          "1": "UnsecuredWithTimeout",
+          "16": "InsideUnsecured",
+          "17": "InsideUnsecuredWithTimeout",
+          "32": "OutsideUnsecured",
+          "33": "OutsideUnsecuredWithTimeout",
+          "254": "Unknown",
+          "255": "Secured"
+        }
+      }
+    },
+    {
+      "commandClassName": "Door Lock",
+      "commandClass": 98,
+      "endpoint": 0,
+      "property": "outsideHandlesCanOpenDoor",
+      "propertyName": "outsideHandlesCanOpenDoor",
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Which outside handles can open the door (actual status)"
+      },
+      "value": [false, false, false, false]
+    },
+    {
+      "commandClassName": "Door Lock",
+      "commandClass": 98,
+      "endpoint": 0,
+      "property": "insideHandlesCanOpenDoor",
+      "propertyName": "insideHandlesCanOpenDoor",
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Which inside handles can open the door (actual status)"
+      },
+      "value": [true, false, false, false]
+    },
+    {
+      "commandClassName": "Door Lock",
+      "commandClass": 98,
+      "endpoint": 0,
+      "property": "latchStatus",
+      "propertyName": "latchStatus",
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "The current status of the latch"
+      },
+      "value": "open"
+    },
+    {
+      "commandClassName": "Door Lock",
+      "commandClass": 98,
+      "endpoint": 0,
+      "property": "boltStatus",
+      "propertyName": "boltStatus",
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "The current status of the bolt"
+      },
+      "value": "locked"
+    },
+    {
+      "commandClassName": "Door Lock",
+      "commandClass": 98,
+      "endpoint": 0,
+      "property": "doorStatus",
+      "propertyName": "doorStatus",
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "The current status of the door"
+      },
+      "value": "closed"
+    },
+    {
+      "commandClassName": "Door Lock",
+      "commandClass": 98,
+      "endpoint": 0,
+      "property": "lockTimeout",
+      "propertyName": "lockTimeout",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Seconds until lock mode times out"
+      }
+    },
+    {
+      "commandClassName": "Door Lock",
+      "commandClass": 98,
+      "endpoint": 0,
+      "property": "operationType",
+      "propertyName": "operationType",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "min": 0,
+        "max": 255,
+        "label": "Lock operation type",
+        "states": {
+          "1": "Constant",
+          "2": "Timed"
+        }
+      },
+      "value": 1
+    },
+    {
+      "commandClassName": "Door Lock",
+      "commandClass": 98,
+      "endpoint": 0,
+      "property": "outsideHandlesCanOpenDoorConfiguration",
+      "propertyName": "outsideHandlesCanOpenDoorConfiguration",
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true,
+        "label": "Which outside handles can open the door (configuration)"
+      },
+      "value": [false, false, false, false]
+    },
+    {
+      "commandClassName": "Door Lock",
+      "commandClass": 98,
+      "endpoint": 0,
+      "property": "insideHandlesCanOpenDoorConfiguration",
+      "propertyName": "insideHandlesCanOpenDoorConfiguration",
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true,
+        "label": "Which inside handles can open the door (configuration)"
+      },
+      "value": [true, false, false, false]
+    },
+    {
+      "commandClassName": "Door Lock",
+      "commandClass": 98,
+      "endpoint": 0,
+      "property": "lockTimeoutConfiguration",
+      "propertyName": "lockTimeoutConfiguration",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "min": 0,
+        "max": 65535,
+        "label": "Duration of timed mode in seconds"
+      }
+    },
+    {
+      "commandClassName": "Notification",
+      "commandClass": 113,
+      "endpoint": 0,
+      "property": "Access Control",
+      "propertyKey": "Lock state",
+      "propertyName": "Access Control",
+      "propertyKeyName": "Lock state",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 255,
+        "label": "Lock state",
+        "states": {
+          "0": "idle",
+          "11": "Lock jammed"
+        },
+        "ccSpecific": {
+          "notificationType": 6
+        }
+      },
+      "value": 0
+    },
+    {
+      "commandClassName": "Manufacturer Specific",
+      "commandClass": 114,
+      "endpoint": 0,
+      "property": "manufacturerId",
+      "propertyName": "manufacturerId",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 65535,
+        "label": "Manufacturer ID"
+      },
+      "value": 831
+    },
+    {
+      "commandClassName": "Manufacturer Specific",
+      "commandClass": 114,
+      "endpoint": 0,
+      "property": "productType",
+      "propertyName": "productType",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 65535,
+        "label": "Product type"
+      },
+      "value": 1
+    },
+    {
+      "commandClassName": "Manufacturer Specific",
+      "commandClass": 114,
+      "endpoint": 0,
+      "property": "productId",
+      "propertyName": "productId",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 65535,
+        "label": "Product ID"
+      },
+      "value": 1
+    },
+    {
+      "commandClassName": "Battery",
+      "commandClass": 128,
+      "endpoint": 0,
+      "property": "level",
+      "propertyName": "level",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 100,
+        "unit": "%",
+        "label": "Battery level"
+      },
+      "value": 100
+    },
+    {
+      "commandClassName": "Battery",
+      "commandClass": 128,
+      "endpoint": 0,
+      "property": "isLow",
+      "propertyName": "isLow",
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": false,
+        "label": "Low battery level"
+      },
+      "value": false
+    },
+    {
+      "commandClassName": "Version",
+      "commandClass": 134,
+      "endpoint": 0,
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type"
+      },
+      "value": 3
+    },
+    {
+      "commandClassName": "Version",
+      "commandClass": 134,
+      "endpoint": 0,
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version"
+      },
+      "value": "4.61"
+    },
+    {
+      "commandClassName": "Version",
+      "commandClass": 134,
+      "endpoint": 0,
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions"
+      },
+      "value": ["1.59"]
+    },
+    {
+      "commandClassName": "Version",
+      "commandClass": 134,
+      "endpoint": 0,
+      "property": "hardwareVersion",
+      "propertyName": "hardwareVersion",
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip hardware version"
+      }
+    }
+  ],
+  "isControllerNode": false
+}

@@ -1,0 +1,32 @@
+{
+  "callsign": "FOODHD",
+  "date": "20070324",
+  "duration": 1791,
+  "episodeTitle": "Spaghetti and Clam Sauce",
+  "expiration": "0",
+  "expiryTime": 0,
+  "isOffAir": false,
+  "isPartial": false,
+  "isPclocked": 1,
+  "isPpv": false,
+  "isRecording": false,
+  "isViewed": true,
+  "isVod": false,
+  "keepUntilFull": true,
+  "major": 231,
+  "minor": 65535,
+  "offset": 263,
+  "programId": "4405732",
+  "rating": "No Rating",
+  "recType": 3,
+  "startTime": 1278342008,
+  "stationId": 3900976,
+  "status": {
+    "code": 200,
+    "commandResult": 0,
+    "msg": "OK.",
+    "query": "/tv/getTuned"
+  },
+  "title": "Tyler's Ultimate",
+  "uniqueId": "6728716739474078694"
+}

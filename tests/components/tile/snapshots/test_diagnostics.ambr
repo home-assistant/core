@@ -1,0 +1,26 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'tiles': list([
+      dict({
+        'accuracy': 13.496111,
+        'altitude': '**REDACTED**',
+        'archetype': 'WALLET',
+        'dead': False,
+        'firmware_version': '01.12.14.0',
+        'hardware_version': '02.09',
+        'kind': 'TILE',
+        'last_timestamp': '2020-08-12T17:55:26',
+        'latitude': '**REDACTED**',
+        'longitude': '**REDACTED**',
+        'lost': False,
+        'lost_timestamp': '1969-12-31T23:59:59.999000',
+        'name': 'Wallet',
+        'ring_state': 'STOPPED',
+        'uuid': '**REDACTED**',
+        'visible': True,
+        'voip_state': 'OFFLINE',
+      }),
+    ]),
+  })
+# ---
