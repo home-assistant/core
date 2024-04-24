@@ -70,5 +70,4 @@ class RomyBinarySensor(RomyEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the value of the sensor."""
-        is_on_value: bool = self.romy.binary_sensors[self.entity_description.key]
-        return is_on_value
+        return bool(self.romy.binary_sensors[self.entity_description.key])
