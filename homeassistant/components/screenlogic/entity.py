@@ -159,7 +159,7 @@ class ScreenLogicSwitchingEntity(ScreenLogicEntity):
         await self._async_set_state(ON_OFF.OFF)
 
     async def _async_set_state(self, state: ON_OFF) -> None:
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class ScreenLogicCircuitEntity(ScreenLogicSwitchingEntity, ScreenLogicPushEntity):

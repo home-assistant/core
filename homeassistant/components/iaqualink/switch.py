@@ -40,7 +40,7 @@ class HassAqualinkSwitch(AqualinkEntity, SwitchEntity):
             self._attr_icon = "mdi:robot-vacuum"
         elif name == "Waterfall" or name.endswith("Dscnt"):
             self._attr_icon = "mdi:fountain"
-        elif name.endswith("Pump") or name.endswith("Blower"):
+        elif name.endswith(("Pump", "Blower")):
             self._attr_icon = "mdi:fan"
         if name.endswith("Heater"):
             self._attr_icon = "mdi:radiator"

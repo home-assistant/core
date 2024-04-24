@@ -162,13 +162,13 @@ def _standardize_geography_config_entry(
         # about, infer it from the data we have:
         entry_updates["data"] = {**entry.data}
         if CONF_CITY in entry.data:
-            entry_updates["data"][
-                CONF_INTEGRATION_TYPE
-            ] = INTEGRATION_TYPE_GEOGRAPHY_NAME
+            entry_updates["data"][CONF_INTEGRATION_TYPE] = (
+                INTEGRATION_TYPE_GEOGRAPHY_NAME
+            )
         else:
-            entry_updates["data"][
-                CONF_INTEGRATION_TYPE
-            ] = INTEGRATION_TYPE_GEOGRAPHY_COORDS
+            entry_updates["data"][CONF_INTEGRATION_TYPE] = (
+                INTEGRATION_TYPE_GEOGRAPHY_COORDS
+            )
 
     if not entry_updates:
         return

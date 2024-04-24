@@ -463,12 +463,12 @@ async def test_discovery_update_event_template(
     config2["name"] = "Milk"
     config1["state_topic"] = "event/state1"
     config2["state_topic"] = "event/state1"
-    config1[
-        "value_template"
-    ] = '{"event_type": "press", "val": "{{ value_json.val | int }}"}'
-    config2[
-        "value_template"
-    ] = '{"event_type": "press", "val": "{{ value_json.val | int * 2 }}"}'
+    config1["value_template"] = (
+        '{"event_type": "press", "val": "{{ value_json.val | int }}"}'
+    )
+    config2["value_template"] = (
+        '{"event_type": "press", "val": "{{ value_json.val | int * 2 }}"}'
+    )
 
     async_fire_mqtt_message(hass, "homeassistant/event/bla/config", json.dumps(config1))
     await hass.async_block_till_done()

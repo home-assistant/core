@@ -1,8 +1,16 @@
 """Base class for Ring entity."""
-from collections.abc import Callable
-from typing import Any, Concatenate, ParamSpec, TypeVar
 
-import ring_doorbell
+from collections.abc import Callable
+from typing import Any, Concatenate, Generic, ParamSpec, cast
+
+from ring_doorbell import (
+    AuthenticationError,
+    RingDevices,
+    RingError,
+    RingGeneric,
+    RingTimeout,
+)
+from typing_extensions import TypeVar
 
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -10,38 +18,37 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, DOMAIN
-from .coordinator import (
-    RingDataCoordinator,
-    RingDeviceData,
-    RingNotificationsCoordinator,
-)
+from .coordinator import RingDataCoordinator, RingNotificationsCoordinator
+
+RingDeviceT = TypeVar("RingDeviceT", bound=RingGeneric, default=RingGeneric)
 
 _RingCoordinatorT = TypeVar(
     "_RingCoordinatorT",
     bound=(RingDataCoordinator | RingNotificationsCoordinator),
 )
-_T = TypeVar("_T", bound="RingEntity")
+_RingBaseEntityT = TypeVar("_RingBaseEntityT", bound="RingBaseEntity[Any, Any]")
+_R = TypeVar("_R")
 _P = ParamSpec("_P")
 
 
 def exception_wrap(
-    func: Callable[Concatenate[_T, _P], Any],
-) -> Callable[Concatenate[_T, _P], Any]:
+    func: Callable[Concatenate[_RingBaseEntityT, _P], _R],
+) -> Callable[Concatenate[_RingBaseEntityT, _P], _R]:
     """Define a wrapper to catch exceptions and raise HomeAssistant errors."""
 
-    def _wrap(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
+    def _wrap(self: _RingBaseEntityT, *args: _P.args, **kwargs: _P.kwargs) -> _R:
         try:
             return func(self, *args, **kwargs)
-        except ring_doorbell.AuthenticationError as err:
+        except AuthenticationError as err:
             self.hass.loop.call_soon_threadsafe(
                 self.coordinator.config_entry.async_start_reauth, self.hass
             )
             raise HomeAssistantError(err) from err
-        except ring_doorbell.RingTimeout as err:
+        except RingTimeout as err:
             raise HomeAssistantError(
                 f"Timeout communicating with API {func}: {err}"
             ) from err
-        except ring_doorbell.RingError as err:
+        except RingError as err:
             raise HomeAssistantError(
                 f"Error communicating with API{func}: {err}"
             ) from err
@@ -49,7 +56,9 @@ def exception_wrap(
     return _wrap
 
 
-class RingEntity(CoordinatorEntity[_RingCoordinatorT]):
+class RingBaseEntity(
+    CoordinatorEntity[_RingCoordinatorT], Generic[_RingCoordinatorT, RingDeviceT]
+):
     """Base implementation for Ring device."""
 
     _attr_attribution = ATTRIBUTION
@@ -58,7 +67,7 @@ class RingEntity(CoordinatorEntity[_RingCoordinatorT]):
 
     def __init__(
         self,
-        device: ring_doorbell.RingGeneric,
+        device: RingDeviceT,
         coordinator: _RingCoordinatorT,
     ) -> None:
         """Initialize a sensor for Ring device."""
@@ -72,29 +81,17 @@ class RingEntity(CoordinatorEntity[_RingCoordinatorT]):
             name=device.name,
         )
 
-    def _get_coordinator_device_data(self) -> RingDeviceData | None:
-        if (data := self.coordinator.data) and (
-            device_data := data.get(self._device.id)
-        ):
-            return device_data
-        return None
 
-    def _get_coordinator_device(self) -> ring_doorbell.RingGeneric | None:
-        if (device_data := self._get_coordinator_device_data()) and (
-            device := device_data.device
-        ):
-            return device
-        return None
+class RingEntity(RingBaseEntity[RingDataCoordinator, RingDeviceT]):
+    """Implementation for Ring devices."""
 
-    def _get_coordinator_history(self) -> list | None:
-        if (device_data := self._get_coordinator_device_data()) and (
-            history := device_data.history
-        ):
-            return history
-        return None
+    def _get_coordinator_data(self) -> RingDevices:
+        return self.coordinator.data
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        if device := self._get_coordinator_device():
-            self._device = device
+        self._device = cast(
+            RingDeviceT,
+            self._get_coordinator_data().get_device(self._device.device_api_id),
+        )
         super()._handle_coordinator_update()

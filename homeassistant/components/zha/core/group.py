@@ -131,7 +131,7 @@ class ZHAGroupMember(LogMixin):
     def log(self, level: int, msg: str, *args: Any, **kwargs) -> None:
         """Log a message."""
         msg = f"[%s](%s): {msg}"
-        args = (f"0x{self._zha_group.group_id:04x}", self.endpoint_id) + args
+        args = (f"0x{self._zha_group.group_id:04x}", self.endpoint_id, *args)
         _LOGGER.log(level, msg, *args, **kwargs)
 
 
@@ -206,12 +206,11 @@ class ZHAGroup(LogMixin):
     @property
     def member_entity_ids(self) -> list[str]:
         """Return the ZHA entity ids for all entities for the members of this group."""
-        all_entity_ids: list[str] = []
-        for member in self.members:
-            entity_references = member.associated_entities
-            for entity_reference in entity_references:
-                all_entity_ids.append(entity_reference["entity_id"])
-        return all_entity_ids
+        return [
+            entity_reference["entity_id"]
+            for member in self.members
+            for entity_reference in member.associated_entities
+        ]
 
     def get_domain_entity_ids(self, domain: str) -> list[str]:
         """Return entity ids from the entity domain for this group."""
@@ -243,5 +242,5 @@ class ZHAGroup(LogMixin):
     def log(self, level: int, msg: str, *args: Any, **kwargs) -> None:
         """Log a message."""
         msg = f"[%s](%s): {msg}"
-        args = (self.name, self.group_id) + args
+        args = (self.name, self.group_id, *args)
         _LOGGER.log(level, msg, *args, **kwargs)

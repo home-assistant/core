@@ -52,8 +52,8 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
-from . import DOMAIN as GROUP_DOMAIN, GroupEntity
-from .const import CONF_IGNORE_NON_NUMERIC
+from .const import CONF_IGNORE_NON_NUMERIC, DOMAIN as GROUP_DOMAIN
+from .entity import GroupEntity
 
 DEFAULT_NAME = "Sensor Group"
 

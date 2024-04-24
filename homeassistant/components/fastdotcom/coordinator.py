@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DEFAULT_INTERVAL, DOMAIN, LOGGER
 
 
-class FastdotcomDataUpdateCoordindator(DataUpdateCoordinator[float]):
+class FastdotcomDataUpdateCoordinator(DataUpdateCoordinator[float]):
     """Class to manage fetching Fast.com data API."""
 
     def __init__(self, hass: HomeAssistant) -> None:

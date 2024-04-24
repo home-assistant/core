@@ -1,11 +1,12 @@
 """The tests for the image component."""
 
-import datetime
+from datetime import datetime
 from http import HTTPStatus
 import ssl
 from unittest.mock import MagicMock, patch
 
 from aiohttp import hdrs
+from freezegun.api import FrozenDateTimeFactory
 import httpx
 import pytest
 import respx
@@ -24,7 +25,12 @@ from .conftest import (
     MockURLImageEntity,
 )
 
-from tests.common import MockModule, mock_integration, mock_platform
+from tests.common import (
+    MockModule,
+    async_fire_time_changed,
+    mock_integration,
+    mock_platform,
+)
 from tests.typing import ClientSessionGenerator
 
 
@@ -292,7 +298,9 @@ async def test_fetch_image_url_wrong_content_type(
 
 
 async def test_image_stream(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test image stream."""
 
@@ -323,18 +331,26 @@ async def test_image_stream(
             assert not resp.closed
             assert resp.status == HTTPStatus.OK
 
-            mock_image.image_last_updated = datetime.datetime.now()
+            mock_image.image_last_updated = datetime.now()
             mock_image.async_write_ha_state()
             # Two blocks to ensure the frame is written
             await hass.async_block_till_done()
             await hass.async_block_till_done()
 
+        with patch.object(mock_image, "async_image", return_value=b"") as mock:
+            # Simulate a "keep alive" frame
+            freezer.tick(55)
+            async_fire_time_changed(hass)
+            # Two blocks to ensure the frame is written
+            await hass.async_block_till_done()
+            await hass.async_block_till_done()
+            mock.assert_called_once()
+
         with patch.object(mock_image, "async_image", return_value=None):
-            mock_image.image_last_updated = datetime.datetime.now()
-            mock_image.async_write_ha_state()
+            freezer.tick(55)
+            async_fire_time_changed(hass)
             # Two blocks to ensure the frame is written
             await hass.async_block_till_done()
             await hass.async_block_till_done()
 
     await close_future
-    assert resp.closed

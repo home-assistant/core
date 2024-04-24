@@ -239,7 +239,7 @@ async def test_no_watermeter(
 
 @pytest.mark.parametrize(
     "entity_id",
-    ("sensor.smartmeter_gas_consumption",),
+    ["sensor.smartmeter_gas_consumption"],
 )
 async def test_smartmeter_disabled_by_default(
     hass: HomeAssistant, init_integration: MockConfigEntry, entity_id: str
