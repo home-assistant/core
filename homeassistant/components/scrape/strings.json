@@ -47,6 +47,7 @@
           "attribute": "Get value of an attribute on the selected tag",
           "index": "Defines which of the elements returned by the CSS selector to use",
           "value_template": "Defines a template to get the state of the sensor",
+          "availability": "Defines a template to get the availability of the sensor",
           "device_class": "The type/class of the sensor to set the icon in the frontend",
           "state_class": "The state_class of the sensor",
           "unit_of_measurement": "Choose temperature measurement or create your own"
