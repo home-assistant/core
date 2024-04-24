@@ -173,11 +173,14 @@ class Sensor(CoordinatedTPLinkEntity, SensorEntity):
     ):
         """Initialize the sensor."""
         super().__init__(device, coordinator, feature=feature, parent=parent)
+        # TODO: generalize creation of entitydescription into CoordinatedTPLinkEntity?
         self.entity_description = SensorEntityDescription(
             key=feature.id,
             translation_key=feature.id,
             name=feature.name,
             icon=feature.icon,
+            entity_registry_enabled_default=feature.category
+            is not Feature.Category.Debug,
         )
 
     @callback

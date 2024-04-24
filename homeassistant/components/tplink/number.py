@@ -60,7 +60,7 @@ class Number(CoordinatedTPLinkEntity, NumberEntity):
     ):
         """Initialize the number entity."""
         super().__init__(device, coordinator, feature=feature, parent=parent)
-
+        # TODO: generalize creation of entitydescription into CoordinatedTPLinkEntity?
         self.entity_description = NumberEntityDescription(
             key=feature.id,
             translation_key=feature.id,
@@ -68,6 +68,8 @@ class Number(CoordinatedTPLinkEntity, NumberEntity):
             icon=feature.icon,
             native_min_value=feature.minimum_value,
             native_max_value=feature.maximum_value,
+            entity_registry_enabled_default=feature.category
+            is not Feature.Category.Debug,
         )
 
     @async_refresh_after

@@ -88,13 +88,35 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         """Initialize the entity."""
         super().__init__(coordinator)
         self.device: SmartDevice = device
-        self._device = device  # TODO: duplicate device.
-        if feature is None:
-            self._attr_unique_id = legacy_device_id(device)
-            _LOGGER.warning("Got empty feature: %s %s", self, type(self))
-        else:
-            self._attr_unique_id = f"{legacy_device_id(device)}_new_{feature.id}"
+        # TODO: clean up this mess.
+        # If the entity is based on feature, we use its ID as part of the unique id
+        if feature is not None:
+            self._attr_unique_id = f"{legacy_device_id(device)}_{feature.id}"
             self._attr_entity_category = self._category_for_feature(feature)
+
+        # Otherwise, if we have entity_description, we use its key
+        elif self._attr_unique_id is None and hasattr(self, "entity_description"):
+            self._attr_unique_id = (
+                f"{legacy_device_id(device)}_{self.entity_description.key}"
+            )
+            _LOGGER.warning(
+                "Got empty feature: %s %s, using entity_description key"
+                " as part of the unique id: %s",
+                self,
+                type(self),
+                self._attr_unique_id,
+            )
+
+        # Finally, if there's no feature nor description, the entity is main platform (e.g., light or fan)
+        else:
+            _LOGGER.warning(
+                "No unique id nor entity_description given for %s,"
+                " unique id based on the device id: %s",
+                type(self),
+                legacy_device_id(device),
+            )
+            self._attr_unique_id = legacy_device_id(device)
+
         self._feature = feature
 
         self._attr_device_info = DeviceInfo(
@@ -117,12 +139,12 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         match feature.category:
             case Feature.Category.Primary:  # Main controls have no category
                 return None
-            case Feature.Category.Info:
-                return None
-            case Feature.Category.Debug:
-                return EntityCategory.DIAGNOSTIC
             case Feature.Category.Config:
                 return EntityCategory.CONFIG
+            case Feature.Category.Info:
+                return EntityCategory.DIAGNOSTIC
+            case Feature.Category.Debug:
+                return EntityCategory.DIAGNOSTIC
 
     @abstractmethod
     def _async_update_attrs(self):

@@ -5,7 +5,6 @@ from __future__ import annotations
 from kasa import Feature, SmartDevice
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -64,14 +63,15 @@ class BinarySensor(CoordinatedTPLinkEntity, BinarySensorEntity):
         parent: SmartDevice = None,
     ) -> None:
         """Initialize the sensor."""
-        # TODO: feature-based entities could be generalized
         super().__init__(device, coordinator, feature=feature, parent=parent)
-        _ = BinarySensorDeviceClass  # TODO: no-op to avoid pre-commit removing the import
+        # TODO: generalize creation of entitydescription into CoordinatedTPLinkEntity?
         self.entity_description = BinarySensorEntityDescription(
             key=feature.id,
             translation_key=feature.id,
             name=feature.name,
             icon=feature.icon,
+            entity_registry_enabled_default=feature.category
+            is not Feature.Category.Debug,
         )
 
     @callback
