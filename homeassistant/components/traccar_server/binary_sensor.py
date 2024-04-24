@@ -9,6 +9,7 @@ from typing import Generic, Literal, TypeVar, cast
 from pytraccar import DeviceModel
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -41,6 +42,7 @@ TRACCAR_SERVER_BINARY_SENSOR_ENTITY_DESCRIPTIONS = (
         key="attributes.motion",
         data_key="position",
         translation_key="motion",
+        device_class=BinarySensorDeviceClass.MOTION,
         value_fn=lambda x: x["attributes"].get("motion", False),
     ),
     TraccarServerBinarySensorEntityDescription[DeviceModel](
