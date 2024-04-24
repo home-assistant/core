@@ -1241,6 +1241,7 @@ SCHEDULING_POLICY: Final = "scheduling_policy"
 
 
 RESCHEDULING_POLICY: Final = "rescheduling_policy"
+OPTIMAL: Final = "optimal"
 RV: Final = "rv"
 EARLY_START: Final = "early_start"
 SJFWO: Final = "sjfwo"
@@ -1259,6 +1260,18 @@ LONGEST: Final = "longest"
 EARLIEST: Final = "earliest"
 LATEST: Final = "latest"
 RANDOM: Final = "random"
+
+OPTIMAL_SCHEDULE_METRIC: Final = "optimal_schedule_metric"
+MIN_LENGTH: Final = "min_length"
+MIN_AVG_RTN_WAIT_TIME: Final = "min_avg_rtn_wait_time"
+MIN_P95_RTN_WAIT_TIME: Final = "min_p95_rtn_wait_time"
+MIN_AVG_RTN_LATENCY: Final = "min_avg_rtn_latency"
+MIN_P95_RTN_LATENCY: Final = "min_p95_rtn_latency"
+MIN_RTN_EXEC_TIME_STD_DEV: Final = "min_rtn_exec_time_std_dev"
+MIN_AVG_IDLE_TIME: Final = "min_avg_idle_time"
+MIN_P95_IDLE_TIME: Final = "min_p95_idle_time"
+MAX_AVG_PARALLELISM: Final = "max_avg_parallelism"
+MAX_P05_PARALLELISM: Final = "max_p05_parallelism"
 
 RESCHEDULING_ESTIMATION: Final = "rescheduling_estimation"
 

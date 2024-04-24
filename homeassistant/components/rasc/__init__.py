@@ -22,6 +22,18 @@ from homeassistant.const import (
     LOCAL_LONGEST,
     LOCAL_SHORTEST,
     LONGEST,
+    MAX_AVG_PARALLELISM,
+    MAX_P05_PARALLELISM,
+    MIN_AVG_IDLE_TIME,
+    MIN_AVG_RTN_LATENCY,
+    MIN_AVG_RTN_WAIT_TIME,
+    MIN_LENGTH,
+    MIN_P95_IDLE_TIME,
+    MIN_P95_RTN_LATENCY,
+    MIN_P95_RTN_WAIT_TIME,
+    MIN_RTN_EXEC_TIME_STD_DEV,
+    OPTIMAL,
+    OPTIMAL_SCHEDULE_METRIC,
     PROACTIVE,
     REACTIVE,
     RESCHEDULE_ALL,
@@ -58,10 +70,23 @@ supported_rescheduling_policies = [
     GLOBAL_FIRST,
     GLOBAL_SHORTEST,
     GLOBAL_LONGEST,
+    OPTIMAL,
     SJFW,
     SJFWO,
 ]
 supported_rescheduling_triggers = [PROACTIVE, REACTIVE, ANTICIPATORY]
+supported_optimal_metrics = [
+    MIN_LENGTH,
+    MIN_AVG_RTN_WAIT_TIME,
+    MIN_P95_RTN_WAIT_TIME,
+    MIN_AVG_RTN_LATENCY,
+    MIN_P95_RTN_LATENCY,
+    MIN_RTN_EXEC_TIME_STD_DEV,
+    MIN_AVG_IDLE_TIME,
+    MIN_P95_IDLE_TIME,
+    MAX_AVG_PARALLELISM,
+    MAX_P05_PARALLELISM,
+]
 supported_routine_priority_policies = [SHORTEST, LONGEST, EARLIEST, LATEST]
 supported_rescheduling_accuracies = [RESCHEDULE_ALL, RESCHEDULE_SOME]
 
@@ -77,6 +102,9 @@ CONFIG_SCHEMA = vol.Schema(
                 ),
                 vol.Optional(RESCHEDULING_TRIGGER, default=PROACTIVE): vol.In(
                     supported_rescheduling_triggers
+                ),
+                vol.Optional(OPTIMAL_SCHEDULE_METRIC, default=[]): vol.In(
+                    supported_optimal_metrics
                 ),
                 vol.Optional(RESCHEDULING_WINDOW, default=10.0): cv.positive_float,
                 vol.Optional(ROUTINE_PRIORITY_POLICY, default=EARLIEST): vol.In(

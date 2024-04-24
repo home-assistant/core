@@ -342,6 +342,19 @@ class ActionEntity:
         """Get logger."""
         return self._logger
 
+    @property
+    def duplicate(self) -> ActionEntity:
+        """Duplicate the action entity."""
+        new_entity = ActionEntity(
+            hass=self.hass,
+            action=self.action,
+            action_id=self._action_id,
+            duration=self.duration,
+        )
+        new_entity.parents = self.parents
+        new_entity.children = self.children
+        return new_entity
+
     def _set_logger(self, logger: logging.Logger | None = None) -> None:
         """Set logger."""
         self._logger = logger
