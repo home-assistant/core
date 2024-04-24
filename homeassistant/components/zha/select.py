@@ -747,6 +747,31 @@ class DanfossAdaptationRunControl(ZCLEnumSelectEntity):
     _enum = thermostat.DanfossAdaptationRunControlEnum
 
 
+class DanfossControlAlgorithmScaleFactorEnum(types.enum8):
+    """The time scale factor for changing the opening of the valve.
+
+    Not all values were given, therefore there are some extrapolated values with a margin of error of about 5 minutes.
+    This is implemented as an enum here, but is a number on the device.
+    """
+
+    quick_5min = 0x01
+
+    quick_10min = 0x02  # extrapolated
+    quick_15min = 0x03  # extrapolated
+    quick_25min = 0x04  # extrapolated
+
+    moderate_30min = 0x05
+
+    moderate_40min = 0x06  # extrapolated
+    moderate_50min = 0x07  # extrapolated
+    moderate_60min = 0x08  # extrapolated
+    moderate_70min = 0x09  # extrapolated
+
+    slow_80min = 0x0A
+
+    quick_open_disabled = 0x11  # not sure what it does; also requires lower 4 bits to be in [1, 10] I assume
+
+
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
@@ -757,7 +782,7 @@ class DanfossControlAlgorithmScaleFactor(ZCLEnumSelectEntity):
     _unique_id_suffix = "control_algorithm_scale_factor"
     _attribute_name = "control_algorithm_scale_factor"
     _attr_translation_key: str = "setpoint_response_time"
-    _enum = thermostat.DanfossControlAlgorithmScaleFactorEnum
+    _enum = DanfossControlAlgorithmScaleFactorEnum
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
