@@ -707,6 +707,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                         # Duplicate the routine with the provided variables and trigger context
                         # This step creates a new routine ready for initialization
                         routine = self._routine.duplicate(variables, trigger_context)
+
                         # routine.output()
 
                         # Initialize the routine
