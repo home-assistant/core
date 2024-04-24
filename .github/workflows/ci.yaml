@@ -86,7 +86,7 @@ jobs:
       tests_glob: ${{ steps.info.outputs.tests_glob }}
       tests: ${{ steps.info.outputs.tests }}
       skip_coverage: ${{ steps.info.outputs.skip_coverage }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.10
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.3
@@ -216,7 +216,7 @@ jobs:
 
   pre-commit:
     name: Prepare pre-commit base
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.10
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
@@ -264,7 +264,7 @@ jobs:
 
   lint-ruff-format:
     name: Check ruff-format
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.10
     needs:
       - info
       - pre-commit
@@ -304,7 +304,7 @@ jobs:
 
   lint-ruff:
     name: Check ruff
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.10
     needs:
       - info
       - pre-commit
@@ -343,7 +343,7 @@ jobs:
           RUFF_OUTPUT_FORMAT: github
   lint-other:
     name: Check other linters
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.10
     needs:
       - info
       - pre-commit
@@ -435,7 +435,7 @@ jobs:
 
   base:
     name: Prepare dependencies
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.10
     needs: info
     timeout-minutes: 60
     strategy:
@@ -510,7 +510,7 @@ jobs:
 
   hassfest:
     name: Check hassfest
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.10
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
@@ -542,7 +542,7 @@ jobs:
 
   gen-requirements-all:
     name: Check all requirements
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.10
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
@@ -574,7 +574,7 @@ jobs:
 
   pylint:
     name: Check pylint
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.10
     timeout-minutes: 20
     if: |
       github.event.inputs.mypy-only != 'true'
@@ -619,7 +619,7 @@ jobs:
 
   mypy:
     name: Check mypy
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.10
     if: |
       github.event.inputs.pylint-only != 'true'
       || github.event.inputs.mypy-only == 'true'
@@ -680,7 +680,7 @@ jobs:
           mypy homeassistant/components/${{ needs.info.outputs.integrations_glob }}
 
   prepare-pytest-full:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.10
     if: |
       (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
       && github.event.inputs.lint-only != 'true'
@@ -728,7 +728,7 @@ jobs:
           overwrite: true
 
   pytest-full:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.10
     if: |
       (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
       && github.event.inputs.lint-only != 'true'
@@ -836,7 +836,7 @@ jobs:
           ./script/check_dirty
 
   pytest-mariadb:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.10
     services:
       mariadb:
         image: ${{ matrix.mariadb-group }}
@@ -958,7 +958,7 @@ jobs:
           ./script/check_dirty
 
   pytest-postgres:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.10
     services:
       postgres:
         image: ${{ matrix.postgresql-group }}
@@ -1083,7 +1083,7 @@ jobs:
   coverage-full:
     name: Upload test coverage to Codecov (full suite)
     if: needs.info.outputs.skip_coverage != 'true'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.10
     needs:
       - info
       - pytest-full
@@ -1106,7 +1106,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   pytest-partial:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.10
     if: |
       (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
       && github.event.inputs.lint-only != 'true'
@@ -1218,7 +1218,7 @@ jobs:
   coverage-partial:
     name: Upload test coverage to Codecov (partial suite)
     if: needs.info.outputs.skip_coverage != 'true'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.10
     needs:
       - info
       - pytest-partial
