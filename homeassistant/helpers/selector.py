@@ -718,6 +718,7 @@ class DurationSelectorConfig(TypedDict, total=False):
     """Class to represent a duration selector config."""
 
     enable_day: bool
+    positive: bool
 
 
 @SELECTORS.register("duration")
@@ -731,6 +732,7 @@ class DurationSelector(Selector[DurationSelectorConfig]):
             # Enable day field in frontend. A selection with `days` set is allowed
             # even if `enable_day` is not set
             vol.Optional("enable_day"): cv.boolean,
+            vol.Optional("positive"): cv.boolean,
         }
     )
 
@@ -740,7 +742,10 @@ class DurationSelector(Selector[DurationSelectorConfig]):
 
     def __call__(self, data: Any) -> dict[str, float]:
         """Validate the passed selection."""
-        cv.time_period_dict(data)
+        if self.config.get("positive"):
+            cv.positive_time_period_dict(data)
+        else:
+            cv.time_period_dict(data)
         return cast(dict[str, float], data)
 
 
