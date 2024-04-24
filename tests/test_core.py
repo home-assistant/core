@@ -3457,3 +3457,26 @@ async def test_async_fire_thread_safety(hass: HomeAssistant) -> None:
         await hass.async_add_executor_job(hass.bus.async_fire, "test_event")
 
     assert len(events) == 1
+
+
+async def test_async_register_thread_safety(hass: HomeAssistant) -> None:
+    """Test async_register thread safety."""
+    with pytest.raises(
+        RuntimeError, match="Detected code that calls async_register from a thread."
+    ):
+        await hass.async_add_executor_job(
+            hass.services.async_register,
+            "test_domain",
+            "test_service",
+            lambda call: None,
+        )
+
+
+async def test_async_remove_thread_safety(hass: HomeAssistant) -> None:
+    """Test async_remove thread safety."""
+    with pytest.raises(
+        RuntimeError, match="Detected code that calls async_remove from a thread."
+    ):
+        await hass.async_add_executor_job(
+            hass.services.async_remove, "test_domain", "test_service"
+        )
