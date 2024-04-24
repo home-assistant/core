@@ -460,6 +460,7 @@ async def test_show_progress_error(hass: HomeAssistant, manager) -> None:
 
         async def async_step_init(self, user_input=None):
             async def long_running_task() -> None:
+                await asyncio.sleep(0)
                 raise TypeError
 
             if not self.progress_task:
@@ -518,7 +519,7 @@ async def test_show_progress_hidden_from_frontend(hass: HomeAssistant, manager) 
             nonlocal progress_task
 
             async def long_running_job() -> None:
-                return
+                await asyncio.sleep(0)
 
             if not progress_task:
                 progress_task = hass.async_create_task(long_running_job())

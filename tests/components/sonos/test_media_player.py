@@ -7,7 +7,10 @@ import pytest
 from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
+    MediaPlayerEnqueue,
 )
+from homeassistant.components.media_player.const import ATTR_MEDIA_ENQUEUE
+from homeassistant.components.sonos.media_player import LONG_SERVICE_TIMEOUT
 from homeassistant.const import STATE_IDLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import (
@@ -16,7 +19,7 @@ from homeassistant.helpers.device_registry import (
     DeviceRegistry,
 )
 
-from .conftest import SoCoMockFactory
+from .conftest import MockMusicServiceItem, SoCoMockFactory
 
 
 async def test_device_registry(
@@ -65,35 +68,134 @@ async def test_entity_basic(
     assert attributes["volume_level"] == 0.19
 
 
-class _MockMusicServiceItem:
-    """Mocks a Soco MusicServiceItem."""
-
-    def __init__(
-        self,
-        title: str,
-        item_id: str,
-        parent_id: str,
-        item_class: str,
-    ) -> None:
-        """Initialize the mock item."""
-        self.title = title
-        self.item_id = item_id
-        self.item_class = item_class
-        self.parent_id = parent_id
-
-    def get_uri(self) -> str:
-        """Return URI."""
-        return self.item_id.replace("S://", "x-file-cifs://")
+@pytest.mark.parametrize(
+    ("media_content_type", "media_content_id", "enqueue", "test_result"),
+    [
+        (
+            "artist",
+            "A:ALBUMARTIST/Beatles",
+            MediaPlayerEnqueue.REPLACE,
+            {
+                "title": "All",
+                "item_id": "A:ALBUMARTIST/Beatles/",
+                "clear_queue": 1,
+                "position": None,
+                "play": 1,
+                "play_pos": 0,
+            },
+        ),
+        (
+            "genre",
+            "A:GENRE/Classic%20Rock",
+            MediaPlayerEnqueue.ADD,
+            {
+                "title": "All",
+                "item_id": "A:GENRE/Classic%20Rock/",
+                "clear_queue": 0,
+                "position": None,
+                "play": 0,
+                "play_pos": 0,
+            },
+        ),
+        (
+            "album",
+            "A:ALBUM/Abbey%20Road",
+            MediaPlayerEnqueue.NEXT,
+            {
+                "title": "Abbey Road",
+                "item_id": "A:ALBUM/Abbey%20Road",
+                "clear_queue": 0,
+                "position": 1,
+                "play": 0,
+                "play_pos": 0,
+            },
+        ),
+        (
+            "composer",
+            "A:COMPOSER/Carlos%20Santana",
+            MediaPlayerEnqueue.PLAY,
+            {
+                "title": "All",
+                "item_id": "A:COMPOSER/Carlos%20Santana/",
+                "clear_queue": 0,
+                "position": 1,
+                "play": 1,
+                "play_pos": 9,
+            },
+        ),
+        (
+            "artist",
+            "A:ALBUMARTIST/Beatles/Abbey%20Road",
+            MediaPlayerEnqueue.REPLACE,
+            {
+                "title": "Abbey Road",
+                "item_id": "A:ALBUMARTIST/Beatles/Abbey%20Road",
+                "clear_queue": 1,
+                "position": None,
+                "play": 1,
+                "play_pos": 0,
+            },
+        ),
+    ],
+)
+async def test_play_media_library(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+    media_content_type,
+    media_content_id,
+    enqueue,
+    test_result,
+) -> None:
+    """Test playing local library with a variety of options."""
+    sock_mock = soco_factory.mock_list.get("192.168.42.2")
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            "entity_id": "media_player.zone_a",
+            "media_content_type": media_content_type,
+            "media_content_id": media_content_id,
+            ATTR_MEDIA_ENQUEUE: enqueue,
+        },
+        blocking=True,
+    )
+    assert sock_mock.clear_queue.call_count == test_result["clear_queue"]
+    assert sock_mock.add_to_queue.call_count == 1
+    assert (
+        sock_mock.add_to_queue.call_args_list[0].args[0].title == test_result["title"]
+    )
+    assert (
+        sock_mock.add_to_queue.call_args_list[0].args[0].item_id
+        == test_result["item_id"]
+    )
+    if test_result["position"] is not None:
+        assert (
+            sock_mock.add_to_queue.call_args_list[0].kwargs["position"]
+            == test_result["position"]
+        )
+    else:
+        assert "position" not in sock_mock.add_to_queue.call_args_list[0].kwargs
+    assert (
+        sock_mock.add_to_queue.call_args_list[0].kwargs["timeout"]
+        == LONG_SERVICE_TIMEOUT
+    )
+    assert sock_mock.play_from_queue.call_count == test_result["play"]
+    if test_result["play"] != 0:
+        assert (
+            sock_mock.play_from_queue.call_args_list[0].args[0]
+            == test_result["play_pos"]
+        )
 
 
 _mock_playlists = [
-    _MockMusicServiceItem(
+    MockMusicServiceItem(
         "playlist1",
         "S://192.168.1.68/music/iTunes/iTunes%20Music%20Library.xml#GUID_1",
         "A:PLAYLISTS",
         "object.container.playlistContainer",
     ),
-    _MockMusicServiceItem(
+    MockMusicServiceItem(
         "playlist2",
         "S://192.168.1.68/music/iTunes/iTunes%20Music%20Library.xml#GUID_2",
         "A:PLAYLISTS",

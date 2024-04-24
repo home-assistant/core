@@ -3,17 +3,16 @@
 from __future__ import annotations
 
 import asyncio
+from collections import defaultdict
 from collections.abc import Callable, Coroutine, Iterable, Mapping, Sequence
 import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import functools as ft
+from functools import partial, wraps
 import logging
 from random import randint
 import time
 from typing import TYPE_CHECKING, Any, Concatenate, Generic, ParamSpec, TypeVar
-
-import attr
 
 from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
@@ -40,6 +39,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.event_type import EventType
 
+from . import frame
 from .device_registry import (
     EVENT_DEVICE_REGISTRY_UPDATED,
     EventDeviceRegistryUpdatedData,
@@ -162,7 +162,7 @@ def threaded_listener_factory(
 ) -> Callable[Concatenate[HomeAssistant, _P], CALLBACK_TYPE]:
     """Convert an async event helper to a threaded one."""
 
-    @ft.wraps(async_factory)
+    @wraps(async_factory)
     def factory(
         hass: HomeAssistant, *args: _P.args, **kwargs: _P.kwargs
     ) -> CALLBACK_TYPE:
@@ -171,7 +171,7 @@ def threaded_listener_factory(
             raise TypeError("First parameter needs to be a hass instance")
 
         async_remove = run_callback_threadsafe(
-            hass.loop, ft.partial(async_factory, hass, *args, **kwargs)
+            hass.loop, partial(async_factory, hass, *args, **kwargs)
         ).result()
 
         def remove() -> None:
@@ -205,8 +205,16 @@ def async_track_state_change(
     being None, async_track_state_change_event should be used instead
     as it is slightly faster.
 
+    This function is deprecated and will be removed in Home Assistant 2025.5.
+
     Must be run within the event loop.
     """
+    frame.report(
+        "calls `async_track_state_change` instead of `async_track_state_change_event`"
+        " which is deprecated and will be removed in Home Assistant 2025.5",
+        error_if_core=False,
+    )
+
     if from_state is not None:
         match_from_state = process_state_match(from_state)
     if to_state is not None:
@@ -402,19 +410,16 @@ def _async_track_event(
         return _remove_empty_listener
 
     hass_data = hass.data
-    callbacks_key = tracker.callbacks_key
-
-    callbacks: dict[str, list[HassJob[[Event[_TypedDictT]], Any]]] | None
-    if not (callbacks := hass_data.get(callbacks_key)):
-        callbacks = hass_data[callbacks_key] = {}
+    callbacks: defaultdict[str, list[HassJob[[Event[_TypedDictT]], Any]]] | None
+    if not (callbacks := hass_data.get(tracker.callbacks_key)):
+        callbacks = hass_data[tracker.callbacks_key] = defaultdict(list)
 
     listeners_key = tracker.listeners_key
-
-    if listeners_key not in hass_data:
-        hass_data[listeners_key] = hass.bus.async_listen(
+    if tracker.listeners_key not in hass_data:
+        hass_data[tracker.listeners_key] = hass.bus.async_listen(
             tracker.event_type,
-            ft.partial(tracker.dispatcher_callable, hass, callbacks),
-            event_filter=ft.partial(tracker.filter_callable, hass, callbacks),
+            partial(tracker.dispatcher_callable, hass, callbacks),
+            event_filter=partial(tracker.filter_callable, hass, callbacks),
         )
 
     job = HassJob(action, f"track {tracker.event_type} event {keys}", job_type=job_type)
@@ -425,19 +430,13 @@ def _async_track_event(
         # here because this function gets called ~20000 times
         # during startup, and we want to avoid the overhead of
         # creating empty lists and throwing them away.
-        if callback_list := callbacks.get(keys):
-            callback_list.append(job)
-        else:
-            callbacks[keys] = [job]
+        callbacks[keys].append(job)
         keys = [keys]
     else:
         for key in keys:
-            if callback_list := callbacks.get(key):
-                callback_list.append(job)
-            else:
-                callbacks[key] = [job]
+            callbacks[key].append(job)
 
-    return ft.partial(_remove_listener, hass, listeners_key, keys, job, callbacks)
+    return partial(_remove_listener, hass, listeners_key, keys, job, callbacks)
 
 
 @callback
@@ -1626,16 +1625,16 @@ def async_track_time_interval(
 track_time_interval = threaded_listener_factory(async_track_time_interval)
 
 
-@attr.s
+@dataclass(slots=True)
 class SunListener:
     """Helper class to help listen to sun events."""
 
-    hass: HomeAssistant = attr.ib()
-    job: HassJob[[], Coroutine[Any, Any, None] | None] = attr.ib()
-    event: str = attr.ib()
-    offset: timedelta | None = attr.ib()
-    _unsub_sun: CALLBACK_TYPE | None = attr.ib(default=None)
-    _unsub_config: CALLBACK_TYPE | None = attr.ib(default=None)
+    hass: HomeAssistant
+    job: HassJob[[], Coroutine[Any, Any, None] | None]
+    event: str
+    offset: timedelta | None
+    _unsub_sun: CALLBACK_TYPE | None = None
+    _unsub_config: CALLBACK_TYPE | None = None
 
     @callback
     def async_attach(self) -> None:
