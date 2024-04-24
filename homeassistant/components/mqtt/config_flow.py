@@ -167,6 +167,24 @@ REAUTH_SCHEMA = vol.Schema(
 PWD_NOT_CHANGED = "__**password_not_changed**__"
 
 
+@callback
+def update_password_from_user_input(
+    entry_password: str | None, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Update the password if the entry has been updated."""
+    substituted_used_data = dict(user_input)
+    # Take out the password submitted
+    user_password: str | None = substituted_used_data.pop(CONF_PASSWORD, None)
+    # Only add the password if it has changed.
+    # If the sentinel password is submitted, we replace that with our current
+    # password from the config entry data.
+    password_changed = user_password is not None and user_password != PWD_NOT_CHANGED
+    password = user_password if password_changed else entry_password
+    if password is not None:
+        substituted_used_data[CONF_PASSWORD] = password
+    return substituted_used_data
+
+
 class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
@@ -209,16 +227,10 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         assert self.entry is not None
         if user_input:
-            password_changed = (
-                user_password := user_input[CONF_PASSWORD]
-            ) != PWD_NOT_CHANGED
-            entry_password = self.entry.data.get(CONF_PASSWORD)
-            password = user_password if password_changed else entry_password
-            new_entry_data = {
-                **self.entry.data,
-                CONF_USERNAME: user_input.get(CONF_USERNAME),
-                CONF_PASSWORD: password,
-            }
+            substituted_used_data = update_password_from_user_input(
+                self.entry.data.get(CONF_PASSWORD), user_input
+            )
+            new_entry_data = {**self.entry.data, **substituted_used_data}
             if await self.hass.async_add_executor_job(
                 try_connection,
                 new_entry_data,
@@ -350,13 +362,17 @@ class MQTTOptionsFlowHandler(OptionsFlow):
             validated_user_input,
             errors,
         ):
+            self.broker_config.update(
+                update_password_from_user_input(
+                    self.config_entry.data.get(CONF_PASSWORD), validated_user_input
+                ),
+            )
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
-                validated_user_input,
+                self.broker_config,
             )
 
             if can_connect:
-                self.broker_config.update(validated_user_input)
                 return await self.async_step_options()
 
             errors["base"] = "cannot_connect"
@@ -657,7 +673,9 @@ async def async_get_broker_settings(
         current_broker = current_config.get(CONF_BROKER)
         current_port = current_config.get(CONF_PORT, DEFAULT_PORT)
         current_user = current_config.get(CONF_USERNAME)
-        current_pass = current_config.get(CONF_PASSWORD)
+        # Return the sentinel password to avoid exposure
+        current_entry_pass = current_config.get(CONF_PASSWORD)
+        current_pass = PWD_NOT_CHANGED if current_entry_pass else None
 
     # Treat the previous post as an update of the current settings
     # (if there was a basic broker setup step)
