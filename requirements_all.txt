@@ -318,7 +318,7 @@ aioopenexchangerates==0.4.0
 aiooui==0.1.5
 
 # homeassistant.components.pegel_online
-aiopegelonline==0.0.9
+aiopegelonline==0.0.10
 
 # homeassistant.components.acmeda
 aiopulse==0.4.4
