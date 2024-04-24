@@ -80,6 +80,16 @@ def addon_setup_time_fixture() -> Generator[int, None, None]:
         yield addon_setup_time
 
 
+@pytest.fixture(name="not_onboarded")
+def mock_onboarded_fixture() -> Generator[MagicMock, None, None]:
+    """Mock that Home Assistant is not yet onboarded."""
+    with patch(
+        "homeassistant.components.matter.config_flow.async_is_onboarded",
+        return_value=False,
+    ) as mock_onboarded:
+        yield mock_onboarded
+
+
 async def test_manual_create_entry(
     hass: HomeAssistant,
     client_connect: AsyncMock,
@@ -217,6 +227,44 @@ async def test_zeroconf_discovery(
         "url": "ws://localhost:5580/ws",
         "integration_created_addon": False,
         "use_addon": False,
+    }
+    assert setup_entry.call_count == 1
+
+
+@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+async def test_zeroconf_not_onboarded_running(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    addon_running: AsyncMock,
+    addon_info: AsyncMock,
+    client_connect: AsyncMock,
+    setup_entry: AsyncMock,
+    not_onboarded: MagicMock,
+) -> None:
+    """Test flow Zeroconf discovery when not onboarded and add-on running."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("fd11:be53:8d46:0:729e:5a4f:539d:1ee6"),
+            ip_addresses=[ip_address("fd11:be53:8d46:0:729e:5a4f:539d:1ee6")],
+            port=5540,
+            hostname="CDEFGHIJ12345678.local.",
+            type="_matter._tcp.local.",
+            name="ABCDEFGH123456789-0000000012345678._matter._tcp.local.",
+            properties={"SII": "3300", "SAI": "1100", "T": "0"},
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert addon_info.call_count == 1
+    assert client_connect.call_count == 1
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Matter"
+    assert result["data"] == {
+        "url": "ws://host1:5581/ws",
+        "use_addon": True,
+        "integration_created_addon": False,
     }
     assert setup_entry.call_count == 1
 
