@@ -404,8 +404,8 @@ class Group(Entity):
             # Handle the group of a group case
             if state in registry.on_off_mapping:
                 self._on_states.add(state)
-            elif state in registry.off_on_mapping:
-                self._on_states.add(registry.off_on_mapping[state])
+            elif state in registry.off_states:
+                self._on_states.add(STATE_ON)
             self._on_off[entity_id] = state in registry.on_off_mapping
         else:
             entity_on_state = registry.on_states_by_domain[domain]
@@ -434,7 +434,7 @@ class Group(Entity):
                 # will result in STATE_ON and we can stop checking
                 if len(active_on_states) > 1:
                     break
-            elif current_state in registry.off_on_mapping:
+            elif current_state in registry.off_states:
                 active_off_states.add(current_state)
 
         return active_on_states if group_is_on else active_off_states
