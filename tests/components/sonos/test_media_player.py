@@ -1,6 +1,7 @@
 """Tests for the Sonos Media Player platform."""
 
 import logging
+from typing import Any
 
 import pytest
 
@@ -216,39 +217,27 @@ async def test_play_media_music_library_playlist_dne(
                 "play_from_queue": 1,
             },
         ),
-        (
-            "Nonexistent Name",
-            {"exception": True},
-        ),
     ],
 )
 async def test_select_source(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
     async_autosetup_sonos,
-    caplog: pytest.LogCaptureFixture,
-    source,
-    result,
+    source: str,
+    result: dict[str, Any],
 ) -> None:
     """Test the select_source method with a variety of inputs."""
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
 
-    async def service_call():
-        await hass.services.async_call(
-            MP_DOMAIN,
-            SERVICE_SELECT_SOURCE,
-            {
-                "entity_id": "media_player.zone_a",
-                "source": source,
-            },
-            blocking=True,
-        )
-
-    if result.get("exception"):
-        with pytest.raises(ServiceValidationError):
-            await service_call()
-    else:
-        await service_call()
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {
+            "entity_id": "media_player.zone_a",
+            "source": source,
+        },
+        blocking=True,
+    )
 
     assert soco_mock.switch_to_line_in.call_count == result.get("switch_to_line_in", 0)
     assert soco_mock.switch_to_tv.call_count == result.get("switch_to_tv", 0)
@@ -271,4 +260,22 @@ async def test_select_source(
             result.get("play_uri_uri"),
             title=result.get("play_uri_title"),
             timeout=LONG_SERVICE_TIMEOUT,
+        )
+
+
+async def test_select_source_error(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+) -> None:
+    """Test the select_source method with a variety of inputs."""
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_SELECT_SOURCE,
+            {
+                "entity_id": "media_player.zone_a",
+                "source": "invalid_source",
+            },
+            blocking=True,
         )

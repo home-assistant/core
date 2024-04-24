@@ -305,7 +305,7 @@ def config_fixture():
 
 
 @pytest.fixture(name="sonos_favorites")
-def sonos_favorites_fixture():
+def sonos_favorites_fixture() -> SearchResult:
     """Create sonos favorites fixture."""
     favorites = load_json_value_fixture("sonos_favorites.json", "sonos")
     favorite_list = [DidlFavorite.from_dict(fav) for fav in favorites]
@@ -313,7 +313,7 @@ def sonos_favorites_fixture():
 
 
 @pytest.fixture(name="music_library")
-def music_library_fixture(sonos_favorites):
+def music_library_fixture(sonos_favorites: SearchResult) -> Mock:
     """Create music_library fixture."""
     music_library = MagicMock()
     music_library.get_sonos_favorites.return_value = sonos_favorites
