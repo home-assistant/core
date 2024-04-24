@@ -26,6 +26,23 @@ def exists(value: Any) -> Any:
     return value
 
 
+def unique_field_validator(fields: Any) -> Any:
+    """Validate the inputs don't have duplicate keys under different sections."""
+    all_fields = set()
+    for key, value in fields.items():
+        if value and "fields" in value:
+            for key in value["fields"]:
+                if key in all_fields:
+                    raise vol.Invalid(f"Duplicate use of field {key} in service.")
+                all_fields.add(key)
+        else:
+            if key in all_fields:
+                raise vol.Invalid(f"Duplicate use of field {key} in service.")
+            all_fields.add(key)
+
+    return fields
+
+
 CORE_INTEGRATION_FIELD_SCHEMA = vol.Schema(
     {
         vol.Optional("example"): exists,
@@ -64,12 +81,16 @@ CORE_INTEGRATION_SERVICE_SCHEMA = vol.Any(
             vol.Optional("target"): vol.Any(
                 selector.TargetSelector.CONFIG_SCHEMA, None
             ),
-            vol.Optional("fields"): vol.Schema(
-                {
-                    str: vol.Any(
-                        CORE_INTEGRATION_FIELD_SCHEMA, CORE_INTEGRATION_SECTION_SCHEMA
-                    )
-                }
+            vol.Optional("fields"): vol.All(
+                vol.Schema(
+                    {
+                        str: vol.Any(
+                            CORE_INTEGRATION_FIELD_SCHEMA,
+                            CORE_INTEGRATION_SECTION_SCHEMA,
+                        )
+                    }
+                ),
+                unique_field_validator,
             ),
         }
     ),
