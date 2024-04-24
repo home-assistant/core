@@ -59,6 +59,7 @@ from homeassistant.const import (
     UnitOfLength,
 )
 from homeassistant.core import (
+    DOMAIN as HA_DOMAIN,
     Context,
     HomeAssistant,
     State,
@@ -2480,6 +2481,29 @@ def relative_time(hass: HomeAssistant, value: Any) -> Any:
 
     If the input are not a datetime object the input will be returned unmodified.
     """
+
+    def warn_relative_time_deprecated() -> None:
+        ir = issue_registry.async_get(hass)
+        issue_id = "template_function_relative_time_deprecated"
+        if ir.async_get_issue(HA_DOMAIN, issue_id):
+            return
+        issue_registry.async_create_issue(
+            hass,
+            HA_DOMAIN,
+            issue_id,
+            breaks_in_ha_version="2024.11.0",
+            is_fixable=False,
+            severity=issue_registry.IssueSeverity.WARNING,
+            translation_key=issue_id,
+            translation_placeholders={
+                "relative_time": "relative_time()",
+                "time_since": "time_since()",
+                "time_until": "time_until()",
+            },
+        )
+        _LOGGER.warning("Template function 'relative_time' is deprecated")
+
+    warn_relative_time_deprecated()
     if (render_info := _render_info.get()) is not None:
         render_info.has_time = True
 
@@ -2490,6 +2514,50 @@ def relative_time(hass: HomeAssistant, value: Any) -> Any:
     if dt_util.now() < value:
         return value
     return dt_util.get_age(value)
+
+
+def time_since(hass: HomeAssistant, value: Any | datetime, precision: int = 1) -> Any:
+    """Take a datetime and return its "age" as a string.
+
+    The age can be in seconds, minutes, hours, days, months and year.
+
+    precision is the number of units to return, with the last unit rounded.
+
+    If the value not a datetime object the input will be returned unmodified.
+    """
+    if (render_info := _render_info.get()) is not None:
+        render_info.has_time = True
+
+    if not isinstance(value, datetime):
+        return value
+    if not value.tzinfo:
+        value = dt_util.as_local(value)
+    if dt_util.now() < value:
+        return value
+
+    return dt_util.get_age(value, precision)
+
+
+def time_until(hass: HomeAssistant, value: Any | datetime, precision: int = 1) -> Any:
+    """Take a datetime and return the amount of time until that time as a string.
+
+    The time until can be in seconds, minutes, hours, days, months and years.
+
+    precision is the number of units to return, with the last unit rounded.
+
+    If the value not a datetime object the input will be returned unmodified.
+    """
+    if (render_info := _render_info.get()) is not None:
+        render_info.has_time = True
+
+    if not isinstance(value, datetime):
+        return value
+    if not value.tzinfo:
+        value = dt_util.as_local(value)
+    if dt_util.now() > value:
+        return value
+
+    return dt_util.get_time_remaining(value, precision)
 
 
 def urlencode(value):
@@ -2890,6 +2958,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "floor_id",
                 "floor_name",
                 "relative_time",
+                "time_since",
+                "time_until",
                 "today_at",
                 "label_id",
                 "label_name",
@@ -2946,6 +3016,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["now"] = hassfunction(now)
         self.globals["relative_time"] = hassfunction(relative_time)
         self.filters["relative_time"] = self.globals["relative_time"]
+        self.globals["time_since"] = hassfunction(time_since)
+        self.filters["time_since"] = self.globals["time_since"]
+        self.globals["time_until"] = hassfunction(time_until)
+        self.filters["time_until"] = self.globals["time_until"]
         self.globals["today_at"] = hassfunction(today_at)
         self.filters["today_at"] = self.globals["today_at"]
 
