@@ -26,7 +26,7 @@ async def test_get_packages_from_list(
         SERVICE_GET_PACKAGES,
         {
             "config_entry_id": mock_config_entry.entry_id,
-            "package_state": "In Transit,Delivered",
+            "package_state": ["in_transit", "delivered"],
         },
         blocking=True,
         return_response=SupportsResponse.ONLY,
