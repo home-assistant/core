@@ -1,19 +1,18 @@
 """Creates the number entities for the mower."""
 
-import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aioautomower.exceptions import ApiException
-from aioautomower.model import MowerAttributes, WorkArea
+from aioautomower.model import MowerAttributes
 from aioautomower.session import AutomowerSession
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -33,6 +32,17 @@ class AutomowerNumberEntityDescription(NumberEntityDescription):
     set_value_fn: Callable[[AutomowerSession, str, float], Awaitable[Any]]
 
 
+
+@callback
+def _async_get_cutting_height(data: MowerAttributes) -> int:
+    """Return the cutting height."""
+    if TYPE_CHECKING:
+        # Sensor does not get created if it is None
+        assert data.cutting_height is not None
+    return data.cutting_height
+
+
+
 NUMBER_TYPES: tuple[AutomowerNumberEntityDescription, ...] = (
     AutomowerNumberEntityDescription(
         key="cutting_height",
@@ -42,7 +52,7 @@ NUMBER_TYPES: tuple[AutomowerNumberEntityDescription, ...] = (
         native_min_value=1,
         native_max_value=9,
         exists_fn=lambda data: data.cutting_height is not None,
-        value_fn=lambda data: data.cutting_height,
+        value_fn=_async_get_cutting_height,
         set_value_fn=lambda session, mower_id, cheight: session.set_cutting_height(
             mower_id, int(cheight)
         ),
@@ -83,7 +93,7 @@ WORK_AREA_NUMBER_TYPES: tuple[AutomowerWorkAreaNumberEntityDescription, ...] = (
     ),
 )
 
-
+  
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -95,6 +105,7 @@ async def async_setup_entry(
         for description in NUMBER_TYPES
         if description.exists_fn(coordinator.data[mower_id])
     )
+
     async_add_entities(
         AutomowerWorkAreaNumberEntity(mower_id, coordinator, description, work_area)
         for mower_id in coordinator.data
@@ -135,7 +146,6 @@ class AutomowerNumberEntity(AutomowerBaseEntity, NumberEntity):
             raise HomeAssistantError(
                 f"Command couldn't be sent to the command queue: {exception}"
             ) from exception
-
 
 class AutomowerWorkAreaNumberEntity(AutomowerBaseEntity, NumberEntity):
     """Defining the AutomowerNumberEntity with AutomowerNumberEntityDescription."""

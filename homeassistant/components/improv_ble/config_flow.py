@@ -326,7 +326,9 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             return
 
         if not self._provision_task:
-            self._provision_task = self.hass.async_create_task(_do_provision())
+            self._provision_task = self.hass.async_create_task(
+                _do_provision(), eager_start=False
+            )
 
         if not self._provision_task.done():
             return self.async_show_progress(
@@ -372,7 +374,9 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             except AbortFlow as err:
                 return self.async_abort(reason=err.reason)
 
-            self._authorize_task = self.hass.async_create_task(authorized_event.wait())
+            self._authorize_task = self.hass.async_create_task(
+                authorized_event.wait(), eager_start=False
+            )
 
         if not self._authorize_task.done():
             return self.async_show_progress(

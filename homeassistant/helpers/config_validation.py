@@ -1106,7 +1106,7 @@ def empty_config_schema(domain: str) -> Callable[[dict], dict]:
     """Return a config schema which logs if there are configuration parameters."""
 
     def validator(config: dict) -> dict:
-        if domain in config and config[domain]:
+        if config_domain := config.get(domain):
             get_integration_logger(__name__).error(
                 (
                     "The %s integration does not support any configuration parameters, "
@@ -1114,7 +1114,7 @@ def empty_config_schema(domain: str) -> Callable[[dict], dict]:
                     "configuration."
                 ),
                 domain,
-                config[domain],
+                config_domain,
             )
         return config
 
@@ -1855,6 +1855,12 @@ def determine_script_action(action: dict[str, Any]) -> str:
     """Determine action type."""
     if not (actions := ACTIONS_SET.intersection(action)):
         raise ValueError("Unable to determine action")
+    if len(actions) > 1:
+        # Ambiguous action, select the first one in the
+        # order of the ACTIONS_MAP
+        for action_key, _script_action in ACTIONS_MAP.items():
+            if action_key in actions:
+                return _script_action
     return ACTIONS_MAP[actions.pop()]
 
 

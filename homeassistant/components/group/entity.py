@@ -8,10 +8,11 @@ from collections.abc import Callable, Collection, Mapping
 import logging
 from typing import Any
 
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_ON
+from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
+    EventStateChangedData,
     HomeAssistant,
     State,
     callback,
@@ -20,10 +21,7 @@ from homeassistant.core import (
 from homeassistant.helpers import start
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import ATTR_AUTO, ATTR_ORDER, DOMAIN, GROUP_ORDER, REG_KEY
 from .registry import GroupIntegrationRegistry
@@ -133,6 +131,9 @@ class Group(Entity):
     _unrecorded_attributes = frozenset({ATTR_ENTITY_ID, ATTR_ORDER, ATTR_AUTO})
 
     _attr_should_poll = False
+    # In case there is only one active domain we use specific ON or OFF
+    # values, if all ON or OFF states are equal
+    single_active_domain: str | None
     tracking: tuple[str, ...]
     trackable: tuple[str, ...]
 
@@ -152,9 +153,9 @@ class Group(Entity):
         This Object has factory function for creation.
         """
         self.hass = hass
-        self._name = name
+        self._attr_name = name
         self._state: str | None = None
-        self._icon = icon
+        self._attr_icon = icon
         self._set_tracked(entity_ids)
         self._on_off: dict[str, bool] = {}
         self._assumed: dict[str, bool] = {}
@@ -236,30 +237,18 @@ class Group(Entity):
         await async_get_component(hass).async_add_entities([group])
         return group
 
-    @property
-    def name(self) -> str:
-        """Return the name of the group."""
-        return self._name
-
-    @name.setter
-    def name(self, value: str) -> None:
+    def set_name(self, value: str) -> None:
         """Set Group name."""
-        self._name = value
+        self._attr_name = value
 
     @property
     def state(self) -> str | None:
         """Return the state of the group."""
         return self._state
 
-    @property
-    def icon(self) -> str | None:
-        """Return the icon of the group."""
-        return self._icon
-
-    @icon.setter
-    def icon(self, value: str | None) -> None:
+    def set_icon(self, value: str | None) -> None:
         """Set Icon for group."""
-        self._icon = value
+        self._attr_icon = value
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -301,6 +290,7 @@ class Group(Entity):
         if not entity_ids:
             self.tracking = ()
             self.trackable = ()
+            self.single_active_domain = None
             return
 
         registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
@@ -308,12 +298,22 @@ class Group(Entity):
 
         tracking: list[str] = []
         trackable: list[str] = []
+        self.single_active_domain = None
+        multiple_domains: bool = False
         for ent_id in entity_ids:
             ent_id_lower = ent_id.lower()
             domain = split_entity_id(ent_id_lower)[0]
             tracking.append(ent_id_lower)
-            if domain not in excluded_domains:
-                trackable.append(ent_id_lower)
+            if domain in excluded_domains:
+                continue
+
+            trackable.append(ent_id_lower)
+
+            if not multiple_domains and self.single_active_domain is None:
+                self.single_active_domain = domain
+            if self.single_active_domain != domain:
+                multiple_domains = True
+                self.single_active_domain = None
 
         self.trackable = tuple(trackable)
         self.tracking = tuple(tracking)
@@ -409,9 +409,35 @@ class Group(Entity):
             self._on_off[entity_id] = state in registry.on_off_mapping
         else:
             entity_on_state = registry.on_states_by_domain[domain]
-            if domain in registry.on_states_by_domain:
-                self._on_states.update(entity_on_state)
+            self._on_states.update(entity_on_state)
             self._on_off[entity_id] = state in entity_on_state
+
+    def _detect_specific_on_off_state(self, group_is_on: bool) -> set[str]:
+        """Check if a specific ON or OFF state is possible."""
+        # In case the group contains entities of the same domain with the same ON
+        # or an OFF state (one or more domains), we want to use that specific state.
+        # If we have more then one ON or OFF state we default to STATE_ON or STATE_OFF.
+        registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
+        active_on_states: set[str] = set()
+        active_off_states: set[str] = set()
+        for entity_id in self.trackable:
+            if (state := self.hass.states.get(entity_id)) is None:
+                continue
+            current_state = state.state
+            if (
+                group_is_on
+                and (domain_on_states := registry.on_states_by_domain.get(state.domain))
+                and current_state in domain_on_states
+            ):
+                active_on_states.add(current_state)
+                # If we have more than one on state, the group state
+                # will result in STATE_ON and we can stop checking
+                if len(active_on_states) > 1:
+                    break
+            elif current_state in registry.off_on_mapping:
+                active_off_states.add(current_state)
+
+        return active_on_states if group_is_on else active_off_states
 
     @callback
     def _async_update_group_state(self, tr_state: State | None = None) -> None:
@@ -439,27 +465,48 @@ class Group(Entity):
         elif tr_state.attributes.get(ATTR_ASSUMED_STATE):
             self._assumed_state = True
 
-        num_on_states = len(self._on_states)
+        # If we do not have an on state for any domains
+        # we use None (which will be STATE_UNKNOWN)
+        if (num_on_states := len(self._on_states)) == 0:
+            self._state = None
+            return
+
+        group_is_on = self.mode(self._on_off.values())
+
         # If all the entity domains we are tracking
         # have the same on state we use this state
         # and its hass.data[REG_KEY].on_off_mapping to off
         if num_on_states == 1:
-            on_state = list(self._on_states)[0]
-        # If we do not have an on state for any domains
-        # we use None (which will be STATE_UNKNOWN)
-        elif num_on_states == 0:
-            self._state = None
-            return
+            on_state = next(iter(self._on_states))
         # If the entity domains have more than one
-        # on state, we use STATE_ON/STATE_OFF
-        else:
+        # on state, we use STATE_ON/STATE_OFF, unless there is
+        # only one specific `on` state in use for one specific domain
+        elif self.single_active_domain and num_on_states:
+            active_on_states = self._detect_specific_on_off_state(True)
+            on_state = (
+                list(active_on_states)[0] if len(active_on_states) == 1 else STATE_ON
+            )
+        elif group_is_on:
             on_state = STATE_ON
-        group_is_on = self.mode(self._on_off.values())
         if group_is_on:
             self._state = on_state
+            return
+
+        registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
+        if (
+            active_domain := self.single_active_domain
+        ) and active_domain in registry.off_state_by_domain:
+            # If there is only one domain used,
+            # then we return the off state for that domain.s
+            self._state = registry.off_state_by_domain[active_domain]
         else:
-            registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
-            self._state = registry.on_off_mapping[on_state]
+            active_off_states = self._detect_specific_on_off_state(False)
+            # If there is one off state in use then we return that specific state,
+            # also if there a multiple domains involved, e.g.
+            # person and device_tracker, with a shared state.
+            self._state = (
+                list(active_off_states)[0] if len(active_off_states) == 1 else STATE_OFF
+            )
 
 
 def async_get_component(hass: HomeAssistant) -> EntityComponent[Group]:

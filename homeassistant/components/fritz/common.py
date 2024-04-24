@@ -48,7 +48,7 @@ from .const import (
     DEFAULT_CONF_OLD_DISCOVERY,
     DEFAULT_DEVICE_NAME,
     DEFAULT_HOST,
-    DEFAULT_PORT,
+    DEFAULT_SSL,
     DEFAULT_USERNAME,
     DOMAIN,
     FRITZ_EXCEPTIONS,
@@ -184,9 +184,10 @@ class FritzBoxTools(
         self,
         hass: HomeAssistant,
         password: str,
+        port: int,
         username: str = DEFAULT_USERNAME,
         host: str = DEFAULT_HOST,
-        port: int = DEFAULT_PORT,
+        use_tls: bool = DEFAULT_SSL,
     ) -> None:
         """Initialize FritzboxTools class."""
         super().__init__(
@@ -211,6 +212,7 @@ class FritzBoxTools(
         self.password = password
         self.port = port
         self.username = username
+        self.use_tls = use_tls
         self.has_call_deflections: bool = False
         self._model: str | None = None
         self._current_firmware: str | None = None
@@ -230,11 +232,13 @@ class FritzBoxTools(
 
     def setup(self) -> None:
         """Set up FritzboxTools class."""
+
         self.connection = FritzConnection(
             address=self.host,
             port=self.port,
             user=self.username,
             password=self.password,
+            use_tls=self.use_tls,
             timeout=60.0,
             pool_maxsize=30,
         )
@@ -928,6 +932,16 @@ class AvmWrapper(FritzBoxTools):  # pylint: disable=hass-enforce-coordinator-mod
             NewDisallow="0" if turn_on else "1",
         )
 
+    async def async_wake_on_lan(self, mac_address: str) -> dict[str, Any]:
+        """Call X_AVM-DE_WakeOnLANByMACAddress service."""
+
+        return await self._async_service_call(
+            "Hosts",
+            "1",
+            "X_AVM-DE_WakeOnLANByMACAddress",
+            NewMACAddress=mac_address,
+        )
+
 
 @dataclass
 class FritzData:
@@ -935,6 +949,7 @@ class FritzData:
 
     tracked: dict = field(default_factory=dict)
     profile_switches: dict = field(default_factory=dict)
+    wol_buttons: dict = field(default_factory=dict)
 
 
 class FritzDeviceBase(update_coordinator.CoordinatorEntity[AvmWrapper]):

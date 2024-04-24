@@ -32,6 +32,9 @@ async def test_options_flow_disabled_not_setup(
         domain=DOMAIN, data={}, options={}, unique_id=DEFAULT_ADDRESS
     )
     entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json(
@@ -53,7 +56,7 @@ async def test_async_step_user_macos(hass: HomeAssistant, macos_adapter: None) -
         context={"source": config_entries.SOURCE_USER},
         data={},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "single_adapter"
     with (
         patch("homeassistant.components.bluetooth.async_setup", return_value=True),
@@ -64,8 +67,8 @@ async def test_async_step_user_macos(hass: HomeAssistant, macos_adapter: None) -
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Core Bluetooth"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Apple Unknown MacOS Model (Core Bluetooth)"
     assert result2["data"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -79,8 +82,13 @@ async def test_async_step_user_linux_one_adapter(
         context={"source": config_entries.SOURCE_USER},
         data={},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "single_adapter"
+    assert result["description_placeholders"] == {
+        "name": "hci0 (00:00:00:00:00:01)",
+        "model": "Bluetooth Adapter 5.0 (cc01:aa01)",
+        "manufacturer": "ACME",
+    }
     with (
         patch("homeassistant.components.bluetooth.async_setup", return_value=True),
         patch(
@@ -90,10 +98,23 @@ async def test_async_step_user_linux_one_adapter(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "00:00:00:00:00:01"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "ACME Bluetooth Adapter 5.0 (00:00:00:00:00:01)"
     assert result2["data"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_async_step_user_linux_crashed_adapter(
+    hass: HomeAssistant, crashed_adapter: None
+) -> None:
+    """Test setting up manually with one crashed adapter on Linux."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_adapters"
 
 
 async def test_async_step_user_linux_two_adapters(
@@ -105,8 +126,12 @@ async def test_async_step_user_linux_two_adapters(
         context={"source": config_entries.SOURCE_USER},
         data={},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "multiple_adapters"
+    assert result["data_schema"].schema["adapter"].container == {
+        "hci0": "hci0 (00:00:00:00:00:01) ACME Bluetooth Adapter 5.0 (cc01:aa01)",
+        "hci1": "hci1 (00:00:00:00:00:02) ACME Bluetooth Adapter 5.0 (cc01:aa01)",
+    }
     with (
         patch("homeassistant.components.bluetooth.async_setup", return_value=True),
         patch(
@@ -116,8 +141,8 @@ async def test_async_step_user_linux_two_adapters(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_ADAPTER: "hci1"}
         )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "00:00:00:00:00:02"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "ACME Bluetooth Adapter 5.0 (00:00:00:00:00:02)"
     assert result2["data"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -133,7 +158,7 @@ async def test_async_step_user_only_allows_one(
         context={"source": config_entries.SOURCE_USER},
         data={},
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_adapters"
 
 
@@ -152,7 +177,12 @@ async def test_async_step_integration_discovery(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
         data={CONF_ADAPTER: "hci0", CONF_DETAILS: details},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
+    assert result["description_placeholders"] == {
+        "name": "hci0 (00:00:00:00:00:01)",
+        "model": "Unknown",
+        "manufacturer": "ACME",
+    }
     assert result["step_id"] == "single_adapter"
     with (
         patch("homeassistant.components.bluetooth.async_setup", return_value=True),
@@ -163,8 +193,8 @@ async def test_async_step_integration_discovery(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "00:00:00:00:00:01"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "ACME Unknown (00:00:00:00:00:01)"
     assert result2["data"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -195,8 +225,8 @@ async def test_async_step_integration_discovery_during_onboarding_one_adapter(
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={CONF_ADAPTER: "hci0", CONF_DETAILS: details},
         )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "00:00:00:00:00:01"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "ACME Unknown (00:00:00:00:00:01)"
     assert result["data"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_onboarding.mock_calls) == 1
@@ -239,12 +269,12 @@ async def test_async_step_integration_discovery_during_onboarding_two_adapters(
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={CONF_ADAPTER: "hci1", CONF_DETAILS: details2},
         )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "00:00:00:00:00:01"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "ACME Unknown (00:00:00:00:00:01)"
     assert result["data"] == {}
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "00:00:00:00:00:02"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "ACME Unknown (00:00:00:00:00:02)"
     assert result2["data"] == {}
 
     assert len(mock_setup_entry.mock_calls) == 2
@@ -277,8 +307,8 @@ async def test_async_step_integration_discovery_during_onboarding(
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={CONF_ADAPTER: "Core Bluetooth", CONF_DETAILS: details},
         )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Core Bluetooth"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "ACME Unknown (Core Bluetooth)"
     assert result["data"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_onboarding.mock_calls) == 1
@@ -302,7 +332,7 @@ async def test_async_step_integration_discovery_already_exists(
         context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
         data={CONF_ADAPTER: "hci0", CONF_DETAILS: details},
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -325,7 +355,7 @@ async def test_options_flow_linux(
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"] is None
 
@@ -337,13 +367,13 @@ async def test_options_flow_linux(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_PASSIVE] is True
 
     # Verify we can change it to False
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"] is None
 
@@ -355,7 +385,7 @@ async def test_options_flow_linux(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_PASSIVE] is False
     await hass.config_entries.async_unload(entry.entry_id)
 
@@ -438,6 +468,6 @@ async def test_async_step_user_linux_adapter_is_ignored(
         context={"source": config_entries.SOURCE_USER},
         data={},
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_adapters"
     assert result["description_placeholders"] == {"ignored_adapters": "1"}

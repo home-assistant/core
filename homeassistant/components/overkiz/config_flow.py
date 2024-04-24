@@ -368,11 +368,9 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         self, username: str, password: str, server: OverkizServer
     ) -> OverkizClient:
         session = async_create_clientsession(self.hass)
-        client = OverkizClient(
+        return OverkizClient(
             username=username, password=password, server=server, session=session
         )
-
-        return client
 
     async def _create_local_api_token(
         self, cloud_client: OverkizClient, host: str, verify_ssl: bool

@@ -77,10 +77,10 @@ async def test_config_entry_reload(hass: HomeAssistant) -> None:
     with _patch_discovery(), _patch_single_discovery(), _patch_connect():
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert already_migrated_config_entry.state == ConfigEntryState.LOADED
+        assert already_migrated_config_entry.state is ConfigEntryState.LOADED
         await hass.config_entries.async_unload(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
-        assert already_migrated_config_entry.state == ConfigEntryState.NOT_LOADED
+        assert already_migrated_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_config_entry_retry(hass: HomeAssistant) -> None:
@@ -96,7 +96,7 @@ async def test_config_entry_retry(hass: HomeAssistant) -> None:
     ):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert already_migrated_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_dimmer_switch_unique_id_fix_original_entity_still_exists(
@@ -154,7 +154,7 @@ async def test_config_entry_wrong_mac_Address(
     with _patch_discovery(), _patch_single_discovery(), _patch_connect():
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert already_migrated_config_entry.state is ConfigEntryState.SETUP_RETRY
 
     assert (
         "Unexpected device found at 127.0.0.1; expected aa:bb:cc:dd:ee:f0, found aa:bb:cc:dd:ee:ff"

@@ -641,12 +641,12 @@ async def test_statistic_during_period_hole(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test statistic_during_period when there are holes in the data."""
-    id = 1
+    stat_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal stat_id
+        stat_id += 1
+        return stat_id
 
     now = dt_util.utcnow()
 

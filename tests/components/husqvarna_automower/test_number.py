@@ -8,6 +8,7 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN
+
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -16,7 +17,7 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .const import TEST_MOWER_ID
 
-from tests.common import MockConfigEntry, load_json_value_fixture
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -97,7 +98,6 @@ async def test_number_workarea_commands(
     assert len(mocked_method.mock_calls) == 2
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_snapshot_number(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -111,13 +111,6 @@ async def test_snapshot_number(
         [Platform.NUMBER],
     ):
         await setup_integration(hass, mock_config_entry)
-        entity_entries = er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
+        await snapshot_platform(
+            hass, entity_registry, snapshot, mock_config_entry.entry_id
         )
-
-        assert entity_entries
-        for entity_entry in entity_entries:
-            assert hass.states.get(entity_entry.entity_id) == snapshot(
-                name=f"{entity_entry.entity_id}-state"
-            )
-            assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")

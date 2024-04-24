@@ -294,7 +294,7 @@ async def test_setup_entry_wait_hassio(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert len(mock_get_os_info.mock_calls) == 1
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_entry_addon_info_fails(
@@ -325,7 +325,7 @@ async def test_setup_entry_addon_info_fails(
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
 
     await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_entry_addon_not_running(
@@ -355,5 +355,5 @@ async def test_setup_entry_addon_not_running(
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
     start_addon.assert_called_once()
