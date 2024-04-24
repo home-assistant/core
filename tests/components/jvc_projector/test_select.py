@@ -33,7 +33,6 @@ async def test_input_select(
     entity = hass.states.get(INPUT_ENTITY_ID)
     assert entity
     assert entity.attributes.get(ATTR_FRIENDLY_NAME) == "JVC Projector Input"
-    assert entity.attributes.get(ATTR_ICON) == "mdi:hdmi-port"
     assert entity.attributes.get(ATTR_OPTIONS) == [const.HDMI1, const.HDMI2]
     assert entity.state == const.HDMI1
 

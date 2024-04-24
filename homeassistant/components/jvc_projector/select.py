@@ -33,7 +33,7 @@ SELECTS: Final[list[JvcProjectorSelectDescription]] = [
     JvcProjectorSelectDescription(
         key="input",
         translation_key="input",
-        options=list(OPTIONS["input"].keys()),
+        options=list(OPTIONS["input"]),
         command=lambda device, option: device.remote(OPTIONS["input"][option]),
     )
 ]
