@@ -10,10 +10,9 @@ from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEnti
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import LinearEntity
 from .const import DOMAIN
 from .coordinator import LinearUpdateCoordinator
 
@@ -45,7 +44,7 @@ async def async_setup_entry(
     )
 
 
-class LinearLightEntity(CoordinatorEntity[LinearUpdateCoordinator], LightEntity):
+class LinearLightEntity(LinearEntity, LightEntity):
     """Light for Linear devices."""
 
     _attr_color_mode = ColorMode.BRIGHTNESS
@@ -60,20 +59,15 @@ class LinearLightEntity(CoordinatorEntity[LinearUpdateCoordinator], LightEntity)
         coordinator: LinearUpdateCoordinator,
     ) -> None:
         """Initialize the light."""
-        super().__init__(coordinator)
-
-        self._attr_has_entity_name = True
-        self._attr_name = subdevice
-        self._attr_unique_id = f"{device_id}-{subdevice}"
-        self._config_entry = config_entry
-        self._device_id = device_id
-        self._subdevice = subdevice
-        self.device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._device_id)},
-            name=device_name,
-            manufacturer="Linear",
-            model="Garage Door Opener",
+        super().__init__(
+            device_id=device_id,
+            device_name=device_name,
+            subdevice=subdevice,
+            config_entry=config_entry,
+            coordinator=coordinator,
         )
+
+        self._attr_name = subdevice
 
     @property
     def is_on(self) -> bool:

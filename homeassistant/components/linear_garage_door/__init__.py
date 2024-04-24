@@ -5,6 +5,7 @@ from __future__ import annotations
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import LinearUpdateCoordinator
@@ -31,3 +32,33 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+class LinearEntity(CoordinatorEntity[LinearUpdateCoordinator]):
+    """Common base for Linear entities."""
+
+    coordinator: LinearUpdateCoordinator
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        device_id: str,
+        device_name: str,
+        subdevice: str,
+        config_entry: ConfigEntry,
+        coordinator: LinearUpdateCoordinator,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+
+        self._attr_unique_id = f"{device_id}-{subdevice}"
+        self._config_entry = config_entry
+        self._device_id = device_id
+        self._device_name = device_name
+        self._subdevice = subdevice
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, device_id)},
+            "name": device_name,
+            "manufacturer": "Linear",
+            "model": "Garage Door Opener",
+        }

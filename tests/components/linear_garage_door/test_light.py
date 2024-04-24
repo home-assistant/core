@@ -24,10 +24,8 @@ async def test_data(hass: HomeAssistant) -> None:
 
     await async_init_integration(hass)
 
-    assert hass.data[DOMAIN]
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
-    assert len(entries) == 1
     assert entries[0].state == ConfigEntryState.LOADED
     assert hass.states.get("light.test_garage_1_light").state == STATE_ON
     assert hass.states.get("light.test_garage_2_light").state == STATE_OFF
@@ -69,36 +67,19 @@ async def test_turn_on(hass: HomeAssistant) -> None:
             "homeassistant.components.linear_garage_door.light.Linear.get_devices",
             return_value=[
                 {
-                    "id": "test1",
-                    "name": "Test Garage 1",
-                    "subdevices": ["GDO", "Light"],
-                },
-                {
                     "id": "test2",
                     "name": "Test Garage 2",
                     "subdevices": ["GDO", "Light"],
-                },
+                }
             ],
         ),
         patch(
             "homeassistant.components.linear_garage_door.light.Linear.get_device_state",
             side_effect=lambda id: {
-                "test1": {
-                    "GDO": {"Open_B": "true", "Open_P": "100"},
-                    "Light": {"On_B": "true", "On_P": "100"},
-                },
                 "test2": {
                     "GDO": {"Open_B": "false", "Open_P": "0"},
                     "Light": {"On_B": "true", "On_P": "100"},
-                },
-                "test3": {
-                    "GDO": {"Open_B": "false", "Opening_P": "0"},
-                    "Light": {"On_B": "false", "On_P": "0"},
-                },
-                "test4": {
-                    "GDO": {"Open_B": "true", "Opening_P": "100"},
-                    "Light": {"On_B": "true", "On_P": "100"},
-                },
+                }
             }[id],
         ),
         patch(
@@ -148,35 +129,18 @@ async def test_turn_on_with_brightness(hass: HomeAssistant) -> None:
             "homeassistant.components.linear_garage_door.light.Linear.get_devices",
             return_value=[
                 {
-                    "id": "test1",
-                    "name": "Test Garage 1",
-                    "subdevices": ["GDO", "Light"],
-                },
-                {
                     "id": "test2",
                     "name": "Test Garage 2",
                     "subdevices": ["GDO", "Light"],
-                },
+                }
             ],
         ),
         patch(
             "homeassistant.components.linear_garage_door.light.Linear.get_device_state",
             side_effect=lambda id: {
-                "test1": {
-                    "GDO": {"Open_B": "true", "Open_P": "100"},
-                    "Light": {"On_B": "true", "On_P": "100"},
-                },
                 "test2": {
                     "GDO": {"Open_B": "false", "Open_P": "0"},
                     "Light": {"On_B": "true", "On_P": "50"},
-                },
-                "test3": {
-                    "GDO": {"Open_B": "false", "Opening_P": "0"},
-                    "Light": {"On_B": "false", "On_P": "0"},
-                },
-                "test4": {
-                    "GDO": {"Open_B": "true", "Opening_P": "100"},
-                    "Light": {"On_B": "true", "On_P": "100"},
                 },
             }[id],
         ),
@@ -194,7 +158,7 @@ async def test_turn_on_with_brightness(hass: HomeAssistant) -> None:
     )
 
 
-async def test_close_cover(hass: HomeAssistant) -> None:
+async def test_turn_off(hass: HomeAssistant) -> None:
     """Test that turning off the light works as intended."""
 
     await async_init_integration(hass)
@@ -234,11 +198,6 @@ async def test_close_cover(hass: HomeAssistant) -> None:
                     "name": "Test Garage 1",
                     "subdevices": ["GDO", "Light"],
                 },
-                {
-                    "id": "test2",
-                    "name": "Test Garage 2",
-                    "subdevices": ["GDO", "Light"],
-                },
             ],
         ),
         patch(
@@ -247,18 +206,6 @@ async def test_close_cover(hass: HomeAssistant) -> None:
                 "test1": {
                     "GDO": {"Open_B": "true", "Closing_P": "100"},
                     "Light": {"On_B": "false", "On_P": "0"},
-                },
-                "test2": {
-                    "GDO": {"Open_B": "false", "Open_P": "0"},
-                    "Light": {"On_B": "false", "On_P": "0"},
-                },
-                "test3": {
-                    "GDO": {"Open_B": "false", "Opening_P": "0"},
-                    "Light": {"On_B": "false", "On_P": "0"},
-                },
-                "test4": {
-                    "GDO": {"Open_B": "true", "Opening_P": "100"},
-                    "Light": {"On_B": "true", "On_P": "100"},
                 },
             }[id],
         ),

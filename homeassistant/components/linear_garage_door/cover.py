@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import LinearEntity
 from .const import DOMAIN
 from .coordinator import LinearUpdateCoordinator
 from .entity import LinearEntity
@@ -43,6 +44,24 @@ class LinearCoverEntity(LinearEntity, CoverEntity):
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
     _attr_name = None
     _attr_device_class = CoverDeviceClass.GARAGE
+
+    def _get_data(self, data_property: str) -> str:
+        """Get a property of the subdevice."""
+        return str(
+            self.coordinator.data[self._device_id]["subdevices"][self._subdevice].get(
+                data_property
+            )
+        )
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info of a garage door."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            name=self._device_name,
+            manufacturer="Linear",
+            model="Garage Door Opener",
+        )
 
     @property
     def is_closed(self) -> bool:
