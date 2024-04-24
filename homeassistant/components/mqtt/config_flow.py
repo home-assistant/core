@@ -171,7 +171,12 @@ PWD_NOT_CHANGED = "__**password_not_changed**__"
 def update_password_from_user_input(
     entry_password: str | None, user_input: dict[str, Any]
 ) -> dict[str, Any]:
-    """Update the password if the entry has been updated."""
+    """Update the password if the entry has been updated.
+
+    As we want to avoid reflecting the stored password in the UI
+    we replace the suggested value in the UI with a sentitel,
+    and we change it back here is it has changed.
+    """
     substituted_used_data = dict(user_input)
     # Take out the password submitted
     user_password: str | None = substituted_used_data.pop(CONF_PASSWORD, None)
