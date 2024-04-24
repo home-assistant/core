@@ -110,6 +110,7 @@ async def async_setup_entry(
     coordinator: SeventeenTrackCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     previous_tracking_numbers: set[str] = set()
 
+    # This has been deprecated in 2024.5, will be removed in 2024.11
     @callback
     def _async_create_remove_entities():
         live_tracking_numbers = set(coordinator.data.live_packages.keys())
@@ -222,6 +223,7 @@ class SeventeenTrackSummarySensor(SeventeenTrackSensor):
         }
 
 
+# The dynamic package sensors have been replaced by the seventeentrack.get_packages service
 class SeventeenTrackPackageSensor(SeventeenTrackSensor):
     """Define an individual package sensor."""
 
