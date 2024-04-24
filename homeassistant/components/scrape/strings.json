@@ -37,7 +37,7 @@
           "index": "Index",
           "select": "Select",
           "value_template": "Value Template",
-          "availability": "Availability Template"
+          "availability": "Availability Template",
           "device_class": "Device Class",
           "state_class": "State Class",
           "unit_of_measurement": "Unit of Measurement"
