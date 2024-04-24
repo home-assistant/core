@@ -12,8 +12,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import LinearEntity
 from .const import DOMAIN
 from .coordinator import LinearDevice, LinearUpdateCoordinator
 
@@ -38,28 +38,27 @@ async def async_setup_entry(
     )
 
 
-class LinearCoverEntity(CoordinatorEntity[LinearUpdateCoordinator], CoverEntity):
+class LinearCoverEntity(LinearEntity, CoverEntity):
     """Representation of a Linear cover."""
 
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_device_class = CoverDeviceClass.GARAGE
 
-    def __init__(
-        self,
-        coordinator: LinearUpdateCoordinator,
-        device_id: str,
-        sub_device_id: str,
-    ) -> None:
-        """Init with device ID and name."""
-        super().__init__(coordinator)
-        self._device_id = device_id
-        self._sub_device_id = sub_device_id
-        self._attr_unique_id = f"{device_id}-{sub_device_id}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, sub_device_id)},
-            name=self.linear_device.name,
+    def _get_data(self, data_property: str) -> str:
+        """Get a property of the subdevice."""
+        return str(
+            self.coordinator.data[self._device_id]["subdevices"][self._subdevice].get(
+                data_property
+            )
+        )
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info of a garage door."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            name=self._device_name,
             manufacturer="Linear",
             model="Garage Door Opener",
         )
