@@ -13,7 +13,7 @@ import pytest
 from homeassistant import bootstrap, loader, runner
 import homeassistant.config as config_util
 from homeassistant.config_entries import HANDLERS, ConfigEntry
-from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
+from homeassistant.const import CONF_DEBUG, SIGNAL_BOOTSTRAP_INTEGRATIONS
 from homeassistant.core import CoreState, HomeAssistant, async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -110,6 +110,16 @@ async def test_empty_setup(hass: HomeAssistant) -> None:
     await bootstrap.async_from_config_dict({}, hass)
     for domain in bootstrap.CORE_INTEGRATIONS:
         assert domain in hass.config.components, domain
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_config_does_not_turn_off_debug(hass: HomeAssistant) -> None:
+    """Test that config does not turn off debug if its turned on by runtime config."""
+    # Mock that its turned on from RuntimeConfig
+    hass.config.debug = True
+
+    await bootstrap.async_from_config_dict({CONF_DEBUG: False}, hass)
+    assert hass.config.debug is True
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -599,6 +609,7 @@ async def test_setup_hass(
                 log_no_color=log_no_color,
                 skip_pip=True,
                 recovery_mode=False,
+                debug=True,
             ),
         )
 
@@ -618,6 +629,9 @@ async def test_setup_hass(
     assert len(mock_mount_local_lib_path.mock_calls) == 1
     assert len(mock_ensure_config_exists.mock_calls) == 1
     assert len(mock_process_ha_config_upgrade.mock_calls) == 1
+
+    # debug in RuntimeConfig should set it it in hass.config
+    assert hass.config.debug is True
 
     assert hass == async_get_hass()
 

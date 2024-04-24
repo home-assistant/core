@@ -1990,6 +1990,7 @@ async def test_config_as_dict() -> None:
         "country": None,
         "language": "en",
         "safe_mode": False,
+        "debug": False,
     }
 
     assert expected == config.as_dict()
@@ -3439,3 +3440,22 @@ async def test_top_level_components(hass: HomeAssistant) -> None:
         hass.config.components.remove("homeassistant.scene")
     with pytest.raises(NotImplementedError):
         hass.config.components.discard("homeassistant")
+
+
+async def test_debug_mode_defaults_to_off(hass: HomeAssistant) -> None:
+    """Test debug mode defaults to off."""
+    assert not hass.config.debug
+
+
+async def test_async_fire_thread_safety(hass: HomeAssistant) -> None:
+    """Test async_fire thread safety."""
+    hass.config.debug = True
+
+    events = async_capture_events(hass, "test_event")
+    hass.bus.async_fire("test_event")
+    with pytest.raises(
+        RuntimeError, match="Detected code that calls async_fire from a thread."
+    ):
+        await hass.async_add_executor_job(hass.bus.async_fire, "test_event")
+
+    assert len(events) == 1

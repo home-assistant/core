@@ -429,6 +429,20 @@ class HomeAssistant:
             max_workers=1, thread_name_prefix="ImportExecutor"
         )
 
+    def verify_event_loop_thread(self, what: str) -> None:
+        """Report and raise if we are not running in the event loop thread."""
+        if (
+            loop_thread_ident := self.loop.__dict__.get("_thread_ident")
+        ) and loop_thread_ident != threading.get_ident():
+            from .helpers import frame  # pylint: disable=import-outside-toplevel
+
+            # frame is a circular import, so we import it here
+            frame.report(
+                f"calls {what} from a thread",
+                error_if_core=True,
+                error_if_integration=True,
+            )
+
     @property
     def _active_tasks(self) -> set[asyncio.Future[Any]]:
         """Return all active tasks.
@@ -503,7 +517,6 @@ class HomeAssistant:
         This method is a coroutine.
         """
         _LOGGER.info("Starting Home Assistant")
-        setattr(self.loop, "_thread_ident", threading.get_ident())
 
         self.set_state(CoreState.starting)
         self.bus.async_fire_internal(EVENT_CORE_CONFIG_UPDATE)
@@ -1451,6 +1464,9 @@ class EventBus:
 
         This method must be run in the event loop.
         """
+        if self._hass.config.debug:
+            self._hass.verify_event_loop_thread("async_fire")
+
         if len(event_type) > MAX_LENGTH_EVENT_EVENT_TYPE:
             raise MaxLengthExceeded(
                 event_type, "event_type", MAX_LENGTH_EVENT_EVENT_TYPE
@@ -2749,6 +2765,7 @@ class Config:
         self.elevation: int = 0
         """Elevation (always in meters regardless of the unit system)."""
 
+        self.debug: bool = False
         self.location_name: str = "Home"
         self.time_zone: str = "UTC"
         self.units: UnitSystem = METRIC_SYSTEM
@@ -2889,6 +2906,7 @@ class Config:
             "country": self.country,
             "language": self.language,
             "safe_mode": self.safe_mode,
+            "debug": self.debug,
         }
 
     def set_time_zone(self, time_zone_str: str) -> None:
