@@ -5,6 +5,7 @@ from datetime import timedelta
 import logging
 from typing import Any, cast
 
+import numpy as np
 import voluptuous as vol
 
 from homeassistant.components.cover import (
@@ -195,14 +196,16 @@ class VirtualCover(VirtualEntity, CoverEntity):
         self._update_attributes()
 
     async def _start_operation(self):
+        if self._attr_device_class == CoverDeviceClass.DOOR:
+            action_length = np.random.choice(self._dataset["close"])
+        else:
+            action_length = self._change_time.total_seconds()
         try:
             if self.is_opening:
                 target_position = 100.0
             elif self.is_closing:
                 target_position = 0.0
-            step = (
-                target_position - self._attr_current_cover_position
-            ) / self._change_time.total_seconds()
+            step = (target_position - self._attr_current_cover_position) / action_length
             while True:
                 self._attr_current_cover_position += step
                 if self._attr_current_cover_position >= 100:
@@ -226,7 +229,10 @@ class VirtualCover(VirtualEntity, CoverEntity):
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        if self._change_time == DEFAULT_CHANGE_TIME:
+        if (
+            self._change_time == DEFAULT_CHANGE_TIME
+            and self._attr_device_class != CoverDeviceClass.DOOR
+        ):
             self._open_cover()
         else:
             self._opening()
@@ -235,7 +241,10 @@ class VirtualCover(VirtualEntity, CoverEntity):
 
     def close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        if self._change_time == DEFAULT_CHANGE_TIME:
+        if (
+            self._change_time == DEFAULT_CHANGE_TIME
+            and self._attr_device_class != CoverDeviceClass.DOOR
+        ):
             self._close_cover()
         else:
             self._closing()

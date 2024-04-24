@@ -2,8 +2,10 @@
 
 import asyncio
 import logging
+import math
 from typing import Any, cast
 
+import numpy as np
 import voluptuous as vol
 
 from homeassistant.components.climate import (
@@ -124,8 +126,10 @@ class VirtualThermostat(VirtualEntity, ClimateEntity):
 
         self._attr_hvac_mode = HVACMode.HEAT
         self._attr_preset_mode = PRESET_NONE
-        self._attr_min_temp = 60.0
-        self._attr_max_temp = 90.0
+        self._attr_min_temp = 62.0
+        self._attr_max_temp = 85.0
+
+        self._task: asyncio.Task | None = None
 
         _LOGGER.info("VirtualThermostat: %s created", self.name)
 
@@ -169,20 +173,59 @@ class VirtualThermostat(VirtualEntity, ClimateEntity):
         return self.hvac_mode != HVACMode.OFF
 
     async def _async_update_temperature(self, target_temperature):
-        await asyncio.sleep(1)
-        self._attr_current_temperature = target_temperature
-        self._update_attributes()
+        if self._dataset is not None:
+            start = math.floor(self._attr_current_temperature)
+            target = math.floor(target_temperature)
+            action = f"{start},{target}"
+            if action in self._dataset:
+                action_length = np.random.choice(self._dataset[action])
+            else:
+                start_keys = list(
+                    filter(lambda key: key.startswith(str(start)), self._dataset.keys())
+                )
+                max_key = max(start_keys)
+                max_action_length = np.random.choice(self._dataset[max_key])
+                max_target = int(max_key.split(",")[-1])
+                action_length = (
+                    max_action_length / (max_target - start) * (target - start)
+                )
+        else:
+            action_length = 1
+        try:
+            step = (target_temperature - self._attr_current_temperature) / action_length
+            while True:
+                self._attr_current_temperature += step
+                if self._attr_current_temperature >= self.max_temp:
+                    self._attr_current_temperature = self.max_temp
+                    self._update_attributes()
+                    break
+                if self._attr_current_temperature <= self.min_temp:
+                    self._attr_current_temperature = self.min_temp
+                    self._update_attributes()
+                    break
+                await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            if self._attr_current_temperature >= self.max_temp:
+                self._attr_current_temperature = self.max_temp
+            elif self._attr_current_temperature <= self.min_temp:
+                self._attr_current_temperature = self.min_temp
+            self._update_attributes()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
         self._attr_target_temperature = temperature
         self._update_attributes()
-        self.hass.create_task(self._async_update_temperature(temperature))
+        self._task = self.hass.async_create_task(
+            self._async_update_temperature(temperature)
+        )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         self._attr_hvac_mode = hvac_mode
+        if self._task is not None:
+            self._task.cancel()
+            self._task = None
         self._update_attributes()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:

@@ -484,14 +484,6 @@ class RASCState:
         """Call when StateDetector detects a failure."""
         await self.set_failed()
 
-    # async def _check_no_progress(self, now: datetime.datetime):
-    #     if self.completed:
-    #         return
-    #     if not self._last_changed:
-    #         return
-    #     if (now - self._last_changed).total_seconds() > CHANGE_TIMEOUT:
-    #         await self.set_failed()
-
     def _match_target_state(self, target_state: dict[str, Any]) -> bool:
         matched = True
         if not target_state:
