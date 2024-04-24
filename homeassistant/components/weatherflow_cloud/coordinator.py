@@ -1,9 +1,10 @@
 """Data coordinator for WeatherFlow Cloud Data."""
+
 from datetime import timedelta
 
 from aiohttp import ClientResponseError
 from weatherflow4py.api import WeatherFlowRestAPI
-from weatherflow4py.models.unified import WeatherFlowData
+from weatherflow4py.models.rest.unified import WeatherFlowDataREST
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -13,7 +14,7 @@ from .const import DOMAIN, LOGGER
 
 
 class WeatherFlowCloudDataUpdateCoordinator(
-    DataUpdateCoordinator[dict[int, WeatherFlowData]]
+    DataUpdateCoordinator[dict[int, WeatherFlowDataREST]]
 ):
     """Class to manage fetching REST Based WeatherFlow Forecast data."""
 
@@ -28,7 +29,7 @@ class WeatherFlowCloudDataUpdateCoordinator(
             update_interval=timedelta(minutes=15),
         )
 
-    async def _async_update_data(self) -> dict[int, WeatherFlowData]:
+    async def _async_update_data(self) -> dict[int, WeatherFlowDataREST]:
         """Fetch data from WeatherFlow Forecast."""
         try:
             async with self.weather_api:

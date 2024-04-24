@@ -1,4 +1,5 @@
 """Platform for sensor integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -49,18 +50,13 @@ class DataRateDirection(StrEnum):
     TX = "tx_rate"
 
 
-@dataclass(frozen=True)
-class DevoloSensorRequiredKeysMixin(Generic[_CoordinatorDataT]):
-    """Mixin for required keys."""
-
-    value_func: Callable[[_CoordinatorDataT], float]
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class DevoloSensorEntityDescription(
-    SensorEntityDescription, DevoloSensorRequiredKeysMixin[_CoordinatorDataT]
+    SensorEntityDescription, Generic[_CoordinatorDataT]
 ):
     """Describes devolo sensor entity."""
+
+    value_func: Callable[[_CoordinatorDataT], float]
 
 
 SENSOR_TYPES: dict[str, DevoloSensorEntityDescription[Any]] = {

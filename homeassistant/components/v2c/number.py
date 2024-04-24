@@ -1,4 +1,5 @@
 """Number platform for V2C settings."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -24,19 +25,12 @@ MIN_INTENSITY = 6
 MAX_INTENSITY = 32
 
 
-@dataclass(frozen=True)
-class V2CSettingsRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class V2CSettingsNumberEntityDescription(NumberEntityDescription):
+    """Describes V2C EVSE number entity."""
 
     value_fn: Callable[[TrydanData], int]
     update_fn: Callable[[Trydan, int], Coroutine[Any, Any, None]]
-
-
-@dataclass(frozen=True)
-class V2CSettingsNumberEntityDescription(
-    NumberEntityDescription, V2CSettingsRequiredKeysMixin
-):
-    """Describes V2C EVSE number entity."""
 
 
 TRYDAN_NUMBER_SETTINGS = (

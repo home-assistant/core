@@ -1,4 +1,5 @@
 """The Wolf SmartSet Service integration."""
+
 from datetime import timedelta
 import logging
 

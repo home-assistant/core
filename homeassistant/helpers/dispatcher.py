@@ -1,42 +1,29 @@
 """Helpers for Home Assistant dispatcher & internal component/platform."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
-from dataclasses import dataclass
 from functools import partial
 import logging
-from typing import Any, Generic, TypeVarTuple, overload
+from typing import Any, TypeVarTuple, overload
 
-from homeassistant.core import HassJob, HomeAssistant, callback
+from homeassistant.core import (
+    HassJob,
+    HomeAssistant,
+    callback,
+    get_hassjob_callable_job_type,
+)
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.logging import catch_log_exception
+
+# Explicit reexport of 'SignalType' for backwards compatibility
+from homeassistant.util.signal_type import SignalType as SignalType  # noqa: PLC0414
 
 _Ts = TypeVarTuple("_Ts")
 
 _LOGGER = logging.getLogger(__name__)
 DATA_DISPATCHER = "dispatcher"
-
-
-@dataclass(frozen=True)
-class SignalType(Generic[*_Ts]):
-    """Generic string class for signal to improve typing."""
-
-    name: str
-
-    def __hash__(self) -> int:
-        """Return hash of name."""
-
-        return hash(self.name)
-
-    def __eq__(self, other: Any) -> bool:
-        """Check equality for dict keys to be compatible with str."""
-
-        if isinstance(other, str):
-            return self.name == other
-        if isinstance(other, SignalType):
-            return self.name == other.name
-        return False
 
 
 _DispatcherDataType = dict[
@@ -52,16 +39,14 @@ _DispatcherDataType = dict[
 @bind_hass
 def dispatcher_connect(
     hass: HomeAssistant, signal: SignalType[*_Ts], target: Callable[[*_Ts], None]
-) -> Callable[[], None]:
-    ...
+) -> Callable[[], None]: ...
 
 
 @overload
 @bind_hass
 def dispatcher_connect(
     hass: HomeAssistant, signal: str, target: Callable[..., None]
-) -> Callable[[], None]:
-    ...
+) -> Callable[[], None]: ...
 
 
 @bind_hass  # type: ignore[misc]  # workaround; exclude typing of 2 overload in func def
@@ -107,8 +92,7 @@ def _async_remove_dispatcher(
 @bind_hass
 def async_dispatcher_connect(
     hass: HomeAssistant, signal: SignalType[*_Ts], target: Callable[[*_Ts], Any]
-) -> Callable[[], None]:
-    ...
+) -> Callable[[], None]: ...
 
 
 @overload
@@ -116,8 +100,7 @@ def async_dispatcher_connect(
 @bind_hass
 def async_dispatcher_connect(
     hass: HomeAssistant, signal: str, target: Callable[..., Any]
-) -> Callable[[], None]:
-    ...
+) -> Callable[[], None]: ...
 
 
 @callback
@@ -149,14 +132,14 @@ def async_dispatcher_connect(
 
 @overload
 @bind_hass
-def dispatcher_send(hass: HomeAssistant, signal: SignalType[*_Ts], *args: *_Ts) -> None:
-    ...
+def dispatcher_send(
+    hass: HomeAssistant, signal: SignalType[*_Ts], *args: *_Ts
+) -> None: ...
 
 
 @overload
 @bind_hass
-def dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None:
-    ...
+def dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None: ...
 
 
 @bind_hass  # type: ignore[misc]  # workaround; exclude typing of 2 overload in func def
@@ -183,9 +166,13 @@ def _generate_job(
     signal: SignalType[*_Ts] | str, target: Callable[[*_Ts], Any] | Callable[..., Any]
 ) -> HassJob[..., None | Coroutine[Any, Any, None]]:
     """Generate a HassJob for a signal and target."""
+    job_type = get_hassjob_callable_job_type(target)
     return HassJob(
-        catch_log_exception(target, partial(_format_err, signal, target)),
+        catch_log_exception(
+            target, partial(_format_err, signal, target), job_type=job_type
+        ),
         f"dispatcher {signal}",
+        job_type=job_type,
     )
 
 
@@ -194,15 +181,13 @@ def _generate_job(
 @bind_hass
 def async_dispatcher_send(
     hass: HomeAssistant, signal: SignalType[*_Ts], *args: *_Ts
-) -> None:
-    ...
+) -> None: ...
 
 
 @overload
 @callback
 @bind_hass
-def async_dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None:
-    ...
+def async_dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None: ...
 
 
 @callback
@@ -214,6 +199,9 @@ def async_dispatcher_send(
 
     This method must be run in the event loop.
     """
+    if hass.config.debug:
+        hass.verify_event_loop_thread("async_dispatcher_send")
+
     if (maybe_dispatchers := hass.data.get(DATA_DISPATCHER)) is None:
         return
     dispatchers: _DispatcherDataType[*_Ts] = maybe_dispatchers

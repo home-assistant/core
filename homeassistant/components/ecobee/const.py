@@ -1,4 +1,5 @@
 """Constants for the ecobee integration."""
+
 import logging
 
 from homeassistant.components.weather import (
@@ -45,6 +46,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.HUMIDIFIER,
+    Platform.NOTIFY,
     Platform.NUMBER,
     Platform.SENSOR,
     Platform.WEATHER,

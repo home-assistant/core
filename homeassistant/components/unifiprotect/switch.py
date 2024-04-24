@@ -1,4 +1,5 @@
 """Component providing Switches for UniFi Protect."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -73,6 +74,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         name="HDR Mode",
         icon="mdi:brightness-7",
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
         ufp_required_field="feature_flags.has_hdr",
         ufp_value="hdr_mode",
         ufp_set_method="set_hdr",
@@ -296,6 +298,16 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_value="is_glass_break_detection_on",
         ufp_enabled="is_recording_enabled",
         ufp_set_method="set_glass_break_detection",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectSwitchEntityDescription(
+        key="track_person",
+        name="Tracking: Person",
+        icon="mdi:walk",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="is_ptz",
+        ufp_value="is_person_tracking_enabled",
+        ufp_set_method="set_person_track",
         ufp_perm=PermRequired.WRITE,
     ),
 )

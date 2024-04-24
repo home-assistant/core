@@ -1,6 +1,5 @@
 """Tests for the La Marzocco select entities."""
 
-
 from unittest.mock import MagicMock
 
 from lmcloud.const import LaMarzoccoModel
@@ -51,7 +50,7 @@ async def test_steam_boiler_level(
     )
 
     assert len(mock_lamarzocco.set_steam_level.mock_calls) == 1
-    mock_lamarzocco.set_steam_level.assert_called_once_with(level=1)
+    mock_lamarzocco.set_steam_level.assert_called_once_with(1, None)
 
 
 @pytest.mark.parametrize(

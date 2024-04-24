@@ -1,4 +1,5 @@
 """Alexa message handlers."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -125,9 +126,9 @@ async def async_api_discovery(
             continue
         try:
             discovered_serialized_entity = alexa_entity.serialize_discovery()
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
-                "Unable to serialize %s for discovery: %s", alexa_entity.entity_id, exc
+                "Unable to serialize %s for discovery", alexa_entity.entity_id
             )
         else:
             discovery_endpoints.append(discovered_serialized_entity)

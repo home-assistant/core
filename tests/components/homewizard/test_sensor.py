@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from homewizard_energy.errors import DisabledError, RequestError
+from homewizard_energy.errors import RequestError
 from homewizard_energy.models import Data
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -112,12 +112,29 @@ pytestmark = [
             ],
         ),
         (
-            "HWE-SKT",
+            "HWE-SKT-11",
             [
                 "sensor.device_energy_export",
                 "sensor.device_energy_import",
                 "sensor.device_power_phase_1",
                 "sensor.device_power",
+                "sensor.device_wi_fi_ssid",
+                "sensor.device_wi_fi_strength",
+            ],
+        ),
+        (
+            "HWE-SKT-21",
+            [
+                "sensor.device_apparent_power",
+                "sensor.device_current",
+                "sensor.device_energy_export",
+                "sensor.device_energy_import",
+                "sensor.device_frequency",
+                "sensor.device_power_factor",
+                "sensor.device_power_phase_1",
+                "sensor.device_power",
+                "sensor.device_reactive_power",
+                "sensor.device_voltage",
                 "sensor.device_wi_fi_ssid",
                 "sensor.device_wi_fi_strength",
             ],
@@ -276,7 +293,13 @@ async def test_sensors(
             ],
         ),
         (
-            "HWE-SKT",
+            "HWE-SKT-11",
+            [
+                "sensor.device_wi_fi_strength",
+            ],
+        ),
+        (
+            "HWE-SKT-21",
             [
                 "sensor.device_wi_fi_strength",
             ],
@@ -375,7 +398,7 @@ async def test_disabled_by_default_sensors(
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
-@pytest.mark.parametrize("exception", [RequestError, DisabledError])
+@pytest.mark.parametrize("exception", [RequestError])
 async def test_sensors_unreachable(
     hass: HomeAssistant,
     mock_homewizardenergy: MagicMock,
@@ -413,7 +436,7 @@ async def test_external_sensors_unreachable(
     ("device_fixture", "entity_ids"),
     [
         (
-            "HWE-SKT",
+            "HWE-SKT-11",
             [
                 "sensor.device_apparent_power_phase_1",
                 "sensor.device_apparent_power_phase_2",
@@ -461,6 +484,52 @@ async def test_external_sensors_unreachable(
                 "sensor.device_voltage_swells_detected_phase_2",
                 "sensor.device_voltage_swells_detected_phase_3",
                 "sensor.device_voltage",
+                "sensor.device_water_usage",
+            ],
+        ),
+        (
+            "HWE-SKT-21",
+            [
+                "sensor.device_apparent_power_phase_1",
+                "sensor.device_apparent_power_phase_2",
+                "sensor.device_apparent_power_phase_3",
+                "sensor.device_average_demand",
+                "sensor.device_current_phase_1",
+                "sensor.device_current_phase_2",
+                "sensor.device_current_phase_3",
+                "sensor.device_dsmr_version",
+                "sensor.device_energy_export_tariff_1",
+                "sensor.device_energy_export_tariff_2",
+                "sensor.device_energy_export_tariff_3",
+                "sensor.device_energy_export_tariff_4",
+                "sensor.device_energy_import_tariff_1",
+                "sensor.device_energy_import_tariff_2",
+                "sensor.device_energy_import_tariff_3",
+                "sensor.device_energy_import_tariff_4",
+                "sensor.device_long_power_failures_detected",
+                "sensor.device_peak_demand_current_month",
+                "sensor.device_power_factor_phase_1",
+                "sensor.device_power_factor_phase_2",
+                "sensor.device_power_factor_phase_3",
+                "sensor.device_power_failures_detected",
+                "sensor.device_power_phase_2",
+                "sensor.device_power_phase_3",
+                "sensor.device_reactive_power_phase_1",
+                "sensor.device_reactive_power_phase_2",
+                "sensor.device_reactive_power_phase_3",
+                "sensor.device_smart_meter_identifier",
+                "sensor.device_smart_meter_model",
+                "sensor.device_tariff",
+                "sensor.device_total_water_usage",
+                "sensor.device_voltage_phase_1",
+                "sensor.device_voltage_phase_2",
+                "sensor.device_voltage_phase_3",
+                "sensor.device_voltage_sags_detected_phase_1",
+                "sensor.device_voltage_sags_detected_phase_2",
+                "sensor.device_voltage_sags_detected_phase_3",
+                "sensor.device_voltage_swells_detected_phase_1",
+                "sensor.device_voltage_swells_detected_phase_2",
+                "sensor.device_voltage_swells_detected_phase_3",
                 "sensor.device_water_usage",
             ],
         ),

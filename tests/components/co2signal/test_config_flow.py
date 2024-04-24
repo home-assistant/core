@@ -1,4 +1,5 @@
 """Test the CO2 Signal config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from aioelectricitymaps import (
@@ -25,7 +26,7 @@ async def test_form_home(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -41,7 +42,7 @@ async def test_form_home(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "CO2 Signal"
     assert result2["data"] == {
         "api_key": "api_key",
@@ -56,7 +57,7 @@ async def test_form_coordinates(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -66,7 +67,7 @@ async def test_form_coordinates(hass: HomeAssistant) -> None:
             "api_key": "api_key",
         },
     )
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
 
     with patch(
         "homeassistant.components.co2signal.async_setup_entry",
@@ -81,7 +82,7 @@ async def test_form_coordinates(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "12.3, 45.6"
     assert result3["data"] == {
         "latitude": 12.3,
@@ -98,7 +99,7 @@ async def test_form_country(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -108,7 +109,7 @@ async def test_form_country(hass: HomeAssistant) -> None:
             "api_key": "api_key",
         },
     )
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
 
     with patch(
         "homeassistant.components.co2signal.async_setup_entry",
@@ -122,7 +123,7 @@ async def test_form_country(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "fr"
     assert result3["data"] == {
         "country_code": "fr",
@@ -166,7 +167,7 @@ async def test_form_error_handling(
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": err_code}
 
     # reset mock and test if now succeeds
@@ -182,7 +183,7 @@ async def test_form_error_handling(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "CO2 Signal"
     assert result["data"] == {
         "api_key": "api_key",
@@ -206,7 +207,7 @@ async def test_reauth(
         data=None,
     )
 
-    assert init_result["type"] == FlowResultType.FORM
+    assert init_result["type"] is FlowResultType.FORM
     assert init_result["step_id"] == "reauth"
 
     with patch(
@@ -221,6 +222,6 @@ async def test_reauth(
         )
         await hass.async_block_till_done()
 
-    assert configure_result["type"] == FlowResultType.ABORT
+    assert configure_result["type"] is FlowResultType.ABORT
     assert configure_result["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1

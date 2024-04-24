@@ -1,4 +1,5 @@
 """Data update coordinator for shark iq vacuums."""
+
 from __future__ import annotations
 
 import asyncio

@@ -1,4 +1,5 @@
 """Support for SNMP enabled switch."""
+
 from __future__ import annotations
 
 import logging
@@ -237,7 +238,7 @@ class SnmpSwitch(SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
-        # If vartype set, use it - http://snmplabs.com/pysnmp/docs/api-reference.html#pysnmp.smi.rfc1902.ObjectType
+        # If vartype set, use it - https://www.pysnmp.com/pysnmp/docs/api-reference.html#pysnmp.smi.rfc1902.ObjectType
         await self._execute_command(self._command_payload_on)
 
     async def async_turn_off(self, **kwargs: Any) -> None:

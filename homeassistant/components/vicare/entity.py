@@ -1,4 +1,5 @@
 """Entities for the ViCare integration."""
+
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 

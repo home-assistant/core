@@ -1,4 +1,5 @@
 """Repairs implementation for supervisor integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -18,10 +19,10 @@ from .const import (
     PLACEHOLDER_KEY_REFERENCE,
     SupervisorIssueContext,
 )
-from .handler import HassioAPIError, async_apply_suggestion
+from .handler import async_apply_suggestion
 from .issues import Issue, Suggestion
 
-SUGGESTION_CONFIRMATION_REQUIRED = {"system_execute_reboot"}
+SUGGESTION_CONFIRMATION_REQUIRED = {"system_adopt_data_disk", "system_execute_reboot"}
 
 EXTRA_PLACEHOLDERS = {
     "issue_mount_mount_failed": {
@@ -109,12 +110,9 @@ class SupervisorIssueRepairFlow(RepairsFlow):
         if not confirmed and suggestion.key in SUGGESTION_CONFIRMATION_REQUIRED:
             return self._async_form_for_suggestion(suggestion)
 
-        try:
-            await async_apply_suggestion(self.hass, suggestion.uuid)
-        except HassioAPIError:
-            return self.async_abort(reason="apply_suggestion_fail")
-
-        return self.async_create_entry(data={})
+        if await async_apply_suggestion(self.hass, suggestion.uuid):
+            return self.async_create_entry(data={})
+        return self.async_abort(reason="apply_suggestion_fail")
 
     @staticmethod
     def _async_step(

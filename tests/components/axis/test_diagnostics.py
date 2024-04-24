@@ -1,4 +1,5 @@
 """Test Axis diagnostics."""
+
 import pytest
 from syrupy import SnapshotAssertion
 

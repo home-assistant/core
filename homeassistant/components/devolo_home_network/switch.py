@@ -1,4 +1,5 @@
 """Platform for switch integration."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -23,20 +24,13 @@ from .entity import DevoloCoordinatorEntity
 _DataT = TypeVar("_DataT", bound=WifiGuestAccessGet | bool)
 
 
-@dataclass(frozen=True)
-class DevoloSwitchRequiredKeysMixin(Generic[_DataT]):
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class DevoloSwitchEntityDescription(SwitchEntityDescription, Generic[_DataT]):
+    """Describes devolo switch entity."""
 
     is_on_func: Callable[[_DataT], bool]
     turn_on_func: Callable[[Device], Awaitable[bool]]
     turn_off_func: Callable[[Device], Awaitable[bool]]
-
-
-@dataclass(frozen=True)
-class DevoloSwitchEntityDescription(
-    SwitchEntityDescription, DevoloSwitchRequiredKeysMixin[_DataT]
-):
-    """Describes devolo switch entity."""
 
 
 SWITCH_TYPES: dict[str, DevoloSwitchEntityDescription[Any]] = {
@@ -115,7 +109,9 @@ class DevoloSwitchEntity(DevoloCoordinatorEntity[_DataT], SwitchEntity):
         except DevicePasswordProtected as ex:
             self.entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
-                f"Device {self.entry.title} require re-authenticatication to set or change the password"
+                translation_domain=DOMAIN,
+                translation_key="password_protected",
+                translation_placeholders={"title": self.entry.title},
             ) from ex
         except DeviceUnavailable:
             pass  # The coordinator will handle this
@@ -128,7 +124,9 @@ class DevoloSwitchEntity(DevoloCoordinatorEntity[_DataT], SwitchEntity):
         except DevicePasswordProtected as ex:
             self.entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
-                f"Device {self.entry.title} require re-authenticatication to set or change the password"
+                translation_domain=DOMAIN,
+                translation_key="password_protected",
+                translation_placeholders={"title": self.entry.title},
             ) from ex
         except DeviceUnavailable:
             pass  # The coordinator will handle this

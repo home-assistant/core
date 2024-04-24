@@ -1,4 +1,5 @@
 """The thread websocket API."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -165,23 +166,22 @@ async def ws_list_datasets(
     """Get a list of thread datasets."""
 
     store = await dataset_store.async_get_store(hass)
-    result = []
     preferred_dataset = store.preferred_dataset
-    for dataset in store.datasets.values():
-        result.append(
-            {
-                "channel": dataset.channel,
-                "created": dataset.created,
-                "dataset_id": dataset.id,
-                "extended_pan_id": dataset.extended_pan_id,
-                "network_name": dataset.network_name,
-                "pan_id": dataset.pan_id,
-                "preferred": dataset.id == preferred_dataset,
-                "preferred_border_agent_id": dataset.preferred_border_agent_id,
-                "preferred_extended_address": dataset.preferred_extended_address,
-                "source": dataset.source,
-            }
-        )
+    result = [
+        {
+            "channel": dataset.channel,
+            "created": dataset.created,
+            "dataset_id": dataset.id,
+            "extended_pan_id": dataset.extended_pan_id,
+            "network_name": dataset.network_name,
+            "pan_id": dataset.pan_id,
+            "preferred": dataset.id == preferred_dataset,
+            "preferred_border_agent_id": dataset.preferred_border_agent_id,
+            "preferred_extended_address": dataset.preferred_extended_address,
+            "source": dataset.source,
+        }
+        for dataset in store.datasets.values()
+    ]
 
     connection.send_result(msg["id"], {"datasets": result})
 

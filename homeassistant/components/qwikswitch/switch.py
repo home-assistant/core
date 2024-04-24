@@ -1,4 +1,5 @@
 """Support for Qwikswitch relays."""
+
 from __future__ import annotations
 
 from homeassistant.components.switch import SwitchEntity

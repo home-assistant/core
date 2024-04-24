@@ -1,4 +1,5 @@
 """Config flow for Smart Meter Texas integration."""
+
 import logging
 
 from aiohttp import ClientError
@@ -9,8 +10,10 @@ from smart_meter_texas.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
@@ -22,7 +25,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(hass: HomeAssistant, data):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -44,7 +47,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     return {"title": account.username}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SMTConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Smart Meter Texas."""
 
     VERSION = 1
@@ -76,9 +79,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""

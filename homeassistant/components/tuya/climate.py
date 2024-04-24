@@ -1,4 +1,5 @@
 """Support for Tuya Climate."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -39,18 +40,11 @@ TUYA_HVAC_TO_HA = {
 }
 
 
-@dataclass(frozen=True)
-class TuyaClimateSensorDescriptionMixin:
-    """Define an entity description mixin for climate entities."""
+@dataclass(frozen=True, kw_only=True)
+class TuyaClimateEntityDescription(ClimateEntityDescription):
+    """Describe an Tuya climate entity."""
 
     switch_only_hvac_mode: HVACMode
-
-
-@dataclass(frozen=True)
-class TuyaClimateEntityDescription(
-    ClimateEntityDescription, TuyaClimateSensorDescriptionMixin
-):
-    """Describe an Tuya climate entity."""
 
 
 CLIMATE_DESCRIPTIONS: dict[str, TuyaClimateEntityDescription] = {

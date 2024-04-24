@@ -1,4 +1,5 @@
 """Binary sensor support for Wireless Sensor Tags."""
+
 from __future__ import annotations
 
 import voluptuous as vol

@@ -1,4 +1,5 @@
 """The tests for frontend storage."""
+
 from typing import Any
 
 import pytest

@@ -1,4 +1,5 @@
 """Tests for the Abode camera device."""
+
 from unittest.mock import patch
 
 from homeassistant.components.abode.const import DOMAIN as ABODE_DOMAIN

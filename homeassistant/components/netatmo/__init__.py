@@ -1,4 +1,5 @@
 """The Netatmo integration."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -24,6 +25,7 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
 )
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.start import async_at_started
@@ -242,3 +244,20 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])
         except cloud.CloudNotAvailable:
             pass
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+    data = hass.data[DOMAIN][config_entry.entry_id][DATA_HANDLER]
+    modules = [m for h in data.account.homes.values() for m in h.modules]
+    rooms = [r for h in data.account.homes.values() for r in h.rooms]
+
+    return not any(
+        identifier
+        for identifier in device_entry.identifiers
+        if identifier[0] == DOMAIN
+        and identifier[1] in modules
+        or identifier[1] in rooms
+    )

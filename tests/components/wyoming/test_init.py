@@ -1,4 +1,5 @@
 """Test init."""
+
 from unittest.mock import patch
 
 from homeassistant.config_entries import ConfigEntry

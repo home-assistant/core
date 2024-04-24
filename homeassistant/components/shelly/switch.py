@@ -1,4 +1,5 @@
 """Switch for Shelly."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -45,7 +46,7 @@ from .utils import (
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class BlockSwitchDescription(BlockEntityDescription, SwitchEntityDescription):
     """Class to describe a BLOCK switch."""
 
@@ -103,8 +104,12 @@ def async_setup_block_entry(
     relay_blocks = []
     assert coordinator.device.blocks
     for block in coordinator.device.blocks:
-        if block.type != "relay" or is_block_channel_type_light(
-            coordinator.device.settings, int(block.channel)
+        if (
+            block.type != "relay"
+            or block.channel is not None
+            and is_block_channel_type_light(
+                coordinator.device.settings, int(block.channel)
+            )
         ):
             continue
 
