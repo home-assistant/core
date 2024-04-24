@@ -53,6 +53,8 @@ from homeassistant.util import Throttle, dt as dt_util
 
 from .const import DOMAIN as TIBBER_DOMAIN, MANUFACTURER
 
+FIVE_YEARS = 5 * 365 * 24
+
 _LOGGER = logging.getLogger(__name__)
 
 ICON = "mdi:currency-usd"
@@ -730,7 +732,7 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=has
                         last_stats_time = first_stat["start"]
                     else:
                         hourly_data = await home.get_historic_data(
-                            5 * 365 * 24, production=is_production
+                            FIVE_YEARS, production=is_production
                         )
                         _sum = 0.0
                         last_stats_time = None
