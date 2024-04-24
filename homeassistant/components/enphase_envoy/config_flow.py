@@ -252,11 +252,8 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                name = self._async_envoy_name()
-
                 if not self.unique_id:
                     await self.async_set_unique_id(envoy.serial_number)
-                    name = self._async_envoy_name()
 
                 if self.unique_id:
                     # If envoy exists in configuration update fields and exit
@@ -269,16 +266,10 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                         error="reconfigure_successful",
                     )
 
-                # CONF_NAME is still set for legacy backwards compatibility
-                return self.async_create_entry(
-                    title=name, data={CONF_HOST: host, CONF_NAME: name} | user_input
-                )
-
-        if self.unique_id:
-            self.context["title_placeholders"] = {
-                CONF_SERIAL: self.unique_id,
-                CONF_HOST: host,
-            }
+        self.context["title_placeholders"] = {
+            CONF_SERIAL: (self.unique_id or entry.unique_id),
+            CONF_HOST: host,
+        }
 
         return self.async_show_form(
             step_id="reconfigure",
