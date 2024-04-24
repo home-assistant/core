@@ -95,6 +95,7 @@
         'enity_id': 'binary_sensor.x_wing_motion',
         'state': dict({
           'attributes': dict({
+            'device_class': 'motion',
             'friendly_name': 'X-Wing Motion',
           }),
           'state': 'off',
