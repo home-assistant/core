@@ -1624,8 +1624,6 @@ async def test_suggested_precision_option_removal(
     """Test suggested precision stored in the registry is removed."""
 
     entity_registry = er.async_get(hass)
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
 
     # Pre-register entities
     entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
@@ -1637,7 +1635,7 @@ async def test_suggested_precision_option_removal(
         },
     )
 
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = MockSensor(
         name="Test",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.HOURS,
@@ -1645,7 +1643,7 @@ async def test_suggested_precision_option_removal(
         suggested_display_precision=None,
         unique_id="very_unique",
     )
-    entity0 = platform.ENTITIES["0"]
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
