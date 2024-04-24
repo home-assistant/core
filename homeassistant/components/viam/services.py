@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import base64
 from datetime import datetime
 from functools import partial
 
+from PIL import Image
 from viam.app.app_client import RobotPart
 from viam.services.vision import VisionClient
+from viam.services.vision.client import RawImage
 import voluptuous as vol
 
 from homeassistant.components import camera
@@ -21,21 +24,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import selector
 
-from .const import (
-    DOMAIN,
-    SERVICE_CAMERA,
-    SERVICE_CLASSIFIER_NAME,
-    SERVICE_COMPONENT_NAME,
-    SERVICE_COMPONENT_TYPE,
-    SERVICE_CONFIDENCE,
-    SERVICE_COUNT,
-    SERVICE_DETECTOR_NAME,
-    SERVICE_FILE_NAME,
-    SERVICE_FILEPATH,
-    SERVICE_ROBOT_ADDRESS,
-    SERVICE_ROBOT_SECRET,
-    SERVICE_VALUES,
-)
+from .const import DOMAIN
 from .manager import ViamManager
 
 ATTR_CONFIG_ENTRY = "config_entry"
@@ -44,6 +33,19 @@ DATA_CAPTURE_SERVICE_NAME = "capture_data"
 CAPTURE_IMAGE_SERVICE_NAME = "capture_image"
 CLASSIFICATION_SERVICE_NAME = "get_classifications"
 DETECTIONS_SERVICE_NAME = "get_detections"
+
+SERVICE_VALUES = "values"
+SERVICE_COMPONENT_NAME = "component_name"
+SERVICE_COMPONENT_TYPE = "component_type"
+SERVICE_FILEPATH = "filepath"
+SERVICE_CAMERA = "camera"
+SERVICE_CONFIDENCE = "confidence_threshold"
+SERVICE_ROBOT_ADDRESS = "robot_address"
+SERVICE_ROBOT_SECRET = "robot_secret"
+SERVICE_FILE_NAME = "file_name"
+SERVICE_CLASSIFIER_NAME = "classifier_name"
+SERVICE_COUNT = "count"
+SERVICE_DETECTOR_NAME = "detector_name"
 
 ENTRY_SERVICE_SCHEMA = vol.Schema(
     {
@@ -99,6 +101,36 @@ DETECTIONS_SERVICE_SCHEMA = VISION_SERVICE_FIELDS.extend(
 )
 
 
+def __fetch_image(filepath: str | None) -> Image.Image | None:
+    if filepath is None:
+        return None
+    return Image.open(filepath)
+
+
+def __encode_image(image: Image.Image | RawImage) -> str:
+    """Create base64-encoded Image string."""
+    if isinstance(image, Image.Image):
+        image_bytes = image.tobytes()
+    else:  # RawImage
+        image_bytes = image.data
+
+    image_string = base64.b64encode(image_bytes).decode()
+    return f"data:image/jpeg;base64,{image_string}"
+
+
+async def __get_image(
+    hass: HomeAssistant, filepath: str | None, camera_entity: str | None
+) -> RawImage | Image.Image | None:
+    """Retrieve image type from camera entity or file system."""
+    if filepath is not None:
+        return await hass.async_add_executor_job(__fetch_image, filepath)
+    if camera_entity is not None:
+        image = await camera.async_get_image(hass, camera_entity)
+        return RawImage(image.content, image.content_type)
+
+    return None
+
+
 def __get_manager(hass: HomeAssistant, call: ServiceCall) -> ViamManager:
     entry_id: str = call.data[ATTR_CONFIG_ENTRY]
     entry: ConfigEntry | None = hass.config_entries.async_get_entry(entry_id)
@@ -130,9 +162,9 @@ async def __capture_data(call: ServiceCall, *, hass: HomeAssistant) -> None:
     """Accept input from service call to send to Viam."""
     manager: ViamManager = __get_manager(hass, call)
     parts: list[RobotPart] = await manager.get_robot_parts()
-    values = [call.data.get(SERVICE_VALUES)]
+    values = [call.data.get(SERVICE_VALUES, {})]
     component_type = call.data.get(SERVICE_COMPONENT_TYPE, "sensor")
-    component_name = call.data.get(SERVICE_COMPONENT_NAME)
+    component_name = call.data.get(SERVICE_COMPONENT_NAME, "")
 
     await manager.viam.data_client.tabular_data_capture_upload(
         tabular_data=values,
@@ -185,7 +217,7 @@ async def __get_service_values(
         call.data.get(SERVICE_ROBOT_SECRET), call.data.get(SERVICE_ROBOT_ADDRESS)
     ) as robot:
         service: VisionClient = VisionClient.from_robot(robot, service_name)
-        image = await manager.get_image(filepath, camera_entity)
+        image = await __get_image(hass, filepath, camera_entity)
 
     return manager, service, image, filepath, confidence_threshold, count
 
@@ -209,7 +241,7 @@ async def __get_classifications(
             "img_src": filepath or None,
         }
 
-    img_src = filepath or manager.encode_image(image)
+    img_src = filepath or __encode_image(image)
     classifications = await classifier.get_classifications(image, count)
 
     return {
@@ -241,7 +273,7 @@ async def __get_detections(
             "img_src": filepath or None,
         }
 
-    img_src = filepath or manager.encode_image(image)
+    img_src = filepath or __encode_image(image)
     detections = await detector.get_detections(image)
 
     return {

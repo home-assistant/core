@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from viam.app.app_client import AppClient
 from viam.app.viam_client import ViamClient
 from viam.rpc.dial import Credentials, DialOptions
 import voluptuous as vol
@@ -151,24 +150,25 @@ class ViamFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Select robot from location."""
+        if user_input is not None:
+            self._data.update({CONF_ROBOT_ID: user_input[CONF_ROBOT]})
+            return self.async_create_entry(title=self._title, data=self._data)
 
-        app_client = self._get_app_client()
+        app_client = self._client.app_client
         locations = await app_client.list_locations()
         robots = await app_client.list_robots(next(iter(locations)).id)
-        if user_input is not None:
-            robot_id = next(
-                robot.id for robot in robots if robot.name == user_input[CONF_ROBOT]
-            )
-            self._data.update({CONF_ROBOT_ID: robot_id})
-            self._close_client()
-            return self.async_create_entry(title=self._title, data=self._data)
 
         return self.async_show_form(
             step_id="robot",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ROBOT): SelectSelector(
-                        SelectSelectorConfig(options=[robot.name for robot in robots])
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(value=robot.id, label=robot.name)
+                                for robot in robots
+                            ]
+                        )
                     )
                 }
             ),
@@ -177,12 +177,6 @@ class ViamFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     def async_remove(self) -> None:
         """Notification that the flow has been removed."""
-        self._close_client()
-
-    def _get_app_client(self) -> AppClient:
-        return self._client.app_client
-
-    def _close_client(self):
         if self._client is not None:
             self._client.close()
 

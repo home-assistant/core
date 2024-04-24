@@ -30,7 +30,7 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 class MockLocation:
     """Fake location for testing."""
 
-    id: int = 13
+    id: str = "13"
     name: str = "home"
 
 
@@ -38,7 +38,7 @@ class MockLocation:
 class MockRobot:
     """Fake robot for testing."""
 
-    id: int = 1234
+    id: str = "1234"
     name: str = "test"
 
 
@@ -77,11 +77,12 @@ async def test_user_form(
     assert result["step_id"] == "auth"
     assert result["errors"] == {}
 
+    mock_robot = MockRobot()
     instance = MockClient.return_value
     mock_create_client.return_value = instance
     instance.app_client.list_locations.return_value = async_return([MockLocation()])
     instance.app_client.get_location.return_value = async_return(MockLocation())
-    instance.app_client.list_robots.return_value = async_return([MockRobot()])
+    instance.app_client.list_robots.return_value = async_return([mock_robot])
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -97,7 +98,7 @@ async def test_user_form(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_ROBOT: "test",
+            CONF_ROBOT: mock_robot.id,
         },
     )
     await hass.async_block_till_done()
@@ -107,7 +108,7 @@ async def test_user_form(
     assert result["data"] == {
         CONF_API_ID: "someTestId",
         CONF_API_KEY: "randomSecureAPIKey",
-        CONF_ROBOT_ID: 1234,
+        CONF_ROBOT_ID: mock_robot.id,
         CONF_CREDENTIAL_TYPE: CRED_TYPE_API_KEY,
     }
 
@@ -141,11 +142,12 @@ async def test_user_form_with_location_secret(
     assert result["step_id"] == "auth"
     assert result["errors"] == {}
 
+    mock_robot = MockRobot()
     instance = MockClient.return_value
     mock_create_client.return_value = instance
     instance.app_client.list_locations.return_value = async_return([MockLocation()])
     instance.app_client.get_location.return_value = async_return(MockLocation())
-    instance.app_client.list_robots.return_value = async_return([MockRobot()])
+    instance.app_client.list_robots.return_value = async_return([mock_robot])
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -161,7 +163,7 @@ async def test_user_form_with_location_secret(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_ROBOT: "test",
+            CONF_ROBOT: mock_robot.id,
         },
     )
     await hass.async_block_till_done()
@@ -171,7 +173,7 @@ async def test_user_form_with_location_secret(
     assert result["data"] == {
         CONF_ADDRESS: "my.robot.cloud",
         CONF_SECRET: "randomSecreteForRobot",
-        CONF_ROBOT_ID: 1234,
+        CONF_ROBOT_ID: mock_robot.id,
         CONF_CREDENTIAL_TYPE: CRED_TYPE_LOCATION_SECRET,
     }
 

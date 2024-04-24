@@ -1,16 +1,12 @@
 """Manage Viam client connection."""
 
-import base64
 from typing import Any
 
-from PIL import Image
 from viam.app.app_client import RobotPart
 from viam.app.viam_client import ViamClient
 from viam.robot.client import RobotClient
 from viam.rpc.dial import Credentials, DialOptions
-from viam.services.vision.client import RawImage
 
-from homeassistant.components import camera
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -20,15 +16,10 @@ from .const import (
     CONF_CREDENTIAL_TYPE,
     CONF_ROBOT_ID,
     CONF_SECRET,
+    CRED_TYPE_API_KEY,
     CRED_TYPE_LOCATION_SECRET,
     DOMAIN,
 )
-
-
-def _fetch_image(filepath: str | None):
-    if filepath is None:
-        return None
-    return Image.open(filepath)
 
 
 class ViamManager:
@@ -42,44 +33,27 @@ class ViamManager:
         data: dict[str, Any],
     ) -> None:
         """Store initialized client and user input data."""
-        self.hass = hass
-        self.viam = viam
-        self.data = data
+        self.address: str = data.get(CONF_ADDRESS, "")
+        self.auth_entity: str = data.get(CONF_API_ID, "")
+        self.cred_type: str = data.get(CONF_CREDENTIAL_TYPE, CRED_TYPE_API_KEY)
         self.entry_id = entry_id
+        self.hass = hass
+        self.robot_id: str = data.get(CONF_ROBOT_ID, "")
+        self.secret: str = data.get(CONF_SECRET, "")
+        self.viam = viam
 
     def unload(self) -> None:
         """Clean up any open clients."""
         self.viam.close()
 
-    def encode_image(self, image: Image.Image | RawImage):
-        """Create base64-encoded Image string."""
-        image_bytes = b""
-        if isinstance(image, Image.Image):
-            image_bytes = image.tobytes()
-        if isinstance(image, RawImage):
-            image_bytes = image.data
-
-        image_string = base64.b64encode(image_bytes).decode()
-        return f"data:image/jpeg;base64,{image_string}"
-
-    async def get_image(self, filepath: str | None, camera_entity: str | None):
-        """Retrieve image type from camera entity or file system."""
-        if filepath is not None:
-            return await self.hass.async_add_executor_job(_fetch_image, filepath)
-        if camera_entity is not None:
-            image = await camera.async_get_image(self.hass, camera_entity)
-            return RawImage(image.content, image.content_type)
-
-        return None
-
     async def get_robot_client(
         self, robot_secret: str | None, robot_address: str | None
     ) -> RobotClient:
         """Check initialized data to create robot client."""
-        address = self.data.get(CONF_ADDRESS)
-        payload = self.data.get(CONF_SECRET)
-        cred_type = self.data.get(CONF_CREDENTIAL_TYPE)
-        auth_entity = self.data.get(CONF_API_ID)
+        address = self.address
+        payload = self.secret
+        cred_type = self.cred_type
+        auth_entity: str | None = self.auth_entity
 
         if robot_secret is not None:
             if robot_address is None:
@@ -109,6 +83,4 @@ class ViamManager:
 
     async def get_robot_parts(self) -> list[RobotPart]:
         """Retrieve list of robot parts."""
-        return await self.viam.app_client.get_robot_parts(
-            robot_id=self.data[CONF_ROBOT_ID]
-        )
+        return await self.viam.app_client.get_robot_parts(robot_id=self.robot_id)
