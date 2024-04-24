@@ -354,6 +354,11 @@
           "name": "[%key:component::light::common::field_effect_name%]",
           "description": "[%key:component::light::common::field_effect_description%]"
         }
+      },
+      "sections": {
+        "advanced_fields": {
+          "name": "Advanced options"
+        }
       }
     },
     "turn_off": {
@@ -367,6 +372,11 @@
         "flash": {
           "name": "[%key:component::light::common::field_flash_name%]",
           "description": "[%key:component::light::common::field_flash_description%]"
+        }
+      },
+      "sections": {
+        "advanced_fields": {
+          "name": "Advanced options"
         }
       }
     },
@@ -433,6 +443,11 @@
         "effect": {
           "name": "[%key:component::light::common::field_effect_name%]",
           "description": "[%key:component::light::common::field_effect_description%]"
+        }
+      },
+      "sections": {
+        "advanced_fields": {
+          "name": "Advanced options"
         }
       }
     }

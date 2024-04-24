@@ -44,6 +44,13 @@ CORE_INTEGRATION_FIELD_SCHEMA = vol.Schema(
     }
 )
 
+CORE_INTEGRATION_SECTION_SCHEMA = vol.Schema(
+    {
+        vol.Optional("collapsed"): bool,
+        vol.Required("fields"): vol.Schema({str: CORE_INTEGRATION_FIELD_SCHEMA}),
+    }
+)
+
 CUSTOM_INTEGRATION_FIELD_SCHEMA = CORE_INTEGRATION_FIELD_SCHEMA.extend(
     {
         vol.Optional("description"): str,
@@ -57,7 +64,13 @@ CORE_INTEGRATION_SERVICE_SCHEMA = vol.Any(
             vol.Optional("target"): vol.Any(
                 selector.TargetSelector.CONFIG_SCHEMA, None
             ),
-            vol.Optional("fields"): vol.Schema({str: CORE_INTEGRATION_FIELD_SCHEMA}),
+            vol.Optional("fields"): vol.Schema(
+                {
+                    str: vol.Any(
+                        CORE_INTEGRATION_FIELD_SCHEMA, CORE_INTEGRATION_SECTION_SCHEMA
+                    )
+                }
+            ),
         }
     ),
     None,
@@ -107,7 +120,7 @@ def grep_dir(path: pathlib.Path, glob_pattern: str, search_pattern: str) -> bool
     return False
 
 
-def validate_services(config: Config, integration: Integration) -> None:
+def validate_services(config: Config, integration: Integration) -> None:  # noqa: C901
     """Validate services."""
     try:
         data = load_yaml_dict(str(integration.path / "services.yaml"))
@@ -200,6 +213,9 @@ def validate_services(config: Config, integration: Integration) -> None:
         # The same check is done for the description in each of the fields of the
         # service schema.
         for field_name, field_schema in service_schema.get("fields", {}).items():
+            if "fields" in field_schema:
+                # This is a section
+                continue
             if "name" not in field_schema:
                 try:
                     strings["services"][service_name]["fields"][field_name]["name"]
@@ -232,6 +248,20 @@ def validate_services(config: Config, integration: Integration) -> None:
                             "services",
                             f"Service {service_name} has a field {field_name} with a selector with a translation key {translation_key} that is not in the translations file",
                         )
+
+        # The same check is done for the description in each of the sections of the
+        # service schema.
+        for section_name, section_schema in service_schema.get("fields", {}).items():
+            if "fields" not in section_schema:
+                # This is not a section
+                continue
+            try:
+                strings["services"][service_name]["sections"][section_name]["name"]
+            except KeyError:
+                integration.add_error(
+                    "services",
+                    f"Service {service_name} has a section {section_name} with no name {error_msg_suffix}",
+                )
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
