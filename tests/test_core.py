@@ -3449,8 +3449,6 @@ async def test_debug_mode_defaults_to_off(hass: HomeAssistant) -> None:
 
 async def test_async_fire_thread_safety(hass: HomeAssistant) -> None:
     """Test async_fire thread safety."""
-    hass.config.debug = True
-
     events = async_capture_events(hass, "test_event")
     hass.bus.async_fire("test_event")
     with pytest.raises(
