@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 from typing import Any
 
@@ -89,17 +89,9 @@ class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
         await self.hass.async_add_executor_job(
             self.data.ecobee.set_ventilator_timer, self.thermostat_index, True
         )
-        self._attr_native_value = True
-        self.thermostat["settings"]["ventilatorOffDateTime"] = (
-            datetime.now() + timedelta(minutes=20) - self._time_zone_delay
-        ).strftime(DATE_FORMAT)
-        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Set ventilator 20 min timer off."""
         await self.hass.async_add_executor_job(
             self.data.ecobee.set_ventilator_timer, self.thermostat_index, False
         )
-        self._attr_native_value = False
-        self.thermostat["settings"]["ventilatorOffDateTime"] = ""
-        self.async_write_ha_state()
