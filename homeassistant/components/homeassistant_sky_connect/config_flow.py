@@ -101,7 +101,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
     async def _async_get_addon_info(self, addon_manager: AddonManager) -> AddonInfo:
         """Return add-on info."""
         try:
-            addon_info: AddonInfo = await addon_manager.async_get_addon_info()
+            addon_info = await addon_manager.async_get_addon_info()
         except AddonError as err:
             _LOGGER.error(err)
             raise AbortFlow(
@@ -490,7 +490,7 @@ class HomeAssistantSkyConnectConfigFlow(
         """Return the options flow."""
         firmware_type = ApplicationType(config_entry.data["firmware"])
 
-        if firmware_type == ApplicationType.CPC:
+        if firmware_type is ApplicationType.CPC:
             return HomeAssistantSkyConnectMultiPanOptionsFlowHandler(config_entry)
 
         return HomeAssistantSkyConnectOptionsFlowHandler(config_entry)

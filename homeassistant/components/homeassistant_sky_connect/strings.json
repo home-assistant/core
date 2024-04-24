@@ -117,7 +117,7 @@
       "not_hassio_thread": "[%key:component::homeassistant_sky_connect::config::abort::not_hassio_thread%]",
       "otbr_addon_already_running": "[%key:component::homeassistant_sky_connect::config::abort::otbr_addon_already_running%]",
       "zha_still_using_stick": "This {model} is in use by the Zigbee Home Automation integration. Please migrate your Zigbee network to another adapter or delete the integration and try again.",
-      "otbr_still_using_stick": "This {model} is in use by the OpenThread Border Router addon. Please migrate your Thread network to another device or delete the addon and try again."
+      "otbr_still_using_stick": "This {model} is in use by the OpenThread Border Router add-on. If you use the Thread network, make sure you have alternative border routers. Uninstall the add-on and try again."
     },
     "progress": {
       "install_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_addon%]",
@@ -145,7 +145,7 @@
       },
       "install_zigbee_flasher_addon": {
         "title": "Installing flasher",
-        "description": "Installing the Silicon Labs Flasher addon."
+        "description": "Installing the Silicon Labs Flasher add-on."
       },
       "run_zigbee_flasher_addon": {
         "title": "Installing Zigbee firmware",
@@ -153,7 +153,7 @@
       },
       "uninstall_zigbee_flasher_addon": {
         "title": "Removing flasher",
-        "description": "Removing the Silicon Labs Flasher addon."
+        "description": "Removing the Silicon Labs Flasher add-on."
       },
       "zigbee_flasher_failed": {
         "title": "Zigbee installation failed",
@@ -164,16 +164,16 @@
         "description": "Your {model} is now a Zigbee coordinator and will be shown as discovered by the Zigbee Home Automation integration once you exit."
       },
       "install_otbr_addon": {
-        "title": "Installing OpenThread Border Router addon",
-        "description": "The OpenThread Border Router (OTBR) addon is being installed."
+        "title": "Installing OpenThread Border Router add-on",
+        "description": "The OpenThread Border Router (OTBR) add-on is being installed."
       },
       "start_otbr_addon": {
-        "title": "Starting OpenThread Border Router addon",
-        "description": "The OpenThread Border Router (OTBR) addon is now starting."
+        "title": "Starting OpenThread Border Router add-on",
+        "description": "The OpenThread Border Router (OTBR) add-on is now starting."
       },
       "otbr_failed": {
         "title": "Failed to setup OpenThread Border Router",
-        "description": "The OTBR addon installation was unsuccessful. Ensure no other software is trying to communicate with the {model}, you have access to the internet and can install other addons, and try again."
+        "description": "The OpenThread Border Router add-on installation was unsuccessful. Ensure no other software is trying to communicate with the {model}, you have access to the internet and can install other add-ons, and try again. Check the Supervisor logs if the problem persists."
       },
       "confirm_otbr": {
         "title": "OpenThread Border Router setup complete",
@@ -189,7 +189,7 @@
       "zha_migration_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::zha_migration_failed%]",
       "not_hassio": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::not_hassio%]",
       "not_hassio_thread": "The OpenThread Border Router addon can only be installed with Home Assistant OS. If you would like to use the {model} as an Thread border router, please flash the firmware manually using the [web flasher]({docs_web_flasher_url}) and set up OpenThread Border Router to communicate with it.",
-      "otbr_addon_already_running": "The OpenThread Border Router addon is already running, it cannot be installed again."
+      "otbr_addon_already_running": "The OpenThread Border Router add-on is already running, it cannot be installed again."
     },
     "progress": {
       "install_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_addon%]",
