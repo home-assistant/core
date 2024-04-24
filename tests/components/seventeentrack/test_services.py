@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+from syrupy import SnapshotAssertion
+
 from homeassistant.components.seventeentrack import DOMAIN, SERVICE_GET_PACKAGES
 from homeassistant.core import HomeAssistant, SupportsResponse
 
@@ -14,6 +16,7 @@ async def test_get_packages_from_list(
     hass: HomeAssistant,
     mock_seventeentrack: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Ensure service returns only the packages in the list."""
     await _mock_packages(mock_seventeentrack)
@@ -29,13 +32,14 @@ async def test_get_packages_from_list(
         return_response=SupportsResponse.ONLY,
     )
 
-    assert len(service_response["packages"]) == 2
+    assert service_response == snapshot
 
 
 async def test_get_all_packages(
     hass: HomeAssistant,
     mock_seventeentrack: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Ensure service returns all packages when non provided."""
     await _mock_packages(mock_seventeentrack)
@@ -50,7 +54,7 @@ async def test_get_all_packages(
         return_response=SupportsResponse.ONLY,
     )
 
-    assert len(service_response["packages"]) == 3
+    assert service_response == snapshot
 
 
 async def _mock_packages(mock_seventeentrack):

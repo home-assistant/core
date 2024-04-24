@@ -74,7 +74,7 @@
       "fields": {
         "package_state": {
           "name": "Package states",
-          "description": "Comma seperated list of package states."
+          "description": "Only return packages with the specified states. Returns all packages if not specified."
         },
         "config_entry_id": {
           "name": "17Track service",

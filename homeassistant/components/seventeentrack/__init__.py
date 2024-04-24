@@ -45,18 +45,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def get_packages(call: ServiceCall) -> ServiceResponse:
         """Get packages from 17Track."""
         config_entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
-        package_states = (
-            [
-                package_state.strip()
-                for package_state in call.data[ATTR_PACKAGE_STATE].split(",")
-            ]
-            if call.data.get(ATTR_PACKAGE_STATE)
-            else []
-        )
+        package_states = call.data.get(ATTR_PACKAGE_STATE, [])
         seventeen_coordinator: SeventeenTrackCoordinator = hass.data[DOMAIN][
             config_entry_id
         ]
-        live_packages = set(
+        live_packages = sorted(
             await seventeen_coordinator.client.profile.packages(
                 show_archived=seventeen_coordinator.show_archived
             )

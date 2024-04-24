@@ -1,9 +1,17 @@
 get_packages:
   fields:
     package_state:
-      example: "In Transit,Delivered"
       selector:
-        text:
+        select:
+          multiple: true
+          options:
+            - "Delivered"
+            - "Expired"
+            - "In Transit"
+            - "Not Found"
+            - "Ready to be picked up"
+            - "Returned"
+            - "Undelivered"
     config_entry_id:
       required: true
       selector:
