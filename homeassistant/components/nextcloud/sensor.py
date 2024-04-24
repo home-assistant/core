@@ -1,4 +1,5 @@
 """Summary data from Nextcoud."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -45,21 +46,18 @@ SENSORS: Final[list[NextcloudSensorEntityDescription]] = [
         translation_key="nextcloud_activeusers_last1hour",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:account-multiple",
     ),
     NextcloudSensorEntityDescription(
         key="activeUsers_last24hours",
         translation_key="nextcloud_activeusers_last24hours",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:account-multiple",
     ),
     NextcloudSensorEntityDescription(
         key="activeUsers_last5minutes",
         translation_key="nextcloud_activeusers_last5minutes",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:account-multiple",
     ),
     NextcloudSensorEntityDescription(
         key="cache_expunges",
@@ -136,7 +134,6 @@ SENSORS: Final[list[NextcloudSensorEntityDescription]] = [
         key="database_size",
         translation_key="nextcloud_database_size",
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:database",
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
@@ -145,13 +142,11 @@ SENSORS: Final[list[NextcloudSensorEntityDescription]] = [
         key="database_type",
         translation_key="nextcloud_database_type",
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:database",
     ),
     NextcloudSensorEntityDescription(
         key="database_version",
         translation_key="nextcloud_database_version",
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:database",
     ),
     NextcloudSensorEntityDescription(
         key="interned_strings_usage_buffer_size",
@@ -328,7 +323,6 @@ SENSORS: Final[list[NextcloudSensorEntityDescription]] = [
         translation_key="nextcloud_server_php_opcache_memory_usage_current_wasted_percentage",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:language-php",
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=1,
     ),
@@ -338,7 +332,6 @@ SENSORS: Final[list[NextcloudSensorEntityDescription]] = [
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:language-php",
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
@@ -349,7 +342,6 @@ SENSORS: Final[list[NextcloudSensorEntityDescription]] = [
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:language-php",
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
@@ -360,7 +352,6 @@ SENSORS: Final[list[NextcloudSensorEntityDescription]] = [
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:language-php",
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
@@ -370,7 +361,6 @@ SENSORS: Final[list[NextcloudSensorEntityDescription]] = [
         translation_key="nextcloud_server_php_max_execution_time",
         device_class=SensorDeviceClass.DURATION,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:language-php",
         native_unit_of_measurement=UnitOfTime.SECONDS,
     ),
     NextcloudSensorEntityDescription(
@@ -378,7 +368,6 @@ SENSORS: Final[list[NextcloudSensorEntityDescription]] = [
         translation_key="nextcloud_server_php_memory_limit",
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:language-php",
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
@@ -388,7 +377,6 @@ SENSORS: Final[list[NextcloudSensorEntityDescription]] = [
         translation_key="nextcloud_server_php_upload_max_filesize",
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:language-php",
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
@@ -397,7 +385,6 @@ SENSORS: Final[list[NextcloudSensorEntityDescription]] = [
         key="server_php_version",
         translation_key="nextcloud_server_php_version",
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:language-php",
     ),
     NextcloudSensorEntityDescription(
         key="server_webserver",
@@ -526,34 +513,29 @@ SENSORS: Final[list[NextcloudSensorEntityDescription]] = [
         key="system_apps_num_updates_available",
         translation_key="nextcloud_system_apps_num_updates_available",
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:update",
     ),
     NextcloudSensorEntityDescription(
         key="system_cpuload_1",
         translation_key="nextcloud_system_cpuload_1",
         native_unit_of_measurement=UNIT_OF_LOAD,
-        icon="mdi:chip",
         suggested_display_precision=2,
     ),
     NextcloudSensorEntityDescription(
         key="system_cpuload_5",
         translation_key="nextcloud_system_cpuload_5",
         native_unit_of_measurement=UNIT_OF_LOAD,
-        icon="mdi:chip",
         suggested_display_precision=2,
     ),
     NextcloudSensorEntityDescription(
         key="system_cpuload_15",
         translation_key="nextcloud_system_cpuload_15",
         native_unit_of_measurement=UNIT_OF_LOAD,
-        icon="mdi:chip",
         suggested_display_precision=2,
     ),
     NextcloudSensorEntityDescription(
         key="system_freespace",
         translation_key="nextcloud_system_freespace",
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:harddisk",
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_display_precision=2,
         suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
@@ -562,7 +544,6 @@ SENSORS: Final[list[NextcloudSensorEntityDescription]] = [
         key="system_mem_free",
         translation_key="nextcloud_system_mem_free",
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:memory",
         native_unit_of_measurement=UnitOfInformation.KILOBYTES,
         suggested_display_precision=2,
         suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
@@ -571,7 +552,6 @@ SENSORS: Final[list[NextcloudSensorEntityDescription]] = [
         key="system_mem_total",
         translation_key="nextcloud_system_mem_total",
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:memory",
         native_unit_of_measurement=UnitOfInformation.KILOBYTES,
         suggested_display_precision=2,
         suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
@@ -598,7 +578,6 @@ SENSORS: Final[list[NextcloudSensorEntityDescription]] = [
         key="system_swap_total",
         translation_key="nextcloud_system_swap_total",
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:memory",
         native_unit_of_measurement=UnitOfInformation.KILOBYTES,
         suggested_display_precision=2,
         suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
@@ -607,7 +586,6 @@ SENSORS: Final[list[NextcloudSensorEntityDescription]] = [
         key="system_swap_free",
         translation_key="nextcloud_system_swap_free",
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:memory",
         native_unit_of_measurement=UnitOfInformation.KILOBYTES,
         suggested_display_precision=2,
         suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
@@ -629,11 +607,9 @@ async def async_setup_entry(
     """Set up the Nextcloud sensors."""
     coordinator: NextcloudDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            NextcloudSensor(coordinator, entry, sensor)
-            for sensor in SENSORS
-            if sensor.key in coordinator.data
-        ]
+        NextcloudSensor(coordinator, entry, sensor)
+        for sensor in SENSORS
+        if sensor.key in coordinator.data
     )
 
 

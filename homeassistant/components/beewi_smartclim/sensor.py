@@ -1,4 +1,5 @@
 """Platform for beewi_smartclim integration."""
+
 from __future__ import annotations
 
 from beewi_smartclim import BeewiSmartClimPoller

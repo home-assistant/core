@@ -1,4 +1,5 @@
 """The Tautulli integration."""
+
 from __future__ import annotations
 
 from pytautulli import PyTautulli, PyTautulliApiUser, PyTautulliHostConfiguration

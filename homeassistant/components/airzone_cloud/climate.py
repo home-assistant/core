@@ -1,4 +1,5 @@
 """Support for the Airzone Cloud climate."""
+
 from __future__ import annotations
 
 from typing import Any, Final
@@ -10,6 +11,7 @@ from aioairzone_cloud.const import (
     API_PARAMS,
     API_POWER,
     API_SETPOINT,
+    API_SPEED_CONF,
     API_UNITS,
     API_VALUE,
     AZD_ACTION,
@@ -23,6 +25,8 @@ from aioairzone_cloud.const import (
     AZD_NUM_DEVICES,
     AZD_NUM_GROUPS,
     AZD_POWER,
+    AZD_SPEED,
+    AZD_SPEEDS,
     AZD_TEMP,
     AZD_TEMP_SET,
     AZD_TEMP_SET_MAX,
@@ -33,6 +37,10 @@ from aioairzone_cloud.const import (
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    FAN_AUTO,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -53,6 +61,22 @@ from .entity import (
     AirzoneInstallationEntity,
     AirzoneZoneEntity,
 )
+
+FAN_SPEED_AUTO: dict[int, str] = {
+    0: FAN_AUTO,
+}
+
+FAN_SPEED_MAPS: Final[dict[int, dict[int, str]]] = {
+    2: {
+        1: FAN_LOW,
+        2: FAN_HIGH,
+    },
+    3: {
+        1: FAN_LOW,
+        2: FAN_MEDIUM,
+        3: FAN_HIGH,
+    },
+}
 
 HVAC_ACTION_LIB_TO_HASS: Final[dict[OperationAction, HVACAction]] = {
     OperationAction.COOLING: HVACAction.COOLING,
@@ -274,6 +298,9 @@ class AirzoneDeviceGroupClimate(AirzoneClimate):
 class AirzoneAidooClimate(AirzoneAidooEntity, AirzoneDeviceClimate):
     """Define an Airzone Cloud Aidoo climate."""
 
+    _speeds: dict[int, str]
+    _speeds_reverse: dict[str, int]
+
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
@@ -290,8 +317,51 @@ class AirzoneAidooClimate(AirzoneAidooEntity, AirzoneDeviceClimate):
         ]
         if HVACMode.OFF not in self._attr_hvac_modes:
             self._attr_hvac_modes += [HVACMode.OFF]
+        if (
+            self.get_airzone_value(AZD_SPEED) is not None
+            and self.get_airzone_value(AZD_SPEEDS) is not None
+        ):
+            self._initialize_fan_speeds()
 
         self._async_update_attrs()
+
+    def _initialize_fan_speeds(self) -> None:
+        """Initialize Aidoo fan speeds."""
+        azd_speeds: dict[int, int] = self.get_airzone_value(AZD_SPEEDS)
+        max_speed = max(azd_speeds)
+
+        fan_speeds: dict[int, str]
+        if speeds_map := FAN_SPEED_MAPS.get(max_speed):
+            fan_speeds = speeds_map
+        else:
+            fan_speeds = {}
+
+            for speed in azd_speeds:
+                if speed != 0:
+                    fan_speeds[speed] = f"{int(round((speed * 100) / max_speed, 0))}%"
+
+        if 0 in azd_speeds:
+            fan_speeds = FAN_SPEED_AUTO | fan_speeds
+
+        self._speeds = {}
+        for key, value in fan_speeds.items():
+            _key = azd_speeds.get(key)
+            if _key is not None:
+                self._speeds[_key] = value
+
+        self._speeds_reverse = {v: k for k, v in self._speeds.items()}
+        self._attr_fan_modes = list(self._speeds_reverse)
+
+        self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set Aidoo fan mode."""
+        params: dict[str, Any] = {
+            API_SPEED_CONF: {
+                API_VALUE: self._speeds_reverse.get(fan_mode),
+            }
+        }
+        await self._async_update_params(params)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
@@ -309,6 +379,14 @@ class AirzoneAidooClimate(AirzoneAidooEntity, AirzoneDeviceClimate):
                 API_VALUE: True,
             }
         await self._async_update_params(params)
+
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update Aidoo climate attributes."""
+        super()._async_update_attrs()
+
+        if self.supported_features & ClimateEntityFeature.FAN_MODE:
+            self._attr_fan_mode = self._speeds.get(self.get_airzone_value(AZD_SPEED))
 
 
 class AirzoneGroupClimate(AirzoneGroupEntity, AirzoneDeviceGroupClimate):

@@ -1,4 +1,5 @@
 """Config flow for iBeacon Tracker integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,23 +7,27 @@ from uuid import UUID
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import bluetooth
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_ALLOW_NAMELESS_UUIDS, DOMAIN
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class IBeaconConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for iBeacon Tracker."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -38,20 +43,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> OptionsFlow:
         """Get the options flow for this handler."""
-        return OptionsFlow(config_entry)
+        return IBeaconOptionsFlow(config_entry)
 
 
-class OptionsFlow(config_entries.OptionsFlow):
+class IBeaconOptionsFlow(OptionsFlow):
     """Handle options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input: dict | None = None) -> FlowResult:
+    async def async_step_init(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Manage the options."""
         errors = {}
 

@@ -7,6 +7,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
@@ -49,6 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     hub.async_update_device_registry()
+    hub.entity_loader.load_entities()
 
     if len(hass.data[UNIFI_DOMAIN]) == 1:
         async_setup_services(hass)
@@ -70,6 +72,18 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         async_unload_services(hass)
 
     return await hub.async_reset()
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove config entry from a device."""
+    hub: UnifiHub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    return not any(
+        identifier
+        for _, identifier in device_entry.connections
+        if identifier in hub.api.clients or identifier in hub.api.devices
+    )
 
 
 class UnifiWirelessClients:

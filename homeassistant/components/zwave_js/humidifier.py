@@ -1,4 +1,5 @@
 """Representation of Z-Wave humidifiers."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -34,9 +35,9 @@ from .entity import ZWaveBaseEntity
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
-class ZwaveHumidifierEntityDescriptionRequiredKeys:
-    """A class for humidifier entity description required keys."""
+@dataclass(frozen=True, kw_only=True)
+class ZwaveHumidifierEntityDescription(HumidifierEntityDescription):
+    """A class that describes the humidifier or dehumidifier entity."""
 
     # The "on" control mode for this entity, e.g. HUMIDIFY for humidifier
     on_mode: HumidityControlMode
@@ -46,13 +47,6 @@ class ZwaveHumidifierEntityDescriptionRequiredKeys:
 
     # The setpoint type controlled by this entity
     setpoint_type: HumidityControlSetpointType
-
-
-@dataclass(frozen=True)
-class ZwaveHumidifierEntityDescription(
-    HumidifierEntityDescription, ZwaveHumidifierEntityDescriptionRequiredKeys
-):
-    """A class that describes the humidifier or dehumidifier entity."""
 
 
 HUMIDIFIER_ENTITY_DESCRIPTION = ZwaveHumidifierEntityDescription(

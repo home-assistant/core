@@ -1,4 +1,5 @@
 """Sensor for the CityBikes data."""
+
 from __future__ import annotations
 
 import asyncio
@@ -200,9 +201,9 @@ async def async_setup_platform(
 
         if radius > dist or stations_list.intersection((station_id, station_uid)):
             if name:
-                uid = "_".join([network.network_id, name, station_id])
+                uid = f"{network.network_id}_{name}_{station_id}"
             else:
-                uid = "_".join([network.network_id, station_id])
+                uid = f"{network.network_id}_{station_id}"
             entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, uid, hass=hass)
             devices.append(CityBikesStation(network, station_id, entity_id))
 
@@ -227,6 +228,9 @@ class CityBikesNetworks:
                     self.hass, NETWORKS_URI, NETWORKS_RESPONSE_SCHEMA
                 )
                 self.networks = networks[ATTR_NETWORKS_LIST]
+        except CityBikesRequestError as err:
+            raise PlatformNotReady from err
+        else:
             result = None
             minimum_dist = None
             for network in self.networks:
@@ -240,8 +244,6 @@ class CityBikesNetworks:
                     result = network[ATTR_ID]
 
             return result
-        except CityBikesRequestError as err:
-            raise PlatformNotReady from err
         finally:
             self.networks_loading.release()
 

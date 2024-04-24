@@ -1,4 +1,5 @@
 """Services tests for the Google Mail integration."""
+
 from unittest.mock import patch
 
 from aiohttp.client_exceptions import ClientResponseError
@@ -61,10 +62,10 @@ async def test_set_vacation(
 
 @pytest.mark.parametrize(
     ("side_effect"),
-    (
+    [
         (RefreshError,),
         (ClientResponseError("", (), status=400),),
-    ),
+    ],
 )
 async def test_reauth_trigger(
     hass: HomeAssistant,

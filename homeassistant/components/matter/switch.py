@@ -1,4 +1,5 @@
 """Matter switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -85,6 +86,7 @@ DISCOVERY_SCHEMAS = [
             device_types.ColorDimmerSwitch,
             device_types.DimmerSwitch,
             device_types.Thermostat,
+            device_types.RoomAirConditioner,
         ),
     ),
 ]

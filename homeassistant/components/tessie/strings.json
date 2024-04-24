@@ -252,7 +252,7 @@
       "state": {
         "name": "Status"
       },
-      "charge_state_battery_heater_on": {
+      "climate_state_battery_heater": {
         "name": "Battery heater"
       },
       "charge_state_charge_enable_request": {
@@ -409,6 +409,41 @@
     },
     "no_cable": {
       "message": "Insert cable to lock"
+    }
+  },
+  "issues": {
+    "deprecated_speed_limit_entity": {
+      "title": "Detected Tessie speed limit lock entity usage",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::tessie::issues::deprecated_speed_limit_entity::title%]",
+            "description": "The Tessie integration's speed limit lock entity has been deprecated and will be remove in 2024.11.0.\nHome Assistant detected that entity `{entity}` is being used in `{info}`\n\nYou should remove the speed limit lock entity from `{info}` then click submit to fix this issue."
+          }
+        }
+      }
+    },
+    "deprecated_speed_limit_locked": {
+      "title": "Detected Tessie speed limit lock entity locked",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::tessie::issues::deprecated_speed_limit_locked::title%]",
+            "description": "The Tessie integration's speed limit lock entity has been deprecated and will be remove in 2024.11.0.\n\nPlease remove this entity from any automation or script, disable the entity then click submit to fix this issue."
+          }
+        }
+      }
+    },
+    "deprecated_speed_limit_unlocked": {
+      "title": "Detected Tessie speed limit lock entity unlocked",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::tessie::issues::deprecated_speed_limit_unlocked::title%]",
+            "description": "The Tessie integration's speed limit lock entity has been deprecated and will be remove in 2024.11.0.\n\nPlease remove this entity from any automation or script, disable the entity then click submit to fix this issue."
+          }
+        }
+      }
     }
   }
 }

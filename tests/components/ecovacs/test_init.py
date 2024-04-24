@@ -1,7 +1,9 @@
 """Test init of ecovacs."""
+
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
+from deebot_client.capabilities import Capabilities
 from deebot_client.exceptions import DeebotError, InvalidAuthenticationError
 import pytest
 from syrupy import SnapshotAssertion
@@ -106,20 +108,21 @@ async def test_devices_in_dr(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test all devices are in the device registry."""
-    for device in controller.devices:
+    for device in controller.devices(Capabilities):
         assert (
             device_entry := device_registry.async_get_device(
-                identifiers={(DOMAIN, device.device_info.did)}
+                identifiers={(DOMAIN, device.device_info["did"])}
             )
         )
-        assert device_entry == snapshot(name=device.device_info.did)
+        assert device_entry == snapshot(name=device.device_info["did"])
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 @pytest.mark.parametrize(
     ("device_fixture", "entities"),
     [
-        ("yna5x1", 25),
+        ("yna5x1", 26),
+        ("5xu9h3", 24),
     ],
 )
 async def test_all_entities_loaded(

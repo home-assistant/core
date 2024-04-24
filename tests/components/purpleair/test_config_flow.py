@@ -1,13 +1,14 @@
 """Define tests for the PurpleAir config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
 import pytest
 
-from homeassistant import data_entry_flow
 from homeassistant.components.purpleair import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import TEST_API_KEY, TEST_SENSOR_INDEX1, TEST_SENSOR_INDEX2
@@ -45,7 +46,7 @@ async def test_create_entry_by_coordinates(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     # Test errors that can arise when checking the API key:
@@ -53,13 +54,13 @@ async def test_create_entry_by_coordinates(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={"api_key": TEST_API_KEY}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == check_api_key_errors
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"api_key": TEST_API_KEY}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "by_coordinates"
 
     # Test errors that can arise when searching for nearby sensors:
@@ -72,7 +73,7 @@ async def test_create_entry_by_coordinates(
                 "distance": 5,
             },
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == get_nearby_sensors_errors
 
     result = await hass.config_entries.flow.async_configure(
@@ -83,7 +84,7 @@ async def test_create_entry_by_coordinates(
             "distance": 5,
         },
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "choose_sensor"
 
     result = await hass.config_entries.flow.async_configure(
@@ -92,7 +93,7 @@ async def test_create_entry_by_coordinates(
             "sensor_index": str(TEST_SENSOR_INDEX1),
         },
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "abcde"
     assert result["data"] == {
         "api_key": TEST_API_KEY,
@@ -109,7 +110,7 @@ async def test_duplicate_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data={"api_key": TEST_API_KEY}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -139,7 +140,7 @@ async def test_reauth(
         },
         data={"api_key": TEST_API_KEY},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     # Test errors that can arise when checking the API key:
@@ -147,14 +148,14 @@ async def test_reauth(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={"api_key": "new_api_key"}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == check_api_key_errors
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={"api_key": "new_api_key"},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert len(hass.config_entries.async_entries()) == 1
     # Unload to make sure the update does not run after the
@@ -180,13 +181,13 @@ async def test_options_add_sensor(
 ) -> None:
     """Test adding a sensor via the options flow (including errors)."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={"next_step_id": "add_sensor"}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "add_sensor"
 
     # Test errors that can arise when searching for nearby sensors:
@@ -201,7 +202,7 @@ async def test_options_add_sensor(
                 "distance": 5,
             },
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "add_sensor"
 
     result = await hass.config_entries.options.async_configure(
@@ -212,7 +213,7 @@ async def test_options_add_sensor(
             "distance": 5,
         },
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "choose_sensor"
 
     result = await hass.config_entries.options.async_configure(
@@ -221,7 +222,7 @@ async def test_options_add_sensor(
             "sensor_index": str(TEST_SENSOR_INDEX2),
         },
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "sensor_indices": [TEST_SENSOR_INDEX1, TEST_SENSOR_INDEX2],
     }
@@ -240,13 +241,13 @@ async def test_options_add_sensor_duplicate(
 ) -> None:
     """Test adding a duplicate sensor via the options flow."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={"next_step_id": "add_sensor"}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "add_sensor"
 
     result = await hass.config_entries.options.async_configure(
@@ -257,7 +258,7 @@ async def test_options_add_sensor_duplicate(
             "distance": 5,
         },
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "choose_sensor"
 
     result = await hass.config_entries.options.async_configure(
@@ -266,7 +267,7 @@ async def test_options_add_sensor_duplicate(
             "sensor_index": str(TEST_SENSOR_INDEX1),
         },
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     # Unload to make sure the update does not run after the
     # mock is removed.
@@ -278,13 +279,13 @@ async def test_options_remove_sensor(
 ) -> None:
     """Test removing a sensor via the options flow."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={"next_step_id": "remove_sensor"}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "remove_sensor"
 
     device_registry = dr.async_get(hass)
@@ -295,7 +296,7 @@ async def test_options_remove_sensor(
         result["flow_id"],
         user_input={"sensor_device_id": device_entry.id},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "sensor_indices": [],
     }
@@ -311,19 +312,19 @@ async def test_options_settings(
 ) -> None:
     """Test setting settings via the options flow."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={"next_step_id": "settings"}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "settings"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={"show_on_map": True}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "sensor_indices": [TEST_SENSOR_INDEX1],
         "show_on_map": True,

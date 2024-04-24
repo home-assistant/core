@@ -1,4 +1,5 @@
 """Diagnostics support for Nanoleaf."""
+
 from __future__ import annotations
 
 from typing import Any

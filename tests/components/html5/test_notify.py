@@ -1,7 +1,8 @@
 """Test HTML5 notify platform."""
+
 from http import HTTPStatus
 import json
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import mock_open, patch
 
 from aiohttp.hdrs import AUTHORIZATION
 
@@ -16,9 +17,11 @@ CONFIG_FILE = "file.conf"
 
 VAPID_CONF = {
     "platform": "html5",
-    "vapid_pub_key": "BJMA2gDZEkHaXRhf1fhY_"
-    + "QbKbhVIHlSJXI0bFyo0eJXnUPOjdgycCAbj-2bMKMKNKs"
-    + "_rM8JoSnyKGCXAY2dbONI",
+    "vapid_pub_key": (
+        "BJMA2gDZEkHaXRhf1fhY_"
+        "QbKbhVIHlSJXI0bFyo0eJXnUPOjdgycCAbj-2bMKMKNKs"
+        "_rM8JoSnyKGCXAY2dbONI"
+    ),
     "vapid_prv_key": "ZwPgwKpESGuGLMZYU39vKgrekrWzCijo-LsBM3CZ9-c",
     "vapid_email": "someone@example.com",
 }
@@ -80,166 +83,174 @@ async def mock_client(hass, hass_client, registrations=None):
     return await hass_client()
 
 
-class TestHtml5Notify:
-    """Tests for HTML5 notify platform."""
+async def test_get_service_with_no_json(hass: HomeAssistant):
+    """Test empty json file."""
+    await async_setup_component(hass, "http", {})
+    m = mock_open()
+    with patch("homeassistant.util.json.open", m, create=True):
+        service = await html5.async_get_service(hass, VAPID_CONF)
 
-    def test_get_service_with_no_json(self):
-        """Test empty json file."""
-        hass = MagicMock()
+    assert service is not None
 
-        m = mock_open()
-        with patch("homeassistant.util.json.open", m, create=True):
-            service = html5.get_service(hass, VAPID_CONF)
 
-        assert service is not None
+@patch("homeassistant.components.html5.notify.WebPusher")
+async def test_dismissing_message(mock_wp, hass: HomeAssistant):
+    """Test dismissing message."""
+    await async_setup_component(hass, "http", {})
+    mock_wp().send().status_code = 201
 
-    @patch("homeassistant.components.html5.notify.WebPusher")
-    def test_dismissing_message(self, mock_wp):
-        """Test dismissing message."""
-        hass = MagicMock()
-        mock_wp().send().status_code = 201
+    data = {"device": SUBSCRIPTION_1}
 
-        data = {"device": SUBSCRIPTION_1}
+    m = mock_open(read_data=json.dumps(data))
+    with patch("homeassistant.util.json.open", m, create=True):
+        service = await html5.async_get_service(hass, VAPID_CONF)
+        service.hass = hass
 
-        m = mock_open(read_data=json.dumps(data))
-        with patch("homeassistant.util.json.open", m, create=True):
-            service = html5.get_service(hass, VAPID_CONF)
+    assert service is not None
 
-        assert service is not None
+    await service.async_dismiss(target=["device", "non_existing"], data={"tag": "test"})
 
-        service.dismiss(target=["device", "non_existing"], data={"tag": "test"})
+    assert len(mock_wp.mock_calls) == 4
 
-        assert len(mock_wp.mock_calls) == 4
+    # WebPusher constructor
+    assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_1["subscription"]
 
-        # WebPusher constructor
-        assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_1["subscription"]
+    # Call to send
+    payload = json.loads(mock_wp.mock_calls[3][2]["data"])
 
-        # Call to send
-        payload = json.loads(mock_wp.mock_calls[3][2]["data"])
+    assert payload["dismiss"] is True
+    assert payload["tag"] == "test"
 
-        assert payload["dismiss"] is True
-        assert payload["tag"] == "test"
 
-    @patch("homeassistant.components.html5.notify.WebPusher")
-    def test_sending_message(self, mock_wp):
-        """Test sending message."""
-        hass = MagicMock()
-        mock_wp().send().status_code = 201
+@patch("homeassistant.components.html5.notify.WebPusher")
+async def test_sending_message(mock_wp, hass: HomeAssistant):
+    """Test sending message."""
+    await async_setup_component(hass, "http", {})
+    mock_wp().send().status_code = 201
 
-        data = {"device": SUBSCRIPTION_1}
+    data = {"device": SUBSCRIPTION_1}
 
-        m = mock_open(read_data=json.dumps(data))
-        with patch("homeassistant.util.json.open", m, create=True):
-            service = html5.get_service(hass, VAPID_CONF)
+    m = mock_open(read_data=json.dumps(data))
+    with patch("homeassistant.util.json.open", m, create=True):
+        service = await html5.async_get_service(hass, VAPID_CONF)
+        service.hass = hass
 
-        assert service is not None
+    assert service is not None
 
-        service.send_message(
-            "Hello", target=["device", "non_existing"], data={"icon": "beer.png"}
-        )
+    await service.async_send_message(
+        "Hello", target=["device", "non_existing"], data={"icon": "beer.png"}
+    )
 
-        assert len(mock_wp.mock_calls) == 4
+    assert len(mock_wp.mock_calls) == 4
 
-        # WebPusher constructor
-        assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_1["subscription"]
+    # WebPusher constructor
+    assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_1["subscription"]
 
-        # Call to send
-        payload = json.loads(mock_wp.mock_calls[3][2]["data"])
+    # Call to send
+    payload = json.loads(mock_wp.mock_calls[3][2]["data"])
 
-        assert payload["body"] == "Hello"
-        assert payload["icon"] == "beer.png"
+    assert payload["body"] == "Hello"
+    assert payload["icon"] == "beer.png"
 
-    @patch("homeassistant.components.html5.notify.WebPusher")
-    def test_fcm_key_include(self, mock_wp):
-        """Test if the FCM header is included."""
-        hass = MagicMock()
-        mock_wp().send().status_code = 201
 
-        data = {"chrome": SUBSCRIPTION_5}
+@patch("homeassistant.components.html5.notify.WebPusher")
+async def test_fcm_key_include(mock_wp, hass: HomeAssistant):
+    """Test if the FCM header is included."""
+    await async_setup_component(hass, "http", {})
+    mock_wp().send().status_code = 201
 
-        m = mock_open(read_data=json.dumps(data))
-        with patch("homeassistant.util.json.open", m, create=True):
-            service = html5.get_service(hass, VAPID_CONF)
+    data = {"chrome": SUBSCRIPTION_5}
 
-        assert service is not None
+    m = mock_open(read_data=json.dumps(data))
+    with patch("homeassistant.util.json.open", m, create=True):
+        service = await html5.async_get_service(hass, VAPID_CONF)
+        service.hass = hass
 
-        service.send_message("Hello", target=["chrome"])
+    assert service is not None
 
-        assert len(mock_wp.mock_calls) == 4
-        # WebPusher constructor
-        assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_5["subscription"]
+    await service.async_send_message("Hello", target=["chrome"])
 
-        # Get the keys passed to the WebPusher's send method
-        assert mock_wp.mock_calls[3][2]["headers"]["Authorization"] is not None
+    assert len(mock_wp.mock_calls) == 4
+    # WebPusher constructor
+    assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_5["subscription"]
 
-    @patch("homeassistant.components.html5.notify.WebPusher")
-    def test_fcm_send_with_unknown_priority(self, mock_wp):
-        """Test if the gcm_key is only included for GCM endpoints."""
-        hass = MagicMock()
-        mock_wp().send().status_code = 201
+    # Get the keys passed to the WebPusher's send method
+    assert mock_wp.mock_calls[3][2]["headers"]["Authorization"] is not None
 
-        data = {"chrome": SUBSCRIPTION_5}
 
-        m = mock_open(read_data=json.dumps(data))
-        with patch("homeassistant.util.json.open", m, create=True):
-            service = html5.get_service(hass, VAPID_CONF)
+@patch("homeassistant.components.html5.notify.WebPusher")
+async def test_fcm_send_with_unknown_priority(mock_wp, hass: HomeAssistant):
+    """Test if the gcm_key is only included for GCM endpoints."""
+    await async_setup_component(hass, "http", {})
+    mock_wp().send().status_code = 201
 
-        assert service is not None
+    data = {"chrome": SUBSCRIPTION_5}
 
-        service.send_message("Hello", target=["chrome"], priority="undefined")
+    m = mock_open(read_data=json.dumps(data))
+    with patch("homeassistant.util.json.open", m, create=True):
+        service = await html5.async_get_service(hass, VAPID_CONF)
+        service.hass = hass
 
-        assert len(mock_wp.mock_calls) == 4
-        # WebPusher constructor
-        assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_5["subscription"]
+    assert service is not None
 
-        # Get the keys passed to the WebPusher's send method
-        assert mock_wp.mock_calls[3][2]["headers"]["priority"] == "normal"
+    await service.async_send_message("Hello", target=["chrome"], priority="undefined")
 
-    @patch("homeassistant.components.html5.notify.WebPusher")
-    def test_fcm_no_targets(self, mock_wp):
-        """Test if the gcm_key is only included for GCM endpoints."""
-        hass = MagicMock()
-        mock_wp().send().status_code = 201
+    assert len(mock_wp.mock_calls) == 4
+    # WebPusher constructor
+    assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_5["subscription"]
 
-        data = {"chrome": SUBSCRIPTION_5}
+    # Get the keys passed to the WebPusher's send method
+    assert mock_wp.mock_calls[3][2]["headers"]["priority"] == "normal"
 
-        m = mock_open(read_data=json.dumps(data))
-        with patch("homeassistant.util.json.open", m, create=True):
-            service = html5.get_service(hass, VAPID_CONF)
 
-        assert service is not None
+@patch("homeassistant.components.html5.notify.WebPusher")
+async def test_fcm_no_targets(mock_wp, hass: HomeAssistant):
+    """Test if the gcm_key is only included for GCM endpoints."""
+    await async_setup_component(hass, "http", {})
+    mock_wp().send().status_code = 201
 
-        service.send_message("Hello")
+    data = {"chrome": SUBSCRIPTION_5}
 
-        assert len(mock_wp.mock_calls) == 4
-        # WebPusher constructor
-        assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_5["subscription"]
+    m = mock_open(read_data=json.dumps(data))
+    with patch("homeassistant.util.json.open", m, create=True):
+        service = await html5.async_get_service(hass, VAPID_CONF)
+        service.hass = hass
 
-        # Get the keys passed to the WebPusher's send method
-        assert mock_wp.mock_calls[3][2]["headers"]["priority"] == "normal"
+    assert service is not None
 
-    @patch("homeassistant.components.html5.notify.WebPusher")
-    def test_fcm_additional_data(self, mock_wp):
-        """Test if the gcm_key is only included for GCM endpoints."""
-        hass = MagicMock()
-        mock_wp().send().status_code = 201
+    await service.async_send_message("Hello")
 
-        data = {"chrome": SUBSCRIPTION_5}
+    assert len(mock_wp.mock_calls) == 4
+    # WebPusher constructor
+    assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_5["subscription"]
 
-        m = mock_open(read_data=json.dumps(data))
-        with patch("homeassistant.util.json.open", m, create=True):
-            service = html5.get_service(hass, VAPID_CONF)
+    # Get the keys passed to the WebPusher's send method
+    assert mock_wp.mock_calls[3][2]["headers"]["priority"] == "normal"
 
-        assert service is not None
 
-        service.send_message("Hello", data={"mykey": "myvalue"})
+@patch("homeassistant.components.html5.notify.WebPusher")
+async def test_fcm_additional_data(mock_wp, hass: HomeAssistant):
+    """Test if the gcm_key is only included for GCM endpoints."""
+    await async_setup_component(hass, "http", {})
+    mock_wp().send().status_code = 201
 
-        assert len(mock_wp.mock_calls) == 4
-        # WebPusher constructor
-        assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_5["subscription"]
+    data = {"chrome": SUBSCRIPTION_5}
 
-        # Get the keys passed to the WebPusher's send method
-        assert mock_wp.mock_calls[3][2]["headers"]["priority"] == "normal"
+    m = mock_open(read_data=json.dumps(data))
+    with patch("homeassistant.util.json.open", m, create=True):
+        service = await html5.async_get_service(hass, VAPID_CONF)
+        service.hass = hass
+
+    assert service is not None
+
+    await service.async_send_message("Hello", data={"mykey": "myvalue"})
+
+    assert len(mock_wp.mock_calls) == 4
+    # WebPusher constructor
+    assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_5["subscription"]
+
+    # Get the keys passed to the WebPusher's send method
+    assert mock_wp.mock_calls[3][2]["headers"]["priority"] == "normal"
 
 
 async def test_registering_new_device_view(

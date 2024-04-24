@@ -1,24 +1,30 @@
 """The tests for the Group components."""
+
 from __future__ import annotations
 
+import asyncio
 from collections import OrderedDict
 from typing import Any
 from unittest.mock import patch
 
 import pytest
 
-import homeassistant.components.group as group
+from homeassistant.components import group, vacuum
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     EVENT_HOMEASSISTANT_START,
     SERVICE_RELOAD,
+    STATE_CLOSED,
     STATE_HOME,
+    STATE_LOCKED,
     STATE_NOT_HOME,
     STATE_OFF,
     STATE_ON,
+    STATE_OPEN,
     STATE_UNKNOWN,
+    STATE_UNLOCKED,
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -553,6 +559,7 @@ async def test_group_updated_after_device_tracker_zone_change(
 
     assert await async_setup_component(hass, "group", {})
     assert await async_setup_component(hass, "device_tracker", {})
+    await hass.async_block_till_done()
 
     await group.Group.async_create_group(
         hass,
@@ -599,6 +606,126 @@ async def test_is_on(hass: HomeAssistant) -> None:
 
     # Try on non existing state
     assert not group.is_on(hass, "non.existing")
+
+
+@pytest.mark.parametrize(
+    (
+        "domains",
+        "states_old",
+        "states_new",
+        "state_ison_group_old",
+        "state_ison_group_new",
+    ),
+    [
+        (
+            ("light", "light"),
+            (STATE_ON, STATE_OFF),
+            (STATE_OFF, STATE_OFF),
+            (STATE_ON, True),
+            (STATE_OFF, False),
+        ),
+        (
+            ("cover", "cover"),
+            (STATE_OPEN, STATE_CLOSED),
+            (STATE_CLOSED, STATE_CLOSED),
+            (STATE_OPEN, True),
+            (STATE_CLOSED, False),
+        ),
+        (
+            ("lock", "lock"),
+            (STATE_UNLOCKED, STATE_LOCKED),
+            (STATE_LOCKED, STATE_LOCKED),
+            (STATE_UNLOCKED, True),
+            (STATE_LOCKED, False),
+        ),
+        (
+            ("cover", "lock"),
+            (STATE_OPEN, STATE_LOCKED),
+            (STATE_CLOSED, STATE_LOCKED),
+            (STATE_ON, True),
+            (STATE_OFF, False),
+        ),
+        (
+            ("cover", "lock"),
+            (STATE_OPEN, STATE_UNLOCKED),
+            (STATE_CLOSED, STATE_LOCKED),
+            (STATE_ON, True),
+            (STATE_OFF, False),
+        ),
+        (
+            ("cover", "lock", "light"),
+            (STATE_OPEN, STATE_LOCKED, STATE_ON),
+            (STATE_CLOSED, STATE_LOCKED, STATE_OFF),
+            (STATE_ON, True),
+            (STATE_OFF, False),
+        ),
+        (
+            ("vacuum", "vacuum"),
+            # Cleaning is the only on state
+            (vacuum.STATE_DOCKED, vacuum.STATE_CLEANING),
+            # Returning is the only on state
+            (vacuum.STATE_RETURNING, vacuum.STATE_PAUSED),
+            (vacuum.STATE_CLEANING, True),
+            (vacuum.STATE_RETURNING, True),
+        ),
+        (
+            ("vacuum", "vacuum"),
+            # Multiple on states, so group state will be STATE_ON
+            (vacuum.STATE_RETURNING, vacuum.STATE_CLEANING),
+            # Only off states, so group state will be off
+            (vacuum.STATE_PAUSED, vacuum.STATE_IDLE),
+            (STATE_ON, True),
+            (STATE_OFF, False),
+        ),
+    ],
+)
+async def test_is_on_and_state_mixed_domains(
+    hass: HomeAssistant,
+    domains: tuple[str, ...],
+    states_old: tuple[str, ...],
+    states_new: tuple[str, ...],
+    state_ison_group_old: tuple[str, bool],
+    state_ison_group_new: tuple[str, bool],
+) -> None:
+    """Test is_on method with mixed domains."""
+    count = len(domains)
+    entity_ids = [f"{domains[index]}.test_{index}" for index in range(count)]
+    for index in range(count):
+        hass.states.async_set(entity_ids[index], states_old[index])
+
+    assert not group.is_on(hass, "group.none")
+    await asyncio.gather(
+        *[async_setup_component(hass, domain, {}) for domain in set(domains)]
+    )
+    assert await async_setup_component(hass, "group", {})
+    await hass.async_block_till_done()
+
+    test_group = await group.Group.async_create_group(
+        hass,
+        "init_group",
+        created_by_service=True,
+        entity_ids=entity_ids,
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
+    )
+    await hass.async_block_till_done()
+
+    # Assert on old state
+    state = hass.states.get(test_group.entity_id)
+    assert state is not None
+    assert state.state == state_ison_group_old[0]
+    assert group.is_on(hass, test_group.entity_id) == state_ison_group_old[1]
+
+    # Switch and assert on new state
+    for index in range(count):
+        hass.states.async_set(entity_ids[index], states_new[index])
+    await hass.async_block_till_done()
+    state = hass.states.get(test_group.entity_id)
+    assert state is not None
+    assert state.state == state_ison_group_new[0]
+    assert group.is_on(hass, test_group.entity_id) == state_ison_group_new[1]
 
 
 async def test_reloading_groups(hass: HomeAssistant) -> None:
@@ -758,6 +885,7 @@ async def test_service_group_services_add_remove_entities(hass: HomeAssistant) -
     assert await async_setup_component(hass, "person", {})
     with assert_setup_component(0, "group"):
         await async_setup_component(hass, "group", {"group": {}})
+    await hass.async_block_till_done()
 
     assert hass.services.has_service("group", group.SERVICE_SET)
 
@@ -1110,7 +1238,7 @@ async def test_group_climate_all_cool(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("group.group_zero").state == STATE_ON
+    assert hass.states.get("group.group_zero").state == "cool"
 
 
 async def test_group_climate_all_off(hass: HomeAssistant) -> None:
@@ -1224,11 +1352,13 @@ async def test_group_vacuum_on(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("group.group_zero").state == STATE_ON
+    assert hass.states.get("group.group_zero").state == "cleaning"
 
 
 async def test_device_tracker_not_home(hass: HomeAssistant) -> None:
     """Test group of device_tracker not_home."""
+    await async_setup_component(hass, "device_tracker", {})
+    await hass.async_block_till_done()
     hass.states.async_set("device_tracker.one", "not_home")
     hass.states.async_set("device_tracker.two", "not_home")
     hass.states.async_set("device_tracker.three", "not_home")
@@ -1621,7 +1751,7 @@ async def test_plant_group(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("group_type", "member_state", "extra_options"),
-    (
+    [
         ("binary_sensor", "on", {"all": False}),
         ("cover", "open", {}),
         ("fan", "on", {}),
@@ -1637,7 +1767,7 @@ async def test_plant_group(hass: HomeAssistant) -> None:
                 "state_class": "measurement",
             },
         ),
-    ),
+    ],
 )
 async def test_setup_and_remove_config_entry(
     hass: HomeAssistant,
@@ -1684,24 +1814,24 @@ async def test_setup_and_remove_config_entry(
 
 @pytest.mark.parametrize(
     ("hide_members", "hidden_by_initial", "hidden_by"),
-    (
+    [
         (False, er.RegistryEntryHider.INTEGRATION, er.RegistryEntryHider.INTEGRATION),
         (False, None, None),
         (False, er.RegistryEntryHider.USER, er.RegistryEntryHider.USER),
         (True, er.RegistryEntryHider.INTEGRATION, None),
         (True, None, None),
         (True, er.RegistryEntryHider.USER, er.RegistryEntryHider.USER),
-    ),
+    ],
 )
 @pytest.mark.parametrize(
     ("group_type", "extra_options"),
-    (
+    [
         ("binary_sensor", {"all": False}),
         ("cover", {}),
         ("fan", {}),
         ("light", {"all": False}),
         ("media_player", {}),
-    ),
+    ],
 )
 async def test_unhide_members_on_remove(
     hass: HomeAssistant,

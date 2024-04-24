@@ -1,4 +1,5 @@
 """Test BMW numbers."""
+
 from unittest.mock import AsyncMock
 
 from bimmer_connected.models import MyBMWAPIError, MyBMWRemoteServiceError

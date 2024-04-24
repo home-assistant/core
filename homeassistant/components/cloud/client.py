@@ -1,4 +1,5 @@
 """Interface implementation for cloud client."""
+
 from __future__ import annotations
 
 import asyncio
@@ -249,6 +250,7 @@ class CloudClient(Interface):
                 "enabled": self._prefs.remote_enabled,
                 "instance_domain": self.cloud.remote.instance_domain,
                 "alias": self.cloud.remote.alias,
+                "strict_connection": self._prefs.strict_connection,
             },
             "version": HA_VERSION,
             "instance_id": self.prefs.instance_id,
@@ -270,13 +272,23 @@ class CloudClient(Interface):
         """Process cloud google message to client."""
         gconf = await self.get_google_config()
 
+        msgid: Any = "<UNKNOWN>"
+        if isinstance(payload, dict):
+            msgid = payload.get("requestId")
+        _LOGGER.debug("Received cloud message %s", msgid)
+
         if not self._prefs.google_enabled:
             return ga.api_disabled_response(  # type: ignore[no-any-return, no-untyped-call]
                 payload, gconf.agent_user_id
             )
 
         return await ga.async_handle_message(  # type: ignore[no-any-return, no-untyped-call]
-            self._hass, gconf, gconf.cloud_user, payload, google_assistant.SOURCE_CLOUD
+            self._hass,
+            gconf,
+            gconf.agent_user_id,
+            gconf.cloud_user,
+            payload,
+            google_assistant.SOURCE_CLOUD,
         )
 
     async def async_webhook_message(self, payload: dict[Any, Any]) -> dict[Any, Any]:

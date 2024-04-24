@@ -1,4 +1,5 @@
 """Test the Kuler Sky lights."""
+
 from unittest.mock import MagicMock, patch
 
 import pykulersky

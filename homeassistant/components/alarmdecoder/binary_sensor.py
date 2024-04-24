@@ -1,4 +1,5 @@
 """Support for AlarmDecoder zone states- represented as binary sensors."""
+
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity

@@ -1,4 +1,5 @@
 """The tests for the UniFi Network device tracker platform."""
+
 from datetime import timedelta
 
 from aiounifi.models.message import MessageKey
@@ -9,11 +10,13 @@ from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.unifi.const import (
     CONF_BLOCK_CLIENT,
     CONF_CLIENT_SOURCE,
+    CONF_DETECTION_TIME,
     CONF_IGNORE_WIRED_BUG,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
+    DEFAULT_DETECTION_TIME,
     DOMAIN as UNIFI_DOMAIN,
 )
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
@@ -55,7 +58,6 @@ async def test_tracked_wireless_clients(
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, clients_response=[client]
     )
-    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
     assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
@@ -70,7 +72,9 @@ async def test_tracked_wireless_clients(
 
     # Change time to mark client as away
 
-    new_time = dt_util.utcnow() + hub.option_detection_time
+    new_time = dt_util.utcnow() + timedelta(
+        seconds=config_entry.options.get(CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME)
+    )
     with freeze_time(new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
@@ -194,7 +198,7 @@ async def test_tracked_wireless_clients_event_source(
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, clients_response=[client]
     )
-    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
     assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
 
@@ -243,7 +247,14 @@ async def test_tracked_wireless_clients_event_source(
     assert hass.states.get("device_tracker.client").state == STATE_HOME
 
     # Change time to mark client as away
-    freezer.tick(hub.option_detection_time + timedelta(seconds=1))
+    freezer.tick(
+        timedelta(
+            seconds=(
+                config_entry.options.get(CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME)
+                + 1
+            )
+        )
+    )
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -282,7 +293,14 @@ async def test_tracked_wireless_clients_event_source(
     assert hass.states.get("device_tracker.client").state == STATE_HOME
 
     # Change time to mark client as away
-    freezer.tick(hub.option_detection_time + timedelta(seconds=1))
+    freezer.tick(
+        timedelta(
+            seconds=(
+                config_entry.options.get(CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME)
+                + 1
+            )
+        )
+    )
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -682,10 +700,8 @@ async def test_option_ssid_filter(
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, clients_response=[client, client_on_ssid2]
     )
-    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
-
     assert hass.states.get("device_tracker.client").state == STATE_HOME
     assert hass.states.get("device_tracker.client_on_ssid2").state == STATE_NOT_HOME
 
@@ -711,7 +727,11 @@ async def test_option_ssid_filter(
     mock_unifi_websocket(message=MessageKey.CLIENT, data=client_on_ssid2)
     await hass.async_block_till_done()
 
-    new_time = dt_util.utcnow() + hub.option_detection_time
+    new_time = dt_util.utcnow() + timedelta(
+        seconds=(
+            config_entry.options.get(CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME) + 1
+        )
+    )
     with freeze_time(new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
@@ -739,7 +759,11 @@ async def test_option_ssid_filter(
 
     # Time pass to mark client as away
 
-    new_time += hub.option_detection_time
+    new_time += timedelta(
+        seconds=(
+            config_entry.options.get(CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME) + 1
+        )
+    )
     with freeze_time(new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
@@ -758,7 +782,9 @@ async def test_option_ssid_filter(
     mock_unifi_websocket(message=MessageKey.CLIENT, data=client_on_ssid2)
     await hass.async_block_till_done()
 
-    new_time += hub.option_detection_time
+    new_time += timedelta(
+        seconds=(config_entry.options.get(CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME))
+    )
     with freeze_time(new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
@@ -788,7 +814,6 @@ async def test_wireless_client_go_wired_issue(
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, clients_response=[client]
     )
-    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
 
@@ -807,7 +832,9 @@ async def test_wireless_client_go_wired_issue(
     assert client_state.state == STATE_HOME
 
     # Pass time
-    new_time = dt_util.utcnow() + hub.option_detection_time
+    new_time = dt_util.utcnow() + timedelta(
+        seconds=(config_entry.options.get(CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME))
+    )
     with freeze_time(new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
@@ -859,7 +886,6 @@ async def test_option_ignore_wired_bug(
         options={CONF_IGNORE_WIRED_BUG: True},
         clients_response=[client],
     )
-    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
 
     # Client is wireless
@@ -876,7 +902,9 @@ async def test_option_ignore_wired_bug(
     assert client_state.state == STATE_HOME
 
     # pass time
-    new_time = dt_util.utcnow() + hub.option_detection_time
+    new_time = dt_util.utcnow() + timedelta(
+        seconds=config_entry.options.get(CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME)
+    )
     with freeze_time(new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()

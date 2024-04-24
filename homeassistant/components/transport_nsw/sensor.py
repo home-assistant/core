@@ -1,4 +1,5 @@
 """Support for Transport NSW (AU) to query next leave event."""
+
 from __future__ import annotations
 
 from datetime import timedelta

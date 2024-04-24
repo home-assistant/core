@@ -1,4 +1,5 @@
 """Base entity for Tami4Edge."""
+
 from __future__ import annotations
 
 from Tami4EdgeAPI import Tami4EdgeAPI

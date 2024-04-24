@@ -1,4 +1,5 @@
 """Definition of air-Q sensor platform."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -37,16 +38,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class AirQEntityDescriptionMixin:
-    """Class for keys required by AirQ entity."""
+@dataclass(frozen=True, kw_only=True)
+class AirQEntityDescription(SensorEntityDescription):
+    """Describes AirQ sensor entity."""
 
     value: Callable[[dict], float | int | None]
-
-
-@dataclass(frozen=True)
-class AirQEntityDescription(SensorEntityDescription, AirQEntityDescriptionMixin):
-    """Describes AirQ sensor entity."""
 
 
 # Keys must match those in the data dictionary

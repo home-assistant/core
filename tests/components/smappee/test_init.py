@@ -1,4 +1,5 @@
 """Tests for the Smappee component init module."""
+
 from unittest.mock import patch
 
 from homeassistant.components.smappee.const import DOMAIN
@@ -10,14 +11,19 @@ from tests.common import MockConfigEntry
 
 async def test_unload_config_entry(hass: HomeAssistant) -> None:
     """Test unload config entry flow."""
-    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}), patch(
-        "pysmappee.api.SmappeeLocalApi.load_advanced_config",
-        return_value=[{"key": "mdnsHostName", "value": "Smappee1006000212"}],
-    ), patch(
-        "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
-    ), patch(
-        "pysmappee.api.SmappeeLocalApi.load_instantaneous",
-        return_value=[{"key": "phase0ActivePower", "value": 0}],
+    with (
+        patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_advanced_config",
+            return_value=[{"key": "mdnsHostName", "value": "Smappee1006000212"}],
+        ),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
+        ),
+        patch(
+            "pysmappee.api.SmappeeLocalApi.load_instantaneous",
+            return_value=[{"key": "phase0ActivePower", "value": 0}],
+        ),
     ):
         config_entry = MockConfigEntry(
             domain=DOMAIN,

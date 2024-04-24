@@ -1,4 +1,5 @@
 """Config flow for Bond integration."""
+
 from __future__ import annotations
 
 import contextlib
@@ -10,12 +11,11 @@ from aiohttp import ClientConnectionError, ClientResponseError
 from bond_async import Bond
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
 from homeassistant.components import zeroconf
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -66,7 +66,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> tuple[st
     return hub.bond_id, hub.name
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class BondConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bond."""
 
     VERSION = 1
@@ -98,7 +98,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         name: str = discovery_info.name
         host: str = discovery_info.host
@@ -113,7 +113,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 updates[CONF_ACCESS_TOKEN] = token
             return self.async_update_reload_and_abort(
-                entry, data={**entry.data, **updates}, reason="already_configured"
+                entry,
+                data={**entry.data, **updates},
+                reason="already_configured",
+                reload_even_if_entry_is_unchanged=False,
             )
 
         self._discovered = {CONF_HOST: host, CONF_NAME: bond_id}
@@ -132,7 +135,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle confirmation flow for discovered bond hub."""
         errors = {}
         if user_input is not None:
@@ -173,7 +176,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
@@ -191,7 +194,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class InputValidationError(exceptions.HomeAssistantError):
+class InputValidationError(HomeAssistantError):
     """Error to indicate we cannot proceed due to invalid input."""
 
     def __init__(self, base: str) -> None:

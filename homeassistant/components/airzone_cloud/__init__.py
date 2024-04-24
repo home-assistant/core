@@ -1,4 +1,5 @@
 """The Airzone Cloud integration."""
+
 from __future__ import annotations
 
 from aioairzone_cloud.cloudapi import AirzoneCloudApi
@@ -15,7 +16,9 @@ from .coordinator import AirzoneUpdateCoordinator
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
+    Platform.SELECT,
     Platform.SENSOR,
+    Platform.WATER_HEATER,
 ]
 
 
@@ -24,6 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     options = ConnectionOptions(
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
+        True,
     )
 
     airzone = AirzoneCloudApi(aiohttp_client.async_get_clientsession(hass), options)
