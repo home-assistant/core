@@ -50,7 +50,7 @@ async def test_form_with_logger(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] is None
+    assert not result["errors"]
 
     with (
         patch(
@@ -85,7 +85,7 @@ async def test_form_with_inverter(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] is None
+    assert not result["errors"]
 
     with (
         patch(
@@ -338,3 +338,182 @@ async def test_dhcp_invalid(
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_host"
+
+
+async def test_reconfigure(hass: HomeAssistant) -> None:
+    """Test reconfiguring an entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="123.4567890",
+        data={
+            CONF_HOST: "10.1.2.3",
+            "is_logger": True,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": entry.entry_id,
+        },
+        data=entry.data,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with (
+        patch(
+            "pyfronius.Fronius.current_logger_info",
+            side_effect=FroniusError,
+        ),
+        patch(
+            "pyfronius.Fronius.inverter_info",
+            return_value=INVERTER_INFO_RETURN_VALUE,
+        ),
+        patch(
+            "homeassistant.components.fronius.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                "host": "10.9.1.1",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        "host": "10.9.1.1",
+        "is_logger": False,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reconfigure_cannot_connect(hass: HomeAssistant) -> None:
+    """Test we handle cannot connect error."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="123.4567890",
+        data={
+            CONF_HOST: "10.1.2.3",
+            "is_logger": True,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": entry.entry_id,
+        },
+        data=entry.data,
+    )
+
+    with (
+        patch(
+            "pyfronius.Fronius.current_logger_info",
+            side_effect=FroniusError,
+        ),
+        patch(
+            "pyfronius.Fronius.inverter_info",
+            side_effect=FroniusError,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reconfigure_unexpected(hass: HomeAssistant) -> None:
+    """Test we handle unexpected error."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="123.4567890",
+        data={
+            CONF_HOST: "10.1.2.3",
+            "is_logger": True,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": entry.entry_id,
+        },
+        data=entry.data,
+    )
+
+    with patch(
+        "pyfronius.Fronius.current_logger_info",
+        side_effect=KeyError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_reconfigure_already_existing(hass: HomeAssistant) -> None:
+    """Test reconfiguring entry to already existing one."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="123.4567890",
+        data={
+            CONF_HOST: "10.1.2.3",
+            "is_logger": True,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    entry_2_uid = "222.2222222"
+    entry_2 = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=entry_2_uid,
+        data={
+            CONF_HOST: "10.2.2.2",
+            "is_logger": True,
+        },
+    )
+    entry_2.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": entry.entry_id,
+        },
+        data=entry.data,
+    )
+    with patch(
+        "pyfronius.Fronius.current_logger_info",
+        return_value={"unique_identifier": {"value": entry_2_uid}},
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "10.2.2.2",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
