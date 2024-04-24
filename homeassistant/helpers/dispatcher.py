@@ -199,6 +199,9 @@ def async_dispatcher_send(
 
     This method must be run in the event loop.
     """
+    if hass.config.debug:
+        hass.verify_event_loop_thread("async_dispatcher_send")
+
     if (maybe_dispatchers := hass.data.get(DATA_DISPATCHER)) is None:
         return
     dispatchers: _DispatcherDataType[*_Ts] = maybe_dispatchers
