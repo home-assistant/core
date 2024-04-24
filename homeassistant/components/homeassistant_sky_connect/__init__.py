@@ -28,8 +28,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
     if config_entry.version == 1:
-        # Core cannot stall addon startup so we can't probe the real firmware running on
-        # the stick. Instead, we must make an educated guess!
+        # Add-on startup with type service get started before Core, always (e.g. the
+        # Multi-Protocol add-on). Probing the firmware would interfere with the add-on,
+        # so we can't safely probe here. Instead, we must make an educated guess!
         firmware_guess = await guess_firmware_type(hass, config_entry.data["device"])
 
         new_data = {**config_entry.data}
