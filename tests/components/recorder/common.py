@@ -109,7 +109,9 @@ async def async_wait_recording_done(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def async_wait_purge_done(hass: HomeAssistant, max: int | None = None) -> None:
+async def async_wait_purge_done(
+    hass: HomeAssistant, max_number: int | None = None
+) -> None:
     """Wait for max number of purge events.
 
     Because a purge may insert another PurgeTask into
@@ -117,9 +119,9 @@ async def async_wait_purge_done(hass: HomeAssistant, max: int | None = None) -> 
     a maximum number of WaitTasks that we will put into the
     queue.
     """
-    if not max:
-        max = DEFAULT_PURGE_TASKS
-    for _ in range(max + 1):
+    if not max_number:
+        max_number = DEFAULT_PURGE_TASKS
+    for _ in range(max_number + 1):
         await async_wait_recording_done(hass)
 
 
@@ -325,10 +327,10 @@ def convert_pending_states_to_meta(instance: Recorder, session: Session) -> None
     entity_ids: set[str] = set()
     states: set[States] = set()
     states_meta_objects: dict[str, StatesMeta] = {}
-    for object in session:
-        if isinstance(object, States):
-            entity_ids.add(object.entity_id)
-            states.add(object)
+    for session_object in session:
+        if isinstance(session_object, States):
+            entity_ids.add(session_object.entity_id)
+            states.add(session_object)
 
     entity_id_to_metadata_ids = instance.states_meta_manager.get_many(
         entity_ids, session, True
@@ -352,10 +354,10 @@ def convert_pending_events_to_event_types(instance: Recorder, session: Session) 
     event_types: set[str] = set()
     events: set[Events] = set()
     event_types_objects: dict[str, EventTypes] = {}
-    for object in session:
-        if isinstance(object, Events):
-            event_types.add(object.event_type)
-            events.add(object)
+    for session_object in session:
+        if isinstance(session_object, Events):
+            event_types.add(session_object.event_type)
+            events.add(session_object)
 
     event_type_to_event_type_ids = instance.event_type_manager.get_many(
         event_types, session, True
