@@ -327,7 +327,7 @@ async def test_service_create_temporary_strict_connection_url_strict_connection_
     ("mode"),
     [
         StrictConnectionMode.DROP_CONNECTION,
-        StrictConnectionMode.STATIC_PAGE,
+        StrictConnectionMode.GUARD_PAGE,
     ],
 )
 async def test_service_create_temporary_strict_connection(
