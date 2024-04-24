@@ -42,7 +42,8 @@ async def test_hardware_info(
         options={},
         title="Home Assistant SkyConnect",
         unique_id="unique_1",
-        version=2,
+        version=1,
+        minor_version=2,
     )
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -53,7 +54,8 @@ async def test_hardware_info(
         options={},
         title="Home Assistant Connect ZBT-1",
         unique_id="unique_2",
-        version=2,
+        version=1,
+        minor_version=2,
     )
     config_entry_2.add_to_hass(hass)
 

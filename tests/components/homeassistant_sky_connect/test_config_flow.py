@@ -584,7 +584,8 @@ async def test_options_flow_zigbee_to_thread(
             "serial_number": usb_data.serial_number,
             "vid": usb_data.vid,
         },
-        version=2,
+        version=1,
+        minor_version=2,
     )
     config_entry.add_to_hass(hass)
 
@@ -708,7 +709,8 @@ async def test_options_flow_thread_to_zigbee(
             "serial_number": usb_data.serial_number,
             "vid": usb_data.vid,
         },
-        version=2,
+        version=1,
+        minor_version=2,
     )
     config_entry.add_to_hass(hass)
 
@@ -844,7 +846,8 @@ async def test_options_flow_multipan_uninstall(
             "serial_number": usb_data.serial_number,
             "vid": usb_data.vid,
         },
-        version=2,
+        version=1,
+        minor_version=2,
     )
     config_entry.add_to_hass(hass)
 

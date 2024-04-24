@@ -479,8 +479,8 @@ class HomeAssistantSkyConnectConfigFlow(
 ):
     """Handle a config flow for Home Assistant SkyConnect."""
 
-    VERSION = 2
-    MINOR_VERSION = 1
+    VERSION = 1
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback
