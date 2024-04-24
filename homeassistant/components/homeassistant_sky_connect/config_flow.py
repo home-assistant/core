@@ -550,6 +550,7 @@ class HomeAssistantSkyConnectConfigFlow(
                 "pid": self._usb_info.pid,
                 "serial_number": self._usb_info.serial_number,
                 "manufacturer": self._usb_info.manufacturer,
+                "description": self._usb_info.description,  # For backwards compatibility
                 "product": self._usb_info.description,
                 "device": self._usb_info.device,
                 "firmware": self._probed_firmware_type.value,
