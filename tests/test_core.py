@@ -1148,11 +1148,11 @@ async def test_eventbus_filtered_listener(hass: HomeAssistant) -> None:
         calls.append(event)
 
     @ha.callback
-    def filter(event_data):
+    def mock_filter(event_data):
         """Mock filter."""
         return not event_data["filtered"]
 
-    unsub = hass.bus.async_listen("test", listener, event_filter=filter)
+    unsub = hass.bus.async_listen("test", listener, event_filter=mock_filter)
 
     hass.bus.async_fire("test", {"filtered": True})
     await hass.async_block_till_done()
@@ -1990,6 +1990,7 @@ async def test_config_as_dict() -> None:
         "country": None,
         "language": "en",
         "safe_mode": False,
+        "debug": False,
     }
 
     assert expected == config.as_dict()
@@ -3274,11 +3275,11 @@ async def test_eventbus_lazy_object_creation(hass: HomeAssistant) -> None:
         calls.append(event)
 
     @ha.callback
-    def filter(event_data):
+    def mock_filter(event_data):
         """Mock filter."""
         return not event_data["filtered"]
 
-    unsub = hass.bus.async_listen("test_1", listener, event_filter=filter)
+    unsub = hass.bus.async_listen("test_1", listener, event_filter=mock_filter)
 
     # Test lazy creation of Event objects
     with patch("homeassistant.core.Event") as mock_event:
@@ -3343,7 +3344,7 @@ async def test_statemachine_report_state(hass: HomeAssistant) -> None:
     """Test report state event."""
 
     @ha.callback
-    def filter(event_data):
+    def mock_filter(event_data):
         """Mock filter."""
         return True
 
@@ -3354,7 +3355,7 @@ async def test_statemachine_report_state(hass: HomeAssistant) -> None:
     hass.states.async_set("light.bowl", "on", {})
     state_changed_events = async_capture_events(hass, EVENT_STATE_CHANGED)
     state_reported_events = []
-    hass.bus.async_listen(EVENT_STATE_REPORTED, listener, event_filter=filter)
+    hass.bus.async_listen(EVENT_STATE_REPORTED, listener, event_filter=mock_filter)
 
     hass.states.async_set("light.bowl", "on")
     await hass.async_block_till_done()
@@ -3385,7 +3386,7 @@ async def test_report_state_listener_restrictions(hass: HomeAssistant) -> None:
         """Mock listener."""
 
     @ha.callback
-    def filter(event_data):
+    def mock_filter(event_data):
         """Mock filter."""
         return False
 
@@ -3394,7 +3395,7 @@ async def test_report_state_listener_restrictions(hass: HomeAssistant) -> None:
         hass.bus.async_listen(EVENT_STATE_REPORTED, listener)
 
     # Both filter and run_immediately
-    hass.bus.async_listen(EVENT_STATE_REPORTED, listener, event_filter=filter)
+    hass.bus.async_listen(EVENT_STATE_REPORTED, listener, event_filter=mock_filter)
 
 
 @pytest.mark.parametrize(
@@ -3439,3 +3440,22 @@ async def test_top_level_components(hass: HomeAssistant) -> None:
         hass.config.components.remove("homeassistant.scene")
     with pytest.raises(NotImplementedError):
         hass.config.components.discard("homeassistant")
+
+
+async def test_debug_mode_defaults_to_off(hass: HomeAssistant) -> None:
+    """Test debug mode defaults to off."""
+    assert not hass.config.debug
+
+
+async def test_async_fire_thread_safety(hass: HomeAssistant) -> None:
+    """Test async_fire thread safety."""
+    hass.config.debug = True
+
+    events = async_capture_events(hass, "test_event")
+    hass.bus.async_fire("test_event")
+    with pytest.raises(
+        RuntimeError, match="Detected code that calls async_fire from a thread."
+    ):
+        await hass.async_add_executor_job(hass.bus.async_fire, "test_event")
+
+    assert len(events) == 1

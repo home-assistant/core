@@ -15,12 +15,11 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import TotalConnectDataUpdateCoordinator
 from .const import DOMAIN
+from .entity import TotalConnectLocationEntity, TotalConnectZoneEntity
 
 LOW_BATTERY = "low_battery"
 TAMPER = "tamper"
@@ -55,7 +54,7 @@ def get_security_zone_device_class(zone: TotalConnectZone) -> BinarySensorDevice
 
 SECURITY_BINARY_SENSOR = TotalConnectZoneBinarySensorEntityDescription(
     key=ZONE,
-    name="",
+    name=None,
     device_class_fn=get_security_zone_device_class,
     is_on_fn=lambda zone: zone.is_faulted() or zone.is_triggered(),
 )
@@ -65,14 +64,12 @@ NO_BUTTON_BINARY_SENSORS: tuple[TotalConnectZoneBinarySensorEntityDescription, .
         key=LOW_BATTERY,
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name=" low battery",
         is_on_fn=lambda zone: zone.is_low_battery(),
     ),
     TotalConnectZoneBinarySensorEntityDescription(
         key=TAMPER,
         device_class=BinarySensorDeviceClass.TAMPER,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name=f" {TAMPER}",
         is_on_fn=lambda zone: zone.is_tampered(),
     ),
 )
@@ -90,21 +87,18 @@ LOCATION_BINARY_SENSORS: tuple[TotalConnectAlarmBinarySensorEntityDescription, .
         key=LOW_BATTERY,
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name=" low battery",
         is_on_fn=lambda location: location.is_low_battery(),
     ),
     TotalConnectAlarmBinarySensorEntityDescription(
         key=TAMPER,
         device_class=BinarySensorDeviceClass.TAMPER,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name=f" {TAMPER}",
         is_on_fn=lambda location: location.is_cover_tampered(),
     ),
     TotalConnectAlarmBinarySensorEntityDescription(
         key=POWER,
         device_class=BinarySensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name=f" {POWER}",
         is_on_fn=lambda location: location.is_ac_loss(),
     ),
 )
@@ -129,7 +123,7 @@ async def async_setup_entry(
         for zone in location.zones.values():
             sensors.append(
                 TotalConnectZoneBinarySensor(
-                    coordinator, SECURITY_BINARY_SENSOR, location_id, zone
+                    coordinator, SECURITY_BINARY_SENSOR, zone, location_id
                 )
             )
 
@@ -138,8 +132,8 @@ async def async_setup_entry(
                     TotalConnectZoneBinarySensor(
                         coordinator,
                         description,
-                        location_id,
                         zone,
+                        location_id,
                     )
                     for description in NO_BUTTON_BINARY_SENSORS
                 )
@@ -147,10 +141,8 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class TotalConnectZoneBinarySensor(
-    CoordinatorEntity[TotalConnectDataUpdateCoordinator], BinarySensorEntity
-):
-    """Represent an TotalConnect zone."""
+class TotalConnectZoneBinarySensor(TotalConnectZoneEntity, BinarySensorEntity):
+    """Represent a TotalConnect zone."""
 
     entity_description: TotalConnectZoneBinarySensorEntityDescription
 
@@ -158,28 +150,17 @@ class TotalConnectZoneBinarySensor(
         self,
         coordinator: TotalConnectDataUpdateCoordinator,
         entity_description: TotalConnectZoneBinarySensorEntityDescription,
-        location_id: str,
         zone: TotalConnectZone,
+        location_id: str,
     ) -> None:
         """Initialize the TotalConnect status."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, zone, location_id, entity_description.key)
         self.entity_description = entity_description
-        self._location_id = location_id
-        self._zone = zone
-        self._attr_name = f"{zone.description}{entity_description.name}"
-        self._attr_unique_id = f"{location_id}_{zone.zoneid}_{entity_description.key}"
-        self._attr_is_on = None
         self._attr_extra_state_attributes = {
             "zone_id": zone.zoneid,
-            "location_id": self._location_id,
+            "location_id": location_id,
             "partition": zone.partition,
         }
-        identifier = zone.sensor_serial_number or f"zone_{zone.zoneid}"
-        self._attr_device_info = DeviceInfo(
-            name=zone.description,
-            identifiers={(DOMAIN, identifier)},
-            serial_number=zone.sensor_serial_number,
-        )
 
     @property
     def is_on(self) -> bool:
@@ -194,9 +175,7 @@ class TotalConnectZoneBinarySensor(
         return super().device_class
 
 
-class TotalConnectAlarmBinarySensor(
-    CoordinatorEntity[TotalConnectDataUpdateCoordinator], BinarySensorEntity
-):
+class TotalConnectAlarmBinarySensor(TotalConnectLocationEntity, BinarySensorEntity):
     """Represent a TotalConnect alarm device binary sensors."""
 
     entity_description: TotalConnectAlarmBinarySensorEntityDescription
@@ -208,10 +187,8 @@ class TotalConnectAlarmBinarySensor(
         location: TotalConnectLocation,
     ) -> None:
         """Initialize the TotalConnect alarm device binary sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, location)
         self.entity_description = entity_description
-        self._location = location
-        self._attr_name = f"{location.location_name}{entity_description.name}"
         self._attr_unique_id = f"{location.location_id}_{entity_description.key}"
         self._attr_extra_state_attributes = {
             "location_id": location.location_id,

@@ -253,6 +253,8 @@ async def async_setup_hass(
         runtime_config.log_no_color,
     )
 
+    if runtime_config.debug:
+        hass.config.debug = True
     hass.config.safe_mode = runtime_config.safe_mode
     hass.config.skip_pip = runtime_config.skip_pip
     hass.config.skip_pip_packages = runtime_config.skip_pip_packages

@@ -18,8 +18,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CoordinatorDataT, NextDnsSettingsUpdateCoordinator
 from .const import ATTR_SETTINGS, DOMAIN
+from .coordinator import CoordinatorDataT, NextDnsSettingsUpdateCoordinator
 
 PARALLEL_UPDATES = 1
 
