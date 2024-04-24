@@ -50,6 +50,9 @@ STEP_PICK_FIRMWARE_ZIGBEE = "pick_firmware_zigbee"
 class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
     """Base flow to install firmware."""
 
+    _failed_addon_name: str
+    _failed_addon_reason: str
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Instantiate base flow."""
         super().__init__(*args, **kwargs)
@@ -184,24 +187,36 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Show progress dialog for installing the Zigbee flasher addon."""
-        fw_flasher_manager = get_zigbee_flasher_addon_manager(self.hass)
-        addon_info = await self._async_get_addon_info(fw_flasher_manager)
+        return await self._install_addon(
+            get_zigbee_flasher_addon_manager(self.hass),
+            "install_zigbee_flasher_addon",
+            "run_zigbee_flasher_addon",
+        )
+
+    async def _install_addon(
+        self,
+        addon_manager: silabs_multiprotocol_addon.WaitingAddonManager,
+        step_id: str,
+        next_step_id: str,
+    ) -> ConfigFlowResult:
+        """Show progress dialog for installing an addon."""
+        addon_info = await self._async_get_addon_info(addon_manager)
 
         _LOGGER.debug("Flasher addon state: %s", addon_info)
 
         if not self.addon_install_task:
             self.addon_install_task = self.hass.async_create_task(
-                fw_flasher_manager.async_install_addon_waiting(),
-                "SiLabs Flasher addon install",
+                addon_manager.async_install_addon_waiting(),
+                "Addon install",
             )
 
         if not self.addon_install_task.done():
             return self.async_show_progress(
-                step_id="install_zigbee_flasher_addon",
+                step_id=step_id,
                 progress_action="install_addon",
                 description_placeholders={
                     **self._get_translation_placeholders(),
-                    "addon_name": fw_flasher_manager.addon_name,
+                    "addon_name": addon_manager.addon_name,
                 },
                 progress_task=self.addon_install_task,
             )
@@ -210,25 +225,23 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             await self.addon_install_task
         except AddonError as err:
             _LOGGER.error(err)
-            return self.async_show_progress_done(
-                next_step_id="zigbee_flasher_install_failed"
-            )
+            self._failed_addon_name = addon_manager.addon_name
+            self._failed_addon_reason = "addon_install_failed"
+            return self.async_show_progress_done(next_step_id="addon_operation_failed")
         finally:
             self.addon_install_task = None
 
-        return self.async_show_progress_done(next_step_id="run_zigbee_flasher_addon")
+        return self.async_show_progress_done(next_step_id=next_step_id)
 
-    async def async_step_zigbee_flasher_install_failed(
+    async def async_step_addon_operation_failed(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Zigbee flasher add-on installation failed."""
-        fw_flasher_manager = get_zigbee_flasher_addon_manager(self.hass)
-
+        """Abort when add-on installation or start failed."""
         return self.async_abort(
-            reason="addon_install_failed",
+            reason=self._failed_addon_reason,
             description_placeholders={
                 **self._get_translation_placeholders(),
-                "addon_name": fw_flasher_manager.addon_name,
+                "addon_name": self._failed_addon_name,
             },
         )
 
@@ -279,25 +292,14 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             await self.addon_start_task
         except (AddonError, AbortFlow) as err:
             _LOGGER.error(err)
-            return self.async_show_progress_done(next_step_id="zigbee_flasher_failed")
+            self._failed_addon_name = fw_flasher_manager.addon_name
+            self._failed_addon_reason = "addon_start_failed"
+            return self.async_show_progress_done(next_step_id="addon_operation_failed")
         finally:
             self.addon_start_task = None
 
         return self.async_show_progress_done(
             next_step_id="uninstall_zigbee_flasher_addon"
-        )
-
-    async def async_step_zigbee_flasher_failed(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Flasher add-on start failed."""
-        fw_flasher_manager = get_zigbee_flasher_addon_manager(self.hass)
-        return self.async_abort(
-            reason="addon_start_failed",
-            description_placeholders={
-                **self._get_translation_placeholders(),
-                "addon_name": fw_flasher_manager.addon_name,
-            },
         )
 
     async def async_step_uninstall_zigbee_flasher_addon(
@@ -396,52 +398,8 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Show progress dialog for installing the OTBR addon."""
-        otbr_manager = get_otbr_addon_manager(self.hass)
-        addon_info = await self._async_get_addon_info(otbr_manager)
-
-        _LOGGER.debug("Flasher addon state: %s", addon_info)
-
-        if not self.addon_install_task:
-            self.addon_install_task = self.hass.async_create_task(
-                otbr_manager.async_install_addon_waiting(),
-                "SiLabs Flasher addon install",
-            )
-
-        if not self.addon_install_task.done():
-            return self.async_show_progress(
-                step_id="install_otbr_addon",
-                progress_action="install_addon",
-                description_placeholders={
-                    **self._get_translation_placeholders(),
-                    "addon_name": otbr_manager.addon_name,
-                },
-                progress_task=self.addon_install_task,
-            )
-
-        try:
-            await self.addon_install_task
-        except AddonError as err:
-            _LOGGER.error(err)
-            return self.async_show_progress_done(
-                next_step_id="otbr_addon_install_failed"
-            )
-        finally:
-            self.addon_install_task = None
-
-        return self.async_show_progress_done(next_step_id="start_otbr_addon")
-
-    async def async_step_otbr_addon_install_failed(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """OTBR add-on installation failed."""
-        otbr_manager = get_otbr_addon_manager(self.hass)
-
-        return self.async_abort(
-            reason="addon_install_failed",
-            description_placeholders={
-                **self._get_translation_placeholders(),
-                "addon_name": otbr_manager.addon_name,
-            },
+        return await self._install_addon(
+            get_otbr_addon_manager(self.hass), "install_otbr_addon", "start_otbr_addon"
         )
 
     async def async_step_start_otbr_addon(
@@ -483,24 +441,13 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             await self.addon_start_task
         except (AddonError, AbortFlow) as err:
             _LOGGER.error(err)
-            return self.async_show_progress_done(next_step_id="otbr_failed")
+            self._failed_addon_name = otbr_manager.addon_name
+            self._failed_addon_reason = "addon_start_failed"
+            return self.async_show_progress_done(next_step_id="addon_operation_failed")
         finally:
             self.addon_start_task = None
 
         return self.async_show_progress_done(next_step_id="confirm_otbr")
-
-    async def async_step_otbr_failed(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """OTBR add-on start failed."""
-        otbr_manager = get_otbr_addon_manager(self.hass)
-        return self.async_abort(
-            reason="addon_start_failed",
-            description_placeholders={
-                **self._get_translation_placeholders(),
-                "addon_name": otbr_manager.addon_name,
-            },
-        )
 
     async def async_step_confirm_otbr(
         self, user_input: dict[str, Any] | None = None
