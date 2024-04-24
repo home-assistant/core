@@ -55,7 +55,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the media extractor service."""
 
     async def extract_media_url(call: ServiceCall) -> ServiceResponse:
@@ -114,7 +114,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         supports_response=SupportsResponse.ONLY,
     )
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN,
         SERVICE_PLAY_MEDIA,
         play_media,

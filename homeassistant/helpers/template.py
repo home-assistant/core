@@ -695,6 +695,8 @@ class Template:
         **kwargs: Any,
     ) -> RenderInfo:
         """Render the template and collect an entity filter."""
+        if self.hass and self.hass.config.debug:
+            self.hass.verify_event_loop_thread("async_render_to_info")
         self._renders += 1
         assert self.hass and _render_info.get() is None
 
