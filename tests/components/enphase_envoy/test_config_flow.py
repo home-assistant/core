@@ -740,6 +740,8 @@ async def test_reconfigure_nochange(
             side_effect=[
                 None,
                 EnvoyAuthenticationError("fail authentication"),
+                EnvoyError("cannot_connect"),
+                Exception("Unexpected exception"),
                 None,
             ]
         ),
@@ -775,6 +777,40 @@ async def test_reconfigure_auth_failure(
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
+
+    # still original config after failure
+    assert config_entry.data["host"] == "1.1.1.1"
+    assert config_entry.data["username"] == "test-username"
+    assert config_entry.data["password"] == "test-password"
+
+    # mock failing authentication on first try
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "1.1.1.2",
+            "username": "new-username",
+            "password": "wrong-password",
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+    # still original config after failure
+    assert config_entry.data["host"] == "1.1.1.1"
+    assert config_entry.data["username"] == "test-username"
+    assert config_entry.data["password"] == "test-password"
+
+    # mock failing authentication on first try
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "1.1.1.2",
+            "username": "other-username",
+            "password": "test-password",
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
 
     # still original config after failure
     assert config_entry.data["host"] == "1.1.1.1"
