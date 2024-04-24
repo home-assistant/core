@@ -353,9 +353,9 @@ class IntegrationSensor(RestoreSensor):
         self._last_valid_state: Decimal | None = None
         self._attr_device_info = device_info
         self._max_sub_interval: timedelta | None = (
-            max_sub_interval
-            if max_sub_interval is not None and max_sub_interval.total_seconds() > 0
-            else None
+            None  # disable time based integration
+            if max_sub_interval is None or max_sub_interval.total_seconds() == 0
+            else max_sub_interval
         )
         self._max_sub_interval_exceeded_callback: CALLBACK_TYPE = lambda *args: None
         self._last_integration_time: datetime = datetime.now(tz=UTC)

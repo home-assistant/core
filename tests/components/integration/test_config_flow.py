@@ -123,6 +123,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
             "method": "right",
             "round": 2.0,
             "source": "sensor.input",
+            "max_sub_interval": {"minutes": 1},
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
