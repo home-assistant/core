@@ -92,7 +92,7 @@ class UbusDeviceScanner(DeviceScanner):
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
-        return self.last_results
+        return list(self.last_results.keys())
 
     def _generate_mac2name(self):
         """Return empty MAC to name dict. Overridden if DHCP server is set."""
@@ -110,7 +110,7 @@ class UbusDeviceScanner(DeviceScanner):
 
     async def async_get_extra_attributes(self, device: str) -> dict[str, str]:
         """Return the host to distinguish between multiple routers."""
-        return {"host": self.host}
+        return {"host": self.host, "signal": self.last_results[device]["signal"]}
 
     @_refresh_on_access_denied
     def _update_info(self):
@@ -137,7 +137,8 @@ class UbusDeviceScanner(DeviceScanner):
                 for key in result["clients"]:
                     device = result["clients"][key]
                     if device["authorized"]:
-                        self.last_results.append(key)
+                        self.last_results[key] = {}
+                        self.last_results[key]["signal"] = device["signal"]
 
         return bool(results)
 
