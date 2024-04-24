@@ -63,7 +63,7 @@
     },
     "sensor": {
       "dustbin_sensor": {
-        "name": "Dustbin Dirt Level"
+        "name": "Dustbin dirt level"
       },
       "total_cleaning_time": {
         "name": "Total cleaning time"
