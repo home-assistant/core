@@ -12,7 +12,7 @@ import numbers
 import random
 from typing import TYPE_CHECKING, Any, Self
 
-from zhaquirks.danfoss import thermostat
+from zhaquirks.danfoss import thermostat as danfoss_thermostat
 from zhaquirks.quirk_ids import DANFOSS_ALLY_THERMOSTAT
 from zigpy import types
 from zigpy.quirks.v2 import ZCLEnumMetadata, ZCLSensorMetadata
@@ -1528,7 +1528,10 @@ class BitMapSensor(Sensor):
         state_attr = {}
 
         for bit in list(self._bitmap):
-            state_attr[bit.name] = bit in self._bitmap(value)
+            if value is None:
+                state_attr[bit.name] = False
+            else:
+                state_attr[bit.name] = bit in self._bitmap(value)
 
         return state_attr
 
@@ -1548,7 +1551,7 @@ class DanfossOpenWindowDetection(EnumSensor):
     _attribute_name = "open_window_detection"
     _attr_translation_key: str = "open_window_detected"
     _attr_icon: str = "mdi:window-open"
-    _enum = thermostat.DanfossOpenWindowDetectionEnum
+    _enum = danfoss_thermostat.DanfossOpenWindowDetectionEnum
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -1578,7 +1581,7 @@ class DanfossAdaptationRunStatus(BitMapSensor):
     _attribute_name = "adaptation_run_status"
     _attr_translation_key: str = "adaptation_run_status"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _bitmap = thermostat.DanfossAdaptationRunStatusBitmap
+    _bitmap = danfoss_thermostat.DanfossAdaptationRunStatusBitmap
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -1609,7 +1612,7 @@ class DanfossSoftwareErrorCode(BitMapSensor):
     _attribute_name = "sw_error_code"
     _attr_translation_key: str = "software_error"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _bitmap = thermostat.DanfossSoftwareErrorCodeBitmap
+    _bitmap = danfoss_thermostat.DanfossSoftwareErrorCodeBitmap
 
 
 @CONFIG_DIAGNOSTIC_MATCH(

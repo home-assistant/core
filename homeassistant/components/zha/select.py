@@ -7,7 +7,7 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
-from zhaquirks.danfoss import thermostat
+from zhaquirks.danfoss import thermostat as danfoss_thermostat
 from zhaquirks.quirk_ids import (
     DANFOSS_ALLY_THERMOSTAT,
     TUYA_PLUG_MANUFACTURER,
@@ -706,7 +706,7 @@ class DanfossExerciseDayOfTheWeek(ZCLEnumSelectEntity):
     _unique_id_suffix = "exercise_day_of_week"
     _attribute_name = "exercise_day_of_week"
     _attr_translation_key: str = "exercise_day_of_week"
-    _enum = thermostat.DanfossExerciseDayOfTheWeekEnum
+    _enum = danfoss_thermostat.DanfossExerciseDayOfTheWeekEnum
     _attr_icon: str = "mdi:wrench-clock"
 
 
@@ -744,7 +744,7 @@ class DanfossAdaptationRunControl(ZCLEnumSelectEntity):
     _unique_id_suffix = "adaptation_run_control"
     _attribute_name = "adaptation_run_control"
     _attr_translation_key: str = "adaptation_run_command"
-    _enum = thermostat.DanfossAdaptationRunControlEnum
+    _enum = danfoss_thermostat.DanfossAdaptationRunControlEnum
 
 
 class DanfossControlAlgorithmScaleFactorEnum(types.enum8):
@@ -795,4 +795,4 @@ class DanfossViewingDirection(ZCLEnumSelectEntity):
     _unique_id_suffix = "viewing_direction"
     _attribute_name = "viewing_direction"
     _attr_translation_key: str = "viewing_direction"
-    _enum = thermostat.DanfossViewingDirectionEnum
+    _enum = danfoss_thermostat.DanfossViewingDirectionEnum

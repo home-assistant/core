@@ -5,6 +5,7 @@ import math
 from unittest.mock import MagicMock, patch
 
 import pytest
+from zhaquirks.danfoss import thermostat as danfoss_thermostat
 import zigpy.profiles.zha
 from zigpy.quirks import CustomCluster
 from zigpy.quirks.v2 import CustomDeviceV2, add_to_registry_v2
@@ -1320,3 +1321,61 @@ async def test_device_counter_sensors(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "2"
+
+
+@pytest.fixture
+async def zigpy_device_danfoss_thermostat(
+    hass: HomeAssistant, zigpy_device_mock, zha_device_joined_restored
+):
+    """Device tracker zigpy danfoss thermostat device."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [
+                    general.Basic.cluster_id,
+                    general.PowerConfiguration.cluster_id,
+                    general.Identify.cluster_id,
+                    general.Time.cluster_id,
+                    general.PollControl.cluster_id,
+                    Thermostat.cluster_id,
+                    hvac.UserInterface.cluster_id,
+                    homeautomation.Diagnostic.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [general.Basic.cluster_id, general.Ota.cluster_id],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.THERMOSTAT,
+            }
+        },
+        manufacturer="Danfoss",
+        model="eTRV0100",
+    )
+
+    zha_device = await zha_device_joined_restored(zigpy_device)
+    return zha_device, zigpy_device
+
+
+async def test_danfoss_thermostat_sw_error(
+    hass: HomeAssistant, zigpy_device_danfoss_thermostat
+) -> None:
+    """Test quirks defined thermostat."""
+
+    zha_device, zigpy_device = zigpy_device_danfoss_thermostat
+
+    entity_id = find_entity_id(
+        Platform.SENSOR, zha_device, hass, qualifier="software_error"
+    )
+    assert entity_id is not None
+
+    cluster = zigpy_device.endpoints[1].diagnostic
+
+    await send_attributes_report(
+        hass,
+        cluster,
+        {
+            danfoss_thermostat.DanfossDiagnosticCluster.AttributeDefs.sw_error_code.id: 0x0001
+        },
+    )
+
+    hass_state = hass.states.get(entity_id)
+    assert hass_state.state == "something"
+    assert hass_state.attributes["Top_pcb_sensor_error"]
