@@ -295,7 +295,11 @@ class MatterLight(MatterEntity, LightEntity):
             # brightness support
             if self._entity_info.endpoint.has_attribute(
                 None, clusters.LevelControl.Attributes.CurrentLevel
-            ):
+            ) and self._entity_info.endpoint.device_types != {device_types.OnOffLight}:
+                # if endpoint has LevelControl and is not OnOffLight device type
+                # this filter is important because OnOffLight can have an optional LevelControl
+                # cluster present to provide a consistent user experience when the device is
+                # grouped with additional dimmable lights and the "with on/off" commands are used.
                 supported_color_modes.add(ColorMode.BRIGHTNESS)
                 self._supports_brightness = True
             # colormode(s)
@@ -394,6 +398,7 @@ DISCOVERY_SCHEMAS = [
             device_types.ColorTemperatureLight,
             device_types.DimmableLight,
             device_types.ExtendedColorLight,
+            device_types.OnOffLight,
         ),
     ),
     # Additional schema to match (HS Color) lights with incorrect/missing device type

@@ -24,15 +24,16 @@ from .common import (
         ("color-temperature-light", "light.mock_color_temperature_light"),
         ("dimmable-light", "light.mock_dimmable_light"),
         ("onoff-light", "light.mock_onoff_light"),
+        ("onoff-light-with-levelcontrol-present", "light.d215s"),
     ],
 )
-async def test_on_off_light(
+async def test_light_turn_on_off(
     hass: HomeAssistant,
     matter_client: MagicMock,
     fixture: str,
     entity_id: str,
 ) -> None:
-    """Test an on/off light."""
+    """Test basic light discovery and turn on/off."""
 
     light_node = await setup_integration_with_node_fixture(
         hass,
@@ -47,6 +48,18 @@ async def test_on_off_light(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "off"
+
+    # check the supported_color_modes
+    # especially important is the onoff light device type that does have
+    # a levelcontrol cluster present which we should ignore
+    if fixture in ("onoff-light", "onoff-light-with-levelcontrol-present"):
+        assert state.attributes["supported_color_modes"] == ["onoff"]
+    elif fixture == "extended-color-light":
+        assert state.attributes["supported_color_modes"] == ["color_temp", "hs", "xy"]
+    elif fixture == "color-temperature-light":
+        assert state.attributes["supported_color_modes"] == ["color_temp"]
+    elif fixture == "dimmable-light":
+        assert state.attributes["supported_color_modes"] == ["brightness"]
 
     # Test that the light is on
     set_node_attribute(light_node, 1, 6, 0, True)
