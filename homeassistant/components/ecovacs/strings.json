@@ -46,11 +46,17 @@
       "relocate": {
         "name": "Relocate"
       },
+      "reset_lifespan_blade": {
+        "name": "Reset blade lifespan"
+      },
       "reset_lifespan_brush": {
         "name": "Reset main brush lifespan"
       },
       "reset_lifespan_filter": {
         "name": "Reset filter lifespan"
+      },
+      "reset_lifespan_lens_brush": {
+        "name": "Reset lens brush lifespan"
       },
       "reset_lifespan_side_brush": {
         "name": "Reset side brushes lifespan"
@@ -92,11 +98,20 @@
           }
         }
       },
+      "lifespan_blade": {
+        "name": "Blade lifespan"
+      },
       "lifespan_brush": {
         "name": "Main brush lifespan"
       },
       "lifespan_filter": {
         "name": "Filter lifespan"
+      },
+      "lifespan_lens_brush": {
+        "name": "Lens brush lifespan"
+      },
+      "lifespan_round_mop": {
+        "name": "Round moop lifespan"
       },
       "lifespan_side_brush": {
         "name": "Side brushes lifespan"
