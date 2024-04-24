@@ -653,6 +653,13 @@ async def test_is_on(hass: HomeAssistant) -> None:
             (STATE_OFF, False),
         ),
         (
+            ("cover", "lock"),
+            (STATE_OPEN, STATE_OPEN),
+            (STATE_CLOSED, STATE_LOCKED),
+            (STATE_ON, True),
+            (STATE_OFF, False),
+        ),
+        (
             ("cover", "lock", "light"),
             (STATE_OPEN, STATE_LOCKED, STATE_ON),
             (STATE_CLOSED, STATE_LOCKED, STATE_OFF),
