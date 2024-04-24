@@ -56,6 +56,10 @@
     "config_entry_reauth": {
       "title": "[%key:common::config_flow::title::reauth%]",
       "description": "Reauthentication is needed"
+    },
+    "template_function_relative_time_deprecated": {
+      "title": "The {relative_time} template function is deprecated",
+      "description": "The {relative_time} template function is deprecated in Home Assistant. Please use the {time_since} or {time_until} template functions instead."
     }
   },
   "system_health": {
@@ -191,6 +195,18 @@
     },
     "service_not_found": {
       "message": "Service {domain}.{service} not found."
+    },
+    "service_does_not_support_response": {
+      "message": "A service which does not return responses can't be called with {return_response}."
+    },
+    "service_lacks_response_request": {
+      "message": "The service call requires responses and must be called with {return_response}."
+    },
+    "service_reponse_invalid": {
+      "message": "Failed to process the returned service response data, expected a dictionary, but got {response_data_type}."
+    },
+    "service_should_be_blocking": {
+      "message": "A non blocking service call with argument {non_blocking_argument} can't be used together with argument {return_response}."
     }
   }
 }
