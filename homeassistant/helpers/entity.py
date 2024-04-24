@@ -971,6 +971,8 @@ class Entity(
         """Write the state to the state machine."""
         if self.hass is None:
             raise RuntimeError(f"Attribute hass is None for {self}")
+        if self.hass.config.debug:
+            self.hass.verify_event_loop_thread("async_write_ha_state")
 
         # The check for self.platform guards against integrations not using an
         # EntityComponent and can be removed in HA Core 2024.1
