@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import logging
 import re
+from typing import TYPE_CHECKING, Optional
 
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -21,6 +22,9 @@ from homeassistant.const import (
     NAME_SUN_NEXT_SETTING,
 )
 from homeassistant.core import HomeAssistant
+
+if TYPE_CHECKING:
+    from homeassistant.components.rasc import RascalScheduler
 
 from . import entity_registry as er
 
@@ -43,21 +47,23 @@ def add_entity_in_lineage(hass: HomeAssistant, entity_id: str) -> None:
 
     domain, full_name = entity_id.split(".")
 
-    if full_name is not None:
+    if full_name:
         if domain not in domains and full_name not in full_names:
             _LOGGER.info("Create queue: %s", entity_id)
-            rascal = hass.data.get(DOMAIN_RASCALSCHEDULER)
-            if rascal is not None:
+            rascal: Optional[RascalScheduler] = hass.data.get(DOMAIN_RASCALSCHEDULER)
+            if rascal:
                 rascal.lineage_table.add_entity(entity_id)
+                rascal.add_entity(entity_id)
 
 
 def delete_entity_in_lineage(hass: HomeAssistant, entity_id: str) -> None:
     """Delete x entity queue."""
 
-    rascal = hass.data.get(DOMAIN_RASCALSCHEDULER)
+    rascal: Optional[RascalScheduler] = hass.data.get(DOMAIN_RASCALSCHEDULER)
 
-    if rascal is not None:
+    if rascal:
         rascal.lineage_table.delete_entity(entity_id)
+        rascal.delete_entity(entity_id)
         _LOGGER.info("Delete queue: %s", entity_id)
 
 

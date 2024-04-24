@@ -1235,6 +1235,7 @@ LOCK_STATE_LEASED: Final = "leased"
 FCFS: Final = "fcfs"
 FCFS_POST: Final = "fcfs_post"
 JIT: Final = "jit"
-SCHEDULING_POLICY = "tl"
+TIMELINE: Final = "tl"
+SCHEDULING_POLICY: Final = "scheduling_policy"
 
 TIMELINE_UNIT: Final = 1

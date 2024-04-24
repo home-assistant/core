@@ -131,10 +131,10 @@ class BaseRoutineEntity:
             logger=_LOGGER,
         )
 
-    def output(self) -> None:
+    def output(self, routine_id: str, actions: dict[str, Any]) -> None:
         """Print the routine information."""
-        actions = []
-        for _, entity in self.actions.items():
+        action_list = []
+        for _, entity in actions.items():
             parents = []
             children = []
 
@@ -154,9 +154,9 @@ class BaseRoutineEntity:
                 "duration": str(entity.duration),
             }
 
-            actions.append(entity_json)
+            action_list.append(entity_json)
 
-        out = {"routine_id": self._routine_id, "actions": actions}
+        out = {"routine_id": routine_id, "actions": action_list}
 
         print(json.dumps(out, indent=2))  # noqa: T201
 
@@ -181,6 +181,7 @@ class RoutineEntity(BaseRoutineEntity):
         self._last_trigger_time = last_trigger_time
         self._set_logger(logger)
         self._log_exceptions = log_exceptions
+        self._attr_earliest_end_time: str
 
     @property
     def routine_id(self) -> str:
@@ -193,6 +194,16 @@ class RoutineEntity(BaseRoutineEntity):
             self._logger = logger
         else:
             self._logger = logging.getLogger(f"{__name__}.{slugify(self.name)}")
+
+    @property
+    def earliest_end_time(self) -> str:
+        """Get earliest end time."""
+        return self._attr_earliest_end_time
+
+    @earliest_end_time.setter
+    def earliest_end_time(self, end_time: str) -> None:
+        """Set earliest end time."""
+        self._attr_earliest_end_time = end_time
 
 
 class ActionEntity:
