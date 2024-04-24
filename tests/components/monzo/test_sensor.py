@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 from typing import Any
-from unittest.mock import AsyncMock, PropertyMock, patch
+from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -89,20 +89,17 @@ async def test_unavailable_entity(
     basic_monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test entities enabled by default."""
-    with patch(
-        "homeassistant.components.monzo.sensor.MonzoBaseEntity.data",
-        new_callable=PropertyMock,
-    ) as data:
-        data.return_value = {
-            "id": "pot_savings",
-            "name": "Savings",
-        }
-        await setup_integration(hass, polling_config_entry)
-        entity_id = await async_get_entity_id(hass, TEST_POTS[0]["id"], POT_SENSORS[0])
-        state = hass.states.get(entity_id)
-        assert state.state == "unknown"
+    await setup_integration(hass, polling_config_entry)
+    basic_monzo.user_account.pots.return_value = [{"id": "pot_savings"}]
+    freezer.tick(timedelta(minutes=100))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    entity_id = await async_get_entity_id(hass, TEST_POTS[0]["id"], POT_SENSORS[0])
+    state = hass.states.get(entity_id)
+    assert state.state == "unknown"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
