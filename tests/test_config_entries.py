@@ -4535,7 +4535,7 @@ def test_raise_trying_to_add_same_config_entry_twice(
             ("1234", "5678"),
             ("data", "data2"),
             ("options", "options2"),
-            {"always_reload": True},
+            {"reload_even_if_entry_is_unchanged": True},
             (2, 1),
         ),
         (
@@ -4543,7 +4543,7 @@ def test_raise_trying_to_add_same_config_entry_twice(
             ("1234", "1234"),
             ("data", "data"),
             ("options", "options"),
-            {"always_reload": False},
+            {"reload_even_if_entry_is_unchanged": False},
             (1, 0),
         ),
     ],
