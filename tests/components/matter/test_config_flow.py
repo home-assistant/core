@@ -231,6 +231,49 @@ async def test_zeroconf_discovery(
     assert setup_entry.call_count == 1
 
 
+async def test_zeroconf_discovery_not_onboarded_not_supervisor(
+    hass: HomeAssistant,
+    client_connect: AsyncMock,
+    setup_entry: AsyncMock,
+    not_onboarded: MagicMock,
+) -> None:
+    """Test flow started from Zeroconf discovery when not onboarded."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("fd11:be53:8d46:0:729e:5a4f:539d:1ee6"),
+            ip_addresses=[ip_address("fd11:be53:8d46:0:729e:5a4f:539d:1ee6")],
+            port=5540,
+            hostname="CDEFGHIJ12345678.local.",
+            type="_matter._tcp.local.",
+            name="ABCDEFGH123456789-0000000012345678._matter._tcp.local.",
+            properties={"SII": "3300", "SAI": "1100", "T": "0"},
+        ),
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+    assert result["errors"] is None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "url": "ws://localhost:5580/ws",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert client_connect.call_count == 1
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Matter"
+    assert result["data"] == {
+        "url": "ws://localhost:5580/ws",
+        "integration_created_addon": False,
+        "use_addon": False,
+    }
+    assert setup_entry.call_count == 1
+
+
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_zeroconf_not_onboarded_running(
     hass: HomeAssistant,
