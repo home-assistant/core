@@ -54,6 +54,9 @@
       },
       "total": {
         "name": "Downloads total"
+      },
+      "free_space": {
+        "name": "Free space"
       }
     }
   },

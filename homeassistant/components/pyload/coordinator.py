@@ -34,7 +34,8 @@ class PyLoadCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
         try:
-            return await self.pyload.get_status()
+            free_space = await self.pyload.free_space()
+            status = await self.pyload.get_status()
         except InvalidAuth:
             _LOGGER.info("Authentication failed, trying to reauthenticate")
             try:
@@ -55,3 +56,5 @@ class PyLoadCoordinator(DataUpdateCoordinator):
             ) from e
         except ParserError as e:
             raise UpdateFailed("Unable to parse data from pyLoad API") from e
+        else:
+            return {"free_space": free_space, **status.to_dict()}
