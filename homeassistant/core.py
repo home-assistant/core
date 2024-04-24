@@ -2456,7 +2456,7 @@ class ServiceRegistry:
         """
         run_callback_threadsafe(
             self._hass.loop,
-            self.async_register,
+            self._async_register,
             domain,
             service,
             service_func,
@@ -2466,6 +2466,33 @@ class ServiceRegistry:
 
     @callback
     def async_register(
+        self,
+        domain: str,
+        service: str,
+        service_func: Callable[
+            [ServiceCall],
+            Coroutine[Any, Any, ServiceResponse | EntityServiceResponse]
+            | ServiceResponse
+            | EntityServiceResponse
+            | None,
+        ],
+        schema: vol.Schema | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
+        job_type: HassJobType | None = None,
+    ) -> None:
+        """Register a service.
+
+        Schema is called to coerce and validate the service data.
+
+        This method must be run in the event loop.
+        """
+        self._hass.verify_event_loop_thread("async_register")
+        self._async_register(
+            domain, service, service_func, schema, supports_response, job_type
+        )
+
+    @callback
+    def _async_register(
         self,
         domain: str,
         service: str,
@@ -2502,18 +2529,27 @@ class ServiceRegistry:
         else:
             self._services[domain] = {service: service_obj}
 
-        self._hass.bus.async_fire(
+        self._hass.bus.async_fire_internal(
             EVENT_SERVICE_REGISTERED, {ATTR_DOMAIN: domain, ATTR_SERVICE: service}
         )
 
     def remove(self, domain: str, service: str) -> None:
         """Remove a registered service from service handler."""
         run_callback_threadsafe(
-            self._hass.loop, self.async_remove, domain, service
+            self._hass.loop, self._async_remove, domain, service
         ).result()
 
     @callback
     def async_remove(self, domain: str, service: str) -> None:
+        """Remove a registered service from service handler.
+
+        This method must be run in the event loop.
+        """
+        self._hass.verify_event_loop_thread("async_remove")
+        self._async_remove(domain, service)
+
+    @callback
+    def _async_remove(self, domain: str, service: str) -> None:
         """Remove a registered service from service handler.
 
         This method must be run in the event loop.
@@ -2530,7 +2566,7 @@ class ServiceRegistry:
         if not self._services[domain]:
             self._services.pop(domain)
 
-        self._hass.bus.async_fire(
+        self._hass.bus.async_fire_internal(
             EVENT_SERVICE_REMOVED, {ATTR_DOMAIN: domain, ATTR_SERVICE: service}
         )
 

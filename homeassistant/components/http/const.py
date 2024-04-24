@@ -15,5 +15,5 @@ class StrictConnectionMode(StrEnum):
     """Enum for strict connection mode."""
 
     DISABLED = "disabled"
-    STATIC_PAGE = "static_page"
+    GUARD_PAGE = "guard_page"
     DROP_CONNECTION = "drop_connection"
