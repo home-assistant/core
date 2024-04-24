@@ -135,3 +135,12 @@ def mock_device_config_for_3em():
         return_value=_mocked_device_config_for_3em(),
     ) as mock_device_config_for_3em:
         yield mock_device_config_for_3em
+
+
+@pytest.fixture
+def mock_setup_entry():
+    """Mock setup entry."""
+    with patch(
+        "homeassistant.components.lektrico.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
