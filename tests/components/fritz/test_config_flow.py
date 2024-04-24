@@ -23,7 +23,12 @@ from homeassistant.components.fritz.const import (
     FRITZ_AUTH_EXCEPTIONS,
 )
 from homeassistant.components.ssdp import ATTR_UPNP_UDN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    SOURCE_SSDP,
+    SOURCE_USER,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -403,6 +408,176 @@ async def test_reauth_not_successful(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
         assert result["errors"]["base"] == error
+
+
+@pytest.mark.parametrize(
+    ("show_advanced_options", "user_input", "expected_config"),
+    [
+        (
+            True,
+            {CONF_HOST: "host_a", CONF_PORT: 49000, CONF_SSL: False},
+            {CONF_HOST: "host_a", CONF_PORT: 49000, CONF_SSL: False},
+        ),
+        (
+            True,
+            {CONF_HOST: "host_a", CONF_PORT: 49443, CONF_SSL: True},
+            {CONF_HOST: "host_a", CONF_PORT: 49443, CONF_SSL: True},
+        ),
+        (
+            True,
+            {CONF_HOST: "host_a", CONF_PORT: 12345, CONF_SSL: True},
+            {CONF_HOST: "host_a", CONF_PORT: 12345, CONF_SSL: True},
+        ),
+        (
+            False,
+            {CONF_HOST: "host_b", CONF_SSL: False},
+            {CONF_HOST: "host_b", CONF_PORT: 49000, CONF_SSL: False},
+        ),
+        (
+            False,
+            {CONF_HOST: "host_b", CONF_SSL: True},
+            {CONF_HOST: "host_b", CONF_PORT: 49443, CONF_SSL: True},
+        ),
+    ],
+)
+async def test_reconfigure_successful(
+    hass: HomeAssistant,
+    fc_class_mock,
+    mock_get_source_ip,
+    show_advanced_options: bool,
+    user_input: dict,
+    expected_config: dict,
+) -> None:
+    """Test starting a reconfigure flow."""
+
+    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    mock_config.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.fritz.config_flow.FritzConnection",
+            side_effect=fc_class_mock,
+        ),
+        patch(
+            "homeassistant.components.fritz.common.FritzBoxTools._update_device_info",
+            return_value=MOCK_FIRMWARE_INFO,
+        ),
+        patch(
+            "homeassistant.components.fritz.async_setup_entry",
+        ) as mock_setup_entry,
+        patch(
+            "requests.get",
+        ) as mock_request_get,
+        patch(
+            "requests.post",
+        ) as mock_request_post,
+    ):
+        mock_request_get.return_value.status_code = 200
+        mock_request_get.return_value.content = MOCK_REQUEST
+        mock_request_post.return_value.status_code = 200
+        mock_request_post.return_value.text = MOCK_REQUEST
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": SOURCE_RECONFIGURE,
+                "entry_id": mock_config.entry_id,
+                "show_advanced_options": show_advanced_options,
+            },
+            data=mock_config.data,
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reconfigure_confirm"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=user_input,
+        )
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+        assert mock_config.data == {
+            **expected_config,
+            CONF_USERNAME: "fake_user",
+            CONF_PASSWORD: "fake_pass",
+        }
+
+    assert mock_setup_entry.called
+
+
+async def test_reconfigure_not_successful(
+    hass: HomeAssistant,
+    fc_class_mock,
+    mock_get_source_ip,
+) -> None:
+    """Test starting a reconfigure flow but no connection found."""
+
+    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    mock_config.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.fritz.config_flow.FritzConnection",
+            side_effect=[FritzConnectionException, fc_class_mock],
+        ),
+        patch(
+            "homeassistant.components.fritz.common.FritzBoxTools._update_device_info",
+            return_value=MOCK_FIRMWARE_INFO,
+        ),
+        patch(
+            "homeassistant.components.fritz.async_setup_entry",
+        ),
+        patch(
+            "requests.get",
+        ) as mock_request_get,
+        patch(
+            "requests.post",
+        ) as mock_request_post,
+    ):
+        mock_request_get.return_value.status_code = 200
+        mock_request_get.return_value.content = MOCK_REQUEST
+        mock_request_post.return_value.status_code = 200
+        mock_request_post.return_value.text = MOCK_REQUEST
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config.entry_id},
+            data=mock_config.data,
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reconfigure_confirm"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "fake_host",
+                CONF_SSL: False,
+            },
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reconfigure_confirm"
+        assert result["errors"]["base"] == ERROR_CANNOT_CONNECT
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "fake_host",
+                CONF_SSL: False,
+            },
+        )
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+        assert mock_config.data == {
+            CONF_HOST: "fake_host",
+            CONF_PASSWORD: "fake_pass",
+            CONF_USERNAME: "fake_user",
+            CONF_PORT: 49000,
+            CONF_SSL: False,
+        }
 
 
 async def test_ssdp_already_configured(

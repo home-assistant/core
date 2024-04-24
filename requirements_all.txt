@@ -697,7 +697,7 @@ debugpy==1.8.1
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==7.0.0
+deebot-client==7.1.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1026,7 +1026,7 @@ ha-av==10.1.1
 ha-ffmpeg==3.2.0
 
 # homeassistant.components.iotawatt
-ha-iotawattpy==0.1.1
+ha-iotawattpy==0.1.2
 
 # homeassistant.components.philips_js
 ha-philipsjs==3.1.1
@@ -1548,7 +1548,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==0.37.2
+plugwise==0.37.3
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -2938,7 +2938,7 @@ zeroconf==0.132.2
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.114
+zha-quirks==0.0.115
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.12
