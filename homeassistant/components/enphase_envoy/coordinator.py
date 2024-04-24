@@ -159,3 +159,9 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return envoy_data.raw
 
         raise RuntimeError("Unreachable code in _async_update_data")  # pragma: no cover
+
+    async def async_cleanup(self) -> None:
+        """Cleanup coordinator."""
+        if self._cancel_token_refresh:
+            self._cancel_token_refresh()
+            self._cancel_token_refresh = None
