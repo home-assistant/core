@@ -273,14 +273,7 @@ class BringTodoListEntity(
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="notify_missing_argument_item",
-            ) from e
-        except TypeError as e:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="notify_invalid_message_type",
                 translation_placeholders={
-                    "notification_types": ", ".join(
-                        x.value for x in BringNotificationType
-                    ),
+                    "service": f"{DOMAIN}.{SERVICE_PUSH_NOTIFICATION}",
                 },
             ) from e
