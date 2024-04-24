@@ -98,7 +98,7 @@ async def test_config_non_unique_profile(
         },
     )
 
-    assert result["type"] == FlowResultType.EXTERNAL_STEP
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
@@ -125,7 +125,7 @@ async def test_config_non_unique_profile(
         },
     )
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -190,7 +190,7 @@ async def test_reauth(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "reauth_successful"
 
     assert mock_config_entry.unique_id == USER_ID
@@ -261,7 +261,7 @@ async def test_reauth_wrong_account(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "wrong_account"
 
     assert mock_config_entry.unique_id == USER_ID

@@ -30,7 +30,7 @@
           'name': 'X-Wing',
           'phone': None,
           'positionId': 0,
-          'status': 'unknown',
+          'status': 'online',
           'uniqueId': 'abc123',
         }),
         'geofence': dict({
@@ -47,6 +47,7 @@
           'address': '**REDACTED**',
           'altitude': 546841384638,
           'attributes': dict({
+            'batteryLevel': 15.00000867601,
             'custom_attr_1': 'custom_attr_1_value',
           }),
           'course': 360,
@@ -75,25 +76,84 @@
         'enity_id': 'device_tracker.x_wing',
         'state': dict({
           'attributes': dict({
-            'address': '**REDACTED**',
-            'altitude': 546841384638,
-            'battery_level': -1,
             'category': 'starfighter',
             'custom_attr_1': 'custom_attr_1_value',
             'friendly_name': 'X-Wing',
-            'geofence': 'Tatooine',
             'gps_accuracy': 3.5,
             'latitude': '**REDACTED**',
             'longitude': '**REDACTED**',
             'motion': False,
             'source_type': 'gps',
-            'speed': 4568795,
-            'status': 'unknown',
+            'status': 'online',
             'traccar_id': 0,
             'tracker': 'traccar_server',
           }),
           'state': 'not_home',
         }),
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': False,
+        'enity_id': 'sensor.x_wing_battery',
+        'state': dict({
+          'attributes': dict({
+            'device_class': 'battery',
+            'friendly_name': 'X-Wing Battery',
+            'state_class': 'measurement',
+            'unit_of_measurement': '%',
+          }),
+          'state': '15.00000867601',
+        }),
+        'unit_of_measurement': '%',
+      }),
+      dict({
+        'disabled': False,
+        'enity_id': 'sensor.x_wing_speed',
+        'state': dict({
+          'attributes': dict({
+            'device_class': 'speed',
+            'friendly_name': 'X-Wing Speed',
+            'state_class': 'measurement',
+            'unit_of_measurement': 'kn',
+          }),
+          'state': '4568795',
+        }),
+        'unit_of_measurement': 'kn',
+      }),
+      dict({
+        'disabled': False,
+        'enity_id': 'sensor.x_wing_altitude',
+        'state': dict({
+          'attributes': dict({
+            'friendly_name': 'X-Wing Altitude',
+            'state_class': 'measurement',
+            'unit_of_measurement': 'm',
+          }),
+          'state': '546841384638',
+        }),
+        'unit_of_measurement': 'm',
+      }),
+      dict({
+        'disabled': False,
+        'enity_id': 'sensor.x_wing_address',
+        'state': dict({
+          'attributes': dict({
+            'friendly_name': 'X-Wing Address',
+          }),
+          'state': '**REDACTED**',
+        }),
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': False,
+        'enity_id': 'sensor.x_wing_geofence',
+        'state': dict({
+          'attributes': dict({
+            'friendly_name': 'X-Wing Geofence',
+          }),
+          'state': 'Tatooine',
+        }),
+        'unit_of_measurement': None,
       }),
     ]),
     'subscription_status': 'disconnected',
@@ -130,7 +190,7 @@
           'name': 'X-Wing',
           'phone': None,
           'positionId': 0,
-          'status': 'unknown',
+          'status': 'online',
           'uniqueId': 'abc123',
         }),
         'geofence': dict({
@@ -147,6 +207,7 @@
           'address': '**REDACTED**',
           'altitude': 546841384638,
           'attributes': dict({
+            'batteryLevel': 15.00000867601,
             'custom_attr_1': 'custom_attr_1_value',
           }),
           'course': 360,
@@ -172,8 +233,39 @@
     'entities': list([
       dict({
         'disabled': True,
+        'enity_id': 'sensor.x_wing_battery',
+        'state': None,
+        'unit_of_measurement': '%',
+      }),
+      dict({
+        'disabled': True,
+        'enity_id': 'sensor.x_wing_speed',
+        'state': None,
+        'unit_of_measurement': 'kn',
+      }),
+      dict({
+        'disabled': True,
+        'enity_id': 'sensor.x_wing_altitude',
+        'state': None,
+        'unit_of_measurement': 'm',
+      }),
+      dict({
+        'disabled': True,
+        'enity_id': 'sensor.x_wing_address',
+        'state': None,
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': True,
+        'enity_id': 'sensor.x_wing_geofence',
+        'state': None,
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': True,
         'enity_id': 'device_tracker.x_wing',
         'state': None,
+        'unit_of_measurement': None,
       }),
     ]),
     'subscription_status': 'disconnected',
@@ -210,7 +302,7 @@
           'name': 'X-Wing',
           'phone': None,
           'positionId': 0,
-          'status': 'unknown',
+          'status': 'online',
           'uniqueId': 'abc123',
         }),
         'geofence': dict({
@@ -227,6 +319,7 @@
           'address': '**REDACTED**',
           'altitude': 546841384638,
           'attributes': dict({
+            'batteryLevel': 15.00000867601,
             'custom_attr_1': 'custom_attr_1_value',
           }),
           'course': 360,
@@ -251,29 +344,55 @@
     }),
     'entities': list([
       dict({
+        'disabled': True,
+        'enity_id': 'sensor.x_wing_battery',
+        'state': None,
+        'unit_of_measurement': '%',
+      }),
+      dict({
+        'disabled': True,
+        'enity_id': 'sensor.x_wing_speed',
+        'state': None,
+        'unit_of_measurement': 'kn',
+      }),
+      dict({
+        'disabled': True,
+        'enity_id': 'sensor.x_wing_altitude',
+        'state': None,
+        'unit_of_measurement': 'm',
+      }),
+      dict({
+        'disabled': True,
+        'enity_id': 'sensor.x_wing_address',
+        'state': None,
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': True,
+        'enity_id': 'sensor.x_wing_geofence',
+        'state': None,
+        'unit_of_measurement': None,
+      }),
+      dict({
         'disabled': False,
         'enity_id': 'device_tracker.x_wing',
         'state': dict({
           'attributes': dict({
-            'address': '**REDACTED**',
-            'altitude': 546841384638,
-            'battery_level': -1,
             'category': 'starfighter',
             'custom_attr_1': 'custom_attr_1_value',
             'friendly_name': 'X-Wing',
-            'geofence': 'Tatooine',
             'gps_accuracy': 3.5,
             'latitude': '**REDACTED**',
             'longitude': '**REDACTED**',
             'motion': False,
             'source_type': 'gps',
-            'speed': 4568795,
-            'status': 'unknown',
+            'status': 'online',
             'traccar_id': 0,
             'tracker': 'traccar_server',
           }),
           'state': 'not_home',
         }),
+        'unit_of_measurement': None,
       }),
     ]),
     'subscription_status': 'disconnected',

@@ -236,7 +236,7 @@ async def test_warning_if_color_mode_flags_are_used(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
-    color_modes: tuple[str,],
+    color_modes: tuple[str, ...],
 ) -> None:
     """Test warnings deprecated config keys without supported color modes defined."""
     with patch(
@@ -278,7 +278,7 @@ async def test_warning_on_discovery_if_color_mode_flags_are_used(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
     config: dict[str, Any],
-    color_modes: tuple[str,],
+    color_modes: tuple[str, ...],
 ) -> None:
     """Test warnings deprecated config keys with discovery."""
     with patch(

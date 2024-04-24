@@ -16,6 +16,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 MAX_WS_RECONNECT_TIME = 600
+SCAN_INTERVAL = timedelta(minutes=8)
 
 
 class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttributes]]):
@@ -29,7 +30,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(minutes=5),
+            update_interval=SCAN_INTERVAL,
         )
         self.api = api
 

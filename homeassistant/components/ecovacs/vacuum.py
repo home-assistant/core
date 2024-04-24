@@ -33,6 +33,7 @@ from homeassistant.util import slugify
 from .const import DOMAIN
 from .controller import EcovacsController
 from .entity import EcovacsEntity
+from .util import get_name_key
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -242,7 +243,7 @@ class EcovacsVacuum(
         self._rooms: list[Room] = []
 
         self._attr_fan_speed_list = [
-            level.display_name for level in capabilities.fan_speed.types
+            get_name_key(level) for level in capabilities.fan_speed.types
         ]
 
     async def async_added_to_hass(self) -> None:
@@ -254,7 +255,7 @@ class EcovacsVacuum(
             self.async_write_ha_state()
 
         async def on_fan_speed(event: FanSpeedEvent) -> None:
-            self._attr_fan_speed = event.speed.display_name
+            self._attr_fan_speed = get_name_key(event.speed)
             self.async_write_ha_state()
 
         async def on_rooms(event: RoomsEvent) -> None:
