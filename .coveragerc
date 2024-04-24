@@ -1161,6 +1161,7 @@ omit =
     homeassistant/components/romy/binary_sensor.py
     homeassistant/components/romy/coordinator.py
     homeassistant/components/romy/entity.py
+    homeassistant/components/romy/sensor.py
     homeassistant/components/romy/vacuum.py
     homeassistant/components/roomba/__init__.py
     homeassistant/components/roomba/binary_sensor.py
