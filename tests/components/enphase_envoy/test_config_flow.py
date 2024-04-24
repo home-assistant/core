@@ -534,7 +534,7 @@ async def test_zero_conf_while_form(
     assert config_entry.unique_id == "1234"
     assert config_entry.title == "Envoy 1234"
 
-    
+
 @pytest.mark.parametrize(
     ("mock_envoy"),
     [
