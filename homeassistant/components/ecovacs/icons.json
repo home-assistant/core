@@ -60,9 +60,6 @@
       "lifespan_lens_brush": {
         "default": "mdi:broom"
       },
-      "lifespan_round_mop": {
-        "default": "mdi:broom"
-      },
       "lifespan_side_brush": {
         "default": "mdi:broom"
       },
