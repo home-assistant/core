@@ -24,6 +24,8 @@ from aioesphomeapi import (
     DeviceInfo,
     EntityInfo,
     EntityState,
+    Event,
+    EventInfo,
     FanInfo,
     LightInfo,
     LockInfo,
@@ -70,6 +72,7 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     CoverInfo: Platform.COVER,
     DateInfo: Platform.DATE,
     DateTimeInfo: Platform.DATETIME,
+    EventInfo: Platform.EVENT,
     FanInfo: Platform.FAN,
     LightInfo: Platform.LIGHT,
     LockInfo: Platform.LOCK,
@@ -345,7 +348,7 @@ class RuntimeEntryData:
         if (
             current_state == state
             and subscription_key not in stale_state
-            and state_type is not CameraState
+            and state_type not in (CameraState, Event)
             and not (
                 state_type is SensorState
                 and (platform_info := self.info.get(SensorInfo))

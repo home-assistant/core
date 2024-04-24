@@ -183,7 +183,7 @@ aioaseko==0.1.1
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.3.4
+aioautomower==2024.4.3
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.0.0
@@ -339,6 +339,9 @@ aioskybell==22.7.0
 
 # homeassistant.components.slimproto
 aioslimproto==3.0.0
+
+# homeassistant.components.solaredge
+aiosolaredge==0.2.0
 
 # homeassistant.components.steamist
 aiosteamist==0.3.2
@@ -572,7 +575,7 @@ dbus-fast==2.21.1
 debugpy==1.8.1
 
 # homeassistant.components.ecovacs
-deebot-client==6.0.2
+deebot-client==7.1.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -837,7 +840,7 @@ ha-av==10.1.1
 ha-ffmpeg==3.2.0
 
 # homeassistant.components.iotawatt
-ha-iotawattpy==0.1.1
+ha-iotawattpy==0.1.2
 
 # homeassistant.components.philips_js
 ha-philipsjs==3.1.1
@@ -1074,7 +1077,7 @@ motionblindsble==0.0.9
 motioneye-client==0.3.14
 
 # homeassistant.components.bang_olufsen
-mozart-api==3.2.1.150.6
+mozart-api==3.4.1.8.5
 
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
@@ -1222,7 +1225,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==0.37.1
+plugwise==0.37.3
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1432,7 +1435,7 @@ pyforked-daapd==0.1.14
 pyfreedompro==1.1.0
 
 # homeassistant.components.fritzbox
-pyfritzhome==0.6.10
+pyfritzhome==0.6.11
 
 # homeassistant.components.ifttt
 pyfttt==0.3
@@ -1990,9 +1993,6 @@ snapcast==2.3.6
 # homeassistant.components.sonos
 soco==0.30.3
 
-# homeassistant.components.solaredge
-solaredge==0.0.2
-
 # homeassistant.components.solax
 solax==3.1.0
 
@@ -2285,7 +2285,7 @@ zeroconf==0.132.2
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.114
+zha-quirks==0.0.115
 
 # homeassistant.components.zha
 zigpy-deconz==0.23.1
