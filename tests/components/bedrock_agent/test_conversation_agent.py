@@ -21,18 +21,16 @@ logging.basicConfig(level=logging.DEBUG)
 _LOGGER = logging.getLogger(__name__)
 
 
-# @pytest.fixture(params=["anthropic.claude-v2:1", "amazon.titan-text-express-v1"]) #bedrock_agent.BedrockAgent.supported_models()
 @pytest.fixture(params=bedrock_agent.BedrockAgent.supported_models())
 def mock_config_entry(hass: HomeAssistant, request):
     """Mock a config entry."""
     entry = MockConfigEntry(
         domain="bedrock_agent",
-        data={
-            "region": "us-west-2",
-            "key_id": "abc",
-            "key_secret": "123",
+        data={"region": "us-west-2", "key_id": "abc", "key_secret": "123"},
+        options={
             "model_id": request.param,
             "prompt_context": CONST_PROMPT_CONTEXT,
+            "knowledgebase_id": "",
         },
     )
     entry.add_to_hass(hass)
@@ -61,12 +59,12 @@ async def test_default_prompt(hass: HomeAssistant, mock_config_entry) -> None:
     entry = mock_config_entry
     with mock.patch(
         "boto3.client",
-        mock.MagicMock(return_value=mock_bedrock_client(entry.data["model_id"])),
+        mock.MagicMock(return_value=mock_bedrock_client(entry.options["model_id"])),
     ):
         agent = bedrock_agent.BedrockAgent(hass, entry)
         conversationResult = await agent.async_process(conversationInput)
         answer = conversationResult.response.speech["plain"]["speech"]
-    assert answer == CONST_ANSWERS[entry.data["model_id"]]
+    assert answer == CONST_ANSWERS[entry.options["model_id"]]
 
 
 def build_response_body(response: str):

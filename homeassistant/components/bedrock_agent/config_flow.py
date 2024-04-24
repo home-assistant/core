@@ -1,6 +1,8 @@
 """Config flow for Amazon Bedrock Agent integration."""
+
 from __future__ import annotations
 
+from collections.abc import Sequence
 import logging
 from typing import Any
 
@@ -21,10 +23,12 @@ from homeassistant.helpers import selector
 from .const import (
     CONST_KEY_ID,
     CONST_KEY_SECRET,
+    CONST_KNOWLEDGEBASE_ID,
     CONST_MODEL_ID,
     CONST_MODEL_LIST,
     CONST_PROMPT_CONTEXT,
     CONST_REGION,
+    CONST_TITLE,
     DOMAIN,
 )
 
@@ -32,16 +36,23 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
+        vol.Required(CONST_TITLE): str,
         vol.Required(CONST_REGION): str,
         vol.Required(CONST_KEY_ID): str,
         vol.Required(CONST_KEY_SECRET): str,
-        vol.Required(
+    }
+)
+
+STEP_MODELCONFIG_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Optional(
             CONST_PROMPT_CONTEXT,
             default="Provide me a short answer to the following question: ",
         ): str,
         vol.Required(CONST_MODEL_ID): selector.SelectSelector(
             selector.SelectSelectorConfig(options=CONST_MODEL_LIST),
         ),
+        vol.Optional(CONST_KNOWLEDGEBASE_ID): str,
     }
 )
 
@@ -51,9 +62,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     bedrock = boto3.client(
         service_name="bedrock",
-        region_name=data[CONST_REGION],
-        aws_access_key_id=data[CONST_KEY_ID],
-        aws_secret_access_key=data[CONST_KEY_SECRET],
+        region_name=data.get(CONST_REGION),
+        aws_access_key_id=data.get(CONST_KEY_ID),
+        aws_secret_access_key=data.get(CONST_KEY_SECRET),
     )
 
     response = None
@@ -76,10 +87,42 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     return {"title": "Bedrock"}
 
 
+async def get_knowledgebases_selectOptionDict(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> Sequence[selector.SelectOptionDict]:
+    """Return available knowledgebases."""
+
+    bedrock_agent = boto3.client(
+        service_name="bedrock-agent",
+        region_name=data.get(CONST_REGION),
+        aws_access_key_id=data.get(CONST_KEY_ID),
+        aws_secret_access_key=data.get(CONST_KEY_SECRET),
+    )
+
+    response = await hass.async_add_executor_job(bedrock_agent.list_knowledge_bases)
+    knowledgebases = response.get("knowledgeBaseSummaries")
+    knowledgebases_list = [
+        selector.SelectOptionDict(
+            {"value": k.get("knowledgeBaseId"), "label": k.get("name")}
+        )
+        for k in knowledgebases
+    ]
+    knowledgebases_list.insert(
+        0, selector.SelectOptionDict({"value": "", "label": "None"})
+    )
+
+    return knowledgebases_list
+
+
 class BedrockAgentConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Amazon Bedrock Agent."""
 
-    VERSION = 1
+    VERSION = 2
+    MINOR_VERSION = 1
+
+    def __init__(self) -> None:
+        """Initialize options flow."""
+        self.config_data: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -88,7 +131,7 @@ class BedrockAgentConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
+                await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -97,10 +140,49 @@ class BedrockAgentConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                self.config_data.update(user_input)
+                return await self.async_step_modelconfig()
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_modelconfig(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial step."""
+
+        knowledgebases = await get_knowledgebases_selectOptionDict(
+            self.hass, self.config_data
+        )
+
+        modelconfig_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONST_PROMPT_CONTEXT,
+                    default="Provide me a short answer to the following question: ",
+                ): str,
+                vol.Required(CONST_MODEL_ID): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=CONST_MODEL_LIST),
+                ),
+                vol.Optional(CONST_KNOWLEDGEBASE_ID): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=knowledgebases),
+                ),
+            }
+        )
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self.config_data.get(CONST_TITLE, "Bedrock"),
+                data=self.config_data,
+                options=user_input,
+            )
+
+        return self.async_show_form(
+            step_id="modelconfig",
+            data_schema=modelconfig_schema,
+            errors=errors,
         )
 
     @staticmethod
@@ -130,47 +212,43 @@ class OptionsFlowHandler(OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage the options."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            try:
-                info = await validate_input(self.hass, user_input)
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry, data=user_input
-                )
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except HomeAssistantError:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                return self.async_create_entry(title=info["title"], data=user_input)
+        """Optionsflow to edit model configuration."""
+        knowledgebases = await get_knowledgebases_selectOptionDict(
+            self.hass, self.config_entry.data.copy()
+        )
 
         options_schema = vol.Schema(
             {
                 vol.Required(
-                    CONST_REGION, default=self.config_entry.data[CONST_REGION]
-                ): str,
-                vol.Required(
-                    CONST_KEY_ID, default=self.config_entry.data[CONST_KEY_ID]
-                ): str,
-                vol.Required(
-                    CONST_KEY_SECRET, default=self.config_entry.data[CONST_KEY_SECRET]
-                ): str,
-                vol.Required(
                     CONST_PROMPT_CONTEXT,
-                    default=self.config_entry.data[CONST_PROMPT_CONTEXT],
-                ): str,
+                    default=self.config_entry.options.get(CONST_PROMPT_CONTEXT),
+                ): selector.TextSelector(
+                    selector.TextSelectorConfig(
+                        type=selector.TextSelectorType.TEXT, multiline=True
+                    )
+                ),
                 vol.Required(
-                    CONST_MODEL_ID, default=self.config_entry.data[CONST_MODEL_ID]
+                    CONST_MODEL_ID,
+                    default=self.config_entry.options.get(CONST_MODEL_ID),
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(options=CONST_MODEL_LIST),
+                ),
+                vol.Optional(
+                    CONST_KNOWLEDGEBASE_ID,
+                    description={
+                        "suggested_value": self.config_entry.options.get(
+                            CONST_KNOWLEDGEBASE_ID
+                        )
+                    },
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=knowledgebases),
                 ),
             }
         )
 
-        return self.async_show_form(
-            step_id="init", data_schema=options_schema, errors=errors
-        )
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self.config_entry.title, data=user_input
+            )
+
+        return self.async_show_form(step_id="init", data_schema=options_schema)

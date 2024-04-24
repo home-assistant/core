@@ -19,6 +19,7 @@ from homeassistant.helpers import intent
 from .const import (
     CONST_KEY_ID,
     CONST_KEY_SECRET,
+    CONST_KNOWLEDGEBASE_ID,
     CONST_MODEL_ID,
     CONST_MODEL_LIST,
     CONST_PROMPT_CONTEXT,
@@ -34,6 +35,18 @@ __all__ = [
     "async_process",
     "BedrockAgent",
 ]
+
+
+# Example migration function
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+    if config_entry.version == 1:
+        hass.config_entries.async_update_entry(
+            config_entry, data=config_entry.data, minor_version=1, version=2
+        )
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -57,7 +70,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def options_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
     """Handle options update."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
+    # await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 class BedrockAgent(conversation.AbstractConversationAgent):
@@ -70,6 +83,12 @@ class BedrockAgent(conversation.AbstractConversationAgent):
         self.history: dict[str, list[dict]] = {}
         self.bedrock = boto3.client(
             service_name="bedrock-runtime",
+            region_name=self.entry.data[CONST_REGION],
+            aws_access_key_id=self.entry.data[CONST_KEY_ID],
+            aws_secret_access_key=self.entry.data[CONST_KEY_SECRET],
+        )
+        self.bedrock_agent = boto3.client(
+            service_name="bedrock-agent-runtime",
             region_name=self.entry.data[CONST_REGION],
             aws_access_key_id=self.entry.data[CONST_KEY_ID],
             aws_secret_access_key=self.entry.data[CONST_KEY_SECRET],
@@ -88,10 +107,31 @@ class BedrockAgent(conversation.AbstractConversationAgent):
     async def async_call_bedrock(self, question) -> str:
         """Return result from Amazon Bedrock."""
 
-        question = self.entry.data[CONST_PROMPT_CONTEXT] + question
+        question = self.entry.options[CONST_PROMPT_CONTEXT] + question
 
-        modelId = self.entry.data[CONST_MODEL_ID]
+        modelId = self.entry.options[CONST_MODEL_ID]
+        knowledgebaseId = self.entry.options.get(CONST_KNOWLEDGEBASE_ID) or ""
         body = json.dumps({"prompt": question})
+
+        if knowledgebaseId != "":
+            agent_input = {"text": question}
+            agent_retrieveAndGenerateConfiguration = {
+                "knowledgeBaseConfiguration": {
+                    "knowledgeBaseId": knowledgebaseId,
+                    "modelArn": modelId,
+                },
+                "type": "KNOWLEDGE_BASE",
+            }
+
+            bedrock_agent_response = await self.hass.async_add_executor_job(
+                partial(
+                    self.bedrock_agent.retrieve_and_generate,
+                    input=agent_input,
+                    retrieveAndGenerateConfiguration=agent_retrieveAndGenerateConfiguration,
+                ),
+            )
+
+            return bedrock_agent_response["output"]["text"]
 
         # switch case statement
         if modelId.startswith("amazon.titan-text-express-v1"):

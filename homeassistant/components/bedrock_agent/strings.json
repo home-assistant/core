@@ -2,21 +2,25 @@
   "config": {
     "step": {
       "user": {
+        "title": "Bedrock AWS Connection",
+        "description": "Enter your connections details.",
         "data": {
+          "title": "Name",
           "region": "Region",
           "key_id": "Key ID",
-          "key_secret": "Key Secret",
-          "model_id": "Model ID",
-          "prompt_context": "Prompt Context"
+          "key_secret": "Key Secret"
+        },
+        "data_description": {
+          "title": "The title of your Agend in Home Assistant."
         }
       },
-      "init": {
+      "modelconfig": {
+        "title": "Model Configuration",
         "data": {
-          "region": "Region",
-          "key_id": "Key ID",
-          "key_secret": "Key Secret",
-          "model_id": "Model ID",
-          "prompt_context": "Prompt Context"
+          "use_knowledgebase": "Activate Knowledgebase",
+          "model_id": "Model",
+          "prompt_context": "Prompt Context",
+          "knowledgebase_id": "Knowledge Base"
         }
       }
     },
@@ -27,6 +31,17 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "model_id": "Model",
+          "prompt_context": "Prompt Context",
+          "knowledgebase_id": "Knowledge Base"
+        }
+      }
     }
   }
 }
