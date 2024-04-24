@@ -24,6 +24,15 @@ ADDON_DISCOVERY_INFO = {
     "host": "host1",
     "port": 5581,
 }
+ZEROCONF_INFO = ZeroconfServiceInfo(
+    ip_address=ip_address("fd11:be53:8d46:0:729e:5a4f:539d:1ee6"),
+    ip_addresses=[ip_address("fd11:be53:8d46:0:729e:5a4f:539d:1ee6")],
+    port=5540,
+    hostname="CDEFGHIJ12345678.local.",
+    type="_matter._tcp.local.",
+    name="ABCDEFGH123456789-0000000012345678._matter._tcp.local.",
+    properties={"SII": "3300", "SAI": "1100", "T": "0"},
+)
 
 
 @pytest.fixture(name="setup_entry", autouse=True)
@@ -198,15 +207,7 @@ async def test_zeroconf_discovery(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=ZeroconfServiceInfo(
-            ip_address=ip_address("fd11:be53:8d46:0:729e:5a4f:539d:1ee6"),
-            ip_addresses=[ip_address("fd11:be53:8d46:0:729e:5a4f:539d:1ee6")],
-            port=5540,
-            hostname="CDEFGHIJ12345678.local.",
-            type="_matter._tcp.local.",
-            name="ABCDEFGH123456789-0000000012345678._matter._tcp.local.",
-            properties={"SII": "3300", "SAI": "1100", "T": "0"},
-        ),
+        data=ZEROCONF_INFO,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
@@ -241,15 +242,7 @@ async def test_zeroconf_discovery_not_onboarded_not_supervisor(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=ZeroconfServiceInfo(
-            ip_address=ip_address("fd11:be53:8d46:0:729e:5a4f:539d:1ee6"),
-            ip_addresses=[ip_address("fd11:be53:8d46:0:729e:5a4f:539d:1ee6")],
-            port=5540,
-            hostname="CDEFGHIJ12345678.local.",
-            type="_matter._tcp.local.",
-            name="ABCDEFGH123456789-0000000012345678._matter._tcp.local.",
-            properties={"SII": "3300", "SAI": "1100", "T": "0"},
-        ),
+        data=ZEROCONF_INFO,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
@@ -288,15 +281,7 @@ async def test_zeroconf_not_onboarded_running(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=ZeroconfServiceInfo(
-            ip_address=ip_address("fd11:be53:8d46:0:729e:5a4f:539d:1ee6"),
-            ip_addresses=[ip_address("fd11:be53:8d46:0:729e:5a4f:539d:1ee6")],
-            port=5540,
-            hostname="CDEFGHIJ12345678.local.",
-            type="_matter._tcp.local.",
-            name="ABCDEFGH123456789-0000000012345678._matter._tcp.local.",
-            properties={"SII": "3300", "SAI": "1100", "T": "0"},
-        ),
+        data=ZEROCONF_INFO,
     )
     await hass.async_block_till_done()
 
@@ -327,15 +312,7 @@ async def test_zeroconf_not_onboarded_installed(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=ZeroconfServiceInfo(
-            ip_address=ip_address("fd11:be53:8d46:0:729e:5a4f:539d:1ee6"),
-            ip_addresses=[ip_address("fd11:be53:8d46:0:729e:5a4f:539d:1ee6")],
-            port=5540,
-            hostname="CDEFGHIJ12345678.local.",
-            type="_matter._tcp.local.",
-            name="ABCDEFGH123456789-0000000012345678._matter._tcp.local.",
-            properties={"SII": "3300", "SAI": "1100", "T": "0"},
-        ),
+        data=ZEROCONF_INFO,
     )
     await hass.async_block_till_done()
 
@@ -375,15 +352,7 @@ async def test_zeroconf_not_onboarded_not_installed(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=ZeroconfServiceInfo(
-            ip_address=ip_address("fd11:be53:8d46:0:729e:5a4f:539d:1ee6"),
-            ip_addresses=[ip_address("fd11:be53:8d46:0:729e:5a4f:539d:1ee6")],
-            port=5540,
-            hostname="CDEFGHIJ12345678.local.",
-            type="_matter._tcp.local.",
-            name="ABCDEFGH123456789-0000000012345678._matter._tcp.local.",
-            properties={"SII": "3300", "SAI": "1100", "T": "0"},
-        ),
+        data=ZEROCONF_INFO,
     )
     await hass.async_block_till_done()
 
