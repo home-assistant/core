@@ -122,7 +122,8 @@ async def test_config_does_not_turn_off_debug(hass: HomeAssistant) -> None:
     assert hass.config.debug is True
 
 
-async def test_asyncio_debug_on_turns_hass_debug_on() -> None:
+@pytest.mark.parametrize("load_registries", [False])
+async def test_asyncio_debug_on_turns_hass_debug_on(hass: HomeAssistant) -> None:
     """Test that asyncio debug turns on hass debug."""
     asyncio.get_running_loop().set_debug(True)
 
