@@ -18,7 +18,7 @@ from homeassistant.auth.session import SESSION_ID, TEMP_TIMEOUT
 from homeassistant.components.cloud.const import PREF_STRICT_CONNECTION
 from homeassistant.components.http import KEY_HASS
 from homeassistant.components.http.auth import (
-    STRICT_CONNECTION_STATIC_PAGE,
+    STRICT_CONNECTION_GUARD_PAGE,
     async_setup_auth,
     async_sign_path,
 )
@@ -213,17 +213,17 @@ async def _drop_connection_unauthorized_request(
         await client.get("/")
 
 
-async def _static_page_unauthorized_request(
+async def _guard_page_unauthorized_request(
     hass: HomeAssistant, client: TestClient
 ) -> None:
     req = await client.get("/")
     assert req.status == HTTPStatus.IM_A_TEAPOT
 
-    def read_static_page() -> str:
-        with open(STRICT_CONNECTION_STATIC_PAGE, encoding="utf-8") as file:
+    def read_guard_page() -> str:
+        with open(STRICT_CONNECTION_GUARD_PAGE, encoding="utf-8") as file:
             return file.read()
 
-    assert await req.text() == await hass.async_add_executor_job(read_static_page)
+    assert await req.text() == await hass.async_add_executor_job(read_guard_page)
 
 
 @pytest.mark.parametrize(
@@ -243,7 +243,7 @@ async def _static_page_unauthorized_request(
     ("strict_connection_mode", "request_func"),
     [
         (StrictConnectionMode.DROP_CONNECTION, _drop_connection_unauthorized_request),
-        (StrictConnectionMode.STATIC_PAGE, _static_page_unauthorized_request),
+        (StrictConnectionMode.GUARD_PAGE, _guard_page_unauthorized_request),
     ],
     ids=["drop connection", "static page"],
 )
