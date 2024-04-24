@@ -11,8 +11,8 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import LinearEntity
 from .const import DOMAIN
 from .coordinator import LinearUpdateCoordinator
 from .entity import LinearEntity
@@ -38,12 +38,30 @@ async def async_setup_entry(
     )
 
 
-class LinearCoverEntity(LinearEntity, CoverEntity):
+class LinearCoverEntity(CoordinatorEntity[LinearUpdateCoordinator], CoverEntity):
     """Representation of a Linear cover."""
 
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
-    _attr_name = None
-    _attr_device_class = CoverDeviceClass.GARAGE
+
+    def __init__(
+        self,
+        device_id: str,
+        device_name: str,
+        subdevice: str,
+        config_entry: ConfigEntry,
+        coordinator: LinearUpdateCoordinator,
+    ) -> None:
+        """Init with device ID and name."""
+        super().__init__(coordinator)
+
+        self._attr_has_entity_name = True
+        self._attr_name = None
+        self._device_id = device_id
+        self._device_name = device_name
+        self._subdevice = subdevice
+        self._attr_device_class = CoverDeviceClass.GARAGE
+        self._attr_unique_id = f"{device_id}-{subdevice}"
+        self._config_entry = config_entry
 
     def _get_data(self, data_property: str) -> str:
         """Get a property of the subdevice."""
