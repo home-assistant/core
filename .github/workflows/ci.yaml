@@ -481,7 +481,8 @@ jobs:
       - name: Install additional OS dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
-          sudo apt-get update || true
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
+          sudo apt-get update
           sudo apt-get -y install \
             bluez \
             ffmpeg \
@@ -694,7 +695,8 @@ jobs:
     steps:
       - name: Install additional OS dependencies
         run: |
-          sudo apt-get update || true
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
+          sudo apt-get update
           sudo apt-get -y install \
             bluez \
             ffmpeg \
@@ -754,7 +756,8 @@ jobs:
     steps:
       - name: Install additional OS dependencies
         run: |
-          sudo apt-get update || true
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
+          sudo apt-get update
           sudo apt-get -y install \
             bluez \
             ffmpeg \
@@ -869,7 +872,8 @@ jobs:
     steps:
       - name: Install additional OS dependencies
         run: |
-          sudo apt-get update || true
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
+          sudo apt-get update
           sudo apt-get -y install \
             bluez \
             ffmpeg \
@@ -991,7 +995,8 @@ jobs:
     steps:
       - name: Install additional OS dependencies
         run: |
-          sudo apt-get update || true
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
+          sudo apt-get update
           sudo apt-get -y install \
             bluez \
             ffmpeg \
@@ -1132,7 +1137,8 @@ jobs:
     steps:
       - name: Install additional OS dependencies
         run: |
-          sudo apt-get update || true
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
+          sudo apt-get update
           sudo apt-get -y install \
             bluez \
             ffmpeg \
