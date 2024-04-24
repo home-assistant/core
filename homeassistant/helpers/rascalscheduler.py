@@ -6,6 +6,8 @@ import logging
 import re
 from typing import TYPE_CHECKING, Optional
 
+import shortuuid
+
 from homeassistant.const import (
     CONF_ENTITY_ID,
     DOMAIN_AUTOMATION,
@@ -111,3 +113,8 @@ def string_to_datetime(dt: str) -> datetime:
 def datetime_to_string(dt: datetime) -> str:
     """Convert datetime to string."""
     return dt.strftime("%H%M%S")
+
+
+def generate_short_uuid(size: int = 5) -> str:
+    """Generate short uuid."""
+    return shortuuid.ShortUUID().random(length=size)

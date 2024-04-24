@@ -22,7 +22,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, service
-from homeassistant.helpers.rascalscheduler import get_entity_id_from_number
+from homeassistant.helpers.rascalscheduler import (
+    generate_short_uuid,
+    get_entity_id_from_number,
+)
 from homeassistant.util import slugify
 
 _KT = TypeVar("_KT")
@@ -67,14 +70,17 @@ class BaseRoutineEntity:
     def duplicate(self, var: dict[str, Any], ctx: Context | None) -> RoutineEntity:
         """Duplicate the routine entity. Only the base routine can call this function."""
 
+        new_routine_id = self._routine_id + "-" + generate_short_uuid()
+
         routine_entity = {}
 
         for action_id, entity in self.actions.items():
             if not entity.is_end_node:
-                routine_entity[action_id] = ActionEntity(
+                new_action_id = new_routine_id + "." + action_id.split(".")[1]
+                routine_entity[new_action_id] = ActionEntity(
                     hass=entity.hass,
                     action=entity.action,
-                    action_id=entity.action_id,
+                    action_id=new_action_id,
                     duration=entity.duration,
                     delay=entity.delay,
                     variables=var,
@@ -94,24 +100,36 @@ class BaseRoutineEntity:
 
         for action_id, entity in self.actions.items():
             if not entity.is_end_node:
+                new_action_id = new_routine_id + "." + action_id.split(".")[1]
+
                 for parent in entity.parents:
-                    routine_entity[action_id].parents.append(
-                        routine_entity[parent.action_id]
+                    new_parent_action_id = (
+                        new_routine_id + "." + parent.action_id.split(".")[1]
+                    )
+                    routine_entity[new_action_id].parents.append(
+                        routine_entity[new_parent_action_id]
                     )
 
                 for child in entity.children:
                     if not child.is_end_node:
-                        routine_entity[action_id].children.append(
-                            routine_entity[child.action_id]
+                        new_child_action_id = (
+                            new_routine_id + "." + child.action_id.split(".")[1]
+                        )
+
+                        routine_entity[new_action_id].children.append(
+                            routine_entity[new_child_action_id]
                         )
                     else:
-                        routine_entity[action_id].children.append(
+                        routine_entity[new_action_id].children.append(
                             routine_entity[CONF_END_VIRTUAL_NODE]
                         )
             else:
                 for parent in entity.parents:
+                    new_parent_action_id = (
+                        new_routine_id + "." + parent.action_id.split(".")[1]
+                    )
                     routine_entity[CONF_END_VIRTUAL_NODE].parents.append(
-                        routine_entity[parent.action_id]
+                        routine_entity[new_parent_action_id]
                     )
 
         if not self._last_trigger_time:
@@ -121,9 +139,11 @@ class BaseRoutineEntity:
             self._last_trigger_time = self._start_time
             self._start_time = time.time()
 
+        self.output(new_routine_id, routine_entity)
+
         return RoutineEntity(
             name=self._name,
-            routine_id=self._routine_id,
+            routine_id=new_routine_id,
             actions=routine_entity,
             action_script=self.action_script,
             start_time=self._start_time,
