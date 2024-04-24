@@ -467,6 +467,11 @@ class IntegrationSensor(RestoreSensor):
     def _integrate_on_state_change_and_max_sub_interval(
         self, event: Event[EventStateChangedData]
     ) -> None:
+        """Integrate based on state change and time.
+
+        Next to doing the integration based on state change this method cancels and
+        reschedules time based integration.
+        """
         self._cancel_max_sub_interval_exceeded_callback()
         old_state = event.data["old_state"]
         new_state = event.data["new_state"]
@@ -475,7 +480,8 @@ class IntegrationSensor(RestoreSensor):
             self._last_integration_trigger = _IntegrationTrigger.StateChange
             self._last_integration_time = datetime.now(tz=UTC)
         finally:
-            # if max_sub_interval exceeds, by construction there was no state change, the source is assumed constant new_state over max_sub_interval
+            # When max_sub_interval exceeds without state change the source is assumed
+            # constant with the last known state (new_state).
             self._schedule_max_sub_interval_exceeded_if_state_is_numeric(new_state)
 
     @callback
@@ -519,6 +525,14 @@ class IntegrationSensor(RestoreSensor):
     def _schedule_max_sub_interval_exceeded_if_state_is_numeric(
         self, source_state: State | None
     ) -> None:
+        """Schedule possible integration using the source state and max_sub_interval.
+
+        The callback reference is stored for possible cancellation if the source state
+        reports a change before max_sub_interval has passed.
+
+        If the callback is executed, meaning there was no state change reported, the
+        source_state is assumed constant and integration is done using its value.
+        """
         if (
             self._max_sub_interval is not None
             and source_state is not None
@@ -527,6 +541,7 @@ class IntegrationSensor(RestoreSensor):
 
             @callback
             def _integrate_on_max_sub_interval_exceeded_callback(now: datetime) -> None:
+                """Integrate based on time and reschedule."""
                 elapsed_seconds = Decimal(
                     (now - self._last_integration_time).total_seconds()
                 )
