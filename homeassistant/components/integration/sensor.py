@@ -558,7 +558,7 @@ class IntegrationSensor(RestoreSensor):
             )
 
     def _cancel_max_sub_interval_exceeded_callback(self) -> None:
-        return self._max_sub_interval_exceeded_callback()
+        self._max_sub_interval_exceeded_callback()
 
     @property
     def native_value(self) -> Decimal | None:
