@@ -33,7 +33,6 @@ SELECTS: Final[list[JvcProjectorSelectDescription]] = [
     JvcProjectorSelectDescription(
         key="input",
         translation_key="input",
-        icon="mdi:hdmi-port",
         options=list(OPTIONS["input"].keys()),
         command=lambda device, option: device.remote(OPTIONS["input"][option]),
     )
