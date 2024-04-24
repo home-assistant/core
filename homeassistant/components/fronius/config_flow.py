@@ -162,12 +162,11 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
                 if existing_entry and existing_entry.entry_id != self._entry.entry_id:
                     self._abort_if_unique_id_configured()
 
-                self.hass.config_entries.async_update_entry(
+                return self.async_update_reload_and_abort(
                     self._entry,
                     data=info,
+                    reason="reconfigure_successful",
                 )
-                await self.hass.config_entries.async_reload(self._entry.entry_id)
-                return self.async_abort(reason="reconfigure_successful")
 
         if self._entry is None:
             self._entry = self.hass.config_entries.async_get_entry(
