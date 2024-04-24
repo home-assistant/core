@@ -10,7 +10,10 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     MediaPlayerEnqueue,
 )
-from homeassistant.components.media_player.const import ATTR_MEDIA_ENQUEUE, SERVICE_SELECT_SOURCE
+from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_ENQUEUE,
+    SERVICE_SELECT_SOURCE,
+)
 from homeassistant.components.sonos.const import SOURCE_LINEIN, SOURCE_TV
 from homeassistant.components.sonos.media_player import LONG_SERVICE_TIMEOUT
 from homeassistant.const import STATE_IDLE

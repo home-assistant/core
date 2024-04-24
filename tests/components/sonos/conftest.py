@@ -311,8 +311,8 @@ def sonos_favorites_fixture() -> SearchResult:
     favorites = load_json_value_fixture("sonos_favorites.json", "sonos")
     favorite_list = [DidlFavorite.from_dict(fav) for fav in favorites]
     return SearchResult(favorite_list, "favorites", 3, 3, 1)
-  
-  
+
+
 class MockMusicServiceItem:
     """Mocks a Soco MusicServiceItem."""
 
