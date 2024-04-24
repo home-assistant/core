@@ -402,11 +402,12 @@ class Group(Entity):
 
         if domain not in registry.on_states_by_domain:
             # Handle the group of a group case
-            if state in registry.on_off_mapping:
+            if state in registry.on_states:
                 self._on_states.add(state)
+            # Only in case of a registered off state we add STATE_ON
             elif state in registry.off_states:
                 self._on_states.add(STATE_ON)
-            self._on_off[entity_id] = state in registry.on_off_mapping
+            self._on_off[entity_id] = state in registry.on_states
         else:
             entity_on_state = registry.on_states_by_domain[domain]
             self._on_states.update(entity_on_state)
@@ -475,7 +476,7 @@ class Group(Entity):
 
         # If all the entity domains we are tracking
         # have the same on state we use this state
-        # and its hass.data[REG_KEY].on_off_mapping to off
+        # and its hass.data[REG_KEY].on_states to off
         if num_on_states == 1:
             on_state = next(iter(self._on_states))
         # If the entity domains have more than one

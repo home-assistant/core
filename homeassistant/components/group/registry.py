@@ -49,9 +49,7 @@ class GroupIntegrationRegistry:
 
     def __init__(self) -> None:
         """Imitialize registry."""
-        self.on_off_mapping: dict[str, dict[str | None, str]] = {
-            STATE_ON: {None: STATE_OFF}
-        }
+        self.on_states: set[str] = {STATE_ON}
         self.off_states: set[str] = {STATE_OFF}
         self.on_states_by_domain: dict[str, set[str]] = {}
         self.off_state_by_domain: dict[str, str] = {}
@@ -65,10 +63,7 @@ class GroupIntegrationRegistry:
         """Register on and off states for the current domain."""
         domain = current_domain.get()
         for on_state in on_states:
-            if on_state not in self.on_off_mapping:
-                self.on_off_mapping[on_state] = {domain: off_state}
-            else:
-                self.on_off_mapping[on_state][domain] = off_state
+            self.on_states.add(on_state)
         self.off_states.add(off_state)
 
         self.on_states_by_domain[domain] = set(on_states)
