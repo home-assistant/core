@@ -9,12 +9,7 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
-    ATTR_OPTION,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_OPTION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
