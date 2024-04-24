@@ -1407,6 +1407,12 @@ class _OneTimeListener(Generic[_DataT]):
 EMPTY_LIST: list[Any] = []
 
 
+def _verify_event_type_length_or_raise(event_type: EventType[_DataT] | str) -> None:
+    """Verify the length of the event type and raise if too long."""
+    if len(event_type) > MAX_LENGTH_EVENT_EVENT_TYPE:
+        raise MaxLengthExceeded(event_type, "event_type", MAX_LENGTH_EVENT_EVENT_TYPE)
+
+
 class EventBus:
     """Allow the firing of and listening for events."""
 
@@ -1447,8 +1453,9 @@ class EventBus:
         context: Context | None = None,
     ) -> None:
         """Fire an event."""
+        _verify_event_type_length_or_raise(event_type)
         self._hass.loop.call_soon_threadsafe(
-            self.async_fire, event_type, event_data, origin, context
+            self.async_fire_internal, event_type, event_data, origin, context
         )
 
     @callback
@@ -1464,13 +1471,8 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        if self._hass.config.debug:
-            self._hass.verify_event_loop_thread("async_fire")
-
-        if len(event_type) > MAX_LENGTH_EVENT_EVENT_TYPE:
-            raise MaxLengthExceeded(
-                event_type, "event_type", MAX_LENGTH_EVENT_EVENT_TYPE
-            )
+        _verify_event_type_length_or_raise(event_type)
+        self._hass.verify_event_loop_thread("async_fire")
         return self.async_fire_internal(
             event_type, event_data, origin, context, time_fired
         )
