@@ -5,6 +5,7 @@ from unittest.mock import Mock
 
 from aiohttp import ClientError
 
+from homeassistant.components.accuweather import AccuWeatherData
 from homeassistant.components.accuweather.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -23,8 +24,10 @@ async def test_accuweather_system_health(
     await hass.async_block_till_done()
 
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN]["0123xyz"] = {}
-    hass.data[DOMAIN]["0123xyz"] = Mock(accuweather=Mock(requests_remaining="42"))
+    hass.data[DOMAIN]["0123xyz"] = AccuWeatherData(
+        coordinator_observation=Mock(accuweather=Mock(requests_remaining="42")),
+        coordinator_daily_forecast=Mock(),
+    )
 
     info = await get_system_health_info(hass, DOMAIN)
 
@@ -48,8 +51,10 @@ async def test_accuweather_system_health_fail(
     await hass.async_block_till_done()
 
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN]["0123xyz"] = {}
-    hass.data[DOMAIN]["0123xyz"] = Mock(accuweather=Mock(requests_remaining="0"))
+    hass.data[DOMAIN]["0123xyz"] = AccuWeatherData(
+        coordinator_observation=Mock(accuweather=Mock(requests_remaining="0")),
+        coordinator_daily_forecast=Mock(),
+    )
 
     info = await get_system_health_info(hass, DOMAIN)
 

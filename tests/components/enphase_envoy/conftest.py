@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, Mock, patch
 
+import jwt
 from pyenphase import (
     Envoy,
     EnvoyData,
@@ -368,7 +369,10 @@ def mock_authenticate():
 @pytest.fixture(name="mock_auth")
 def mock_auth(serial_number):
     """Define a mocked EnvoyAuth fixture."""
-    return EnvoyTokenAuth("127.0.0.1", token="abc", envoy_serial=serial_number)
+    token = jwt.encode(
+        payload={"name": "envoy", "exp": 1907837780}, key="secret", algorithm="HS256"
+    )
+    return EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial=serial_number)
 
 
 @pytest.fixture(name="mock_setup")
