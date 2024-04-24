@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.components.rasc.entity import BaseRoutineEntity
+from homeassistant.components.rasc.log import output_routine
 from homeassistant.components.rasc.scheduler import create_routine
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -595,7 +596,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                 routine_id=str(self.unique_id),
                 action_script=self.raw_config["action"],
             )
-            self._routine.output()
+            output_routine(str(self.unique_id), self._routine.actions)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on and update the state."""

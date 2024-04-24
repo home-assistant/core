@@ -6,7 +6,7 @@ import json
 import logging
 import os
 import shutil
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .entity import Queue
@@ -65,8 +65,8 @@ def output_lock_queues(lock_queues: dict[str, Queue], filepath: str) -> None:
                 "action_id": action_id,
                 "action_state": action_info.action_state,
                 "lock_state": action_info.lock_state,
-                "start_time": action_info.time_range[0],
-                "end_time": action_info.time_range[1],
+                "start_time": action_info.start_time,
+                "end_time": action_info.end_time,
             }
             action_list.append(sub_entity_json)
 
@@ -111,6 +111,25 @@ def output_wait_queues(wait_queue: Queue, filepath: str) -> None:
     # print(json.dumps(out, indent=2))  # noqa: T201
 
 
+def output_lock_waitlist(lock_waitlist: dict[str, list[str]], filepath: str) -> None:
+    """Output lock waitlist."""
+    fp = os.path.join(filepath, "lock_waitlist.json")
+
+    waitlist = []
+    for entity_id, routines in lock_waitlist.items():
+        routine_list = []
+        for routine_id in routines:
+            routine_list.append(routine_id)
+
+        entity_json = {"entity_id": entity_id, "waitlist": routine_list}
+
+        waitlist.append(entity_json)
+
+    out = {"Type": "Lock Waitlist", "Routines": waitlist}
+    with open(fp, "w", encoding="utf-8") as f:
+        json.dump(out, f, indent=2)
+
+
 def output_serialization_order(serialization_order: Queue, filepath: str) -> None:
     """Output serialization order."""
     fp = os.path.join(filepath, "serialization_order.json")
@@ -148,6 +167,65 @@ def output_free_slots(timelines: dict[str, Queue], filepath: str) -> None:
     # print(json.dumps(out, indent=2))  # noqa: T201()
 
 
+def output_routine(routine_id: str, actions: dict[str, Any]) -> None:
+    """Output routine."""
+    dirname = f"trail-{trail.num:04d}"
+    trail.increment()
+
+    os.path.join(_LOG_PATH, dirname, "routines.json")
+
+    action_list = []
+    for _, entity in actions.items():
+        parents = []
+        children = []
+
+        for parent in entity.parents:
+            parents.append(parent.action_id)
+
+        for child in entity.children:
+            children.append(child.action_id)
+
+        entity_json = {
+            "action_id": entity.action_id,
+            "action": entity.action,
+            "action_completed": entity.action_completed,
+            "parents": parents,
+            "children": children,
+            "delay": str(entity.delay),
+            "duration": str(entity.duration),
+        }
+
+        action_list.append(entity_json)
+
+    out = {"Routine_id": routine_id, "Actions": action_list}
+
+    print(json.dumps(out, indent=2))  # noqa: T201
+
+
+def output_preset(preset: set[str], filepath: str) -> None:
+    """Output serialization order."""
+    fp = os.path.join(filepath, "preset.json")
+    routines: list[str] = []
+    for routine_id in preset:
+        routines.append(routine_id)
+
+    out = {"Type": "Preset", "Routines": routines}
+    with open(fp, "w", encoding="utf-8") as f:
+        json.dump(out, f, indent=2)
+
+
+def output_postset(postset: set[str], filepath: str) -> None:
+    """Output serialization order."""
+    fp = os.path.join(filepath, "postset.json")
+    routines: list[str] = []
+    for routine_id in postset:
+        routines.append(routine_id)
+
+    out = {"Type": "Postset", "Routines": routines}
+    with open(fp, "w", encoding="utf-8") as f:
+        json.dump(out, f, indent=2)
+
+
 def output_all(
     logger: logging.Logger,
     locks: dict[str, str | None] | None = None,
@@ -155,6 +233,9 @@ def output_all(
     free_slots: dict[str, Queue] | None = None,
     serialization_order: Queue | None = None,
     wait_queue: Queue | None = None,
+    lock_waitlist: dict[str, list[str]] | None = None,
+    preset: set[str] | None = None,
+    postset: set[str] | None = None,
 ):
     """Output specific info."""
 
@@ -181,3 +262,12 @@ def output_all(
 
     if wait_queue:
         output_wait_queues(wait_queue, fp)
+
+    if lock_waitlist:
+        output_lock_waitlist(lock_waitlist, fp)
+
+    if preset:
+        output_preset(preset, fp)
+
+    if postset:
+        output_postset(postset, fp)
