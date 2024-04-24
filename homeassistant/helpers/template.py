@@ -2342,7 +2342,7 @@ def relative_time(hass: HomeAssistant, value: Any) -> Any:
                 "relative_time": "relative_time()",
                 "time_since": "time_since()",
                 "time_until": "time_until()",
-            }
+            },
         )
         _LOGGER.warning("Template function 'relative_time' is deprecated")
 
