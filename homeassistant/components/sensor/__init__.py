@@ -754,7 +754,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return None
 
         for option in ("display_precision", "suggested_display_precision"):
-            if sensor_options and (precision := sensor_options.get(option)) is not None:
+            if (precision := sensor_options.get(option)) is not None:
                 return cast(int, precision)
         return None
 
