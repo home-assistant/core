@@ -18,6 +18,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -43,6 +44,7 @@ from .const import (
     ATTR_POSITION,
     ATTR_TRANSPARENCY,
     DEFAULT_TIMEOUT,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -147,7 +149,12 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                         auth=imagedata.get(ATTR_IMAGE_AUTH),
                     )
                 else:
-                    _LOGGER.error("Unexpected image data passed to notify service")
+                    raise ServiceValidationError(
+                        "Invalid image provided",
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_notification_image",
+                        translation_placeholders={"type": type(imagedata).__name__},
+                    )
             if icondata := data.get(ATTR_ICON):
                 if isinstance(icondata, str):
                     icondata = (
@@ -164,7 +171,12 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                         auth=icondata.get(ATTR_ICON_AUTH),
                     )
                 else:
-                    _LOGGER.error("Unexpected icon data passed to notify service")
+                    raise ServiceValidationError(
+                        "Invalid Icon provided",
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_notification_icon",
+                        translation_placeholders={"type": type(icondata).__name__},
+                    )
         self.notify.send(
             message,
             title=title,
