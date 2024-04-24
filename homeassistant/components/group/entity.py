@@ -471,12 +471,13 @@ class Group(Entity):
             self._state = None
             return
 
+        group_is_on = self.mode(self._on_off.values())
+
         # If all the entity domains we are tracking
         # have the same on state we use this state
         # and its hass.data[REG_KEY].on_off_mapping to off
-        group_is_on = self.mode(self._on_off.values())
         if num_on_states == 1:
-            on_state = list(self._on_states)[0]
+            on_state = next(iter(self._on_states))
         # If the entity domains have more than one
         # on state, we use STATE_ON/STATE_OFF, unless there is
         # only one specific `on` state in use for one specific domain
