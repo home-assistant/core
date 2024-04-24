@@ -902,7 +902,7 @@ async def test_option_flow_default_suggested_values(
     }
     suggested = {
         mqtt.CONF_USERNAME: "user",
-        mqtt.CONF_PASSWORD: "pass",
+        mqtt.CONF_PASSWORD: PWD_NOT_CHANGED,
     }
     for key, value in defaults.items():
         assert get_default(result["data_schema"].schema, key) == value
@@ -964,7 +964,7 @@ async def test_option_flow_default_suggested_values(
     }
     suggested = {
         mqtt.CONF_USERNAME: "us3r",
-        mqtt.CONF_PASSWORD: "p4ss",
+        mqtt.CONF_PASSWORD: PWD_NOT_CHANGED,
     }
     for key, value in defaults.items():
         assert get_default(result["data_schema"].schema, key) == value
@@ -1329,7 +1329,7 @@ async def test_try_connection_with_advanced_parameters(
     }
     suggested = {
         mqtt.CONF_USERNAME: "user",
-        mqtt.CONF_PASSWORD: "pass",
+        mqtt.CONF_PASSWORD: PWD_NOT_CHANGED,
         mqtt.CONF_TLS_INSECURE: True,
         mqtt.CONF_PROTOCOL: "3.1.1",
         mqtt.CONF_TRANSPORT: "websockets",
