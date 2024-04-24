@@ -92,7 +92,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_UNIT_PREFIX): vol.In(UNIT_PREFIXES),
             vol.Optional(CONF_UNIT_TIME, default=UnitOfTime.HOURS): vol.In(UNIT_TIME),
             vol.Remove(CONF_UNIT_OF_MEASUREMENT): cv.string,
-            vol.Optional(CONF_MAX_SUB_INTERVAL): cv.time_period,
+            vol.Optional(CONF_MAX_SUB_INTERVAL): cv.positive_time_period,
             vol.Optional(CONF_METHOD, default=METHOD_TRAPEZOIDAL): vol.In(
                 INTEGRATION_METHODS
             ),
