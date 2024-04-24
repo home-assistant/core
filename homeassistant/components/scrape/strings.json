@@ -72,6 +72,7 @@
           "index": "[%key:component::scrape::config::step::sensor::data::index%]",
           "select": "[%key:component::scrape::config::step::sensor::data::select%]",
           "value_template": "[%key:component::scrape::config::step::sensor::data::value_template%]",
+          "availability": "[%key:component::scrape::config::step::sensor::data::availability%]",
           "device_class": "[%key:component::scrape::config::step::sensor::data::device_class%]",
           "state_class": "[%key:component::scrape::config::step::sensor::data::state_class%]",
           "unit_of_measurement": "[%key:component::scrape::config::step::sensor::data::unit_of_measurement%]"
@@ -81,6 +82,7 @@
           "attribute": "[%key:component::scrape::config::step::sensor::data_description::attribute%]",
           "index": "[%key:component::scrape::config::step::sensor::data_description::index%]",
           "value_template": "[%key:component::scrape::config::step::sensor::data_description::value_template%]",
+          "availability": "[%key:component::scrape::config::step::sensor::data_description::availability%]",
           "device_class": "[%key:component::scrape::config::step::sensor::data_description::device_class%]",
           "state_class": "[%key:component::scrape::config::step::sensor::data_description::state_class%]",
           "unit_of_measurement": "[%key:component::scrape::config::step::sensor::data_description::unit_of_measurement%]"
@@ -93,6 +95,7 @@
           "index": "[%key:component::scrape::config::step::sensor::data::index%]",
           "select": "[%key:component::scrape::config::step::sensor::data::select%]",
           "value_template": "[%key:component::scrape::config::step::sensor::data::value_template%]",
+          "availability": "[%key:component::scrape::config::step::sensor::data::availability%]",
           "device_class": "[%key:component::scrape::config::step::sensor::data::device_class%]",
           "state_class": "[%key:component::scrape::config::step::sensor::data::state_class%]",
           "unit_of_measurement": "[%key:component::scrape::config::step::sensor::data::unit_of_measurement%]"
@@ -102,6 +105,7 @@
           "attribute": "[%key:component::scrape::config::step::sensor::data_description::attribute%]",
           "index": "[%key:component::scrape::config::step::sensor::data_description::index%]",
           "value_template": "[%key:component::scrape::config::step::sensor::data_description::value_template%]",
+          "availability": "[%key:component::scrape::config::step::sensor::data_description::availability%]",
           "device_class": "[%key:component::scrape::config::step::sensor::data_description::device_class%]",
           "state_class": "[%key:component::scrape::config::step::sensor::data_description::state_class%]",
           "unit_of_measurement": "[%key:component::scrape::config::step::sensor::data_description::unit_of_measurement%]"
