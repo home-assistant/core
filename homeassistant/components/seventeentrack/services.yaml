@@ -5,13 +5,14 @@ get_packages:
         select:
           multiple: true
           options:
-            - "Delivered"
-            - "Expired"
-            - "In Transit"
-            - "Not Found"
-            - "Ready to be picked up"
-            - "Returned"
-            - "Undelivered"
+            - "not_found"
+            - "in_transit"
+            - "expired"
+            - "ready_to_be_picked_up"
+            - "undelivered"
+            - "delivered"
+            - "returned"
+          translation_key: package_state
     config_entry_id:
       required: true
       selector:

@@ -82,5 +82,18 @@
         }
       }
     }
+  },
+  "selector": {
+    "package_state": {
+      "options": {
+        "not_found": "[%key:component::seventeentrack::entity::sensor::not_found::name%]",
+        "in_transit": "[%key:component::seventeentrack::entity::sensor::in_transit::name%]",
+        "expired": "[%key:component::seventeentrack::entity::sensor::expired::name%]",
+        "ready_to_be_picked_up": "[%key:component::seventeentrack::entity::sensor::ready_to_be_picked_up::name%]",
+        "undelivered": "[%key:component::seventeentrack::entity::sensor::undelivered::name%]",
+        "delivered": "[%key:component::seventeentrack::entity::sensor::delivered::name%]",
+        "returned": "[%key:component::seventeentrack::entity::sensor::returned::name%]"
+      }
+    }
   }
 }

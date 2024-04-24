@@ -21,6 +21,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import slugify
 
 from .const import (
     ATTR_CONFIG_ENTRY_ID,
@@ -66,7 +67,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     ATTR_FRIENDLY_NAME: package.friendly_name,
                 }
                 for package in live_packages
-                if package.status in package_states or package_states == []
+                if slugify(package.status) in package_states or package_states == []
             ]
         }
 
