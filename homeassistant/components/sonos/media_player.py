@@ -432,7 +432,11 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         if len(fav) != 1:
             raise ServiceValidationError(
-                f'Could not find a Sonos favorite named "{name}"'
+                translation_domain=SONOS_DOMAIN,
+                translation_key="invalid_favorite",
+                translation_placeholders={
+                    "name": name,
+                },
             )
 
         src = fav.pop()

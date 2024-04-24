@@ -269,7 +269,7 @@ async def test_select_source_error(
     async_autosetup_sonos,
 ) -> None:
     """Test the select_source method with a variety of inputs."""
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as sve:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_SELECT_SOURCE,
@@ -279,3 +279,5 @@ async def test_select_source_error(
             },
             blocking=True,
         )
+    assert "invalid_source" in str(sve.value)
+    assert "Could not find a Sonos favorite" in str(sve.value)
