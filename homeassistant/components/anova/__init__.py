@@ -41,9 +41,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.warning(
             "No devices were found on the websocket, perhaps you don't have any devices on this account?"
         )
-    # Create a coordinator per device, if the device is offline, no data will be on the websocket,
-    # and the coordinator should auto mark as unavailable. But as long as the websocket successfully connected,
-    # config entry should setup.
+    # Create a coordinator per device, if the device is offline, no data will be on the
+    # websocket, and the coordinator should auto mark as unavailable. But as long as the
+    # websocket successfully connected, config entry should setup.
     devices: list[APCWifiDevice] = []
     if api.websocket_handler is not None:
         devices = list(api.websocket_handler.devices.values())
