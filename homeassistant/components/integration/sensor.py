@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
@@ -517,30 +516,6 @@ class IntegrationSensor(RestoreSensor):
         self._update_integral(area)
         self.async_write_ha_state()
 
-    def _create_on_max_sub_interval_exceeded_callback(
-        self,
-        source_state: State,
-        source_state_dec: Decimal,
-    ) -> Callable[[datetime], None]:
-        @callback
-        def _integrate_on_max_sub_interval_exceeded_callback(now: datetime) -> None:
-            elapsed_seconds = Decimal(
-                (now - self._last_integration_time).total_seconds()
-            )
-            self._derive_and_set_attributes_from_state(source_state)
-            area = self._method.calculate_area_with_one_state(
-                elapsed_seconds, source_state_dec
-            )
-            self._update_integral(area)
-            self.async_write_ha_state()
-
-            self._last_integration_time = datetime.now(tz=UTC)
-            self._last_integration_trigger = _IntegrationTrigger.TimeElapsed
-
-            self._schedule_max_sub_interval_exceeded_if_state_is_numeric(source_state)
-
-        return _integrate_on_max_sub_interval_exceeded_callback
-
     def _schedule_max_sub_interval_exceeded_if_state_is_numeric(
         self, source_state: State | None
     ) -> None:
@@ -549,12 +524,30 @@ class IntegrationSensor(RestoreSensor):
             and source_state is not None
             and (source_state_dec := _decimal_state(source_state.state))
         ):
+
+            @callback
+            def _integrate_on_max_sub_interval_exceeded_callback(now: datetime) -> None:
+                elapsed_seconds = Decimal(
+                    (now - self._last_integration_time).total_seconds()
+                )
+                self._derive_and_set_attributes_from_state(source_state)
+                area = self._method.calculate_area_with_one_state(
+                    elapsed_seconds, source_state_dec
+                )
+                self._update_integral(area)
+                self.async_write_ha_state()
+
+                self._last_integration_time = datetime.now(tz=UTC)
+                self._last_integration_trigger = _IntegrationTrigger.TimeElapsed
+
+                self._schedule_max_sub_interval_exceeded_if_state_is_numeric(
+                    source_state
+                )
+
             self._max_sub_interval_exceeded_callback = async_call_later(
                 self.hass,
                 self._max_sub_interval,
-                self._create_on_max_sub_interval_exceeded_callback(
-                    source_state, source_state_dec
-                ),
+                _integrate_on_max_sub_interval_exceeded_callback,
             )
 
     def _cancel_max_sub_interval_exceeded_callback(self) -> None:
