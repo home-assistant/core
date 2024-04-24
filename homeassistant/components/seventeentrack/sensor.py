@@ -204,6 +204,7 @@ class SeventeenTrackSummarySensor(SeventeenTrackSensor):
         """Return the state of the sensor."""
         return self.coordinator.data.summary[self._status]["quantity"]
 
+    # This has been deprecated in 2024.5, will be removed in 2024.11
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
