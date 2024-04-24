@@ -521,6 +521,7 @@ class Entity(
     # While not purely typed, it makes typehinting more useful for us
     # and removes the need for constant None checks or asserts.
     _state_info: StateInfo = None  # type: ignore[assignment]
+    _is_custom_component: bool = False
 
     __capabilities_updated_at: deque[float]
     __capabilities_updated_at_reported: bool = False
@@ -967,8 +968,8 @@ class Entity(
         self._async_write_ha_state()
 
     @callback
-    def async_write_ha_state(self) -> None:
-        """Write the state to the state machine."""
+    def _async_verify_state_writable(self) -> None:
+        """Verify the entity is in a writable state."""
         if self.hass is None:
             raise RuntimeError(f"Attribute hass is None for {self}")
 
@@ -993,6 +994,18 @@ class Entity(
                 f"No entity id specified for entity {self.name}"
             )
 
+    @callback
+    def _async_write_ha_state_from_call_soon_threadsafe(self) -> None:
+        """Write the state to the state machine from the event loop thread."""
+        self._async_verify_state_writable()
+        self._async_write_ha_state()
+
+    @callback
+    def async_write_ha_state(self) -> None:
+        """Write the state to the state machine."""
+        self._async_verify_state_writable()
+        if self._is_custom_component or self.hass.config.debug:
+            self.hass.verify_event_loop_thread("async_write_ha_state")
         self._async_write_ha_state()
 
     def _stringify_state(self, available: bool) -> str:
@@ -1219,7 +1232,9 @@ class Entity(
                 f"Entity {self.entity_id} schedule update ha state",
             )
         else:
-            self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
+            self.hass.loop.call_soon_threadsafe(
+                self._async_write_ha_state_from_call_soon_threadsafe
+            )
 
     @callback
     def async_schedule_update_ha_state(self, force_refresh: bool = False) -> None:
@@ -1424,10 +1439,12 @@ class Entity(
 
         Not to be extended by integrations.
         """
+        is_custom_component = "custom_components" in type(self).__module__
         entity_info: EntityInfo = {
             "domain": self.platform.platform_name,
-            "custom_component": "custom_components" in type(self).__module__,
+            "custom_component": is_custom_component,
         }
+        self._is_custom_component = is_custom_component
 
         if self.platform.config_entry:
             entity_info["config_entry"] = self.platform.config_entry.entry_id
