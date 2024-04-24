@@ -253,6 +253,9 @@ async def async_setup_hass(
         runtime_config.log_no_color,
     )
 
+    if runtime_config.debug or hass.loop.get_debug():
+        hass.config.debug = True
+
     hass.config.safe_mode = runtime_config.safe_mode
     hass.config.skip_pip = runtime_config.skip_pip
     hass.config.skip_pip_packages = runtime_config.skip_pip_packages
@@ -316,6 +319,7 @@ async def async_setup_hass(
         hass = core.HomeAssistant(old_config.config_dir)
         if old_logging:
             hass.data[DATA_LOGGING] = old_logging
+        hass.config.debug = old_config.debug
         hass.config.skip_pip = old_config.skip_pip
         hass.config.skip_pip_packages = old_config.skip_pip_packages
         hass.config.internal_url = old_config.internal_url
