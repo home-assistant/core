@@ -8,7 +8,6 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -17,7 +16,7 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .const import TEST_MOWER_ID
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, load_json_value_fixture, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -98,6 +97,7 @@ async def test_number_workarea_commands(
     assert len(mocked_method.mock_calls) == 2
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_snapshot_number(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

@@ -1,12 +1,13 @@
 """Creates the number entities for the mower."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any
 
 from aioautomower.exceptions import ApiException
-from aioautomower.model import MowerAttributes
+from aioautomower.model import MowerAttributes, WorkArea
 from aioautomower.session import AutomowerSession
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
@@ -32,7 +33,6 @@ class AutomowerNumberEntityDescription(NumberEntityDescription):
     set_value_fn: Callable[[AutomowerSession, str, float], Awaitable[Any]]
 
 
-
 @callback
 def _async_get_cutting_height(data: MowerAttributes) -> int:
     """Return the cutting height."""
@@ -41,6 +41,32 @@ def _async_get_cutting_height(data: MowerAttributes) -> int:
         assert data.cutting_height is not None
     return data.cutting_height
 
+
+@callback
+def _async_get_work_area_cutting_height(data: WorkArea) -> int:
+    """Return the cutting height."""
+    if TYPE_CHECKING:
+        # Sensor does not get created if it is None
+        assert data is not None
+    return data.cutting_height
+
+
+@callback
+def _async_work_area_mowers(data: dict[int, WorkArea] | None) -> dict[int, WorkArea]:
+    """Return the cutting height."""
+    if TYPE_CHECKING:
+        # Sensor does not get created if it is None
+        assert data is not None
+    return data
+
+
+@callback
+def _async_work_area_name(data: WorkArea) -> str:
+    """Return the cutting height."""
+    if TYPE_CHECKING:
+        # Sensor does not get created if it is None
+        assert data.name is not None
+    return data.name
 
 
 NUMBER_TYPES: tuple[AutomowerNumberEntityDescription, ...] = (
@@ -66,7 +92,7 @@ class AutomowerWorkAreaNumberEntityDescription(NumberEntityDescription):
 
     value_fn: Callable[[WorkArea], int]
     translation_key_fn: Callable[[WorkArea], str]
-    set_value_fn: Callable[[AutomowerSession, str, float, WorkArea], Awaitable[Any]]
+    set_value_fn: Callable[[AutomowerSession, str, float, int], Awaitable[Any]]
 
 
 WORK_AREA_NUMBER_TYPES: tuple[AutomowerWorkAreaNumberEntityDescription, ...] = (
@@ -81,7 +107,7 @@ WORK_AREA_NUMBER_TYPES: tuple[AutomowerWorkAreaNumberEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         native_min_value=0,
         native_max_value=100,
-        value_fn=lambda data: data.cutting_height,
+        value_fn=_async_get_work_area_cutting_height,
         set_value_fn=(
             lambda session,
             mower_id,
@@ -93,7 +119,7 @@ WORK_AREA_NUMBER_TYPES: tuple[AutomowerWorkAreaNumberEntityDescription, ...] = (
     ),
 )
 
-  
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -110,7 +136,7 @@ async def async_setup_entry(
         AutomowerWorkAreaNumberEntity(mower_id, coordinator, description, work_area)
         for mower_id in coordinator.data
         for description in WORK_AREA_NUMBER_TYPES
-        for work_area in coordinator.data[mower_id].work_areas
+        for work_area in _async_work_area_mowers(coordinator.data[mower_id].work_areas)
         if coordinator.data[mower_id].capabilities.work_areas
     )
 
@@ -147,6 +173,7 @@ class AutomowerNumberEntity(AutomowerBaseEntity, NumberEntity):
                 f"Command couldn't be sent to the command queue: {exception}"
             ) from exception
 
+
 class AutomowerWorkAreaNumberEntity(AutomowerBaseEntity, NumberEntity):
     """Defining the AutomowerNumberEntity with AutomowerNumberEntityDescription."""
 
@@ -165,22 +192,25 @@ class AutomowerWorkAreaNumberEntity(AutomowerBaseEntity, NumberEntity):
         self.work_area = work_area
         self._attr_unique_id = f"{mower_id}_cutting_height_work_area_{work_area}"
         self._attr_translation_placeholders = {
-            "work_area": self.mower_attributes.work_areas[work_area].name
+            "work_area": _async_work_area_name(self._work_area)
         }
+
+    @property
+    def _work_area(self) -> WorkArea:
+        """Get the mower attributes of the current mower."""
+        if TYPE_CHECKING:
+            assert self.mower_attributes.work_areas is not None
+        return self.mower_attributes.work_areas[self.work_area]
 
     @property
     def translation_key(self) -> str:
         """Return the translation key of the work area."""
-        return self.entity_description.translation_key_fn(
-            self.mower_attributes.work_areas[self.work_area]
-        )
+        return self.entity_description.translation_key_fn(self._work_area)
 
     @property
     def native_value(self) -> float:
         """Return the state of the number."""
-        return self.entity_description.value_fn(
-            self.mower_attributes.work_areas[self.work_area]
-        )
+        return self.entity_description.value_fn(self._work_area)
 
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""

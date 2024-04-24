@@ -52,7 +52,6 @@
       'error_datetime': None,
       'error_datetime_naive': None,
       'error_key': None,
-      'error_timestamp': 0,
       'mode': 'MAIN_AREA',
       'state': 'RESTRICTED',
     }),
