@@ -82,6 +82,7 @@ DISCOVERY_SCHEMAS = [
             device_types.DimmableLight,
             device_types.ExtendedColorLight,
             device_types.ColorDimmerSwitch,
+            device_types.OnOffLight,
         ),
     ),
 ]
