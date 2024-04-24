@@ -52,9 +52,9 @@ STORAGE_VERSION = 1
 STORAGE_KEY = "http.auth"
 CONTENT_USER_NAME = "Home Assistant Content"
 STRICT_CONNECTION_EXCLUDED_PATH = "/api/webhook/"
-STRICT_CONNECTION_STATIC_PAGE_NAME = "strict_connection_static_page.html"
-STRICT_CONNECTION_STATIC_PAGE = os.path.join(
-    os.path.dirname(__file__), STRICT_CONNECTION_STATIC_PAGE_NAME
+STRICT_CONNECTION_GUARD_PAGE_NAME = "strict_connection_guard_page.html"
+STRICT_CONNECTION_GUARD_PAGE = os.path.join(
+    os.path.dirname(__file__), STRICT_CONNECTION_GUARD_PAGE_NAME
 )
 
 
@@ -160,9 +160,9 @@ async def async_setup_auth(
 
     hass.data[STORAGE_KEY] = refresh_token.id
 
-    if strict_connection_mode_non_cloud is StrictConnectionMode.STATIC_PAGE:
-        # Load the static page content on setup
-        await _read_strict_connection_static_page(hass)
+    if strict_connection_mode_non_cloud is StrictConnectionMode.GUARD_PAGE:
+        # Load the guard page content on setup
+        await _read_strict_connection_guard_page(hass)
 
     @callback
     def async_validate_auth_header(request: Request) -> bool:
@@ -276,7 +276,7 @@ async def async_setup_auth(
                     resp := await strict_connection_func(
                         hass,
                         request,
-                        strict_connection_mode is StrictConnectionMode.STATIC_PAGE,
+                        strict_connection_mode is StrictConnectionMode.GUARD_PAGE,
                     )
                 )
                 is not None
@@ -301,14 +301,14 @@ async def async_setup_auth(
 async def _async_perform_strict_connection_action_on_non_local(
     hass: HomeAssistant,
     request: Request,
-    static_page: bool,
+    guard_page: bool,
 ) -> StreamResponse | None:
     """Perform strict connection mode action if the request is not local.
 
     The function does the following:
     - Try to get the IP address of the request. If it fails, assume it's not local
     - If the request is local, return None (allow the request to continue)
-    - If static_page is True, return a response with the content
+    - If guard_page is True, return a response with the content
     - Otherwise close the connection and raise an exception
     """
     try:
@@ -320,25 +320,25 @@ async def _async_perform_strict_connection_action_on_non_local(
     if ip_address_ and is_local(ip_address_):
         return None
 
-    return await _async_perform_strict_connection_action(hass, request, static_page)
+    return await _async_perform_strict_connection_action(hass, request, guard_page)
 
 
 async def _async_perform_strict_connection_action(
     hass: HomeAssistant,
     request: Request,
-    static_page: bool,
+    guard_page: bool,
 ) -> StreamResponse | None:
     """Perform strict connection mode action.
 
     The function does the following:
-    - If static_page is True, return a response with the content
+    - If guard_page is True, return a response with the content
     - Otherwise close the connection and raise an exception
     """
 
     _LOGGER.debug("Perform strict connection action for %s", request.remote)
-    if static_page:
+    if guard_page:
         return Response(
-            text=await _read_strict_connection_static_page(hass),
+            text=await _read_strict_connection_guard_page(hass),
             content_type="text/html",
             status=HTTPStatus.IM_A_TEAPOT,
         )
@@ -351,12 +351,12 @@ async def _async_perform_strict_connection_action(
     raise HTTPBadRequest
 
 
-@singleton.singleton(f"{DOMAIN}_{STRICT_CONNECTION_STATIC_PAGE_NAME}")
-async def _read_strict_connection_static_page(hass: HomeAssistant) -> str:
-    """Read the strict connection static page from disk via executor."""
+@singleton.singleton(f"{DOMAIN}_{STRICT_CONNECTION_GUARD_PAGE_NAME}")
+async def _read_strict_connection_guard_page(hass: HomeAssistant) -> str:
+    """Read the strict connection guard page from disk via executor."""
 
-    def read_static_page() -> str:
-        with open(STRICT_CONNECTION_STATIC_PAGE, encoding="utf-8") as file:
+    def read_guard_page() -> str:
+        with open(STRICT_CONNECTION_GUARD_PAGE, encoding="utf-8") as file:
             return file.read()
 
-    return await hass.async_add_executor_job(read_static_page)
+    return await hass.async_add_executor_job(read_guard_page)
