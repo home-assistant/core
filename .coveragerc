@@ -695,6 +695,8 @@ omit =
     homeassistant/components/led_ble/__init__.py
     homeassistant/components/led_ble/light.py
     homeassistant/components/lektrico/__init__.py
+    homeassistant/components/lektrico/coordinator.py
+    homeassistant/components/lektrico/entity.py
     homeassistant/components/lektrico/sensor.py
     homeassistant/components/lg_netcast/media_player.py
     homeassistant/components/lg_soundbar/__init__.py
