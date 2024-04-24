@@ -173,9 +173,9 @@ def update_password_from_user_input(
 ) -> dict[str, Any]:
     """Update the password if the entry has been updated.
 
-    As we want to avoid reflecting the stored password in the UI
+    As we want to avoid reflecting the stored password in the UI,
     we replace the suggested value in the UI with a sentitel,
-    and we change it back here is it has changed.
+    and we change it back here if it was changed.
     """
     substituted_used_data = dict(user_input)
     # Take out the password submitted
