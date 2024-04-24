@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import datetime as dt
 
 from apyosoenergyapi import OSOEnergy
 from apyosoenergyapi.helper.const import OSOEnergySensorData
@@ -18,50 +17,9 @@ from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-import homeassistant.util.dt as dt_util
 
 from . import OSOEnergyEntity
 from .const import DOMAIN
-
-
-def _get_local_hour(utc_hour: int) -> dt.datetime:
-    """Convert the requested utc hour to a local hour for the day.
-
-    Args:
-        utc_hour: the utc hour (0-23) for the current day to be converted.
-
-    Returns:
-        Datetime representation for the requested hour in local time for the day.
-
-    """
-    now = dt_util.utcnow()
-    now_local = dt_util.now()
-    utc_time = now.replace(hour=utc_hour, minute=0, second=0, microsecond=0)
-    local_hour = dt_util.as_local(utc_time)
-    return local_hour.replace(
-        year=now_local.year, month=now_local.month, day=now_local.day
-    )
-
-
-def _convert_profile_to_local(values: list[float]) -> str:
-    """Convert UTC profile to local.
-
-    Receives a device temperature schedule - 24 values for the day where the index represents the hour of the day in UTC.
-    Converts the schedule to string in local time with comma separated values.
-
-    Args:
-        values: list of floats representing the 24 hour temperature schedule for the device
-
-    Returns:
-        The device temperature schedule in local time - 24 comma separated values.
-
-    """
-    profile = [0.0] * 24
-    for hour in range(24):
-        local_hour = _get_local_hour(hour)
-        profile[local_hour.hour] = float(values[hour])
-
-    return ",".join(str(hour_local) for hour_local in profile)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -72,11 +30,6 @@ class OSOEnergySensorEntityDescription(SensorEntityDescription):
 
 
 SENSOR_TYPES: dict[str, OSOEnergySensorEntityDescription] = {
-    "profile": OSOEnergySensorEntityDescription(
-        key="profile",
-        translation_key="profile",
-        value_fn=lambda entity_data: _convert_profile_to_local(entity_data.state),
-    ),
     "heater_mode": OSOEnergySensorEntityDescription(
         key="heater_mode",
         translation_key="heater_mode",
