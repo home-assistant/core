@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import patch
 
 from lektricowifi import Settings
+import pytest
 
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
@@ -106,43 +107,31 @@ def _mocked_device_config_for_3em() -> Settings:
     )
 
 
-def patch_device_config(device=None, exception=None):
-    """Patch device_config() for 1P7K or 3P7K devices."""
-
-    async def _device_config(*args, **kwargs):
-        if exception:
-            raise exception
-        return _mocked_device_config()
-
-    return patch(
+@pytest.fixture
+def mock_device_config():
+    """Override device_config() for 1P7K or 3P7K devices."""
+    with patch(
         "homeassistant.components.lektrico.config_flow.Device.device_config",
-        new=_device_config,
-    )
+        return_value=_mocked_device_config(),
+    ) as mocked_device_config:
+        yield mocked_device_config
 
 
-def patch_device_config_for_em(device=None, exception=None):
-    """Patch device_config() for EM device."""
-
-    async def _device_config(*args, **kwargs):
-        if exception:
-            raise exception
-        return _mocked_device_config_for_em()
-
-    return patch(
+@pytest.fixture
+def mock_device_config_for_em():
+    """Override device_config() for EM device."""
+    with patch(
         "homeassistant.components.lektrico.config_flow.Device.device_config",
-        new=_device_config,
-    )
+        return_value=_mocked_device_config_for_em(),
+    ) as mock_device_config_for_em:
+        yield mock_device_config_for_em
 
 
-def patch_device_config_for_3em(device=None, exception=None):
-    """Patch device_config() for 3EM device."""
-
-    async def _device_config(*args, **kwargs):
-        if exception:
-            raise exception
-        return _mocked_device_config_for_3em()
-
-    return patch(
+@pytest.fixture
+def mock_device_config_for_3em():
+    """Override device_config() for 3EM device."""
+    with patch(
         "homeassistant.components.lektrico.config_flow.Device.device_config",
-        new=_device_config,
-    )
+        return_value=_mocked_device_config_for_3em(),
+    ) as mock_device_config_for_3em:
+        yield mock_device_config_for_3em
