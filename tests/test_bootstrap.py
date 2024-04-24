@@ -130,7 +130,6 @@ async def test_asyncio_debug_on_turns_hass_debug_on(
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that asyncio debug turns on hass debug."""
     asyncio.get_running_loop().set_debug(True)
