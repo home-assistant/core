@@ -1504,6 +1504,7 @@ class EventBus:
             )
 
         listeners = self._listeners.get(event_type, EMPTY_LIST)
+        _LOGGER.debug("Bus:Event %s has listeners %s", event_type, listeners)
         if event_type not in EVENTS_EXCLUDED_FROM_MATCH_ALL:
             match_all_listeners = self._match_all_listeners
         else:
@@ -1514,6 +1515,7 @@ class EventBus:
             aliased_listeners = EMPTY_LIST
         listeners = listeners + match_all_listeners + aliased_listeners
         if not listeners:
+            _LOGGER.debug("Bus:Event %s has no listeners", event_type)
             return
 
         event: Event[_DataT] | None = None

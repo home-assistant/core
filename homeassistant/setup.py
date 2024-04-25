@@ -596,6 +596,8 @@ def _async_when_setup(
 ) -> None:
     """Call a method when a component is setup or the start event fires."""
 
+    _LOGGER.info("Enter _async_when_setup ha state: %s", hass.state)
+
     async def when_setup() -> None:
         """Call the callback."""
         try:
@@ -607,6 +609,7 @@ def _async_when_setup(
         hass.async_create_task(
             when_setup(), f"when setup {component}", eager_start=True
         )
+        _LOGGER.info("%s already setup", component)
         return
 
     listeners: list[CALLBACK_TYPE] = []
@@ -633,6 +636,8 @@ def _async_when_setup(
         listeners.append(
             hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _matched_event)
         )
+
+    _LOGGER.info("Leave _async_when_setup")
 
 
 @core.callback
