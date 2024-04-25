@@ -14,7 +14,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
-from .entity import CoordinatedTPLinkEntity, async_refresh_after
+from .entity import (
+    CoordinatedTPLinkEntity,
+    _entities_for_device_and_its_children,
+    async_refresh_after,
+)
 from .models import TPLinkData
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,21 +33,13 @@ async def async_setup_entry(
     data: TPLinkData = hass.data[DOMAIN][config_entry.entry_id]
     parent_coordinator = data.parent_coordinator
     device = cast(SmartPlug, parent_coordinator.device)
-    entities: list = []
 
-    def _numbers_for_device(dev, parent: SmartDevice = None) -> list[Number]:
-        return [
-            Number(dev, data.parent_coordinator, feat, parent=parent)
-            for feat in dev.features.values()
-            if feat.type == Feature.Number
-        ]
-
-    if device.children:
-        _LOGGER.debug("Initializing device with %s children", len(device.children))
-        for child in device.children:
-            entities.extend(_numbers_for_device(child, parent=device))
-
-    entities.extend(_numbers_for_device(device))
+    entities = _entities_for_device_and_its_children(
+        device,
+        feature_type=Feature.Number,
+        entity_class=Number,
+        coordinator=parent_coordinator,
+    )
 
     async_add_entities(entities)
 

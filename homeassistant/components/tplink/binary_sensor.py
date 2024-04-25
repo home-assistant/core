@@ -14,21 +14,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
-from .entity import CoordinatedTPLinkEntity
+from .entity import CoordinatedTPLinkEntity, _entities_for_device_and_its_children
 from .models import TPLinkData
-
-
-def _async_sensors_for_device(
-    device: SmartDevice,
-    coordinator: TPLinkDataUpdateCoordinator,
-    parent: SmartDevice = None,
-) -> list[BinarySensor]:
-    """Generate the sensors for the device."""
-    return [
-        BinarySensor(device, coordinator, feat, parent=parent)
-        for id_, feat in device.features.items()
-        if feat.type == Feature.BinarySensor
-    ]
 
 
 async def async_setup_entry(
@@ -39,15 +26,14 @@ async def async_setup_entry(
     """Set up sensors."""
     data: TPLinkData = hass.data[DOMAIN][config_entry.entry_id]
     parent_coordinator = data.parent_coordinator
-    entities: list[BinarySensor] = []
     device = parent_coordinator.device
 
-    entities.extend(_async_sensors_for_device(device, parent_coordinator))
-
-    for child in device.children:
-        entities.extend(
-            _async_sensors_for_device(child, parent_coordinator, parent=device)
-        )
+    entities = _entities_for_device_and_its_children(
+        device,
+        feature_type=Feature.BinarySensor,
+        entity_class=BinarySensor,
+        coordinator=parent_coordinator,
+    )
 
     async_add_entities(entities)
 

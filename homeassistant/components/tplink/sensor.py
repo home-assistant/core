@@ -33,7 +33,7 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import TPLinkDataUpdateCoordinator
-from .entity import CoordinatedTPLinkEntity
+from .entity import CoordinatedTPLinkEntity, _entities_for_device
 from .models import TPLinkData
 
 
@@ -138,7 +138,7 @@ async def async_setup_entry(
     data: TPLinkData = hass.data[DOMAIN][config_entry.entry_id]
     parent_coordinator = data.parent_coordinator
     children_coordinators = data.children_coordinators
-    entities: list[SmartPlugSensor] = []
+    entities: list[CoordinatedTPLinkEntity] = []
     device = parent_coordinator.device
 
     for idx, child in enumerate(device.children):
@@ -153,10 +153,23 @@ async def async_setup_entry(
             )
         else:
             entities.extend(
-                _async_sensors_for_device(child, parent_coordinator, parent=device)
+                _entities_for_device(
+                    child,
+                    feature_type=Feature.Sensor,
+                    entity_class=Sensor,
+                    coordinator=parent_coordinator,
+                    parent=device,
+                )
             )
 
-    entities.extend(_async_sensors_for_device(device, parent_coordinator))
+    entities.extend(
+        _entities_for_device(
+            device,
+            feature_type=Feature.Sensor,
+            entity_class=Sensor,
+            coordinator=parent_coordinator,
+        )
+    )
 
     async_add_entities(entities)
 
@@ -192,6 +205,7 @@ class Sensor(CoordinatedTPLinkEntity, SensorEntity):
 class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
     """Representation of a TPLink sensor."""
 
+    # TODO: get rid of the old sensor impl.
     entity_description: TPLinkSensorEntityDescription
 
     def __init__(

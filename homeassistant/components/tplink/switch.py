@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any, cast
 
-from kasa import Feature, SmartDevice, SmartPlug
+from kasa import Device, Feature
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -14,7 +14,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
-from .entity import CoordinatedTPLinkEntity, async_refresh_after
+from .entity import (
+    CoordinatedTPLinkEntity,
+    _entities_for_device_and_its_children,
+    async_refresh_after,
+)
 from .models import TPLinkData
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,24 +32,14 @@ async def async_setup_entry(
     """Set up switches."""
     data: TPLinkData = hass.data[DOMAIN][config_entry.entry_id]
     parent_coordinator = data.parent_coordinator
-    device = cast(SmartPlug, parent_coordinator.device)
-    entities: list = []
+    device = cast(Device, parent_coordinator.device)
 
-    def _switches_for_device(dev, parent: SmartDevice = None) -> list[Switch]:
-        return [
-            Switch(dev, data.parent_coordinator, feat, parent=parent)
-            for feat in dev.features.values()
-            if feat.type == Feature.Switch
-        ]
-        # TODO: a way to filter state switch for platforms with their own main controls:
-        #  lights and fans?
-
-    if device.children:
-        _LOGGER.debug("Initializing device with %s children", len(device.children))
-        for child in device.children:
-            entities.extend(_switches_for_device(child, parent=device))
-
-    entities.extend(_switches_for_device(device))
+    entities = _entities_for_device_and_its_children(
+        device,
+        feature_type=Feature.Switch,
+        entity_class=Switch,
+        coordinator=parent_coordinator,
+    )
 
     async_add_entities(entities)
 
@@ -55,10 +49,10 @@ class Switch(CoordinatedTPLinkEntity, SwitchEntity):
 
     def __init__(
         self,
-        device: SmartDevice,
+        device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
         feature: Feature,
-        parent: SmartDevice = None,
+        parent: Device = None,
     ):
         """Initialize the switch."""
         super().__init__(device, coordinator, feature=feature, parent=parent)
@@ -74,12 +68,12 @@ class Switch(CoordinatedTPLinkEntity, SwitchEntity):
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the LED switch on."""
+        """Turn the switch on."""
         await self._feature.set_value(True)
 
     @async_refresh_after
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the LED switch off."""
+        """Turn the switch off."""
         await self._feature.set_value(False)
 
     @callback

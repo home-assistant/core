@@ -9,6 +9,8 @@ from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from kasa import (
     AuthenticationException,
+    Device,
+    DeviceType,
     Feature,
     SmartDevice,
     SmartDeviceException,
@@ -167,3 +169,80 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
             self._attr_available = False
 
         super()._handle_coordinator_update()
+
+
+def _entities_for_device(
+    device,
+    *,
+    feature_type: Feature.Type,
+    entity_class: type[CoordinatedTPLinkEntity],
+    coordinator: TPLinkDataUpdateCoordinator,
+    parent: Device = None,
+) -> list[CoordinatedTPLinkEntity]:
+    """Return a list of entities to add.
+
+    This filters out unwanted features to avoid creating unnecessary entities
+    for device features that are implemented by specialized platforms like light.
+    """
+
+    def _filter(dev: Device, feat: Feature):
+        if feat.type != feature_type:
+            return False
+
+        # We skip primary features for device types that have specialized platforms,
+        #  like light for lights.
+        ignore_primary_controls_devicetypes = [
+            DeviceType.Bulb,
+            DeviceType.LightStrip,
+            DeviceType.Dimmer,
+        ]
+        if (
+            feat.category == Feature.Category.Primary
+            and dev.device_type in ignore_primary_controls_devicetypes
+        ):
+            return False
+
+        return True
+
+    return [
+        entity_class(device, coordinator, feat, parent=parent)
+        for feat in device.features.values()
+        if _filter(device, feat)
+    ]
+
+
+def _entities_for_device_and_its_children(
+    device: Device,
+    *,
+    feature_type: Feature.Type,
+    entity_class: type[CoordinatedTPLinkEntity],
+    coordinator: TPLinkDataUpdateCoordinator,
+) -> list[CoordinatedTPLinkEntity]:
+    """Create entities for device and its children.
+
+    This is just a helper that calls *_entities_for_device*.
+    """
+    entities = []
+    if device.children:
+        _LOGGER.debug("Initializing device with %s children", len(device.children))
+        for child in device.children:
+            entities.extend(
+                _entities_for_device(
+                    child,
+                    feature_type=feature_type,
+                    entity_class=entity_class,
+                    coordinator=coordinator,
+                    parent=device,
+                )
+            )
+
+    entities.extend(
+        _entities_for_device(
+            device,
+            feature_type=feature_type,
+            entity_class=entity_class,
+            coordinator=coordinator,
+        )
+    )
+
+    return entities
