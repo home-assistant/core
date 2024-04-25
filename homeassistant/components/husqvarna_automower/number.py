@@ -59,11 +59,11 @@ def _async_work_area_mowers(data: dict[int, WorkArea] | None) -> dict[int, WorkA
 
 
 @callback
-def _async_work_area_name(data: WorkArea) -> str:
-    """Return the work area name."""
-    if TYPE_CHECKING:
-        assert data.name is not None
-    return data.name
+def _async_work_area_translation_key(data: WorkArea) -> str:
+    """Return the translation key."""
+    if data.name == "my_lawn":
+        return "cutting_height_work_area_my_lawn"
+    return "cutting_height_work_area"
 
 
 NUMBER_TYPES: tuple[AutomowerNumberEntityDescription, ...] = (
@@ -95,11 +95,7 @@ class AutomowerWorkAreaNumberEntityDescription(NumberEntityDescription):
 WORK_AREA_NUMBER_TYPES: tuple[AutomowerWorkAreaNumberEntityDescription, ...] = (
     AutomowerWorkAreaNumberEntityDescription(
         key="cutting_height_work_area",
-        translation_key_fn=(
-            lambda work_area: "cutting_height_work_area_my_lawn"
-            if work_area.name is None
-            else "cutting_height_work_area"
-        ),
+        translation_key_fn=_async_work_area_translation_key,
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.CONFIG,
         native_min_value=0,
@@ -190,9 +186,7 @@ class AutomowerWorkAreaNumberEntity(AutomowerBaseEntity, NumberEntity):
         self.entity_description = description
         self.work_area_id = work_area_id
         self._attr_unique_id = f"{mower_id}_cutting_height_work_area_{work_area_id}"
-        self._attr_translation_placeholders = {
-            "work_area": _async_work_area_name(self.work_area)
-        }
+        self._attr_translation_placeholders = {"work_area": self.work_area.name}
 
     @property
     def work_area(self) -> WorkArea:
