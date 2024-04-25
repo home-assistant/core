@@ -59,6 +59,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
     },
     "16.111111111111": {
+        # Test case for issue #115984, where the device type cannot be read
         ATTR_INJECT_READS: [
             ProtocolError(),  # read device type
         ],
