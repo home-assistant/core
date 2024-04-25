@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2024.5.0.dev0"
+version     = "2024.6.0.dev0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -251,7 +251,7 @@ disable = [
     "nested-min-max", # PLW3301
     "pointless-statement", # B018
     "raise-missing-from", # B904
-    # "redefined-builtin", # A001, ruff is way more stricter, needs work
+    "redefined-builtin", # A001
     "try-except-raise", # TRY302
     "unused-argument", # ARG001, we don't use it
     "unused-format-string-argument", #F507
@@ -659,10 +659,11 @@ filterwarnings = [
 ]
 
 [tool.ruff]
-required-version = ">=0.3.7"
+required-version = ">=0.4.1"
 
 [tool.ruff.lint]
 select = [
+    "A001", # Variable {name} is shadowing a Python builtin
     "B002", # Python does not support the unary prefix increment
     "B005", # Using .strip() with multi-character strings is misleading
     "B007", # Loop control variable {name} not used within loop body
@@ -704,6 +705,7 @@ select = [
     "RUF006", # Store a reference to the return value of asyncio.create_task
     "RUF013", # PEP 484 prohibits implicit Optional
     "RUF018", # Avoid assignment expressions in assert statements
+    "RUF019", # Unnecessary key check before dictionary access
     # "RUF100", # Unused `noqa` directive; temporarily every now and then to clean them up
     "S102", # Use of exec detected
     "S103", # bad-file-permissions
