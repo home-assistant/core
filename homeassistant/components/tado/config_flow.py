@@ -193,7 +193,7 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self.async_update_reload_and_abort(
                     self.config_entry,
-                    data={**self.config_entry.data, **user_input},
+                    data=user_input,
                     reason="reconfigure_successful",
                 )
 
