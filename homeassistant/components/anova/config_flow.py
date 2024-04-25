@@ -6,7 +6,7 @@ from anova_wifi import AnovaApi, InvalidLogin
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -15,7 +15,7 @@ from .const import DOMAIN
 class AnovaConfligFlow(ConfigFlow, domain=DOMAIN):
     """Sets up a config flow for Anova."""
 
-    VERSION = 2
+    VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
@@ -42,6 +42,8 @@ class AnovaConfligFlow(ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_USERNAME: user_input[CONF_USERNAME],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        # this can be removed in a migration to 1.2 in 2024.11
+                        CONF_DEVICES: [],
                     },
                 )
 

@@ -1,17 +1,12 @@
 """Test init for Anova."""
 
 from anova_wifi import AnovaApi
-import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.anova import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import async_init_integration, create_entry
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry(hass: HomeAssistant, anova_api: AnovaApi) -> None:
@@ -47,35 +42,16 @@ async def test_unload_entry(hass: HomeAssistant, anova_api: AnovaApi) -> None:
 async def test_no_devices_found(
     hass: HomeAssistant,
     anova_api_no_devices: AnovaApi,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test when there don't seem to be any devices on the account."""
     entry = await async_init_integration(hass)
-    assert entry.state is ConfigEntryState.LOADED
-    # Config flow should be loaded - but we shouldn't have our entities.
-    assert hass.states.get("sensor.anova_precision_cooker_mode") is None
-    assert (
-        "No devices were found on the websocket, perhaps you don't have any devices on this account?"
-        in caplog.text
-    )
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_migrate_entry(hass: HomeAssistant, anova_api: AnovaApi) -> None:
-    """Test the migration of the config flow."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Anova",
-        data={
-            CONF_USERNAME: "sample@gmail.com",
-            CONF_PASSWORD: "sample",
-            "devices": [("random_id", "type_sample")],
-        },
-        unique_id="sample@gmail.com",
-        version=1,
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.state == config_entries.ConfigEntryState.LOADED
-    assert entry.version == 2
+async def test_websocket_failure(
+    hass: HomeAssistant,
+    anova_api_websocket_failure: AnovaApi,
+) -> None:
+    """Test that we successfully handle a websocket failure on setup."""
+    entry = await async_init_integration(hass)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
