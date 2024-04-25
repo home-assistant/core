@@ -523,8 +523,10 @@ class HomeAssistant:
         self.bus.async_fire_internal(EVENT_HOMEASSISTANT_START)
 
         if not self._tasks:
+            _LOGGER.info("No tasks %s", self._tasks)
             pending: set[asyncio.Future[Any]] | None = None
         else:
+            _LOGGER.info("Waiting for tasks %s", self._tasks)
             _done, pending = await asyncio.wait(
                 self._tasks, timeout=TIMEOUT_EVENT_START
             )

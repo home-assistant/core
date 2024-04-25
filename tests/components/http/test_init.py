@@ -312,6 +312,7 @@ async def test_emergency_ssl_certificate_when_invalid(
     Blabla.
     """
 
+    hass.bus._debug = True
     cert_path, key_path = await hass.async_add_executor_job(
         _setup_broken_ssl_pem_files, tmp_path
     )
