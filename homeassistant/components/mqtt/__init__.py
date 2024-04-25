@@ -96,6 +96,12 @@ from .models import (  # noqa: F401
     ReceiveMessage,
     ReceivePayloadType,
 )
+from .subscription import (  # noqa: F401
+    EntitySubscription,
+    async_prepare_subscribe_topics,
+    async_subscribe_topics,
+    async_unsubscribe_topics,
+)
 from .util import (  # noqa: F401
     async_create_certificate_temp_files,
     async_forward_entry_setup_and_setup_discovery,
