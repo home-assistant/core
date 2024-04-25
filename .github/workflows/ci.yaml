@@ -93,7 +93,7 @@ jobs:
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
         run: >-
-          echo "key=venv-${{ env.CACHE_VERSION }}-${{
+          echo "key=venv-${{ env.CACHE_VERSION }}-${{ env.HA_SHORT_VERSION }}-${{
             hashFiles('requirements_test.txt', 'requirements_test_pre_commit.txt') }}-${{
             hashFiles('requirements.txt') }}-${{
             hashFiles('requirements_all.txt') }}-${{
