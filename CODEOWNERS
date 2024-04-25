@@ -1287,8 +1287,8 @@ build.json @home-assistant/supervisor
 /tests/components/snmp/ @nmaggioni
 /homeassistant/components/snooz/ @AustinBrunkhorst
 /tests/components/snooz/ @AustinBrunkhorst
-/homeassistant/components/solaredge/ @frenck
-/tests/components/solaredge/ @frenck
+/homeassistant/components/solaredge/ @frenck @bdraco
+/tests/components/solaredge/ @frenck @bdraco
 /homeassistant/components/solaredge_local/ @drobtravels @scheric
 /homeassistant/components/solarlog/ @Ernst79
 /tests/components/solarlog/ @Ernst79

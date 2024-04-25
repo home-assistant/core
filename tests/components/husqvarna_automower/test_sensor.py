@@ -10,7 +10,7 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -46,7 +46,7 @@ async def test_sensor_unknown_states(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.test_mower_1_mode")
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_cutting_blade_usage_time_sensor(
@@ -61,6 +61,30 @@ async def test_cutting_blade_usage_time_sensor(
     state = hass.states.get("sensor.test_mower_1_cutting_blade_usage_time")
     assert state is not None
     assert state.state == "0.034"
+
+
+async def test_next_start_sensor(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test if this sensor is only added, if data is available."""
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get("sensor.test_mower_1_next_start")
+    assert state is not None
+    assert state.state == "2023-06-05T19:00:00+00:00"
+
+    values = mower_list_to_dictionary_dataclass(
+        load_json_value_fixture("mower.json", DOMAIN)
+    )
+    values[TEST_MOWER_ID].planner.next_start_datetime = None
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_mower_1_next_start")
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(
