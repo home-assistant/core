@@ -181,7 +181,7 @@ async def test_entity_refresh(hass: HomeAssistant, mock_simple_nws, no_sensor) -
     await hass.async_block_till_done()
     assert instance.update_observation.call_count == 2
     assert instance.update_forecast.call_count == 2
-    instance.update_forecast_hourly.assert_called_once()
+    assert instance.update_forecast_hourly.call_count == 2
 
 
 async def test_error_observation(
@@ -355,7 +355,7 @@ async def test_forecast_service(
 
     assert instance.update_observation.call_count == 2
     assert instance.update_forecast.call_count == 2
-    assert instance.update_forecast_hourly.call_count == 1
+    assert instance.update_forecast_hourly.call_count == 2
 
     for forecast_type in ("twice_daily", "hourly"):
         response = await hass.services.async_call(
