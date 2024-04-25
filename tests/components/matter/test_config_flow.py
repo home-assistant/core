@@ -1347,6 +1347,37 @@ async def test_addon_not_installed_failures(
     assert result["reason"] == "addon_install_failed"
 
 
+@pytest.mark.parametrize("zeroconf_info", [ZEROCONF_INFO_TCP, ZEROCONF_INFO_UDP])
+async def test_addon_not_installed_failures_zeroconf(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    addon_not_installed: AsyncMock,
+    addon_info: AsyncMock,
+    install_addon: AsyncMock,
+    not_onboarded: MagicMock,
+    zeroconf_info: ZeroconfServiceInfo,
+) -> None:
+    """Test add-on install failure."""
+    install_addon.side_effect = HassioAPIError()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=zeroconf_info
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "install_addon"
+
+    # Make sure the flow continues when the progress task is done.
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert install_addon.call_args == call(hass, "core_matter_server")
+    assert addon_info.call_count == 0
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "addon_install_failed"
+
+
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_addon_not_installed_already_configured(
     hass: HomeAssistant,
