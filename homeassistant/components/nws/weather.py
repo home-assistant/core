@@ -141,8 +141,6 @@ class NWSWeather(CoordinatorWeatherEntity):
         latitude = entry_data[CONF_LATITUDE]
         longitude = entry_data[CONF_LONGITUDE]
         self.coordinator_forecast_legacy = nws_data.coordinator_forecast
-        self.coordinator_forecast_twice_daily = nws_data.coordinator_forecast
-        self.coordinator_forecast_hourly = nws_data.coordinator_forecast_hourly
         self.station = self.nws.station
 
         self.observation: dict[str, Any] | None = None
@@ -162,16 +160,18 @@ class NWSWeather(CoordinatorWeatherEntity):
                 self._handle_legacy_forecast_coordinator_update
             )
         )
-        self.async_on_remove(
-            self.coordinator_forecast_twice_daily.async_add_listener(
-                self._handle_twice_daily_forecast_coordinator_update
+        if (coordinator := self.forecast_coordinators["twice_daily"]) is not None:
+            self.async_on_remove(
+                coordinator.async_add_listener(
+                    self._handle_twice_daily_forecast_coordinator_update
+                )
             )
-        )
-        self.async_on_remove(
-            self.coordinator_forecast_hourly.async_add_listener(
-                self._handle_hourly_forecast_coordinator_update
+        if (coordinator := self.forecast_coordinators["hourly"]) is not None:
+            self.async_on_remove(
+                coordinator.async_add_listener(
+                    self._handle_hourly_forecast_coordinator_update
+                )
             )
-        )
         # Load initial data from coordinators
         self._handle_coordinator_update()
         self._handle_hourly_forecast_coordinator_update()
@@ -324,32 +324,38 @@ class NWSWeather(CoordinatorWeatherEntity):
     @property
     def available(self) -> bool:
         """Return if state is available."""
-        last_success = (
-            self.coordinator.last_update_success
-            and self.coordinator_forecast_hourly.last_update_success
-            and self.coordinator_forecast_twice_daily.last_update_success
-            and self.coordinator_forecast_legacy.last_update_success
-        )
         if (
-            self.coordinator.last_update_success_time
-            and self.coordinator_forecast_hourly.last_update_success_time
-            and self.coordinator_forecast_twice_daily.last_update_success_time
-            and self.coordinator_forecast_legacy.last_update_success_time
-        ):
-            last_success_time = (
-                utcnow() - self.coordinator.last_update_success_time
-                < OBSERVATION_VALID_TIME
-                and utcnow() - self.coordinator_forecast_hourly.last_update_success_time
-                < FORECAST_VALID_TIME
-                and utcnow()
-                - self.coordinator_forecast_twice_daily.last_update_success_time
-                < FORECAST_VALID_TIME
-                and utcnow() - self.coordinator_forecast_legacy.last_update_success_time
-                < FORECAST_VALID_TIME
+            hourly_coordinator := self.forecast_coordinators["hourly"]
+        ) is not None and (
+            twice_daily_coordinator := self.forecast_coordinators["twice_daily"]
+        ) is not None:
+            last_success = (
+                self.coordinator.last_update_success
+                and hourly_coordinator.last_update_success
+                and twice_daily_coordinator.last_update_success
+                and self.coordinator_forecast_legacy.last_update_success
             )
-        else:
-            last_success_time = False
-        return last_success or last_success_time
+            if (
+                self.coordinator.last_update_success_time
+                and hourly_coordinator.last_update_success_time
+                and twice_daily_coordinator.last_update_success_time
+                and self.coordinator_forecast_legacy.last_update_success_time
+            ):
+                last_success_time = (
+                    utcnow() - self.coordinator.last_update_success_time
+                    < OBSERVATION_VALID_TIME
+                    and utcnow() - hourly_coordinator.last_update_success_time
+                    < FORECAST_VALID_TIME
+                    and utcnow() - twice_daily_coordinator.last_update_success_time
+                    < FORECAST_VALID_TIME
+                    and utcnow()
+                    - self.coordinator_forecast_legacy.last_update_success_time
+                    < FORECAST_VALID_TIME
+                )
+            else:
+                last_success_time = False
+            return last_success or last_success_time
+        return False
 
     async def async_update(self) -> None:
         """Update the entity.
@@ -358,5 +364,8 @@ class NWSWeather(CoordinatorWeatherEntity):
         """
         await self.coordinator.async_request_refresh()
         await self.coordinator_forecast_legacy.async_request_refresh()
-        await self.coordinator_forecast_hourly.async_request_refresh()
-        await self.coordinator_forecast_twice_daily.async_request_refresh()
+        if (coordinator := self.forecast_coordinators["hourly"]) is not None:
+            await coordinator.async_request_refresh()
+
+        if (coordinator := self.forecast_coordinators["twice_daily"]) is not None:
+            await coordinator.async_request_refresh()
