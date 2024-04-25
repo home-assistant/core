@@ -1635,7 +1635,7 @@ pyqwikswitch==0.93
 pyrainbird==4.0.2
 
 # homeassistant.components.risco
-pyrisco==0.6.0
+pyrisco==0.6.1
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6
