@@ -62,11 +62,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
 
-    def _cleanup():
-        del hass.data[DOMAIN][entry.entry_id][MONOPRICE_OBJECT]
-        hass.data[DOMAIN].pop(entry.entry_id)
+    def _cleanup(monoprice) -> None:
+        """Destroy the Monoprice object.
 
-    await hass.async_add_executor_job(_cleanup)
+        Destroying the Monoprice closes the serial connection, do it in an executor so the garbage
+        collection does not block.
+        """
+        del monoprice
+
+    monoprice = hass.data[DOMAIN][entry.entry_id][MONOPRICE_OBJECT]
+    hass.data[DOMAIN].pop(entry.entry_id)
+
+    await hass.async_add_executor_job(_cleanup, monoprice)
 
     return True
 
