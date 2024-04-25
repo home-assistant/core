@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Coroutine
 from contextlib import suppress
 import logging
 from typing import Any
@@ -966,7 +965,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client: ZwaveClient = info[DATA_CLIENT]
     driver_events: DriverEvents = info[DATA_DRIVER_EVENTS]
 
-    tasks: list[Coroutine] = [
+    tasks = [
         create_eager_task(
             hass.config_entries.async_forward_entry_unload(entry, platform)
         )
