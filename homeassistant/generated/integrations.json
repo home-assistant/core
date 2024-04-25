@@ -1604,8 +1604,8 @@
     },
     "enigma2": {
       "name": "Enigma2 (OpenWebif)",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "enmax": {
@@ -1648,6 +1648,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "epic_games_store": {
+      "name": "Epic Games Store",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "epion": {
       "name": "Epion",
@@ -1950,7 +1956,7 @@
     "folder_watcher": {
       "name": "Folder Watcher",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "foobot": {
@@ -2558,6 +2564,11 @@
       "name": "Legrand Home+ Control",
       "integration_type": "virtual",
       "supported_by": "netatmo"
+    },
+    "homeassistant_sky_connect": {
+      "name": "Home Assistant SkyConnect",
+      "integration_type": "device",
+      "config_flow": true
     },
     "homematic": {
       "name": "Homematic",
@@ -5179,6 +5190,12 @@
           "name": "Samsung SyncThru Printer"
         }
       }
+    },
+    "sanix": {
+      "name": "Sanix",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "satel_integra": {
       "name": "Satel Integra",
