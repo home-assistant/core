@@ -1538,6 +1538,8 @@ class EventBus:
                 )
 
             try:
+                if event_type == "homeassistant_start":
+                    _LOGGER.info("Run job: %s %s", job.name, job.target)
                 self._hass.async_run_hass_job(job, event)
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Error running job: %s", job)
