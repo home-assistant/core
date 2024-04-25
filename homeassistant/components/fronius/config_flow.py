@@ -155,6 +155,7 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                # Config didn't change or is already configured in another entry
                 self._async_abort_entries_match(dict(info))
 
                 existing_entry = await self.async_set_unique_id(
@@ -162,6 +163,7 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 assert self._entry is not None
                 if existing_entry and existing_entry.entry_id != self._entry.entry_id:
+                    # Uid of device is already configured in another entry (but with different host)
                     self._abort_if_unique_id_configured()
 
                 return self.async_update_reload_and_abort(

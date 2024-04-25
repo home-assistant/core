@@ -561,7 +561,7 @@ async def test_reconfigure_already_existing(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "10.2.2.2",
+                "host": "10.1.1.1",
             },
         )
         await hass.async_block_till_done()
