@@ -452,7 +452,7 @@ def async_fire_mqtt_message(
 
     mqtt_data: MqttData = hass.data["mqtt"]
     assert mqtt_data.client
-    mqtt_data.client._mqtt_handle_message(msg)
+    mqtt_data.client._async_mqtt_on_message(Mock(), None, msg)
 
 
 fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
