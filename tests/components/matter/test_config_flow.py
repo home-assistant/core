@@ -24,7 +24,7 @@ ADDON_DISCOVERY_INFO = {
     "host": "host1",
     "port": 5581,
 }
-ZEROCONF_INFO = ZeroconfServiceInfo(
+ZEROCONF_INFO_TCP = ZeroconfServiceInfo(
     ip_address=ip_address("fd11:be53:8d46:0:729e:5a4f:539d:1ee6"),
     ip_addresses=[ip_address("fd11:be53:8d46:0:729e:5a4f:539d:1ee6")],
     port=5540,
@@ -32,6 +32,28 @@ ZEROCONF_INFO = ZeroconfServiceInfo(
     type="_matter._tcp.local.",
     name="ABCDEFGH123456789-0000000012345678._matter._tcp.local.",
     properties={"SII": "3300", "SAI": "1100", "T": "0"},
+)
+
+ZEROCONF_INFO_UDP = ZeroconfServiceInfo(
+    ip_address=ip_address("fd11:be53:8d46:0:729e:5a4f:539d:1ee6"),
+    ip_addresses=[ip_address("fd11:be53:8d46:0:729e:5a4f:539d:1ee6")],
+    port=5540,
+    hostname="CDEFGHIJ12345678.local.",
+    type="_matterc._udp.local.",
+    name="ABCDEFGH123456789._matterc._udp.local.",
+    properties={
+        "VP": "4874+77",
+        "DT": "21",
+        "DN": "Eve Door",
+        "SII": "3300",
+        "SAI": "1100",
+        "T": "0",
+        "D": "183",
+        "CM": "2",
+        "RI": "0400530980B950D59BF473CFE42BD7DDBF2D",
+        "PH": "36",
+        "PI": None,
+    },
 )
 
 
@@ -198,16 +220,18 @@ async def test_manual_already_configured(
     assert setup_entry.call_count == 1
 
 
+@pytest.mark.parametrize("zeroconf_info", [ZEROCONF_INFO_TCP, ZEROCONF_INFO_UDP])
 async def test_zeroconf_discovery(
     hass: HomeAssistant,
     client_connect: AsyncMock,
     setup_entry: AsyncMock,
+    zeroconf_info: ZeroconfServiceInfo,
 ) -> None:
     """Test flow started from Zeroconf discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=ZEROCONF_INFO,
+        data=zeroconf_info,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
@@ -232,17 +256,19 @@ async def test_zeroconf_discovery(
     assert setup_entry.call_count == 1
 
 
+@pytest.mark.parametrize("zeroconf_info", [ZEROCONF_INFO_TCP, ZEROCONF_INFO_UDP])
 async def test_zeroconf_discovery_not_onboarded_not_supervisor(
     hass: HomeAssistant,
     client_connect: AsyncMock,
     setup_entry: AsyncMock,
     not_onboarded: MagicMock,
+    zeroconf_info: ZeroconfServiceInfo,
 ) -> None:
     """Test flow started from Zeroconf discovery when not onboarded."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=ZEROCONF_INFO,
+        data=zeroconf_info,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
@@ -267,6 +293,7 @@ async def test_zeroconf_discovery_not_onboarded_not_supervisor(
     assert setup_entry.call_count == 1
 
 
+@pytest.mark.parametrize("zeroconf_info", [ZEROCONF_INFO_TCP, ZEROCONF_INFO_UDP])
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_zeroconf_not_onboarded_running(
     hass: HomeAssistant,
@@ -276,12 +303,13 @@ async def test_zeroconf_not_onboarded_running(
     client_connect: AsyncMock,
     setup_entry: AsyncMock,
     not_onboarded: MagicMock,
+    zeroconf_info: ZeroconfServiceInfo,
 ) -> None:
     """Test flow Zeroconf discovery when not onboarded and add-on running."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=ZEROCONF_INFO,
+        data=zeroconf_info,
     )
     await hass.async_block_till_done()
 
@@ -297,6 +325,7 @@ async def test_zeroconf_not_onboarded_running(
     assert setup_entry.call_count == 1
 
 
+@pytest.mark.parametrize("zeroconf_info", [ZEROCONF_INFO_TCP, ZEROCONF_INFO_UDP])
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_zeroconf_not_onboarded_installed(
     hass: HomeAssistant,
@@ -307,12 +336,13 @@ async def test_zeroconf_not_onboarded_installed(
     client_connect: AsyncMock,
     setup_entry: AsyncMock,
     not_onboarded: MagicMock,
+    zeroconf_info: ZeroconfServiceInfo,
 ) -> None:
     """Test flow Zeroconf discovery when not onboarded and add-on installed."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=ZEROCONF_INFO,
+        data=zeroconf_info,
     )
     await hass.async_block_till_done()
 
@@ -335,6 +365,7 @@ async def test_zeroconf_not_onboarded_installed(
     assert setup_entry.call_count == 1
 
 
+@pytest.mark.parametrize("zeroconf_info", [ZEROCONF_INFO_TCP, ZEROCONF_INFO_UDP])
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_zeroconf_not_onboarded_not_installed(
     hass: HomeAssistant,
@@ -347,12 +378,13 @@ async def test_zeroconf_not_onboarded_not_installed(
     client_connect: AsyncMock,
     setup_entry: AsyncMock,
     not_onboarded: MagicMock,
+    zeroconf_info: ZeroconfServiceInfo,
 ) -> None:
     """Test flow Zeroconf discovery when not onboarded and add-on not installed."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=ZEROCONF_INFO,
+        data=zeroconf_info,
     )
     await hass.async_block_till_done()
 
