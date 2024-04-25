@@ -185,7 +185,8 @@ def _info_for_entity(hass: HomeAssistant, entity_id: str) -> dict[str, Any]:
                     "qos": msg.qos,
                     "retain": msg.retain,
                     "time": dt.datetime.fromtimestamp(
-                        msg.timestamp + monotonic_time_diff
+                        msg.timestamp + monotonic_time_diff,
+                        tz=dt.UTC,
                     ),
                     "topic": msg.topic,
                 }
@@ -203,7 +204,8 @@ def _info_for_entity(hass: HomeAssistant, entity_id: str) -> dict[str, Any]:
                     "qos": msg.qos,
                     "retain": msg.retain,
                     "time": dt.datetime.fromtimestamp(
-                        msg.timestamp + monotonic_time_diff
+                        msg.timestamp + monotonic_time_diff,
+                        tz=dt.UTC,
                     ),
                     "topic": msg.topic,
                 }
