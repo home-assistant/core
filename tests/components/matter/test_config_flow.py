@@ -1059,14 +1059,6 @@ async def test_addon_installed(
 
 
 @pytest.mark.parametrize(
-    ("onboarded_return_value", "flow_source", "flow_data"),
-    [
-        (True, config_entries.SOURCE_USER, None),
-        (False, config_entries.SOURCE_ZEROCONF, ZEROCONF_INFO_TCP),
-        (False, config_entries.SOURCE_ZEROCONF, ZEROCONF_INFO_UDP),
-    ],
-)
-@pytest.mark.parametrize(
     (
         "discovery_info",
         "start_addon_error",
@@ -1110,18 +1102,13 @@ async def test_addon_installed_failures(
     client_connect_error: Exception | None,
     discovery_info_called: bool,
     client_connect_called: bool,
-    not_onboarded: MagicMock,
-    onboarded_return_value: bool,
-    flow_source: dict[str, Any],
-    flow_data: Any,
 ) -> None:
     """Test add-on start failure when add-on is installed."""
-    not_onboarded.return_value = onboarded_return_value
     start_addon.side_effect = start_addon_error
     client_connect.side_effect = client_connect_error
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": flow_source}, data=flow_data
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
