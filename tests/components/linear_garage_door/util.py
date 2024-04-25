@@ -12,7 +12,7 @@ async def async_init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Initialize mock integration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="acefdd4b3a4a0911067d1cf51414201e",
+        entry_id="acefdd4b3a4a0911067d1cf51414201e",
         data={
             "email": "test-email",
             "password": "test-password",
