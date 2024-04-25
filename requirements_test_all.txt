@@ -1311,7 +1311,7 @@ pyDuotecno==2024.3.2
 pyElectra==1.2.0
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.31.0
+pyRFXtrx==0.31.1
 
 # homeassistant.components.tibber
 pyTibber==0.28.2
