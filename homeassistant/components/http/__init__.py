@@ -560,6 +560,7 @@ class HomeAssistantHTTP:
         # This will now raise a RunTimeError.
         # To work around this we now prevent the router from getting frozen
         # pylint: disable-next=protected-access
+        _LOGGER.info("Enter HomeAssistantHTTP.start %s", self)
         self.app._router.freeze = lambda: None  # type: ignore[method-assign]
 
         self.runner = web.AppRunner(
@@ -569,6 +570,12 @@ class HomeAssistantHTTP:
 
         self.site = HomeAssistantTCPSite(
             self.runner, self.server_host, self.server_port, ssl_context=self.context
+        )
+        _LOGGER.info(
+            "Setup site HomeAssistantHTTP.start %s %s %s",
+            id(self.hass),
+            self,
+            self.site,
         )
         try:
             await self.site.start()

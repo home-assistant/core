@@ -28,6 +28,8 @@ from homeassistant.util.ssl import server_context_intermediate, server_context_m
 from tests.common import async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def _setup_broken_ssl_pem_files(tmp_path: Path) -> tuple[Path, Path]:
     test_dir = tmp_path / "test_broken_ssl"
@@ -334,6 +336,10 @@ async def test_emergency_ssl_certificate_when_invalid(
     assert (
         "Home Assistant is running in recovery mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
         in caplog.text
+    )
+
+    _LOGGER.info(
+        "Blah test_emergency_ssl_certificate_when_invalid %s %s", id(hass), hass.http
     )
 
     assert hass.http.site is not None
