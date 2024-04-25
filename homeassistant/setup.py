@@ -459,7 +459,9 @@ async def _async_setup_component(
     # Cleanup
     hass.data[DATA_SETUP].pop(domain, None)
 
-    hass.bus.async_fire(EVENT_COMPONENT_LOADED, EventComponentLoaded(component=domain))
+    hass.bus.async_fire_internal(
+        EVENT_COMPONENT_LOADED, EventComponentLoaded(component=domain)
+    )
 
     return True
 
