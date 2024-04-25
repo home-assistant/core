@@ -975,6 +975,14 @@ async def test_addon_installed(
 
 
 @pytest.mark.parametrize(
+    ("onboarded_return_value", "flow_source", "flow_data"),
+    [
+        (True, config_entries.SOURCE_USER, None),
+        (False, config_entries.SOURCE_ZEROCONF, ZEROCONF_INFO_TCP),
+        (False, config_entries.SOURCE_ZEROCONF, ZEROCONF_INFO_UDP),
+    ],
+)
+@pytest.mark.parametrize(
     (
         "discovery_info",
         "start_addon_error",
@@ -1018,13 +1026,18 @@ async def test_addon_installed_failures(
     client_connect_error: Exception | None,
     discovery_info_called: bool,
     client_connect_called: bool,
+    not_onboarded: MagicMock,
+    onboarded_return_value: bool,
+    flow_source: dict[str, Any],
+    flow_data: Any,
 ) -> None:
     """Test add-on start failure when add-on is installed."""
+    not_onboarded.return_value = onboarded_return_value
     start_addon.side_effect = start_addon_error
     client_connect.side_effect = client_connect_error
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": flow_source}, data=flow_data
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -1040,6 +1053,77 @@ async def test_addon_installed_failures(
 
     await hass.async_block_till_done()
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert start_addon.call_args == call(hass, "core_matter_server")
+    assert get_addon_discovery_info.called is discovery_info_called
+    assert client_connect.called is client_connect_called
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "addon_start_failed"
+
+
+@pytest.mark.parametrize("zeroconf_info", [ZEROCONF_INFO_TCP, ZEROCONF_INFO_UDP])
+@pytest.mark.parametrize(
+    (
+        "discovery_info",
+        "start_addon_error",
+        "client_connect_error",
+        "discovery_info_called",
+        "client_connect_called",
+    ),
+    [
+        (
+            {"config": ADDON_DISCOVERY_INFO},
+            HassioAPIError(),
+            None,
+            False,
+            False,
+        ),
+        (
+            {"config": ADDON_DISCOVERY_INFO},
+            None,
+            CannotConnect(Exception("Boom")),
+            True,
+            True,
+        ),
+        (
+            None,
+            None,
+            None,
+            True,
+            False,
+        ),
+    ],
+)
+async def test_addon_installed_failures_zeroconf(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    addon_installed: AsyncMock,
+    addon_info: AsyncMock,
+    start_addon: AsyncMock,
+    get_addon_discovery_info: AsyncMock,
+    client_connect: AsyncMock,
+    start_addon_error: Exception | None,
+    client_connect_error: Exception | None,
+    discovery_info_called: bool,
+    client_connect_called: bool,
+    not_onboarded: MagicMock,
+    zeroconf_info: ZeroconfServiceInfo,
+) -> None:
+    """Test add-on start failure when add-on is installed and not onboarded."""
+    start_addon.side_effect = start_addon_error
+    client_connect.side_effect = client_connect_error
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=zeroconf_info
+    )
+    await hass.async_block_till_done()
+
+    assert addon_info.call_count == 1
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
 
     assert start_addon.call_args == call(hass, "core_matter_server")
     assert get_addon_discovery_info.called is discovery_info_called
