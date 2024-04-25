@@ -49,6 +49,7 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 from homeassistant.helpers.typing import UNDEFINED, ConfigType
+from homeassistant.util.async_ import create_eager_task
 
 from .addon import get_addon_manager
 from .api import async_register_api
@@ -296,7 +297,7 @@ class DriverEvents:
         # run discovery on all other ready nodes
         await asyncio.gather(
             *(
-                self.controller_events.async_on_node_added(node)
+                create_eager_task(self.controller_events.async_on_node_added(node))
                 for node in controller.nodes.values()
                 if node != controller.own_node
             )
@@ -308,7 +309,6 @@ class DriverEvents:
                 "node added",
                 lambda event: self.hass.async_create_task(
                     self.controller_events.async_on_node_added(event["node"]),
-                    eager_start=False,
                 ),
             )
         )
@@ -417,7 +417,6 @@ class ControllerEvents:
                 "ready",
                 lambda event: self.hass.async_create_task(
                     self.node_events.async_on_node_ready(event["node"]),
-                    eager_start=False,
                 ),
             )
         )
@@ -609,8 +608,10 @@ class NodeEvents:
         # run discovery on all node values and create/update entities
         await asyncio.gather(
             *(
-                self.async_handle_discovery_info(
-                    device, disc_info, value_updates_disc_info
+                create_eager_task(
+                    self.async_handle_discovery_info(
+                        device, disc_info, value_updates_disc_info
+                    )
                 )
                 for disc_info in async_discover_node_values(
                     node, device, self.controller_events.discovered_value_ids
@@ -745,8 +746,10 @@ class NodeEvents:
         LOGGER.debug("Processing node %s added value %s", value.node, value)
         await asyncio.gather(
             *(
-                self.async_handle_discovery_info(
-                    device, disc_info, value_updates_disc_info
+                create_eager_task(
+                    self.async_handle_discovery_info(
+                        device, disc_info, value_updates_disc_info
+                    )
                 )
                 for disc_info in async_discover_single_value(
                     value, device, self.controller_events.discovered_value_ids
@@ -964,7 +967,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     driver_events: DriverEvents = info[DATA_DRIVER_EVENTS]
 
     tasks: list[Coroutine] = [
-        hass.config_entries.async_forward_entry_unload(entry, platform)
+        create_eager_task(
+            hass.config_entries.async_forward_entry_unload(entry, platform)
+        )
         for platform, task in driver_events.platform_setup_tasks.items()
         if not task.cancel()
     ]
