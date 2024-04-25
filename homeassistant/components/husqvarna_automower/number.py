@@ -44,9 +44,8 @@ def _async_get_cutting_height(data: MowerAttributes) -> int:
 
 @callback
 def _async_get_work_area_cutting_height(data: WorkArea) -> int:
-    """Return the cutting height."""
+    """Return the work area cutting height."""
     if TYPE_CHECKING:
-        # Sensor does not get created if it is None
         assert data is not None
     return data.cutting_height
 
@@ -55,16 +54,14 @@ def _async_get_work_area_cutting_height(data: WorkArea) -> int:
 def _async_work_area_mowers(data: dict[int, WorkArea] | None) -> dict[int, WorkArea]:
     """Return the cutting height."""
     if TYPE_CHECKING:
-        # Sensor does not get created if it is None
         assert data is not None
     return data
 
 
 @callback
 def _async_work_area_name(data: WorkArea) -> str:
-    """Return the cutting height."""
+    """Return the work area name."""
     if TYPE_CHECKING:
-        # Sensor does not get created if it is None
         assert data.name is not None
     return data.name
 
@@ -112,8 +109,8 @@ WORK_AREA_NUMBER_TYPES: tuple[AutomowerWorkAreaNumberEntityDescription, ...] = (
             lambda session,
             mower_id,
             cheight,
-            work_area: session.set_cutting_height_workarea(
-                mower_id, int(cheight), work_area
+            work_area_id: session.set_cutting_height_workarea(
+                mower_id, int(cheight), work_area_id
             )
         ),
     ),
@@ -133,10 +130,12 @@ async def async_setup_entry(
     )
 
     async_add_entities(
-        AutomowerWorkAreaNumberEntity(mower_id, coordinator, description, work_area)
+        AutomowerWorkAreaNumberEntity(mower_id, coordinator, description, work_area_id)
         for mower_id in coordinator.data
         for description in WORK_AREA_NUMBER_TYPES
-        for work_area in _async_work_area_mowers(coordinator.data[mower_id].work_areas)
+        for work_area_id in _async_work_area_mowers(
+            coordinator.data[mower_id].work_areas
+        )
         if coordinator.data[mower_id].capabilities.work_areas
     )
 
@@ -184,39 +183,39 @@ class AutomowerWorkAreaNumberEntity(AutomowerBaseEntity, NumberEntity):
         mower_id: str,
         coordinator: AutomowerDataUpdateCoordinator,
         description: AutomowerWorkAreaNumberEntityDescription,
-        work_area: int,
+        work_area_id: int,
     ) -> None:
         """Set up AutomowerNumberEntity."""
         super().__init__(mower_id, coordinator)
         self.entity_description = description
-        self.work_area = work_area
-        self._attr_unique_id = f"{mower_id}_cutting_height_work_area_{work_area}"
+        self.work_area_id = work_area_id
+        self._attr_unique_id = f"{mower_id}_cutting_height_work_area_{work_area_id}"
         self._attr_translation_placeholders = {
-            "work_area": _async_work_area_name(self._work_area)
+            "work_area": _async_work_area_name(self.work_area)
         }
 
     @property
-    def _work_area(self) -> WorkArea:
+    def work_area(self) -> WorkArea:
         """Get the mower attributes of the current mower."""
         if TYPE_CHECKING:
             assert self.mower_attributes.work_areas is not None
-        return self.mower_attributes.work_areas[self.work_area]
+        return self.mower_attributes.work_areas[self.work_area_id]
 
     @property
     def translation_key(self) -> str:
         """Return the translation key of the work area."""
-        return self.entity_description.translation_key_fn(self._work_area)
+        return self.entity_description.translation_key_fn(self.work_area)
 
     @property
     def native_value(self) -> float:
         """Return the state of the number."""
-        return self.entity_description.value_fn(self._work_area)
+        return self.entity_description.value_fn(self.work_area)
 
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
         try:
             await self.entity_description.set_value_fn(
-                self.coordinator.api, self.mower_id, value, self.work_area
+                self.coordinator.api, self.mower_id, value, self.work_area_id
             )
             await asyncio.sleep(5)
             await self.async_update()
