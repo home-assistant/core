@@ -146,7 +146,9 @@ async def async_setup_component(
 
     This method is a coroutine.
     """
+    _LOGGER.info("Enter async_setup_component %s", domain)
     if domain in hass.config.components:
+        _LOGGER.info("%s is already setup", domain)
         return True
 
     setup_futures: dict[str, asyncio.Future[bool]] = hass.data.setdefault(
@@ -157,6 +159,7 @@ async def async_setup_component(
     )
 
     if existing_setup_future := setup_futures.get(domain):
+        _LOGGER.info("Awaiting existing_setup_future for %s", domain)
         return await existing_setup_future
 
     setup_future = hass.loop.create_future()
@@ -185,6 +188,7 @@ async def async_setup_component(
                 # if there are no concurrent setup attempts
                 await future
         raise
+    _LOGGER.info("Done with async_setup_component %s: %s", domain, result)
     return result
 
 

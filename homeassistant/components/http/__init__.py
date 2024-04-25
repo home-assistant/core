@@ -201,6 +201,7 @@ class ApiConfig:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HTTP API and debug interface."""
+    _LOGGER.info("Enter async_setup")
     enable_isal()
 
     conf: ConfData | None = config.get(DOMAIN)
@@ -270,6 +271,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     _setup_services(hass, conf)
+    _LOGGER.info("Leave async_setup")
     return True
 
 
