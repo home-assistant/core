@@ -614,6 +614,7 @@ def _async_when_setup(
 
     async def _matched_event(event: Event[Any]) -> None:
         """Call the callback when we matched an event."""
+        _LOGGER.info("%s _matched_event", component)
         for listener in listeners:
             listener()
         await when_setup()
