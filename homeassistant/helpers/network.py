@@ -122,6 +122,7 @@ def get_url(
     require_current_request: bool = False,
     require_ssl: bool = False,
     require_standard_port: bool = False,
+    require_cloud: bool = False,
     allow_internal: bool = True,
     allow_external: bool = True,
     allow_cloud: bool = True,
@@ -145,7 +146,7 @@ def get_url(
 
     # Try finding an URL in the order specified
     for url_type in order:
-        if allow_internal and url_type == TYPE_URL_INTERNAL:
+        if allow_internal and url_type == TYPE_URL_INTERNAL and not require_cloud:
             with suppress(NoURLAvailableError):
                 return _get_internal_url(
                     hass,
@@ -155,7 +156,7 @@ def get_url(
                     require_standard_port=require_standard_port,
                 )
 
-        if allow_external and url_type == TYPE_URL_EXTERNAL:
+        if require_cloud or (allow_external and url_type == TYPE_URL_EXTERNAL):
             with suppress(NoURLAvailableError):
                 return _get_external_url(
                     hass,
@@ -165,7 +166,10 @@ def get_url(
                     require_current_request=require_current_request,
                     require_ssl=require_ssl,
                     require_standard_port=require_standard_port,
+                    require_cloud=require_cloud,
                 )
+            if require_cloud:
+                raise NoURLAvailableError
 
     # For current request, we accept loopback interfaces (e.g., 127.0.0.1),
     # the Supervisor hostname and localhost transparently
@@ -263,8 +267,12 @@ def _get_external_url(
     require_current_request: bool = False,
     require_ssl: bool = False,
     require_standard_port: bool = False,
+    require_cloud: bool = False,
 ) -> str:
     """Get external URL of this instance."""
+    if require_cloud:
+        return _get_cloud_url(hass, require_current_request=require_current_request)
+
     if prefer_cloud and allow_cloud:
         with suppress(NoURLAvailableError):
             return _get_cloud_url(hass)

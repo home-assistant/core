@@ -37,6 +37,11 @@
         "name": "Returning to dock"
       }
     },
+    "number": {
+      "cutting_height": {
+        "name": "Cutting height"
+      }
+    },
     "select": {
       "headlight_mode": {
         "name": "Headlight mode",

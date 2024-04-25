@@ -22,7 +22,7 @@ from .entity import (
     EcovacsDescriptionEntity,
     EventT,
 )
-from .util import get_supported_entitites
+from .util import get_name_key, get_supported_entitites
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -41,8 +41,8 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSelectEntityDescription, ...] = (
     EcovacsSelectEntityDescription[WaterInfoEvent](
         device_capabilities=VacuumCapabilities,
         capability_fn=lambda caps: caps.water,
-        current_option_fn=lambda e: e.amount.display_name,
-        options_fn=lambda water: [amount.display_name for amount in water.types],
+        current_option_fn=lambda e: get_name_key(e.amount),
+        options_fn=lambda water: [get_name_key(amount) for amount in water.types],
         key="water_amount",
         translation_key="water_amount",
         entity_category=EntityCategory.CONFIG,
@@ -50,8 +50,8 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSelectEntityDescription, ...] = (
     EcovacsSelectEntityDescription[WorkModeEvent](
         device_capabilities=VacuumCapabilities,
         capability_fn=lambda caps: caps.clean.work_mode,
-        current_option_fn=lambda e: e.mode.display_name,
-        options_fn=lambda cap: [mode.display_name for mode in cap.types],
+        current_option_fn=lambda e: get_name_key(e.mode),
+        options_fn=lambda cap: [get_name_key(mode) for mode in cap.types],
         key="work_mode",
         translation_key="work_mode",
         entity_registry_enabled_default=False,
