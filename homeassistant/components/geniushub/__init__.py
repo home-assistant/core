@@ -36,7 +36,14 @@ from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN
+from .const import (
+    DEFAULT_GENIISHUB_MAC,
+    DEFAULT_GENIISHUB_TOKEN,
+    DEFAULT_GENIUSHUB_HOST,
+    DEFAULT_GENIUSHUB_PASSWORD,
+    DEFAULT_GENIUSHUB_USERNAME,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,20 +61,42 @@ GH_DEVICE_ATTRS = {
 SCAN_INTERVAL = timedelta(seconds=60)
 
 MAC_ADDRESS_REGEXP = r"^([0-9A-F]{2}:){5}([0-9A-F]{2})$"
+
+data = {
+    CONF_MAC: DEFAULT_GENIISHUB_MAC,
+    CONF_TOKEN: DEFAULT_GENIISHUB_TOKEN,
+    CONF_HOST: DEFAULT_GENIUSHUB_HOST,
+    CONF_PASSWORD: DEFAULT_GENIUSHUB_PASSWORD,
+    CONF_USERNAME: DEFAULT_GENIUSHUB_USERNAME,
+}
+
 V1_API_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_TOKEN): cv.string,
-        vol.Required(CONF_MAC): vol.Match(MAC_ADDRESS_REGEXP),
-    }
+        vol.Required(CONF_TOKEN, default=data.get(CONF_TOKEN)): cv.string,
+        vol.Optional(
+            CONF_MAC, default=data.get(CONF_MAC)
+        ): cv.string,  # vol.Match(MAC_ADDRESS_REGEXP),
+    },
+    extra=vol.PREVENT_EXTRA,
 )
+
+
 V3_API_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_MAC): vol.Match(MAC_ADDRESS_REGEXP),
-    }
+        vol.Required(CONF_HOST, default=data.get(CONF_HOST)): cv.string,
+        vol.Required(CONF_USERNAME, default=data.get(CONF_USERNAME)): cv.string,
+        vol.Required(CONF_PASSWORD, default=data.get(CONF_PASSWORD)): cv.string,
+        vol.Optional(
+            CONF_MAC, default=data.get(CONF_MAC)
+        ): cv.string,  # vol.Match(MAC_ADDRESS_REGEXP),
+    },
+    extra=vol.PREVENT_EXTRA,
 )
+
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {vol.Optional("option_1_or_2", default=True): bool}, extra=vol.PREVENT_EXTRA
+)
+
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Any(V3_API_SCHEMA, V1_API_SCHEMA)}, extra=vol.ALLOW_EXTRA
 )
