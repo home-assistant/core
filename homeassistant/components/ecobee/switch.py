@@ -61,6 +61,7 @@ class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
         super().__init__(data, thermostat_index)
         self._attr_unique_id = "ventilator_20m_timer"
         self._attr_native_value = False
+        self.update_without_throttle = False
         self._time_zone_delay = datetime.strptime(
             self.thermostat["utcTime"], DATE_FORMAT
         ) - datetime.strptime(self.thermostat["thermostatTime"], DATE_FORMAT)
@@ -72,7 +73,12 @@ class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
 
     async def async_update(self) -> None:
         """Get the latest state from the thermostat."""
-        await self.data.update()
+
+        if self.update_without_throttle:
+            await self.data.update(no_throttle=True)
+            self.update_without_throttle = False
+        else:
+            await self.data.update()
 
         ventilatorOffDateTime = self.thermostat["settings"]["ventilatorOffDateTime"]
 
@@ -89,9 +95,11 @@ class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
         await self.hass.async_add_executor_job(
             self.data.ecobee.set_ventilator_timer, self.thermostat_index, True
         )
+        self.update_without_throttle = True
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Set ventilator 20 min timer off."""
         await self.hass.async_add_executor_job(
             self.data.ecobee.set_ventilator_timer, self.thermostat_index, False
         )
+        self.update_without_throttle = True
