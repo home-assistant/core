@@ -90,6 +90,8 @@ build.json @home-assistant/supervisor
 /tests/components/amberelectric/ @madpilot
 /homeassistant/components/ambiclimate/ @danielhiversen
 /tests/components/ambiclimate/ @danielhiversen
+/homeassistant/components/ambient_network/ @thomaskistler
+/tests/components/ambient_network/ @thomaskistler
 /homeassistant/components/ambient_station/ @bachya
 /tests/components/ambient_station/ @bachya
 /homeassistant/components/amcrest/ @flacjacket
@@ -387,6 +389,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/energyzero/ @klaasnicolaas
 /tests/components/energyzero/ @klaasnicolaas
 /homeassistant/components/enigma2/ @autinerd
+/tests/components/enigma2/ @autinerd
 /homeassistant/components/enocean/ @bdurrer
 /tests/components/enocean/ @bdurrer
 /homeassistant/components/enphase_envoy/ @bdraco @cgarwood @dgomes @joostlek @catsmanac
@@ -395,6 +398,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/environment_canada/ @gwww @michaeldavie
 /tests/components/environment_canada/ @gwww @michaeldavie
 /homeassistant/components/ephember/ @ttroy50
+/homeassistant/components/epic_games_store/ @hacf-fr @Quentame
+/tests/components/epic_games_store/ @hacf-fr @Quentame
 /homeassistant/components/epion/ @lhgravendeel
 /tests/components/epion/ @lhgravendeel
 /homeassistant/components/epson/ @pszafer
@@ -596,6 +601,8 @@ build.json @home-assistant/supervisor
 /tests/components/homekit_controller/ @Jc2k @bdraco
 /homeassistant/components/homematic/ @pvizeli
 /tests/components/homematic/ @pvizeli
+/homeassistant/components/homematicip_cloud/ @hahn-th
+/tests/components/homematicip_cloud/ @hahn-th
 /homeassistant/components/homewizard/ @DCSBL
 /tests/components/homewizard/ @DCSBL
 /homeassistant/components/honeywell/ @rdfurman @mkmer
@@ -753,7 +760,8 @@ build.json @home-assistant/supervisor
 /tests/components/leaone/ @bdraco
 /homeassistant/components/led_ble/ @bdraco
 /tests/components/led_ble/ @bdraco
-/homeassistant/components/lg_netcast/ @Drafteed
+/homeassistant/components/lg_netcast/ @Drafteed @splinter98
+/tests/components/lg_netcast/ @Drafteed @splinter98
 /homeassistant/components/lidarr/ @tkdrob
 /tests/components/lidarr/ @tkdrob
 /homeassistant/components/light/ @home-assistant/core
@@ -869,8 +877,8 @@ build.json @home-assistant/supervisor
 /tests/components/motioneye/ @dermotduffy
 /homeassistant/components/motionmount/ @RJPoelstra
 /tests/components/motionmount/ @RJPoelstra
-/homeassistant/components/mqtt/ @emontnemery @jbouwh
-/tests/components/mqtt/ @emontnemery @jbouwh
+/homeassistant/components/mqtt/ @emontnemery @jbouwh @bdraco
+/tests/components/mqtt/ @emontnemery @jbouwh @bdraco
 /homeassistant/components/msteams/ @peroyvind
 /homeassistant/components/mullvad/ @meichthys
 /tests/components/mullvad/ @meichthys
@@ -1183,6 +1191,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/saj/ @fredericvl
 /homeassistant/components/samsungtv/ @chemelli74 @epenet
 /tests/components/samsungtv/ @chemelli74 @epenet
+/homeassistant/components/sanix/ @tomaszsluszniak
+/tests/components/sanix/ @tomaszsluszniak
 /homeassistant/components/scene/ @home-assistant/core
 /tests/components/scene/ @home-assistant/core
 /homeassistant/components/schedule/ @home-assistant/core
@@ -1269,14 +1279,15 @@ build.json @home-assistant/supervisor
 /homeassistant/components/smhi/ @gjohansson-ST
 /tests/components/smhi/ @gjohansson-ST
 /homeassistant/components/sms/ @ocalvo
+/tests/components/sms/ @ocalvo
 /homeassistant/components/snapcast/ @luar123
 /tests/components/snapcast/ @luar123
 /homeassistant/components/snmp/ @nmaggioni
 /tests/components/snmp/ @nmaggioni
 /homeassistant/components/snooz/ @AustinBrunkhorst
 /tests/components/snooz/ @AustinBrunkhorst
-/homeassistant/components/solaredge/ @frenck
-/tests/components/solaredge/ @frenck
+/homeassistant/components/solaredge/ @frenck @bdraco
+/tests/components/solaredge/ @frenck @bdraco
 /homeassistant/components/solaredge_local/ @drobtravels @scheric
 /homeassistant/components/solarlog/ @Ernst79
 /tests/components/solarlog/ @Ernst79
@@ -1573,8 +1584,8 @@ build.json @home-assistant/supervisor
 /tests/components/wiz/ @sbidy
 /homeassistant/components/wled/ @frenck
 /tests/components/wled/ @frenck
-/homeassistant/components/wolflink/ @adamkrol93
-/tests/components/wolflink/ @adamkrol93
+/homeassistant/components/wolflink/ @adamkrol93 @mtielen
+/tests/components/wolflink/ @adamkrol93 @mtielen
 /homeassistant/components/workday/ @fabaff @gjohansson-ST
 /tests/components/workday/ @fabaff @gjohansson-ST
 /homeassistant/components/worldclock/ @fabaff
