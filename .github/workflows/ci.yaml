@@ -90,6 +90,8 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
         run: >-
@@ -225,6 +227,8 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -271,6 +275,8 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v5.1.0
         id: python
@@ -311,6 +317,8 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v5.1.0
         id: python
@@ -350,6 +358,8 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v5.1.0
         id: python
@@ -444,6 +454,8 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -521,6 +533,8 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -553,6 +567,8 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -586,6 +602,8 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -630,6 +648,8 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -703,6 +723,8 @@ jobs:
             libgammu-dev
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -764,6 +786,8 @@ jobs:
             libgammu-dev
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -880,6 +904,8 @@ jobs:
             libmariadb-dev-compat
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -1003,6 +1029,8 @@ jobs:
             postgresql-server-dev-14
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -1098,6 +1126,8 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v4.1.7
         with:
@@ -1145,6 +1175,8 @@ jobs:
             libgammu-dev
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -1232,6 +1264,8 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v4.1.7
         with:
