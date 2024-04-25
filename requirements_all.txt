@@ -318,7 +318,7 @@ aioopenexchangerates==0.4.0
 aiooui==0.1.5
 
 # homeassistant.components.pegel_online
-aiopegelonline==0.0.9
+aiopegelonline==0.0.10
 
 # homeassistant.components.acmeda
 aiopulse==0.4.4
@@ -1081,7 +1081,7 @@ holidays==0.47
 home-assistant-frontend==20240424.1
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.4.3
+home-assistant-intents==2024.4.24
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
