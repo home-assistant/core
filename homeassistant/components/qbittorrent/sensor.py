@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -35,17 +36,29 @@ SENSOR_TYPE_INACTIVE_TORRENTS = "inactive_torrents"
 
 def get_state(coordinator: QBittorrentDataCoordinator) -> str:
     """Get current download/upload state."""
-    server_state = coordinator.data.get("server_state")
-    upload = server_state.get("up_info_speed", int)  # type: ignore[union-attr]
-    download = server_state.get("dl_info_speed", int)  # type: ignore[union-attr]
+    server_state: Any = coordinator.data.get("server_state")
+    upload = server_state.get("up_info_speed")
+    download = server_state.get("dl_info_speed")
 
-    if upload > 0 and download > 0:  # type: ignore[operator]
+    if upload > 0 and download > 0:
         return STATE_UP_DOWN
-    if upload > 0 and download == 0:  # type: ignore[operator]
+    if upload > 0 and download == 0:
         return STATE_SEEDING
-    if upload == 0 and download > 0:  # type: ignore[operator]
+    if upload == 0 and download > 0:
         return STATE_DOWNLOADING
     return STATE_IDLE
+
+
+def get_dl(coordinator: QBittorrentDataCoordinator) -> float:
+    """Get current download speed."""
+    server_state: Any = coordinator.data.get("server_state")
+    return float(server_state.get("dl_info_speed"))
+
+
+def get_up(coordinator: QBittorrentDataCoordinator) -> float:
+    """Get current upload speed."""
+    server_state: Any = coordinator.data.get("server_state")
+    return float(server_state.get("up_info_speed"))
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -70,9 +83,7 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         suggested_display_precision=2,
         suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
-        value_fn=lambda coordinator: float(
-            coordinator.data.get("server_state").get("dl_info_speed")  # type: ignore[arg-type, union-attr]
-        ),
+        value_fn=get_dl,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_UPLOAD_SPEED,
@@ -81,9 +92,7 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         suggested_display_precision=2,
         suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
-        value_fn=lambda coordinator: float(
-            coordinator.data.get("server_state").get("up_info_speed")  # type: ignore[arg-type, union-attr]
-        ),
+        value_fn=get_up,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_ALL_TORRENTS,
@@ -167,14 +176,11 @@ def count_torrents_in_states(
     """Count the number of torrents in specified states."""
     # When torrents are not in the returned data, there are none, return 0.
     try:
+        torrents: Any = coordinator.data.get("torrents")
         if not states:
-            return len(coordinator.data.get("torrents"))  # type: ignore[arg-type]
+            return len(torrents)
         return len(
-            [
-                torrent
-                for torrent in coordinator.data.get("torrents").values()  # type: ignore[union-attr]
-                if torrent.get("state") in states  # type: ignore[operator, union-attr]
-            ]
+            [torrent for torrent in torrents.values() if torrent.get("state") in states]
         )
     except AttributeError:
         return 0
