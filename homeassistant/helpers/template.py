@@ -59,7 +59,6 @@ from homeassistant.const import (
     UnitOfLength,
 )
 from homeassistant.core import (
-    DOMAIN as HA_DOMAIN,
     Context,
     HomeAssistant,
     State,
@@ -2480,30 +2479,11 @@ def relative_time(hass: HomeAssistant, value: Any) -> Any:
     Make sure date is not in the future, or else it will return None.
 
     If the input are not a datetime object the input will be returned unmodified.
+
+    Note: This template function is deprecated in favor of `time_until`, but is still
+    supported so as not to break old templates.
     """
 
-    def warn_relative_time_deprecated() -> None:
-        ir = issue_registry.async_get(hass)
-        issue_id = "template_function_relative_time_deprecated"
-        if ir.async_get_issue(HA_DOMAIN, issue_id):
-            return
-        issue_registry.async_create_issue(
-            hass,
-            HA_DOMAIN,
-            issue_id,
-            breaks_in_ha_version="2024.11.0",
-            is_fixable=False,
-            severity=issue_registry.IssueSeverity.WARNING,
-            translation_key=issue_id,
-            translation_placeholders={
-                "relative_time": "relative_time()",
-                "time_since": "time_since()",
-                "time_until": "time_until()",
-            },
-        )
-        _LOGGER.warning("Template function 'relative_time' is deprecated")
-
-    warn_relative_time_deprecated()
     if (render_info := _render_info.get()) is not None:
         render_info.has_time = True
 
