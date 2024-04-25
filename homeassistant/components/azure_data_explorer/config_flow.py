@@ -9,8 +9,8 @@ from azure.kusto.data.exceptions import KustoAuthenticationError, KustoServiceEr
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 
 from . import AzureDataExplorerClient
 from .const import (
@@ -79,7 +79,7 @@ class ADXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
 
         errors: dict = {}
@@ -106,7 +106,7 @@ class ADXOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the ADX options."""
         if user_input is not None:
             return self.async_create_entry(data=user_input)
