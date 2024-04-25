@@ -254,6 +254,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
             # We already checked it's not None.
             assert conf is not None
+            _LOGGER.info(
+                "Call start_http_server_and_save_config %s",
+                start_http_server_and_save_config,
+            )
             await start_http_server_and_save_config(hass, dict(conf), server)
         _LOGGER.info("Leave start_server")
 
