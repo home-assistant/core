@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.util import dt as dt_util
 
 from .const import ATTR_DISCOVERY_PAYLOAD, ATTR_DISCOVERY_TOPIC
 from .models import MessageCallbackType, PublishPayloadType
@@ -184,7 +185,7 @@ def _info_for_entity(hass: HomeAssistant, entity_id: str) -> dict[str, Any]:
                     "payload": str(msg.payload),
                     "qos": msg.qos,
                     "retain": msg.retain,
-                    "time": dt.datetime.fromtimestamp(
+                    "time": dt_util.utc_from_timestamp(
                         msg.timestamp + monotonic_time_diff,
                         tz=dt.UTC,
                     ),
@@ -203,7 +204,7 @@ def _info_for_entity(hass: HomeAssistant, entity_id: str) -> dict[str, Any]:
                     "payload": str(msg.payload),
                     "qos": msg.qos,
                     "retain": msg.retain,
-                    "time": dt.datetime.fromtimestamp(
+                    "time": dt_util.utc_from_timestamp(
                         msg.timestamp + monotonic_time_diff,
                         tz=dt.UTC,
                     ),
