@@ -36,7 +36,7 @@ env:
   CACHE_VERSION: 8
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 8
-  HA_SHORT_VERSION: "2024.5"
+  HA_SHORT_VERSION: "2024.6"
   DEFAULT_PYTHON: "3.12"
   ALL_PYTHON_VERSIONS: "['3.12']"
   # 10.3 is the oldest supported version
@@ -481,6 +481,7 @@ jobs:
       - name: Install additional OS dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
           sudo apt-get -y install \
             bluez \
@@ -694,6 +695,7 @@ jobs:
     steps:
       - name: Install additional OS dependencies
         run: |
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
           sudo apt-get -y install \
             bluez \
@@ -754,6 +756,7 @@ jobs:
     steps:
       - name: Install additional OS dependencies
         run: |
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
           sudo apt-get -y install \
             bluez \
@@ -869,6 +872,7 @@ jobs:
     steps:
       - name: Install additional OS dependencies
         run: |
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
           sudo apt-get -y install \
             bluez \
@@ -991,6 +995,7 @@ jobs:
     steps:
       - name: Install additional OS dependencies
         run: |
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
           sudo apt-get -y install \
             bluez \
@@ -1132,6 +1137,7 @@ jobs:
     steps:
       - name: Install additional OS dependencies
         run: |
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
           sudo apt-get -y install \
             bluez \

@@ -49,5 +49,12 @@
       "name": "Arm home instant",
       "description": "Arms Home with zero entry delay."
     }
+  },
+  "entity": {
+    "alarm_control_panel": {
+      "partition": {
+        "name": "Partition {partition_id}"
+      }
+    }
   }
 }
