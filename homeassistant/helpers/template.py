@@ -2480,8 +2480,8 @@ def relative_time(hass: HomeAssistant, value: Any) -> Any:
 
     If the input are not a datetime object the input will be returned unmodified.
 
-    Note: This template function is deprecated in favor of `time_until`, but still
-    supported to not break old templates.
+    Note: This template function is deprecated in favor of `time_until`, but is still
+    supported so as not to break old templates.
     """
 
     if (render_info := _render_info.get()) is not None:
