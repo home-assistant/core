@@ -190,7 +190,7 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
-            if "base" not in errors:
+            if not errors:
                 return self.async_update_reload_and_abort(
                     self.config_entry,
                     data={**self.config_entry.data, **user_input},
