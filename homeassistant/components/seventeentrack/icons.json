@@ -26,5 +26,8 @@
         "default": "mdi:package"
       }
     }
+  },
+  "services": {
+    "get_packages": "mdi:package"
   }
 }

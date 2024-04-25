@@ -122,6 +122,38 @@ async def test_config_does_not_turn_off_debug(hass: HomeAssistant) -> None:
     assert hass.config.debug is True
 
 
+@pytest.mark.parametrize("hass_config", [{"frontend": {}}])
+async def test_asyncio_debug_on_turns_hass_debug_on(
+    mock_hass_config: None,
+    mock_enable_logging: Mock,
+    mock_is_virtual_env: Mock,
+    mock_mount_local_lib_path: AsyncMock,
+    mock_ensure_config_exists: AsyncMock,
+    mock_process_ha_config_upgrade: Mock,
+) -> None:
+    """Test that asyncio debug turns on hass debug."""
+    asyncio.get_running_loop().set_debug(True)
+
+    verbose = Mock()
+    log_rotate_days = Mock()
+    log_file = Mock()
+    log_no_color = Mock()
+
+    hass = await bootstrap.async_setup_hass(
+        runner.RuntimeConfig(
+            config_dir=get_test_config_dir(),
+            verbose=verbose,
+            log_rotate_days=log_rotate_days,
+            log_file=log_file,
+            log_no_color=log_no_color,
+            skip_pip=True,
+            recovery_mode=False,
+        ),
+    )
+
+    assert hass.config.debug is True
+
+
 @pytest.mark.parametrize("load_registries", [False])
 async def test_preload_translations(hass: HomeAssistant) -> None:
     """Test translations are preloaded for all frontend deps and base platforms."""

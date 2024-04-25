@@ -986,6 +986,7 @@ omit =
     homeassistant/components/orvibo/switch.py
     homeassistant/components/osoenergy/__init__.py
     homeassistant/components/osoenergy/const.py
+    homeassistant/components/osoenergy/sensor.py
     homeassistant/components/osoenergy/water_heater.py
     homeassistant/components/osramlightify/light.py
     homeassistant/components/otp/sensor.py
@@ -1157,8 +1158,10 @@ omit =
     homeassistant/components/roborock/coordinator.py
     homeassistant/components/rocketchat/notify.py
     homeassistant/components/romy/__init__.py
+    homeassistant/components/romy/binary_sensor.py
     homeassistant/components/romy/coordinator.py
     homeassistant/components/romy/entity.py
+    homeassistant/components/romy/sensor.py
     homeassistant/components/romy/vacuum.py
     homeassistant/components/roomba/__init__.py
     homeassistant/components/roomba/binary_sensor.py
