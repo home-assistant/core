@@ -2303,6 +2303,38 @@ def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
         ).async_render()
         assert result == "string"
 
+        # Test behavior when current time is same as the input time
+        result = template.Template(
+            (
+                "{{"
+                "  relative_time("
+                "    strptime("
+                '        "2000-01-01 10:00:00 +00:00",'
+                '        "%Y-%m-%d %H:%M:%S %z"'
+                "    )"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "0 seconds"
+
+        # Test behavior when the input time is in the future
+        result = template.Template(
+            (
+                "{{"
+                "  relative_time("
+                "    strptime("
+                '        "2000-01-01 11:00:00 +00:00",'
+                '        "%Y-%m-%d %H:%M:%S %z"'
+                "    )"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "2000-01-01 11:00:00+00:00"
+
         info = template.Template(relative_time_template, hass).async_render_to_info()
         assert info.has_time is True
 
