@@ -11,7 +11,6 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from functools import partial
-from typing import cast
 
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.clients import Clients
@@ -256,7 +255,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         name_fn=lambda port: f"{port.name} RX",
         object_fn=lambda api, obj_id: api.ports[obj_id],
         unique_id_fn=lambda hub, obj_id: f"port_rx-{obj_id}",
-        value_fn=lambda hub, port: cast(float, port.raw.get("rx_bytes-r", 0)),
+        value_fn=lambda hub, port: port.rx_bytes_r,
     ),
     UnifiSensorEntityDescription[Ports, Port](
         key="Port Bandwidth sensor TX",
@@ -274,7 +273,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         name_fn=lambda port: f"{port.name} TX",
         object_fn=lambda api, obj_id: api.ports[obj_id],
         unique_id_fn=lambda hub, obj_id: f"port_tx-{obj_id}",
-        value_fn=lambda hub, port: cast(float, port.raw.get("tx_bytes-r", 0)),
+        value_fn=lambda hub, port: port.tx_bytes_r,
     ),
     UnifiSensorEntityDescription[Clients, Client](
         key="Client uptime",
@@ -461,7 +460,7 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
         if description.is_connected_fn is not None:
             # Send heartbeat if client is connected
             if description.is_connected_fn(self.hub, self._obj_id):
-                self.hub.async_heartbeat(
+                self.hub.update_heartbeat(
                     self._attr_unique_id,
                     dt_util.utcnow() + self.hub.config.option_detection_time,
                 )
@@ -486,4 +485,4 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
 
         if self.entity_description.is_connected_fn is not None:
             # Remove heartbeat registration
-            self.hub.async_heartbeat(self._attr_unique_id)
+            self.hub.remove_heartbeat(self._attr_unique_id)

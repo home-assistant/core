@@ -1956,7 +1956,7 @@
     "folder_watcher": {
       "name": "Folder Watcher",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "foobot": {
@@ -2564,6 +2564,11 @@
       "name": "Legrand Home+ Control",
       "integration_type": "virtual",
       "supported_by": "netatmo"
+    },
+    "homeassistant_sky_connect": {
+      "name": "Home Assistant SkyConnect",
+      "integration_type": "device",
+      "config_flow": true
     },
     "homematic": {
       "name": "Homematic",

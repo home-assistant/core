@@ -183,7 +183,7 @@ aioaseko==0.1.1
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.3.4
+aioautomower==2024.4.3
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.0.0
@@ -222,7 +222,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==24.2.0
+aioesphomeapi==24.3.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -291,7 +291,7 @@ aioopenexchangerates==0.4.0
 aiooui==0.1.5
 
 # homeassistant.components.pegel_online
-aiopegelonline==0.0.9
+aiopegelonline==0.0.10
 
 # homeassistant.components.acmeda
 aiopulse==0.4.4
@@ -340,6 +340,9 @@ aioskybell==22.7.0
 # homeassistant.components.slimproto
 aioslimproto==3.0.0
 
+# homeassistant.components.solaredge
+aiosolaredge==0.2.0
+
 # homeassistant.components.steamist
 aiosteamist==0.3.2
 
@@ -356,7 +359,7 @@ aiotankerkoenig==0.4.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==75
+aiounifi==76
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -463,7 +466,7 @@ base36==0.1.1
 beautifulsoup4==4.12.3
 
 # homeassistant.components.zha
-bellows==0.38.1
+bellows==0.38.2
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected[china]==0.14.6
@@ -572,7 +575,7 @@ dbus-fast==2.21.1
 debugpy==1.8.1
 
 # homeassistant.components.ecovacs
-deebot-client==6.0.2
+deebot-client==7.1.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -778,7 +781,7 @@ glances-api==0.6.0
 goalzero==0.2.2
 
 # homeassistant.components.goodwe
-goodwe==0.2.32
+goodwe==0.3.2
 
 # homeassistant.components.google_mail
 # homeassistant.components.google_tasks
@@ -800,7 +803,7 @@ googlemaps==2.5.1
 gotailwind==0.2.2
 
 # homeassistant.components.govee_ble
-govee-ble==0.31.0
+govee-ble==0.31.2
 
 # homeassistant.components.govee_light_local
 govee-local-api==1.4.4
@@ -837,7 +840,7 @@ ha-av==10.1.1
 ha-ffmpeg==3.2.0
 
 # homeassistant.components.iotawatt
-ha-iotawattpy==0.1.1
+ha-iotawattpy==0.1.2
 
 # homeassistant.components.philips_js
 ha-philipsjs==3.1.1
@@ -877,10 +880,10 @@ hole==0.8.0
 holidays==0.47
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240404.2
+home-assistant-frontend==20240424.1
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.4.3
+home-assistant-intents==2024.4.24
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1074,7 +1077,7 @@ motionblindsble==0.0.9
 motioneye-client==0.3.14
 
 # homeassistant.components.bang_olufsen
-mozart-api==3.2.1.150.6
+mozart-api==3.4.1.8.5
 
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
@@ -1222,7 +1225,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==0.37.1
+plugwise==0.37.3
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1308,7 +1311,7 @@ pyDuotecno==2024.3.2
 pyElectra==1.2.0
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.31.0
+pyRFXtrx==0.31.1
 
 # homeassistant.components.tibber
 pyTibber==0.28.2
@@ -1414,7 +1417,7 @@ pyevilgenius==2.0.0
 pyezviz==0.2.1.2
 
 # homeassistant.components.fibaro
-pyfibaro==0.7.7
+pyfibaro==0.7.8
 
 # homeassistant.components.fido
 pyfido==2.1.2
@@ -1432,7 +1435,7 @@ pyforked-daapd==0.1.14
 pyfreedompro==1.1.0
 
 # homeassistant.components.fritzbox
-pyfritzhome==0.6.10
+pyfritzhome==0.6.11
 
 # homeassistant.components.ifttt
 pyfttt==0.3
@@ -1632,7 +1635,7 @@ pyqwikswitch==0.93
 pyrainbird==4.0.2
 
 # homeassistant.components.risco
-pyrisco==0.6.0
+pyrisco==0.6.1
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6
@@ -1990,9 +1993,6 @@ snapcast==2.3.6
 # homeassistant.components.sonos
 soco==0.30.3
 
-# homeassistant.components.solaredge
-solaredge==0.0.2
-
 # homeassistant.components.solax
 solax==3.1.0
 
@@ -2285,7 +2285,7 @@ zeroconf==0.132.2
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.114
+zha-quirks==0.0.115
 
 # homeassistant.components.zha
 zigpy-deconz==0.23.1
@@ -2300,7 +2300,7 @@ zigpy-zigate==0.12.0
 zigpy-znp==0.12.1
 
 # homeassistant.components.zha
-zigpy==0.63.5
+zigpy==0.64.0
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.55.3

@@ -3173,3 +3173,16 @@ async def test_haos_9_or_later(
     registry = async_get_issue_registry(hass)
     issue = registry.async_get_issue(DOMAIN, "haos_outdated")
     assert issue is None
+
+
+async def test_title_updated_if_mac_address(
+    hass: HomeAssistant, mock_bleak_scanner_start: MagicMock, one_adapter: None
+) -> None:
+    """Test the title is updated if it is the mac address."""
+    entry = MockConfigEntry(
+        domain="bluetooth", title="00:00:00:00:00:01", unique_id="00:00:00:00:00:01"
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.title == "ACME Bluetooth Adapter 5.0 (00:00:00:00:00:01)"
