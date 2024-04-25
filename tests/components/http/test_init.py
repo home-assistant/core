@@ -307,7 +307,10 @@ async def test_peer_cert(hass: HomeAssistant, tmp_path: Path) -> None:
 async def test_emergency_ssl_certificate_when_invalid(
     hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test http can startup with an emergency self signed cert when the current one is broken."""
+    """Test http can startup with an emergency self signed cert when the current one is broken.
+
+    Blabla.
+    """
 
     cert_path, key_path = await hass.async_add_executor_job(
         _setup_broken_ssl_pem_files, tmp_path
