@@ -89,6 +89,7 @@ async def test_listener_update(
                 )
             ]
         )
+    await hass.async_block_till_done()
     assert hass.states.get("sensor.roborock_s7_maxv_filter_time_left").state == str(
         FILTER_REPLACE_TIME - 743
     )
