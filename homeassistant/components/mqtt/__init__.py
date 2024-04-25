@@ -216,6 +216,7 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
     """Handle signals of config entry being updated.
 
     Causes for this is config entry options changing.
+    Blabla.
     """
     await hass.config_entries.async_reload(entry.entry_id)
 
