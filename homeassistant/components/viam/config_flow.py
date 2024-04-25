@@ -111,38 +111,41 @@ class ViamFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             self._data.update(user_input)
-            return await self.async_step_auth()
+
+            if self._data.get(CONF_CREDENTIAL_TYPE) == CRED_TYPE_API_KEY:
+                return await self.async_step_auth_api_key()
+
+            return await self.async_step_auth_robot_location()
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_AUTH_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_auth(
+    async def async_step_auth_api_key(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial step."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            try:
-                self._data.update(user_input)
-                (title, client) = await validate_input(self._data)
-                self._title = title
-                self._client = client
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                return await self.async_step_robot()
-
-        schema = STEP_AUTH_ROBOT_DATA_SCHEMA
-        if self._data.get(CONF_CREDENTIAL_TYPE) == CRED_TYPE_API_KEY:
-            schema = STEP_AUTH_ORG_DATA_SCHEMA
+        """Handle the API Key authentication."""
+        errors = await self.__handle_auth_input(user_input)
+        if errors is None:
+            return await self.async_step_robot()
 
         return self.async_show_form(
-            step_id="auth",
-            data_schema=schema,
+            step_id="auth_api_key",
+            data_schema=STEP_AUTH_ORG_DATA_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_auth_robot_location(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the robot location authentication."""
+        errors = await self.__handle_auth_input(user_input)
+        if errors is None:
+            return await self.async_step_robot()
+
+        return self.async_show_form(
+            step_id="auth_robot_location",
+            data_schema=STEP_AUTH_ROBOT_DATA_SCHEMA,
             errors=errors,
         )
 
@@ -179,6 +182,32 @@ class ViamFlowHandler(ConfigFlow, domain=DOMAIN):
         """Notification that the flow has been removed."""
         if self._client is not None:
             self._client.close()
+
+    async def __handle_auth_input(
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, str] | None:
+        """Validate user input for the common authentication logic.
+
+        Returns:
+            A dictionary with any handled errors if any occurred, or None
+
+        """
+        errors: dict[str, str] | None = None
+        if user_input is not None:
+            try:
+                self._data.update(user_input)
+                (title, client) = await validate_input(self._data)
+                self._title = title
+                self._client = client
+            except CannotConnect:
+                errors = {"base": "cannot_connect"}
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors = {"base": "unknown"}
+        else:
+            errors = {}
+
+        return errors
 
 
 class CannotConnect(HomeAssistantError):
