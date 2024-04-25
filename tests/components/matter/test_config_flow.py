@@ -896,6 +896,90 @@ async def test_addon_running_failures(
     assert result["reason"] == abort_reason
 
 
+@pytest.mark.parametrize("zeroconf_info", [ZEROCONF_INFO_TCP, ZEROCONF_INFO_UDP])
+@pytest.mark.parametrize(
+    (
+        "discovery_info",
+        "discovery_info_error",
+        "client_connect_error",
+        "addon_info_error",
+        "abort_reason",
+        "discovery_info_called",
+        "client_connect_called",
+    ),
+    [
+        (
+            {"config": ADDON_DISCOVERY_INFO},
+            HassioAPIError(),
+            None,
+            None,
+            "addon_get_discovery_info_failed",
+            True,
+            False,
+        ),
+        (
+            {"config": ADDON_DISCOVERY_INFO},
+            None,
+            CannotConnect(Exception("Boom")),
+            None,
+            "cannot_connect",
+            True,
+            True,
+        ),
+        (
+            None,
+            None,
+            None,
+            None,
+            "addon_get_discovery_info_failed",
+            True,
+            False,
+        ),
+        (
+            {"config": ADDON_DISCOVERY_INFO},
+            None,
+            None,
+            HassioAPIError(),
+            "addon_info_failed",
+            False,
+            False,
+        ),
+    ],
+)
+async def test_addon_running_failures_zeroconf(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    addon_running: AsyncMock,
+    addon_info: AsyncMock,
+    get_addon_discovery_info: AsyncMock,
+    client_connect: AsyncMock,
+    discovery_info_error: Exception | None,
+    client_connect_error: Exception | None,
+    addon_info_error: Exception | None,
+    abort_reason: str,
+    discovery_info_called: bool,
+    client_connect_called: bool,
+    not_onboarded: MagicMock,
+    zeroconf_info: ZeroconfServiceInfo,
+) -> None:
+    """Test all failures when add-on is running and not onboarded."""
+    get_addon_discovery_info.side_effect = discovery_info_error
+    client_connect.side_effect = client_connect_error
+    addon_info.side_effect = addon_info_error
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf_info,
+    )
+    await hass.async_block_till_done()
+
+    assert addon_info.call_count == 1
+    assert get_addon_discovery_info.called is discovery_info_called
+    assert client_connect.called is client_connect_called
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == abort_reason
+
+
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_addon_running_already_configured(
     hass: HomeAssistant,
