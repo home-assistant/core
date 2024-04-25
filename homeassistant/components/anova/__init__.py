@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from anova_wifi import (
     AnovaApi,
@@ -55,9 +56,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # websocket, and the coordinator should auto mark as unavailable. But as long as
     # the websocket successfully connected, config entry should setup.
     devices: list[APCWifiDevice] = []
-    if api.websocket_handler is not None:
-        # This should not be None as this point - but typing views it as a possibility.
-        devices = list(api.websocket_handler.devices.values())
+    if TYPE_CHECKING:
+        # api.websocket_handler can't be None after successfully creating the
+        # websocket client
+        assert api.websocket_handler is not None
+    devices = list(api.websocket_handler.devices.values())
     coordinators = [AnovaCoordinator(hass, device) for device in devices]
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = AnovaData(
         api_jwt=api.jwt, coordinators=coordinators, api=api
