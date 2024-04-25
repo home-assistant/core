@@ -1876,6 +1876,11 @@ async def test_replace_failed_node(
 
     client.driver.receive_event(nortek_thermostat_added_event)
     msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "device registered"
+    # Check the keys of the device item
+    assert list(msg["event"]["device"]) == ["name", "id", "manufacturer", "model"]
+
+    msg = await ws_client.receive_json()
     assert msg["event"]["event"] == "node added"
     node_details = {
         "node_id": 67,
@@ -1883,11 +1888,6 @@ async def test_replace_failed_node(
         "ready": False,
     }
     assert msg["event"]["node"] == node_details
-
-    msg = await ws_client.receive_json()
-    assert msg["event"]["event"] == "device registered"
-    # Check the keys of the device item
-    assert list(msg["event"]["device"]) == ["name", "id", "manufacturer", "model"]
 
     # Test receiving interview events
     event = Event(
