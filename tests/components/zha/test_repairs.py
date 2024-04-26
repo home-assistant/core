@@ -12,7 +12,7 @@ from zigpy.application import ControllerApplication
 import zigpy.backups
 from zigpy.exceptions import NetworkSettingsInconsistent
 
-from homeassistant.components.homeassistant_sky_connect import (
+from homeassistant.components.homeassistant_sky_connect.const import (
     DOMAIN as SKYCONNECT_DOMAIN,
 )
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
@@ -59,8 +59,10 @@ def test_detect_radio_hardware(hass: HomeAssistant) -> None:
             "pid": "EA60",
             "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
             "manufacturer": "Nabu Casa",
-            "description": "SkyConnect v1.0",
+            "product": "SkyConnect v1.0",
+            "firmware": "ezsp",
         },
+        version=2,
         domain=SKYCONNECT_DOMAIN,
         options={},
         title="Home Assistant SkyConnect",
@@ -74,8 +76,10 @@ def test_detect_radio_hardware(hass: HomeAssistant) -> None:
             "pid": "EA60",
             "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
             "manufacturer": "Nabu Casa",
-            "description": "Home Assistant Connect ZBT-1",
+            "product": "Home Assistant Connect ZBT-1",
+            "firmware": "ezsp",
         },
+        version=2,
         domain=SKYCONNECT_DOMAIN,
         options={},
         title="Home Assistant Connect ZBT-1",
@@ -265,17 +269,27 @@ async def test_no_warn_on_socket(hass: HomeAssistant) -> None:
     mock_probe.assert_not_called()
 
 
-async def test_probe_failure_exception_handling(caplog) -> None:
+async def test_probe_failure_exception_handling(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test that probe failures are handled gracefully."""
+    logger = logging.getLogger(
+        "homeassistant.components.zha.repairs.wrong_silabs_firmware"
+    )
+    orig_level = logger.level
+
     with (
+        caplog.at_level(logging.DEBUG),
         patch(
             "homeassistant.components.zha.repairs.wrong_silabs_firmware.Flasher.probe_app_type",
             side_effect=RuntimeError(),
-        ),
-        caplog.at_level(logging.DEBUG),
+        ) as mock_probe_app_type,
     ):
+        logger.setLevel(logging.DEBUG)
         await probe_silabs_firmware_type("/dev/ttyZigbee")
+        logger.setLevel(orig_level)
 
+    mock_probe_app_type.assert_awaited()
     assert "Failed to probe application type" in caplog.text
 
 

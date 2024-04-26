@@ -125,13 +125,13 @@ class ImapMessage:
             return str(part.get_payload())
 
     @property
-    def headers(self) -> dict[str, tuple[str,]]:
+    def headers(self) -> dict[str, tuple[str, ...]]:
         """Get the email headers."""
-        header_base: dict[str, tuple[str,]] = {}
+        header_base: dict[str, tuple[str, ...]] = {}
         for key, value in self.email_message.items():
-            header_instances: tuple[str,] = (str(value),)
+            header_instances: tuple[str, ...] = (str(value),)
             if header_base.setdefault(key, header_instances) != header_instances:
-                header_base[key] += header_instances  # type: ignore[assignment]
+                header_base[key] += header_instances
         return header_base
 
     @property
@@ -443,23 +443,24 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
         _LOGGER.debug("Connected to server %s using IMAP push", entry.data[CONF_SERVER])
         super().__init__(hass, imap_client, entry, None)
         self._push_wait_task: asyncio.Task[None] | None = None
+        self.number_of_messages: int | None = None
 
     async def _async_update_data(self) -> int | None:
         """Update the number of unread emails."""
         await self.async_start()
-        return None
+        return self.number_of_messages
 
     async def async_start(self) -> None:
         """Start coordinator."""
         self._push_wait_task = self.hass.async_create_background_task(
-            self._async_wait_push_loop(), "Wait for IMAP data push", eager_start=False
+            self._async_wait_push_loop(), "Wait for IMAP data push"
         )
 
     async def _async_wait_push_loop(self) -> None:
         """Wait for data push from server."""
         while True:
             try:
-                number_of_messages = await self._async_fetch_number_of_messages()
+                self.number_of_messages = await self._async_fetch_number_of_messages()
             except InvalidAuth as ex:
                 self.auth_errors += 1
                 await self._cleanup()
@@ -489,7 +490,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 continue
             else:
                 self.auth_errors = 0
-                self.async_set_updated_data(number_of_messages)
+                self.async_set_updated_data(self.number_of_messages)
             try:
                 idle: asyncio.Future = await self.imap_client.idle_start()
                 await self.imap_client.wait_server_push()
