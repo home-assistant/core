@@ -192,6 +192,7 @@ class Sensor(CoordinatedTPLinkEntity, SensorEntity):
             translation_key=feature.id,
             name=feature.name,
             icon=feature.icon,
+            native_unit_of_measurement=feature.unit,
             entity_registry_enabled_default=feature.category
             is not Feature.Category.Debug,
         )
