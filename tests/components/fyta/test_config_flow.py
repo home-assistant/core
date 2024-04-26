@@ -1,5 +1,6 @@
 """Test the fyta config flow."""
 
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
 from fyta_cli.fyta_exceptions import (
@@ -19,6 +20,8 @@ from tests.common import MockConfigEntry
 
 USERNAME = "fyta_user"
 PASSWORD = "fyta_pass"
+ACCESS_TOKEN = "123xyz"
+EXPIRATION = datetime.fromisoformat("2024-12-31T10:00:00").astimezone(UTC)
 
 
 async def test_user_flow(
@@ -39,7 +42,12 @@ async def test_user_flow(
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == USERNAME
-    assert result2["data"] == {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+    assert result2["data"] == {
+        CONF_USERNAME: USERNAME,
+        CONF_PASSWORD: PASSWORD,
+        "access_token": ACCESS_TOKEN,
+        "expiration": "2024-12-31T10:00:00+00:00",
+    }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -89,6 +97,8 @@ async def test_form_exceptions(
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"]["access_token"] == ACCESS_TOKEN
+    assert result["data"]["expiration"] == "2024-12-31T10:00:00+00:00"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -141,7 +151,12 @@ async def test_reauth(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title=USERNAME,
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        data={
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+            "access_token": "old_token",
+            "expiration": "2024-06-30T10:00:00+00:00",
+        },
     )
     entry.add_to_hass(hass)
 
@@ -178,5 +193,7 @@ async def test_reauth(
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_USERNAME] == "other_username"
     assert entry.data[CONF_PASSWORD] == "other_password"
+    assert entry.data["access_token"] == ACCESS_TOKEN
+    assert entry.data["expiration"] == "2024-12-31T10:00:00+00:00"
 
     assert len(mock_setup_entry.mock_calls) == 1

@@ -39,17 +39,36 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
     ) -> dict[int, dict[str, Any]]:
         """Fetch data from API endpoint."""
 
-        if self.fyta.expiration is None or self.fyta.expiration < datetime.now():
+        if (
+            self.fyta.expiration is None
+            or self.fyta.expiration.timestamp() < datetime.now().timestamp()
+        ):
             await self.renew_authentication()
 
         return await self.fyta.update_all_plants()
 
-    async def renew_authentication(self) -> None:
+    async def renew_authentication(self) -> bool:
         """Renew access token for FYTA API."""
+        credentials: dict[str, str | datetime] = {}
 
         try:
-            await self.fyta.login()
+            credentials = await self.fyta.login()
         except FytaConnectionError as ex:
             raise ConfigEntryNotReady from ex
         except (FytaAuthentificationError, FytaPasswordError) as ex:
             raise ConfigEntryAuthFailed from ex
+
+        if isinstance(credentials["expiration"], datetime):
+            credentials["expiration"] = credentials["expiration"].isoformat()
+
+        new_config_entry = {**self.config_entry.data}
+        new_config_entry["access_token"] = credentials.get("access_token")
+        new_config_entry["expiration"] = credentials.get("expiration")
+
+        self.hass.config_entries.async_update_entry(
+            self.config_entry, data=new_config_entry
+        )
+
+        _LOGGER.info("Credentials successfully updated")
+
+        return True

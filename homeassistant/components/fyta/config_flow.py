@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import datetime
 import logging
 from typing import Any
 
@@ -32,13 +33,14 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     _entry: ConfigEntry | None = None
+    credentials: dict[str, str | datetime] = {}
 
     async def async_auth(self, user_input: Mapping[str, Any]) -> dict[str, str]:
         """Reusable Auth Helper."""
         fyta = FytaConnector(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
 
         try:
-            await fyta.login()
+            self.credentials = await fyta.login()
         except FytaConnectionError:
             return {"base": "cannot_connect"}
         except FytaAuthentificationError:
@@ -51,6 +53,9 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
         finally:
             await fyta.client.close()
 
+        if isinstance(self.credentials["expiration"], datetime):
+            self.credentials["expiration"] = self.credentials["expiration"].isoformat()
+
         return {}
 
     async def async_step_user(
@@ -62,6 +67,7 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
 
             if not (errors := await self.async_auth(user_input)):
+                user_input |= self.credentials
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )
@@ -85,6 +91,7 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._entry is not None
 
         if user_input and not (errors := await self.async_auth(user_input)):
+            user_input |= self.credentials
             return self.async_update_reload_and_abort(
                 self._entry, data={**self._entry.data, **user_input}
             )
