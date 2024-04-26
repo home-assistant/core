@@ -2,7 +2,6 @@
 
 from unittest import mock
 
-from aiohomekit.exceptions import AccessoryNotFoundError
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 from aiohomekit.testing import FakeController
@@ -344,8 +343,8 @@ async def test_light_becomes_unavailable_but_recovers(hass: HomeAssistant) -> No
     helper.pairing.available = False
     with mock.patch.object(
         FakeController,
-        "async_find",
-        side_effect=AccessoryNotFoundError("Accessory not found"),
+        "async_reachable",
+        return_value=False,
     ):
         state = await helper.poll_and_get_state()
     assert state.state == "unavailable"

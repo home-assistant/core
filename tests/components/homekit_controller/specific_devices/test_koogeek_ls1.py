@@ -3,11 +3,7 @@
 from datetime import timedelta
 from unittest import mock
 
-from aiohomekit.exceptions import (
-    AccessoryDisconnectedError,
-    AccessoryNotFoundError,
-    EncryptionError,
-)
+from aiohomekit.exceptions import AccessoryDisconnectedError, EncryptionError
 from aiohomekit.model import CharacteristicsTypes, ServicesTypes
 from aiohomekit.testing import FakeController, FakePairing
 import pytest
@@ -56,8 +52,8 @@ async def test_recover_from_failure(hass: HomeAssistant, failure_cls) -> None:
         mock.patch.object(FakePairing, "get_characteristics") as get_char,
         mock.patch.object(
             FakeController,
-            "async_find",
-            side_effect=AccessoryNotFoundError("Accessory not found"),
+            "async_reachable",
+            return_value=False,
         ),
     ):
         get_char.side_effect = failure_cls("Disconnected")
