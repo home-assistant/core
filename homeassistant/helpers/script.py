@@ -1713,9 +1713,6 @@ class Script:
             # return false after the other script runs were stopped until our task
             # resumes running.
             self._log("Restarting")
-            # Important: yield to the event loop to allow the script to start in case
-            # the script is restarting itself.
-            await asyncio.sleep(0)
             await self.async_stop(update_state=False, spare=run)
 
         if started_action:
