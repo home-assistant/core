@@ -1706,12 +1706,15 @@ class Script:
         run = cls(
             self._hass, self, cast(dict, variables), context, self._log_exceptions
         )
+        has_existing_runs = bool(self._runs)
         self._runs.append(run)
-        if self.script_mode == SCRIPT_MODE_RESTART:
+        if self.script_mode == SCRIPT_MODE_RESTART and has_existing_runs:
             # When script mode is SCRIPT_MODE_RESTART, first add the new run and then
             # stop any other runs. If we stop other runs first, self.is_running will
             # return false after the other script runs were stopped until our task
-            # resumes running.
+            # resumes running. Its important that we check if there are existing
+            # runs before sleeping as otherwise if two runs are started at the exact
+            # same time they will cancel each other out.
             self._log("Restarting")
             # Important: yield to the event loop to allow the script to start in case
             # the script is restarting itself.
