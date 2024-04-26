@@ -7,14 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_NAME,
-    CONF_API_KEY,
-    CONF_NAME,
-    CONF_SENSORS,
-    CONF_URL,
-    Platform,
-)
+from homeassistant.const import ATTR_NAME, CONF_API_KEY, CONF_NAME, CONF_URL, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -30,21 +23,16 @@ from .const import (
     EVENT_API_CALL_SUCCESS,
     SERVICE_API_CALL,
 )
-from .sensor import SENSORS_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
 INSTANCE_SCHEMA = vol.All(
-    cv.deprecated(CONF_SENSORS),
     vol.Schema(
         {
             vol.Optional(CONF_URL, default=DEFAULT_URL): cv.url,
             vol.Optional(CONF_NAME): cv.string,
             vol.Required(CONF_API_USER): cv.string,
             vol.Required(CONF_API_KEY): cv.string,
-            vol.Optional(CONF_SENSORS, default=list(SENSORS_TYPES)): vol.All(
-                cv.ensure_list, vol.Unique(), [vol.In(list(SENSORS_TYPES))]
-            ),
         }
     ),
 )

@@ -32,21 +32,6 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 SensorType = namedtuple("SensorType", ["name", "icon", "unit", "path"])
 
-SENSORS_TYPES = {
-    "name": SensorType("Name", None, None, ["profile", "name"]),
-    "hp": SensorType("HP", "mdi:heart", "HP", ["stats", "hp"]),
-    "maxHealth": SensorType("max HP", "mdi:heart", "HP", ["stats", "maxHealth"]),
-    "mp": SensorType("Mana", "mdi:auto-fix", "MP", ["stats", "mp"]),
-    "maxMP": SensorType("max Mana", "mdi:auto-fix", "MP", ["stats", "maxMP"]),
-    "exp": SensorType("EXP", "mdi:star", "EXP", ["stats", "exp"]),
-    "toNextLevel": SensorType("Next Lvl", "mdi:star", "EXP", ["stats", "toNextLevel"]),
-    "lvl": SensorType(
-        "Lvl", "mdi:arrow-up-bold-circle-outline", "Lvl", ["stats", "lvl"]
-    ),
-    "gp": SensorType("Gold", "mdi:circle-multiple", "Gold", ["stats", "gp"]),
-    "class": SensorType("Class", "mdi:sword", None, ["stats", "class"]),
-}
-
 
 @dataclass(kw_only=True, frozen=True)
 class HabitipySensorEntityDescription(SensorEntityDescription):
