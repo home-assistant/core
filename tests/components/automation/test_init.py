@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components import automation
+from homeassistant.components import automation, script
 from homeassistant.components.automation import (
     ATTR_SOURCE,
     DOMAIN,
@@ -2980,3 +2980,66 @@ async def test_automation_turns_off_other_automation(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
     await hass.async_block_till_done()
     assert len(calls) == 0
+
+
+async def test_two_automations_call_restart_script_same_time(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test two automations that call a restart mode script at the same."""
+    hass.states.async_set("binary_sensor.presence", "off")
+    await hass.async_block_till_done()
+
+    events = async_capture_events(hass, "it_ran")
+
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {
+            script.DOMAIN: {
+                "fire_toggle": {
+                    "sequence": [
+                        {
+                            "event": "it_ran",
+                        }
+                    ]
+                },
+            }
+        },
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "state",
+                        "entity_id": "binary_sensor.presence",
+                        "to": "on",
+                    },
+                    "action": {
+                        "service": "script.fire_toggle",
+                    },
+                    "id": "automation_0",
+                    "mode": "single",
+                },
+                {
+                    "trigger": {
+                        "platform": "state",
+                        "entity_id": "binary_sensor.presence",
+                        "to": "on",
+                    },
+                    "action": {
+                        "service": "script.fire_toggle",
+                    },
+                    "id": "automation_1",
+                    "mode": "single",
+                },
+            ]
+        },
+    )
+
+    hass.states.async_set("binary_sensor.presence", "on")
+    await hass.async_block_till_done()
+    assert len(events) == 2
