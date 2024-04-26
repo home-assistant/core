@@ -22,6 +22,21 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
+  "entity": {
+    "event": {
+      "button": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "single_press": "Single press",
+              "press": "Press",
+              "release": "Release"
+            }
+          }
+        }
+      }
+    }
+  },
   "issues": {
     "deprecated_yaml_import_issue_cannot_connect": {
       "title": "The Lutron YAML configuration import cannot connect to server",
