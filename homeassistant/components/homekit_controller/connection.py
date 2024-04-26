@@ -858,6 +858,7 @@ class HKDevice:
             len(self.entity_map.accessories) == 1
             and self.available
             and not (self.pollable_characteristics - self.watchable_characteristics)
+            and self.pairing.is_available
             and await self.async_is_reachable()
         ):
             # If its a single accessory and all chars are watchable,
