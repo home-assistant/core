@@ -542,7 +542,8 @@ async def hass(
         else:
             exceptions.append(
                 Exception(
-                    f"Received exception handler without exception, but with message: {context["message"]}"
+                    "Received exception handler without exception, "
+                    f"but with message: {context["message"]}"
                 )
             )
         orig_exception_handler(loop, context)
