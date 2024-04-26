@@ -77,7 +77,7 @@ def validate_input(data: dict[str, Any]) -> dict[str, str] | None:
         return {"base": "invalid_account_format"}
     except InvalidAccountLengthError:
         return {"base": "invalid_account_length"}
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Unexpected exception from SIAAccount")
         return {"base": "unknown"}
     if not 1 <= data[CONF_PING_INTERVAL] <= 1440:

@@ -495,7 +495,7 @@ def _safe_repr(obj: Any) -> str:
     """
     try:
         return repr(obj)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         return f"Failed to serialize {type(obj)}"
 
 

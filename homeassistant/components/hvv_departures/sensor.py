@@ -125,7 +125,7 @@ class HVVDepartureSensor(SensorEntity):
                 _LOGGER.warning("Network unavailable: %r", error)
                 self._last_error = ClientConnectorError
             self._attr_available = False
-        except Exception as error:  # pylint: disable=broad-except
+        except Exception as error:  # noqa: BLE001
             if self._last_error != error:
                 _LOGGER.error("Error occurred while fetching data: %r", error)
                 self._last_error = error

@@ -596,7 +596,7 @@ def _async_when_setup(
         """Call the callback."""
         try:
             await when_setup_cb(hass, component)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error handling when_setup callback for %s", component)
 
     if component in hass.config.components:

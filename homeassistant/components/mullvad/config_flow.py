@@ -24,7 +24,7 @@ class MullvadConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(MullvadAPI)
             except MullvadAPIError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(title="Mullvad VPN", data=user_input)

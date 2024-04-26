@@ -61,7 +61,7 @@ def run_callback_threadsafe(
         """Run callback and store result."""
         try:
             future.set_result(callback(*args))
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception as exc:  # noqa: BLE001
             if future.set_running_or_notify_cancel():
                 future.set_exception(exc)
             else:

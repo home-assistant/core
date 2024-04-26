@@ -234,7 +234,7 @@ def _async_process_callbacks(
             hass.async_run_hass_job(
                 callback, discovery_info, ssdp_change, background=True
             )
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Failed to callback info: %s", discovery_info)
 
 

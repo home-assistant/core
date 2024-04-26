@@ -52,7 +52,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         try:
             camera_info = await camera_api.async_get_camera(location)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             _LOGGER.error(
                 "Could not migrate the config entry. No connection to the api"
             )
@@ -78,7 +78,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         try:
             camera_info = await camera_api.async_get_camera(location)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             _LOGGER.error(
                 "Could not migrate the config entry. No connection to the api"
             )

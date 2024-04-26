@@ -780,7 +780,7 @@ class ConfigEntry:
                 self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
 
             await self._async_process_on_unload(hass)
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception as exc:
             _LOGGER.exception(
                 "Error unloading entry %s for %s", self.title, integration.domain
             )
@@ -811,7 +811,7 @@ class ConfigEntry:
             return
         try:
             await component.async_remove_entry(hass, self)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Error calling entry remove callback %s for %s",
                 self.title,
@@ -888,7 +888,7 @@ class ConfigEntry:
             if result:
                 # pylint: disable-next=protected-access
                 hass.config_entries._async_schedule_save()
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Error migrating entry %s for %s", self.title, self.domain
             )

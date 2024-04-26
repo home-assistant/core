@@ -230,7 +230,7 @@ async def async_start(  # noqa: C901
                     key = ORIGIN_ABBREVIATIONS.get(key, key)
                     origin_info[key] = origin_info.pop(abbreviated_key)
                 MQTT_ORIGIN_INFO_SCHEMA(discovery_payload[CONF_ORIGIN])
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 _LOGGER.warning(
                     "Unable to parse origin information "
                     "from discovery message, got %s",

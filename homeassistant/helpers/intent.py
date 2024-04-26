@@ -622,7 +622,7 @@ class DynamicServiceIntentHandler(IntentHandler):
             try:
                 await service_coro
                 success_results.append(target)
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 failed_results.append(target)
                 _LOGGER.exception("Service call failed for %s", state.entity_id)
 

@@ -82,7 +82,7 @@ class CalDavConfigFlow(ConfigFlow, domain=DOMAIN):
         except DAVError as err:
             _LOGGER.warning("CalDAV client error: %s", err)
             return "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return "unknown"
         return None

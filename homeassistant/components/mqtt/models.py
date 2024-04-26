@@ -375,7 +375,7 @@ class EntityTopicState:
             _, entity = self.subscribe_calls.popitem()
             try:
                 entity.async_write_ha_state()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception(
                     "Exception raised when updating state of %s, topic: "
                     "'%s' with payload: %s",

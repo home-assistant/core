@@ -1291,7 +1291,7 @@ def _resolve_integrations_from_root(
     for domain in domains:
         try:
             integration = Integration.resolve_from_root(hass, root_module, domain)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error loading integration: %s", domain)
         else:
             if integration:

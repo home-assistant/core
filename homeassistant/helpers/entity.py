@@ -948,7 +948,7 @@ class Entity(
         if force_refresh:
             try:
                 await self.async_device_update()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Update for %s fails", self.entity_id)
                 return
         elif not self._async_update_ha_state_reported:

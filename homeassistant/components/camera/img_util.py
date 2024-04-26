@@ -6,7 +6,7 @@ from contextlib import suppress
 import logging
 from typing import TYPE_CHECKING, Literal, cast
 
-with suppress(Exception):  # pylint: disable=broad-except
+with suppress(Exception):
     # TurboJPEG imports numpy which may or may not work so
     # we have to guard the import here. We still want
     # to import it at top level so it gets loaded
@@ -98,7 +98,7 @@ class TurboJPEGSingleton:
         """Try to create TurboJPEG only once."""
         try:
             TurboJPEGSingleton.__instance = TurboJPEG()
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Error loading libturbojpeg; Camera snapshot performance will be sub-optimal"
             )

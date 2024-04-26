@@ -104,7 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ConnectTimeout as err:
         _LOGGER.debug("Connection Timeout")
         raise ConfigEntryNotReady from err
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         _LOGGER.error("Authentication Error")
         return False
 

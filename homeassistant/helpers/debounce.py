@@ -138,7 +138,7 @@ class Debouncer(Generic[_R_co]):
                     self._job, background=self._background
                 ):
                     await task
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 self.logger.exception("Unexpected exception from %s", self.function)
             finally:
                 # Schedule a new timer to prevent new runs during cooldown

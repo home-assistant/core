@@ -254,7 +254,7 @@ class AugustConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except RequireValidation:
             validation_required = True
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception as ex:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unhandled"
             description_placeholders = {"error": str(ex)}

@@ -78,7 +78,7 @@ class ProgettiHWSWConfigFlow(ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
             else:
                 user_input.update(info)

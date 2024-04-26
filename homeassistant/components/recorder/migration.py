@@ -183,7 +183,7 @@ def get_schema_version(session_maker: Callable[[], Session]) -> int | None:
     try:
         with session_scope(session=session_maker(), read_only=True) as session:
             return _get_schema_version(session)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Error when determining DB schema version")
         return None
 
@@ -1788,7 +1788,7 @@ def initialize_database(session_maker: Callable[[], Session]) -> bool:
         with session_scope(session=session_maker()) as session:
             return _initialize_database(session)
 
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Error when initialise database")
         return False
 

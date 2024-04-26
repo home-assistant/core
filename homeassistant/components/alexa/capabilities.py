@@ -268,7 +268,7 @@ class AlexaCapability:
                 prop_value = self.get_property(prop_name)
             except UnsupportedProperty:
                 raise
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception(
                     "Unexpected error getting %s.%s property from %s",
                     self.name(),

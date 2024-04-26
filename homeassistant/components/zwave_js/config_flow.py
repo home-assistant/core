@@ -477,7 +477,7 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
             version_info = await validate_input(self.hass, user_input)
         except InvalidInput as err:
             errors["base"] = err.error
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -743,7 +743,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
             version_info = await validate_input(self.hass, user_input)
         except InvalidInput as err:
             errors["base"] = err.error
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:

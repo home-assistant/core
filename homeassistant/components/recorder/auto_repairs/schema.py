@@ -55,7 +55,7 @@ def validate_table_schema_supports_utf8(
         schema_errors = _validate_table_schema_supports_utf8(
             instance, table_object, columns
         )
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Error when validating DB schema")
 
     _log_schema_errors(table_object, schema_errors)
@@ -76,7 +76,7 @@ def validate_table_schema_has_correct_collation(
         schema_errors = _validate_table_schema_has_correct_collation(
             instance, table_object
         )
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Error when validating DB schema")
 
     _log_schema_errors(table_object, schema_errors)
@@ -159,7 +159,7 @@ def validate_db_schema_precision(
         return schema_errors
     try:
         schema_errors = _validate_db_schema_precision(instance, table_object)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Error when validating DB schema")
 
     _log_schema_errors(table_object, schema_errors)

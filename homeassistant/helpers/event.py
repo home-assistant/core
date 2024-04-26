@@ -325,7 +325,7 @@ def _async_dispatch_entity_id_event(
     for job in callbacks_list.copy():
         try:
             hass.async_run_hass_job(job, event)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Error while dispatching event for %s to %s",
                 event.data["entity_id"],
@@ -455,7 +455,7 @@ def _async_dispatch_old_entity_id_or_entity_id_event(
     for job in callbacks_list.copy():
         try:
             hass.async_run_hass_job(job, event)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Error while dispatching event for %s to %s",
                 event.data.get("old_entity_id", event.data["entity_id"]),
@@ -523,7 +523,7 @@ def _async_dispatch_device_id_event(
     for job in callbacks_list.copy():
         try:
             hass.async_run_hass_job(job, event)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Error while dispatching event for %s to %s",
                 event.data["device_id"],
@@ -567,7 +567,7 @@ def _async_dispatch_domain_event(
     for job in callbacks.get(domain, []) + callbacks.get(MATCH_ALL, []):
         try:
             hass.async_run_hass_job(job, event)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Error while processing event %s for domain %s", event, domain
             )

@@ -406,7 +406,7 @@ class EntityPlatform:
                 SLOW_SETUP_MAX_WAIT,
             )
             return False
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             logger.exception(
                 "Error while setting up %s platform for %s",
                 self.platform_name,
@@ -428,7 +428,7 @@ class EntityPlatform:
             return await translation.async_get_translations(
                 self.hass, language, category, {integration}
             )
-        except Exception as err:  # pylint: disable=broad-exception-caught
+        except Exception as err:  # noqa: BLE001
             _LOGGER.debug(
                 "Could not load translations for %s",
                 integration,
@@ -578,7 +578,7 @@ class EntityPlatform:
                 for idx, coro in enumerate(coros):
                     try:
                         await coro
-                    except Exception as ex:  # pylint: disable=broad-except
+                    except Exception as ex:
                         entity = entities[idx]
                         self.logger.exception(
                             "Error adding entity %s for domain %s with platform %s",
@@ -705,7 +705,7 @@ class EntityPlatform:
         if update_before_add:
             try:
                 await entity.async_device_update(warning=False)
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 self.logger.exception("%s: Error on device update!", self.platform_name)
                 entity.add_to_platform_abort()
                 return
@@ -908,7 +908,7 @@ class EntityPlatform:
         for entity in list(self.entities.values()):
             try:
                 await entity.async_remove()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 self.logger.exception(
                     "Error while removing entity %s", entity.entity_id
                 )

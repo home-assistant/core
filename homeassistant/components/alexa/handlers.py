@@ -126,7 +126,7 @@ async def async_api_discovery(
             continue
         try:
             discovered_serialized_entity = alexa_entity.serialize_discovery()
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Unable to serialize %s for discovery", alexa_entity.entity_id
             )

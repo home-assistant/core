@@ -96,7 +96,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except CannotGetMacError:
                 return self.async_abort(reason="device_unsupported")
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -130,7 +130,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except (ApiError, ClientConnectorError, TimeoutError):
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

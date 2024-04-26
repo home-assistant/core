@@ -66,7 +66,7 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 errors["base"] = "unknown"
                 _LOGGER.exception("Unexpected exception")
             else:
@@ -116,7 +116,7 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 errors["base"] = "unknown"
                 _LOGGER.exception("Unexpected exception")
             else:

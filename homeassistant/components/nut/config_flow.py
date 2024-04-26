@@ -183,7 +183,7 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders["error"] = str(ex)
         except AbortFlow:
             raise
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors[CONF_BASE] = "unknown"
         return info, errors, description_placeholders

@@ -298,7 +298,7 @@ async def handle_call_service(
             translation_key=err.translation_key,
             translation_placeholders=err.translation_placeholders,
         )
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:
         connection.logger.exception("Unexpected exception")
         connection.send_error(msg["id"], const.ERR_UNKNOWN_ERROR, str(err))
 

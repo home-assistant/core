@@ -700,7 +700,7 @@ class Recorder(threading.Thread):
         self.is_running = True
         try:
             self._run()
-        except Exception:  # pylint: disable=broad-exception-caught
+        except Exception:
             _LOGGER.exception(
                 "Recorder._run threw unexpected exception, recorder shutting down"
             )
@@ -900,7 +900,7 @@ class Recorder(threading.Thread):
         _LOGGER.debug("Processing task: %s", task)
         try:
             self._process_one_task_or_event_or_recover(task)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error while processing event %s", task)
 
     def _process_one_task_or_event_or_recover(self, task: RecorderTask | Event) -> None:
@@ -941,7 +941,7 @@ class Recorder(threading.Thread):
                 return migration.initialize_database(self.get_session)
             except UnsupportedDialect:
                 break
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception(
                     "Error during connection setup: (retrying in %s seconds)",
                     self.db_retry_wait,
@@ -985,7 +985,7 @@ class Recorder(threading.Thread):
                 return True
             _LOGGER.exception("Database error during schema migration")
             return False
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error during schema migration")
             return False
         else:
@@ -1473,7 +1473,7 @@ class Recorder(threading.Thread):
             self.recorder_runs_manager.end(self.event_session)
         try:
             self._commit_event_session_or_retry()
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error saving the event session during shutdown")
 
         self.event_session.close()

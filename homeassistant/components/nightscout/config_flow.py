@@ -56,7 +56,7 @@ class NightscoutConfigFlow(ConfigFlow, domain=DOMAIN):
                 info = await _validate_input(user_input)
             except InputValidationError as error:
                 errors["base"] = error.base
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

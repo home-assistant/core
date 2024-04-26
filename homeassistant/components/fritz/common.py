@@ -441,7 +441,7 @@ class FritzBoxTools(
                 hosts_info = await self.hass.async_add_executor_job(
                     self.fritz_hosts.get_hosts_info
                 )
-        except Exception as ex:  # pylint: disable=[broad-except]
+        except Exception as ex:  # noqa: BLE001
             if not self.hass.is_stopping:
                 raise HomeAssistantError("Error refreshing hosts info") from ex
 

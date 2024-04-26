@@ -652,7 +652,7 @@ class ReolinkHost:
 
             message = data.decode("utf-8")
             channels = await self._api.ONVIF_event_callback(message)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Error processing ONVIF event for Reolink %s", self._api.nvr_name
             )

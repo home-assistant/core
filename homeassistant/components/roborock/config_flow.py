@@ -72,7 +72,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         except RoborockException:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown_roborock"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         return errors
@@ -95,7 +95,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             except RoborockException:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown_roborock"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

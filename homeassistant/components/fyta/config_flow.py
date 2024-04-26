@@ -45,7 +45,7 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "invalid_auth"}
         except FytaPasswordError:
             return {"base": "invalid_auth", CONF_PASSWORD: "password_error"}
-        except Exception as e:  # pylint: disable=broad-except
+        except Exception as e:  # noqa: BLE001
             _LOGGER.error(e)
             return {"base": "unknown"}
         finally:

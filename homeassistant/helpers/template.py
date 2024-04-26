@@ -666,7 +666,7 @@ class Template:
                 _render_with_context(self.template, compiled, **kwargs)
             except TimeoutError:
                 pass
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 self._exc_info = sys.exc_info()
             finally:
                 self.hass.loop.call_soon_threadsafe(finish_event.set)

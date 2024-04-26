@@ -38,7 +38,7 @@ class AnovaConfligFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except NoDevicesFound:
                 errors["base"] = "no_devices_found"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
             else:
                 # We store device list in config flow in order to persist found devices on restart, as the Anova api get_devices does not return any devices that are offline.

@@ -426,7 +426,7 @@ class WebSocketHandler:
         except Disconnect as ex:
             debug("%s: Connection closed by client: %s", self.description, ex)
 
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             self._logger.exception(
                 "%s: Unexpected error inside websocket API", self.description
             )

@@ -246,7 +246,7 @@ class RequirementsManager:
                     or ex.domain not in integration.after_dependencies
                 ):
                     exceptions.append(ex)
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception as ex:  # noqa: BLE001
                 exceptions.insert(0, ex)
 
         if exceptions:

@@ -995,7 +995,7 @@ def _identify_config_schema(module: ComponentProtocol) -> str | None:
         key = next(k for k in schema if k == module.DOMAIN)
     except (TypeError, AttributeError, StopIteration):
         return None
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Unexpected error identifying config schema")
         return None
 
@@ -1465,7 +1465,7 @@ async def _async_load_and_validate_platform_integration(
             p_integration.integration.documentation,
         )
         config_exceptions.append(exc_info)
-    except Exception as exc:  # pylint: disable=broad-except
+    except Exception as exc:  # noqa: BLE001
         exc_info = ConfigExceptionInfo(
             exc,
             ConfigErrorTranslationKey.PLATFORM_SCHEMA_VALIDATOR_ERR,
@@ -1549,7 +1549,7 @@ async def async_process_component_config(
             )
             config_exceptions.append(exc_info)
             return IntegrationConfigInfo(None, config_exceptions)
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception as exc:  # noqa: BLE001
             exc_info = ConfigExceptionInfo(
                 exc,
                 ConfigErrorTranslationKey.CONFIG_VALIDATOR_UNKNOWN_ERR,
@@ -1574,7 +1574,7 @@ async def async_process_component_config(
             )
             config_exceptions.append(exc_info)
             return IntegrationConfigInfo(None, config_exceptions)
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception as exc:  # noqa: BLE001
             exc_info = ConfigExceptionInfo(
                 exc,
                 ConfigErrorTranslationKey.CONFIG_SCHEMA_UNKNOWN_ERR,
@@ -1609,7 +1609,7 @@ async def async_process_component_config(
             )
             config_exceptions.append(exc_info)
             continue
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception as exc:  # noqa: BLE001
             exc_info = ConfigExceptionInfo(
                 exc,
                 ConfigErrorTranslationKey.PLATFORM_SCHEMA_VALIDATOR_ERR,

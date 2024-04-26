@@ -45,7 +45,7 @@ class OAuth2FlowHandler(
             current_user = await microbees.getMyProfile()
         except MicroBeesException:
             return self.async_abort(reason="invalid_auth")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             self.logger.exception("Unexpected error")
             return self.async_abort(reason="unknown")
 

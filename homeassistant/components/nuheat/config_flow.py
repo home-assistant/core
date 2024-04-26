@@ -76,7 +76,7 @@ class NuHeatConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except InvalidThermostat:
                 errors["base"] = "invalid_thermostat"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 

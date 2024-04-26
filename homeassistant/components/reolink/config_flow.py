@@ -200,7 +200,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
             except (ReolinkError, ReolinkException) as err:
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "cannot_connect"
-            except Exception as err:  # pylint: disable=broad-except
+            except Exception as err:
                 _LOGGER.exception("Unexpected exception")
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "unknown"

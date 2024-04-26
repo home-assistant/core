@@ -95,7 +95,7 @@ class Enigma2ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             errors = {"base": "invalid_auth"}
         except ClientError:
             errors = {"base": "cannot_connect"}
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             errors = {"base": "unknown"}
         else:
             await self.async_set_unique_id(about["info"]["ifaces"][0]["mac"])

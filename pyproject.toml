@@ -310,6 +310,7 @@ disable = [
     "no-else-continue", # RET507
     "no-else-raise", # RET506
     "no-else-return", # RET505
+    "broad-except", # BLE001
     # "no-self-use", # PLR6301  # Optional plugin, not enabled
 
     # Handled by mypy
@@ -676,6 +677,7 @@ select = [
     "B032", # Possible unintentional type annotation (using :). Did you mean to assign (using =)?
     "B904", # Use raise from to specify exception cause
     "B905", # zip() without an explicit strict= parameter
+    "BLE",
     "C", # complexity
     "COM818", # Trailing comma on bare tuple prohibited
     "D", # docstrings

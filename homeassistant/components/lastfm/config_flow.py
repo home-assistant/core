@@ -49,7 +49,7 @@ def get_lastfm_user(api_key: str, username: str) -> tuple[User, dict[str, str]]:
             errors["base"] = "invalid_auth"
         else:
             errors["base"] = "unknown"
-    except Exception:  # pylint:disable=broad-except
+    except Exception:  # noqa: BLE001
         errors["base"] = "unknown"
     return user, errors
 

@@ -353,7 +353,7 @@ class AlexaEntity:
 
             try:
                 capabilities.append(i.serialize_discovery())
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception(
                     "Error serializing %s discovery for %s", i.name(), self.entity
                 )
@@ -379,7 +379,7 @@ def async_get_entities(
         try:
             alexa_entity = ENTITY_ADAPTERS[state.domain](hass, config, state)
             interfaces = list(alexa_entity.interfaces())
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unable to serialize %s for discovery", state.entity_id)
         else:
             if not interfaces:

@@ -246,7 +246,7 @@ class AppleTVManager(DeviceListener):
             if self._task:
                 self._task.cancel()
                 self._task = None
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("An error occurred while disconnecting")
 
     def _start_connect_loop(self) -> None:
@@ -292,7 +292,7 @@ class AppleTVManager(DeviceListener):
             return
         except asyncio.CancelledError:
             pass
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Failed to connect")
             await self.disconnect()
 

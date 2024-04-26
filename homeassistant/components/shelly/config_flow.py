@@ -155,7 +155,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.info = await self._async_get_info(host, port)
             except DeviceConnectionError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -174,7 +174,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "cannot_connect"
                 except CustomPortNotSupported:
                     errors["base"] = "custom_port_not_supported"
-                except Exception:  # pylint: disable=broad-except
+                except Exception:  # noqa: BLE001
                     LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
                 else:
@@ -211,7 +211,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except DeviceConnectionError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

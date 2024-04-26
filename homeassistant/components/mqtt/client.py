@@ -380,7 +380,7 @@ class EnsureJobAfterCooldown:
             await self._task
         except asyncio.CancelledError:
             pass
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error cleaning up task")
 
 

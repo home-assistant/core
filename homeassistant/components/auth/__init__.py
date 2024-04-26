@@ -651,7 +651,7 @@ def websocket_delete_all_refresh_tokens(
             continue
         try:
             hass.auth.async_remove_refresh_token(token)
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             getLogger(__name__).exception(
                 "During refresh token removal, the following error occurred: %s",
                 err,

@@ -438,7 +438,7 @@ class TemplateEntity(Entity):
         try:
             calculated_state = self._async_calculate_state()
             validate_state(calculated_state.state)
-        except Exception as err:  # pylint: disable=broad-exception-caught
+        except Exception as err:  # noqa: BLE001
             self._preview_callback(None, None, None, str(err))
         else:
             assert self._template_result_info
@@ -535,7 +535,7 @@ class TemplateEntity(Entity):
         self._async_setup_templates()
         try:
             self._async_template_startup(None, log_template_error)
-        except Exception as err:  # pylint: disable=broad-exception-caught
+        except Exception as err:  # noqa: BLE001
             preview_callback(None, None, None, str(err))
         return self._call_on_remove_callbacks
 

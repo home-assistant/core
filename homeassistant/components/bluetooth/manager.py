@@ -108,7 +108,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             callback = match[CALLBACK]
             try:
                 callback(service_info, BluetoothChange.ADVERTISEMENT)
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Error in bluetooth callback")
 
         for domain in matched_domains:
@@ -183,7 +183,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             if ble_device_matches(callback_matcher, service_info):
                 try:
                     callback(service_info, BluetoothChange.ADVERTISEMENT)
-                except Exception:  # pylint: disable=broad-except
+                except Exception:
                     _LOGGER.exception("Error in bluetooth callback")
 
         return _async_remove_callback

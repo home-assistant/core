@@ -50,7 +50,7 @@ class Tami4ConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_phone"
             except exceptions.Tami4EdgeAPIException:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -78,7 +78,7 @@ class Tami4ConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except exceptions.Tami4EdgeAPIException:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

@@ -111,7 +111,7 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
                 else:
                     errors["base"] = "cannot_connect"
 
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 errors["base"] = "cannot_connect"
 
         if self._ip_address and self._device_type:

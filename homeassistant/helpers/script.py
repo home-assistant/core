@@ -499,7 +499,7 @@ class _ScriptRun:
                 handler = f"_async_{action}_step"
                 try:
                     await getattr(self, handler)()
-                except Exception as ex:  # pylint: disable=broad-except
+                except Exception as ex:  # noqa: BLE001
                     self._handle_exception(
                         ex, continue_on_error, self._log_exceptions or log_exceptions
                     )

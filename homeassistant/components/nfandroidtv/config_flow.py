@@ -54,7 +54,7 @@ class NFAndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
         except ConnectError:
             _LOGGER.error("Error connecting to device at %s", host)
             return "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return "unknown"
         return None
