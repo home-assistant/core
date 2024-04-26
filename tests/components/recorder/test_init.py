@@ -981,11 +981,12 @@ async def test_defaults_set(hass: HomeAssistant) -> None:
     assert recorder_config["purge_keep_days"] == 10
 
 
-def run_tasks_at_time(hass, test_time):
+def run_tasks_at_time(hass: HomeAssistant, test_time: datetime) -> None:
     """Advance the clock and wait for any callbacks to finish."""
     fire_time_changed(hass, test_time)
-    hass.block_till_done()
+    hass.block_till_done(wait_background_tasks=True)
     get_instance(hass).block_till_done()
+    hass.block_till_done(wait_background_tasks=True)
 
 
 @pytest.mark.parametrize("enable_nightly_purge", [True])
@@ -1225,7 +1226,6 @@ def test_auto_statistics(hass_recorder: Callable[..., HomeAssistant], freezer) -
     test_time = datetime(now.year + 2, 1, 1, 4, 51, 0, tzinfo=tz)
     freezer.move_to(test_time.isoformat())
     run_tasks_at_time(hass, test_time)
-    hass.block_till_done()
 
     hass.bus.listen(
         EVENT_RECORDER_5MIN_STATISTICS_GENERATED, async_5min_stats_updated_listener
@@ -1245,7 +1245,6 @@ def test_auto_statistics(hass_recorder: Callable[..., HomeAssistant], freezer) -
         freezer.move_to(test_time.isoformat())
         run_tasks_at_time(hass, test_time)
         assert len(compile_statistics.mock_calls) == 1
-        hass.block_till_done()
         assert len(stats_5min) == 1
         assert len(stats_hourly) == 0
 
@@ -1256,7 +1255,6 @@ def test_auto_statistics(hass_recorder: Callable[..., HomeAssistant], freezer) -
         freezer.move_to(test_time.isoformat())
         run_tasks_at_time(hass, test_time)
         assert len(compile_statistics.mock_calls) == 1
-        hass.block_till_done()
         assert len(stats_5min) == 2
         assert len(stats_hourly) == 1
 
@@ -1267,7 +1265,6 @@ def test_auto_statistics(hass_recorder: Callable[..., HomeAssistant], freezer) -
         freezer.move_to(test_time.isoformat())
         run_tasks_at_time(hass, test_time)
         assert len(compile_statistics.mock_calls) == 0
-        hass.block_till_done()
         assert len(stats_5min) == 2
         assert len(stats_hourly) == 1
 
@@ -1276,7 +1273,6 @@ def test_auto_statistics(hass_recorder: Callable[..., HomeAssistant], freezer) -
         freezer.move_to(test_time.isoformat())
         run_tasks_at_time(hass, test_time)
         assert len(compile_statistics.mock_calls) == 1
-        hass.block_till_done()
         assert len(stats_5min) == 3
         assert len(stats_hourly) == 1
 
