@@ -22,7 +22,6 @@ from aiohomekit.model import Accessories, Accessory, Transport
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 
-from homeassistant.components.bluetooth import async_address_present
 from homeassistant.components.thread.dataset_store import async_get_preferred_dataset
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_VIA_DEVICE, EVENT_HOMEASSISTANT_STARTED
@@ -842,13 +841,12 @@ class HKDevice:
 
     async def async_is_reachable(self, timeout: float = 5.0) -> bool:
         """Return if the accessory is reachable."""
-        controller = self.pairing.controller
-        if controller.transport_type is TransportType.BLE:
-            return async_address_present(
-                self.hass, self.pairing_data["AccessoryAddress"]
-            )
         try:
-            return bool(await controller.async_find(self.unique_id, timeout=timeout))
+            return bool(
+                await self.pairing.controller.async_find(
+                    self.unique_id, timeout=timeout
+                )
+            )
         except AccessoryNotFoundError:
             return False
 
