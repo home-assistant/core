@@ -45,8 +45,8 @@ class HabitipySensorEntity(StrEnum):
 
     DISPLAY_NAME = "display_name"
     HEALTH = "health"
-    HEALTH_MAX = "health_max"
     MANA = "mana"
+    MANA_MAX = "mana_max"
     EXPERIENCE = "experience"
     EXPERIENCE_MAX = "experience_max"
     LEVEL = "level"
@@ -67,18 +67,18 @@ SENSOR_DESCRIPTIONS: dict[str, HabitipySensorEntityDescription] = {
         suggested_display_precision=0,
         value_path=["stats", "hp"],
     ),
-    HabitipySensorEntity.HEALTH_MAX: HabitipySensorEntityDescription(
-        key=HabitipySensorEntity.HEALTH_MAX,
-        translation_key=HabitipySensorEntity.HEALTH_MAX,
-        native_unit_of_measurement="HP",
-        value_path=["stats", "maxHealth"],
-    ),
     HabitipySensorEntity.MANA: HabitipySensorEntityDescription(
         key=HabitipySensorEntity.MANA,
         translation_key=HabitipySensorEntity.MANA,
         native_unit_of_measurement="MP",
         suggested_display_precision=0,
         value_path=["stats", "mp"],
+    ),
+    HabitipySensorEntity.MANA_MAX: HabitipySensorEntityDescription(
+        key=HabitipySensorEntity.MANA_MAX,
+        translation_key=HabitipySensorEntity.MANA_MAX,
+        native_unit_of_measurement="MP",
+        value_path=["stats", "maxMP"],
     ),
     HabitipySensorEntity.EXPERIENCE: HabitipySensorEntityDescription(
         key=HabitipySensorEntity.EXPERIENCE,
