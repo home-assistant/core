@@ -102,6 +102,7 @@ import homeassistant.util.yaml.loader as yaml_loader
 from tests.testing_config.custom_components.test_constant_deprecation import (
     import_deprecated_constant,
 )
+from tests.typing import MockHAClientWebSocket
 
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
@@ -1754,3 +1755,17 @@ async def snapshot_platform(
         assert entity_entry.disabled_by is None, "Please enable all entities."
         assert (state := hass.states.get(entity_entry.entity_id))
         assert state == snapshot(name=f"{entity_entry.entity_id}-state")
+
+
+async def remove_device(
+    client: MockHAClientWebSocket, device_id: str, config_entry_id: str
+) -> Any:
+    """Remove config entry from a device."""
+    await client.send_json_auto_id(
+        {
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": config_entry_id,
+            "device_id": device_id,
+        }
+    )
+    return await client.receive_json()
