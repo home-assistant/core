@@ -38,5 +38,45 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "name": {
+        "name": "Display name"
+      },
+      "hp": {
+        "name": "Health"
+      },
+      "maxhealth": {
+        "name": "Health max."
+      },
+      "mp": {
+        "name": "Mana"
+      },
+      "maxmp": {
+        "name": "Mana max."
+      },
+      "exp": {
+        "name": "Experience"
+      },
+      "tonextlevel": {
+        "name": "Next Level"
+      },
+      "lvl": {
+        "name": "Level"
+      },
+      "gp": {
+        "name": "Gold"
+      },
+      "class": {
+        "name": "Class",
+        "state": {
+          "warrior": "Warrior",
+          "healer": "Healer",
+          "wizard": "Mage",
+          "rogue": "Rogue"
+        }
+      }
+    }
   }
 }

@@ -1,5 +1,51 @@
 {
   "services": {
     "api_call": "mdi:console"
+  },
+  "entity": {
+    "sensor": {
+      "name": {
+        "default": "mdi:account-circle"
+      },
+      "hp": {
+        "default": "mdi:heart",
+        "state": {
+          "0": "mdi:skull-outline"
+        }
+      },
+      "maxhealth": {
+        "default": "mdi:heart"
+      },
+      "mp": {
+        "default": "mdi:flask",
+        "state": {
+          "0": "mdi:flask-empty-outline"
+        }
+      },
+      "maxmp": {
+        "default": "mdi:flask"
+      },
+      "exp": {
+        "default": "mdi:star-four-points"
+      },
+      "tonextlevel": {
+        "default": "mdi:star-four-points"
+      },
+      "lvl": {
+        "default": "mdi:crown-circle"
+      },
+      "gp": {
+        "default": "mdi:sack"
+      },
+      "class": {
+        "default": "mdi:sword",
+        "state": {
+          "warrior": "mdi:sword",
+          "healer": "mdi:shield",
+          "wizard": "mdi:wizard-hat",
+          "rogue": "mdi:ninja"
+        }
+      }
+    }
   }
 }

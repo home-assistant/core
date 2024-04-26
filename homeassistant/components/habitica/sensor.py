@@ -3,20 +3,22 @@
 from __future__ import annotations
 
 from collections import namedtuple
+from dataclasses import dataclass
 from datetime import timedelta
 from http import HTTPStatus
 import logging
 
 from aiohttp import ClientResponseError
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
 
-from .const import DOMAIN
+from .const import DOMAIN, MANUFACTURER, NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +39,78 @@ SENSORS_TYPES = {
     ),
     "gp": SensorType("Gold", "mdi:circle-multiple", "Gold", ["stats", "gp"]),
     "class": SensorType("Class", "mdi:sword", None, ["stats", "class"]),
+}
+
+
+@dataclass(kw_only=True, frozen=True)
+class HabitipySensorEntityDescription(SensorEntityDescription):
+    """Habitipy Sensor Description."""
+
+    value_path: list[str]
+
+
+SENSOR_DESCRIPTIONS: dict[str, HabitipySensorEntityDescription] = {
+    "name": HabitipySensorEntityDescription(
+        key="name",
+        translation_key="name",
+        value_path=["profile", "name"],
+    ),
+    "hp": HabitipySensorEntityDescription(
+        key="hp",
+        translation_key="hp",
+        native_unit_of_measurement="HP",
+        suggested_display_precision=0,
+        value_path=["stats", "hp"],
+    ),
+    "maxHealth": HabitipySensorEntityDescription(
+        key="maxHealth",
+        translation_key="maxhealth",
+        native_unit_of_measurement="HP",
+        value_path=["stats", "maxHealth"],
+    ),
+    "mp": HabitipySensorEntityDescription(
+        key="mp",
+        translation_key="mp",
+        native_unit_of_measurement="MP",
+        suggested_display_precision=0,
+        value_path=["stats", "mp"],
+    ),
+    "maxMP": HabitipySensorEntityDescription(
+        key="maxMP",
+        translation_key="maxmp",
+        native_unit_of_measurement="MP",
+        value_path=["stats", "maxMP"],
+    ),
+    "exp": HabitipySensorEntityDescription(
+        key="exp",
+        translation_key="exp",
+        native_unit_of_measurement="XP",
+        value_path=["stats", "exp"],
+    ),
+    "toNextLevel": HabitipySensorEntityDescription(
+        key="toNextLevel",
+        translation_key="tonextlevel",
+        native_unit_of_measurement="XP",
+        value_path=["stats", "toNextLevel"],
+    ),
+    "lvl": HabitipySensorEntityDescription(
+        key="lvl",
+        translation_key="lvl",
+        native_unit_of_measurement="Lvl",
+        value_path=["stats", "lvl"],
+    ),
+    "gp": HabitipySensorEntityDescription(
+        key="gp",
+        translation_key="gp",
+        native_unit_of_measurement="🜚",  # alchemy symbol for gold
+        suggested_display_precision=2,
+        value_path=["stats", "gp"],
+    ),
+    "class": HabitipySensorEntityDescription(
+        key="class",
+        translation_key="class",
+        value_path=["stats", "class"],
+    ),
 }
 
 TASKS_TYPES = {
@@ -92,7 +166,8 @@ async def async_setup_entry(
     await sensor_data.update()
 
     entities: list[SensorEntity] = [
-        HabitipySensor(name, sensor_type, sensor_data) for sensor_type in SENSORS_TYPES
+        HabitipySensor(sensor_data, description, config_entry)
+        for description in SENSOR_DESCRIPTIONS.values()
     ]
     entities.extend(
         HabitipyTaskSensor(name, task_type, sensor_data) for task_type in TASKS_TYPES
@@ -153,41 +228,37 @@ class HabitipyData:
 class HabitipySensor(SensorEntity):
     """A generic Habitica sensor."""
 
-    def __init__(self, name, sensor_name, updater):
+    _attr_has_entity_name = True
+    entity_description: HabitipySensorEntityDescription
+
+    def __init__(
+        self,
+        updater,
+        entity_description: HabitipySensorEntityDescription,
+        entry: ConfigEntry,
+    ) -> None:
         """Initialize a generic Habitica sensor."""
-        self._name = name
-        self._sensor_name = sensor_name
-        self._sensor_type = SENSORS_TYPES[sensor_name]
-        self._state = None
+        super().__init__()
+        assert entry.unique_id
         self._updater = updater
+        self.entity_description = entity_description
+        self._attr_unique_id = f"{entry.unique_id}_{entity_description.key}"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer=MANUFACTURER,
+            model=NAME,
+            name=entry.data[CONF_NAME],
+            configuration_url=entry.data[CONF_URL],
+            identifiers={(DOMAIN, entry.unique_id)},
+        )
 
     async def async_update(self) -> None:
         """Update Condition and Forecast."""
         await self._updater.update()
         data = self._updater.data
-        for element in self._sensor_type.path:
+        for element in self.entity_description.value_path:
             data = data[element]
-        self._state = data
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return self._sensor_type.icon
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{DOMAIN}_{self._name}_{self._sensor_name}"
-
-    @property
-    def native_value(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._sensor_type.unit
+        self._attr_native_value = data
 
 
 class HabitipyTaskSensor(SensorEntity):
