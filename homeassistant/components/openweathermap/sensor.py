@@ -32,6 +32,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ATTR_API_CLOUDS,
     ATTR_API_CONDITION,
+    ATTR_API_CURRENT,
     ATTR_API_DEW_POINT,
     ATTR_API_FEELS_LIKE_TEMPERATURE,
     ATTR_API_FORECAST,
@@ -315,7 +316,9 @@ class OpenWeatherMapSensor(AbstractOpenWeatherMapSensor):
     @property
     def native_value(self) -> StateType:
         """Return the state of the device."""
-        return self._weather_coordinator.data.get(self.entity_description.key, None)
+        return self._weather_coordinator.data[ATTR_API_CURRENT].get(
+            self.entity_description.key, None
+        )
 
 
 class OpenWeatherMapForecastSensor(AbstractOpenWeatherMapSensor):

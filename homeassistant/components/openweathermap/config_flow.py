@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
-from pyowm import OWM
-from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
+from pyopenweathermap import OWMClient, RequestError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LANGUAGE,
@@ -42,7 +46,7 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OpenWeatherMapOptionsFlow(config_entry)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 
@@ -54,14 +58,10 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             try:
-                api_online = await _is_owm_api_online(
-                    self.hass, user_input[CONF_API_KEY], latitude, longitude
-                )
-                if not api_online:
+                api_key_valid = await _is_owm_api_key_valid(user_input[CONF_API_KEY])
+                if not api_key_valid:
                     errors["base"] = "invalid_api_key"
-            except UnauthorizedError:
-                errors["base"] = "invalid_api_key"
-            except APIRequestError:
+            except RequestError:
                 errors["base"] = "cannot_connect"
 
             if not errors:
@@ -98,7 +98,7 @@ class OpenWeatherMapOptionsFlow(OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -129,6 +129,6 @@ class OpenWeatherMapOptionsFlow(OptionsFlow):
         )
 
 
-async def _is_owm_api_online(hass, api_key, lat, lon):
-    owm = OWM(api_key).weather_manager()
-    return await hass.async_add_executor_job(owm.weather_at_coords, lat, lon)
+async def _is_owm_api_key_valid(api_key):
+    owm_client = OWMClient(api_key)
+    return await owm_client.validate_key()

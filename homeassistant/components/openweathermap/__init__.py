@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from pyopenweathermap import OWMClient
 from pyowm import OWM
 from pyowm.utils.config import get_default_config
 
@@ -45,9 +46,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     config_dict = _get_owm_config(language)
 
+    owm_client = OWMClient(api_key, lang=language)
     owm = OWM(api_key, config_dict).weather_manager()
     weather_coordinator = WeatherUpdateCoordinator(
-        owm, latitude, longitude, forecast_mode, hass
+        owm_client, owm, latitude, longitude, forecast_mode, hass
     )
 
     await weather_coordinator.async_config_entry_first_refresh()

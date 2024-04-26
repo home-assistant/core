@@ -4,21 +4,29 @@ import asyncio
 from datetime import timedelta
 import logging
 
+from pyopenweathermap import (
+    CurrentWeather,
+    DailyWeatherForecast,
+    HourlyWeatherForecast,
+    OWMClient,
+    WeatherReport,
+)
 from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_SUNNY,
 )
-from homeassistant.const import UnitOfTemperature
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import sun
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
-from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
     ATTR_API_CLOUDS,
     ATTR_API_CONDITION,
+    ATTR_API_CURRENT,
+    ATTR_API_DAILY_FORECAST,
     ATTR_API_DEW_POINT,
     ATTR_API_FEELS_LIKE_TEMPERATURE,
     ATTR_API_FORECAST,
@@ -34,6 +42,7 @@ from .const import (
     ATTR_API_FORECAST_TIME,
     ATTR_API_FORECAST_WIND_BEARING,
     ATTR_API_FORECAST_WIND_SPEED,
+    ATTR_API_HOURLY_FORECAST,
     ATTR_API_HUMIDITY,
     ATTR_API_PRECIPITATION_KIND,
     ATTR_API_PRESSURE,
@@ -64,9 +73,18 @@ WEATHER_UPDATE_INTERVAL = timedelta(minutes=10)
 class WeatherUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
     """Weather data update coordinator."""
 
-    def __init__(self, owm, latitude, longitude, forecast_mode, hass):
+    def __init__(
+        self,
+        owm_client: OWMClient,
+        owm,
+        latitude,
+        longitude,
+        forecast_mode,
+        hass: HomeAssistant,
+    ) -> None:
         """Initialize coordinator."""
-        self._owm_client = owm
+        self._owm_client = owm_client
+        self._owm_client_old = owm
         self._latitude = latitude
         self._longitude = longitude
         self.forecast_mode = forecast_mode
@@ -83,8 +101,13 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-e
         data = {}
         async with asyncio.timeout(20):
             try:
-                weather_response = await self._get_owm_weather()
-                data = self._convert_weather_response(weather_response)
+                weather_report = await self._owm_client.get_weather(
+                    self._latitude, self._longitude
+                )
+                weather_response_old = await self._get_owm_weather()
+                data = self._convert_weather_response(
+                    weather_report, weather_response_old
+                )
             except (APIRequestError, UnauthorizedError) as error:
                 raise UpdateFailed(error) from error
         return data
@@ -96,7 +119,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-e
             FORECAST_MODE_ONECALL_DAILY,
         ):
             weather = await self.hass.async_add_executor_job(
-                self._owm_client.one_call, self._latitude, self._longitude
+                self._owm_client_old.one_call, self._latitude, self._longitude
             )
         else:
             weather = await self.hass.async_add_executor_job(
@@ -108,8 +131,10 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-e
     def _get_legacy_weather_and_forecast(self):
         """Get weather and forecast data from OWM."""
         interval = self._get_legacy_forecast_interval()
-        weather = self._owm_client.weather_at_coords(self._latitude, self._longitude)
-        forecast = self._owm_client.forecast_at_coords(
+        weather = self._owm_client_old.weather_at_coords(
+            self._latitude, self._longitude
+        )
+        forecast = self._owm_client_old.forecast_at_coords(
             self._latitude, self._longitude, interval, self._forecast_limit
         )
         return LegacyWeather(weather.weather, forecast.forecast.weathers)
@@ -121,34 +146,92 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-e
             interval = "3h"
         return interval
 
-    def _convert_weather_response(self, weather_response):
+    def _convert_weather_response(
+        self, weather_report: WeatherReport, weather_response_old
+    ):
         """Format the weather response correctly."""
-        current_weather = weather_response.current
-        forecast_weather = self._get_forecast_from_weather_response(weather_response)
+        current_weather_old = weather_response_old.current
+        forecast_weather_old = self._get_forecast_from_weather_response(
+            weather_response_old
+        )
 
         return {
-            ATTR_API_TEMPERATURE: current_weather.temperature("celsius").get("temp"),
-            ATTR_API_FEELS_LIKE_TEMPERATURE: current_weather.temperature("celsius").get(
-                "feels_like"
-            ),
-            ATTR_API_DEW_POINT: self._fmt_dewpoint(current_weather.dewpoint),
-            ATTR_API_PRESSURE: current_weather.pressure.get("press"),
-            ATTR_API_HUMIDITY: current_weather.humidity,
-            ATTR_API_WIND_BEARING: current_weather.wind().get("deg"),
-            ATTR_API_WIND_GUST: current_weather.wind().get("gust"),
-            ATTR_API_WIND_SPEED: current_weather.wind().get("speed"),
-            ATTR_API_CLOUDS: current_weather.clouds,
-            ATTR_API_RAIN: self._get_rain(current_weather.rain),
-            ATTR_API_SNOW: self._get_snow(current_weather.snow),
+            ATTR_API_CURRENT: self._get_current_weather_data(weather_report.current),
+            ATTR_API_HOURLY_FORECAST: [
+                self._get_hourly_forecast_weather_data(item)
+                for item in weather_report.hourly_forecast
+            ],
+            ATTR_API_DAILY_FORECAST: [
+                self._get_daily_forecast_weather_data(item)
+                for item in weather_report.daily_forecast
+            ],
+            ATTR_API_RAIN: self._get_rain(current_weather_old.rain),
+            ATTR_API_SNOW: self._get_snow(current_weather_old.snow),
             ATTR_API_PRECIPITATION_KIND: self._calc_precipitation_kind(
-                current_weather.rain, current_weather.snow
+                current_weather_old.rain, current_weather_old.snow
             ),
-            ATTR_API_WEATHER: current_weather.detailed_status,
-            ATTR_API_CONDITION: self._get_condition(current_weather.weather_code),
-            ATTR_API_UV_INDEX: current_weather.uvi,
-            ATTR_API_VISIBILITY_DISTANCE: current_weather.visibility_distance,
-            ATTR_API_WEATHER_CODE: current_weather.weather_code,
-            ATTR_API_FORECAST: forecast_weather,
+            ATTR_API_FORECAST: forecast_weather_old,
+        }
+
+    def _get_current_weather_data(self, current_weather: CurrentWeather):
+        return {
+            ATTR_API_CONDITION: self._get_condition(current_weather.get_weather().id),
+            ATTR_API_TEMPERATURE: current_weather.temperature,
+            ATTR_API_FEELS_LIKE_TEMPERATURE: current_weather.feels_like,
+            ATTR_API_PRESSURE: current_weather.pressure,
+            ATTR_API_HUMIDITY: current_weather.humidity,
+            ATTR_API_DEW_POINT: current_weather.dew_point,
+            ATTR_API_CLOUDS: current_weather.clouds,
+            ATTR_API_WIND_SPEED: current_weather.wind_speed,
+            ATTR_API_WIND_GUST: current_weather.wind_gust,
+            ATTR_API_WIND_BEARING: str(current_weather.wind_deg),
+            ATTR_API_WEATHER: current_weather.get_weather().description,
+            ATTR_API_WEATHER_CODE: current_weather.get_weather().id,
+            ATTR_API_UV_INDEX: current_weather.uv_index,
+            ATTR_API_VISIBILITY_DISTANCE: current_weather.visibility,
+        }
+
+    def _get_hourly_forecast_weather_data(self, forecast: HourlyWeatherForecast):
+        return {
+            ATTR_API_FORECAST_TIME: {},
+            ATTR_API_CONDITION: self._get_condition(forecast.get_weather().id),
+            ATTR_API_TEMPERATURE: forecast.temperature,
+            ATTR_API_FEELS_LIKE_TEMPERATURE: forecast.feels_like,
+            ATTR_API_PRESSURE: forecast.pressure,
+            ATTR_API_HUMIDITY: forecast.humidity,
+            ATTR_API_DEW_POINT: forecast.dew_point,
+            ATTR_API_CLOUDS: forecast.clouds,
+            ATTR_API_WIND_SPEED: forecast.wind_speed,
+            ATTR_API_WIND_GUST: forecast.wind_gust,
+            ATTR_API_WIND_BEARING: str(forecast.wind_deg),
+            ATTR_API_WEATHER: forecast.get_weather().description,
+            ATTR_API_WEATHER_CODE: forecast.get_weather().id,
+            ATTR_API_UV_INDEX: forecast.uv_index,
+            ATTR_API_VISIBILITY_DISTANCE: forecast.visibility,
+            ATTR_API_FORECAST_PRECIPITATION_PROBABILITY: forecast.precipitation_probability,
+            ATTR_API_FORECAST_PRECIPITATION: {},
+        }
+
+    def _get_daily_forecast_weather_data(self, forecast: DailyWeatherForecast):
+        return {
+            ATTR_API_FORECAST_TIME: {},
+            ATTR_API_CONDITION: self._get_condition(forecast.get_weather().id),
+            ATTR_API_TEMPERATURE: forecast.temperature.max,
+            ATTR_API_FORECAST_TEMP_LOW: forecast.temperature.min,
+            ATTR_API_FEELS_LIKE_TEMPERATURE: forecast.feels_like.day,
+            ATTR_API_PRESSURE: forecast.pressure,
+            ATTR_API_HUMIDITY: forecast.humidity,
+            ATTR_API_DEW_POINT: forecast.dew_point,
+            ATTR_API_CLOUDS: forecast.clouds,
+            ATTR_API_WIND_SPEED: forecast.wind_speed,
+            ATTR_API_WIND_GUST: forecast.wind_gust,
+            ATTR_API_WIND_BEARING: str(forecast.wind_deg),
+            ATTR_API_WEATHER: forecast.get_weather().description,
+            ATTR_API_WEATHER_CODE: forecast.get_weather().id,
+            ATTR_API_UV_INDEX: forecast.uv_index,
+            ATTR_API_VISIBILITY_DISTANCE: forecast.visibility,
+            ATTR_API_FORECAST_PRECIPITATION_PROBABILITY: forecast.precipitation_probability,
+            ATTR_API_FORECAST_PRECIPITATION: {},
         }
 
     def _get_forecast_from_weather_response(self, weather_response):
@@ -197,18 +280,6 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-e
             forecast[ATTR_API_FORECAST_TEMP] = entry.temperature("celsius").get("temp")
 
         return forecast
-
-    @staticmethod
-    def _fmt_dewpoint(dewpoint):
-        """Format the dewpoint data."""
-        if dewpoint is not None:
-            return round(
-                TemperatureConverter.convert(
-                    dewpoint, UnitOfTemperature.KELVIN, UnitOfTemperature.CELSIUS
-                ),
-                1,
-            )
-        return None
 
     @staticmethod
     def _get_rain(rain):

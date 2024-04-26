@@ -2021,6 +2021,9 @@ pyombi==0.1.10
 # homeassistant.components.openuv
 pyopenuv==2023.02.0
 
+# homeassistant.components.openweathermap
+pyopenweathermap==0.0.1
+
 # homeassistant.components.opnsense
 pyopnsense==0.4.0
 
@@ -2040,9 +2043,6 @@ pyotp==2.8.0
 
 # homeassistant.components.overkiz
 pyoverkiz==1.13.10
-
-# homeassistant.components.openweathermap
-pyowm==3.2.0
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
