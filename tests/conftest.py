@@ -856,7 +856,7 @@ def hass_ws_client(
             data["id"] = next(id_generator)
             return websocket.send_json(data)
 
-        async def _remove_device_from_config_entry(
+        async def _remove_device(
             device_id: str, config_entry_id: str
         ) -> Coroutine[Any, Any, Any]:
             await _send_json_auto_id(
@@ -872,9 +872,7 @@ def hass_ws_client(
         wrapped_websocket = cast(MockHAClientWebSocket, websocket)
         wrapped_websocket.client = client
         wrapped_websocket.send_json_auto_id = _send_json_auto_id
-        wrapped_websocket.remove_device_from_config_entry = (
-            _remove_device_from_config_entry
-        )
+        wrapped_websocket.remove_device = _remove_device
         return wrapped_websocket
 
     return create_client
