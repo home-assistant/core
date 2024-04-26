@@ -27,10 +27,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     async def async_get_monzo_api_data() -> MonzoSensorData:
+        monzo_data: MonzoData = hass.data[DOMAIN][entry.entry_id]
         accounts = await external_api.user_account.accounts()
         pots = await external_api.user_account.pots()
-        hass.data[DOMAIN][entry.entry_id].accounts = accounts
-        hass.data[DOMAIN][entry.entry_id].pots = pots
+        monzo_data.accounts = accounts
+        monzo_data.pots = pots
         return MonzoSensorData(accounts=accounts, pots=pots)
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
