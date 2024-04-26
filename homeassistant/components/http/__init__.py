@@ -573,6 +573,34 @@ class HomeAssistantHTTP:
             context.load_cert_chain(cert_pem.name, key_pem.name)
         return context
 
+    async def _socket_set_ownership(self, socket_path: str) -> None:
+        """Set the configured uid/gid and permissions on the socket."""
+        # They didn't find a way to put this in aiohttp yet so we have to do it here
+        # https://github.com/aio-libs/aiohttp/issues/4155#issuecomment-643509809
+
+        def _set_permissions() -> None:
+            if self.socket_permissions is None:
+                return
+            os.chmod(socket_path, self.socket_permissions)
+
+        def _set_user_group() -> None:
+            shutil.chown(socket_path, self.socket_user or -1, self.socket_group or -1)
+
+        if self.socket_permissions is not None:
+            try:
+                await self.hass.async_add_executor_job(_set_permissions)
+            except OSError as error:
+                _LOGGER.error(
+                    "Failed to change permissions on %s: %s", socket_path, error
+                )
+        if self.socket_user is not None or self.socket_group is not None:
+            try:
+                await self.hass.async_add_executor_job(_set_user_group)
+            except OSError as error:
+                _LOGGER.error(
+                    "Failed to change user/group on %s: %s", socket_path, error
+                )
+
     async def start(self) -> None:
         """Start the aiohttp server."""
         # Aiohttp freezes apps after start so that no changes can be made.
@@ -610,26 +638,7 @@ class HomeAssistantHTTP:
             )
 
         if socket_path is not None:
-            # They didn't find a way to put this in aiohttp yet so we have to do it here
-            # https://github.com/aio-libs/aiohttp/issues/4155#issuecomment-643509809
-            if self.socket_permissions is not None:
-                try:
-                    os.chmod(socket_path, self.socket_permissions)
-                except OSError as error:
-                    _LOGGER.error(
-                        "Failed to change permissions on %s: %s", socket_path, error
-                    )
-            if self.socket_user is not None or self.socket_group is not None:
-                try:
-                    shutil.chown(
-                        socket_path,
-                        self.socket_user or -1,
-                        self.socket_group or -1,
-                    )
-                except OSError as error:
-                    _LOGGER.error(
-                        "Failed to change user/group on %s: %s", socket_path, error
-                    )
+            await self._socket_set_ownership(socket_path)
 
         _LOGGER.info("Now listening on %s", self.site.name)
 
