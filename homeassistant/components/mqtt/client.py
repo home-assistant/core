@@ -40,7 +40,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.logging import catch_log_exception
 
@@ -991,8 +990,6 @@ class MQTT:
             msg.qos,
             msg.payload[0:8192],
         )
-        timestamp = dt_util.utcnow()
-
         subscriptions = self._matching_subscriptions(topic)
         msg_cache_by_subscription_topic: dict[str, ReceiveMessage] = {}
 
@@ -1030,7 +1027,7 @@ class MQTT:
                     msg.qos,
                     msg.retain,
                     subscription_topic,
-                    timestamp,
+                    msg.timestamp,
                 )
                 msg_cache_by_subscription_topic[subscription_topic] = receive_msg
             else:
