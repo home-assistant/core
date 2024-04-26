@@ -4,6 +4,7 @@ The v23 schema used for these tests has been slightly modified to add the
 EventData table to allow the recorder to startup successfully.
 """
 
+import datetime
 from functools import partial
 import importlib
 import json
@@ -406,6 +407,9 @@ def test_delete_duplicates_non_identical(
     caplog: pytest.LogCaptureFixture, tmp_path: Path
 ) -> None:
     """Test removal of duplicated statistics."""
+
+    assert dt_util.DEFAULT_TIME_ZONE is datetime.UTC
+
     test_dir = tmp_path.joinpath("sqlite")
     test_dir.mkdir()
     test_db_file = test_dir.joinpath("test_run_info.db")
