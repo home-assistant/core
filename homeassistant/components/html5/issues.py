@@ -19,7 +19,7 @@ FAILED_IMPORT_LOG = """Loading HTML5 push notification via configuration.yaml is
  and setup HTML5 from scratch via the UI.""".replace("\n", "")
 
 
-def create_issue(hass: HomeAssistant, import_success: bool):
+def async_create_html5_issue(hass: HomeAssistant, import_success: bool):
     """Create issues for HTML5."""
     _LOGGER.warning(SUCCESSFUL_IMPORT_LOG if import_success else FAILED_IMPORT_LOG)
 

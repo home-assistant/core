@@ -9,7 +9,7 @@ from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_HASS_CONFIG, DOMAIN
-from .issues import create_issue
+from .issues import async_create_html5_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 # the configuration has already been imported
                 # but the YAML configuration is still present
                 if existing_config_entry:
-                    create_issue(hass, True)
+                    async_create_html5_issue(hass, True)
                     return True
                 hass.async_create_task(
                     hass.config_entries.flow.async_init(

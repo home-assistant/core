@@ -1,7 +1,7 @@
 {
   "domain": "html5",
   "name": "HTML5 Push Notifications",
-  "codeowners": [],
+  "codeowners": ["@alexyao2015"],
   "config_flow": true,
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/html5",

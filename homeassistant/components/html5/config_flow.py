@@ -14,7 +14,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 import homeassistant.helpers.config_validation as cv
 
 from .const import ATTR_VAPID_EMAIL, ATTR_VAPID_PRV_KEY, ATTR_VAPID_PUB_KEY, DOMAIN
-from .issues import create_issue
+from .issues import async_create_html5_issue
 
 EMAIL_REGEX = r"^([a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$"
 
@@ -96,7 +96,7 @@ class HTML5ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle config import from yaml."""
         _, flow_result = self._create_entry(import_config)
         if not flow_result:
-            create_issue(self.hass, False)
+            async_create_html5_issue(self.hass, False)
             return self.async_abort(reason="invalid_config")
-        create_issue(self.hass, True)
+        async_create_html5_issue(self.hass, True)
         return flow_result
