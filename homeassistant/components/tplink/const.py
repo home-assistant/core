@@ -25,4 +25,5 @@ PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     #    Platform.UPDATE,
     Platform.NUMBER,
+    Platform.CLIMATE,
 ]

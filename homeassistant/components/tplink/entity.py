@@ -95,6 +95,11 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         if feature is not None:
             self._attr_unique_id = f"{legacy_device_id(device)}_{feature.id}"
             self._attr_entity_category = self._category_for_feature(feature)
+            _LOGGER.warning(
+                "Initializing feature-based %s with category %s",
+                self._attr_unique_id,
+                self._attr_entity_category,
+            )
 
         # Otherwise, if we have entity_description, we use its key
         elif self._attr_unique_id is None and hasattr(self, "entity_description"):
@@ -141,14 +146,15 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         match feature.category:
             case Feature.Category.Primary:  # Main controls have no category
                 return None
+            case Feature.Category.Info:
+                return None
             case Feature.Category.Config:
                 return EntityCategory.CONFIG
-            case Feature.Category.Info:
-                return EntityCategory.DIAGNOSTIC
             case Feature.Category.Debug:
                 return EntityCategory.DIAGNOSTIC
 
     @abstractmethod
+    @callback
     def _async_update_attrs(self):
         """Implement to update the entity internals."""
         raise NotImplementedError
@@ -195,6 +201,7 @@ def _entities_for_device(
             DeviceType.Bulb,
             DeviceType.LightStrip,
             DeviceType.Dimmer,
+            DeviceType.Thermostat,
         ]
         if (
             feat.category == Feature.Category.Primary
