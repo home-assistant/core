@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components import automation, script
+from homeassistant.components import automation, input_boolean, script
 from homeassistant.components.automation import (
     ATTR_SOURCE,
     DOMAIN,
@@ -41,6 +41,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import (
     SCRIPT_MODE_CHOICES,
     SCRIPT_MODE_PARALLEL,
@@ -2988,8 +2989,22 @@ async def test_two_automations_call_restart_script_same_time(
     """Test two automations that call a restart mode script at the same."""
     hass.states.async_set("binary_sensor.presence", "off")
     await hass.async_block_till_done()
+    events = []
 
-    events = async_capture_events(hass, "it_ran")
+    @callback
+    def _save_event(event):
+        events.append(event)
+
+    assert await async_setup_component(
+        hass,
+        input_boolean.DOMAIN,
+        {
+            input_boolean.DOMAIN: {
+                "test_1": None,
+            }
+        },
+    )
+    cancel = async_track_state_change_event(hass, "input_boolean.test_1", _save_event)
 
     assert await async_setup_component(
         hass,
@@ -2999,7 +3014,8 @@ async def test_two_automations_call_restart_script_same_time(
                 "fire_toggle": {
                     "sequence": [
                         {
-                            "event": "it_ran",
+                            "service": "input_boolean.toggle",
+                            "target": {"entity_id": "input_boolean.test_1"},
                         }
                     ]
                 },
@@ -3043,3 +3059,4 @@ async def test_two_automations_call_restart_script_same_time(
     hass.states.async_set("binary_sensor.presence", "on")
     await hass.async_block_till_done()
     assert len(events) == 2
+    cancel()
