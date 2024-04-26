@@ -25,7 +25,7 @@ SERVICE_RELOAD_STATE = "reload_state"
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.COVER, Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.COVER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
