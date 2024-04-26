@@ -1717,7 +1717,8 @@ class Script:
             # same time they will cancel each other out.
             self._log("Restarting")
             # Important: yield to the event loop to allow the script to start in case
-            # the script is restarting itself.
+            # the script is restarting itself so it ends up in the script stack and
+            # the recursion check above will prevent the script from running.
             await asyncio.sleep(0)
             await self.async_stop(update_state=False, spare=run)
 
