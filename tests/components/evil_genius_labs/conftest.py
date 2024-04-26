@@ -10,20 +10,20 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry, load_fixture
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def all_fixture():
     """Fixture data."""
     data = json.loads(load_fixture("data.json", "evil_genius_labs"))
     return {item["name"]: item for item in data}
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def info_fixture():
     """Fixture info."""
     return json.loads(load_fixture("info.json", "evil_genius_labs"))
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def product_fixture():
     """Fixture info."""
     return {"productName": "Fibonacci256"}
