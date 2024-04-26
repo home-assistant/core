@@ -856,9 +856,7 @@ def hass_ws_client(
             data["id"] = next(id_generator)
             return websocket.send_json(data)
 
-        async def _remove_device(
-            device_id: str, config_entry_id: str
-        ) -> Coroutine[Any, Any, Any]:
+        async def _remove_device(device_id: str, config_entry_id: str) -> Any:
             await _send_json_auto_id(
                 {
                     "type": "config/device_registry/remove_config_entry",
