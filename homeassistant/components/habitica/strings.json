@@ -27,9 +27,6 @@
       "health": {
         "name": "Health"
       },
-      "health_max": {
-        "name": "Health max."
-      },
       "mana": {
         "name": "Mana"
       },
