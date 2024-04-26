@@ -229,6 +229,84 @@ def check_real(func: Callable[_P, Coroutine[Any, Any, _R]]):
 location.async_detect_location_info = check_real(location.async_detect_location_info)
 
 
+# Test fixtures with autouse enabled and scope set to session.
+#
+# These test fixtures will be set up once during the test session and not torn down
+# until the test session finished. Test fixtures which are needed by a single
+# integration should not be added here, but instead added in the integrations'
+# conftest.py with scope set to "package".
+
+
+@pytest.fixture(scope="session")
+def mock_bluetooth_adapters() -> Generator[None, None, None]:
+    """Fixture to mock bluetooth adapters."""
+    with (
+        patch("bluetooth_auto_recovery.recover_adapter"),
+        patch("bluetooth_adapters.systems.platform.system", return_value="Linux"),
+        patch("bluetooth_adapters.systems.linux.LinuxAdapters.refresh"),
+        patch(
+            "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
+            {
+                "hci0": {
+                    "address": "00:00:00:00:00:01",
+                    "hw_version": "usb:v1D6Bp0246d053F",
+                    "passive_scan": False,
+                    "sw_version": "homeassistant",
+                    "manufacturer": "ACME",
+                    "product": "Bluetooth Adapter 5.0",
+                    "product_id": "aa01",
+                    "vendor_id": "cc01",
+                },
+            },
+        ),
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True, scope="session")
+def mock_network() -> Generator[None, None, None]:
+    """Mock network."""
+    with patch(
+        "homeassistant.components.network.util.ifaddr.get_adapters",
+        return_value=[
+            Mock(
+                nice_name="eth0",
+                ips=[Mock(is_IPv6=False, ip="10.10.10.10", network_prefix=24)],
+                index=0,
+            )
+        ],
+    ):
+        yield
+
+
+@pytest.fixture(scope="session", autouse=True)
+def patch_zeroconf_multiple_catcher() -> Generator[None, None, None]:
+    """Patch zeroconf wrapper that detects if multiple instances are used."""
+    with patch(
+        "homeassistant.components.zeroconf.install_multiple_zeroconf_catcher",
+        side_effect=lambda zc: None,
+    ):
+        yield
+
+
+@pytest.fixture(scope="session", autouse=True)
+def prevent_ffmpeg_subprocess() -> Generator[None, None, None]:
+    """Prevent ffmpeg from creating a subprocess."""
+    with patch(
+        "homeassistant.components.ffmpeg.FFVersion.get_version", return_value="6.0"
+    ):
+        yield
+
+
+@pytest.fixture(scope="session", autouse=True)
+def prevent_io() -> Generator[None, None, None]:
+    """Fixture to prevent certain I/O from happening."""
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+    ):
+        yield
+
+
 @pytest.fixture(name="caplog")
 def caplog_fixture(caplog: pytest.LogCaptureFixture) -> pytest.LogCaptureFixture:
     """Set log level to debug for tests using the caplog fixture."""
@@ -1117,22 +1195,6 @@ async def mqtt_mock_entry(
         yield _setup_mqtt_entry
 
 
-@pytest.fixture(autouse=True, scope="session")
-def mock_network() -> Generator[None, None, None]:
-    """Mock network."""
-    with patch(
-        "homeassistant.components.network.util.ifaddr.get_adapters",
-        return_value=[
-            Mock(
-                nice_name="eth0",
-                ips=[Mock(is_IPv6=False, ip="10.10.10.10", network_prefix=24)],
-                index=0,
-            )
-        ],
-    ):
-        yield
-
-
 @pytest.fixture(autouse=True)
 def mock_get_source_ip() -> Generator[None, None, None]:
     """Mock network util's async_get_source_ip."""
@@ -1576,32 +1638,6 @@ async def mock_enable_bluetooth(
     yield
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-
-
-@pytest.fixture(scope="session")
-def mock_bluetooth_adapters() -> Generator[None, None, None]:
-    """Fixture to mock bluetooth adapters."""
-    with (
-        patch("bluetooth_auto_recovery.recover_adapter"),
-        patch("bluetooth_adapters.systems.platform.system", return_value="Linux"),
-        patch("bluetooth_adapters.systems.linux.LinuxAdapters.refresh"),
-        patch(
-            "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
-            {
-                "hci0": {
-                    "address": "00:00:00:00:00:01",
-                    "hw_version": "usb:v1D6Bp0246d053F",
-                    "passive_scan": False,
-                    "sw_version": "homeassistant",
-                    "manufacturer": "ACME",
-                    "product": "Bluetooth Adapter 5.0",
-                    "product_id": "aa01",
-                    "vendor_id": "cc01",
-                },
-            },
-        ),
-    ):
-        yield
 
 
 @pytest.fixture

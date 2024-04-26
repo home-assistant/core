@@ -18,25 +18,6 @@ if TYPE_CHECKING:
     from tests.components.switch.common import MockSwitch
 
 
-@pytest.fixture(scope="session", autouse=True)
-def patch_zeroconf_multiple_catcher() -> Generator[None, None, None]:
-    """Patch zeroconf wrapper that detects if multiple instances are used."""
-    with patch(
-        "homeassistant.components.zeroconf.install_multiple_zeroconf_catcher",
-        side_effect=lambda zc: None,
-    ):
-        yield
-
-
-@pytest.fixture(scope="session", autouse=True)
-def prevent_io() -> Generator[None, None, None]:
-    """Fixture to prevent certain I/O from happening."""
-    with patch(
-        "homeassistant.components.http.ban.load_yaml_config_file",
-    ):
-        yield
-
-
 @pytest.fixture
 def entity_registry_enabled_by_default() -> Generator[None, None, None]:
     """Test fixture that ensures all entities are enabled in the registry."""
@@ -113,15 +94,6 @@ def mock_conversation_agent_fixture(hass: HomeAssistant) -> MockAgent:
     )
 
     return mock_conversation_agent_fixture_helper(hass)
-
-
-@pytest.fixture(scope="session", autouse=True)
-def prevent_ffmpeg_subprocess() -> Generator[None, None, None]:
-    """Prevent ffmpeg from creating a subprocess."""
-    with patch(
-        "homeassistant.components.ffmpeg.FFVersion.get_version", return_value="6.0"
-    ):
-        yield
 
 
 @pytest.fixture
