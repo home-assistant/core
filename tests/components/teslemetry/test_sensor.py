@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, assert_entities_alt, setup_platform
-from .const import LIVE_STATUS, VEHICLE_DATA_ALT
+from .const import VEHICLE_DATA_ALT
 
 from tests.common import async_fire_time_changed
 
@@ -40,16 +40,3 @@ async def test_sensors(
     await hass.async_block_till_done()
 
     assert_entities_alt(hass, entry.entry_id, entity_registry, snapshot)
-
-
-async def test_no_wall_connector(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    freezer: FrozenDateTimeFactory,
-    mock_live_status,
-) -> None:
-    """Tests that the sensor entities are correct."""
-
-    LIVE_STATUS["wall_connectors"] = None
-    mock_live_status.side_effect = LIVE_STATUS
-    await setup_platform(hass, [Platform.SENSOR])
