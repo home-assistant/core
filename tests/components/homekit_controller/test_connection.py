@@ -346,7 +346,6 @@ async def test_thread_provision_migration_failed(hass: HomeAssistant) -> None:
 
 async def test_skip_polling_all_watchable_accessory_mode(hass: HomeAssistant) -> None:
     """Test that we skip polling if available and all chars are watchable accessory mode."""
-    """Define lightbulb characteristics."""
 
     def _create_accessory(accessory):
         service = accessory.add_service(ServicesTypes.LIGHTBULB, name="TestDevice")
