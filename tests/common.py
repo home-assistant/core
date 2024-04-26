@@ -449,6 +449,7 @@ def async_fire_mqtt_message(
     msg.payload = payload
     msg.qos = qos
     msg.retain = retain
+    msg.timestamp = time.monotonic()
 
     mqtt_data: MqttData = hass.data["mqtt"]
     assert mqtt_data.client
