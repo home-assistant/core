@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from total_connect_client.location import TotalConnectLocation
+from total_connect_client.zone import TotalConnectZone
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -67,7 +68,12 @@ class TotalConnectZoneBypassButton(TotalConnectZoneEntity, ButtonEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     entity_description = ButtonEntityDescription(key="bypass", name="bypass")
 
-    def __init__(self, coordinator, zone, location_id) -> None:
+    def __init__(
+        self,
+        coordinator: TotalConnectDataUpdateCoordinator,
+        zone: TotalConnectZone,
+        location_id,
+    ) -> None:
         """Initialize the TotalConnect status."""
         super().__init__(coordinator, zone, location_id, "bypass")
         self.entity_description = ButtonEntityDescription(key="bypass", name="bypass")
@@ -86,8 +92,8 @@ class TotalConnectPanelButton(TotalConnectLocationEntity, ButtonEntity):
 
     def __init__(
         self,
-        coordinator,
-        location,
+        coordinator: TotalConnectDataUpdateCoordinator,
+        location: TotalConnectLocation,
         entity_description: TotalConnectButtonEntityDescription,
     ) -> None:
         """Initialize the TotalConnect button."""
