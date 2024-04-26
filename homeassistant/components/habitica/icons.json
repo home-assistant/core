@@ -10,6 +10,9 @@
           "0": "mdi:skull-outline"
         }
       },
+      "health_max": {
+        "default": "mdi:heart"
+      },
       "mana": {
         "default": "mdi:flask",
         "state": {
