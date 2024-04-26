@@ -339,11 +339,22 @@ def mock_envoy_fixture(
         raw={"varies_by": "firmware_version"},
     )
     mock_envoy.update = AsyncMock(return_value=mock_envoy.data)
+
+    response = Mock()
+    response.status_code = 200
+    response.text = "Testing request \nreplies."
+    response.headers = {"Hello": "World"}
+    mock_envoy.request = AsyncMock(return_value=response)
+
     return mock_envoy
 
 
 @pytest.fixture(name="setup_enphase_envoy")
-async def setup_enphase_envoy_fixture(hass: HomeAssistant, config, mock_envoy):
+async def setup_enphase_envoy_fixture(
+    hass: HomeAssistant,
+    config,
+    mock_envoy,
+):
     """Define a fixture to set up Enphase Envoy."""
     with (
         patch(
