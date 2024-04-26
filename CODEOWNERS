@@ -127,8 +127,8 @@ build.json @home-assistant/supervisor
 /tests/components/aprilaire/ @chamberlain2007
 /homeassistant/components/aprs/ @PhilRW
 /tests/components/aprs/ @PhilRW
-/homeassistant/components/aranet/ @aschmitz @thecode
-/tests/components/aranet/ @aschmitz @thecode
+/homeassistant/components/aranet/ @aschmitz @thecode @anrijs
+/tests/components/aranet/ @aschmitz @thecode @anrijs
 /homeassistant/components/arcam_fmj/ @elupus
 /tests/components/arcam_fmj/ @elupus
 /homeassistant/components/arris_tg2492lg/ @vanbalken
