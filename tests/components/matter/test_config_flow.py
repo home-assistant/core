@@ -347,12 +347,6 @@ async def test_zeroconf_not_onboarded_installed(
     await hass.async_block_till_done()
 
     assert addon_info.call_count == 1
-    assert result["type"] is FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "start_addon"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    await hass.async_block_till_done()
-
     assert start_addon.call_args == call(hass, "core_matter_server")
     assert client_connect.call_count == 1
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -390,19 +384,7 @@ async def test_zeroconf_not_onboarded_not_installed(
 
     assert addon_info.call_count == 0
     assert addon_store_info.call_count == 2
-    assert result["type"] is FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "install_addon"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    await hass.async_block_till_done()
-
     assert install_addon.call_args == call(hass, "core_matter_server")
-    assert result["type"] is FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "start_addon"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    await hass.async_block_till_done()
-
     assert start_addon.call_args == call(hass, "core_matter_server")
     assert client_connect.call_count == 1
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -1190,12 +1172,6 @@ async def test_addon_installed_failures_zeroconf(
     await hass.async_block_till_done()
 
     assert addon_info.call_count == 1
-    assert result["type"] is FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "start_addon"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    await hass.async_block_till_done()
-
     assert start_addon.call_args == call(hass, "core_matter_server")
     assert get_addon_discovery_info.called is discovery_info_called
     assert client_connect.called is client_connect_called
@@ -1351,13 +1327,6 @@ async def test_addon_not_installed_failures_zeroconf(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=zeroconf_info
     )
     await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "install_addon"
-
-    # Make sure the flow continues when the progress task is done.
-    await hass.async_block_till_done()
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert install_addon.call_args == call(hass, "core_matter_server")
     assert addon_info.call_count == 0
