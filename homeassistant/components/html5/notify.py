@@ -38,33 +38,21 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import ensure_unique_string
 from homeassistant.util.json import JsonObjectType, load_json_object
 
-from .const import DOMAIN, SERVICE_DISMISS
+from .const import (
+    ATTR_VAPID_EMAIL,
+    ATTR_VAPID_PRV_KEY,
+    ATTR_VAPID_PUB_KEY,
+    DOMAIN,
+    SERVICE_DISMISS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 REGISTRATIONS_FILE = "html5_push_registrations.conf"
 
-ATTR_VAPID_PUB_KEY = "vapid_pub_key"
-ATTR_VAPID_PRV_KEY = "vapid_prv_key"
-ATTR_VAPID_EMAIL = "vapid_email"
-
-
-def gcm_api_deprecated(value):
-    """Warn user that GCM API config is deprecated."""
-    if value:
-        _LOGGER.warning(
-            "Configuring html5_push_notifications via the GCM api"
-            " has been deprecated and stopped working since May 29,"
-            " 2019. Use the VAPID configuration instead. For instructions,"
-            " see https://www.home-assistant.io/integrations/html5/"
-        )
-    return value
-
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional("gcm_sender_id"): vol.All(cv.string, gcm_api_deprecated),
-        vol.Optional("gcm_api_key"): cv.string,
         vol.Required(ATTR_VAPID_PUB_KEY): cv.string,
         vol.Required(ATTR_VAPID_PRV_KEY): cv.string,
         vol.Required(ATTR_VAPID_EMAIL): cv.string,
@@ -171,13 +159,16 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> HTML5NotificationService | None:
     """Get the HTML5 push notification service."""
+    if discovery_info is None:
+        return None
+
     json_path = hass.config.path(REGISTRATIONS_FILE)
 
     registrations = await hass.async_add_executor_job(_load_config, json_path)
 
-    vapid_pub_key = config[ATTR_VAPID_PUB_KEY]
-    vapid_prv_key = config[ATTR_VAPID_PRV_KEY]
-    vapid_email = config[ATTR_VAPID_EMAIL]
+    vapid_pub_key = discovery_info[ATTR_VAPID_PUB_KEY]
+    vapid_prv_key = discovery_info[ATTR_VAPID_PRV_KEY]
+    vapid_email = discovery_info[ATTR_VAPID_EMAIL]
 
     def websocket_appkey(hass, connection, msg):
         connection.send_message(websocket_api.result_message(msg["id"], vapid_pub_key))
