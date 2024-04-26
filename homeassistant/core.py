@@ -972,10 +972,11 @@ class HomeAssistant:
             target = cast(Callable[[*_Ts], Coroutine[Any, Any, _R] | _R], target)
         return self.async_run_hass_job(HassJob(target), *args)
 
-    def block_till_done(self) -> None:
+    def block_till_done(self, wait_background_tasks: bool = False) -> None:
         """Block until all pending work is done."""
         asyncio.run_coroutine_threadsafe(
-            self.async_block_till_done(), self.loop
+            self.async_block_till_done(wait_background_tasks=wait_background_tasks),
+            self.loop,
         ).result()
 
     async def async_block_till_done(self, wait_background_tasks: bool = False) -> None:

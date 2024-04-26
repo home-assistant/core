@@ -44,7 +44,7 @@ async def apply_stop_hass(stop_hass: None) -> None:
     """Make sure all hass are stopped."""
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="module", autouse=True)
 def mock_http_start_stop() -> Generator[None, None, None]:
     """Mock HTTP start and stop."""
     with (
