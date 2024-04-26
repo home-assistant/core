@@ -134,11 +134,13 @@ WORK_AREA_NUMBER_TYPES: tuple[AutomowerWorkAreaNumberEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=_async_get_work_area_cutting_height,
-        set_value_fn=lambda session,
-        mower_id,
-        cheight,
-        work_area_id: session.set_cutting_height_workarea(
-            mower_id, int(cheight), work_area_id
+        set_value_fn=(
+            lambda session,
+            mower_id,
+            cheight,
+            work_area_id: session.set_cutting_height_workarea(
+                mower_id, int(cheight), work_area_id
+            )
         ),
     ),
 )
@@ -186,7 +188,8 @@ class AutomowerWorkAreaNumberEntity(AutomowerBaseEntity, NumberEntity):
             await self.entity_description.set_value_fn(
                 self.coordinator.api, self.mower_id, value, self.work_area_id
             )
-            # As there are no updates from the websocket regarding work area changes, we need to wait 5s an then poll the API
+            # As there are no updates from the websocket regarding work area changes,
+            # we need to wait 5s an then poll the API.
             await asyncio.sleep(5)
             await self.async_update()
         except ApiException as exception:
