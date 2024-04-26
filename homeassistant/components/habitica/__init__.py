@@ -23,6 +23,7 @@ from .const import (
     EVENT_API_CALL_SUCCESS,
     SERVICE_API_CALL,
 )
+from .coordinator import HabitipyData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,7 +108,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         api = None
         for entry in entries:
             if entry.data[CONF_NAME] == name:
-                api = hass.data[DOMAIN].get(entry.entry_id)
+                coordinator = hass.data[DOMAIN].get(entry.entry_id)
+                api = coordinator.api
                 break
         if api is None:
             _LOGGER.error("API_CALL: User '%s' not configured", name)
@@ -126,7 +128,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             EVENT_API_CALL_SUCCESS, {ATTR_NAME: name, ATTR_PATH: path, ATTR_DATA: data}
         )
 
-    data = hass.data.setdefault(DOMAIN, {})
     config = entry.data
     websession = async_get_clientsession(hass)
     url = config[CONF_URL]
@@ -142,8 +143,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             data={**entry.data, CONF_NAME: name},
         )
-    data[entry.entry_id] = api
 
+    coordinator = HabitipyData(api)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     if not hass.services.has_service(DOMAIN, SERVICE_API_CALL):
