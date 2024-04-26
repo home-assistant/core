@@ -60,8 +60,8 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': 100,
-      'min': 0,
+      'max': 100.0,
+      'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
     }),
@@ -96,8 +96,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Cutting height Back lawn',
-      'max': 100,
-      'min': 0,
+      'max': 100.0,
+      'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
       'unit_of_measurement': '%',
@@ -116,8 +116,8 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': 100,
-      'min': 0,
+      'max': 100.0,
+      'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
     }),
@@ -152,8 +152,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Cutting height Front lawn',
-      'max': 100,
-      'min': 0,
+      'max': 100.0,
+      'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
       'unit_of_measurement': '%',
@@ -172,8 +172,8 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': 100,
-      'min': 0,
+      'max': 100.0,
+      'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
     }),
@@ -208,8 +208,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Cutting height My lawn',
-      'max': 100,
-      'min': 0,
+      'max': 100.0,
+      'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
       'unit_of_measurement': '%',

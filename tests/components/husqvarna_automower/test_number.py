@@ -54,7 +54,6 @@ async def test_number_commands(
     assert len(mocked_method.mock_calls) == 2
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_number_workarea_commands(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
