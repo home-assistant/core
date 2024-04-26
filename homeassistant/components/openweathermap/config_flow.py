@@ -16,7 +16,6 @@ from homeassistant.const import (
     CONF_LANGUAGE,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_MODE,
     CONF_NAME,
 )
 from homeassistant.core import callback
@@ -24,11 +23,9 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONFIG_FLOW_VERSION,
-    DEFAULT_FORECAST_MODE,
     DEFAULT_LANGUAGE,
     DEFAULT_NAME,
     DOMAIN,
-    FORECAST_MODES,
     LANGUAGES,
 )
 
@@ -79,9 +76,6 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Optional(
                     CONF_LONGITUDE, default=self.hass.config.longitude
                 ): cv.longitude,
-                vol.Optional(CONF_MODE, default=DEFAULT_FORECAST_MODE): vol.In(
-                    FORECAST_MODES
-                ),
                 vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(
                     LANGUAGES
                 ),
@@ -111,13 +105,6 @@ class OpenWeatherMapOptionsFlow(OptionsFlow):
     def _get_options_schema(self):
         return vol.Schema(
             {
-                vol.Optional(
-                    CONF_MODE,
-                    default=self.config_entry.options.get(
-                        CONF_MODE,
-                        self.config_entry.data.get(CONF_MODE, DEFAULT_FORECAST_MODE),
-                    ),
-                ): vol.In(FORECAST_MODES),
                 vol.Optional(
                     CONF_LANGUAGE,
                     default=self.config_entry.options.get(

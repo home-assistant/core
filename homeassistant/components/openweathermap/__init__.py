@@ -6,8 +6,6 @@ import logging
 from typing import Any
 
 from pyopenweathermap import OWMClient
-from pyowm import OWM
-from pyowm.utils.config import get_default_config
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -41,15 +39,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api_key = entry.data[CONF_API_KEY]
     latitude = entry.data.get(CONF_LATITUDE, hass.config.latitude)
     longitude = entry.data.get(CONF_LONGITUDE, hass.config.longitude)
-    forecast_mode = _get_config_value(entry, CONF_MODE)
     language = _get_config_value(entry, CONF_LANGUAGE)
 
-    config_dict = _get_owm_config(language)
-
     owm_client = OWMClient(api_key, lang=language)
-    owm = OWM(api_key, config_dict).weather_manager()
     weather_coordinator = WeatherUpdateCoordinator(
-        owm_client, owm, latitude, longitude, forecast_mode, hass
+        owm_client, latitude, longitude, hass
     )
 
     await weather_coordinator.async_config_entry_first_refresh()
@@ -110,10 +104,3 @@ def _get_config_value(config_entry: ConfigEntry, key: str) -> Any:
     if config_entry.options:
         return config_entry.options[key]
     return config_entry.data[key]
-
-
-def _get_owm_config(language: str) -> dict[str, Any]:
-    """Get OpenWeatherMap configuration and add language to it."""
-    config_dict = get_default_config()
-    config_dict["language"] = language
-    return config_dict

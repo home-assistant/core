@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import cast
-
 from homeassistant.components.weather import (
     ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_FORECAST_CONDITION,
@@ -39,7 +37,6 @@ from .const import (
     ATTR_API_DAILY_FORECAST,
     ATTR_API_DEW_POINT,
     ATTR_API_FEELS_LIKE_TEMPERATURE,
-    ATTR_API_FORECAST,
     ATTR_API_FORECAST_CLOUDS,
     ATTR_API_FORECAST_CONDITION,
     ATTR_API_FORECAST_FEELS_LIKE_TEMPERATURE,
@@ -64,8 +61,6 @@ from .const import (
     DOMAIN,
     ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
-    FORECAST_MODE_DAILY,
-    FORECAST_MODE_ONECALL_DAILY,
     MANUFACTURER,
 )
 from .weather_update_coordinator import WeatherUpdateCoordinator
@@ -129,13 +124,9 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordina
             manufacturer=MANUFACTURER,
             name=DEFAULT_NAME,
         )
-        if weather_coordinator.forecast_mode in (
-            FORECAST_MODE_DAILY,
-            FORECAST_MODE_ONECALL_DAILY,
-        ):
-            self._attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
-        else:  # FORECAST_MODE_DAILY or FORECAST_MODE_ONECALL_HOURLY
-            self._attr_supported_features = WeatherEntityFeature.FORECAST_HOURLY
+        self._attr_supported_features = (
+            WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
+        )
 
     @property
     def condition(self) -> str | None:
@@ -186,20 +177,6 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordina
     def wind_bearing(self) -> float | str | None:
         """Return the wind bearing."""
         return self.coordinator.data[ATTR_API_CURRENT][ATTR_API_WIND_BEARING]
-
-    @property
-    def _forecast(self) -> list[Forecast] | None:
-        """Return the forecast array."""
-        api_forecasts = self.coordinator.data[ATTR_API_FORECAST]
-        forecasts = [
-            {
-                ha_key: forecast[api_key]
-                for api_key, ha_key in FORECAST_MAP.items()
-                if api_key in forecast
-            }
-            for forecast in api_forecasts
-        ]
-        return cast(list[Forecast], forecasts)
 
     @callback
     def _async_forecast_daily(self) -> list[Forecast] | None:
