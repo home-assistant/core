@@ -554,7 +554,7 @@ def test_saving_state_with_commit_interval_zero(
     hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test saving a state with a commit interval of zero."""
-    hass = hass_recorder({"commit_interval": 0})
+    hass = hass_recorder(config={"commit_interval": 0})
     assert get_instance(hass).commit_interval == 0
 
     entity_id = "test.recorder"
@@ -611,7 +611,7 @@ def test_saving_state_include_domains(
     hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test saving and restoring a state."""
-    hass = hass_recorder({"include": {"domains": "test2"}})
+    hass = hass_recorder(config={"include": {"domains": "test2"}})
     states = _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
     assert _state_with_context(hass, "test2.recorder").as_dict() == states[0].as_dict()
@@ -622,7 +622,7 @@ def test_saving_state_include_domains_globs(
 ) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder(
-        {"include": {"domains": "test2", "entity_globs": "*.included_*"}}
+        config={"include": {"domains": "test2", "entity_globs": "*.included_*"}}
     )
     states = _add_entities(
         hass, ["test.recorder", "test2.recorder", "test3.included_entity"]
@@ -644,7 +644,7 @@ def test_saving_state_incl_entities(
     hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test saving and restoring a state."""
-    hass = hass_recorder({"include": {"entities": "test2.recorder"}})
+    hass = hass_recorder(config={"include": {"entities": "test2.recorder"}})
     states = _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
     assert _state_with_context(hass, "test2.recorder").as_dict() == states[0].as_dict()
@@ -705,7 +705,7 @@ def test_saving_state_exclude_domains(
     hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test saving and restoring a state."""
-    hass = hass_recorder({"exclude": {"domains": "test"}})
+    hass = hass_recorder(config={"exclude": {"domains": "test"}})
     states = _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
     assert _state_with_context(hass, "test2.recorder").as_dict() == states[0].as_dict()
@@ -716,7 +716,7 @@ def test_saving_state_exclude_domains_globs(
 ) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder(
-        {"exclude": {"domains": "test", "entity_globs": "*.excluded_*"}}
+        config={"exclude": {"domains": "test", "entity_globs": "*.excluded_*"}}
     )
     states = _add_entities(
         hass, ["test.recorder", "test2.recorder", "test2.excluded_entity"]
@@ -729,7 +729,7 @@ def test_saving_state_exclude_entities(
     hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test saving and restoring a state."""
-    hass = hass_recorder({"exclude": {"entities": "test.recorder"}})
+    hass = hass_recorder(config={"exclude": {"entities": "test.recorder"}})
     states = _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
     assert _state_with_context(hass, "test2.recorder").as_dict() == states[0].as_dict()
@@ -740,7 +740,10 @@ def test_saving_state_exclude_domain_include_entity(
 ) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder(
-        {"include": {"entities": "test.recorder"}, "exclude": {"domains": "test"}}
+        config={
+            "include": {"entities": "test.recorder"},
+            "exclude": {"domains": "test"},
+        }
     )
     states = _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 2
@@ -751,7 +754,7 @@ def test_saving_state_exclude_domain_glob_include_entity(
 ) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder(
-        {
+        config={
             "include": {"entities": ["test.recorder", "test.excluded_entity"]},
             "exclude": {"domains": "test", "entity_globs": "*._excluded_*"},
         }
@@ -767,7 +770,10 @@ def test_saving_state_include_domain_exclude_entity(
 ) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder(
-        {"exclude": {"entities": "test.recorder"}, "include": {"domains": "test"}}
+        config={
+            "exclude": {"entities": "test.recorder"},
+            "include": {"domains": "test"},
+        }
     )
     states = _add_entities(hass, ["test.recorder", "test2.recorder", "test.ok"])
     assert len(states) == 1
@@ -780,7 +786,7 @@ def test_saving_state_include_domain_glob_exclude_entity(
 ) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder(
-        {
+        config={
             "exclude": {"entities": ["test.recorder", "test2.included_entity"]},
             "include": {"domains": "test", "entity_globs": "*._included_*"},
         }
@@ -985,12 +991,9 @@ def run_tasks_at_time(hass, test_time):
 @pytest.mark.parametrize("enable_nightly_purge", [True])
 def test_auto_purge(hass_recorder: Callable[..., HomeAssistant]) -> None:
     """Test periodic purge scheduling."""
-    hass = hass_recorder()
-
-    original_tz = dt_util.DEFAULT_TIME_ZONE
-
-    tz = dt_util.get_time_zone("Europe/Copenhagen")
-    dt_util.set_default_time_zone(tz)
+    timezone = "Europe/Copenhagen"
+    hass = hass_recorder(timezone=timezone)
+    tz = dt_util.get_time_zone(timezone)
 
     # Purging is scheduled to happen at 4:12am every day. Exercise this behavior by
     # firing time changed events and advancing the clock around this time. Pick an
@@ -1040,20 +1043,15 @@ def test_auto_purge(hass_recorder: Callable[..., HomeAssistant]) -> None:
         assert len(purge_old_data.mock_calls) == 1
         assert len(periodic_db_cleanups.mock_calls) == 1
 
-    dt_util.set_default_time_zone(original_tz)
-
 
 @pytest.mark.parametrize("enable_nightly_purge", [True])
 def test_auto_purge_auto_repack_on_second_sunday(
     hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test periodic purge scheduling does a repack on the 2nd sunday."""
-    hass = hass_recorder()
-
-    original_tz = dt_util.DEFAULT_TIME_ZONE
-
-    tz = dt_util.get_time_zone("Europe/Copenhagen")
-    dt_util.set_default_time_zone(tz)
+    timezone = "Europe/Copenhagen"
+    hass = hass_recorder(timezone=timezone)
+    tz = dt_util.get_time_zone(timezone)
 
     # Purging is scheduled to happen at 4:12am every day. Exercise this behavior by
     # firing time changed events and advancing the clock around this time. Pick an
@@ -1084,20 +1082,15 @@ def test_auto_purge_auto_repack_on_second_sunday(
         assert args[2] is True  # repack
         assert len(periodic_db_cleanups.mock_calls) == 1
 
-    dt_util.set_default_time_zone(original_tz)
-
 
 @pytest.mark.parametrize("enable_nightly_purge", [True])
 def test_auto_purge_auto_repack_disabled_on_second_sunday(
     hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test periodic purge scheduling does not auto repack on the 2nd sunday if disabled."""
-    hass = hass_recorder({CONF_AUTO_REPACK: False})
-
-    original_tz = dt_util.DEFAULT_TIME_ZONE
-
-    tz = dt_util.get_time_zone("Europe/Copenhagen")
-    dt_util.set_default_time_zone(tz)
+    timezone = "Europe/Copenhagen"
+    hass = hass_recorder(config={CONF_AUTO_REPACK: False}, timezone=timezone)
+    tz = dt_util.get_time_zone(timezone)
 
     # Purging is scheduled to happen at 4:12am every day. Exercise this behavior by
     # firing time changed events and advancing the clock around this time. Pick an
@@ -1128,20 +1121,15 @@ def test_auto_purge_auto_repack_disabled_on_second_sunday(
         assert args[2] is False  # repack
         assert len(periodic_db_cleanups.mock_calls) == 1
 
-    dt_util.set_default_time_zone(original_tz)
-
 
 @pytest.mark.parametrize("enable_nightly_purge", [True])
 def test_auto_purge_no_auto_repack_on_not_second_sunday(
     hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test periodic purge scheduling does not do a repack unless its the 2nd sunday."""
-    hass = hass_recorder()
-
-    original_tz = dt_util.DEFAULT_TIME_ZONE
-
-    tz = dt_util.get_time_zone("Europe/Copenhagen")
-    dt_util.set_default_time_zone(tz)
+    timezone = "Europe/Copenhagen"
+    hass = hass_recorder(timezone=timezone)
+    tz = dt_util.get_time_zone(timezone)
 
     # Purging is scheduled to happen at 4:12am every day. Exercise this behavior by
     # firing time changed events and advancing the clock around this time. Pick an
@@ -1173,18 +1161,13 @@ def test_auto_purge_no_auto_repack_on_not_second_sunday(
         assert args[2] is False  # repack
         assert len(periodic_db_cleanups.mock_calls) == 1
 
-    dt_util.set_default_time_zone(original_tz)
-
 
 @pytest.mark.parametrize("enable_nightly_purge", [True])
 def test_auto_purge_disabled(hass_recorder: Callable[..., HomeAssistant]) -> None:
     """Test periodic db cleanup still run when auto purge is disabled."""
-    hass = hass_recorder({CONF_AUTO_PURGE: False})
-
-    original_tz = dt_util.DEFAULT_TIME_ZONE
-
-    tz = dt_util.get_time_zone("Europe/Copenhagen")
-    dt_util.set_default_time_zone(tz)
+    timezone = "Europe/Copenhagen"
+    hass = hass_recorder(config={CONF_AUTO_PURGE: False}, timezone=timezone)
+    tz = dt_util.get_time_zone(timezone)
 
     # Purging is scheduled to happen at 4:12am every day. We want
     # to verify that when auto purge is disabled periodic db cleanups
@@ -1212,18 +1195,13 @@ def test_auto_purge_disabled(hass_recorder: Callable[..., HomeAssistant]) -> Non
         purge_old_data.reset_mock()
         periodic_db_cleanups.reset_mock()
 
-    dt_util.set_default_time_zone(original_tz)
-
 
 @pytest.mark.parametrize("enable_statistics", [True])
 def test_auto_statistics(hass_recorder: Callable[..., HomeAssistant], freezer) -> None:
     """Test periodic statistics scheduling."""
-    hass = hass_recorder()
-
-    original_tz = dt_util.DEFAULT_TIME_ZONE
-
-    tz = dt_util.get_time_zone("Europe/Copenhagen")
-    dt_util.set_default_time_zone(tz)
+    timezone = "Europe/Copenhagen"
+    hass = hass_recorder(timezone=timezone)
+    tz = dt_util.get_time_zone(timezone)
 
     stats_5min = []
     stats_hourly = []
@@ -1301,8 +1279,6 @@ def test_auto_statistics(hass_recorder: Callable[..., HomeAssistant], freezer) -
         hass.block_till_done()
         assert len(stats_5min) == 3
         assert len(stats_hourly) == 1
-
-    dt_util.set_default_time_zone(original_tz)
 
 
 def test_statistics_runs_initiated(hass_recorder: Callable[..., HomeAssistant]) -> None:
@@ -1719,7 +1695,10 @@ async def test_database_corruption_while_running(
 def test_entity_id_filter(hass_recorder: Callable[..., HomeAssistant]) -> None:
     """Test that entity ID filtering filters string and list."""
     hass = hass_recorder(
-        {"include": {"domains": "hello"}, "exclude": {"domains": "hidden_domain"}}
+        config={
+            "include": {"domains": "hello"},
+            "exclude": {"domains": "hidden_domain"},
+        }
     )
     event_types = ("hello",)
 
