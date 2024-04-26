@@ -76,11 +76,9 @@ async def test_clear_button(hass: HomeAssistant) -> None:
     """Test pushing the clear bypass button."""
     data = {ATTR_ENTITY_ID: PANEL_CLEAR_ID}
     await setup_platform(hass, BUTTON)
-    """ 'clear bypass' is actually just a call to Disarm the panel
-    which is tested thoroughly in test_alarm_control_panel.py
-    so just make sure it gets called
-    """
-    TOTALCONNECT_REQUEST = "total_connect_client.location.TotalConnectLocation.disarm"
+    TOTALCONNECT_REQUEST = (
+        "total_connect_client.location.TotalConnectLocation.clear_bypass"
+    )
 
     with patch(TOTALCONNECT_REQUEST) as mock_request:
         await hass.services.async_call(
