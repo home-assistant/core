@@ -62,9 +62,6 @@ class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
         self._attr_unique_id = "ventilator_20m_timer"
         self._attr_native_value = False
         self.update_without_throttle = False
-        self._time_zone_delay = datetime.strptime(
-            self.thermostat["utcTime"], DATE_FORMAT
-        ) - datetime.strptime(self.thermostat["thermostatTime"], DATE_FORMAT)
 
     @property
     def is_on(self) -> bool:
@@ -82,11 +79,14 @@ class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
 
         ventilatorOffDateTime = self.thermostat["settings"]["ventilatorOffDateTime"]
 
+        time_zone_delay = datetime.strptime(
+            self.thermostat["utcTime"], DATE_FORMAT
+        ) - datetime.strptime(self.thermostat["thermostatTime"], DATE_FORMAT)
+
         self._attr_native_value = (
             ventilatorOffDateTime is not None
             and ventilatorOffDateTime != ""
-            and datetime.strptime(ventilatorOffDateTime, DATE_FORMAT)
-            + self._time_zone_delay
+            and datetime.strptime(ventilatorOffDateTime, DATE_FORMAT) + time_zone_delay
             >= datetime.now()
         )
 
