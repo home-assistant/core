@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from logging import getLogger
+import math
 from typing import Any
 
 import numdifftools as nd
@@ -156,31 +157,8 @@ def get_best_distribution(data: list[float]) -> Any:
     return getattr(st, best_dist)(*params[best_dist])
 
 
-def get_polls(
-    dist: Any,
-    upper_bound: float | None = None,
-    worst_case_delta: float = 2.0,
-    SLO: float = 0.95,
-    name: str = "_",
-) -> list[float]:
-    """Get polls based on distribution."""
-    N = 1
-    L = None
-    upper_bound = upper_bound or dist.ppf(0.99)
-    while True:
-        L = _get_polling_interval(dist, N, upper_bound)
-        valid = _examinate_2nd_derivate(dist, L)
-        if not valid:
-            LOGGER.warning("The result for %s is probably not minimized", name)
-        valid = _examinate_delta(dist, L, worst_case_delta, SLO)
-        if valid:
-            break
-        N += 1
-    return L
-
-
 def _get_polling_interval(dist: Any, num_poll: int, upper_bound: float) -> list[float]:
-    return _get_polling_interval_r(dist, num_poll, upper_bound, 0.0, upper_bound)
+    return _get_polling_interval_r(dist, num_poll, upper_bound, 0, upper_bound)
 
 
 def _get_polling_interval_r(
@@ -194,20 +172,25 @@ def _get_polling_interval_r(
     L = [0.0 for _ in range(num_poll + 1)]
     # L0 is 0
     # randomized L1
+    L[0] = 0.0
     L[1] = (left + right) / 2
     if left == right:
         raise ValueError("left == right")
-    too_large = False
+    too_large = -1
     for n in range(2, num_poll + 1):
+        if dist.pdf(L[n - 1]) == 0 and dist.cdf(L[n - 1]) == 0:
+            break
         L[n] = 1 / dist.pdf(L[n - 1]) * (integral(L[n - 2], L[n - 1])) + L[n - 1]
         if L[n] > upper_bound:
-            too_large = True
+            too_large = n
             break
+
     if np.isclose(L[num_poll], upper_bound):
         L[num_poll] = upper_bound
         return L[1:]
+
     # L1 is too large
-    if too_large:
+    if too_large != -1:
         return _get_polling_interval_r(
             dist,
             num_poll,
@@ -215,6 +198,7 @@ def _get_polling_interval_r(
             left,
             L[1],
         )
+
     # L1 is too small
     return _get_polling_interval_r(
         dist,
@@ -237,10 +221,117 @@ def _examinate_2nd_derivate(dist: Any, L: list[float]) -> bool:
     return True
 
 
-def _examinate_delta(dist: Any, L: list[float], delta: float, SLO: float = 0.5) -> bool:
-    L = [0.0] + L
-    prob: float = 0.0
+def _examinate_Q(dist: Any, L: list[float]) -> float:
+    L = [0] + L
+    Q = 0
+    for i in range(1, len(L)):
+        Q += L[i] * (dist.cdf(L[i]) - dist.cdf(L[i - 1]))
+    Q -= dist.expect(lambda x: x, lb=0.0, ub=L[-1])
+    # print(f"Q = {round(Q, 2)}, k = {len(L)-1}")
+    return Q
+
+
+def _examinate_delta(
+    dist: Any, L: list[float], delta: float, SLO: float = 0.95
+) -> bool:
+    L = [0] + L
+    prob = 0
     for i in range(1, len(L)):
         prob += dist.cdf(L[i]) - dist.cdf(max(L[i - 1], L[i] - delta))
 
-    return prob >= SLO
+    return prob >= float(SLO - dist.cdf(0))
+
+
+def get_detection_time(dist: Any, L: list[float]) -> float:
+    """Get detection time of L."""
+    return _examinate_Q(dist, L)
+
+
+def get_polls(
+    dist: Any,
+    *,
+    upper_bound: float | None = None,
+    worst_case_delta: float = 2.0,
+    SLO: float = 0.95,
+    name: str = "_",
+    N: int | None = None,
+) -> list[float]:
+    """Get polls based on distribution."""
+    upper_bound = upper_bound or float(dist.ppf(0.99))
+    if N is not None:
+        L = _get_polling_interval(dist, N, upper_bound)
+        valid = _examinate_2nd_derivate(dist, L)
+        if not valid:
+            print("The result for", name, "is probably not minimized.")  # noqa: T201
+
+        return L
+
+    return _r_get_polls(
+        dist,
+        upper_bound,
+        0,
+        math.ceil(upper_bound / worst_case_delta),
+        -1,
+        worst_case_delta,
+        SLO,
+        name,
+    )
+
+
+def _r_get_polls(
+    dist: Any,
+    upper_bound: float,
+    left_N: int,
+    right_N: int,
+    last_N: int,
+    worst_case_delta: float = 2.0,
+    SLO: float = 0.95,
+    name: str = "_",
+) -> list[float]:
+    N = max(1, math.floor((left_N + right_N) / 2))
+    # print(N)
+    try:
+        L = _get_polling_interval(dist, N, upper_bound)
+    except ValueError:
+        return _r_get_polls(
+            dist, upper_bound, left_N, N + 1, N, worst_case_delta, SLO, name
+        )
+    valid = _examinate_2nd_derivate(dist, L)
+    if not valid:
+        print("The result for", name, "is probably not minimized.")  # noqa: T201
+
+    # _examinate_Q(dist, L, SLO)
+    valid = _examinate_delta(dist, L, worst_case_delta, SLO)
+
+    if left_N == right_N or last_N == N:
+        if not valid:
+            raise ValueError("Failed to find the polls")
+        return L
+
+    if valid:
+        # want to further reduce polls
+        return _r_get_polls(
+            dist, upper_bound, left_N, N + 1, N, worst_case_delta, SLO, name
+        )
+    if N + 1 >= right_N:
+        return _r_get_polls(
+            dist, upper_bound, N + 1, right_N * 2, N, worst_case_delta, SLO, name
+        )
+    return _r_get_polls(
+        dist, upper_bound, N + 1, right_N, N, worst_case_delta, SLO, name
+    )
+
+
+def get_uniform_polls(
+    upper_bound: float, *, N: int | None = None, worst_case_delta: float = 2.0
+) -> list[float]:
+    """Get uniform polls."""
+    if N is not None:
+        return [(i + 1) * upper_bound / N for i in range(N)]
+    polls = [
+        (i + 1) * worst_case_delta
+        for i in range(math.floor(upper_bound / worst_case_delta))
+    ]
+    if not np.isclose(polls[-1], upper_bound):
+        polls.append(upper_bound)
+    return polls

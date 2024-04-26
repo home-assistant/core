@@ -12,6 +12,7 @@ from typing import Any, Self, cast, final
 
 import voluptuous as vol
 
+from homeassistant.components.rasc.decorator import rasc_target_state
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EVENT,
@@ -1103,6 +1104,7 @@ class LightEntity(ToggleEntity):
         def _target_start_state(
             current: int | float | None, target_complete_state: int | float
         ) -> Callable[[int | float], bool]:
+            @rasc_target_state(target_complete_state)
             def match(value: int | float) -> bool:
                 if current is None:
                     if target_complete_state > 0:
@@ -1119,6 +1121,7 @@ class LightEntity(ToggleEntity):
         def _target_complete_state(
             target_complete_state: int | float,
         ) -> Callable[[int | float], bool]:
+            @rasc_target_state(target_complete_state)
             def match(value: int | float) -> bool:
                 return value == target_complete_state
 

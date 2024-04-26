@@ -49,6 +49,7 @@ SERVICE_SCHEMA = vol.Schema(
 VIRTUAL_PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.COVER,
+    Platform.CLIMATE,
     Platform.DEVICE_TRACKER,
     Platform.FAN,
     Platform.LIGHT,

@@ -3,7 +3,7 @@
 COMPONENT_DOMAIN = "virtual"
 COMPONENT_SERVICES = "virtual-services"
 COMPONENT_NETWORK = "virtual-network"
-COMPONENT_MANUFACTURER = "twrecked"
+COMPONENT_MANUFACTURER = "dprg"
 COMPONENT_MODEL = "virtual"
 
 ATTR_AVAILABLE = "available"

@@ -42,6 +42,21 @@ def rasc_push_event(
     return _wrapper
 
 
+def rasc_target_state(
+    target_complete_state: Any,
+) -> Callable[[Callable[[Any], bool]], Callable[[Any], bool]]:
+    """RASC decorator for match function."""
+
+    def decorator(func: Callable[[Any], bool]) -> Callable[[Any], bool]:
+        def wrapper(value: Any) -> bool:
+            wrapper.value = target_complete_state  # type: ignore[attr-defined]
+            return func(value)
+
+        return wrapper
+
+    return decorator
+
+
 # @overload
 # def rasc_track_service(func: Callable[..., Awaitable[RT]]):
 #     ...
