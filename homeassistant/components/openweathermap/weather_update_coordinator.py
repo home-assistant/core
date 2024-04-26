@@ -193,7 +193,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-e
 
     def _get_hourly_forecast_weather_data(self, forecast: HourlyWeatherForecast):
         return {
-            ATTR_API_FORECAST_TIME: {},
+            ATTR_API_FORECAST_TIME: forecast.date_time.isoformat(),
             ATTR_API_CONDITION: self._get_condition(forecast.get_weather().id),
             ATTR_API_TEMPERATURE: forecast.temperature,
             ATTR_API_FEELS_LIKE_TEMPERATURE: forecast.feels_like,
@@ -208,14 +208,18 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-e
             ATTR_API_WEATHER_CODE: forecast.get_weather().id,
             ATTR_API_UV_INDEX: forecast.uv_index,
             ATTR_API_VISIBILITY_DISTANCE: forecast.visibility,
-            ATTR_API_FORECAST_PRECIPITATION_PROBABILITY: forecast.precipitation_probability,
+            ATTR_API_FORECAST_PRECIPITATION_PROBABILITY: round(
+                forecast.precipitation_probability * 100
+            ),
             ATTR_API_FORECAST_PRECIPITATION: {},
         }
 
     def _get_daily_forecast_weather_data(self, forecast: DailyWeatherForecast):
         return {
-            ATTR_API_FORECAST_TIME: {},
-            ATTR_API_CONDITION: self._get_condition(forecast.get_weather().id),
+            ATTR_API_FORECAST_TIME: forecast.date_time.isoformat(),
+            ATTR_API_CONDITION: self._get_condition(
+                forecast.get_weather().id, forecast.date_time.timestamp()
+            ),
             ATTR_API_TEMPERATURE: forecast.temperature.max,
             ATTR_API_FORECAST_TEMP_LOW: forecast.temperature.min,
             ATTR_API_FEELS_LIKE_TEMPERATURE: forecast.feels_like.day,
@@ -229,9 +233,10 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-e
             ATTR_API_WEATHER: forecast.get_weather().description,
             ATTR_API_WEATHER_CODE: forecast.get_weather().id,
             ATTR_API_UV_INDEX: forecast.uv_index,
-            ATTR_API_VISIBILITY_DISTANCE: forecast.visibility,
-            ATTR_API_FORECAST_PRECIPITATION_PROBABILITY: forecast.precipitation_probability,
-            ATTR_API_FORECAST_PRECIPITATION: {},
+            ATTR_API_FORECAST_PRECIPITATION_PROBABILITY: round(
+                forecast.precipitation_probability * 100
+            ),
+            ATTR_API_FORECAST_PRECIPITATION: round(forecast.rain + forecast.snow, 2),
         }
 
     def _get_forecast_from_weather_response(self, weather_response):

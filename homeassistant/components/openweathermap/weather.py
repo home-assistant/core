@@ -36,6 +36,7 @@ from .const import (
     ATTR_API_CLOUDS,
     ATTR_API_CONDITION,
     ATTR_API_CURRENT,
+    ATTR_API_DAILY_FORECAST,
     ATTR_API_DEW_POINT,
     ATTR_API_FEELS_LIKE_TEMPERATURE,
     ATTR_API_FORECAST,
@@ -51,6 +52,7 @@ from .const import (
     ATTR_API_FORECAST_TIME,
     ATTR_API_FORECAST_WIND_BEARING,
     ATTR_API_FORECAST_WIND_SPEED,
+    ATTR_API_HOURLY_FORECAST,
     ATTR_API_HUMIDITY,
     ATTR_API_PRESSURE,
     ATTR_API_TEMPERATURE,
@@ -202,9 +204,9 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordina
     @callback
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
-        return self._forecast
+        return self.coordinator.data[ATTR_API_DAILY_FORECAST]
 
     @callback
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
-        return self._forecast
+        return self.coordinator.data[ATTR_API_HOURLY_FORECAST]
