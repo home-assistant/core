@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from ipaddress import IPv4Network, IPv6Network, ip_address
 import logging
+import socket
 
 from aiohttp.hdrs import X_FORWARDED_FOR, X_FORWARDED_HOST, X_FORWARDED_PROTO
 from aiohttp.web import Application, HTTPBadRequest, Request, StreamResponse, middleware
@@ -90,7 +91,11 @@ def async_setup_forwarded(
             # Connected IP isn't retrieveable from the request transport, continue
             return await handler(request)
 
-        connected_ip = ip_address(request.transport.get_extra_info("peername")[0])
+        if request.transport.get_extra_info("socket").family == socket.AF_UNIX:
+            # UNIX sockets won't have a peername but always come from localhost anyway
+            connected_ip = ip_address("127.0.0.1")
+        else:
+            connected_ip = ip_address(request.transport.get_extra_info("peername")[0])
 
         # We have X-Forwarded-For, but config does not agree
         if not use_x_forwarded_for:
