@@ -636,7 +636,6 @@ def _validate_item(
             unique_id,
             report_issue,
         )
-        return
     if (
         disabled_by
         and disabled_by is not UNDEFINED

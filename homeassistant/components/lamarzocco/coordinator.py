@@ -147,7 +147,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             raise ConfigEntryAuthFailed(msg) from ex
         except RequestNotSuccessful as ex:
             _LOGGER.debug(ex, exc_info=True)
-            raise UpdateFailed("Querying API failed. Error: %s" % ex) from ex
+            raise UpdateFailed(f"Querying API failed. Error: {ex}") from ex
 
     def async_get_ble_device(self) -> BLEDevice | None:
         """Get a Bleak Client for the machine."""
