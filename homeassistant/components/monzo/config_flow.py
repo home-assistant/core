@@ -42,7 +42,7 @@ class MonzoFlowHandler(
         )
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
-        """Create an entry for the flow, or update existing entry."""
+        """Create an entry for the flow."""
         user_id = str(data[CONF_TOKEN]["user_id"])
         await self.async_set_unique_id(user_id)
         self._abort_if_unique_id_configured()
