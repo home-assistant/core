@@ -1,40 +1,37 @@
 {
-  "services": {
-    "api_call": "mdi:console"
-  },
   "entity": {
     "sensor": {
-      "name": {
+      "display_name": {
         "default": "mdi:account-circle"
       },
-      "hp": {
+      "health": {
         "default": "mdi:heart",
         "state": {
           "0": "mdi:skull-outline"
         }
       },
-      "maxhealth": {
+      "health_max": {
         "default": "mdi:heart"
       },
-      "mp": {
+      "mana": {
         "default": "mdi:flask",
         "state": {
           "0": "mdi:flask-empty-outline"
         }
       },
-      "maxmp": {
+      "mana_max": {
         "default": "mdi:flask"
       },
-      "exp": {
+      "experience": {
         "default": "mdi:star-four-points"
       },
-      "tonextlevel": {
+      "experience_max": {
         "default": "mdi:star-four-points"
       },
-      "lvl": {
+      "level": {
         "default": "mdi:crown-circle"
       },
-      "gp": {
+      "gold": {
         "default": "mdi:sack"
       },
       "class": {
@@ -47,5 +44,8 @@
         }
       }
     }
+  },
+  "services": {
+    "api_call": "mdi:console"
   }
 }

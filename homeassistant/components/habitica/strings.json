@@ -19,6 +19,46 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "display_name": {
+        "name": "Display name"
+      },
+      "health": {
+        "name": "Health"
+      },
+      "health_max": {
+        "name": "Health max."
+      },
+      "mana": {
+        "name": "Mana"
+      },
+      "mana_max": {
+        "name": "Mana max."
+      },
+      "experience": {
+        "name": "Experience"
+      },
+      "experience_max": {
+        "name": "Next Level"
+      },
+      "level": {
+        "name": "Level"
+      },
+      "gold": {
+        "name": "Gold"
+      },
+      "class": {
+        "name": "Class",
+        "state": {
+          "warrior": "Warrior",
+          "healer": "Healer",
+          "wizard": "Mage",
+          "rogue": "Rogue"
+        }
+      }
+    }
+  },
   "services": {
     "api_call": {
       "name": "API name",
@@ -35,46 +75,6 @@
         "args": {
           "name": "Args",
           "description": "Any additional JSON or URL parameter arguments. See apidoc mentioned for path. Example uses same API endpoint."
-        }
-      }
-    }
-  },
-  "entity": {
-    "sensor": {
-      "name": {
-        "name": "Display name"
-      },
-      "hp": {
-        "name": "Health"
-      },
-      "maxhealth": {
-        "name": "Health max."
-      },
-      "mp": {
-        "name": "Mana"
-      },
-      "maxmp": {
-        "name": "Mana max."
-      },
-      "exp": {
-        "name": "Experience"
-      },
-      "tonextlevel": {
-        "name": "Next Level"
-      },
-      "lvl": {
-        "name": "Level"
-      },
-      "gp": {
-        "name": "Gold"
-      },
-      "class": {
-        "name": "Class",
-        "state": {
-          "warrior": "Warrior",
-          "healer": "Healer",
-          "wizard": "Mage",
-          "rogue": "Rogue"
         }
       }
     }

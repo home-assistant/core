@@ -5,12 +5,18 @@ from __future__ import annotations
 from collections import namedtuple
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import StrEnum
 from http import HTTPStatus
 import logging
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientResponseError
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
@@ -49,67 +55,83 @@ class HabitipySensorEntityDescription(SensorEntityDescription):
     value_path: list[str]
 
 
+class HabitipySensorEntity(StrEnum):
+    """Habitipy Entities."""
+
+    DISPLAY_NAME = "display_name"
+    HEALTH = "health"
+    HEALTH_MAX = "health_max"
+    MANA = "mana"
+    MANA_MAX = "mana_max"
+    EXPERIENCE = "experience"
+    EXPERIENCE_MAX = "experience_max"
+    LEVEL = "level"
+    GOLD = "gold"
+    CLASS = "class"
+
+
 SENSOR_DESCRIPTIONS: dict[str, HabitipySensorEntityDescription] = {
-    "name": HabitipySensorEntityDescription(
-        key="name",
-        translation_key="name",
+    HabitipySensorEntity.DISPLAY_NAME: HabitipySensorEntityDescription(
+        key=HabitipySensorEntity.DISPLAY_NAME,
+        translation_key=HabitipySensorEntity.DISPLAY_NAME,
         value_path=["profile", "name"],
     ),
-    "hp": HabitipySensorEntityDescription(
-        key="hp",
-        translation_key="hp",
+    HabitipySensorEntity.HEALTH: HabitipySensorEntityDescription(
+        key=HabitipySensorEntity.HEALTH,
+        translation_key=HabitipySensorEntity.HEALTH,
         native_unit_of_measurement="HP",
         suggested_display_precision=0,
         value_path=["stats", "hp"],
     ),
-    "maxHealth": HabitipySensorEntityDescription(
-        key="maxHealth",
-        translation_key="maxhealth",
+    HabitipySensorEntity.HEALTH_MAX: HabitipySensorEntityDescription(
+        key=HabitipySensorEntity.HEALTH_MAX,
+        translation_key=HabitipySensorEntity.HEALTH_MAX,
         native_unit_of_measurement="HP",
         value_path=["stats", "maxHealth"],
     ),
-    "mp": HabitipySensorEntityDescription(
-        key="mp",
-        translation_key="mp",
+    HabitipySensorEntity.MANA: HabitipySensorEntityDescription(
+        key=HabitipySensorEntity.MANA,
+        translation_key=HabitipySensorEntity.MANA,
         native_unit_of_measurement="MP",
         suggested_display_precision=0,
         value_path=["stats", "mp"],
     ),
-    "maxMP": HabitipySensorEntityDescription(
-        key="maxMP",
-        translation_key="maxmp",
+    HabitipySensorEntity.MANA_MAX: HabitipySensorEntityDescription(
+        key=HabitipySensorEntity.MANA_MAX,
+        translation_key=HabitipySensorEntity.MANA_MAX,
         native_unit_of_measurement="MP",
         value_path=["stats", "maxMP"],
     ),
-    "exp": HabitipySensorEntityDescription(
-        key="exp",
-        translation_key="exp",
+    HabitipySensorEntity.EXPERIENCE: HabitipySensorEntityDescription(
+        key=HabitipySensorEntity.EXPERIENCE,
+        translation_key=HabitipySensorEntity.EXPERIENCE,
         native_unit_of_measurement="XP",
         value_path=["stats", "exp"],
     ),
-    "toNextLevel": HabitipySensorEntityDescription(
-        key="toNextLevel",
-        translation_key="tonextlevel",
+    HabitipySensorEntity.EXPERIENCE_MAX: HabitipySensorEntityDescription(
+        key=HabitipySensorEntity.EXPERIENCE_MAX,
+        translation_key=HabitipySensorEntity.EXPERIENCE_MAX,
         native_unit_of_measurement="XP",
         value_path=["stats", "toNextLevel"],
     ),
-    "lvl": HabitipySensorEntityDescription(
-        key="lvl",
-        translation_key="lvl",
-        native_unit_of_measurement="Lvl",
+    HabitipySensorEntity.LEVEL: HabitipySensorEntityDescription(
+        key=HabitipySensorEntity.LEVEL,
+        translation_key=HabitipySensorEntity.LEVEL,
         value_path=["stats", "lvl"],
     ),
-    "gp": HabitipySensorEntityDescription(
-        key="gp",
-        translation_key="gp",
-        native_unit_of_measurement="🜚",  # alchemy symbol for gold
+    HabitipySensorEntity.GOLD: HabitipySensorEntityDescription(
+        key=HabitipySensorEntity.GOLD,
+        translation_key=HabitipySensorEntity.GOLD,
+        native_unit_of_measurement="GP",
         suggested_display_precision=2,
         value_path=["stats", "gp"],
     ),
-    "class": HabitipySensorEntityDescription(
-        key="class",
-        translation_key="class",
+    HabitipySensorEntity.CLASS: HabitipySensorEntityDescription(
+        key=HabitipySensorEntity.CLASS,
+        translation_key=HabitipySensorEntity.CLASS,
         value_path=["stats", "class"],
+        device_class=SensorDeviceClass.ENUM,
+        options=["warrior", "healer", "wizard", "rogue"],
     ),
 }
 
@@ -178,7 +200,9 @@ async def async_setup_entry(
 class HabitipyData:
     """Habitica API user data cache."""
 
-    def __init__(self, api):
+    tasks: dict[str, Any]
+
+    def __init__(self, api) -> None:
         """Habitica API user data cache."""
         self.api = api
         self.data = None
@@ -233,14 +257,15 @@ class HabitipySensor(SensorEntity):
 
     def __init__(
         self,
-        updater,
+        coordinator,
         entity_description: HabitipySensorEntityDescription,
         entry: ConfigEntry,
     ) -> None:
         """Initialize a generic Habitica sensor."""
         super().__init__()
-        assert entry.unique_id
-        self._updater = updater
+        if TYPE_CHECKING:
+            assert entry.unique_id
+        self.coordinator = coordinator
         self.entity_description = entity_description
         self._attr_unique_id = f"{entry.unique_id}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
@@ -253,9 +278,9 @@ class HabitipySensor(SensorEntity):
         )
 
     async def async_update(self) -> None:
-        """Update Condition and Forecast."""
-        await self._updater.update()
-        data = self._updater.data
+        """Update Sensor state."""
+        await self.coordinator.update()
+        data = self.coordinator.data
         for element in self.entity_description.value_path:
             data = data[element]
         self._attr_native_value = data
