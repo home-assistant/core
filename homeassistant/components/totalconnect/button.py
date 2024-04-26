@@ -12,7 +12,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import TotalConnectDataUpdateCoordinator
 from .const import DOMAIN
+from .entity import TotalConnectZoneEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -41,17 +43,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up TotalConnect buttons based on a config entry."""
     buttons: list = []
+    coordinator: TotalConnectDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    client_locations = hass.data[DOMAIN][entry.entry_id].client.locations
-
-    for location_id, location in client_locations.items():
+    for location_id, location in coordinator.client.locations.items():
         buttons.extend(
             TotalConnectPanelButton(location, description)
             for description in PANEL_BUTTONS
         )
 
         buttons.extend(
-            TotalConnectZoneBypassButton(location_id, zone)
+            TotalConnectZoneBypassButton(coordinator, zone, location_id)
             for zone in location.zones.values()
             if zone.can_be_bypassed
         )
@@ -59,7 +60,7 @@ async def async_setup_entry(
     async_add_entities(buttons)
 
 
-class TotalConnectZoneBypassButton(ButtonEntity):
+class TotalConnectZoneBypassButton(TotalConnectZoneEntity, ButtonEntity):
     """Represent a TotalConnect zone bypass button."""
 
     _attr_has_entity_name = True
@@ -67,17 +68,10 @@ class TotalConnectZoneBypassButton(ButtonEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     entity_description = ButtonEntityDescription(key="bypass", name="bypass")
 
-    def __init__(self, location_id, zone) -> None:
+    def __init__(self, coordinator, zone, location_id) -> None:
         """Initialize the TotalConnect status."""
-        self._zone = zone
+        super().__init__(coordinator, zone, location_id, "bypass")
         self.entity_description = ButtonEntityDescription(key="bypass", name="bypass")
-        identifier = self._zone.sensor_serial_number or f"zone_{self._zone.zoneid}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, identifier)},
-            name=self._zone.description,
-            serial_number=self._zone.sensor_serial_number,
-        )
-        self._attr_unique_id = f"{location_id}_{zone.zoneid}_bypass"
 
     def press(self):
         """Press the bypass button."""
