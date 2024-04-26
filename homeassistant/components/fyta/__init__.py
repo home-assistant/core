@@ -58,3 +58,38 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if config_entry.version == 1:
+        new = {**config_entry.data}
+        if config_entry.minor_version < 1:
+            fyta = FytaConnector(
+                config_entry.data[CONF_USERNAME], config_entry.data[CONF_PASSWORD]
+            )
+            credentials: dict[str, str | datetime] = fyta.login()
+
+            if isinstance(credentials["expiration"], datetime):
+                credentials["expiration"] = credentials["expiration"].isoformat()
+
+            new["access_token"] = credentials["access_token"]
+            new["expiration"] = credentials["expiration"]
+
+        hass.config_entries.async_update_entry(
+            config_entry, data=new, minor_version=1, version=1
+        )
+
+    _LOGGER.debug(
+        "Migration to version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    return True

@@ -32,6 +32,8 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fyta."""
 
     VERSION = 1
+    MINOR_VERSION = 1
+
     _entry: ConfigEntry | None = None
     credentials: dict[str, str | datetime] = {}
 
