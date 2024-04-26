@@ -89,7 +89,7 @@
     'supported_features': 0,
     'translation_key': 'cutting_height_work_area',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_cutting_height_work_area_654321',
-    'unit_of_measurement': None,
+    'unit_of_measurement': '%',
   })
 # ---
 # name: test_snapshot_number[number.test_mower_1_cutting_height_back_lawn-state]
@@ -100,6 +100,7 @@
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.test_mower_1_cutting_height_back_lawn',
@@ -144,7 +145,7 @@
     'supported_features': 0,
     'translation_key': 'cutting_height_work_area',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_cutting_height_work_area_123456',
-    'unit_of_measurement': None,
+    'unit_of_measurement': '%',
   })
 # ---
 # name: test_snapshot_number[number.test_mower_1_cutting_height_front_lawn-state]
@@ -155,6 +156,7 @@
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.test_mower_1_cutting_height_front_lawn',
@@ -197,9 +199,9 @@
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'cutting_height_work_area_my_lawn',
+    'translation_key': 'cutting_height_my_lawn',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_cutting_height_work_area_0',
-    'unit_of_measurement': None,
+    'unit_of_measurement': '%',
   })
 # ---
 # name: test_snapshot_number[number.test_mower_1_cutting_height_my_lawn-state]
@@ -210,6 +212,7 @@
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.test_mower_1_cutting_height_my_lawn',

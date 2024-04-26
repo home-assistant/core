@@ -12,7 +12,7 @@ from aioautomower.session import AutomowerSession
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -22,15 +22,6 @@ from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True, kw_only=True)
-class AutomowerNumberEntityDescription(NumberEntityDescription):
-    """Describes Automower number entity."""
-
-    exists_fn: Callable[[MowerAttributes], bool] = lambda _: True
-    value_fn: Callable[[MowerAttributes], int]
-    set_value_fn: Callable[[AutomowerSession, str, float], Awaitable[Any]]
 
 
 @callback
@@ -46,6 +37,7 @@ def _async_get_cutting_height(data: MowerAttributes) -> int:
 def _async_get_work_area_cutting_height(data: WorkArea) -> int:
     """Return the work area cutting height."""
     if TYPE_CHECKING:
+        # Entity does not get created if it is None
         assert data is not None
     return data.cutting_height
 
@@ -54,16 +46,26 @@ def _async_get_work_area_cutting_height(data: WorkArea) -> int:
 def _async_work_area_mowers(data: dict[int, WorkArea] | None) -> dict[int, WorkArea]:
     """Return the cutting height."""
     if TYPE_CHECKING:
+        # Entity does not get created if it is None
         assert data is not None
     return data
 
 
 @callback
-def _async_work_area_translation_key(data: WorkArea) -> str:
+def _work_area_translation_key(work_area_id: int) -> str:
     """Return the translation key."""
-    if data.name == "my_lawn":
-        return "cutting_height_work_area_my_lawn"
+    if work_area_id == 0:
+        return "cutting_height_my_lawn"
     return "cutting_height_work_area"
+
+
+@dataclass(frozen=True, kw_only=True)
+class AutomowerNumberEntityDescription(NumberEntityDescription):
+    """Describes Automower number entity."""
+
+    exists_fn: Callable[[MowerAttributes], bool] = lambda _: True
+    value_fn: Callable[[MowerAttributes], int]
+    set_value_fn: Callable[[AutomowerSession, str, float], Awaitable[Any]]
 
 
 NUMBER_TYPES: tuple[AutomowerNumberEntityDescription, ...] = (
@@ -88,26 +90,25 @@ class AutomowerWorkAreaNumberEntityDescription(NumberEntityDescription):
     """Describes Automower number entity."""
 
     value_fn: Callable[[WorkArea], int]
-    translation_key_fn: Callable[[WorkArea], str]
+    translation_key_fn: Callable[[int], str]
     set_value_fn: Callable[[AutomowerSession, str, float, int], Awaitable[Any]]
 
 
 WORK_AREA_NUMBER_TYPES: tuple[AutomowerWorkAreaNumberEntityDescription, ...] = (
     AutomowerWorkAreaNumberEntityDescription(
         key="cutting_height_work_area",
-        translation_key_fn=_async_work_area_translation_key,
+        translation_key_fn=_work_area_translation_key,
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.CONFIG,
         native_min_value=0,
         native_max_value=100,
+        native_unit_of_measurement=PERCENTAGE,
         value_fn=_async_get_work_area_cutting_height,
-        set_value_fn=(
-            lambda session,
-            mower_id,
-            cheight,
-            work_area_id: session.set_cutting_height_workarea(
-                mower_id, int(cheight), work_area_id
-            )
+        set_value_fn=lambda session,
+        mower_id,
+        cheight,
+        work_area_id: session.set_cutting_height_workarea(
+            mower_id, int(cheight), work_area_id
         ),
     ),
 )
@@ -198,7 +199,7 @@ class AutomowerWorkAreaNumberEntity(AutomowerBaseEntity, NumberEntity):
     @property
     def translation_key(self) -> str:
         """Return the translation key of the work area."""
-        return self.entity_description.translation_key_fn(self.work_area)
+        return self.entity_description.translation_key_fn(self.work_area_id)
 
     @property
     def native_value(self) -> float:
@@ -211,6 +212,7 @@ class AutomowerWorkAreaNumberEntity(AutomowerBaseEntity, NumberEntity):
             await self.entity_description.set_value_fn(
                 self.coordinator.api, self.mower_id, value, self.work_area_id
             )
+            # As there are no updates from the websocket regarding work area changes, we need to wait 5s an then poll the API
             await asyncio.sleep(5)
             await self.async_update()
         except ApiException as exception:
