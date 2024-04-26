@@ -3,7 +3,7 @@
 import logging
 from unittest.mock import AsyncMock, patch
 
-from dio_chacon_wifi_api.exceptions import DIOChaconAPIError
+from dio_chacon_wifi_api.exceptions import DIOChaconAPIError, DIOChaconInvalidAuthError
 
 from homeassistant import config_entries
 from homeassistant.components.dio_chacon.const import DOMAIN
@@ -75,6 +75,28 @@ async def test_form_cannot_connect(
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+    assert len(mock_dio_chacon_client.mock_calls) == 1
+
+
+async def test_form_invalid_auth(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test we handle cannot connect error."""
+    with patch(
+        "dio_chacon_wifi_api.DIOChaconAPIClient.get_user_id",
+        side_effect=DIOChaconInvalidAuthError,
+    ) as mock_dio_chacon_client:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={
+                CONF_USERNAME: "nada",
+                CONF_PASSWORD: "nadap",
+            },
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
     assert len(mock_dio_chacon_client.mock_calls) == 1
 
 

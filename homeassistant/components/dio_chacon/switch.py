@@ -7,7 +7,7 @@ from dio_chacon_wifi_api.const import DeviceTypeEnum
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -131,21 +131,19 @@ class DioChaconShade(RestoreEntity, SwitchEntity):
         # Remove listener on entity destruction
         self.async_on_remove(listener_callback_event)
 
+    @callback
     def _on_device_state_changed(self, event):
         # On server side event of state change
         if event.data.get("id") == self._target_id:
             _LOGGER.debug("Event state changed received : %s", event)
-            self._effectively_update_entity_state(event.data)
+            self._attr_available = event.data["connected"]
+            is_on = event.data["is_on"]
+            self._attr_is_on = is_on
+            self.async_write_ha_state()
 
     def _on_device_state_reload(self, event):
         # Simply launches a forced update calling async_update
         self.schedule_update_ha_state(True)
-
-    def _effectively_update_entity_state(self, data: dict[str, Any]) -> None:
-        self._attr_available = data["connected"]
-        is_on = data["is_on"]
-        self._attr_is_on = is_on
-        self.async_write_ha_state()
 
     async def async_update(self) -> None:
         """Get the latest data from the Dio Chacon API and update the states."""
@@ -155,5 +153,7 @@ class DioChaconShade(RestoreEntity, SwitchEntity):
             self._attr_name,
         )
         data = await self.dio_chacon_client.get_status_details([self._target_id])
-        details = data[self._target_id]
-        self._effectively_update_entity_state(details)
+        self._attr_available = data[self._target_id]["connected"]
+        is_on = data[self._target_id]["is_on"]
+        self._attr_is_on = is_on
+        self.async_write_ha_state()

@@ -13,7 +13,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import Event, HomeAssistant, ServiceCall
 
 from .const import (
     DOMAIN,
@@ -54,7 +54,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = dio_chacon_client
 
     # Disconnects the permanent websocket connection of home assistant shutdown
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, dio_chacon_client.disconnect)
+    async def call_disconnect(event: Event) -> None:
+        await dio_chacon_client.disconnect()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, call_disconnect)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

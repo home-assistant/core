@@ -1,16 +1,17 @@
 """Config flow for dio_chacon integration."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any
 
 from dio_chacon_wifi_api import DIOChaconAPIClient
-from dio_chacon_wifi_api.exceptions import DIOChaconAPIError
+from dio_chacon_wifi_api.exceptions import DIOChaconAPIError, DIOChaconInvalidAuthError
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_UNIQUE_ID, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -26,7 +27,7 @@ class DioChaconConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self._show_setup_form()
@@ -39,6 +40,8 @@ class DioChaconConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._user_id = await self._authenticate_and_search_user_id()
         except DIOChaconAPIError:
             errors["base"] = "cannot_connect"
+        except DIOChaconInvalidAuthError:
+            errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"

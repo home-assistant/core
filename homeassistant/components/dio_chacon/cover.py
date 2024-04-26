@@ -12,7 +12,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -190,6 +190,7 @@ class DioChaconShade(RestoreEntity, CoverEntity):
         # Remove listener on entity destruction
         self.async_on_remove(listener_callback_event)
 
+    @callback
     def _on_device_state_changed(self, event):
         # On server side event of state change
         if event.data.get("id") == self._target_id:
