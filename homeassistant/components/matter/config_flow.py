@@ -230,6 +230,7 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         if not async_is_onboarded(self.hass) and is_hassio(self.hass):
+            await self._async_handle_discovery_without_unique_id()
             return await self.async_step_on_supervisor(
                 user_input={CONF_USE_ADDON: True}
             )
