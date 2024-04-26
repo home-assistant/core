@@ -9,12 +9,11 @@ from homeassistant.components.button import ButtonEntity, ButtonEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TotalConnectDataUpdateCoordinator
 from .const import DOMAIN
-from .entity import TotalConnectZoneEntity
+from .entity import TotalConnectLocationEntity, TotalConnectZoneEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -47,7 +46,7 @@ async def async_setup_entry(
 
     for location_id, location in coordinator.client.locations.items():
         buttons.extend(
-            TotalConnectPanelButton(location, description)
+            TotalConnectPanelButton(coordinator, location, description)
             for description in PANEL_BUTTONS
         )
 
@@ -78,7 +77,7 @@ class TotalConnectZoneBypassButton(TotalConnectZoneEntity, ButtonEntity):
         self._zone.bypass()
 
 
-class TotalConnectPanelButton(ButtonEntity):
+class TotalConnectPanelButton(TotalConnectLocationEntity, ButtonEntity):
     """Generic TotalConnect panel button."""
 
     _attr_has_entity_name = True
@@ -86,18 +85,15 @@ class TotalConnectPanelButton(ButtonEntity):
     entity_description: TotalConnectButtonEntityDescription
 
     def __init__(
-        self, location, entity_description: TotalConnectButtonEntityDescription
+        self,
+        coordinator,
+        location,
+        entity_description: TotalConnectButtonEntityDescription,
     ) -> None:
         """Initialize the TotalConnect button."""
-        self._location = location
+        super().__init__(coordinator, location)
         self.entity_description = entity_description
-        device = location.devices[location.security_device_id]
         self._attr_unique_id = f"{location.location_id}_{entity_description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.serial_number)},
-            name=device.name,
-            serial_number=device.serial_number,
-        )
 
     def press(self) -> None:
         """Press the button."""
