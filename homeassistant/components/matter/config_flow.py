@@ -66,6 +66,7 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Set up flow instance."""
+        self._running_in_background = False
         self.ws_address: str | None = None
         # If we install the add-on we should uninstall it on entry remove.
         self.integration_created_addon = False
@@ -80,7 +81,7 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self.install_task:
             self.install_task = self.hass.async_create_task(self._async_install_addon())
 
-        if not self.install_task.done():
+        if not self._running_in_background and not self.install_task.done():
             return self.async_show_progress(
                 step_id="install_addon",
                 progress_action="install_addon",
@@ -91,12 +92,16 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.install_task
         except AddonError as err:
             LOGGER.error(err)
+            if self._running_in_background:
+                return await self.async_step_install_failed()
             return self.async_show_progress_done(next_step_id="install_failed")
         finally:
             self.install_task = None
 
         self.integration_created_addon = True
 
+        if self._running_in_background:
+            return await self.async_step_start_addon()
         return self.async_show_progress_done(next_step_id="start_addon")
 
     async def async_step_install_failed(
@@ -127,7 +132,7 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
         """Start Matter Server add-on."""
         if not self.start_task:
             self.start_task = self.hass.async_create_task(self._async_start_addon())
-        if not self.start_task.done():
+        if not self._running_in_background and not self.start_task.done():
             return self.async_show_progress(
                 step_id="start_addon",
                 progress_action="start_addon",
@@ -138,10 +143,14 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.start_task
         except (FailedConnect, AddonError, AbortFlow) as err:
             LOGGER.error(err)
+            if self._running_in_background:
+                return await self.async_step_start_failed()
             return self.async_show_progress_done(next_step_id="start_failed")
         finally:
             self.start_task = None
 
+        if self._running_in_background:
+            return await self.async_step_finish_addon_setup()
         return self.async_show_progress_done(next_step_id="finish_addon_setup")
 
     async def async_step_start_failed(
@@ -231,6 +240,7 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         if not async_is_onboarded(self.hass) and is_hassio(self.hass):
             await self._async_handle_discovery_without_unique_id()
+            self._running_in_background = True
             return await self.async_step_on_supervisor(
                 user_input={CONF_USE_ADDON: True}
             )
