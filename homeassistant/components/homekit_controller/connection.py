@@ -839,17 +839,6 @@ class HKDevice:
         """Request an debounced update from the accessory."""
         await self._debounced_update.async_call()
 
-    async def async_is_reachable(self, timeout: float = 5.0) -> bool:
-        """Return if the accessory is reachable."""
-        try:
-            return bool(
-                await self.pairing.controller.async_find(
-                    self.unique_id, timeout=timeout
-                )
-            )
-        except AccessoryNotFoundError:
-            return False
-
     async def async_update(self, now: datetime | None = None) -> None:
         """Poll state of all entities attached to this bridge/accessory."""
         if (
@@ -857,7 +846,9 @@ class HKDevice:
             and self.available
             and not (self.pollable_characteristics - self.watchable_characteristics)
             and self.pairing.is_available
-            and await self.async_is_reachable()
+            and await self.pairing.controller.async_reachable(
+                self.unique_id, timeout=5.0
+            )
         ):
             # If its a single accessory and all chars are watchable,
             # we don't need to poll.
