@@ -66,6 +66,15 @@ def setup_entry_fixture() -> Generator[AsyncMock, None, None]:
         yield mock_setup_entry
 
 
+@pytest.fixture(name="unload_entry", autouse=True)
+def unload_entry_fixture() -> Generator[AsyncMock, None, None]:
+    """Mock entry unload."""
+    with patch(
+        "homeassistant.components.matter.async_unload_entry", return_value=True
+    ) as mock_unload_entry:
+        yield mock_unload_entry
+
+
 @pytest.fixture(name="client_connect", autouse=True)
 def client_connect_fixture() -> Generator[AsyncMock, None, None]:
     """Mock server version."""
