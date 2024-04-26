@@ -57,6 +57,10 @@ class Switch(CoordinatedTPLinkEntity, SwitchEntity):
         """Initialize the switch."""
         super().__init__(device, coordinator, feature=feature, parent=parent)
         # TODO: generalize creation of entitydescription into CoordinatedTPLinkEntity?
+        # Use the device name for the primary switch control
+        if feature.category is Feature.Category.Primary:
+            self._attr_name = None
+
         self.entity_description = SwitchEntityDescription(
             key=feature.id,
             translation_key=feature.id,
