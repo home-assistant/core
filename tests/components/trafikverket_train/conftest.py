@@ -63,7 +63,7 @@ async def load_integration_from_entry(
         unique_id="stockholmc-uppsalac-1100-['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']",
     )
     config_entry2.add_to_hass(hass)
-    await setup_config_entry_with_mocked_data(config_entry.entry_id)
+    await setup_config_entry_with_mocked_data(config_entry2.entry_id)
 
     return config_entry
 
