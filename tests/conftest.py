@@ -386,8 +386,12 @@ def verify_cleanup(
             "waitpid-"
         )
 
-    # Verify the default time zone has been restored
-    assert dt_util.DEFAULT_TIME_ZONE is datetime.UTC
+    try:
+        # Verify the default time zone has been restored
+        assert dt_util.DEFAULT_TIME_ZONE is datetime.UTC
+    finally:
+        # Restore the default time zone to not break subsequent tests
+        dt_util.DEFAULT_TIME_ZONE = datetime.UTC
 
 
 @pytest.fixture(autouse=True)
