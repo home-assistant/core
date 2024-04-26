@@ -2007,7 +2007,7 @@ async def test_get_or_create_thread_safety(
 async def test_async_update_entity_thread_safety(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test call async_get_or_create_from a thread."""
+    """Test call async_get_or_create from a thread."""
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
     with pytest.raises(
         RuntimeError,
@@ -2025,7 +2025,7 @@ async def test_async_update_entity_thread_safety(
 async def test_async_remove_thread_safety(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test call async_remove a thread."""
+    """Test call async_remove from a thread."""
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
     with pytest.raises(
         RuntimeError,
