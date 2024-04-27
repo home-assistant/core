@@ -1,6 +1,7 @@
 """Tests for the Entity Registry."""
 
 from datetime import timedelta
+from functools import partial
 from typing import Any
 from unittest.mock import patch
 
@@ -1988,3 +1989,46 @@ async def test_entries_for_category(entity_registry: er.EntityRegistry) -> None:
     assert not er.async_entries_for_category(entity_registry, "", "id")
     assert not er.async_entries_for_category(entity_registry, "scope1", "unknown")
     assert not er.async_entries_for_category(entity_registry, "scope1", "")
+
+
+async def test_get_or_create_thread_safety(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test call async_get_or_create_from a thread."""
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls async_get_or_create from a thread. Please report this issue.",
+    ):
+        await hass.async_add_executor_job(
+            entity_registry.async_get_or_create, "light", "hue", "1234"
+        )
+
+
+async def test_async_update_entity_thread_safety(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test call async_get_or_create from a thread."""
+    entry = entity_registry.async_get_or_create("light", "hue", "1234")
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls _async_update_entity from a thread. Please report this issue.",
+    ):
+        await hass.async_add_executor_job(
+            partial(
+                entity_registry.async_update_entity,
+                entry.entity_id,
+                new_unique_id="5678",
+            )
+        )
+
+
+async def test_async_remove_thread_safety(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test call async_remove from a thread."""
+    entry = entity_registry.async_get_or_create("light", "hue", "1234")
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls async_remove from a thread. Please report this issue.",
+    ):
+        await hass.async_add_executor_job(entity_registry.async_remove, entry.entity_id)
