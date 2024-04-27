@@ -2,6 +2,7 @@
 
 from collections.abc import Iterable
 from contextlib import AbstractContextManager, nullcontext
+from functools import partial
 import time
 from typing import Any
 from unittest.mock import patch
@@ -2473,3 +2474,49 @@ async def test_device_name_translation_placeholders_errors(
         )
 
     assert expected_error in caplog.text
+
+
+async def test_async_get_or_create_thread_safety(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test async_get_or_create raises when called from wrong thread."""
+
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls async_update_device from a thread. Please report this issue.",
+    ):
+        await hass.async_add_executor_job(
+            partial(
+                device_registry.async_get_or_create,
+                config_entry_id=mock_config_entry.entry_id,
+                connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+                identifiers=set(),
+                manufacturer="manufacturer",
+                model="model",
+            )
+        )
+
+
+async def test_async_remove_device_thread_safety(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test async_remove_device raises when called from wrong thread."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers=set(),
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls async_remove_device from a thread. Please report this issue.",
+    ):
+        await hass.async_add_executor_job(
+            device_registry.async_remove_device, device.id
+        )
