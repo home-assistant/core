@@ -1560,6 +1560,7 @@ async def test_group_that_references_a_group_of_covers(hass: HomeAssistant) -> N
     for entity_id in entity_ids:
         hass.states.async_set(entity_id, "closed")
     await hass.async_block_till_done()
+    assert await async_setup_component(hass, "cover", {})
 
     assert await async_setup_component(
         hass,
@@ -1643,6 +1644,7 @@ async def test_group_that_references_two_types_of_groups(hass: HomeAssistant) ->
         hass.states.async_set(entity_id, "home")
     await hass.async_block_till_done()
 
+    assert await async_setup_component(hass, "cover", {})
     assert await async_setup_component(hass, "device_tracker", {})
     assert await async_setup_component(
         hass,

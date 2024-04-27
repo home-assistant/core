@@ -8,7 +8,7 @@ from collections.abc import Callable, Collection, Mapping
 import logging
 from typing import Any
 
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_ON
+from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -133,6 +133,7 @@ class Group(Entity):
     _attr_should_poll = False
     tracking: tuple[str, ...]
     trackable: tuple[str, ...]
+    single_state_type_key: tuple[str, str] | None
 
     def __init__(
         self,
@@ -287,6 +288,7 @@ class Group(Entity):
         if not entity_ids:
             self.tracking = ()
             self.trackable = ()
+            self.single_state_type_key = None
             return
 
         registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
@@ -294,15 +296,40 @@ class Group(Entity):
 
         tracking: list[str] = []
         trackable: list[str] = []
+        single_state_type_key: set[tuple[str, str]] = set()
         for ent_id in entity_ids:
             ent_id_lower = ent_id.lower()
             domain = split_entity_id(ent_id_lower)[0]
             tracking.append(ent_id_lower)
             if domain not in excluded_domains:
                 trackable.append(ent_id_lower)
+            if domain in registry.state_group_mapping:
+                single_state_type_key.add(registry.state_group_mapping[domain])
+            elif domain == DOMAIN:
+                for group in iter(registry.group_entities):
+                    if group.entity_id == ent_id and group.single_state_type_key:
+                        single_state_type_key.add(group.single_state_type_key)
+                        break
+            else:
+                single_state_type_key.add((STATE_ON, STATE_OFF))
+
+        self.single_state_type_key = (
+            next(iter(single_state_type_key))
+            if len(single_state_type_key) == 1
+            else None
+        )
+        registry.group_entities.add(self)
+        self.async_on_remove(self._deregister)
 
         self.trackable = tuple(trackable)
         self.tracking = tuple(tracking)
+
+    @callback
+    def _deregister(self) -> None:
+        """Deregister group entity from the registry."""
+        registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
+        if self in registry.group_entities:
+            registry.group_entities.remove(self)
 
     @callback
     def _async_start(self, _: HomeAssistant | None = None) -> None:
@@ -430,12 +457,14 @@ class Group(Entity):
         # have the same on state we use this state
         # and its hass.data[REG_KEY].on_off_mapping to off
         if num_on_states == 1:
-            on_state = list(self._on_states)[0]
+            on_state = next(iter(self._on_states))
         # If we do not have an on state for any domains
         # we use None (which will be STATE_UNKNOWN)
         elif num_on_states == 0:
             self._state = None
             return
+        if self.single_state_type_key:
+            on_state = self.single_state_type_key[0]
         # If the entity domains have more than one
         # on state, we use STATE_ON/STATE_OFF
         else:
@@ -444,8 +473,11 @@ class Group(Entity):
         if group_is_on:
             self._state = on_state
         else:
-            registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
-            self._state = registry.on_off_mapping[on_state]
+            self._state = (
+                self.single_state_type_key[1]
+                if self.single_state_type_key
+                else STATE_OFF
+            )
 
 
 def async_get_component(hass: HomeAssistant) -> EntityComponent[Group]:
