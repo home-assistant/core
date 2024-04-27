@@ -495,7 +495,7 @@ async def test_legacy_entity_type(
                 "action": TEST_AUTOMATION_ACTION,
                 "trigger": {
                     "platform": calendar.DOMAIN,
-                    "entity_id": "calendar.calendar_3",
+                    "entity_id": "calendar.calendar_4",
                 },
             }
         },

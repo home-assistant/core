@@ -8,7 +8,12 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.calendar import DOMAIN, CalendarEntity, CalendarEvent
+from homeassistant.components.calendar import (
+    DOMAIN,
+    CalendarEntity,
+    CalendarEntityFeature,
+    CalendarEvent,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -44,9 +49,15 @@ class MockCalendarEntity(CalendarEntity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, name: str, events: list[CalendarEvent] | None = None) -> None:
+    def __init__(
+        self,
+        name: str,
+        events: list[CalendarEvent] | None = None,
+        supported_features: int | None = None,
+    ) -> None:
         """Initialize entity."""
         self._attr_name = name.capitalize()
+        self._attr_supported_features = supported_features
         self._events = events or []
 
     @property
@@ -196,4 +207,7 @@ def create_test_entities() -> list[MockCalendarEntity]:
     )
     entity2.async_get_events = AsyncMock(wraps=entity2.async_get_events)
 
-    return [entity1, entity2]
+    entity3 = MockCalendarEntity("Calendar 3", [], CalendarEntityFeature.CREATE_EVENT)
+    entity3.async_get_events = AsyncMock(wraps=entity3.async_get_events)
+
+    return [entity1, entity2, entity3]

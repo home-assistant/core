@@ -22,6 +22,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.issue_registry import IssueRegistry
 import homeassistant.util.dt as dt_util
 
+from . import TEST_ICAL, TEST_INVALID_ICAL, TEST_TXT
 from .conftest import TEST_DOMAIN, MockCalendarEntity, MockConfigEntry
 
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -126,7 +127,45 @@ async def test_calendars_http_api(
     assert data == [
         {"entity_id": "calendar.calendar_1", "name": "Calendar 1"},
         {"entity_id": "calendar.calendar_2", "name": "Calendar 2"},
+        {"entity_id": "calendar.calendar_3", "name": "Calendar 3"},
     ]
+
+
+@pytest.mark.parametrize(
+    ("payload", "message"),
+    [
+        (
+            {"file": TEST_ICAL.open("rb")},
+            "required key not provided @ data['entity_id']",
+        ),
+        (
+            {"file": TEST_ICAL.open("rb"), "entity_id": "calendar.calendar_4"},
+            "Entity not found",
+        ),
+        (
+            {"file": TEST_ICAL.open("rb"), "entity_id": "calendar.calendar_1"},
+            "Calendar does not support event creation",
+        ),
+        (
+            {"file": TEST_TXT.open("rb"), "entity_id": "calendar.calendar_3"},
+            "Only ics Calendar files are allowed",
+        ),
+        (
+            {"file": TEST_INVALID_ICAL.open("rb"), "entity_id": "calendar.calendar_3"},
+            "Failed to parse ics file",
+        ),
+    ],
+)
+async def test_import_events_http_api_invalid_params(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, payload, message
+) -> None:
+    """Test the import events view."""
+    client = await hass_client()
+    response = await client.post("/api/calendars/import", data=payload)
+    assert response.status == HTTPStatus.BAD_REQUEST
+    data = await response.json()
+    assert data == {"message": message}
+    payload["file"].close()
 
 
 @pytest.mark.parametrize(
