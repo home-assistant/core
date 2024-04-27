@@ -58,10 +58,10 @@
     },
     "button": {
       "clear_bypass": {
-        "name": "Clear Bypass"
+        "name": "Clear bypass"
       },
       "bypass_all": {
-        "name": "Bypass All"
+        "name": "Bypass all"
       }
     }
   }
