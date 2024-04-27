@@ -1408,6 +1408,7 @@ class _OneTimeListener(Generic[_DataT]):
 EMPTY_LIST: list[Any] = []
 
 
+@functools.lru_cache
 def _verify_event_type_length_or_raise(event_type: EventType[_DataT] | str) -> None:
     """Verify the length of the event type and raise if too long."""
     if len(event_type) > MAX_LENGTH_EVENT_EVENT_TYPE:
