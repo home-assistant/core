@@ -1189,8 +1189,10 @@ class Entity(
             )
 
         # Overwrite properties that have been set in the config file.
-        if customize := hass.data.get(DATA_CUSTOMIZE):
-            attr.update(customize.get(entity_id))
+        if (customize := hass.data.get(DATA_CUSTOMIZE)) and (
+            custom := customize.get(entity_id)
+        ):
+            attr.update(custom)
 
         if (
             self._context_set is not None
