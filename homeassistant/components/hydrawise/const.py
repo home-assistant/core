@@ -16,3 +16,5 @@ MANUFACTURER = "Hydrawise"
 SCAN_INTERVAL = timedelta(seconds=30)
 
 SIGNAL_UPDATE_HYDRAWISE = "hydrawise_update"
+
+SERVICE_START_WATERING = "start_watering"
