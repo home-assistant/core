@@ -24,6 +24,30 @@ from .entity import AutomowerBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up number platform."""
+    coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    entities: list[NumberEntity] = []
+    entities.extend(
+        AutomowerNumberEntity(mower_id, coordinator, description)
+        for mower_id in coordinator.data
+        for description in NUMBER_TYPES
+        if description.exists_fn(coordinator.data[mower_id])
+    )
+    entities.extend(
+        AutomowerWorkAreaNumberEntity(mower_id, coordinator, description, work_area_id)
+        for mower_id in coordinator.data
+        for description in WORK_AREA_NUMBER_TYPES
+        for work_area_id in _async_work_area_mowers(
+            coordinator.data[mower_id].work_areas
+        )
+        if coordinator.data[mower_id].capabilities.work_areas
+    )
+    async_add_entities(entities)
+
+
 @callback
 def _async_get_cutting_height(data: MowerAttributes) -> int:
     """Return the cutting height."""
@@ -118,13 +142,31 @@ def _work_area_translation_key(work_area_id: int) -> str:
     return "cutting_height_work_area"
 
 
+async def async_set_work_area_cutting_height(
+    coordinator: AutomowerDataUpdateCoordinator,
+    mower_id: str,
+    cheight: float,
+    work_area_id: int,
+) -> None:
+    """Set cutting height for work area."""
+    await coordinator.api.set_cutting_height_workarea(
+        mower_id, int(cheight), work_area_id
+    )
+    # As there are no updates from the websocket regarding work area changes,
+    # we need to wait 5s and then poll the API.
+    await asyncio.sleep(5)
+    await coordinator.async_request_refresh()
+
+
 @dataclass(frozen=True, kw_only=True)
 class AutomowerWorkAreaNumberEntityDescription(NumberEntityDescription):
     """Describes Automower work area number entity."""
 
     value_fn: Callable[[WorkArea], int]
     translation_key_fn: Callable[[int], str]
-    set_value_fn: Callable[[AutomowerSession, str, float, int], Awaitable[Any]]
+    set_value_fn: Callable[
+        [AutomowerDataUpdateCoordinator, str, float, int], Awaitable[Any]
+    ]
 
 
 WORK_AREA_NUMBER_TYPES: tuple[AutomowerWorkAreaNumberEntityDescription, ...] = (
@@ -134,14 +176,7 @@ WORK_AREA_NUMBER_TYPES: tuple[AutomowerWorkAreaNumberEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=_async_get_work_area_cutting_height,
-        set_value_fn=(
-            lambda session,
-            mower_id,
-            cheight,
-            work_area_id: session.set_cutting_height_workarea(
-                mower_id, int(cheight), work_area_id
-            )
-        ),
+        set_value_fn=async_set_work_area_cutting_height,
     ),
 )
 
@@ -186,36 +221,9 @@ class AutomowerWorkAreaNumberEntity(AutomowerBaseEntity, NumberEntity):
         """Change to new number value."""
         try:
             await self.entity_description.set_value_fn(
-                self.coordinator.api, self.mower_id, value, self.work_area_id
+                self.coordinator, self.mower_id, value, self.work_area_id
             )
-            # As there are no updates from the websocket regarding work area changes,
-            # we need to wait 5s an then poll the API.
-            await asyncio.sleep(5)
-            await self.async_update()
         except ApiException as exception:
             raise HomeAssistantError(
                 f"Command couldn't be sent to the command queue: {exception}"
             ) from exception
-
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Set up number platform."""
-    coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        AutomowerNumberEntity(mower_id, coordinator, description)
-        for mower_id in coordinator.data
-        for description in NUMBER_TYPES
-        if description.exists_fn(coordinator.data[mower_id])
-    )
-
-    async_add_entities(
-        AutomowerWorkAreaNumberEntity(mower_id, coordinator, description, work_area_id)
-        for mower_id in coordinator.data
-        for description in WORK_AREA_NUMBER_TYPES
-        for work_area_id in _async_work_area_mowers(
-            coordinator.data[mower_id].work_areas
-        )
-        if coordinator.data[mower_id].capabilities.work_areas
-    )
