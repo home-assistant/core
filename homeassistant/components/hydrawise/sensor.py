@@ -119,9 +119,11 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
 
     def _update_attrs(self) -> None:
         """Update state attributes."""
-        method = getattr(self, f"_update_attrs_{self.entity_description.key}")
-        if method:
-            method()
+        specific_update_attrs_method = getattr(
+            self, f"_update_attrs_{self.entity_description.key}"
+        )
+        if specific_update_attrs_method:
+            specific_update_attrs_method()
 
     def _update_attrs_watering_time(self) -> None:
         if (current_run := self.zone.scheduled_runs.current_run) is not None:
