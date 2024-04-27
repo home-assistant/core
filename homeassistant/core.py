@@ -2266,8 +2266,6 @@ class StateMachine:
             return
 
         if context is None:
-            if TYPE_CHECKING:
-                assert timestamp is not None
             context = Context(id=ulid_at_time(timestamp))
 
         if same_attr:
