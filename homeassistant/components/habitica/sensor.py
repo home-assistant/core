@@ -4,9 +4,7 @@ from __future__ import annotations
 
 from collections import namedtuple
 from dataclasses import dataclass
-from datetime import timedelta
 from enum import StrEnum
-import logging
 from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
@@ -26,10 +24,6 @@ from homeassistant.helpers.issue_registry import (
 )
 
 from .const import DOMAIN, MANUFACTURER, NAME
-
-_LOGGER = logging.getLogger(__name__)
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 SensorType = namedtuple("SensorType", ["name", "icon", "unit", "path"])
 
