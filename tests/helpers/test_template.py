@@ -707,7 +707,7 @@ def test_multiply(hass: HomeAssistant) -> None:
     for inp, out in tests.items():
         assert (
             template.Template(
-                "{{ %s | multiply(10) | round }}" % inp, hass
+                f"{{{{ {inp} | multiply(10) | round }}}}", hass
             ).async_render()
             == out
         )
@@ -775,7 +775,9 @@ def test_sine(hass: HomeAssistant) -> None:
 
     for value, expected in tests:
         assert (
-            template.Template("{{ %s | sin | round(3) }}" % value, hass).async_render()
+            template.Template(
+                f"{{{{ {value} | sin | round(3) }}}}", hass
+            ).async_render()
             == expected
         )
         assert render(hass, f"{{{{ sin({value}) | round(3) }}}}") == expected
@@ -805,7 +807,9 @@ def test_cos(hass: HomeAssistant) -> None:
 
     for value, expected in tests:
         assert (
-            template.Template("{{ %s | cos | round(3) }}" % value, hass).async_render()
+            template.Template(
+                f"{{{{ {value} | cos | round(3) }}}}", hass
+            ).async_render()
             == expected
         )
         assert render(hass, f"{{{{ cos({value}) | round(3) }}}}") == expected
@@ -835,7 +839,9 @@ def test_tan(hass: HomeAssistant) -> None:
 
     for value, expected in tests:
         assert (
-            template.Template("{{ %s | tan | round(3) }}" % value, hass).async_render()
+            template.Template(
+                f"{{{{ {value} | tan | round(3) }}}}", hass
+            ).async_render()
             == expected
         )
         assert render(hass, f"{{{{ tan({value}) | round(3) }}}}") == expected
@@ -865,7 +871,9 @@ def test_sqrt(hass: HomeAssistant) -> None:
 
     for value, expected in tests:
         assert (
-            template.Template("{{ %s | sqrt | round(3) }}" % value, hass).async_render()
+            template.Template(
+                f"{{{{ {value} | sqrt | round(3) }}}}", hass
+            ).async_render()
             == expected
         )
         assert render(hass, f"{{{{ sqrt({value}) | round(3) }}}}") == expected
@@ -895,7 +903,9 @@ def test_arc_sine(hass: HomeAssistant) -> None:
 
     for value, expected in tests:
         assert (
-            template.Template("{{ %s | asin | round(3) }}" % value, hass).async_render()
+            template.Template(
+                f"{{{{ {value} | asin | round(3) }}}}", hass
+            ).async_render()
             == expected
         )
         assert render(hass, f"{{{{ asin({value}) | round(3) }}}}") == expected
@@ -909,7 +919,9 @@ def test_arc_sine(hass: HomeAssistant) -> None:
 
     for value in invalid_tests:
         with pytest.raises(TemplateError):
-            template.Template("{{ %s | asin | round(3) }}" % value, hass).async_render()
+            template.Template(
+                f"{{{{ {value} | asin | round(3) }}}}", hass
+            ).async_render()
         with pytest.raises(TemplateError):
             assert render(hass, f"{{{{ asin({value}) | round(3) }}}}")
 
@@ -932,7 +944,9 @@ def test_arc_cos(hass: HomeAssistant) -> None:
 
     for value, expected in tests:
         assert (
-            template.Template("{{ %s | acos | round(3) }}" % value, hass).async_render()
+            template.Template(
+                f"{{{{ {value} | acos | round(3) }}}}", hass
+            ).async_render()
             == expected
         )
         assert render(hass, f"{{{{ acos({value}) | round(3) }}}}") == expected
@@ -946,7 +960,9 @@ def test_arc_cos(hass: HomeAssistant) -> None:
 
     for value in invalid_tests:
         with pytest.raises(TemplateError):
-            template.Template("{{ %s | acos | round(3) }}" % value, hass).async_render()
+            template.Template(
+                f"{{{{ {value} | acos | round(3) }}}}", hass
+            ).async_render()
         with pytest.raises(TemplateError):
             assert render(hass, f"{{{{ acos({value}) | round(3) }}}}")
 
@@ -973,7 +989,9 @@ def test_arc_tan(hass: HomeAssistant) -> None:
 
     for value, expected in tests:
         assert (
-            template.Template("{{ %s | atan | round(3) }}" % value, hass).async_render()
+            template.Template(
+                f"{{{{ {value} | atan | round(3) }}}}", hass
+            ).async_render()
             == expected
         )
         assert render(hass, f"{{{{ atan({value}) | round(3) }}}}") == expected
@@ -1122,7 +1140,7 @@ def test_timestamp_local(hass: HomeAssistant) -> None:
 
     for inp, out in tests:
         assert (
-            template.Template("{{ %s | timestamp_local }}" % inp, hass).async_render()
+            template.Template(f"{{{{ {inp} | timestamp_local }}}}", hass).async_render()
             == out
         )
 
@@ -1133,7 +1151,7 @@ def test_timestamp_local(hass: HomeAssistant) -> None:
 
     for inp in invalid_tests:
         with pytest.raises(TemplateError):
-            template.Template("{{ %s | timestamp_local }}" % inp, hass).async_render()
+            template.Template(f"{{{{ {inp} | timestamp_local }}}}", hass).async_render()
 
     # Test handling of default return value
     assert render(hass, "{{ None | timestamp_local(1) }}") == 1
@@ -1616,7 +1634,7 @@ def test_ordinal(hass: HomeAssistant) -> None:
 
     for value, expected in tests:
         assert (
-            template.Template("{{ %s | ordinal }}" % value, hass).async_render()
+            template.Template(f"{{{{ {value} | ordinal }}}}", hass).async_render()
             == expected
         )
 
@@ -1631,7 +1649,7 @@ def test_timestamp_utc(hass: HomeAssistant) -> None:
 
     for inp, out in tests:
         assert (
-            template.Template("{{ %s | timestamp_utc }}" % inp, hass).async_render()
+            template.Template(f"{{{{ {inp} | timestamp_utc }}}}", hass).async_render()
             == out
         )
 
@@ -1642,7 +1660,7 @@ def test_timestamp_utc(hass: HomeAssistant) -> None:
 
     for inp in invalid_tests:
         with pytest.raises(TemplateError):
-            template.Template("{{ %s | timestamp_utc }}" % inp, hass).async_render()
+            template.Template(f"{{{{ {inp} | timestamp_utc }}}}", hass).async_render()
 
     # Test handling of default return value
     assert render(hass, "{{ None | timestamp_utc(1) }}") == 1
@@ -4618,7 +4636,9 @@ def test_closest_function_invalid_state(hass: HomeAssistant) -> None:
 
     for state in ("states.zone.non_existing", '"zone.non_existing"'):
         assert (
-            template.Template("{{ closest(%s, states) }}" % state, hass).async_render()
+            template.Template(
+                f"{{{{ closest({state}, states) }}}}", hass
+            ).async_render()
             is None
         )
 
