@@ -90,7 +90,7 @@ from .helpers.system_info import async_get_system_info
 from .helpers.typing import ConfigType
 from .setup import (
     BASE_PLATFORMS,
-    DATA_SETUP_STARTED,
+    _setup_started,
     async_get_setup_timings,
     async_notify_setup_error,
     async_set_domains_to_be_loaded,
@@ -913,9 +913,7 @@ async def _async_set_up_integrations(
     hass: core.HomeAssistant, config: dict[str, Any]
 ) -> None:
     """Set up all the integrations."""
-    setup_started: dict[tuple[str, str | None], float] = {}
-    hass.data[DATA_SETUP_STARTED] = setup_started
-    watcher = _WatchPendingSetups(hass, setup_started)
+    watcher = _WatchPendingSetups(hass, _setup_started(hass))
     watcher.async_start()
 
     domains_to_setup, integration_cache = await _async_resolve_domains_to_setup(
