@@ -80,7 +80,6 @@ class AsekoUnitBinarySensorEntity(AsekoEntity, BinarySensorEntity):
         super().__init__(unit, coordinator)
         self.entity_description = entity_description
         self._attr_unique_id = f"{self._unit.serial_number}_{entity_description.key}"
-        self._attr_translation_key = entity_description.translation_key
 
     @property
     def is_on(self) -> bool:
