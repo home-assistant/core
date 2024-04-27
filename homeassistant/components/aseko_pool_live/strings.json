@@ -31,9 +31,6 @@
       },
       "alarm": {
         "name": "Alarm"
-      },
-      "error": {
-        "name": "Error"
       }
     },
     "sensor": {
