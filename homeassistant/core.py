@@ -2205,6 +2205,7 @@ class StateMachine:
         force_update: bool = False,
         context: Context | None = None,
         state_info: StateInfo | None = None,
+        timestamp: float | None = None,
     ) -> None:
         """Set the state of an entity, add entity if it does not exist.
 
@@ -2244,7 +2245,8 @@ class StateMachine:
         # timestamp implementation:
         # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6387
         # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6323
-        timestamp = time.time()
+        if timestamp is None:
+            timestamp = time.time()
         now = dt_util.utc_from_timestamp(timestamp)
 
         if same_state and same_attr:
