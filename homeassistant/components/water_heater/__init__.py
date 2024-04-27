@@ -44,11 +44,10 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import group as group_pre_import  # noqa: F401
+from .const import DOMAIN
 
 DEFAULT_MIN_TEMP = 110
 DEFAULT_MAX_TEMP = 140
-
-DOMAIN = "water_heater"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = timedelta(seconds=60)
