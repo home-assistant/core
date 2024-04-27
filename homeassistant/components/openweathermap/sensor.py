@@ -30,6 +30,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    ATTR_API_CLOUD_COVERAGE,
     ATTR_API_CLOUDS,
     ATTR_API_CONDITION,
     ATTR_API_CURRENT,
@@ -213,7 +214,7 @@ FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.WIND_SPEED,
     ),
     SensorEntityDescription(
-        key=ATTR_API_CLOUDS,
+        key=ATTR_API_CLOUD_COVERAGE,
         name="Cloud coverage",
         native_unit_of_measurement=PERCENTAGE,
     ),
