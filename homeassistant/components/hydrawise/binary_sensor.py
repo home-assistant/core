@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from pydrawise.schema import Sensor, Zone
-import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -41,15 +40,6 @@ ZONE_BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
 )
-
-BINARY_SENSOR_KEYS: list[str] = [
-    desc.key
-    for desc in (
-        *CONTROLLER_BINARY_SENSORS,
-        *RAIN_SENSOR_BINARY_SENSOR,
-        *ZONE_BINARY_SENSORS,
-    )
-]
 
 
 async def async_setup_entry(
