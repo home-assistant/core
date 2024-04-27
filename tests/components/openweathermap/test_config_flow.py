@@ -29,46 +29,49 @@ CONFIG = {
 VALID_YAML_CONFIG = {CONF_API_KEY: "foo"}
 
 
-async def todo_test_form(hass: HomeAssistant) -> None:
+def _create_mocked_owm_client(is_valid: bool):
+    mocked_owm_client = MagicMock()
+    mocked_owm_client.validate_key = AsyncMock(return_value=is_valid)
+    mocked_owm_client.get_weather = AsyncMock(return_value=None)
+
+    return mocked_owm_client
+
+
+@patch("pyopenweathermap.OWMClient", return_value=_create_mocked_owm_client(True))
+async def todotest_form(_, hass: HomeAssistant) -> None:
     """Test that the form is served with valid input."""
-    mocked_owm = _create_mocked_owm(True)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
-    with patch(
-        "pyowm.weatherapi25.weather_manager.WeatherManager",
-        return_value=mocked_owm,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
-        assert result["errors"] == {}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+    )
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
-        )
+    await hass.async_block_till_done()
 
-        await hass.async_block_till_done()
+    conf_entries = hass.config_entries.async_entries(DOMAIN)
+    entry = conf_entries[0]
+    assert entry.state is ConfigEntryState.LOADED
 
-        conf_entries = hass.config_entries.async_entries(DOMAIN)
-        entry = conf_entries[0]
-        assert entry.state is ConfigEntryState.LOADED
+    await hass.config_entries.async_unload(conf_entries[0].entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
-        await hass.config_entries.async_unload(conf_entries[0].entry_id)
-        await hass.async_block_till_done()
-        assert entry.state is ConfigEntryState.NOT_LOADED
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == CONFIG[CONF_NAME]
-        assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
-        assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
-        assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == CONFIG[CONF_NAME]
+    assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
+    assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
+    assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
 
 
 async def todo_test_form_options(hass: HomeAssistant) -> None:
     """Test that the options form."""
-    mocked_owm = _create_mocked_owm(True)
+    mocked_owm = _create_mocked_owm_old(True)
 
     with patch(
         "pyowm.weatherapi25.weather_manager.WeatherManager",
@@ -121,53 +124,31 @@ async def todo_test_form_options(hass: HomeAssistant) -> None:
         assert config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_form_invalid_api_key(hass: HomeAssistant) -> None:
+@patch("pyopenweathermap.OWMClient", return_value=_create_mocked_owm_client(False))
+async def test_form_invalid_api_key(w, hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
-    mocked_owm = _get_mocked_owm_client(False)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+    )
 
-    with patch(
-        "pyopenweathermap.OWMClient",
-        return_value=mocked_owm,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
-        )
-
-        assert result["errors"] == {"base": "invalid_api_key"}
+    assert result["errors"] == {"base": "invalid_api_key"}
 
 
-async def todo_test_form_api_call_error(hass: HomeAssistant) -> None:
+@patch(
+    "pyopenweathermap.OWMClient",
+    return_value=_create_mocked_owm_client(True),
+    side_effect=RequestError("oops"),
+)
+async def test_form_api_call_error(d, hass: HomeAssistant) -> None:
     """Test setting up with api call error."""
-    mocked_owm = _create_mocked_owm(True)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+    )
 
-    with patch(
-        "pyowm.weatherapi25.weather_manager.WeatherManager",
-        return_value=mocked_owm,
-        side_effect=RequestError(""),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
-        )
-
-        assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def t2est_form_api_offline(hass: HomeAssistant) -> None:
-    """Test setting up with api call error."""
-    mocked_owm = _create_mocked_owm(False)
-
-    with patch(
-        "homeassistant.components.openweathermap.config_flow.OWM",
-        return_value=mocked_owm,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
-        )
-
-        assert result["errors"] == {"base": "invalid_api_key"}
-
-
-def _create_mocked_owm(is_api_online: bool):
+def _create_mocked_owm_old(is_api_online: bool):
     mocked_owm = MagicMock()
 
     weather = MagicMock()
@@ -206,10 +187,3 @@ def _create_mocked_owm(is_api_online: bool):
     )
 
     return mocked_owm
-
-
-def _get_mocked_owm_client(is_valid: bool):
-    mocked_owm_client = AsyncMock()
-    mocked_owm_client.validate_key.return_value = is_valid
-
-    return mocked_owm_client
