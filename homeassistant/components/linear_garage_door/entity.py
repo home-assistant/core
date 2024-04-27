@@ -1,6 +1,5 @@
 """Base entity for Linear."""
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -15,7 +14,6 @@ class LinearEntity(CoordinatorEntity[LinearUpdateCoordinator]):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
         coordinator: LinearUpdateCoordinator,
         device_id: str,
         device_name: str,

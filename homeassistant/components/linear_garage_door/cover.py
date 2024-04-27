@@ -30,9 +30,7 @@ async def async_setup_entry(
     coordinator: LinearUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        LinearCoverEntity(
-            config_entry, coordinator, device_id, device_data.name, sub_device_id
-        )
+        LinearCoverEntity(coordinator, device_id, device_data.name, sub_device_id)
         for device_id, device_data in coordinator.data.items()
         for sub_device_id in device_data.subdevices
         if sub_device_id in SUPPORTED_SUBDEVICES
