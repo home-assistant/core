@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from syrupy import SnapshotAssertion
 from total_connect_client.exceptions import FailedToBypassZone
 
 from homeassistant.components.button import DOMAIN as BUTTON, SERVICE_PRESS
@@ -11,34 +12,26 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import (
-    LOCATION_ID,
     RESPONSE_ZONE_BYPASS_FAILURE,
     RESPONSE_ZONE_BYPASS_SUCCESS,
     TOTALCONNECT_REQUEST,
-    ZONE_NORMAL,
     setup_platform,
 )
+
+from tests.common import snapshot_platform
 
 ZONE_BYPASS_ID = "button.security_bypass"
 PANEL_CLEAR_ID = "button.test_clear_bypass"
 PANEL_BYPASS_ID = "button.test_bypass_all"
 
 
-async def test_entity_registry(hass: HomeAssistant) -> None:
+async def test_entity_registry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+) -> None:
     """Test the button is registered in entity registry."""
-    await setup_platform(hass, BUTTON)
-    entity_registry = er.async_get(hass)
+    entry = await setup_platform(hass, BUTTON)
 
-    # ensure zone 1 bypass is created
-    entry = entity_registry.async_get(ZONE_BYPASS_ID)
-    assert entry.unique_id == f"{LOCATION_ID}_{ZONE_NORMAL['ZoneID']}_bypass"
-
-    # ensure panel BypassAll and Clear are created
-    panel_bypass = entity_registry.async_get(PANEL_BYPASS_ID)
-    panel_clear = entity_registry.async_get(PANEL_CLEAR_ID)
-
-    assert panel_bypass.unique_id == f"{LOCATION_ID}_bypass_all"
-    assert panel_clear.unique_id == f"{LOCATION_ID}_clear_bypass"
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 @pytest.mark.parametrize(
