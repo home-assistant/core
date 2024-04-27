@@ -14,7 +14,7 @@ import logging
 import math
 from operator import attrgetter
 import sys
-from timeit import default_timer as timer
+import time
 from types import FunctionType
 from typing import (
     TYPE_CHECKING,
@@ -73,6 +73,8 @@ from .event import (
     async_track_entity_registry_updated_event,
 )
 from .typing import UNDEFINED, StateType, UndefinedType
+
+timer = time.time
 
 if TYPE_CHECKING:
     from .entity_platform import EntityPlatform
@@ -927,7 +929,7 @@ class Entity(
     def async_set_context(self, context: Context) -> None:
         """Set the context the entity currently operates under."""
         self._context = context
-        self._context_set = self.hass.loop.time()
+        self._context_set = time.time()
 
     async def async_update_ha_state(self, force_refresh: bool = False) -> None:
         """Update Home Assistant with current state of entity.
@@ -1131,9 +1133,9 @@ class Entity(
                 )
             return
 
-        start = timer()
+        state_calculate_start = timer()
         state, attr, capabilities, shadowed_attr = self.__async_calculate_state()
-        end = timer()
+        time_now = timer()
 
         if entry:
             # Make sure capabilities in the entity registry are up to date. Capabilities
@@ -1146,7 +1148,6 @@ class Entity(
                 or supported_features != entry.supported_features
             ):
                 if not self.__capabilities_updated_at_reported:
-                    time_now = hass.loop.time()
                     # _Entity__capabilities_updated_at is because of name mangling
                     if not (
                         capabilities_updated_at := getattr(
@@ -1180,14 +1181,14 @@ class Entity(
                     supported_features=supported_features,
                 )
 
-        if end - start > 0.4 and not self._slow_reported:
+        if time_now - state_calculate_start > 0.4 and not self._slow_reported:
             self._slow_reported = True
             report_issue = self._suggest_report_issue()
             _LOGGER.warning(
                 "Updating state for %s (%s) took %.3f seconds. Please %s",
                 entity_id,
                 type(self),
-                end - start,
+                time_now - state_calculate_start,
                 report_issue,
             )
 
@@ -1199,7 +1200,7 @@ class Entity(
 
         if (
             self._context_set is not None
-            and hass.loop.time() - self._context_set > CONTEXT_RECENT_TIME_SECONDS
+            and time_now - self._context_set > CONTEXT_RECENT_TIME_SECONDS
         ):
             self._context = None
             self._context_set = None
@@ -1212,6 +1213,7 @@ class Entity(
                 self.force_update,
                 self._context,
                 self._state_info,
+                time_now,
             )
         except InvalidStateError:
             _LOGGER.exception(
