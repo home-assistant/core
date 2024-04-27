@@ -29,12 +29,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
     access_token: str = entry.data.get("access_token", "")
-    expiration: datetime | None = (
-        datetime.fromisoformat(entry.data.get("expiration", "")).astimezone(
-            ZoneInfo(tz)
-        )
-        if "expiration" in entry.data
-        else None
+    expiration: datetime = datetime.fromisoformat(entry.data["expiration"]).astimezone(
+        ZoneInfo(tz)
     )
 
     fyta = FytaConnector(username, password, access_token, expiration, tz)
