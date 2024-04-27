@@ -75,16 +75,15 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-e
 
     async def _async_update_data(self):
         """Update the data."""
-        data = {}
+        weather_report = {}
         async with asyncio.timeout(20):
             try:
                 weather_report = await self._owm_client.get_weather(
                     self._latitude, self._longitude
                 )
-                data = self._convert_weather_response(weather_report)
             except RequestError as error:
                 raise UpdateFailed(error) from error
-        return data
+        return self._convert_weather_response(weather_report)
 
     def _convert_weather_response(self, weather_report: WeatherReport):
         """Format the weather response correctly."""
