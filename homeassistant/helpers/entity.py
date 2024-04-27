@@ -1014,6 +1014,9 @@ class Entity(
             return STATE_UNAVAILABLE
         if (state := self.state) is None:
             return STATE_UNKNOWN
+        if type(state) is str:  # noqa: E721
+            # fast path for strings
+            return state
         if isinstance(state, float):
             # If the entity's state is a float, limit precision according to machine
             # epsilon to make the string representation readable
