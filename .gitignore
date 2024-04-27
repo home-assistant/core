@@ -55,7 +55,6 @@ develop-eggs
 lib
 lib64
 pip-wheel-metadata
-*.whl
 
 # Logs
 *.log
