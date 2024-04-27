@@ -38,15 +38,15 @@ async def test_turn_on(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.linear_garage_door.light.Linear.login",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.login",
             return_value=True,
         ),
         patch(
-            "homeassistant.components.linear_garage_door.light.Linear.operate_device",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.operate_device",
             return_value=None,
         ) as operate_device,
         patch(
-            "homeassistant.components.linear_garage_door.light.Linear.close",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.close",
             return_value=True,
         ),
     ):
@@ -60,11 +60,11 @@ async def test_turn_on(hass: HomeAssistant) -> None:
     assert operate_device.call_count == 1
     with (
         patch(
-            "homeassistant.components.linear_garage_door.light.Linear.login",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.login",
             return_value=True,
         ),
         patch(
-            "homeassistant.components.linear_garage_door.light.Linear.get_devices",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.get_devices",
             return_value=[
                 {
                     "id": "test1",
@@ -79,7 +79,7 @@ async def test_turn_on(hass: HomeAssistant) -> None:
             ],
         ),
         patch(
-            "homeassistant.components.linear_garage_door.light.Linear.get_device_state",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.get_device_state",
             side_effect=lambda id: {
                 "test1": {
                     "GDO": {"Open_B": "true", "Open_P": "100"},
@@ -100,7 +100,7 @@ async def test_turn_on(hass: HomeAssistant) -> None:
             }[id],
         ),
         patch(
-            "homeassistant.components.linear_garage_door.light.Linear.close",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.close",
             return_value=True,
         ),
     ):
@@ -117,15 +117,15 @@ async def test_turn_on_with_brightness(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.linear_garage_door.light.Linear.login",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.login",
             return_value=True,
         ),
         patch(
-            "homeassistant.components.linear_garage_door.light.Linear.operate_device",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.operate_device",
             return_value=None,
         ) as operate_device,
         patch(
-            "homeassistant.components.linear_garage_door.light.Linear.close",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.close",
             return_value=True,
         ),
     ):
@@ -139,11 +139,11 @@ async def test_turn_on_with_brightness(hass: HomeAssistant) -> None:
     assert operate_device.call_count == 1
     with (
         patch(
-            "homeassistant.components.linear_garage_door.light.Linear.login",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.login",
             return_value=True,
         ),
         patch(
-            "homeassistant.components.linear_garage_door.light.Linear.get_devices",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.get_devices",
             return_value=[
                 {
                     "id": "test1",
@@ -158,7 +158,7 @@ async def test_turn_on_with_brightness(hass: HomeAssistant) -> None:
             ],
         ),
         patch(
-            "homeassistant.components.linear_garage_door.light.Linear.get_device_state",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.get_device_state",
             side_effect=lambda id: {
                 "test1": {
                     "GDO": {"Open_B": "true", "Open_P": "100"},
@@ -179,7 +179,7 @@ async def test_turn_on_with_brightness(hass: HomeAssistant) -> None:
             }[id],
         ),
         patch(
-            "homeassistant.components.linear_garage_door.light.Linear.close",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.close",
             return_value=True,
         ),
     ):
@@ -199,15 +199,15 @@ async def test_turn_off(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.linear_garage_door.light.Linear.login",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.login",
             return_value=True,
         ),
         patch(
-            "homeassistant.components.linear_garage_door.light.Linear.operate_device",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.operate_device",
             return_value=None,
         ) as operate_device,
         patch(
-            "homeassistant.components.linear_garage_door.light.Linear.close",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.close",
             return_value=True,
         ),
     ):
@@ -221,11 +221,11 @@ async def test_turn_off(hass: HomeAssistant) -> None:
     assert operate_device.call_count == 1
     with (
         patch(
-            "homeassistant.components.linear_garage_door.light.Linear.login",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.login",
             return_value=True,
         ),
         patch(
-            "homeassistant.components.linear_garage_door.light.Linear.get_devices",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.get_devices",
             return_value=[
                 {
                     "id": "test1",
@@ -240,7 +240,7 @@ async def test_turn_off(hass: HomeAssistant) -> None:
             ],
         ),
         patch(
-            "homeassistant.components.linear_garage_door.light.Linear.get_device_state",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.get_device_state",
             side_effect=lambda id: {
                 "test1": {
                     "GDO": {"Open_B": "true", "Closing_P": "100"},
@@ -261,7 +261,7 @@ async def test_turn_off(hass: HomeAssistant) -> None:
             }[id],
         ),
         patch(
-            "homeassistant.components.linear_garage_door.light.Linear.close",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.close",
             return_value=True,
         ),
     ):

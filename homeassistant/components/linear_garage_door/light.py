@@ -46,6 +46,7 @@ class LinearLightEntity(LinearEntity, LightEntity):
     """Light for Linear devices."""
 
     _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_name = "Light"
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     @property
@@ -66,7 +67,7 @@ class LinearLightEntity(LinearEntity, LightEntity):
             if not kwargs:
                 await linear.operate_device(self._device_id, self._sub_device_id, "On")
             elif ATTR_BRIGHTNESS in kwargs:
-                brightness = str(math.floor((kwargs[ATTR_BRIGHTNESS] / 255) * 100))
+                brightness = math.floor((kwargs[ATTR_BRIGHTNESS] / 255) * 100)
                 await linear.operate_device(
                     self._device_id, self._sub_device_id, f"DimPercent:{brightness}"
                 )
