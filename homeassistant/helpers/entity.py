@@ -14,6 +14,7 @@ import logging
 import math
 from operator import attrgetter
 import sys
+import time
 from types import FunctionType
 from typing import (
     TYPE_CHECKING,
@@ -72,6 +73,8 @@ from .event import (
     async_track_entity_registry_updated_event,
 )
 from .typing import UNDEFINED, StateType, UndefinedType
+
+timer = time.time
 
 if TYPE_CHECKING:
     from .entity_platform import EntityPlatform
@@ -926,7 +929,7 @@ class Entity(
     def async_set_context(self, context: Context) -> None:
         """Set the context the entity currently operates under."""
         self._context = context
-        self._context_set = self.hass.loop.time()
+        self._context_set = time.time()
 
     async def async_update_ha_state(self, force_refresh: bool = False) -> None:
         """Update Home Assistant with current state of entity.
@@ -1127,10 +1130,9 @@ class Entity(
                 )
             return
 
-        loop = hass.loop
-        state_calculate_start = loop.time()
+        state_calculate_start = timer()
         state, attr, capabilities, shadowed_attr = self.__async_calculate_state()
-        time_now = loop.time()
+        time_now = timer()
 
         if entry:
             # Make sure capabilities in the entity registry are up to date. Capabilities
@@ -1206,6 +1208,7 @@ class Entity(
                 self.force_update,
                 self._context,
                 self._state_info,
+                time_now,
             )
         except InvalidStateError:
             _LOGGER.exception(
