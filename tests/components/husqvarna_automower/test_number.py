@@ -60,7 +60,7 @@ async def test_number_workarea_commands(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test number commands."""
-    entity_id = "number.test_mower_1_cutting_height_front_lawn"
+    entity_id = "number.test_mower_1_front_lawn_cutting_height"
     await setup_integration(hass, mock_config_entry)
     values = mower_list_to_dictionary_dataclass(
         load_json_value_fixture("mower.json", DOMAIN)

@@ -138,8 +138,8 @@ def _async_work_area_mowers(data: dict[int, WorkArea] | None) -> dict[int, WorkA
 def _work_area_translation_key(work_area_id: int) -> str:
     """Return the translation key."""
     if work_area_id == 0:
-        return "cutting_height_my_lawn"
-    return "cutting_height_work_area"
+        return "my_lawn_cutting_height"
+    return "work_area_cutting_height"
 
 
 async def async_set_work_area_cutting_height(
@@ -197,7 +197,7 @@ class AutomowerWorkAreaNumberEntity(AutomowerBaseEntity, NumberEntity):
         super().__init__(mower_id, coordinator)
         self.entity_description = description
         self.work_area_id = work_area_id
-        self._attr_unique_id = f"{mower_id}_cutting_height_work_area_{work_area_id}"
+        self._attr_unique_id = f"{mower_id}_{work_area_id}_{description.key}"
         self._attr_translation_placeholders = {"work_area": self.work_area.name}
 
     @property

@@ -1,4 +1,60 @@
 # serializer version: 1
+# name: test_snapshot_number[number.test_mower_1_back_lawn_cutting_height-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.test_mower_1_back_lawn_cutting_height',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Back lawn cutting height',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'work_area_cutting_height',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_654321_cutting_height_work_area',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_snapshot_number[number.test_mower_1_back_lawn_cutting_height-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Mower 1 Back lawn cutting height',
+      'max': 100.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.test_mower_1_back_lawn_cutting_height',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
 # name: test_snapshot_number[number.test_mower_1_cutting_height-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -54,7 +110,7 @@
     'state': '4',
   })
 # ---
-# name: test_snapshot_number[number.test_mower_1_cutting_height_back_lawn-entry]
+# name: test_snapshot_number[number.test_mower_1_front_lawn_cutting_height-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -71,7 +127,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.test_mower_1_cutting_height_back_lawn',
+    'entity_id': 'number.test_mower_1_front_lawn_cutting_height',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -83,19 +139,19 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Cutting height Back lawn',
+    'original_name': 'Front lawn cutting height',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'cutting_height_work_area',
-    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_cutting_height_work_area_654321',
+    'translation_key': 'work_area_cutting_height',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_123456_cutting_height_work_area',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_snapshot_number[number.test_mower_1_cutting_height_back_lawn-state]
+# name: test_snapshot_number[number.test_mower_1_front_lawn_cutting_height-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 1 Cutting height Back lawn',
+      'friendly_name': 'Test Mower 1 Front lawn cutting height',
       'max': 100.0,
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -103,70 +159,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.test_mower_1_cutting_height_back_lawn',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '25',
-  })
-# ---
-# name: test_snapshot_number[number.test_mower_1_cutting_height_front_lawn-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 100.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.test_mower_1_cutting_height_front_lawn',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Cutting height Front lawn',
-    'platform': 'husqvarna_automower',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'cutting_height_work_area',
-    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_cutting_height_work_area_123456',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_snapshot_number[number.test_mower_1_cutting_height_front_lawn-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 1 Cutting height Front lawn',
-      'max': 100.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.test_mower_1_cutting_height_front_lawn',
+    'entity_id': 'number.test_mower_1_front_lawn_cutting_height',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50',
   })
 # ---
-# name: test_snapshot_number[number.test_mower_1_cutting_height_my_lawn-entry]
+# name: test_snapshot_number[number.test_mower_1_my_lawn_cutting_height-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -183,7 +183,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.test_mower_1_cutting_height_my_lawn',
+    'entity_id': 'number.test_mower_1_my_lawn_cutting_height',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -195,19 +195,19 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Cutting height My lawn',
+    'original_name': 'My lawn cutting height ',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'cutting_height_my_lawn',
-    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_cutting_height_work_area_0',
+    'translation_key': 'my_lawn_cutting_height',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_0_cutting_height_work_area',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_snapshot_number[number.test_mower_1_cutting_height_my_lawn-state]
+# name: test_snapshot_number[number.test_mower_1_my_lawn_cutting_height-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 1 Cutting height My lawn',
+      'friendly_name': 'Test Mower 1 My lawn cutting height ',
       'max': 100.0,
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -215,7 +215,7 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.test_mower_1_cutting_height_my_lawn',
+    'entity_id': 'number.test_mower_1_my_lawn_cutting_height',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
