@@ -40,7 +40,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.logging import catch_log_exception
 
@@ -895,10 +894,18 @@ class MQTT:
         import paho.mqtt.client as mqtt
 
         if result_code != mqtt.CONNACK_ACCEPTED:
+            if result_code in (
+                mqtt.CONNACK_REFUSED_BAD_USERNAME_PASSWORD,
+                mqtt.CONNACK_REFUSED_NOT_AUTHORIZED,
+            ):
+                self._should_reconnect = False
+                self.hass.async_create_task(self.async_disconnect())
+                self.config_entry.async_start_reauth(self.hass)
             _LOGGER.error(
                 "Unable to connect to the MQTT broker: %s",
                 mqtt.connack_string(result_code),
             )
+            self._async_connection_result(False)
             return
 
         self.connected = True
@@ -983,8 +990,6 @@ class MQTT:
             msg.qos,
             msg.payload[0:8192],
         )
-        timestamp = dt_util.utcnow()
-
         subscriptions = self._matching_subscriptions(topic)
         msg_cache_by_subscription_topic: dict[str, ReceiveMessage] = {}
 
@@ -1022,7 +1027,7 @@ class MQTT:
                     msg.qos,
                     msg.retain,
                     subscription_topic,
-                    timestamp,
+                    msg.timestamp,
                 )
                 msg_cache_by_subscription_topic[subscription_topic] = receive_msg
             else:

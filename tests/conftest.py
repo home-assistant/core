@@ -499,7 +499,7 @@ def aiohttp_client(
         elif isinstance(__param, BaseTestServer):
             client = TestClient(__param, loop=loop, **kwargs)
         else:
-            raise TypeError("Unknown argument type: %r" % type(__param))
+            raise TypeError(f"Unknown argument type: {type(__param)!r}")
 
         await client.start_server()
         clients.append(client)
@@ -542,8 +542,8 @@ async def hass(
         else:
             exceptions.append(
                 Exception(
-                    "Received exception handler without exception, but with message: %s"
-                    % context["message"]
+                    "Received exception handler without exception, "
+                    f"but with message: {context["message"]}"
                 )
             )
         orig_exception_handler(loop, context)
@@ -1404,8 +1404,12 @@ def hass_recorder(
             ),
         ):
 
-            def setup_recorder(config: dict[str, Any] | None = None) -> HomeAssistant:
+            def setup_recorder(
+                *, config: dict[str, Any] | None = None, timezone: str | None = None
+            ) -> HomeAssistant:
                 """Set up with params."""
+                if timezone is not None:
+                    hass.config.set_time_zone(timezone)
                 init_recorder_component(hass, config, recorder_db_url)
                 hass.start()
                 hass.block_till_done()

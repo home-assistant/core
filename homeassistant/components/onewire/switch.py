@@ -178,7 +178,7 @@ def get_entities(onewire_hub: OneWireHub) -> list[OneWireSwitch]:
         device_id = device.id
         device_info = device.device_info
         device_sub_type = "std"
-        if "EF" in family:
+        if device_type and "EF" in family:
             device_sub_type = "HobbyBoard"
             family = device_type
         elif "A6" in family:

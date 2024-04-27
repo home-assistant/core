@@ -7,6 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import datetime as dt
 from functools import wraps
+import time
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import HomeAssistant
@@ -57,7 +58,7 @@ class TimestampedPublishMessage:
     payload: PublishPayloadType
     qos: int
     retain: bool
-    timestamp: dt.datetime
+    timestamp: float
 
 
 def log_message(
@@ -77,7 +78,7 @@ def log_message(
             "messages": deque([], STORED_MESSAGES),
         }
     msg = TimestampedPublishMessage(
-        topic, payload, qos, retain, timestamp=dt_util.utcnow()
+        topic, payload, qos, retain, timestamp=time.monotonic()
     )
     entity_info["transmitted"][topic]["messages"].append(msg)
 
@@ -175,6 +176,7 @@ def remove_trigger_discovery_data(
 
 def _info_for_entity(hass: HomeAssistant, entity_id: str) -> dict[str, Any]:
     entity_info = get_mqtt_data(hass).debug_info_entities[entity_id]
+    monotonic_time_diff = time.time() - time.monotonic()
     subscriptions = [
         {
             "topic": topic,
@@ -183,7 +185,10 @@ def _info_for_entity(hass: HomeAssistant, entity_id: str) -> dict[str, Any]:
                     "payload": str(msg.payload),
                     "qos": msg.qos,
                     "retain": msg.retain,
-                    "time": msg.timestamp,
+                    "time": dt_util.utc_from_timestamp(
+                        msg.timestamp + monotonic_time_diff,
+                        tz=dt.UTC,
+                    ),
                     "topic": msg.topic,
                 }
                 for msg in subscription["messages"]
@@ -199,7 +204,10 @@ def _info_for_entity(hass: HomeAssistant, entity_id: str) -> dict[str, Any]:
                     "payload": str(msg.payload),
                     "qos": msg.qos,
                     "retain": msg.retain,
-                    "time": msg.timestamp,
+                    "time": dt_util.utc_from_timestamp(
+                        msg.timestamp + monotonic_time_diff,
+                        tz=dt.UTC,
+                    ),
                     "topic": msg.topic,
                 }
                 for msg in subscription["messages"]

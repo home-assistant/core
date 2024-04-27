@@ -12,7 +12,6 @@ from bluetooth_adapters import (
     AdapterDetails,
     adapter_human_name,
     adapter_model,
-    adapter_unique_name,
     get_adapters,
 )
 import voluptuous as vol
@@ -28,6 +27,7 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import models
 from .const import CONF_ADAPTER, CONF_DETAILS, CONF_PASSIVE, DOMAIN
+from .util import adapter_title
 
 OPTIONS_SCHEMA = vol.Schema(
     {
@@ -45,14 +45,6 @@ def adapter_display_info(adapter: str, details: AdapterDetails) -> str:
     model = adapter_model(details)
     manufacturer = details[ADAPTER_MANUFACTURER] or "Unknown"
     return f"{name} {manufacturer} {model}"
-
-
-def adapter_title(adapter: str, details: AdapterDetails) -> str:
-    """Return the adapter title."""
-    unique_name = adapter_unique_name(adapter, details[ADAPTER_ADDRESS])
-    model = adapter_model(details)
-    manufacturer = details[ADAPTER_MANUFACTURER] or "Unknown"
-    return f"{manufacturer} {model} ({unique_name})"
 
 
 class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
