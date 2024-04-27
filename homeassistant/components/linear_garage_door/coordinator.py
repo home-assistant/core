@@ -58,7 +58,7 @@ class LinearUpdateCoordinator(DataUpdateCoordinator[dict[str, LinearDevice]]):
             for device in self._devices:
                 device_id = str(device["id"])
                 state = await linear.get_device_state(device_id)
-                data[device_id] = LinearDevice(str(device["name"]), state)
+                data[device_id] = LinearDevice(device["name"], state)
             return data
 
         return await self.execute(update_data)
