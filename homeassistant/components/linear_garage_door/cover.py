@@ -11,7 +11,6 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import LinearUpdateCoordinator
@@ -38,48 +37,12 @@ async def async_setup_entry(
     )
 
 
-class LinearCoverEntity(CoordinatorEntity[LinearUpdateCoordinator], CoverEntity):
+class LinearCoverEntity(LinearEntity, CoverEntity):
     """Representation of a Linear cover."""
 
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
-
-    def __init__(
-        self,
-        device_id: str,
-        device_name: str,
-        subdevice: str,
-        config_entry: ConfigEntry,
-        coordinator: LinearUpdateCoordinator,
-    ) -> None:
-        """Init with device ID and name."""
-        super().__init__(coordinator)
-
-        self._attr_has_entity_name = True
-        self._attr_name = None
-        self._device_id = device_id
-        self._device_name = device_name
-        self._subdevice = subdevice
-        self._attr_device_class = CoverDeviceClass.GARAGE
-        self._attr_unique_id = f"{device_id}-{subdevice}"
-        self._config_entry = config_entry
-
-    def _get_data(self, data_property: str) -> str:
-        """Get a property of the subdevice."""
-        return str(
-            self.coordinator.data[self._device_id]["subdevices"][self._subdevice].get(
-                data_property
-            )
-        )
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info of a garage door."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device_id)},
-            name=self._device_name,
-            manufacturer="Linear",
-            model="Garage Door Opener",
-        )
+    _attr_name = None
+    _attr_device_class = CoverDeviceClass.GARAGE
 
     @property
     def is_closed(self) -> bool:
