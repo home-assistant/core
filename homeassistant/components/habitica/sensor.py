@@ -4,8 +4,13 @@ from __future__ import annotations
 
 from collections import namedtuple
 from dataclasses import dataclass
+from datetime import timedelta
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from http import HTTPStatus
+import logging
+from typing import TYPE_CHECKING, Any
+
+from aiohttp import ClientResponseError
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -17,8 +22,13 @@ from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import Throttle
 
 from .const import DOMAIN, MANUFACTURER, NAME
+
+_LOGGER = logging.getLogger(__name__)
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 SensorType = namedtuple("SensorType", ["name", "icon", "unit", "path"])
 
@@ -160,7 +170,7 @@ async def async_setup_entry(
     """Set up the habitica sensors."""
 
     name = config_entry.data[CONF_NAME]
-    sensor_data = hass.data[DOMAIN][config_entry.entry_id]
+    sensor_data = HabitipyData(hass.data[DOMAIN][config_entry.entry_id])
     await sensor_data.update()
 
     entities: list[SensorEntity] = [
@@ -172,6 +182,58 @@ async def async_setup_entry(
         for task_type in TASKS_TYPES
     )
     async_add_entities(entities, True)
+
+
+class HabitipyData:
+    """Habitica API user data cache."""
+
+    tasks: dict[str, Any]
+
+    def __init__(self, api) -> None:
+        """Habitica API user data cache."""
+        self.api = api
+        self.data = None
+        self.tasks = {}
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    async def update(self):
+        """Get a new fix from Habitica servers."""
+        try:
+            self.data = await self.api.user.get()
+        except ClientResponseError as error:
+            if error.status == HTTPStatus.TOO_MANY_REQUESTS:
+                _LOGGER.warning(
+                    (
+                        "Sensor data update for %s has too many API requests;"
+                        " Skipping the update"
+                    ),
+                    DOMAIN,
+                )
+            else:
+                _LOGGER.error(
+                    "Count not update sensor data for %s (%s)",
+                    DOMAIN,
+                    error,
+                )
+
+        for task_type in TASKS_TYPES:
+            try:
+                self.tasks[task_type] = await self.api.tasks.user.get(type=task_type)
+            except ClientResponseError as error:
+                if error.status == HTTPStatus.TOO_MANY_REQUESTS:
+                    _LOGGER.warning(
+                        (
+                            "Sensor data update for %s has too many API requests;"
+                            " Skipping the update"
+                        ),
+                        DOMAIN,
+                    )
+                else:
+                    _LOGGER.error(
+                        "Count not update sensor data for %s (%s)",
+                        DOMAIN,
+                        error,
+                    )
 
 
 class HabitipySensor(SensorEntity):
