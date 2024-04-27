@@ -42,6 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     language = _get_config_value(entry, CONF_LANGUAGE)
 
     owm_client = OWMClient(api_key, lang=language)
+    # print("also should be mocked " + str(owm_client))
+
     weather_coordinator = WeatherUpdateCoordinator(
         owm_client, latitude, longitude, hass
     )

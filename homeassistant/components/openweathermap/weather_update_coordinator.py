@@ -9,9 +9,9 @@ from pyopenweathermap import (
     DailyWeatherForecast,
     HourlyWeatherForecast,
     OWMClient,
+    RequestError,
     WeatherReport,
 )
-from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -82,7 +82,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-e
                     self._latitude, self._longitude
                 )
                 data = self._convert_weather_response(weather_report)
-            except (APIRequestError, UnauthorizedError) as error:
+            except RequestError as error:
                 raise UpdateFailed(error) from error
         return data
 
