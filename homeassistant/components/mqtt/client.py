@@ -711,7 +711,8 @@ class MQTT:
         async with self._connection_lock:
             self._should_reconnect = False
             self._async_cancel_reconnect()
-            self._mqttc.disconnect()
+            # We do not gracefully disconnect to ensure
+            # the broker publishes the will message
 
     @callback
     def async_restore_tracked_subscriptions(
