@@ -59,16 +59,6 @@
       }
     }
   },
-  "issues": {
-    "deprecated_task_entity": {
-      "title": "The Habitica `{task_name}` sensor is deprecated",
-      "description": "The Habitica entity `{entity}` is deprecated and will be removed in `2024.12`.\nPlease update your automations and scripts to replace the sensor entity with the new todo entity.\nWhen you are done migrating you can disable the entity."
-    },
-    "deprecated_sensor_entity": {
-      "title": "The Habitica `{entity_name}` sensor is deprecated",
-      "description": "The Habitica entity `{entity}` is deprecated and will be removed in `2024.12`.\nEach player can have a maximum of 50 HP, and this maximum cannot be altered, thus the `{entity_name}` sensor serves no purpose.\nYou can disable the entity."
-    }
-  },
   "services": {
     "api_call": {
       "name": "API name",
