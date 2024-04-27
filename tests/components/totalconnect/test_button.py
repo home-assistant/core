@@ -41,7 +41,10 @@ async def test_entity_registry(hass: HomeAssistant) -> None:
     assert panel_clear.unique_id == f"{LOCATION_ID}_clear_bypass"
 
 
-async def _test_bypass_button(hass: HomeAssistant, data: {}) -> None:
+@pytest.mark.parametrize(
+    "data", [{ATTR_ENTITY_ID: ZONE_BYPASS_ID}, {ATTR_ENTITY_ID: PANEL_BYPASS_ID}]
+)
+async def test_bypass_button(hass: HomeAssistant, data: {}) -> None:
     """Test pushing a bypass button."""
     responses = [RESPONSE_ZONE_BYPASS_FAILURE, RESPONSE_ZONE_BYPASS_SUCCESS]
     await setup_platform(hass, BUTTON)
@@ -58,18 +61,6 @@ async def _test_bypass_button(hass: HomeAssistant, data: {}) -> None:
             domain=BUTTON, service=SERVICE_PRESS, service_data=data, blocking=True
         )
         assert mock_request.call_count == 2
-
-
-async def test_zone_bypass(hass: HomeAssistant) -> None:
-    """Test pushing the zone bypass button."""
-    data = {ATTR_ENTITY_ID: ZONE_BYPASS_ID}
-    await _test_bypass_button(hass, data)
-
-
-async def test_bypass_all(hass: HomeAssistant) -> None:
-    """Test pushing the panel bypass all button."""
-    data = {ATTR_ENTITY_ID: PANEL_BYPASS_ID}
-    await _test_bypass_button(hass, data)
 
 
 async def test_clear_button(hass: HomeAssistant) -> None:
