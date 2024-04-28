@@ -101,6 +101,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             cooldown=COMPONENT_LOADED_COOLDOWN,
             immediate=False,
             function=coordinator.async_refresh,
+            background=True,
         )
 
         @callback
