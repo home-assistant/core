@@ -2,7 +2,12 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pyopenweathermap import CurrentWeather, RequestError, WeatherReport
+from pyopenweathermap import (
+    CurrentWeather,
+    DailyWeatherForecast,
+    RequestError,
+    WeatherReport,
+)
 import pytest
 
 from homeassistant.components.openweathermap.const import DEFAULT_LANGUAGE, DOMAIN
@@ -52,7 +57,32 @@ def _create_mocked_owm_client(is_valid: bool):
             }
         ],
     )
-    weather_report = WeatherReport(current_weather, [], [])
+    daily_weather_forecast = DailyWeatherForecast(
+        dt=1714298400,
+        summary="There will be clear sky until morning, then partly cloudy",
+        temp={
+            "day": 18.76,
+            "min": 8.11,
+            "max": 21.26,
+            "night": 13.06,
+            "eve": 20.51,
+            "morn": 8.47,
+        },
+        feels_like={"day": 18.31, "night": 12.46, "eve": 20.76, "morn": 6.62},
+        pressure=1015,
+        humidity=62,
+        dew_point=11.34,
+        wind_speed=8.14,
+        wind_deg=168,
+        wind_gust=11.81,
+        weather=[
+            {"id": 803, "main": "Clouds", "description": "broken clouds", "icon": "04d"}
+        ],
+        clouds=84,
+        pop=0,
+        uvi=4.06,
+    )
+    weather_report = WeatherReport(current_weather, [], [daily_weather_forecast])
 
     mocked_owm_client = MagicMock()
     mocked_owm_client.validate_key = AsyncMock(return_value=is_valid)
@@ -79,7 +109,7 @@ def mock_config_flow_owm_client():
         yield config_flow_owm_client_mock
 
 
-async def test_form(
+async def test_successful_config_flow(
     hass: HomeAssistant,
     owm_client_mock,
     config_flow_owm_client_mock,
@@ -118,7 +148,30 @@ async def test_form(
     assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
 
 
-async def test_form_options(
+async def test_abort_config_flow(
+    hass: HomeAssistant,
+    owm_client_mock,
+    config_flow_owm_client_mock,
+) -> None:
+    """Test that the form is served with same data."""
+    mock = _create_mocked_owm_client(True)
+    owm_client_mock.return_value = mock
+    config_flow_owm_client_mock.return_value = mock
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+    )
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+
+
+async def test_config_flow_options_change(
     hass: HomeAssistant,
     owm_client_mock,
     config_flow_owm_client_mock,
