@@ -361,7 +361,12 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
     ) -> None:
         """Handle device update."""
         if update_type is BlockUpdateType.ONLINE:
-            self.hass.async_create_task(self._async_device_connect(), eager_start=True)
+            self.entry.async_create_background_task(
+                self.hass,
+                self._async_device_connect(),
+                "block device online",
+                eager_start=True,
+            )
         elif update_type is BlockUpdateType.COAP_PERIODIC:
             self._push_update_failures = 0
             ir.async_delete_issue(
@@ -654,12 +659,24 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
     ) -> None:
         """Handle device update."""
         if update_type is RpcUpdateType.ONLINE:
-            self.hass.async_create_task(self._async_device_connect(), eager_start=True)
+            self.entry.async_create_background_task(
+                self.hass,
+                self._async_device_connect(),
+                "rpc device online",
+                eager_start=True,
+            )
         elif update_type is RpcUpdateType.INITIALIZED:
-            self.hass.async_create_task(self._async_connected(), eager_start=True)
+            self.entry.async_create_background_task(
+                self.hass, self._async_connected(), "rpc device init", eager_start=True
+            )
             self.async_set_updated_data(None)
         elif update_type is RpcUpdateType.DISCONNECTED:
-            self.hass.async_create_task(self._async_disconnected(), eager_start=True)
+            self.entry.async_create_background_task(
+                self.hass,
+                self._async_disconnected(),
+                "rpc device disconnected",
+                eager_start=True,
+            )
         elif update_type is RpcUpdateType.STATUS:
             self.async_set_updated_data(None)
             if self.sleep_period:
@@ -673,7 +690,9 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self.device.subscribe_updates(self._async_handle_update)
         if self.device.initialized:
             # If we are already initialized, we are connected
-            self.hass.async_create_task(self._async_connected(), eager_start=True)
+            self.entry.async_create_task(
+                self.hass, self._async_connected(), eager_start=True
+            )
 
     async def shutdown(self) -> None:
         """Shutdown the coordinator."""
@@ -756,4 +775,9 @@ async def async_reconnect_soon(hass: HomeAssistant, entry: ConfigEntry) -> None:
         and (entry_data := get_entry_data(hass).get(entry.entry_id))
         and (coordinator := entry_data.rpc)
     ):
-        hass.async_create_task(coordinator.async_request_refresh(), eager_start=True)
+        entry.async_create_background_task(
+            hass,
+            coordinator.async_request_refresh(),
+            "reconnect soon",
+            eager_start=True,
+        )
