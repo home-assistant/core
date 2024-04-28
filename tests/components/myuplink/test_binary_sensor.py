@@ -1,6 +1,8 @@
 """Tests for myuplink sensor module."""
 
-from unittest.mock import MagicMock  # noqa: I001
+from unittest.mock import MagicMock
+
+import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -9,16 +11,29 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry
 
-import pytest
-
 
 # Test one entity from each of binary_sensor classes.
 @pytest.mark.parametrize(
-    ("entity_id", "test_attributes", "expected_state"),
+    ("entity_id", "friendly_name", "test_attributes", "expected_state"),
     [
-        ("binary_sensor.f730_cu_3x400v_pump_heating_medium_gp1", True, STATE_ON),
-        ("binary_sensor.f730_cu_3x400v_connectivity", False, STATE_ON),
-        ("binary_sensor.f730_cu_3x400v_alarm", False, STATE_OFF),
+        (
+            "binary_sensor.gotham_city_pump_heating_medium_gp1",
+            "Gotham City Pump: Heating medium (GP1)",
+            True,
+            STATE_ON,
+        ),
+        (
+            "binary_sensor.gotham_city_connectivity",
+            "Gotham City Connectivity",
+            False,
+            STATE_ON,
+        ),
+        (
+            "binary_sensor.gotham_city_alarm",
+            "Gotham City Pump: Alarm",
+            False,
+            STATE_OFF,
+        ),
     ],
 )
 async def test_sensor_states(
@@ -26,6 +41,7 @@ async def test_sensor_states(
     mock_myuplink_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_id: str,
+    friendly_name: str,
     test_attributes: bool,
     expected_state: str,
 ) -> None:
@@ -37,5 +53,5 @@ async def test_sensor_states(
     assert state.state == expected_state
     if test_attributes:
         assert state.attributes == {
-            "friendly_name": "F730 CU 3x400V Pump: Heating medium (GP1)",
+            "friendly_name": friendly_name,
         }

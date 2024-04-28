@@ -34,7 +34,7 @@ CONNECTED_BINARY_SENSOR_DESCRIPTION = BinarySensorEntityDescription(
 ALARM_BINARY_SENSOR_DESCRIPTION = BinarySensorEntityDescription(
     key="has_alarm",
     device_class=BinarySensorDeviceClass.PROBLEM,
-    name="Alarm",
+    translation_key="alarm",
 )
 
 
@@ -75,16 +75,16 @@ async def async_setup_entry(
                 )
 
     # Setup device bound sensors
-    for system in coordinator.data.systems:
-        for device in system.devices:
-            entities.append(
-                MyUplinkDeviceBinarySensor(
-                    coordinator=coordinator,
-                    device_id=device.id,
-                    entity_description=CONNECTED_BINARY_SENSOR_DESCRIPTION,
-                    unique_id_suffix="connection_state",
-                )
-            )
+    entities.extend(
+        MyUplinkDeviceBinarySensor(
+            coordinator=coordinator,
+            device_id=device.id,
+            entity_description=CONNECTED_BINARY_SENSOR_DESCRIPTION,
+            unique_id_suffix="connection_state",
+        )
+        for system in coordinator.data.systems
+        for device in system.devices
+    )
 
     # Setup system bound sensors
     for system in coordinator.data.systems:
@@ -196,9 +196,5 @@ class MyUplinkSystemBinarySensor(MyUplinkSystemEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Binary sensor state value."""
-        retval = None
-        for system in self.coordinator.data.systems:
-            if system.id == self.system_id:
-                retval = system.has_alarm
-                break
-        return retval
+        _systems = {x.system_id: x for x in self.coordinator.data.systems}
+        return _systems[self.system_id].has_alarm

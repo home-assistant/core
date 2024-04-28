@@ -29,10 +29,8 @@ class MyUplinkEntity(CoordinatorEntity[MyUplinkDataCoordinator]):
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_id)})
 
 
-class MyUplinkSystemEntity(CoordinatorEntity[MyUplinkDataCoordinator]):
+class MyUplinkSystemEntity(MyUplinkEntity):
     """Representation of a system bound entity."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -42,11 +40,14 @@ class MyUplinkSystemEntity(CoordinatorEntity[MyUplinkDataCoordinator]):
         unique_id_suffix: str,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator=coordinator)
+        super().__init__(
+            coordinator=coordinator,
+            device_id=device_id,
+            unique_id_suffix=unique_id_suffix,
+        )
 
         # Internal properties
         self.system_id = system_id
 
         # Basic values
         self._attr_unique_id = f"{system_id}-{unique_id_suffix}"
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_id)})
