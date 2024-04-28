@@ -65,10 +65,8 @@ async def async_setup_entry(
 class TotalConnectZoneBypassButton(TotalConnectZoneEntity, ButtonEntity):
     """Represent a TotalConnect zone bypass button."""
 
-    _attr_has_entity_name = True
     _attr_translation_key = "bypass"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    entity_description = ButtonEntityDescription(key="bypass", name="bypass")
 
     def __init__(
         self,
@@ -87,8 +85,6 @@ class TotalConnectZoneBypassButton(TotalConnectZoneEntity, ButtonEntity):
 
 class TotalConnectPanelButton(TotalConnectLocationEntity, ButtonEntity):
     """Generic TotalConnect panel button."""
-
-    _attr_has_entity_name = True
 
     entity_description: TotalConnectButtonEntityDescription
 
