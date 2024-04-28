@@ -2,6 +2,7 @@
 
 DOMAIN = "derivative"
 
+CONF_IGNORE_NEGATIVE = "ignore_negative"
 CONF_ROUND_DIGITS = "round"
 CONF_TIME_WINDOW = "time_window"
 CONF_UNIT = "unit"
