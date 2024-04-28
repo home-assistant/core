@@ -109,9 +109,7 @@ async def test_async_add_hass_job_eager_start_coro_suspends(
     async def job_that_suspends():
         await asyncio.sleep(0)
 
-    task = hass._async_add_hass_job(
-        ha.HassJob(ha.callback(job_that_suspends)), eager_start=True
-    )
+    task = hass._async_add_hass_job(ha.HassJob(ha.callback(job_that_suspends)))
     assert not task.done()
     assert task in hass._tasks
     await task
@@ -247,7 +245,7 @@ async def test_async_add_hass_job_eager_start(hass: HomeAssistant) -> None:
     job = ha.HassJob(mycoro, "named coro")
     assert "named coro" in str(job)
     assert job.name == "named coro"
-    task = ha.HomeAssistant._async_add_hass_job(hass, job, eager_start=True)
+    task = ha.HomeAssistant._async_add_hass_job(hass, job)
     assert "named coro" in str(task)
 
 
@@ -263,19 +261,6 @@ async def test_async_add_hass_job_schedule_partial_callback() -> None:
     assert len(hass.add_job.mock_calls) == 0
 
 
-async def test_async_add_hass_job_schedule_coroutinefunction() -> None:
-    """Test that we schedule coroutines and add jobs to the job pool."""
-    hass = MagicMock(loop=MagicMock(wraps=asyncio.get_running_loop()))
-
-    async def job():
-        pass
-
-    ha.HomeAssistant._async_add_hass_job(hass, ha.HassJob(job))
-    assert len(hass.loop.call_soon.mock_calls) == 0
-    assert len(hass.loop.create_task.mock_calls) == 1
-    assert len(hass.add_job.mock_calls) == 0
-
-
 async def test_async_add_hass_job_schedule_corofunction_eager_start() -> None:
     """Test that we schedule coroutines and add jobs to the job pool."""
     hass = MagicMock(loop=MagicMock(wraps=asyncio.get_running_loop()))
@@ -287,15 +272,15 @@ async def test_async_add_hass_job_schedule_corofunction_eager_start() -> None:
         "homeassistant.core.create_eager_task", wraps=create_eager_task
     ) as mock_create_eager_task:
         hass_job = ha.HassJob(job)
-        task = ha.HomeAssistant._async_add_hass_job(hass, hass_job, eager_start=True)
+        task = ha.HomeAssistant._async_add_hass_job(hass, hass_job)
         assert len(hass.loop.call_soon.mock_calls) == 0
         assert len(hass.add_job.mock_calls) == 0
         assert mock_create_eager_task.mock_calls
         await task
 
 
-async def test_async_add_hass_job_schedule_partial_coroutinefunction() -> None:
-    """Test that we schedule partial coros and add jobs to the job pool."""
+async def test_async_add_hass_job_schedule_partial_corofunction_eager_start() -> None:
+    """Test that we schedule coroutines and add jobs to the job pool."""
     hass = MagicMock(loop=MagicMock(wraps=asyncio.get_running_loop()))
 
     async def job():
@@ -303,10 +288,15 @@ async def test_async_add_hass_job_schedule_partial_coroutinefunction() -> None:
 
     partial = functools.partial(job)
 
-    ha.HomeAssistant._async_add_hass_job(hass, ha.HassJob(partial))
-    assert len(hass.loop.call_soon.mock_calls) == 0
-    assert len(hass.loop.create_task.mock_calls) == 1
-    assert len(hass.add_job.mock_calls) == 0
+    with patch(
+        "homeassistant.core.create_eager_task", wraps=create_eager_task
+    ) as mock_create_eager_task:
+        hass_job = ha.HassJob(partial)
+        task = ha.HomeAssistant._async_add_hass_job(hass, hass_job)
+        assert len(hass.loop.call_soon.mock_calls) == 0
+        assert len(hass.add_job.mock_calls) == 0
+        assert mock_create_eager_task.mock_calls
+        await task
 
 
 async def test_async_add_job_add_hass_threaded_job_to_pool() -> None:
