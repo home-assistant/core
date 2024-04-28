@@ -674,3 +674,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
                         self._child_state = child_state
                 else:
                     self._child_state = child_state
+
+    async def async_update(self) -> None:
+        """Manual update from API."""
+        self._async_update()
