@@ -141,17 +141,17 @@ async def test_mqtt_connects_on_home_assistant_mqtt_setup(
     assert mqtt_client_mock.connect.call_count == 1
 
 
-async def test_mqtt_disconnects_on_home_assistant_stop(
+async def test_mqtt_does_not_disconnect_on_home_assistant_stop(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
-    """Test if client stops on HA stop."""
+    """Test if client is not disconnected on HA stop."""
     await mqtt_mock_entry()
     hass.bus.fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
-    assert mqtt_client_mock.disconnect.call_count == 1
+    assert mqtt_client_mock.disconnect.call_count == 0
 
 
 async def test_mqtt_await_ack_at_disconnect(
