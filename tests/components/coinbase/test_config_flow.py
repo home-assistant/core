@@ -14,7 +14,7 @@ from homeassistant.components.coinbase.const import (
     CONF_EXCHANGE_RATES,
     DOMAIN,
 )
-from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
+from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, CONF_API_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -53,16 +53,17 @@ async def test_form(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_API_KEY: "123456",
-                CONF_API_TOKEN: "AbCDeF",
-            },
+            {CONF_API_KEY: "123456", CONF_API_TOKEN: "AbCDeF"},
         )
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Test User"
-    assert result2["data"] == {CONF_API_KEY: "123456", CONF_API_TOKEN: "AbCDeF"}
+    assert result2["data"] == {
+        CONF_API_KEY: "123456",
+        CONF_API_TOKEN: "AbCDeF",
+        CONF_API_VERSION: "v2",
+    }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
