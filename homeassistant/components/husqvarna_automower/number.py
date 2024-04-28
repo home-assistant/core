@@ -247,6 +247,7 @@ async def async_remove_entities(
         uid = f"{mower_id}_{work_area_id}_cutting_height_work_area"
         work_area_list.append(uid)
     for entity in er.async_entries_for_config_entry(entity_reg, config_entry.entry_id):
-        if entity.unique_id.endswith("cutting_height_work_area"):
-            if entity.unique_id not in work_area_list:
-                entity_reg.async_remove(entity.entity_id)
+        if entity.unique_id.split("_")[0] == mower_id:
+            if entity.unique_id.endswith("cutting_height_work_area"):
+                if entity.unique_id not in work_area_list:
+                    entity_reg.async_remove(entity.entity_id)
