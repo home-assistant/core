@@ -1,6 +1,5 @@
 """Weather data coordinator for the OpenWeatherMap (OWM) service."""
 
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -75,13 +74,12 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-e
 
     async def _async_update_data(self):
         """Update the data."""
-        async with asyncio.timeout(20):
-            try:
-                weather_report = await self._owm_client.get_weather(
-                    self._latitude, self._longitude
-                )
-            except RequestError as error:
-                raise UpdateFailed(error) from error
+        try:
+            weather_report = await self._owm_client.get_weather(
+                self._latitude, self._longitude
+            )
+        except RequestError as error:
+            raise UpdateFailed(error) from error
         return self._convert_weather_response(weather_report)
 
     def _convert_weather_response(self, weather_report: WeatherReport):
