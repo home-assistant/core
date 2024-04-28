@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -46,6 +47,8 @@ async def async_setup_entry(
         if coordinator.data[mower_id].capabilities.work_areas
     )
     async_add_entities(entities)
+
+    await async_remove_entities(coordinator, hass, entry)
 
 
 @callback
@@ -227,3 +230,23 @@ class AutomowerWorkAreaNumberEntity(AutomowerBaseEntity, NumberEntity):
             raise HomeAssistantError(
                 f"Command couldn't be sent to the command queue: {exception}"
             ) from exception
+
+
+async def async_remove_entities(
+    coordinator: AutomowerDataUpdateCoordinator,
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+) -> None:
+    """Remove deleted work areas from Home Assistant."""
+    entity_reg = er.async_get(hass)
+    work_area_list = []
+    for mower_id in coordinator.data:
+        for work_area_id in _async_work_area_mowers(
+            coordinator.data[mower_id].work_areas
+        ):
+            uid = f"{mower_id}_{work_area_id}_cutting_height_work_area"
+            work_area_list.append(uid)
+    for entity in er.async_entries_for_config_entry(entity_reg, config_entry.entry_id):
+        if entity.unique_id.endswith("cutting_height_work_area"):
+            if entity.unique_id not in work_area_list:
+                entity_reg.async_remove(entity.entity_id)
