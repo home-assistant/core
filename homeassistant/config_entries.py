@@ -698,7 +698,7 @@ class ConfigEntry:
         # Check again when we fire in case shutdown
         # has started so we do not block shutdown
         if not hass.is_stopping:
-            hass.async_create_task(
+            hass.async_create_background_task(
                 self._async_setup_retry(hass),
                 f"config entry retry {self.domain} {self.title}",
                 eager_start=True,
@@ -1157,6 +1157,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
             cooldown=DISCOVERY_COOLDOWN,
             immediate=True,
             function=self._async_discovery,
+            background=True,
         )
 
     async def async_wait_import_flow_initialized(self, handler: str) -> None:
