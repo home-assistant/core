@@ -26,4 +26,5 @@ PLATFORMS: Final = [
     #    Platform.UPDATE,
     Platform.NUMBER,
     Platform.CLIMATE,
+    Platform.BUTTON,
 ]
