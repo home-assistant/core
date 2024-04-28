@@ -24,11 +24,9 @@ async def test_form(
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
-    with (
-        patch(
-            "uuid.uuid4",
-            return_value="test-uuid",
-        ),
+    with patch(
+        "uuid.uuid4",
+        return_value="test-uuid",
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -76,11 +74,9 @@ async def test_reauth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with (
-        patch(
-            "uuid.uuid4",
-            return_value="test-uuid",
-        ),
+    with patch(
+        "uuid.uuid4",
+        return_value="test-uuid",
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
