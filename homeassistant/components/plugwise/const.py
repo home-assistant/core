@@ -13,14 +13,19 @@ DOMAIN: Final = "plugwise"
 LOGGER = logging.getLogger(__package__)
 
 API: Final = "api"
+AVAILABLE_SCHEDULES: Final = "available_schedules"
+DEVICES: Final = "devices"
 FLOW_SMILE: Final = "smile (Adam/Anna/P1)"
 FLOW_STRETCH: Final = "stretch (Stretch)"
 FLOW_TYPE: Final = "flow_type"
 GATEWAY: Final = "gateway"
+MAC_ADDRESS: Final = "mac_address"
 PW_TYPE: Final = "plugwise_type"
+SELECT_SCHEDULE: Final = "select_schedule"
 SMILE: Final = "smile"
 STRETCH: Final = "stretch"
 STRETCH_USERNAME: Final = "stretch"
+ZIGBEE_MAC_ADDRESS: Final = "zigbee_mac_address"
 
 PLATFORMS: Final[list[str]] = [
     Platform.BINARY_SENSOR,
