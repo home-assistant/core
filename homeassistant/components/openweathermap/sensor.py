@@ -317,7 +317,7 @@ class OpenWeatherMapSensor(AbstractOpenWeatherMapSensor):
     def native_value(self) -> StateType:
         """Return the state of the device."""
         return self._weather_coordinator.data[ATTR_API_CURRENT].get(
-            self.entity_description.key, None
+            self.entity_description.key
         )
 
 
@@ -339,7 +339,7 @@ class OpenWeatherMapForecastSensor(AbstractOpenWeatherMapSensor):
     def native_value(self) -> StateType | datetime:
         """Return the state of the device."""
         forecasts = self._weather_coordinator.data[ATTR_API_DAILY_FORECAST]
-        value = forecasts[0].get(self.entity_description.key, None)
+        value = forecasts[0].get(self.entity_description.key)
         if (
             value
             and self.entity_description.device_class is SensorDeviceClass.TIMESTAMP

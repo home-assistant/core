@@ -80,7 +80,9 @@ def mock_config_flow_owm_client():
 
 
 async def test_form(
-    owm_client_mock, config_flow_owm_client_mock, hass: HomeAssistant
+    hass: HomeAssistant,
+    owm_client_mock,
+    config_flow_owm_client_mock,
 ) -> None:
     """Test that the form is served with valid input."""
     mock = _create_mocked_owm_client(True)
@@ -117,7 +119,9 @@ async def test_form(
 
 
 async def test_form_options(
-    owm_client_mock, config_flow_owm_client_mock, hass: HomeAssistant
+    hass: HomeAssistant,
+    owm_client_mock,
+    config_flow_owm_client_mock,
 ) -> None:
     """Test that the options form."""
     mock = _create_mocked_owm_client(True)
@@ -172,7 +176,8 @@ async def test_form_options(
 
 
 async def test_form_invalid_api_key(
-    config_flow_owm_client_mock, hass: HomeAssistant
+    hass: HomeAssistant,
+    config_flow_owm_client_mock,
 ) -> None:
     """Test that the form is served with no input."""
     config_flow_owm_client_mock.return_value = _create_mocked_owm_client(False)
@@ -184,7 +189,8 @@ async def test_form_invalid_api_key(
 
 
 async def test_form_api_call_error(
-    config_flow_owm_client_mock, hass: HomeAssistant
+    hass: HomeAssistant,
+    config_flow_owm_client_mock,
 ) -> None:
     """Test setting up with api call error."""
     config_flow_owm_client_mock.return_value = _create_mocked_owm_client(True)
