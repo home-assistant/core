@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 from pydrawise.schema import Zone
 
@@ -119,51 +120,45 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
 
     def _update_attrs(self) -> None:
         """Update state attributes."""
-        specific_update_attrs_method = getattr(
-            self, f"_update_attrs_{self.entity_description.key}"
-        )
-        if specific_update_attrs_method:
-            specific_update_attrs_method()
+        specific_getter = getattr(self, f"_get_{self.entity_description.key}")
+        value = specific_getter()
+        if value is not None:
+            self._attr_native_value = value
 
-    def _update_attrs_watering_time(self) -> None:
+    def _get_watering_time(self) -> int:
         if (current_run := self.zone.scheduled_runs.current_run) is not None:
-            self._attr_native_value = int(
-                current_run.remaining_time.total_seconds() / 60
-            )
-        else:
-            self._attr_native_value = 0
+            return int(current_run.remaining_time.total_seconds() / 60)
+        return 0
 
-    def _update_attrs_next_cycle(self) -> None:
+    def _get_next_cycle(self) -> datetime:
         if (next_run := self.zone.scheduled_runs.next_run) is not None:
-            self._attr_native_value = dt_util.as_utc(next_run.start_time)
-        else:
-            self._attr_native_value = datetime.max.replace(tzinfo=dt_util.UTC)
+            return dt_util.as_utc(next_run.start_time)
+        return datetime.max.replace(tzinfo=dt_util.UTC)
 
-    def _update_attrs_daily_active_water_use(self) -> None:
+    def _get_daily_active_water_use(self) -> Any:
         daily_water_summary = self.coordinator.data.daily_water_use[self.controller.id]
         if self.zone is None and self.sensor is not None:
             # water use for the controller
-            self._attr_native_value = daily_water_summary.total_active_use
-        elif self.zone is not None:
+            return daily_water_summary.total_active_use
+        if self.zone is not None:
             # water use for the zone
-            self._attr_native_value = daily_water_summary.active_use_by_zone_id.get(
-                self.zone.id, 0.0
-            )
-        else:
-            self._attr_native_value = 0
+            return daily_water_summary.active_use_by_zone_id.get(self.zone.id, 0.0)
+        return 0.0
 
-    def _update_attrs_daily_inactive_water_use(self) -> None:
+    def _get_daily_inactive_water_use(self) -> Any:
         if self.zone is None and self.sensor is not None:
             # water use for the controller
             daily_water_summary = self.coordinator.data.daily_water_use[
                 self.controller.id
             ]
-            self._attr_native_value = daily_water_summary.total_inactive_use
+            return daily_water_summary.total_inactive_use
+        return None
 
-    def _update_attrs_daily_total_water_use(self) -> None:
+    def _get_daily_total_water_use(self) -> Any:
         if self.zone is None and self.sensor is not None:
             # water use for the controller
             daily_water_summary = self.coordinator.data.daily_water_use[
                 self.controller.id
             ]
-            self._attr_native_value = daily_water_summary.total_use
+            return daily_water_summary.total_use
+        return None
