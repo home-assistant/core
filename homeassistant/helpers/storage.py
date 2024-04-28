@@ -278,7 +278,7 @@ class Store(Generic[_T]):
         if self._load_task:
             return await self._load_task
 
-        load_task = self.hass.async_create_task(
+        load_task = self.hass.async_create_background_task(
             self._async_load(), f"Storage load {self.key}", eager_start=True
         )
         if not load_task.done():
