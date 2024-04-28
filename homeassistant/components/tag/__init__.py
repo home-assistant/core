@@ -139,11 +139,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if change_type == collection.CHANGE_UPDATED:
             # When tags are changed or updated in storage
             if entities[updated_config[TAG_ID]]._last_scanned != updated_config.get(  # pylint: disable=protected-access
-                LAST_SCANNED, ""
+                LAST_SCANNED
             ):
                 entities[updated_config[TAG_ID]].async_handle_event(
                     updated_config.get(DEVICE_ID),
-                    updated_config.get(LAST_SCANNED, ""),
+                    updated_config.get(LAST_SCANNED),
                 )
 
         # Deleted tags
@@ -163,7 +163,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass,
             tag.get(CONF_NAME, DEFAULT_NAME),
             tag[TAG_ID],
-            tag.get(LAST_SCANNED, ""),
+            tag.get(LAST_SCANNED),
             tag.get(DEVICE_ID),
         )
         await entities[tag[TAG_ID]].async_add_initial_state()
@@ -220,7 +220,7 @@ class TagEntity(Entity):
         hass: HomeAssistant,
         name: str,
         tag_id: str,
-        last_scanned: str,
+        last_scanned: str | None,
         device_id: str | None,
     ) -> None:
         """Initialize the Tag event."""
@@ -255,7 +255,10 @@ class TagEntity(Entity):
     @final
     def state(self) -> str | None:
         """Return the entity state."""
-        if (last_scanned := dt_util.parse_datetime(self._last_scanned)) is None:
+        if (
+            not self._last_scanned
+            or (last_scanned := dt_util.parse_datetime(self._last_scanned)) is None
+        ):
             return None
         return last_scanned.isoformat(timespec="milliseconds")
 
