@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_NAME
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import collection
+from homeassistant.helpers import collection, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.storage import Store
@@ -118,6 +118,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         change_type: str, item_id: str, updated_config: dict
     ) -> None:
         """Tag storage change listener."""
+
+        entity_reg = er.async_get(hass)
+
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
                 "%s, item: %s, update: %s", change_type, item_id, updated_config
@@ -150,7 +153,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             entity_id = entities[updated_config[TAG_ID]].entity_id
             hass.states.async_remove(entity_id)
             entities.pop(updated_config[TAG_ID])
-            hass.states.async_remove(entity_id)
+            entity_reg.async_remove(entity_id)
 
     storage_collection.async_add_listener(tag_change_listener)
 
