@@ -58,20 +58,19 @@ def mock_connection(
     """Mock all calls to the API."""
     aioclient_mock.get(BASE_URL)
 
-    auth_endpoint = AUTH_ENDPOINT
     if not auth_fail and not auth_timeout:
         aioclient_mock.post(
-            auth_endpoint,
+            AUTH_ENDPOINT,
             json={"token": "token123"},
         )
     elif auth_fail:
         aioclient_mock.post(
-            auth_endpoint,
+            AUTH_ENDPOINT,
             status=HTTPStatus.BAD_REQUEST,
             json={"errormessage": "ERR-USR-INVALIDPASSWORDERROR"},
         )
     else:  # auth_timeout
-        aioclient_mock.post(auth_endpoint, exc=TimeoutError)
+        aioclient_mock.post(AUTH_ENDPOINT, exc=TimeoutError)
 
     aioclient_mock.post(
         f"{BASE_ENDPOINT}{METER_ENDPOINT}",
