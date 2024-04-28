@@ -1,0 +1,14 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Dreo",
+        "description": "",
+        "data": {
+          "username": "E-mail",
+          "password": "Password"
+        }
+      }
+    }
+  }
+}
