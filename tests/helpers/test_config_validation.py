@@ -855,6 +855,13 @@ def test_positive_time_period_dict_in_serializer() -> None:
     }
 
 
+def test_file_in_serializer() -> None:
+    """Test file with custom_serializer."""
+    assert cv.custom_serializer(cv.file) == {
+        "type": "file",
+    }
+
+
 @pytest.fixture
 def schema():
     """Create a schema used for testing deprecation."""

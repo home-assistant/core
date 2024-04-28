@@ -22,6 +22,7 @@ from typing import Any, TypeVar, cast, overload
 from urllib.parse import urlparse
 from uuid import UUID
 
+from aiohttp.web_request import FileField
 import voluptuous as vol
 import voluptuous_serialize
 
@@ -1047,6 +1048,9 @@ def key_dependency(
 def custom_serializer(schema: Any) -> Any:
     """Serialize additional types for voluptuous_serialize."""
     from . import selector  # pylint: disable=import-outside-toplevel
+
+    if schema is FileField:
+        return {"type": "file"}
 
     if schema is positive_time_period_dict:
         return {"type": "positive_time_period_dict"}
