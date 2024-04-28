@@ -161,7 +161,7 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
             await self.device.initialize()
             update_device_fw_info(self.hass, self.device, self.entry)
         except DeviceConnectionError as err:
-            LOGGER.error(
+            LOGGER.debug(
                 "Error connecting to Shelly device %s, error: %r", self.name, err
             )
             return False
