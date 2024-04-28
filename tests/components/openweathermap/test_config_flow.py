@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyopenweathermap import CurrentWeather, RequestError, WeatherReport
+import pytest
 
 from homeassistant.components.openweathermap.const import DEFAULT_LANGUAGE, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
@@ -60,13 +61,31 @@ def _create_mocked_owm_client(is_valid: bool):
     return mocked_owm_client
 
 
-@patch("homeassistant.components.openweathermap.config_flow.OWMClient")
-@patch("homeassistant.components.openweathermap.OWMClient")
-async def test_form(owm_client_mock, owm_client_mock2, hass: HomeAssistant) -> None:
+@pytest.fixture(name="owm_client_mock")
+def mock_owm_client():
+    """Mock config_flow OWMClient."""
+    with patch(
+        "homeassistant.components.openweathermap.OWMClient",
+    ) as owm_client_mock:
+        yield owm_client_mock
+
+
+@pytest.fixture(name="config_flow_owm_client_mock")
+def mock_config_flow_owm_client():
+    """Mock config_flow OWMClient."""
+    with patch(
+        "homeassistant.components.openweathermap.config_flow.OWMClient",
+    ) as config_flow_owm_client_mock:
+        yield config_flow_owm_client_mock
+
+
+async def test_form(
+    owm_client_mock, config_flow_owm_client_mock, hass: HomeAssistant
+) -> None:
     """Test that the form is served with valid input."""
     mock = _create_mocked_owm_client(True)
     owm_client_mock.return_value = mock
-    owm_client_mock2.return_value = mock
+    config_flow_owm_client_mock.return_value = mock
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -97,15 +116,13 @@ async def test_form(owm_client_mock, owm_client_mock2, hass: HomeAssistant) -> N
     assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
 
 
-@patch("homeassistant.components.openweathermap.config_flow.OWMClient")
-@patch("homeassistant.components.openweathermap.OWMClient")
 async def test_form_options(
-    owm_client_mock, owm_client_mock2, hass: HomeAssistant
+    owm_client_mock, config_flow_owm_client_mock, hass: HomeAssistant
 ) -> None:
     """Test that the options form."""
     mock = _create_mocked_owm_client(True)
     owm_client_mock.return_value = mock
-    owm_client_mock2.return_value = mock
+    config_flow_owm_client_mock.return_value = mock
 
     config_entry = MockConfigEntry(
         domain=DOMAIN, unique_id="openweathermap_unique_id", data=CONFIG
@@ -154,10 +171,11 @@ async def test_form_options(
     assert config_entry.state is ConfigEntryState.LOADED
 
 
-@patch("homeassistant.components.openweathermap.config_flow.OWMClient")
-async def test_form_invalid_api_key(owm_client_mock, hass: HomeAssistant) -> None:
+async def test_form_invalid_api_key(
+    config_flow_owm_client_mock, hass: HomeAssistant
+) -> None:
     """Test that the form is served with no input."""
-    owm_client_mock.return_value = _create_mocked_owm_client(False)
+    config_flow_owm_client_mock.return_value = _create_mocked_owm_client(False)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
     )
@@ -165,11 +183,12 @@ async def test_form_invalid_api_key(owm_client_mock, hass: HomeAssistant) -> Non
     assert result["errors"] == {"base": "invalid_api_key"}
 
 
-@patch("homeassistant.components.openweathermap.config_flow.OWMClient")
-async def test_form_api_call_error(owm_client_mock, hass: HomeAssistant) -> None:
+async def test_form_api_call_error(
+    config_flow_owm_client_mock, hass: HomeAssistant
+) -> None:
     """Test setting up with api call error."""
-    owm_client_mock.return_value = _create_mocked_owm_client(True)
-    owm_client_mock.side_effect = RequestError("oops")
+    config_flow_owm_client_mock.return_value = _create_mocked_owm_client(True)
+    config_flow_owm_client_mock.side_effect = RequestError("oops")
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
     )
