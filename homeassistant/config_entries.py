@@ -1087,7 +1087,7 @@ class ConfigEntry:
 
         target: target to call.
         """
-        task = hass.async_create_task(
+        task = hass.async_create_task_internal(
             target, f"{name} {self.title} {self.domain} {self.entry_id}", eager_start
         )
         if eager_start and task.done():
@@ -1643,7 +1643,7 @@ class ConfigEntries:
         # starting a new flow with the 'unignore' step. If the integration doesn't
         # implement async_step_unignore then this will be a no-op.
         if entry.source == SOURCE_IGNORE:
-            self.hass.async_create_task(
+            self.hass.async_create_task_internal(
                 self.hass.config_entries.flow.async_init(
                     entry.domain,
                     context={"source": SOURCE_UNIGNORE},
