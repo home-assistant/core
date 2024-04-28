@@ -429,6 +429,20 @@ class HomeAssistant:
             max_workers=1, thread_name_prefix="ImportExecutor"
         )
 
+    def verify_event_loop_thread(self, what: str) -> None:
+        """Report and raise if we are not running in the event loop thread."""
+        if (
+            loop_thread_ident := self.loop.__dict__.get("_thread_ident")
+        ) and loop_thread_ident != threading.get_ident():
+            from .helpers import frame  # pylint: disable=import-outside-toplevel
+
+            # frame is a circular import, so we import it here
+            frame.report(
+                f"calls {what} from a thread",
+                error_if_core=True,
+                error_if_integration=True,
+            )
+
     @property
     def _active_tasks(self) -> set[asyncio.Future[Any]]:
         """Return all active tasks.
@@ -503,7 +517,6 @@ class HomeAssistant:
         This method is a coroutine.
         """
         _LOGGER.info("Starting Home Assistant")
-        setattr(self.loop, "_thread_ident", threading.get_ident())
 
         self.set_state(CoreState.starting)
         self.bus.async_fire_internal(EVENT_CORE_CONFIG_UPDATE)
@@ -564,9 +577,7 @@ class HomeAssistant:
         if TYPE_CHECKING:
             target = cast(Callable[[*_Ts], Any], target)
         self.loop.call_soon_threadsafe(
-            functools.partial(
-                self._async_add_hass_job, HassJob(target), *args, eager_start=True
-            )
+            functools.partial(self._async_add_hass_job, HassJob(target), *args)
         )
 
     @overload
@@ -637,7 +648,7 @@ class HomeAssistant:
         # https://github.com/home-assistant/core/pull/71960
         if TYPE_CHECKING:
             target = cast(Callable[[*_Ts], Coroutine[Any, Any, _R] | _R], target)
-        return self._async_add_hass_job(HassJob(target), *args, eager_start=eager_start)
+        return self._async_add_hass_job(HassJob(target), *args)
 
     @overload
     @callback
@@ -687,9 +698,7 @@ class HomeAssistant:
             error_if_core=False,
         )
 
-        return self._async_add_hass_job(
-            hassjob, *args, eager_start=eager_start, background=background
-        )
+        return self._async_add_hass_job(hassjob, *args, background=background)
 
     @overload
     @callback
@@ -697,7 +706,6 @@ class HomeAssistant:
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R]],
         *args: Any,
-        eager_start: bool = False,
         background: bool = False,
     ) -> asyncio.Future[_R] | None: ...
 
@@ -707,7 +715,6 @@ class HomeAssistant:
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
-        eager_start: bool = False,
         background: bool = False,
     ) -> asyncio.Future[_R] | None: ...
 
@@ -716,7 +723,6 @@ class HomeAssistant:
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
-        eager_start: bool = False,
         background: bool = False,
     ) -> asyncio.Future[_R] | None:
         """Add a HassJob from within the event loop.
@@ -738,16 +744,11 @@ class HomeAssistant:
                 hassjob.target = cast(
                     Callable[..., Coroutine[Any, Any, _R]], hassjob.target
                 )
-            # Use loop.create_task
-            # to avoid the extra function call in asyncio.create_task.
-            if eager_start:
-                task = create_eager_task(
-                    hassjob.target(*args), name=hassjob.name, loop=self.loop
-                )
-                if task.done():
-                    return task
-            else:
-                task = self.loop.create_task(hassjob.target(*args), name=hassjob.name)
+            task = create_eager_task(
+                hassjob.target(*args), name=hassjob.name, loop=self.loop
+            )
+            if task.done():
+                return task
         elif hassjob.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
@@ -901,9 +902,7 @@ class HomeAssistant:
             hassjob.target(*args)
             return None
 
-        return self._async_add_hass_job(
-            hassjob, *args, eager_start=True, background=background
-        )
+        return self._async_add_hass_job(hassjob, *args, background=background)
 
     @overload
     @callback
@@ -959,10 +958,11 @@ class HomeAssistant:
             target = cast(Callable[[*_Ts], Coroutine[Any, Any, _R] | _R], target)
         return self.async_run_hass_job(HassJob(target), *args)
 
-    def block_till_done(self) -> None:
+    def block_till_done(self, wait_background_tasks: bool = False) -> None:
         """Block until all pending work is done."""
         asyncio.run_coroutine_threadsafe(
-            self.async_block_till_done(), self.loop
+            self.async_block_till_done(wait_background_tasks=wait_background_tasks),
+            self.loop,
         ).result()
 
     async def async_block_till_done(self, wait_background_tasks: bool = False) -> None:
@@ -1394,6 +1394,13 @@ class _OneTimeListener(Generic[_DataT]):
 EMPTY_LIST: list[Any] = []
 
 
+@functools.lru_cache
+def _verify_event_type_length_or_raise(event_type: EventType[_DataT] | str) -> None:
+    """Verify the length of the event type and raise if too long."""
+    if len(event_type) > MAX_LENGTH_EVENT_EVENT_TYPE:
+        raise MaxLengthExceeded(event_type, "event_type", MAX_LENGTH_EVENT_EVENT_TYPE)
+
+
 class EventBus:
     """Allow the firing of and listening for events."""
 
@@ -1434,8 +1441,9 @@ class EventBus:
         context: Context | None = None,
     ) -> None:
         """Fire an event."""
+        _verify_event_type_length_or_raise(event_type)
         self._hass.loop.call_soon_threadsafe(
-            self.async_fire, event_type, event_data, origin, context
+            self.async_fire_internal, event_type, event_data, origin, context
         )
 
     @callback
@@ -1451,10 +1459,8 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        if len(event_type) > MAX_LENGTH_EVENT_EVENT_TYPE:
-            raise MaxLengthExceeded(
-                event_type, "event_type", MAX_LENGTH_EVENT_EVENT_TYPE
-            )
+        _verify_event_type_length_or_raise(event_type)
+        self._hass.verify_event_loop_thread("async_fire")
         return self.async_fire_internal(
             event_type, event_data, origin, context, time_fired
         )
@@ -2186,6 +2192,7 @@ class StateMachine:
         force_update: bool = False,
         context: Context | None = None,
         state_info: StateInfo | None = None,
+        timestamp: float | None = None,
     ) -> None:
         """Set the state of an entity, add entity if it does not exist.
 
@@ -2225,7 +2232,8 @@ class StateMachine:
         # timestamp implementation:
         # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6387
         # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6323
-        timestamp = time.time()
+        if timestamp is None:
+            timestamp = time.time()
         now = dt_util.utc_from_timestamp(timestamp)
 
         if same_state and same_attr:
@@ -2245,8 +2253,6 @@ class StateMachine:
             return
 
         if context is None:
-            if TYPE_CHECKING:
-                assert timestamp is not None
             context = Context(id=ulid_at_time(timestamp))
 
         if same_attr:
@@ -2438,7 +2444,7 @@ class ServiceRegistry:
         """
         run_callback_threadsafe(
             self._hass.loop,
-            self.async_register,
+            self._async_register,
             domain,
             service,
             service_func,
@@ -2448,6 +2454,33 @@ class ServiceRegistry:
 
     @callback
     def async_register(
+        self,
+        domain: str,
+        service: str,
+        service_func: Callable[
+            [ServiceCall],
+            Coroutine[Any, Any, ServiceResponse | EntityServiceResponse]
+            | ServiceResponse
+            | EntityServiceResponse
+            | None,
+        ],
+        schema: vol.Schema | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
+        job_type: HassJobType | None = None,
+    ) -> None:
+        """Register a service.
+
+        Schema is called to coerce and validate the service data.
+
+        This method must be run in the event loop.
+        """
+        self._hass.verify_event_loop_thread("async_register")
+        self._async_register(
+            domain, service, service_func, schema, supports_response, job_type
+        )
+
+    @callback
+    def _async_register(
         self,
         domain: str,
         service: str,
@@ -2484,18 +2517,27 @@ class ServiceRegistry:
         else:
             self._services[domain] = {service: service_obj}
 
-        self._hass.bus.async_fire(
+        self._hass.bus.async_fire_internal(
             EVENT_SERVICE_REGISTERED, {ATTR_DOMAIN: domain, ATTR_SERVICE: service}
         )
 
     def remove(self, domain: str, service: str) -> None:
         """Remove a registered service from service handler."""
         run_callback_threadsafe(
-            self._hass.loop, self.async_remove, domain, service
+            self._hass.loop, self._async_remove, domain, service
         ).result()
 
     @callback
     def async_remove(self, domain: str, service: str) -> None:
+        """Remove a registered service from service handler.
+
+        This method must be run in the event loop.
+        """
+        self._hass.verify_event_loop_thread("async_remove")
+        self._async_remove(domain, service)
+
+    @callback
+    def _async_remove(self, domain: str, service: str) -> None:
         """Remove a registered service from service handler.
 
         This method must be run in the event loop.
@@ -2512,7 +2554,7 @@ class ServiceRegistry:
         if not self._services[domain]:
             self._services.pop(domain)
 
-        self._hass.bus.async_fire(
+        self._hass.bus.async_fire_internal(
             EVENT_SERVICE_REMOVED, {ATTR_DOMAIN: domain, ATTR_SERVICE: service}
         )
 
@@ -2749,6 +2791,7 @@ class Config:
         self.elevation: int = 0
         """Elevation (always in meters regardless of the unit system)."""
 
+        self.debug: bool = False
         self.location_name: str = "Home"
         self.time_zone: str = "UTC"
         self.units: UnitSystem = METRIC_SYSTEM
@@ -2889,6 +2932,7 @@ class Config:
             "country": self.country,
             "language": self.language,
             "safe_mode": self.safe_mode,
+            "debug": self.debug,
         }
 
     def set_time_zone(self, time_zone_str: str) -> None:

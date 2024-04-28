@@ -74,7 +74,7 @@ async def test_vehicle_first_refresh(
     # Wait for the retry
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify we have loaded
     assert entry.state is ConfigEntryState.LOADED

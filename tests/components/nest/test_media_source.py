@@ -399,7 +399,7 @@ async def test_camera_event(
 
     client = await hass_client()
     response = await client.get(media.url)
-    assert response.status == HTTPStatus.OK, "Response not matched: %s" % response
+    assert response.status == HTTPStatus.OK, f"Response not matched: {response}"
     contents = await response.read()
     assert contents == IMAGE_BYTES_FROM_EVENT
 
@@ -572,7 +572,7 @@ async def test_multiple_image_events_in_session(
 
     client = await hass_client()
     response = await client.get(media.url)
-    assert response.status == HTTPStatus.OK, "Response not matched: %s" % response
+    assert response.status == HTTPStatus.OK, f"Response not matched: {response}"
     contents = await response.read()
     assert contents == IMAGE_BYTES_FROM_EVENT + b"-2"
 
@@ -585,7 +585,7 @@ async def test_multiple_image_events_in_session(
 
     client = await hass_client()
     response = await client.get(media.url)
-    assert response.status == HTTPStatus.OK, "Response not matched: %s" % response
+    assert response.status == HTTPStatus.OK, f"Response not matched: {response}"
     contents = await response.read()
     assert contents == IMAGE_BYTES_FROM_EVENT + b"-1"
 
@@ -673,7 +673,7 @@ async def test_multiple_clip_preview_events_in_session(
 
     client = await hass_client()
     response = await client.get(media.url)
-    assert response.status == HTTPStatus.OK, "Response not matched: %s" % response
+    assert response.status == HTTPStatus.OK, f"Response not matched: {response}"
     contents = await response.read()
     assert contents == IMAGE_BYTES_FROM_EVENT
 
@@ -685,7 +685,7 @@ async def test_multiple_clip_preview_events_in_session(
     assert media.mime_type == "video/mp4"
 
     response = await client.get(media.url)
-    assert response.status == HTTPStatus.OK, "Response not matched: %s" % response
+    assert response.status == HTTPStatus.OK, f"Response not matched: {response}"
     contents = await response.read()
     assert contents == IMAGE_BYTES_FROM_EVENT
 
@@ -888,7 +888,7 @@ async def test_camera_event_clip_preview(
 
     client = await hass_client()
     response = await client.get(media.url)
-    assert response.status == HTTPStatus.OK, "Response not matched: %s" % response
+    assert response.status == HTTPStatus.OK, f"Response not matched: {response}"
     contents = await response.read()
     assert contents == mp4.getvalue()
 
@@ -896,7 +896,7 @@ async def test_camera_event_clip_preview(
     response = await client.get(
         f"/api/nest/event_media/{device.id}/{event_identifier}/thumbnail"
     )
-    assert response.status == HTTPStatus.OK, "Response not matched: %s" % response
+    assert response.status == HTTPStatus.OK, f"Response not matched: {response}"
     await response.read()  # Animated gif format not tested
 
 
@@ -907,9 +907,7 @@ async def test_event_media_render_invalid_device_id(
     await setup_platform()
     client = await hass_client()
     response = await client.get("/api/nest/event_media/invalid-device-id")
-    assert response.status == HTTPStatus.NOT_FOUND, (
-        "Response not matched: %s" % response
-    )
+    assert response.status == HTTPStatus.NOT_FOUND, f"Response not matched: {response}"
 
 
 async def test_event_media_render_invalid_event_id(
@@ -924,9 +922,7 @@ async def test_event_media_render_invalid_event_id(
 
     client = await hass_client()
     response = await client.get(f"/api/nest/event_media/{device.id}/invalid-event-id")
-    assert response.status == HTTPStatus.NOT_FOUND, (
-        "Response not matched: %s" % response
-    )
+    assert response.status == HTTPStatus.NOT_FOUND, f"Response not matched: {response}"
 
 
 async def test_event_media_failure(
@@ -981,9 +977,7 @@ async def test_event_media_failure(
     # Media is not available to be fetched
     client = await hass_client()
     response = await client.get(media.url)
-    assert response.status == HTTPStatus.NOT_FOUND, (
-        "Response not matched: %s" % response
-    )
+    assert response.status == HTTPStatus.NOT_FOUND, f"Response not matched: {response}"
 
 
 async def test_media_permission_unauthorized(
@@ -1011,9 +1005,9 @@ async def test_media_permission_unauthorized(
 
     client = await hass_client()
     response = await client.get(media_url)
-    assert response.status == HTTPStatus.UNAUTHORIZED, (
-        "Response not matched: %s" % response
-    )
+    assert (
+        response.status == HTTPStatus.UNAUTHORIZED
+    ), f"Response not matched: {response}"
 
 
 async def test_multiple_devices(
@@ -1157,7 +1151,7 @@ async def test_media_store_persistence(
     # Fetch event media
     client = await hass_client()
     response = await client.get(media.url)
-    assert response.status == HTTPStatus.OK, "Response not matched: %s" % response
+    assert response.status == HTTPStatus.OK, f"Response not matched: {response}"
     contents = await response.read()
     assert contents == IMAGE_BYTES_FROM_EVENT
 
@@ -1198,7 +1192,7 @@ async def test_media_store_persistence(
 
     # Verify media exists
     response = await client.get(media.url)
-    assert response.status == HTTPStatus.OK, "Response not matched: %s" % response
+    assert response.status == HTTPStatus.OK, f"Response not matched: {response}"
     contents = await response.read()
     assert contents == IMAGE_BYTES_FROM_EVENT
 
@@ -1254,9 +1248,7 @@ async def test_media_store_save_filesystem_error(
     # We fail to retrieve the media from the server since the origin filesystem op failed
     client = await hass_client()
     response = await client.get(media.url)
-    assert response.status == HTTPStatus.NOT_FOUND, (
-        "Response not matched: %s" % response
-    )
+    assert response.status == HTTPStatus.NOT_FOUND, f"Response not matched: {response}"
 
 
 async def test_media_store_load_filesystem_error(
@@ -1307,9 +1299,9 @@ async def test_media_store_load_filesystem_error(
         response = await client.get(
             f"/api/nest/event_media/{device.id}/{event_identifier}"
         )
-        assert response.status == HTTPStatus.NOT_FOUND, (
-            "Response not matched: %s" % response
-        )
+        assert (
+            response.status == HTTPStatus.NOT_FOUND
+        ), f"Response not matched: {response}"
 
 
 @pytest.mark.parametrize(("device_traits", "cache_size"), [(BATTERY_CAMERA_TRAITS, 5)])
@@ -1384,7 +1376,7 @@ async def test_camera_event_media_eviction(
     for i in reversed(range(3, 8)):
         child_event = next(child_events)
         response = await client.get(f"/api/nest/event_media/{child_event.identifier}")
-        assert response.status == HTTPStatus.OK, "Response not matched: %s" % response
+        assert response.status == HTTPStatus.OK, f"Response not matched: {response}"
         contents = await response.read()
         assert contents == f"image-bytes-{i}".encode()
         await hass.async_block_till_done()
@@ -1444,7 +1436,7 @@ async def test_camera_image_resize(
 
     client = await hass_client()
     response = await client.get(browse.thumbnail)
-    assert response.status == HTTPStatus.OK, "Response not matched: %s" % response
+    assert response.status == HTTPStatus.OK, f"Response not matched: {response}"
     contents = await response.read()
     assert contents == IMAGE_BYTES_FROM_EVENT
 
