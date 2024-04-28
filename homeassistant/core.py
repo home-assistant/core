@@ -1408,6 +1408,7 @@ class _OneTimeListener(Generic[_DataT]):
 EMPTY_LIST: list[Any] = []
 
 
+@functools.lru_cache
 def _verify_event_type_length_or_raise(event_type: EventType[_DataT] | str) -> None:
     """Verify the length of the event type and raise if too long."""
     if len(event_type) > MAX_LENGTH_EVENT_EVENT_TYPE:
@@ -2205,6 +2206,7 @@ class StateMachine:
         force_update: bool = False,
         context: Context | None = None,
         state_info: StateInfo | None = None,
+        timestamp: float | None = None,
     ) -> None:
         """Set the state of an entity, add entity if it does not exist.
 
@@ -2244,7 +2246,8 @@ class StateMachine:
         # timestamp implementation:
         # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6387
         # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6323
-        timestamp = time.time()
+        if timestamp is None:
+            timestamp = time.time()
         now = dt_util.utc_from_timestamp(timestamp)
 
         if same_state and same_attr:
@@ -2264,8 +2267,6 @@ class StateMachine:
             return
 
         if context is None:
-            if TYPE_CHECKING:
-                assert timestamp is not None
             context = Context(id=ulid_at_time(timestamp))
 
         if same_attr:

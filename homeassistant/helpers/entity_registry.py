@@ -819,6 +819,7 @@ class EntityRegistry(BaseRegistry):
                 unit_of_measurement=unit_of_measurement,
             )
 
+        self.hass.verify_event_loop_thread("async_get_or_create")
         _validate_item(
             self.hass,
             domain,
@@ -879,7 +880,7 @@ class EntityRegistry(BaseRegistry):
         _LOGGER.info("Registered new %s.%s entity: %s", domain, platform, entity_id)
         self.async_schedule_save()
 
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_ENTITY_REGISTRY_UPDATED,
             _EventEntityRegistryUpdatedData_CreateRemove(
                 action="create", entity_id=entity_id
@@ -891,6 +892,7 @@ class EntityRegistry(BaseRegistry):
     @callback
     def async_remove(self, entity_id: str) -> None:
         """Remove an entity from registry."""
+        self.hass.verify_event_loop_thread("async_remove")
         entity = self.entities.pop(entity_id)
         config_entry_id = entity.config_entry_id
         key = (entity.domain, entity.platform, entity.unique_id)
@@ -904,7 +906,7 @@ class EntityRegistry(BaseRegistry):
             platform=entity.platform,
             unique_id=entity.unique_id,
         )
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_ENTITY_REGISTRY_UPDATED,
             _EventEntityRegistryUpdatedData_CreateRemove(
                 action="remove", entity_id=entity_id
@@ -1085,6 +1087,8 @@ class EntityRegistry(BaseRegistry):
         if not new_values:
             return old
 
+        self.hass.verify_event_loop_thread("_async_update_entity")
+
         new = self.entities[entity_id] = attr.evolve(old, **new_values)
 
         self.async_schedule_save()
@@ -1098,7 +1102,7 @@ class EntityRegistry(BaseRegistry):
         if old.entity_id != entity_id:
             data["old_entity_id"] = old.entity_id
 
-        self.hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, data)
+        self.hass.bus.async_fire_internal(EVENT_ENTITY_REGISTRY_UPDATED, data)
 
         return new
 
