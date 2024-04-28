@@ -1746,6 +1746,7 @@ omit =
     homeassistant/components/zwave_me/sensor.py
     homeassistant/components/zwave_me/siren.py
     homeassistant/components/zwave_me/switch.py
+    homeassistant/components/dreo/fan.py
 
 
 [report]
