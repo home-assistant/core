@@ -4,15 +4,21 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
+from typing import Any
 from zoneinfo import ZoneInfo
 
 from fyta_cli.fyta_connector import FytaConnector
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import CONF_EXPIRATION, DOMAIN
 from .coordinator import FytaCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,10 +34,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
-    access_token: str = entry.data.get("access_token", "")
-    expiration: datetime = datetime.fromisoformat(entry.data["expiration"]).astimezone(
-        ZoneInfo(tz)
-    )
+    access_token: str = entry.data.get(CONF_ACCESS_TOKEN, "")
+    expiration: datetime = datetime.fromisoformat(
+        entry.data[CONF_EXPIRATION]
+    ).astimezone(ZoneInfo(tz))
 
     fyta = FytaConnector(username, password, access_token, expiration, tz)
 
@@ -66,20 +72,21 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
     if config_entry.version == 1:
         new = {**config_entry.data}
-        if config_entry.minor_version < 1:
+        if config_entry.minor_version < 2:
             fyta = FytaConnector(
                 config_entry.data[CONF_USERNAME], config_entry.data[CONF_PASSWORD]
             )
-            credentials: dict[str, str | datetime] = fyta.login()
+            credentials: dict[str, Any] = await fyta.login()
+            await fyta.client.close()
 
-            if isinstance(credentials["expiration"], datetime):
-                credentials["expiration"] = credentials["expiration"].isoformat()
+            if isinstance(credentials[CONF_EXPIRATION], datetime):
+                credentials[CONF_EXPIRATION] = credentials[CONF_EXPIRATION].isoformat()
 
-            new["access_token"] = credentials["access_token"]
-            new["expiration"] = credentials["expiration"]
+            new[CONF_ACCESS_TOKEN] = credentials[CONF_ACCESS_TOKEN]
+            new[CONF_EXPIRATION] = credentials[CONF_EXPIRATION]
 
         hass.config_entries.async_update_entry(
-            config_entry, data=new, minor_version=1, version=1
+            config_entry, data=new, minor_version=2, version=1
         )
 
     _LOGGER.debug(

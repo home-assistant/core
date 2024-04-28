@@ -18,7 +18,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import DOMAIN
+from .const import CONF_EXPIRATION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,10 +32,12 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fyta."""
 
     VERSION = 1
-    MINOR_VERSION = 1
+    MINOR_VERSION = 2
 
-    _entry: ConfigEntry | None = None
-    credentials: dict[str, str | datetime] = {}
+    def __init__(self) -> None:
+        """Initialize FytaConfigFlow."""
+        self.credentials: dict[str, Any] = {}
+        self._entry: ConfigEntry | None = None
 
     async def async_auth(self, user_input: Mapping[str, Any]) -> dict[str, str]:
         """Reusable Auth Helper."""
@@ -55,8 +57,10 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
         finally:
             await fyta.client.close()
 
-        if isinstance(self.credentials["expiration"], datetime):
-            self.credentials["expiration"] = self.credentials["expiration"].isoformat()
+        if isinstance(self.credentials[CONF_EXPIRATION], datetime):
+            self.credentials[CONF_EXPIRATION] = self.credentials[
+                CONF_EXPIRATION
+            ].isoformat()
 
         return {}
 
