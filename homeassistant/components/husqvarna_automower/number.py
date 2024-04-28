@@ -31,24 +31,26 @@ async def async_setup_entry(
     """Set up number platform."""
     coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     entities: list[NumberEntity] = []
+
+    for mower_id in coordinator.data:
+        if coordinator.data[mower_id].capabilities.work_areas:
+            entities.extend(
+                AutomowerWorkAreaNumberEntity(
+                    mower_id, coordinator, description, work_area_id
+                )
+                for description in WORK_AREA_NUMBER_TYPES
+                for work_area_id in _async_work_area_mowers(
+                    coordinator.data[mower_id].work_areas
+                )
+            )
+            await async_remove_entities(coordinator, hass, entry, mower_id)
     entities.extend(
         AutomowerNumberEntity(mower_id, coordinator, description)
         for mower_id in coordinator.data
         for description in NUMBER_TYPES
         if description.exists_fn(coordinator.data[mower_id])
     )
-    entities.extend(
-        AutomowerWorkAreaNumberEntity(mower_id, coordinator, description, work_area_id)
-        for mower_id in coordinator.data
-        for description in WORK_AREA_NUMBER_TYPES
-        for work_area_id in _async_work_area_mowers(
-            coordinator.data[mower_id].work_areas
-        )
-        if coordinator.data[mower_id].capabilities.work_areas
-    )
     async_add_entities(entities)
-
-    await async_remove_entities(coordinator, hass, entry)
 
 
 @callback
@@ -236,16 +238,14 @@ async def async_remove_entities(
     coordinator: AutomowerDataUpdateCoordinator,
     hass: HomeAssistant,
     config_entry: ConfigEntry,
+    mower_id: str,
 ) -> None:
     """Remove deleted work areas from Home Assistant."""
     entity_reg = er.async_get(hass)
     work_area_list = []
-    for mower_id in coordinator.data:
-        for work_area_id in _async_work_area_mowers(
-            coordinator.data[mower_id].work_areas
-        ):
-            uid = f"{mower_id}_{work_area_id}_cutting_height_work_area"
-            work_area_list.append(uid)
+    for work_area_id in _async_work_area_mowers(coordinator.data[mower_id].work_areas):
+        uid = f"{mower_id}_{work_area_id}_cutting_height_work_area"
+        work_area_list.append(uid)
     for entity in er.async_entries_for_config_entry(entity_reg, config_entry.entry_id):
         if entity.unique_id.endswith("cutting_height_work_area"):
             if entity.unique_id not in work_area_list:
