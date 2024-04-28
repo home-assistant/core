@@ -117,7 +117,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def tag_change_listener(
         change_type: str, item_id: str, updated_config: dict
     ) -> None:
-        """Tag event listener."""
+        """Tag storage change listener."""
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
                 "%s, item: %s, update: %s", change_type, item_id, updated_config
