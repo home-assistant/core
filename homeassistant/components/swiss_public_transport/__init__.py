@@ -109,6 +109,10 @@ async def async_migrate_entry(
             config_entry, unique_id=new_unique_id, minor_version=2
         )
 
+    if config_entry.minor_version == 2:
+        # Via stations now available
+        hass.config_entries.async_update_entry(config_entry, minor_version=3)
+
     _LOGGER.debug(
         "Migration to version %s.%s successful",
         config_entry.version,
