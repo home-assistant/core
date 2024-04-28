@@ -206,7 +206,7 @@ async def async_process_integration_platforms(
     # We use hass.async_create_task instead of asyncio.create_task because
     # we want to make sure that startup waits for the task to complete.
     #
-    future = hass.async_create_task(
+    future = hass.async_create_task_internal(
         _async_process_integration_platforms(
             hass, platform_name, top_level_components.copy(), process_job
         ),

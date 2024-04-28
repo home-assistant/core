@@ -329,7 +329,7 @@ async def test_async_create_task_schedule_coroutine() -> None:
     async def job():
         pass
 
-    ha.HomeAssistant.async_create_task(hass, job(), eager_start=False)
+    ha.HomeAssistant.async_create_task_internal(hass, job(), eager_start=False)
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 1
     assert len(hass.add_job.mock_calls) == 0
@@ -342,7 +342,7 @@ async def test_async_create_task_eager_start_schedule_coroutine() -> None:
     async def job():
         pass
 
-    ha.HomeAssistant.async_create_task(hass, job(), eager_start=True)
+    ha.HomeAssistant.async_create_task_internal(hass, job(), eager_start=True)
     # Should create the task directly since 3.12 supports eager_start
     assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.add_job.mock_calls) == 0
@@ -355,7 +355,7 @@ async def test_async_create_task_schedule_coroutine_with_name() -> None:
     async def job():
         pass
 
-    task = ha.HomeAssistant.async_create_task(
+    task = ha.HomeAssistant.async_create_task_internal(
         hass, job(), "named task", eager_start=False
     )
     assert len(hass.loop.call_soon.mock_calls) == 0
@@ -3480,3 +3480,15 @@ async def test_async_remove_thread_safety(hass: HomeAssistant) -> None:
         await hass.async_add_executor_job(
             hass.services.async_remove, "test_domain", "test_service"
         )
+
+
+async def test_async_create_task_thread_safety(hass: HomeAssistant) -> None:
+    """Test async_create_task thread safety."""
+
+    async def _any_coro():
+        pass
+
+    with pytest.raises(
+        RuntimeError, match="Detected code that calls async_create_task from a thread."
+    ):
+        await hass.async_add_executor_job(hass.async_create_task, _any_coro)
