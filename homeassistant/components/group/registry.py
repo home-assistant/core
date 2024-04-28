@@ -56,15 +56,16 @@ class GroupIntegrationRegistry:
         self.state_group_mapping: dict[str, tuple[str, str]] = {}
         self.group_entities: set[Group] = set()
 
+    @callback
     def exclude_domain(self, domain: str) -> None:
         """Exclude the current domain."""
         self.exclude_domains.add(domain)
 
+    @callback
     def on_off_states(
         self, domain: str, on_states: tuple[str, ...], off_state: str
     ) -> None:
         """Register on and off states for the current domain."""
-        # domain = current_domain.get()
         for on_state in on_states:
             if on_state not in self.on_off_mapping:
                 self.on_off_mapping[on_state] = off_state
