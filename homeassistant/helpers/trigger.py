@@ -319,7 +319,7 @@ async def async_initialize_triggers(
                 try:
                     enabled = enabled.async_render(variables, limited=True)
                 except TemplateError as err:
-                    log_cb(logging.ERROR, "Error rendering enabled template: %s", err)
+                    log_cb(logging.ERROR, f"Error rendering enabled template: {err}")
                     return None
             if not enabled:
                 continue

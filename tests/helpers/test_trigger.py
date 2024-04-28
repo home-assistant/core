@@ -165,6 +165,35 @@ async def test_trigger_enabled_templates(
     assert len(calls) == 2
 
 
+async def test_trigger_enabled_template_limited(
+    hass: HomeAssistant, calls: list[ServiceCall], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test triggers enabled invalid template."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": [
+                    {
+                        "enabled": "{{ states('sensor.limited') }}",  # only limited template supported
+                        "platform": "event",
+                        "event_type": "test_event",
+                    },
+                ],
+                "action": {
+                    "service": "test.automation",
+                },
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert not calls
+    assert "Error rendering enabled template" in caplog.text
+
+
 async def test_trigger_alias(
     hass: HomeAssistant, calls: list[ServiceCall], caplog: pytest.LogCaptureFixture
 ) -> None:
