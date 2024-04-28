@@ -110,7 +110,7 @@ async def async_setup_entry(
     coordinator: SeventeenTrackCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     previous_tracking_numbers: set[str] = set()
 
-    # This has been deprecated in 2024.5, will be removed in 2024.11
+    # This has been deprecated in 2024.6, will be removed in 2024.12
     @callback
     def _async_create_remove_entities():
         live_tracking_numbers = set(coordinator.data.live_packages.keys())
@@ -204,7 +204,7 @@ class SeventeenTrackSummarySensor(SeventeenTrackSensor):
         """Return the state of the sensor."""
         return self.coordinator.data.summary[self._status]["quantity"]
 
-    # This has been deprecated in 2024.5, will be removed in 2024.11
+    # This has been deprecated in 2024.6, will be removed in 2024.12
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
