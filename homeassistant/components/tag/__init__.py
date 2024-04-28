@@ -129,7 +129,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 hass,
                 updated_config.get(CONF_NAME, DEFAULT_NAME),
                 updated_config[TAG_ID],
-                updated_config.get(LAST_SCANNED, ""),
+                updated_config.get(LAST_SCANNED),
                 updated_config.get(DEVICE_ID),
             )
             await entities[updated_config[TAG_ID]].async_add_initial_state()
@@ -237,7 +237,9 @@ class TagEntity(Entity):
         }
 
     @callback
-    def async_handle_event(self, device_id: str | None, last_scanned: str) -> None:
+    def async_handle_event(
+        self, device_id: str | None, last_scanned: str | None
+    ) -> None:
         """Handle the Tag scan event."""
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
