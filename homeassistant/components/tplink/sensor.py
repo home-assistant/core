@@ -193,9 +193,10 @@ class Sensor(CoordinatedTPLinkEntity, SensorEntity):
             name=feature.name,
             icon=feature.icon,
             native_unit_of_measurement=feature.unit,
-            entity_registry_enabled_default=feature.category
-            is not Feature.Category.Debug,
+            **feature.hass_compat.dict(),
         )
+        # TODO: define `options` if type==Choice
+        #  Requires the enum device class to be set. Cannot be combined with state_class or native_unit_of_measurement.
 
     @callback
     def _async_update_attrs(self) -> None:

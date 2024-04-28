@@ -56,8 +56,7 @@ class BinarySensor(CoordinatedTPLinkEntity, BinarySensorEntity):
             translation_key=feature.id,
             name=feature.name,
             icon=feature.icon,
-            entity_registry_enabled_default=feature.category
-            is not Feature.Category.Debug,
+            **feature.hass_compat.dict(),
         )
 
     @callback
