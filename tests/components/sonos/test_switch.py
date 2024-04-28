@@ -157,7 +157,7 @@ async def test_alarm_create_delete(
     alarm_event.variables["alarm_list_version"] = two_alarms["CurrentAlarmListVersion"]
 
     sub_callback(event=alarm_event)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "switch.sonos_alarm_14" in entity_registry.entities
     assert "switch.sonos_alarm_15" in entity_registry.entities
@@ -169,7 +169,7 @@ async def test_alarm_create_delete(
     alarm_clock.ListAlarms.return_value = one_alarm
 
     sub_callback(event=alarm_event)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "switch.sonos_alarm_14" in entity_registry.entities
     assert "switch.sonos_alarm_15" not in entity_registry.entities
