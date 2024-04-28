@@ -156,7 +156,7 @@ async def test_default_code_option_update(
     """Test default code stored in the registry is updated."""
 
     assert (
-        mock_alarm_control_panel_entity._alarm_control_panel_option_default_code == ""
+        mock_alarm_control_panel_entity._alarm_control_panel_option_default_code is None
     )
 
     entity_registry.async_update_entity_options(

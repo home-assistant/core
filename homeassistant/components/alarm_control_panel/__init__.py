@@ -155,19 +155,21 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     _attr_supported_features: AlarmControlPanelEntityFeature = (
         AlarmControlPanelEntityFeature(0)
     )
-    _alarm_control_panel_option_default_code: str = ""
+    _alarm_control_panel_option_default_code: str | None = None
 
     @final
     @callback
-    def add_default_code(self, code: str | None) -> str | None:
-        """Add default arm code."""
-        if not code:
-            # Set code to default code
-            code = self._alarm_control_panel_option_default_code
-        if not code:
-            # If no default code (""), return None
-            return None
-        return code
+    def code_or_default_code(self, code: str | None) -> str | None:
+        """Return code to use for a service call.
+
+        If the passed in code is not None, it will be return. Otherwise return the
+        default code if set, or None if not set.
+        """
+        if code:
+            # Return code provided by user
+            return code
+        # Failback to default code or None if not set
+        return self._alarm_control_panel_option_default_code
 
     @cached_property
     def code_format(self) -> CodeFormat | None:
@@ -187,8 +189,8 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     @final
     @callback
     def check_code_arm_required(self, code: str | None) -> str | None:
-        """Check if code arm required and no code is given raise."""
-        if not (_code := self.add_default_code(code)) and self.code_arm_required:
+        """Check if arm code is required, raise if no code is given."""
+        if not (_code := self.code_or_default_code(code)) and self.code_arm_required:
             raise ServiceValidationError(
                 f"Arming requires a code but none was given for {self.entity_id}",
                 translation_domain=DOMAIN,
@@ -202,7 +204,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     @final
     async def async_handle_alarm_disarm(self, code: str | None = None) -> None:
         """Add default code and disarm."""
-        await self.async_alarm_disarm(self.add_default_code(code))
+        await self.async_alarm_disarm(self.code_or_default_code(code))
 
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
@@ -338,7 +340,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
                 custom_default_alarm_control_panel_code
             )
             return
-        self._alarm_control_panel_option_default_code = ""
+        self._alarm_control_panel_option_default_code = None
 
 
 # As we import constants of the const module here, we need to add the following
