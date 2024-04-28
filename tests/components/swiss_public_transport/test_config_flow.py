@@ -26,16 +26,38 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 MOCK_DATA_STEP = {
     CONF_START: "test_start",
     CONF_DESTINATION: "test_destination",
+}
+
+MOCK_DATA_STEP_ONE_VIA = {
+    **MOCK_DATA_STEP,
     CONF_VIA: ["via_station"],
+}
+
+MOCK_DATA_STEP_MANY_VIA = {
+    **MOCK_DATA_STEP,
+    CONF_VIA: ["via_station_1", "via_station_2", "via_station_3"],
 }
 
 MOCK_DATA_STEP_TOO_MANY_STATIONS = {
     **MOCK_DATA_STEP,
-    CONF_VIA: MOCK_DATA_STEP[CONF_VIA] * (MAX_VIA + 1),
+    CONF_VIA: MOCK_DATA_STEP_ONE_VIA[CONF_VIA] * (MAX_VIA + 1),
 }
 
 
-async def test_flow_user_init_data_success(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("user_input", "config_title"),
+    [
+        (MOCK_DATA_STEP, "test_start test_destination"),
+        (MOCK_DATA_STEP_ONE_VIA, "test_start test_destination via via_station"),
+        (
+            MOCK_DATA_STEP_MANY_VIA,
+            "test_start test_destination via via_station_1, via_station_2, via_station_3",
+        ),
+    ],
+)
+async def test_flow_user_init_data_success(
+    hass: HomeAssistant, user_input, config_title
+) -> None:
     """Test success response."""
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": "user"}
@@ -56,13 +78,13 @@ async def test_flow_user_init_data_success(hass: HomeAssistant) -> None:
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input=MOCK_DATA_STEP,
+            user_input=user_input,
         )
 
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["result"].title == "test_start test_destination via via_station"
+        assert result["result"].title == config_title
 
-        assert result["data"] == MOCK_DATA_STEP
+        assert result["data"] == user_input
 
 
 @pytest.mark.parametrize(
@@ -103,7 +125,7 @@ async def test_flow_user_init_data_error_and_recover(
         )
 
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["result"].title == "test_start test_destination via via_station"
+        assert result["result"].title == "test_start test_destination"
 
         assert result["data"] == MOCK_DATA_STEP
 
