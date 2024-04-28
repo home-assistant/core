@@ -59,6 +59,8 @@ class BinarySensor(CoordinatedTPLinkEntity, BinarySensorEntity):
             **feature.hass_compat.dict(),
         )
 
+        self._async_update_attrs()
+
     @callback
     def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
