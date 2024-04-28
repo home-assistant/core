@@ -85,7 +85,7 @@ def _async_integration_platform_component_loaded(
 
     # At least one of the platforms is not loaded, we need to load them
     # so we have to fall back to creating a task.
-    hass.async_create_task(
+    hass.async_create_task_internal(
         _async_process_integration_platforms_for_component(
             hass, integration, platforms_that_exist, integration_platforms_by_name
         ),
