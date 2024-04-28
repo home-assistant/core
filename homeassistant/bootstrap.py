@@ -292,9 +292,7 @@ async def async_setup_hass(
             if not is_virtual_env():
                 await async_mount_local_lib_path(runtime_config.config_dir)
 
-            custom_packages: list[str] | None = None
-            if not runtime_config.safe_mode:
-                custom_packages = _mount_custom_packages_path(runtime_config.config_dir)
+            custom_packages = _mount_custom_packages_path(runtime_config)
 
             basic_setup_success = (
                 await async_from_config_dict(config_dict, hass) is not None
@@ -634,13 +632,16 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
     return deps_dir
 
 
-def _mount_custom_packages_path(config_dir: str) -> list[str] | None:
+def _mount_custom_packages_path(runtime_config: RuntimeConfig) -> list[str] | None:
     """Add custom packages path to Python Path."""
-    custom_packages_dir = os.path.join(config_dir, "custom_packages")
+    custom_packages_dir = os.path.join(runtime_config.config_dir, "custom_packages")
     if not os.path.exists(custom_packages_dir):
         return None
+    if runtime_config.safe_mode and custom_packages_dir in sys.path:
+        sys.path.remove(custom_packages_dir)
+        return None
 
-    if custom_packages_dir not in sys.path:
+    if not runtime_config.safe_mode and custom_packages_dir not in sys.path:
         sys.path.insert(0, custom_packages_dir)
     custom_packages = [
         name for _, name, _ in pkgutil.iter_modules([custom_packages_dir])
