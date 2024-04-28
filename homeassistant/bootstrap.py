@@ -735,7 +735,7 @@ async def async_setup_multi_components(
     # to wait to be imported, and the sooner we can get the base platforms
     # loaded the sooner we can start loading the rest of the integrations.
     futures = {
-        domain: hass.async_create_task(
+        domain: hass.async_create_task_internal(
             async_setup_component(hass, domain, config),
             f"setup component {domain}",
             eager_start=True,
