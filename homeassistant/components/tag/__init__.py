@@ -119,8 +119,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ) -> None:
         """Tag storage change listener."""
 
-        entity_reg = er.async_get(hass)
-
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
                 "%s, item: %s, update: %s", change_type, item_id, updated_config
@@ -153,7 +151,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             entity_id = entities[updated_config[TAG_ID]].entity_id
             hass.states.async_remove(entity_id)
             entities.pop(updated_config[TAG_ID])
-            entity_reg.async_remove(entity_id)
 
     storage_collection.async_add_listener(tag_change_listener)
 
