@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pyopenweathermap import RequestError
+from pyopenweathermap import CurrentWeather, RequestError, WeatherReport
 
 from homeassistant.components.openweathermap.const import DEFAULT_LANGUAGE, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
@@ -30,16 +30,44 @@ VALID_YAML_CONFIG = {CONF_API_KEY: "foo"}
 
 
 def _create_mocked_owm_client(is_valid: bool):
+    current_weather = CurrentWeather(
+        dt=1714063536,
+        temp=6.84,
+        feels_like=2.07,
+        pressure=1000,
+        humidity=82,
+        dew_point=3.99,
+        uvi=0.13,
+        clouds=75,
+        visibility=10000,
+        wind_speed=9.83,
+        wind_deg=199,
+        weather=[
+            {
+                "id": 803,
+                "main": "Clouds",
+                "description": "broken clouds",
+                "icon": "04d",
+            }
+        ],
+    )
+    weather_report = WeatherReport(current_weather, [], [])
+
     mocked_owm_client = MagicMock()
     mocked_owm_client.validate_key = AsyncMock(return_value=is_valid)
-    mocked_owm_client.get_weather = AsyncMock(return_value=None)
+    mocked_owm_client.get_weather = AsyncMock(return_value=weather_report)
 
     return mocked_owm_client
 
 
-@patch("pyopenweathermap.OWMClient", return_value=_create_mocked_owm_client(True))
-async def todotest_form(_, hass: HomeAssistant) -> None:
+@patch("homeassistant.components.openweathermap.config_flow.OWMClient")
+@patch("homeassistant.components.openweathermap.OWMClient")
+async def test_form(owm_client_mock, owm_client_mock2, hass: HomeAssistant) -> None:
     """Test that the form is served with valid input."""
+    mock = _create_mocked_owm_client(True)
+    owm_client_mock.return_value = mock
+    owm_client_mock2.return_value = mock
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -69,64 +97,67 @@ async def todotest_form(_, hass: HomeAssistant) -> None:
     assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
 
 
-async def todo_test_form_options(hass: HomeAssistant) -> None:
+@patch("homeassistant.components.openweathermap.config_flow.OWMClient")
+@patch("homeassistant.components.openweathermap.OWMClient")
+async def test_form_options(
+    owm_client_mock, owm_client_mock2, hass: HomeAssistant
+) -> None:
     """Test that the options form."""
-    mocked_owm = _create_mocked_owm_old(True)
+    mock = _create_mocked_owm_client(True)
+    owm_client_mock.return_value = mock
+    owm_client_mock2.return_value = mock
 
-    with patch(
-        "pyowm.weatherapi25.weather_manager.WeatherManager",
-        return_value=mocked_owm,
-    ):
-        config_entry = MockConfigEntry(
-            domain=DOMAIN, unique_id="openweathermap_unique_id", data=CONFIG
-        )
-        config_entry.add_to_hass(hass)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="openweathermap_unique_id", data=CONFIG
+    )
+    config_entry.add_to_hass(hass)
 
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "init"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
 
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={}
-        )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
 
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert config_entry.options == {
-            CONF_LANGUAGE: DEFAULT_LANGUAGE,
-        }
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        CONF_LANGUAGE: DEFAULT_LANGUAGE,
+    }
 
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-        assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "init"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
 
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={}
-        )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
 
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert config_entry.options == {
-            CONF_LANGUAGE: DEFAULT_LANGUAGE,
-        }
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        CONF_LANGUAGE: DEFAULT_LANGUAGE,
+    }
 
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-        assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
-@patch("pyopenweathermap.OWMClient", return_value=_create_mocked_owm_client(False))
-async def test_form_invalid_api_key(w, hass: HomeAssistant) -> None:
+@patch("homeassistant.components.openweathermap.config_flow.OWMClient")
+async def test_form_invalid_api_key(owm_client_mock, hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
+    owm_client_mock.return_value = _create_mocked_owm_client(False)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
     )
@@ -134,56 +165,13 @@ async def test_form_invalid_api_key(w, hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "invalid_api_key"}
 
 
-@patch(
-    "pyopenweathermap.OWMClient",
-    return_value=_create_mocked_owm_client(True),
-    side_effect=RequestError("oops"),
-)
-async def test_form_api_call_error(d, hass: HomeAssistant) -> None:
+@patch("homeassistant.components.openweathermap.config_flow.OWMClient")
+async def test_form_api_call_error(owm_client_mock, hass: HomeAssistant) -> None:
     """Test setting up with api call error."""
+    owm_client_mock.return_value = _create_mocked_owm_client(True)
+    owm_client_mock.side_effect = RequestError("oops")
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
     )
 
     assert result["errors"] == {"base": "cannot_connect"}
-
-
-def _create_mocked_owm_old(is_api_online: bool):
-    mocked_owm = MagicMock()
-
-    weather = MagicMock()
-    weather.temperature.return_value.get.return_value = 10
-    weather.pressure.get.return_value = 10
-    weather.humidity.return_value = 10
-    weather.wind.return_value.get.return_value = 0
-    weather.clouds.return_value = "clouds"
-    weather.rain.return_value = []
-    weather.snow.return_value = []
-    weather.detailed_status.return_value = "status"
-    weather.weather_code = 803
-    weather.dewpoint = 10
-
-    mocked_owm.weather_at_coords.return_value.weather = weather
-
-    one_day_forecast = MagicMock()
-    one_day_forecast.reference_time.return_value = 10
-    one_day_forecast.temperature.return_value.get.return_value = 10
-    one_day_forecast.rain.return_value.get.return_value = 0
-    one_day_forecast.snow.return_value.get.return_value = 0
-    one_day_forecast.wind.return_value.get.return_value = 0
-    one_day_forecast.weather_code = 803
-
-    mocked_owm.forecast_at_coords.return_value.forecast.weathers = [one_day_forecast]
-
-    one_call = MagicMock()
-    one_call.current = weather
-    one_call.forecast_hourly = [one_day_forecast]
-    one_call.forecast_daily = [one_day_forecast]
-
-    mocked_owm.one_call.return_value = one_call
-
-    mocked_owm.weather_manager.return_value.weather_at_coords.return_value = (
-        is_api_online
-    )
-
-    return mocked_owm

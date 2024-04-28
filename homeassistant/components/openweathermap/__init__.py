@@ -13,7 +13,6 @@ from homeassistant.const import (
     CONF_LANGUAGE,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_MODE,
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant
@@ -23,8 +22,6 @@ from .const import (
     DOMAIN,
     ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
-    FORECAST_MODE_FREE_DAILY,
-    FORECAST_MODE_ONECALL_DAILY,
     PLATFORMS,
     UPDATE_LISTENER,
 )
@@ -64,21 +61,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    config_entries = hass.config_entries
-    data = entry.data
     version = entry.version
 
     _LOGGER.debug("Migrating OpenWeatherMap entry from version %s", version)
-
-    if version == 1:
-        if (mode := data[CONF_MODE]) == FORECAST_MODE_FREE_DAILY:
-            mode = FORECAST_MODE_ONECALL_DAILY
-
-        new_data = {**data, CONF_MODE: mode}
-        config_entries.async_update_entry(
-            entry, data=new_data, version=CONFIG_FLOW_VERSION
-        )
-
+    _LOGGER.info("Empty migration, left for compatibility")
     _LOGGER.info("Migration to version %s successful", CONFIG_FLOW_VERSION)
 
     return True

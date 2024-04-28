@@ -54,6 +54,7 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(f"{latitude}-{longitude}")
             self._abort_if_unique_id_configured()
 
+            api_key_valid = None
             try:
                 api_key_valid = await _is_owm_api_key_valid(user_input[CONF_API_KEY])
             except RequestError:

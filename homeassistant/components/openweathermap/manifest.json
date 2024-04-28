@@ -5,6 +5,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/openweathermap",
   "iot_class": "cloud_polling",
-  "loggers": ["geojson", "pyopenweathermap", "pysocks"],
+  "loggers": ["pyopenweathermap"],
   "requirements": ["pyopenweathermap==0.0.5"]
 }
