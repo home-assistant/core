@@ -224,7 +224,7 @@ async def test_block_sleeping_device_firmware_unsupported(
 
     # Make device online
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
     assert (
@@ -299,7 +299,7 @@ async def test_block_sleeping_device_no_periodic_updates(
 
     # Make device online
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert get_entity_state(hass, entity_id) == "22.1"
 
@@ -542,7 +542,7 @@ async def test_rpc_update_entry_sleep_period(
 
     # Make device online
     mock_rpc_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.data["sleep_period"] == 600
 
@@ -550,7 +550,7 @@ async def test_rpc_update_entry_sleep_period(
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 3600)
     freezer.tick(timedelta(seconds=600 * SLEEP_PERIOD_MULTIPLIER))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.data["sleep_period"] == 3600
 
@@ -575,14 +575,14 @@ async def test_rpc_sleeping_device_no_periodic_updates(
 
     # Make device online
     mock_rpc_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert get_entity_state(hass, entity_id) == "22.9"
 
     # Move time to generate polling
     freezer.tick(timedelta(seconds=SLEEP_PERIOD_MULTIPLIER * 1000))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert get_entity_state(hass, entity_id) is STATE_UNAVAILABLE
 
@@ -599,7 +599,7 @@ async def test_rpc_sleeping_device_firmware_unsupported(
 
     # Make device online
     mock_rpc_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
     assert (
@@ -765,7 +765,7 @@ async def test_rpc_update_entry_fw_ver(
 
     # Make device online
     mock_rpc_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.unique_id
     device = dev_reg.async_get_device(
