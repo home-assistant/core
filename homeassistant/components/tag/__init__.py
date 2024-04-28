@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_NAME
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import collection, entity_registry as er
+from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.storage import Store
@@ -191,13 +191,16 @@ async def async_scan_tag(
         context=context,
     )
 
+    _add_device_id = {}
+    if device_id:
+        _add_device_id[DEVICE_ID] = device_id
     if tag_id in storage_collection.data:
         await storage_collection.async_update_item(
-            tag_id, {LAST_SCANNED: dt_util.utcnow(), DEVICE_ID: device_id or ""}
+            tag_id, {LAST_SCANNED: dt_util.utcnow(), **_add_device_id}
         )
     else:
         await storage_collection.async_create_item(
-            {TAG_ID: tag_id, LAST_SCANNED: dt_util.utcnow(), DEVICE_ID: device_id or ""}
+            {TAG_ID: tag_id, LAST_SCANNED: dt_util.utcnow(), **_add_device_id}
         )
     _LOGGER.debug("Tag: %s scanned by device: %s", tag_id, device_id)
 
