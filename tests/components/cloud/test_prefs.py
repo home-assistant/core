@@ -197,3 +197,21 @@ async def test_strict_connection_convertion(
     await hass.async_block_till_done()
 
     assert cloud.client.prefs.strict_connection is mode
+
+
+@pytest.mark.parametrize("storage_data", [{}, {PREF_STRICT_CONNECTION: None}])
+async def test_strict_connection_default(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    hass_storage: dict[str, Any],
+    storage_data: dict[str, Any],
+) -> None:
+    """Test strict connection default values."""
+    hass_storage[STORAGE_KEY] = {
+        "version": 1,
+        "data": storage_data,
+    }
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    assert cloud.client.prefs.strict_connection is StrictConnectionMode.DISABLED

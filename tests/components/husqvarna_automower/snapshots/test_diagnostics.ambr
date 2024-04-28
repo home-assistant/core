@@ -91,7 +91,7 @@
     'work_areas': dict({
       '0': dict({
         'cutting_height': 50,
-        'name': None,
+        'name': 'my_lawn',
       }),
       '123456': dict({
         'cutting_height': 50,
