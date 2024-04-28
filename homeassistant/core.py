@@ -809,7 +809,7 @@ class HomeAssistant:
         # reported. It will take a while to get all the issues fixed in
         # custom components.
         #
-        # In 2025.5 we should guard the `verify_event_loop_thread``
+        # In 2025.5 we should guard the `verify_event_loop_thread`
         # check with a check for the `hass.config.debug` flag being set as
         # we long term, we don't want to be checking this in production
         # environments since it is a performance hit.
