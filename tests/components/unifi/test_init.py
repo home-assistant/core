@@ -177,13 +177,13 @@ async def test_remove_config_entry_device(
     assert await async_setup_component(hass, "config", {})
     await hass.async_block_till_done()
 
-    client = await hass_ws_client(hass)
+    ws_client = await hass_ws_client(hass)
 
     # Try to remove an active client from UI: not allowed
     device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, client_1["mac"])}
     )
-    await client.send_json(
+    await ws_client.send_json(
         {
             "id": 1,
             "type": "config/device_registry/remove_config_entry",
@@ -191,7 +191,7 @@ async def test_remove_config_entry_device(
             "device_id": device_entry.id,
         }
     )
-    response = await client.receive_json()
+    response = await ws_client.receive_json()
     assert not response["success"]
     await hass.async_block_till_done()
     assert device_registry.async_get_device(
@@ -202,7 +202,7 @@ async def test_remove_config_entry_device(
     device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, device_1["mac"])}
     )
-    await client.send_json(
+    await ws_client.send_json(
         {
             "id": 2,
             "type": "config/device_registry/remove_config_entry",
@@ -210,7 +210,7 @@ async def test_remove_config_entry_device(
             "device_id": device_entry.id,
         }
     )
-    response = await client.receive_json()
+    response = await ws_client.receive_json()
     assert not response["success"]
     await hass.async_block_till_done()
     assert device_registry.async_get_device(
@@ -225,7 +225,7 @@ async def test_remove_config_entry_device(
     device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, client_2["mac"])}
     )
-    await client.send_json(
+    await ws_client.send_json(
         {
             "id": 3,
             "type": "config/device_registry/remove_config_entry",
@@ -233,7 +233,7 @@ async def test_remove_config_entry_device(
             "device_id": device_entry.id,
         }
     )
-    response = await client.receive_json()
+    response = await ws_client.receive_json()
     assert response["success"]
     await hass.async_block_till_done()
     assert not device_registry.async_get_device(
