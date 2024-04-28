@@ -577,9 +577,7 @@ class HomeAssistant:
         if TYPE_CHECKING:
             target = cast(Callable[[*_Ts], Any], target)
         self.loop.call_soon_threadsafe(
-            functools.partial(
-                self._async_add_hass_job, HassJob(target), *args, eager_start=True
-            )
+            functools.partial(self._async_add_hass_job, HassJob(target), *args)
         )
 
     @overload
@@ -650,7 +648,7 @@ class HomeAssistant:
         # https://github.com/home-assistant/core/pull/71960
         if TYPE_CHECKING:
             target = cast(Callable[[*_Ts], Coroutine[Any, Any, _R] | _R], target)
-        return self._async_add_hass_job(HassJob(target), *args, eager_start=eager_start)
+        return self._async_add_hass_job(HassJob(target), *args)
 
     @overload
     @callback
@@ -700,9 +698,7 @@ class HomeAssistant:
             error_if_core=False,
         )
 
-        return self._async_add_hass_job(
-            hassjob, *args, eager_start=eager_start, background=background
-        )
+        return self._async_add_hass_job(hassjob, *args, background=background)
 
     @overload
     @callback
@@ -710,7 +706,6 @@ class HomeAssistant:
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R]],
         *args: Any,
-        eager_start: bool = False,
         background: bool = False,
     ) -> asyncio.Future[_R] | None: ...
 
@@ -720,7 +715,6 @@ class HomeAssistant:
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
-        eager_start: bool = False,
         background: bool = False,
     ) -> asyncio.Future[_R] | None: ...
 
@@ -729,7 +723,6 @@ class HomeAssistant:
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
-        eager_start: bool = False,
         background: bool = False,
     ) -> asyncio.Future[_R] | None:
         """Add a HassJob from within the event loop.
@@ -751,16 +744,11 @@ class HomeAssistant:
                 hassjob.target = cast(
                     Callable[..., Coroutine[Any, Any, _R]], hassjob.target
                 )
-            # Use loop.create_task
-            # to avoid the extra function call in asyncio.create_task.
-            if eager_start:
-                task = create_eager_task(
-                    hassjob.target(*args), name=hassjob.name, loop=self.loop
-                )
-                if task.done():
-                    return task
-            else:
-                task = self.loop.create_task(hassjob.target(*args), name=hassjob.name)
+            task = create_eager_task(
+                hassjob.target(*args), name=hassjob.name, loop=self.loop
+            )
+            if task.done():
+                return task
         elif hassjob.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
@@ -914,9 +902,7 @@ class HomeAssistant:
             hassjob.target(*args)
             return None
 
-        return self._async_add_hass_job(
-            hassjob, *args, eager_start=True, background=background
-        )
+        return self._async_add_hass_job(hassjob, *args, background=background)
 
     @overload
     @callback
