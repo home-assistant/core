@@ -306,26 +306,25 @@ class Group(Entity):
             if domain in registry.state_group_mapping:
                 single_state_type_key.add(registry.state_group_mapping[domain])
             elif domain == DOMAIN:
-                for group in iter(registry.group_entities):
+                for group in registry.group_entities:
                     if group.entity_id == ent_id and group.single_state_type_key:
                         single_state_type_key.add(group.single_state_type_key)
                         break
             else:
                 single_state_type_key.add((STATE_ON, STATE_OFF))
 
-        self.single_state_type_key = (
-            next(iter(single_state_type_key))
-            if len(single_state_type_key) == 1
-            else None
-        )
+        if len(single_state_type_key) == 1:
+            self.single_state_type_key = next(iter(single_state_type_key))
+        else:
+            self.single_state_type_key = None
         registry.group_entities.add(self)
-        self.async_on_remove(self._deregister)
+        self.async_on_remove(self._async_deregister)
 
         self.trackable = tuple(trackable)
         self.tracking = tuple(tracking)
 
     @callback
-    def _deregister(self) -> None:
+    def _async_deregister(self) -> None:
         """Deregister group entity from the registry."""
         registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
         if self in registry.group_entities:
