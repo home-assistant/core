@@ -1157,6 +1157,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
             cooldown=DISCOVERY_COOLDOWN,
             immediate=True,
             function=self._async_discovery,
+            background=True,
         )
 
     async def async_wait_import_flow_initialized(self, handler: str) -> None:
