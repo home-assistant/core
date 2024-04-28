@@ -41,8 +41,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> ReturnOutputData | None:  # type: ignore[override]
         try:
-            data = await self.api.get_output_data()
-            return data  # noqa: TRY300
+            return await self.api.get_output_data()
         except (TimeoutError, client_exceptions.ClientConnectionError):
             # raise InverterNotAvailable
             raise InverterNotAvailable from None
