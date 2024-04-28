@@ -46,7 +46,7 @@ CONNECTIONS = [
 ]
 
 
-async def test_migration_1_1_to_1_2(
+async def test_migration_1_1_to_1_3(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test successful setup."""
@@ -76,7 +76,7 @@ async def test_migration_1_1_to_1_2(
         )
 
         # Check change in config entry
-        assert config_entry_faulty.minor_version == 2
+        assert config_entry_faulty.minor_version == 3
         assert config_entry_faulty.unique_id == "test_start test_destination"
 
         # Check "None" is gone
