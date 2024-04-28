@@ -27,7 +27,7 @@ def async_describe_on_off_states(
     """Describe group on off states."""
     registry.on_off_states(
         DOMAIN,
-        (
+        {
             STATE_ON,
             STATE_ALARM_ARMED_AWAY,
             STATE_ALARM_ARMED_CUSTOM_BYPASS,
@@ -35,6 +35,7 @@ def async_describe_on_off_states(
             STATE_ALARM_ARMED_NIGHT,
             STATE_ALARM_ARMED_VACATION,
             STATE_ALARM_TRIGGERED,
-        ),
+        },
+        STATE_ON,
         STATE_OFF,
     )

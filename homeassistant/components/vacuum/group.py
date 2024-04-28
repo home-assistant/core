@@ -18,11 +18,12 @@ def async_describe_on_off_states(
     """Describe group on off states."""
     registry.on_off_states(
         DOMAIN,
-        (
+        {
             STATE_ON,
             STATE_CLEANING,
             STATE_RETURNING,
             STATE_ERROR,
-        ),
+        },
+        STATE_ON,
         STATE_OFF,
     )

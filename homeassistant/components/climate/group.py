@@ -18,13 +18,14 @@ def async_describe_on_off_states(
     """Describe group on off states."""
     registry.on_off_states(
         DOMAIN,
-        (
+        {
             STATE_ON,
             HVACMode.HEAT,
             HVACMode.COOL,
             HVACMode.HEAT_COOL,
             HVACMode.AUTO,
             HVACMode.FAN_ONLY,
-        ),
+        },
+        STATE_ON,
         STATE_OFF,
     )

@@ -63,7 +63,7 @@ class GroupIntegrationRegistry:
 
     @callback
     def on_off_states(
-        self, domain: str, on_states: tuple[str, ...], off_state: str
+        self, domain: str, on_states: set[str], default_on_state: str, off_state: str
     ) -> None:
         """Register on and off states for the current domain."""
         for on_state in on_states:
@@ -71,6 +71,6 @@ class GroupIntegrationRegistry:
                 self.on_off_mapping[on_state] = off_state
 
         if len(on_states) == 1 and off_state not in self.off_on_mapping:
-            self.off_on_mapping[off_state] = on_states[0]
+            self.off_on_mapping[off_state] = default_on_state
 
-        self.on_states_by_domain[domain] = set(on_states)
+        self.on_states_by_domain[domain] = on_states

@@ -17,4 +17,4 @@ def async_describe_on_off_states(
 ) -> None:
     """Describe group on off states."""
     # On means open, Off means closed
-    registry.on_off_states(DOMAIN, (STATE_OPEN,), STATE_CLOSED)
+    registry.on_off_states(DOMAIN, {STATE_OPEN}, STATE_OPEN, STATE_CLOSED)

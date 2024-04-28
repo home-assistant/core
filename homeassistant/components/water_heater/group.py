@@ -26,7 +26,7 @@ def async_describe_on_off_states(
     """Describe group on off states."""
     registry.on_off_states(
         DOMAIN,
-        (
+        {
             STATE_ON,
             STATE_ECO,
             STATE_ELECTRIC,
@@ -34,6 +34,7 @@ def async_describe_on_off_states(
             STATE_HIGH_DEMAND,
             STATE_HEAT_PUMP,
             STATE_GAS,
-        ),
+        },
+        STATE_ON,
         STATE_OFF,
     )
