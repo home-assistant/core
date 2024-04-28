@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Generator, Iterable
+import contextlib
 import glob
 import os
 import sys
@@ -1454,3 +1455,50 @@ def test_should_rollover_is_always_false():
         ).shouldRollover(Mock())
         is False
     )
+
+
+@pytest.mark.parametrize("safe_mode", [False, True])
+async def test_setup_hass_with_custom_packages(
+    safe_mode: bool,
+    mock_hass_config: None,
+    mock_enable_logging: Mock,
+    mock_is_virtual_env: Mock,
+    mock_mount_local_lib_path: AsyncMock,
+    mock_ensure_config_exists: AsyncMock,
+    mock_process_ha_config_upgrade: Mock,
+) -> None:
+    """Test it works."""
+    verbose = Mock()
+    log_rotate_days = Mock()
+    log_file = Mock()
+    log_no_color = Mock()
+
+    with patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 5000):
+        hass = await bootstrap.async_setup_hass(
+            runner.RuntimeConfig(
+                config_dir=get_test_config_dir(),
+                verbose=verbose,
+                log_rotate_days=log_rotate_days,
+                log_file=log_file,
+                log_no_color=log_no_color,
+                skip_pip=True,
+                recovery_mode=False,
+                debug=True,
+                safe_mode=safe_mode,
+            ),
+        )
+    # Verify that we are (un-)able to import this file from top level depending on safe_mode
+    with contextlib.suppress(ImportError):
+        import check_custom_package_in_path  # noqa: F401
+
+    loaded = bool(sys.modules.pop("check_custom_package_in_path", None))
+    assert loaded is not safe_mode
+
+    # Verify that we are always able to load the file with absolute path
+    import tests.testing_config.custom_packages.check_custom_package_in_path  # noqa: F401
+
+    assert sys.modules.pop(
+        "tests.testing_config.custom_packages.check_custom_package_in_path", None
+    )
+
+    assert hass == async_get_hass()
