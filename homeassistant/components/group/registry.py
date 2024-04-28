@@ -71,7 +71,7 @@ class GroupIntegrationRegistry:
                 self.on_off_mapping[on_state] = off_state
 
         if off_state not in self.off_on_mapping:
-            self.off_on_mapping[off_state] = on_states[0]
+            self.off_on_mapping[off_state] = default_on_state
         self.state_group_mapping[domain] = (default_on_state, off_state)
 
         self.on_states_by_domain[domain] = on_states
