@@ -129,16 +129,13 @@ async def test_temperature_conversion(
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
 
 
-@pytest.mark.parametrize("device_class", [None, SensorDeviceClass.PRESSURE])
-async def test_temperature_conversion_wrong_device_class(
-    hass: HomeAssistant, device_class
-) -> None:
+async def test_temperature_conversion_wrong_device_class(hass: HomeAssistant) -> None:
     """Test temperatures are not converted if the sensor has wrong device class."""
     entity0 = MockSensor(
         name="Test",
         native_value="0.0",
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
-        device_class=device_class,
+        device_class=None,
     )
     setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
@@ -149,6 +146,26 @@ async def test_temperature_conversion_wrong_device_class(
     state = hass.states.get(entity0.entity_id)
     assert state.state == "0.0"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.FAHRENHEIT
+
+
+async def test_no_sensor_with_incorrect_uom_and_device_class(
+    hass: HomeAssistant,
+) -> None:
+    """Test we don't create a sensor with incorrect UoM and device class."""
+    entity0 = MockSensor(
+        name="Test",
+        native_value="0.0",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        device_class=SensorDeviceClass.PRESSURE,
+    )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    # Check temperature is not converted
+    state = hass.states.get(entity0.entity_id)
+    assert not state
 
 
 @pytest.mark.parametrize("state_class", ["measurement", "total_increasing"])
@@ -725,15 +742,6 @@ async def test_custom_unit(
             100,
             "100",
             "1.00",
-            SensorDeviceClass.POWER_FACTOR,
-        ),
-        (
-            "Cos φ",
-            None,
-            "Cos φ",
-            1.0,
-            "1.0",
-            "1.0",
             SensorDeviceClass.POWER_FACTOR,
         ),
         # Pressure
