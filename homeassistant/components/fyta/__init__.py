@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
-    access_token: str = entry.data.get(CONF_ACCESS_TOKEN, "")
+    access_token: str = entry.data[CONF_ACCESS_TOKEN]
     expiration: datetime = datetime.fromisoformat(
         entry.data[CONF_EXPIRATION]
     ).astimezone(ZoneInfo(tz))
