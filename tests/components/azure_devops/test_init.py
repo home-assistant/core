@@ -24,12 +24,12 @@ async def test_load_unload_entry(
     assert mock_devops_client.authorize.call_count == 1
     assert mock_devops_client.get_builds.call_count == 2
 
-    assert mock_config_entry.state == ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_remove(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_auth_failed(
@@ -45,7 +45,7 @@ async def test_auth_failed(
 
     assert not mock_devops_client.authorized
 
-    assert mock_config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_update_failed(
@@ -60,7 +60,7 @@ async def test_update_failed(
 
     assert mock_devops_client.get_builds.call_count == 1
 
-    assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_no_builds(
@@ -75,4 +75,4 @@ async def test_no_builds(
 
     assert mock_devops_client.get_builds.call_count == 1
 
-    assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

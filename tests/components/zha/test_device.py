@@ -115,8 +115,7 @@ async def ota_zha_device(zha_device_restored, zigpy_device_mock):
         "test model",
     )
 
-    zha_device = await zha_device_restored(zigpy_dev)
-    return zha_device
+    return await zha_device_restored(zigpy_dev)
 
 
 def _send_time_changed(hass, seconds):

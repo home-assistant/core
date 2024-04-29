@@ -8,6 +8,7 @@ from collections.abc import Awaitable, Callable, Generator, Mapping
 import contextlib
 import contextvars
 from enum import StrEnum
+from functools import partial
 import logging.handlers
 import time
 from types import ModuleType
@@ -28,7 +29,7 @@ from .core import (
     callback,
 )
 from .exceptions import DependencyError, HomeAssistantError
-from .helpers import translation
+from .helpers import singleton, translation
 from .helpers.issue_registry import IssueSeverity, async_create_issue
 from .helpers.typing import ConfigType
 from .util.async_ import create_eager_task
@@ -253,33 +254,38 @@ async def _async_process_dependencies(
     return failed
 
 
-async def _async_setup_component(  # noqa: C901
+def _log_error_setup_error(
+    hass: HomeAssistant,
+    domain: str,
+    integration: loader.Integration | None,
+    msg: str,
+    exc_info: Exception | None = None,
+) -> None:
+    """Log helper."""
+    if integration is None:
+        custom = ""
+        link = None
+    else:
+        custom = "" if integration.is_built_in else "custom integration "
+        link = integration.documentation
+    _LOGGER.error("Setup failed for %s'%s': %s", custom, domain, msg, exc_info=exc_info)
+    async_notify_setup_error(hass, domain, link)
+
+
+async def _async_setup_component(
     hass: core.HomeAssistant, domain: str, config: ConfigType
 ) -> bool:
     """Set up a component for Home Assistant.
 
     This method is a coroutine.
     """
-    integration: loader.Integration | None = None
-
-    def log_error(msg: str, exc_info: Exception | None = None) -> None:
-        """Log helper."""
-        if integration is None:
-            custom = ""
-            link = None
-        else:
-            custom = "" if integration.is_built_in else "custom integration "
-            link = integration.documentation
-        _LOGGER.error(
-            "Setup failed for %s'%s': %s", custom, domain, msg, exc_info=exc_info
-        )
-        async_notify_setup_error(hass, domain, link)
-
     try:
         integration = await loader.async_get_integration(hass, domain)
     except loader.IntegrationNotFound:
-        log_error("Integration not found.")
+        _log_error_setup_error(hass, domain, None, "Integration not found.")
         return False
+
+    log_error = partial(_log_error_setup_error, hass, domain, integration)
 
     if integration.disabled:
         log_error(f"Dependency is disabled - {integration.disabled}")
@@ -428,10 +434,9 @@ async def _async_setup_component(  # noqa: C901
             await load_translations_task
 
     if integration.platforms_exists(("config_flow",)):
-        # If the integration has a config_flow, flush out async_setup calling create_task
-        # with an asyncio.sleep(0) so we can wait for import flows.
-        # Fragile but covered by test.
-        await asyncio.sleep(0)
+        # If the integration has a config_flow, wait for import flows.
+        # As these are all created with eager tasks, we do not sleep here,
+        # as the tasks will always be started before we reach this point.
         await hass.config_entries.flow.async_wait_import_flow_initialized(domain)
 
     # Add to components before the entry.async_setup
@@ -452,10 +457,11 @@ async def _async_setup_component(  # noqa: C901
         )
 
     # Cleanup
-    if domain in hass.data[DATA_SETUP]:
-        hass.data[DATA_SETUP].pop(domain)
+    hass.data[DATA_SETUP].pop(domain, None)
 
-    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: domain})
+    hass.bus.async_fire_internal(
+        EVENT_COMPONENT_LOADED, EventComponentLoaded(component=domain)
+    )
 
     return True
 
@@ -483,14 +489,6 @@ async def async_prepare_setup_platform(
         log_error("Integration not found")
         return None
 
-    # Process deps and reqs as soon as possible, so that requirements are
-    # available when we import the platform.
-    try:
-        await async_process_deps_reqs(hass, hass_config, integration)
-    except HomeAssistantError as err:
-        log_error(str(err))
-        return None
-
     # Platforms cannot exist on their own, they are part of their integration.
     # If the integration is not set up yet, and can be set up, set it up.
     #
@@ -498,6 +496,16 @@ async def async_prepare_setup_platform(
     # where the top level component is.
     #
     if load_top_level_component := integration.domain not in hass.config.components:
+        # Process deps and reqs as soon as possible, so that requirements are
+        # available when we import the platform. We only do this if the integration
+        # is not in hass.config.components yet, as we already processed them in
+        # async_setup_component if it is.
+        try:
+            await async_process_deps_reqs(hass, hass_config, integration)
+        except HomeAssistantError as err:
+            log_error(str(err))
+            return None
+
         try:
             component = await integration.async_get_component()
         except ImportError as exc:
@@ -592,7 +600,7 @@ def _async_when_setup(
             _LOGGER.exception("Error handling when_setup callback for %s", component)
 
     if component in hass.config.components:
-        hass.async_create_task(
+        hass.async_create_task_internal(
             when_setup(), f"when setup {component}", eager_start=True
         )
         return
@@ -615,14 +623,11 @@ def _async_when_setup(
             EVENT_COMPONENT_LOADED,
             _matched_event,
             event_filter=_async_is_component_filter,
-            run_immediately=True,
         )
     )
     if start_event:
         listeners.append(
-            hass.bus.async_listen(
-                EVENT_HOMEASSISTANT_START, _matched_event, run_immediately=True
-            )
+            hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _matched_event)
         )
 
 
@@ -666,13 +671,12 @@ class SetupPhases(StrEnum):
     """Wait time for the packages to import."""
 
 
+@singleton.singleton(DATA_SETUP_STARTED)
 def _setup_started(
     hass: core.HomeAssistant,
 ) -> dict[tuple[str, str | None], float]:
     """Return the setup started dict."""
-    if DATA_SETUP_STARTED not in hass.data:
-        hass.data[DATA_SETUP_STARTED] = {}
-    return hass.data[DATA_SETUP_STARTED]  # type: ignore[no-any-return]
+    return {}
 
 
 @contextlib.contextmanager
@@ -712,15 +716,12 @@ def async_pause_setup(
         )
 
 
+@singleton.singleton(DATA_SETUP_TIME)
 def _setup_times(
     hass: core.HomeAssistant,
 ) -> defaultdict[str, defaultdict[str | None, defaultdict[SetupPhases, float]]]:
     """Return the setup timings default dict."""
-    if DATA_SETUP_TIME not in hass.data:
-        hass.data[DATA_SETUP_TIME] = defaultdict(
-            lambda: defaultdict(lambda: defaultdict(float))
-        )
-    return hass.data[DATA_SETUP_TIME]  # type: ignore[no-any-return]
+    return defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
 
 
 @contextlib.contextmanager

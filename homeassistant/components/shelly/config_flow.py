@@ -11,7 +11,6 @@ from aioshelly.const import BLOCK_GENERATIONS, DEFAULT_HTTP_PORT, RPC_GENERATION
 from aioshelly.exceptions import (
     CustomPortNotSupported,
     DeviceConnectionError,
-    FirmwareUnsupported,
     InvalidAuthError,
 )
 from aioshelly.rpc_device import RpcDevice
@@ -103,6 +102,7 @@ async def validate_input(
             ws_context,
             options,
         )
+        await rpc_device.initialize()
         await rpc_device.shutdown()
 
         sleep_period = get_rpc_device_wakeup_period(rpc_device.status)
@@ -121,6 +121,7 @@ async def validate_input(
         coap_context,
         options,
     )
+    await block_device.initialize()
     block_device.shutdown()
     return {
         "title": block_device.name,
@@ -154,8 +155,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.info = await self._async_get_info(host, port)
             except DeviceConnectionError:
                 errors["base"] = "cannot_connect"
-            except FirmwareUnsupported:
-                return self.async_abort(reason="unsupported_firmware")
             except Exception:  # pylint: disable=broad-except
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -287,8 +286,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             self.info = await self._async_get_info(host, DEFAULT_HTTP_PORT)
         except DeviceConnectionError:
             return self.async_abort(reason="cannot_connect")
-        except FirmwareUnsupported:
-            return self.async_abort(reason="unsupported_firmware")
 
         if not mac:
             # We could not get the mac address from the name
@@ -366,14 +363,14 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await self._async_get_info(host, port)
-            except (DeviceConnectionError, InvalidAuthError, FirmwareUnsupported):
+            except (DeviceConnectionError, InvalidAuthError):
                 return self.async_abort(reason="reauth_unsuccessful")
 
             if get_device_entry_gen(self.entry) != 1:
                 user_input[CONF_USERNAME] = "admin"
             try:
                 await validate_input(self.hass, host, port, info, user_input)
-            except (DeviceConnectionError, InvalidAuthError, FirmwareUnsupported):
+            except (DeviceConnectionError, InvalidAuthError):
                 return self.async_abort(reason="reauth_unsuccessful")
 
             return self.async_update_reload_and_abort(

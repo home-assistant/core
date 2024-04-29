@@ -1,6 +1,7 @@
 """API for Husqvarna Automower bound to Home Assistant OAuth."""
 
 import logging
+from typing import cast
 
 from aioautomower.auth import AbstractAuth
 from aioautomower.const import API_BASE_URL
@@ -26,4 +27,4 @@ class AsyncConfigEntryAuth(AbstractAuth):
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
         await self._oauth_session.async_ensure_token_valid()
-        return self._oauth_session.token["access_token"]
+        return cast(str, self._oauth_session.token["access_token"])

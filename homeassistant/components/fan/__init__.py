@@ -5,9 +5,10 @@ from __future__ import annotations
 from datetime import timedelta
 from enum import IntFlag
 import functools as ft
+from functools import cached_property
 import logging
 import math
-from typing import TYPE_CHECKING, Any, final
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -39,12 +40,6 @@ from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 _LOGGER = logging.getLogger(__name__)
 
