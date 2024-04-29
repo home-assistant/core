@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Protocol
+from typing import Protocol
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
@@ -12,9 +12,6 @@ from homeassistant.helpers.integration_platform import (
 )
 
 from .const import DOMAIN, REG_KEY
-
-if TYPE_CHECKING:
-    pass
 
 
 async def async_setup(hass: HomeAssistant) -> None:
