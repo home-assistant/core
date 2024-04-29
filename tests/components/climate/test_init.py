@@ -378,6 +378,29 @@ def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) ->
     assert "is using deprecated supported features values" not in caplog.text
 
 
+def test_deprecated_supported_features_ints_with_on(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test deprecated supported features ints with on."""
+    int_value = 1 | 128 | 256
+
+    class MockClimateEntity(ClimateEntity):
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return int_value
+
+    entity = MockClimateEntity()
+    assert entity.supported_features is ClimateEntityFeature(int_value)
+    assert "MockClimateEntity" in caplog.text
+    assert "is using deprecated supported features values" in caplog.text
+    assert "Instead it should use" in caplog.text
+    assert "ClimateEntityFeature.TARGET_TEMPERATURE" in caplog.text
+    caplog.clear()
+    assert entity.supported_features is ClimateEntityFeature(int_value)
+    assert "is using deprecated supported features values" not in caplog.text
+
+
 async def test_warning_not_implemented_turn_on_off_feature(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, config_flow_fixture: None
 ) -> None:
