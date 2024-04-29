@@ -196,13 +196,14 @@ async def test_config_flow_options_change(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
+    new_language = "es"
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={}
+        result["flow_id"], user_input={CONF_LANGUAGE: new_language}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
-        CONF_LANGUAGE: DEFAULT_LANGUAGE,
+        CONF_LANGUAGE: new_language,
     }
 
     await hass.async_block_till_done()
@@ -214,13 +215,14 @@ async def test_config_flow_options_change(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
+    updated_language = "es"
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={}
+        result["flow_id"], user_input={CONF_LANGUAGE: updated_language}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
-        CONF_LANGUAGE: DEFAULT_LANGUAGE,
+        CONF_LANGUAGE: updated_language,
     }
 
     await hass.async_block_till_done()
@@ -238,7 +240,15 @@ async def test_form_invalid_api_key(
         DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
     )
 
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_api_key"}
+
+    config_flow_owm_client_mock.return_value = _create_mocked_owm_client(True)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_api_call_error(
@@ -252,4 +262,12 @@ async def test_form_api_call_error(
         DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
     )
 
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    config_flow_owm_client_mock.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
