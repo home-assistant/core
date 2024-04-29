@@ -915,6 +915,7 @@ async def test_websocket_update_preferences(
             "google_secure_devices_pin": "1234",
             "tts_default_voice": ["en-GB", "RyanNeural"],
             "remote_allow_remote_enable": False,
+            "strict_connection": StrictConnectionMode.DROP_CONNECTION,
         }
     )
     response = await client.receive_json()
@@ -925,6 +926,7 @@ async def test_websocket_update_preferences(
     assert cloud.client.prefs.google_secure_devices_pin == "1234"
     assert cloud.client.prefs.remote_allow_remote_enable is False
     assert cloud.client.prefs.tts_default_voice == ("en-GB", "RyanNeural")
+    assert cloud.client.prefs.strict_connection is StrictConnectionMode.DROP_CONNECTION
 
 
 @pytest.mark.parametrize(
