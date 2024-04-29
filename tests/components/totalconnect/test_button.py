@@ -37,7 +37,7 @@ async def test_entity_registry(
 @pytest.mark.parametrize(
     "data", [{ATTR_ENTITY_ID: ZONE_BYPASS_ID}, {ATTR_ENTITY_ID: PANEL_BYPASS_ID}]
 )
-async def test_bypass_button(hass: HomeAssistant, data: {}) -> None:
+async def test_bypass_button(hass: HomeAssistant, data: dict[str, str]) -> None:
     """Test pushing a bypass button."""
     responses = [RESPONSE_ZONE_BYPASS_FAILURE, RESPONSE_ZONE_BYPASS_SUCCESS]
     await setup_platform(hass, BUTTON)

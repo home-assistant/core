@@ -27,13 +27,11 @@ class TotalConnectButtonEntityDescription(ButtonEntityDescription):
 PANEL_BUTTONS: tuple[TotalConnectButtonEntityDescription, ...] = (
     TotalConnectButtonEntityDescription(
         key="clear_bypass",
-        name="Clear Bypass",
         translation_key="clear_bypass",
         press_fn=lambda location: location.clear_bypass(),
     ),
     TotalConnectButtonEntityDescription(
         key="bypass_all",
-        name="Bypass All",
         translation_key="bypass_all",
         press_fn=lambda location: location.zone_bypass_all(),
     ),
@@ -72,13 +70,12 @@ class TotalConnectZoneBypassButton(TotalConnectZoneEntity, ButtonEntity):
         self,
         coordinator: TotalConnectDataUpdateCoordinator,
         zone: TotalConnectZone,
-        location_id,
+        location_id: str,
     ) -> None:
         """Initialize the TotalConnect status."""
         super().__init__(coordinator, zone, location_id, "bypass")
-        self.entity_description = ButtonEntityDescription(key="bypass", name="bypass")
 
-    def press(self):
+    def press(self) -> None:
         """Press the bypass button."""
         self._zone.bypass()
 
