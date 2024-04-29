@@ -199,7 +199,7 @@ async def test_non_text_stdout_capture(
     assert not response
 
     # Non-text output throws with 'return_response'
-    with pytest.raises(UnicodeDecodeError):
+    with pytest.raises(HomeAssistantError):
         response = await hass.services.async_call(
             "shell_command", "output_image", blocking=True, return_response=True
         )

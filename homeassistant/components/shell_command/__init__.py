@@ -137,11 +137,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     service_response["stdout"] = stdout_data.decode("utf-8").strip()
                 if stderr_data:
                     service_response["stderr"] = stderr_data.decode("utf-8").strip()
-            except UnicodeDecodeError:
+            except UnicodeDecodeError as err:
                 _LOGGER.exception(
                     "Unable to handle non-utf8 output of command: `%s`", cmd
                 )
-                raise
+                raise HomeAssistantError(
+                    f"Unable to handle non-utf8 output of command: `{cmd}`"
+                ) from err
             return service_response
         return None
 
