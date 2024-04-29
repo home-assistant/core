@@ -211,9 +211,7 @@ class HabitipySensor(CoordinatorEntity[HabiticaDataUpdateCoordinator], SensorEnt
         data = self.coordinator.data.user
         for element in self.entity_description.value_path:
             data = data[element]
-        if isinstance(data, (str, int, float)):
-            return data
-        return None
+        return data  # type: ignore[return-value]
 
 
 class HabitipyTaskSensor(
