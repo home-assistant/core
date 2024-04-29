@@ -71,7 +71,7 @@ async def test_create_entry_gps(
         DOMAIN, context={"source": SOURCE_USER}
     )
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     # Test for missing registry entry error.
     result = await hass.config_entries.flow.async_configure(
@@ -79,7 +79,7 @@ async def test_create_entry_gps(
     )
 
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "entity_not_found"}
 
     # Test for missing device tracker error.
@@ -92,7 +92,7 @@ async def test_create_entry_gps(
     )
 
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "entity_not_found"}
 
     # Test for missing attribute error.
@@ -107,7 +107,7 @@ async def test_create_entry_gps(
     )
 
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "attribute_not_found"}
 
     # Test for invalid provided identifier.
@@ -123,7 +123,7 @@ async def test_create_entry_gps(
     )
 
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_identifier"}
 
     # Test for successfully created entry.
@@ -133,7 +133,7 @@ async def test_create_entry_gps(
     )
 
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test_gps"
     assert result["data"] == {
         CONF_REGION_DEVICE_TRACKER: registry_entry.id,
@@ -175,7 +175,7 @@ async def test_config_flow_with_errors(hass: HomeAssistant) -> None:
     )
 
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     # Test error for empty input data.
     result = await hass.config_entries.flow.async_configure(
@@ -183,7 +183,7 @@ async def test_config_flow_with_errors(hass: HomeAssistant) -> None:
     )
 
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "no_identifier"}
 
     # Test error for setting both options during configuration.
@@ -195,5 +195,5 @@ async def test_config_flow_with_errors(hass: HomeAssistant) -> None:
     )
 
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "ambiguous_identifier"}
