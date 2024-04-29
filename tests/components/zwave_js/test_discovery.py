@@ -155,6 +155,9 @@ async def test_shelly_001p10_disabled_entities(
         assert updated_entry != entry
         assert updated_entry.disabled is False
 
+    state = hass.states.get("cover.wave_shutter")
+    assert state
+
 
 async def test_merten_507801_disabled_enitites(
     hass: HomeAssistant, client, merten_507801, integration
