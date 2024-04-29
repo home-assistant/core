@@ -36,33 +36,33 @@ class OneWireBinarySensorEntityDescription(
 DEVICE_BINARY_SENSORS: dict[str, tuple[OneWireBinarySensorEntityDescription, ...]] = {
     "12": tuple(
         OneWireBinarySensorEntityDescription(
-            key=f"sensed.{id}",
+            key=f"sensed.{device_key}",
             entity_registry_enabled_default=False,
             read_mode=READ_MODE_BOOL,
             translation_key="sensed_id",
-            translation_placeholders={"id": str(id)},
+            translation_placeholders={"id": str(device_key)},
         )
-        for id in DEVICE_KEYS_A_B
+        for device_key in DEVICE_KEYS_A_B
     ),
     "29": tuple(
         OneWireBinarySensorEntityDescription(
-            key=f"sensed.{id}",
+            key=f"sensed.{device_key}",
             entity_registry_enabled_default=False,
             read_mode=READ_MODE_BOOL,
             translation_key="sensed_id",
-            translation_placeholders={"id": str(id)},
+            translation_placeholders={"id": str(device_key)},
         )
-        for id in DEVICE_KEYS_0_7
+        for device_key in DEVICE_KEYS_0_7
     ),
     "3A": tuple(
         OneWireBinarySensorEntityDescription(
-            key=f"sensed.{id}",
+            key=f"sensed.{device_key}",
             entity_registry_enabled_default=False,
             read_mode=READ_MODE_BOOL,
             translation_key="sensed_id",
-            translation_placeholders={"id": str(id)},
+            translation_placeholders={"id": str(device_key)},
         )
-        for id in DEVICE_KEYS_A_B
+        for device_key in DEVICE_KEYS_A_B
     ),
     "EF": (),  # "HobbyBoard": special
 }
@@ -71,15 +71,15 @@ DEVICE_BINARY_SENSORS: dict[str, tuple[OneWireBinarySensorEntityDescription, ...
 HOBBYBOARD_EF: dict[str, tuple[OneWireBinarySensorEntityDescription, ...]] = {
     "HB_HUB": tuple(
         OneWireBinarySensorEntityDescription(
-            key=f"hub/short.{id}",
+            key=f"hub/short.{device_key}",
             entity_registry_enabled_default=False,
             read_mode=READ_MODE_BOOL,
             entity_category=EntityCategory.DIAGNOSTIC,
             device_class=BinarySensorDeviceClass.PROBLEM,
             translation_key="hub_short_id",
-            translation_placeholders={"id": str(id)},
+            translation_placeholders={"id": str(device_key)},
         )
-        for id in DEVICE_KEYS_0_3
+        for device_key in DEVICE_KEYS_0_3
     ),
 }
 
@@ -117,7 +117,7 @@ def get_entities(onewire_hub: OneWireHub) -> list[OneWireBinarySensor]:
         device_type = device.type
         device_info = device.device_info
         device_sub_type = "std"
-        if "EF" in family:
+        if device_type and "EF" in family:
             device_sub_type = "HobbyBoard"
             family = device_type
 

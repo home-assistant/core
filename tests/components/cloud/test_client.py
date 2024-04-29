@@ -24,6 +24,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
     ExposedEntities,
     async_expose_entity,
 )
+from homeassistant.components.http.const import StrictConnectionMode
 from homeassistant.const import CONTENT_TYPE_JSON, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
@@ -387,6 +388,7 @@ async def test_cloud_connection_info(hass: HomeAssistant) -> None:
             "connected": False,
             "enabled": False,
             "instance_domain": None,
+            "strict_connection": StrictConnectionMode.DISABLED,
         },
         "version": HA_VERSION,
     }

@@ -20,6 +20,7 @@ from homeassistant.const import STATE_ON
 from homeassistant.core import (
     Event,
     EventStateChangedData,
+    HassJobType,
     HomeAssistant,
     State,
     callback,
@@ -272,6 +273,7 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
                     self.hass,
                     [self.linked_motion_sensor],
                     self._async_update_motion_state_event,
+                    job_type=HassJobType.Callback,
                 )
             )
 
@@ -282,6 +284,7 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
                     self.hass,
                     [self.linked_doorbell_sensor],
                     self._async_update_doorbell_state_event,
+                    job_type=HassJobType.Callback,
                 )
             )
 

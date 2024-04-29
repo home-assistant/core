@@ -160,7 +160,7 @@ async def test_offline_device_raises(hass: HomeAssistant, controller) -> None:
     is_connected = True
 
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
@@ -217,16 +217,18 @@ async def test_ble_device_only_checks_is_available(
     is_available = True
 
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
     is_available = False
     async_fire_time_changed(hass, utcnow() + timedelta(hours=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get("light.testdevice").state == STATE_UNAVAILABLE
 
     is_available = True
     async_fire_time_changed(hass, utcnow() + timedelta(hours=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
 
