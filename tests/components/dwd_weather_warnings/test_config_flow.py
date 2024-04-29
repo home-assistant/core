@@ -1,7 +1,7 @@
 """Tests for Deutscher Wetterdienst (DWD) Weather Warnings config flow."""
 
 from typing import Final
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -29,7 +29,9 @@ DEMO_CONFIG_ENTRY_GPS: Final = {
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_create_entry_region(hass: HomeAssistant) -> None:
+async def test_create_entry_region(
+    hass: HomeAssistant, mock_dwdwfsapi: MagicMock
+) -> None:
     """Test that the full config flow works for a region identifier."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -37,26 +39,20 @@ async def test_create_entry_region(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
 
-    with patch(
-        "homeassistant.components.dwd_weather_warnings.config_flow.DwdWeatherWarningsAPI",
-        return_value=False,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=DEMO_CONFIG_ENTRY_REGION
-        )
+    mock_dwdwfsapi.__bool__.return_value = False
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=DEMO_CONFIG_ENTRY_REGION
+    )
 
     # Test for invalid region identifier.
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_identifier"}
 
-    with patch(
-        "homeassistant.components.dwd_weather_warnings.config_flow.DwdWeatherWarningsAPI",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=DEMO_CONFIG_ENTRY_REGION
-        )
+    mock_dwdwfsapi.__bool__.return_value = True
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=DEMO_CONFIG_ENTRY_REGION
+    )
 
     # Test for successfully created entry.
     await hass.async_block_till_done()
@@ -68,7 +64,7 @@ async def test_create_entry_region(hass: HomeAssistant) -> None:
 
 
 async def test_create_entry_gps(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_dwdwfsapi: MagicMock
 ) -> None:
     """Test that the full config flow works for a device tracker."""
     result = await hass.config_entries.flow.async_init(
@@ -121,26 +117,20 @@ async def test_create_entry_gps(
         {ATTR_LATITUDE: "50.180454", ATTR_LONGITUDE: "7.610263"},
     )
 
-    with patch(
-        "homeassistant.components.dwd_weather_warnings.config_flow.DwdWeatherWarningsAPI",
-        return_value=False,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=DEMO_CONFIG_ENTRY_GPS
-        )
+    mock_dwdwfsapi.__bool__.return_value = False
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=DEMO_CONFIG_ENTRY_GPS
+    )
 
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_identifier"}
 
     # Test for successfully created entry.
-    with patch(
-        "homeassistant.components.dwd_weather_warnings.config_flow.DwdWeatherWarningsAPI",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=DEMO_CONFIG_ENTRY_GPS
-        )
+    mock_dwdwfsapi.__bool__.return_value = True
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=DEMO_CONFIG_ENTRY_GPS
+    )
 
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.CREATE_ENTRY
@@ -150,7 +140,9 @@ async def test_create_entry_gps(
     }
 
 
-async def test_config_flow_already_configured(hass: HomeAssistant) -> None:
+async def test_config_flow_already_configured(
+    hass: HomeAssistant, mock_dwdwfsapi: MagicMock
+) -> None:
     """Test aborting, if the warncell ID / name is already configured during the config."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -167,13 +159,9 @@ async def test_config_flow_already_configured(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
 
-    with patch(
-        "homeassistant.components.dwd_weather_warnings.config_flow.DwdWeatherWarningsAPI",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=DEMO_CONFIG_ENTRY_REGION
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=DEMO_CONFIG_ENTRY_REGION
+    )
 
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT

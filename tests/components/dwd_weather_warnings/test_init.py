@@ -1,6 +1,7 @@
 """Tests for Deutscher Wetterdienst (DWD) Weather Warnings integration."""
 
 from typing import Final
+from unittest.mock import MagicMock
 
 from homeassistant.components.dwd_weather_warnings.const import (
     ADVANCE_WARNING_SENSOR,
@@ -35,10 +36,13 @@ DEMO_TRACKER_CONFIG_ENTRY: Final = {
 }
 
 
-async def test_load_unload_entry(hass: HomeAssistant) -> None:
+async def test_load_unload_entry(
+    hass: HomeAssistant, mock_dwdwfsapi: MagicMock
+) -> None:
     """Test loading and unloading the integration with a region identifier based entry."""
     entry = MockConfigEntry(domain=DOMAIN, data=DEMO_IDENTIFIER_CONFIG_ENTRY)
     entry.add_to_hass(hass)
+
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -91,7 +95,7 @@ async def test_load_missing_required_attribute(hass: HomeAssistant) -> None:
 
 
 async def test_load_valid_device_tracker(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_dwdwfsapi: MagicMock
 ) -> None:
     """Test loading the integration with a valid device tracker based entry."""
     entry = MockConfigEntry(domain=DOMAIN, data=DEMO_TRACKER_CONFIG_ENTRY)
