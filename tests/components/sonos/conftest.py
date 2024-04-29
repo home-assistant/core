@@ -17,7 +17,7 @@ from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_fixture, load_json_value_fixture
 
 
 class SonosMockEventListener:
@@ -314,6 +314,24 @@ class MockMusicServiceItem:
         self.item_class = item_class
         self.parent_id = parent_id
 
+    @property
+    def album_art_uri(self) -> str:
+        """Album Art.  Album ART URIs come back double URL encoded."""
+        if self.item_class == "object.container.album.musicAlbum":
+            return "http://192.168.42.2:1400/getaa?u=x-file-cifs%3a%2f%2f192.168.42.100%2fmusic%2fThe%2520Beatles%2fA%2520Hard%2520Day's%2520Night%2f01%2520A%2520Hard%2520Day's%2520Night%25201.m4a&v=53"
+        return None
+
+
+def list_from_json_fixture(file_name: str) -> list[MockMusicServiceItem]:
+    """Create a list of music service items from a json fixture file."""
+    item_list = load_json_value_fixture(file_name, "sonos")
+    return [
+        MockMusicServiceItem(
+            item["title"], item["item_id"], item["parent_id"], item["item_class"]
+        )
+        for item in item_list
+    ]
+
 
 def mock_browse_by_idstring(
     search_type: str, idstring: str, start=0, max_items=100, full_album_art_uri=False
@@ -389,6 +407,10 @@ def mock_browse_by_idstring(
                 "object.container.album.musicAlbum",
             ),
         ]
+    if search_type == "tracks":
+        return list_from_json_fixture("music_library_tracks.json")
+    if search_type == "albums" and idstring == "A:ALBUM":
+        return list_from_json_fixture("music_library_albums.json")
     return []
 
 
@@ -407,13 +429,20 @@ def mock_get_music_library_information(
         ]
 
 
+@pytest.fixture(name="music_library_browse_categories")
+def music_library_browse_categories() -> list[MockMusicServiceItem]:
+    """Create fixture for top-level music library categories."""
+    return list_from_json_fixture("music_library_categories.json")
+
+
 @pytest.fixture(name="music_library")
-def music_library_fixture():
+def music_library_fixture(music_library_browse_categories):
     """Create music_library fixture."""
     music_library = MagicMock()
     music_library.get_sonos_favorites.return_value.update_id = 1
-    music_library.browse_by_idstring = mock_browse_by_idstring
+    music_library.browse_by_idstring = Mock(side_effect=mock_browse_by_idstring)
     music_library.get_music_library_information = mock_get_music_library_information
+    music_library.browse = Mock(return_value=music_library_browse_categories)
     return music_library
 
 
