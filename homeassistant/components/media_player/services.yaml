@@ -171,13 +171,13 @@ browse_media:
       domain: media_player
   fields:
     media_content_type:
-      required: true
+      required: false
       example: "music"
       selector:
         text:
 
     media_content_id:
-      required: true
+      required: false
       example: "https://home-assistant.io/images/cast/splash.png"
       selector:
         text:
