@@ -1483,7 +1483,7 @@ pyiss==1.0.1
 pyisy==3.1.14
 
 # homeassistant.components.jvc_projector
-pyjvcprojector==1.0.10
+pyjvcprojector==1.0.11
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.1
