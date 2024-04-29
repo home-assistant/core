@@ -42,11 +42,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up conversation entities."""
-    agent = GoogleGenerativeAIAgent(hass, config_entry)
+    agent = GoogleGenerativeAIConversationEntity(hass, config_entry)
     async_add_entities([agent])
 
 
-class GoogleGenerativeAIAgent(
+class GoogleGenerativeAIConversationEntity(
     conversation.ConversationEntity, conversation.AbstractConversationAgent
 ):
     """Google Generative AI conversation agent."""
