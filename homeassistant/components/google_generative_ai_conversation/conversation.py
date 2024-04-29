@@ -59,6 +59,11 @@ class GoogleGenerativeAIConversationEntity(
         self._attr_name = entry.title
         self._attr_unique_id = entry.entry_id
 
+    @property
+    def supported_languages(self) -> list[str] | Literal["*"]:
+        """Return a list of supported languages."""
+        return MATCH_ALL
+
     async def async_added_to_hass(self) -> None:
         """When entity is added to Home Assistant."""
         await super().async_added_to_hass()
@@ -71,11 +76,6 @@ class GoogleGenerativeAIConversationEntity(
         """When entity will be removed from Home Assistant."""
         conversation.async_unset_agent(self.hass, self.entry)
         await super().async_will_remove_from_hass()
-
-    @property
-    def supported_languages(self) -> list[str] | Literal["*"]:
-        """Return a list of supported languages."""
-        return MATCH_ALL
 
     async def async_process(
         self, user_input: conversation.ConversationInput
