@@ -71,7 +71,7 @@ async def _validate_input(
     if errors:
         return errors
 
-    device_id = get_client_device_id()
+    device_id = get_client_device_id(hass, rest_url is not None)
     country = user_input[CONF_COUNTRY]
     rest_config = create_rest_config(
         aiohttp_client.async_get_clientsession(hass),

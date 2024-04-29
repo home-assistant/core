@@ -48,7 +48,7 @@ from .const import (
     DEFAULT_CONF_OLD_DISCOVERY,
     DEFAULT_DEVICE_NAME,
     DEFAULT_HOST,
-    DEFAULT_PORT,
+    DEFAULT_SSL,
     DEFAULT_USERNAME,
     DOMAIN,
     FRITZ_EXCEPTIONS,
@@ -184,9 +184,10 @@ class FritzBoxTools(
         self,
         hass: HomeAssistant,
         password: str,
+        port: int,
         username: str = DEFAULT_USERNAME,
         host: str = DEFAULT_HOST,
-        port: int = DEFAULT_PORT,
+        use_tls: bool = DEFAULT_SSL,
     ) -> None:
         """Initialize FritzboxTools class."""
         super().__init__(
@@ -211,6 +212,7 @@ class FritzBoxTools(
         self.password = password
         self.port = port
         self.username = username
+        self.use_tls = use_tls
         self.has_call_deflections: bool = False
         self._model: str | None = None
         self._current_firmware: str | None = None
@@ -230,11 +232,13 @@ class FritzBoxTools(
 
     def setup(self) -> None:
         """Set up FritzboxTools class."""
+
         self.connection = FritzConnection(
             address=self.host,
             port=self.port,
             user=self.username,
             password=self.password,
+            use_tls=self.use_tls,
             timeout=60.0,
             pool_maxsize=30,
         )
@@ -311,6 +315,17 @@ class FritzBoxTools(
                 )
         return unregister_entity_updates
 
+    def _entity_states_update(self) -> dict:
+        """Run registered entity update calls."""
+        entity_states = {}
+        for key in list(self._entity_update_functions):
+            if (update_fn := self._entity_update_functions.get(key)) is not None:
+                _LOGGER.debug("update entity %s", key)
+                entity_states[key] = update_fn(
+                    self.fritz_status, self.data["entity_states"].get(key)
+                )
+        return entity_states
+
     async def _async_update_data(self) -> UpdateCoordinatorDataType:
         """Update FritzboxTools data."""
         entity_data: UpdateCoordinatorDataType = {
@@ -319,15 +334,9 @@ class FritzBoxTools(
         }
         try:
             await self.async_scan_devices()
-            for key in list(self._entity_update_functions):
-                _LOGGER.debug("update entity %s", key)
-                entity_data["entity_states"][
-                    key
-                ] = await self.hass.async_add_executor_job(
-                    self._entity_update_functions[key],
-                    self.fritz_status,
-                    self.data["entity_states"].get(key),
-                )
+            entity_data["entity_states"] = await self.hass.async_add_executor_job(
+                self._entity_states_update
+            )
             if self.has_call_deflections:
                 entity_data[
                     "call_deflections"
@@ -923,6 +932,16 @@ class AvmWrapper(FritzBoxTools):  # pylint: disable=hass-enforce-coordinator-mod
             NewDisallow="0" if turn_on else "1",
         )
 
+    async def async_wake_on_lan(self, mac_address: str) -> dict[str, Any]:
+        """Call X_AVM-DE_WakeOnLANByMACAddress service."""
+
+        return await self._async_service_call(
+            "Hosts",
+            "1",
+            "X_AVM-DE_WakeOnLANByMACAddress",
+            NewMACAddress=mac_address,
+        )
+
 
 @dataclass
 class FritzData:
@@ -930,6 +949,7 @@ class FritzData:
 
     tracked: dict = field(default_factory=dict)
     profile_switches: dict = field(default_factory=dict)
+    wol_buttons: dict = field(default_factory=dict)
 
 
 class FritzDeviceBase(update_coordinator.CoordinatorEntity[AvmWrapper]):

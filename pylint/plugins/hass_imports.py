@@ -25,6 +25,15 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^StrEnum$"),
         ),
     ],
+    "homeassistant.backports.functools": [
+        ObsoleteImportMatch(
+            reason=(
+                "We can now use the Python 3.12 provided "
+                "functools.cached_property instead"
+            ),
+            constant=re.compile(r"^cached_property$"),
+        ),
+    ],
     "homeassistant.components.alarm_control_panel": [
         ObsoleteImportMatch(
             reason="replaced by AlarmControlPanelEntityFeature enum",

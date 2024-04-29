@@ -148,7 +148,7 @@ def test_get_significant_states_with_initial(legacy_hass_history) -> None:
         if entity_id == "media_player.test":
             states[entity_id] = states[entity_id][1:]
         for state in states[entity_id]:
-            if state.last_changed == one or state.last_changed == one_with_microsecond:
+            if state.last_changed in (one, one_with_microsecond):
                 state.last_changed = one_and_half
                 state.last_updated = one_and_half
 
@@ -177,8 +177,7 @@ def test_get_significant_states_without_initial(legacy_hass_history) -> None:
     for entity_id in states:
         states[entity_id] = list(
             filter(
-                lambda s: s.last_changed != one
-                and s.last_changed != one_with_microsecond,
+                lambda s: s.last_changed not in (one, one_with_microsecond),
                 states[entity_id],
             )
         )

@@ -22,6 +22,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
 from homeassistant.util.json import json_loads
 
+from .backports.aiohttp_resolver import AsyncResolver
 from .frame import warn_use
 from .json import json_dumps
 
@@ -125,15 +126,13 @@ def async_create_clientsession(
     if auto_cleanup:
         auto_cleanup_method = _async_register_clientsession_shutdown
 
-    clientsession = _async_create_clientsession(
+    return _async_create_clientsession(
         hass,
         verify_ssl,
         auto_cleanup_method=auto_cleanup_method,
         family=family,
         **kwargs,
     )
-
-    return clientsession
 
 
 @callback
@@ -310,6 +309,7 @@ def _async_get_connector(
         ssl=ssl_context,
         limit=MAXIMUM_CONNECTIONS,
         limit_per_host=MAXIMUM_CONNECTIONS_PER_HOST,
+        resolver=AsyncResolver(),
     )
     connectors[connector_key] = connector
 

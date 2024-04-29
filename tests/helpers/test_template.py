@@ -707,7 +707,7 @@ def test_multiply(hass: HomeAssistant) -> None:
     for inp, out in tests.items():
         assert (
             template.Template(
-                "{{ %s | multiply(10) | round }}" % inp, hass
+                f"{{{{ {inp} | multiply(10) | round }}}}", hass
             ).async_render()
             == out
         )
@@ -775,7 +775,9 @@ def test_sine(hass: HomeAssistant) -> None:
 
     for value, expected in tests:
         assert (
-            template.Template("{{ %s | sin | round(3) }}" % value, hass).async_render()
+            template.Template(
+                f"{{{{ {value} | sin | round(3) }}}}", hass
+            ).async_render()
             == expected
         )
         assert render(hass, f"{{{{ sin({value}) | round(3) }}}}") == expected
@@ -805,7 +807,9 @@ def test_cos(hass: HomeAssistant) -> None:
 
     for value, expected in tests:
         assert (
-            template.Template("{{ %s | cos | round(3) }}" % value, hass).async_render()
+            template.Template(
+                f"{{{{ {value} | cos | round(3) }}}}", hass
+            ).async_render()
             == expected
         )
         assert render(hass, f"{{{{ cos({value}) | round(3) }}}}") == expected
@@ -835,7 +839,9 @@ def test_tan(hass: HomeAssistant) -> None:
 
     for value, expected in tests:
         assert (
-            template.Template("{{ %s | tan | round(3) }}" % value, hass).async_render()
+            template.Template(
+                f"{{{{ {value} | tan | round(3) }}}}", hass
+            ).async_render()
             == expected
         )
         assert render(hass, f"{{{{ tan({value}) | round(3) }}}}") == expected
@@ -865,7 +871,9 @@ def test_sqrt(hass: HomeAssistant) -> None:
 
     for value, expected in tests:
         assert (
-            template.Template("{{ %s | sqrt | round(3) }}" % value, hass).async_render()
+            template.Template(
+                f"{{{{ {value} | sqrt | round(3) }}}}", hass
+            ).async_render()
             == expected
         )
         assert render(hass, f"{{{{ sqrt({value}) | round(3) }}}}") == expected
@@ -895,7 +903,9 @@ def test_arc_sine(hass: HomeAssistant) -> None:
 
     for value, expected in tests:
         assert (
-            template.Template("{{ %s | asin | round(3) }}" % value, hass).async_render()
+            template.Template(
+                f"{{{{ {value} | asin | round(3) }}}}", hass
+            ).async_render()
             == expected
         )
         assert render(hass, f"{{{{ asin({value}) | round(3) }}}}") == expected
@@ -909,7 +919,9 @@ def test_arc_sine(hass: HomeAssistant) -> None:
 
     for value in invalid_tests:
         with pytest.raises(TemplateError):
-            template.Template("{{ %s | asin | round(3) }}" % value, hass).async_render()
+            template.Template(
+                f"{{{{ {value} | asin | round(3) }}}}", hass
+            ).async_render()
         with pytest.raises(TemplateError):
             assert render(hass, f"{{{{ asin({value}) | round(3) }}}}")
 
@@ -932,7 +944,9 @@ def test_arc_cos(hass: HomeAssistant) -> None:
 
     for value, expected in tests:
         assert (
-            template.Template("{{ %s | acos | round(3) }}" % value, hass).async_render()
+            template.Template(
+                f"{{{{ {value} | acos | round(3) }}}}", hass
+            ).async_render()
             == expected
         )
         assert render(hass, f"{{{{ acos({value}) | round(3) }}}}") == expected
@@ -946,7 +960,9 @@ def test_arc_cos(hass: HomeAssistant) -> None:
 
     for value in invalid_tests:
         with pytest.raises(TemplateError):
-            template.Template("{{ %s | acos | round(3) }}" % value, hass).async_render()
+            template.Template(
+                f"{{{{ {value} | acos | round(3) }}}}", hass
+            ).async_render()
         with pytest.raises(TemplateError):
             assert render(hass, f"{{{{ acos({value}) | round(3) }}}}")
 
@@ -973,7 +989,9 @@ def test_arc_tan(hass: HomeAssistant) -> None:
 
     for value, expected in tests:
         assert (
-            template.Template("{{ %s | atan | round(3) }}" % value, hass).async_render()
+            template.Template(
+                f"{{{{ {value} | atan | round(3) }}}}", hass
+            ).async_render()
             == expected
         )
         assert render(hass, f"{{{{ atan({value}) | round(3) }}}}") == expected
@@ -1122,7 +1140,7 @@ def test_timestamp_local(hass: HomeAssistant) -> None:
 
     for inp, out in tests:
         assert (
-            template.Template("{{ %s | timestamp_local }}" % inp, hass).async_render()
+            template.Template(f"{{{{ {inp} | timestamp_local }}}}", hass).async_render()
             == out
         )
 
@@ -1133,7 +1151,7 @@ def test_timestamp_local(hass: HomeAssistant) -> None:
 
     for inp in invalid_tests:
         with pytest.raises(TemplateError):
-            template.Template("{{ %s | timestamp_local }}" % inp, hass).async_render()
+            template.Template(f"{{{{ {inp} | timestamp_local }}}}", hass).async_render()
 
     # Test handling of default return value
     assert render(hass, "{{ None | timestamp_local(1) }}") == 1
@@ -1176,7 +1194,7 @@ def test_as_datetime(hass: HomeAssistant, input) -> None:
 )
 def test_as_datetime_from_timestamp(
     hass: HomeAssistant,
-    input: int | float,
+    input: float,
     output: str,
 ) -> None:
     """Test converting a UNIX timestamp to a date object."""
@@ -1194,6 +1212,35 @@ def test_as_datetime_from_timestamp(
     )
     assert (
         template.Template(f"{{{{ '{input}' | as_datetime }}}}", hass).async_render()
+        == output
+    )
+
+
+@pytest.mark.parametrize(
+    ("input", "output"),
+    [
+        (
+            "{% set dt = as_datetime('2024-01-01 16:00:00-08:00') %}",
+            "2024-01-01 16:00:00-08:00",
+        ),
+        (
+            "{% set dt = as_datetime('2024-01-29').date() %}",
+            "2024-01-29 00:00:00",
+        ),
+    ],
+)
+def test_as_datetime_from_datetime(
+    hass: HomeAssistant, input: str, output: str
+) -> None:
+    """Test using datetime.datetime or datetime.date objects as input."""
+
+    assert (
+        template.Template(f"{input}{{{{ dt | as_datetime }}}}", hass).async_render()
+        == output
+    )
+
+    assert (
+        template.Template(f"{input}{{{{ as_datetime(dt) }}}}", hass).async_render()
         == output
     )
 
@@ -1270,7 +1317,7 @@ def test_to_json(hass: HomeAssistant) -> None:
     # Test special case where substring class cannot be rendered
     # See: https://github.com/ijl/orjson/issues/445
     class MyStr(str):
-        pass
+        __slots__ = ()
 
     expected_result = '{"mykey1":11.0,"mykey2":"myvalue2","mykey3":["opt3b","opt3a"]}'
     test_dict = {
@@ -1587,7 +1634,7 @@ def test_ordinal(hass: HomeAssistant) -> None:
 
     for value, expected in tests:
         assert (
-            template.Template("{{ %s | ordinal }}" % value, hass).async_render()
+            template.Template(f"{{{{ {value} | ordinal }}}}", hass).async_render()
             == expected
         )
 
@@ -1602,7 +1649,7 @@ def test_timestamp_utc(hass: HomeAssistant) -> None:
 
     for inp, out in tests:
         assert (
-            template.Template("{{ %s | timestamp_utc }}" % inp, hass).async_render()
+            template.Template(f"{{{{ {inp} | timestamp_utc }}}}", hass).async_render()
             == out
         )
 
@@ -1613,7 +1660,7 @@ def test_timestamp_utc(hass: HomeAssistant) -> None:
 
     for inp in invalid_tests:
         with pytest.raises(TemplateError):
-            template.Template("{{ %s | timestamp_utc }}" % inp, hass).async_render()
+            template.Template(f"{{{{ {inp} | timestamp_utc }}}}", hass).async_render()
 
     # Test handling of default return value
     assert render(hass, "{{ None | timestamp_utc(1) }}") == 1
@@ -2050,12 +2097,7 @@ async def test_state_translated(
     ):
         if category == "entity":
             return {
-                "component.hue.entity.light.translation_key.state.on": "state_is_on"
-            }
-        if category == "state":
-            return {
-                "component.some_domain.state.some_device_class.off": "state_is_off",
-                "component.some_domain.state._.foo": "state_is_foo",
+                "component.hue.entity.light.translation_key.state.on": "state_is_on",
             }
         return {}
 
@@ -2065,16 +2107,6 @@ async def test_state_translated(
     ):
         tpl8 = template.Template('{{ state_translated("light.hue_5678") }}', hass)
         assert tpl8.async_render() == "state_is_on"
-
-        tpl9 = template.Template(
-            '{{ state_translated("some_domain.with_device_class_1") }}', hass
-        )
-        assert tpl9.async_render() == "state_is_off"
-
-        tpl10 = template.Template(
-            '{{ state_translated("some_domain.with_device_class_2") }}', hass
-        )
-        assert tpl10.async_render() == "state_is_foo"
 
     tpl11 = template.Template('{{ state_translated("domain.is_unavailable") }}', hass)
     assert tpl11.async_render() == "unavailable"
@@ -2235,7 +2267,6 @@ def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
             hass,
         ).async_render()
         assert result == "1 hour"
-
         result = template.Template(
             (
                 "{{"
@@ -2290,7 +2321,366 @@ def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
         ).async_render()
         assert result == "string"
 
+        # Test behavior when current time is same as the input time
+        result = template.Template(
+            (
+                "{{"
+                "  relative_time("
+                "    strptime("
+                '        "2000-01-01 10:00:00 +00:00",'
+                '        "%Y-%m-%d %H:%M:%S %z"'
+                "    )"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "0 seconds"
+
+        # Test behavior when the input time is in the future
+        result = template.Template(
+            (
+                "{{"
+                "  relative_time("
+                "    strptime("
+                '        "2000-01-01 11:00:00 +00:00",'
+                '        "%Y-%m-%d %H:%M:%S %z"'
+                "    )"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "2000-01-01 11:00:00+00:00"
+
         info = template.Template(relative_time_template, hass).async_render_to_info()
+        assert info.has_time is True
+
+
+@patch(
+    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
+    return_value=True,
+)
+def test_time_since(mock_is_safe, hass: HomeAssistant) -> None:
+    """Test time_since method."""
+    hass.config.set_time_zone("UTC")
+    now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
+    time_since_template = (
+        '{{time_since(strptime("2000-01-01 09:00:00", "%Y-%m-%d %H:%M:%S"))}}'
+    )
+    with freeze_time(now):
+        result = template.Template(
+            time_since_template,
+            hass,
+        ).async_render()
+        assert result == "1 hour"
+
+        result = template.Template(
+            (
+                "{{"
+                "  time_since("
+                "    strptime("
+                '        "2000-01-01 09:00:00 +01:00",'
+                '        "%Y-%m-%d %H:%M:%S %z"'
+                "    )"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "2 hours"
+
+        result = template.Template(
+            (
+                "{{"
+                "  time_since("
+                "    strptime("
+                '       "2000-01-01 03:00:00 -06:00",'
+                '       "%Y-%m-%d %H:%M:%S %z"'
+                "    )"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "1 hour"
+
+        result1 = str(
+            template.strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
+        )
+        result2 = template.Template(
+            (
+                "{{"
+                "  time_since("
+                "    strptime("
+                '       "2000-01-01 11:00:00 +00:00",'
+                '       "%Y-%m-%d %H:%M:%S %z"),'
+                "    precision = 2"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result1 == result2
+
+        result = template.Template(
+            (
+                "{{"
+                "  time_since("
+                "    strptime("
+                '        "2000-01-01 09:05:00 +01:00",'
+                '        "%Y-%m-%d %H:%M:%S %z"),'
+                "       precision=2"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "1 hour 55 minutes"
+
+        result = template.Template(
+            (
+                "{{"
+                "  time_since("
+                "    strptime("
+                '       "2000-01-01 02:05:27 -06:00",'
+                '       "%Y-%m-%d %H:%M:%S %z"),'
+                "       precision = 3"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "1 hour 54 minutes 33 seconds"
+        result = template.Template(
+            (
+                "{{"
+                "  time_since("
+                "    strptime("
+                '       "2000-01-01 02:05:27 -06:00",'
+                '       "%Y-%m-%d %H:%M:%S %z")'
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "2 hours"
+        result = template.Template(
+            (
+                "{{"
+                "  time_since("
+                "    strptime("
+                '       "1999-02-01 02:05:27 -06:00",'
+                '       "%Y-%m-%d %H:%M:%S %z"),'
+                "       precision = 0"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "11 months 4 days 1 hour 54 minutes 33 seconds"
+        result = template.Template(
+            (
+                "{{"
+                "  time_since("
+                "    strptime("
+                '       "1999-02-01 02:05:27 -06:00",'
+                '       "%Y-%m-%d %H:%M:%S %z")'
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "11 months"
+        result1 = str(
+            template.strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
+        )
+        result2 = template.Template(
+            (
+                "{{"
+                "  time_since("
+                "    strptime("
+                '       "2000-01-01 11:00:00 +00:00",'
+                '       "%Y-%m-%d %H:%M:%S %z"),'
+                "       precision=3"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result1 == result2
+
+        result = template.Template(
+            '{{time_since("string")}}',
+            hass,
+        ).async_render()
+        assert result == "string"
+
+        info = template.Template(time_since_template, hass).async_render_to_info()
+        assert info.has_time is True
+
+
+@patch(
+    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
+    return_value=True,
+)
+def test_time_until(mock_is_safe, hass: HomeAssistant) -> None:
+    """Test time_until method."""
+    hass.config.set_time_zone("UTC")
+    now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
+    time_until_template = (
+        '{{time_until(strptime("2000-01-01 11:00:00", "%Y-%m-%d %H:%M:%S"))}}'
+    )
+    with freeze_time(now):
+        result = template.Template(
+            time_until_template,
+            hass,
+        ).async_render()
+        assert result == "1 hour"
+
+        result = template.Template(
+            (
+                "{{"
+                "  time_until("
+                "    strptime("
+                '        "2000-01-01 13:00:00 +01:00",'
+                '        "%Y-%m-%d %H:%M:%S %z"'
+                "    )"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "2 hours"
+
+        result = template.Template(
+            (
+                "{{"
+                "  time_until("
+                "    strptime("
+                '       "2000-01-01 05:00:00 -06:00",'
+                '       "%Y-%m-%d %H:%M:%S %z"'
+                "    )"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "1 hour"
+
+        result1 = str(
+            template.strptime("2000-01-01 09:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
+        )
+        result2 = template.Template(
+            (
+                "{{"
+                "  time_until("
+                "    strptime("
+                '       "2000-01-01 09:00:00 +00:00",'
+                '       "%Y-%m-%d %H:%M:%S %z"),'
+                "    precision = 2"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result1 == result2
+
+        result = template.Template(
+            (
+                "{{"
+                "  time_until("
+                "    strptime("
+                '        "2000-01-01 12:05:00 +01:00",'
+                '        "%Y-%m-%d %H:%M:%S %z"),'
+                "       precision=2"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "1 hour 5 minutes"
+
+        result = template.Template(
+            (
+                "{{"
+                "  time_until("
+                "    strptime("
+                '       "2000-01-01 05:54:33 -06:00",'
+                '       "%Y-%m-%d %H:%M:%S %z"),'
+                "       precision = 3"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "1 hour 54 minutes 33 seconds"
+        result = template.Template(
+            (
+                "{{"
+                "  time_until("
+                "    strptime("
+                '       "2000-01-01 05:54:33 -06:00",'
+                '       "%Y-%m-%d %H:%M:%S %z")'
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "2 hours"
+        result = template.Template(
+            (
+                "{{"
+                "  time_until("
+                "    strptime("
+                '       "2001-02-01 05:54:33 -06:00",'
+                '       "%Y-%m-%d %H:%M:%S %z"),'
+                "       precision = 0"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "1 year 1 month 2 days 1 hour 54 minutes 33 seconds"
+        result = template.Template(
+            (
+                "{{"
+                "  time_until("
+                "    strptime("
+                '       "2001-02-01 05:54:33 -06:00",'
+                '       "%Y-%m-%d %H:%M:%S %z"),'
+                "       precision = 4"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "1 year 1 month 2 days 2 hours"
+        result1 = str(
+            template.strptime("2000-01-01 09:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
+        )
+        result2 = template.Template(
+            (
+                "{{"
+                "  time_until("
+                "    strptime("
+                '       "2000-01-01 09:00:00 +00:00",'
+                '       "%Y-%m-%d %H:%M:%S %z"),'
+                "       precision=3"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result1 == result2
+
+        result = template.Template(
+            '{{time_until("string")}}',
+            hass,
+        ).async_render()
+        assert result == "string"
+
+        info = template.Template(time_until_template, hass).async_render_to_info()
         assert info.has_time is True
 
 
@@ -4246,7 +4636,9 @@ def test_closest_function_invalid_state(hass: HomeAssistant) -> None:
 
     for state in ("states.zone.non_existing", '"zone.non_existing"'):
         assert (
-            template.Template("{{ closest(%s, states) }}" % state, hass).async_render()
+            template.Template(
+                f"{{{{ closest({state}, states) }}}}", hass
+            ).async_render()
             is None
         )
 
@@ -5198,17 +5590,23 @@ async def test_floors(
 async def test_floor_id(
     hass: HomeAssistant,
     floor_registry: fr.FloorRegistry,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test floor_id function."""
 
-    # Test non existing floor name
-    info = render_to_info(hass, "{{ floor_id('Third floor') }}")
-    assert_result_info(info, None)
-    assert info.rate_limit is None
+    def test(value: str, expected: str | None) -> None:
+        info = render_to_info(hass, f"{{{{ floor_id('{value}') }}}}")
+        assert_result_info(info, expected)
+        assert info.rate_limit is None
 
-    info = render_to_info(hass, "{{ 'Third floor' | floor_id }}")
-    assert_result_info(info, None)
-    assert info.rate_limit is None
+        info = render_to_info(hass, f"{{{{ '{value}' | floor_id }}}}")
+        assert_result_info(info, expected)
+        assert info.rate_limit is None
+
+    # Test non existing floor name
+    test("Third floor", None)
 
     # Test wrong value type
     info = render_to_info(hass, "{{ floor_id(42) }}")
@@ -5221,28 +5619,65 @@ async def test_floor_id(
 
     # Test with an actual floor
     floor = floor_registry.async_create("First floor")
-    info = render_to_info(hass, "{{ floor_id('First floor') }}")
-    assert_result_info(info, floor.floor_id)
-    assert info.rate_limit is None
+    test("First floor", floor.floor_id)
 
-    info = render_to_info(hass, "{{ 'First floor' | floor_id }}")
-    assert_result_info(info, floor.floor_id)
-    assert info.rate_limit is None
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    area_entry_hex = area_registry.async_get_or_create("123abc")
+
+    # Create area, device, entity and assign area to device and entity
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+    device_entry = device_registry.async_update_device(
+        device_entry.id, area_id=area_entry_hex.id
+    )
+    entity_entry = entity_registry.async_update_entity(
+        entity_entry.entity_id, area_id=area_entry_hex.id
+    )
+
+    test(area_entry_hex.id, None)
+    test(device_entry.id, None)
+    test(entity_entry.entity_id, None)
+
+    # Add floor to area
+    area_entry_hex = area_registry.async_update(
+        area_entry_hex.id, floor_id=floor.floor_id
+    )
+
+    test(area_entry_hex.id, floor.floor_id)
+    test(device_entry.id, floor.floor_id)
+    test(entity_entry.entity_id, floor.floor_id)
 
 
 async def test_floor_name(
     hass: HomeAssistant,
     floor_registry: fr.FloorRegistry,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test floor_name function."""
-    # Test non existing floor ID
-    info = render_to_info(hass, "{{ floor_name('third_floor') }}")
-    assert_result_info(info, None)
-    assert info.rate_limit is None
 
-    info = render_to_info(hass, "{{ 'third_floor' | floor_name }}")
-    assert_result_info(info, None)
-    assert info.rate_limit is None
+    def test(value: str, expected: str | None) -> None:
+        info = render_to_info(hass, f"{{{{ floor_name('{value}') }}}}")
+        assert_result_info(info, expected)
+        assert info.rate_limit is None
+
+        info = render_to_info(hass, f"{{{{ '{value}' | floor_name }}}}")
+        assert_result_info(info, expected)
+        assert info.rate_limit is None
+
+    # Test non existing floor name
+    test("Third floor", None)
 
     # Test wrong value type
     info = render_to_info(hass, "{{ floor_name(42) }}")
@@ -5255,13 +5690,43 @@ async def test_floor_name(
 
     # Test existing floor ID
     floor = floor_registry.async_create("First floor")
-    info = render_to_info(hass, f"{{{{ floor_name('{floor.floor_id}') }}}}")
-    assert_result_info(info, floor.name)
-    assert info.rate_limit is None
+    test(floor.floor_id, floor.name)
 
-    info = render_to_info(hass, f"{{{{ '{floor.floor_id}' | floor_name }}}}")
-    assert_result_info(info, floor.name)
-    assert info.rate_limit is None
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    area_entry_hex = area_registry.async_get_or_create("123abc")
+
+    # Create area, device, entity and assign area to device and entity
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+    device_entry = device_registry.async_update_device(
+        device_entry.id, area_id=area_entry_hex.id
+    )
+    entity_entry = entity_registry.async_update_entity(
+        entity_entry.entity_id, area_id=area_entry_hex.id
+    )
+
+    test(area_entry_hex.id, None)
+    test(device_entry.id, None)
+    test(entity_entry.entity_id, None)
+
+    # Add floor to area
+    area_entry_hex = area_registry.async_update(
+        area_entry_hex.id, floor_id=floor.floor_id
+    )
+
+    test(area_entry_hex.id, floor.name)
+    test(device_entry.id, floor.name)
+    test(entity_entry.entity_id, floor.name)
 
 
 async def test_floor_areas(
@@ -5670,3 +6135,20 @@ async def test_label_areas(
     info = render_to_info(hass, f"{{{{ '{label.name}' | label_areas }}}}")
     assert_result_info(info, [master_bedroom.id])
     assert info.rate_limit is None
+
+
+async def test_template_thread_safety_checks(hass: HomeAssistant) -> None:
+    """Test template thread safety checks."""
+    hass.states.async_set("sensor.test", "23")
+    template_str = "{{ states('sensor.test') }}"
+    template_obj = template.Template(template_str, None)
+    template_obj.hass = hass
+    hass.config.debug = True
+
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls async_render_to_info from a thread.",
+    ):
+        await hass.async_add_executor_job(template_obj.async_render_to_info)
+
+    assert template_obj.async_render_to_info().result() == 23

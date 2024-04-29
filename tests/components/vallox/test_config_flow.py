@@ -20,7 +20,7 @@ async def test_form_no_input(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
 
@@ -30,7 +30,7 @@ async def test_form_create_entry(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert init["type"] == FlowResultType.FORM
+    assert init["type"] is FlowResultType.FORM
     assert init["errors"] is None
 
     with (
@@ -49,7 +49,7 @@ async def test_form_create_entry(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Vallox"
     assert result["data"] == {"host": "1.2.3.4", "name": "Vallox"}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -67,7 +67,7 @@ async def test_form_invalid_ip(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"host": "invalid_host"}
 
 
@@ -87,7 +87,7 @@ async def test_form_vallox_api_exception_cannot_connect(hass: HomeAssistant) -> 
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"host": "cannot_connect"}
 
 
@@ -107,7 +107,7 @@ async def test_form_os_error_cannot_connect(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"host": "cannot_connect"}
 
 
@@ -127,7 +127,7 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"host": "unknown"}
 
 
@@ -152,5 +152,5 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

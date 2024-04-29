@@ -9,13 +9,13 @@ import pytest
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockToggleEntity
 from tests.components.conversation import MockAgent
 
 if TYPE_CHECKING:
     from tests.components.device_tracker.common import MockScanner
     from tests.components.light.common import MockLight
     from tests.components.sensor.common import MockSensor
+    from tests.components.switch.common import MockSwitch
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -145,11 +145,11 @@ def mock_sensor_entities() -> dict[str, "MockSensor"]:
 
 
 @pytest.fixture
-def mock_toggle_entities() -> list[MockToggleEntity]:
+def mock_switch_entities() -> list["MockSwitch"]:
     """Return mocked toggle entities."""
-    from tests.components.switch.common import get_mock_toggle_entities
+    from tests.components.switch.common import get_mock_switch_entities
 
-    return get_mock_toggle_entities()
+    return get_mock_switch_entities()
 
 
 @pytest.fixture

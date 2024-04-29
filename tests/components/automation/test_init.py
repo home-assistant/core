@@ -8,8 +8,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant import config_entries
-import homeassistant.components.automation as automation
+from homeassistant.components import automation, input_boolean, script
 from homeassistant.components.automation import (
     ATTR_SOURCE,
     DOMAIN,
@@ -18,9 +17,11 @@ from homeassistant.components.automation import (
     SERVICE_TRIGGER,
     AutomationEntity,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
+    CONF_ID,
     EVENT_HOMEASSISTANT_STARTED,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
@@ -40,6 +41,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import (
     SCRIPT_MODE_CHOICES,
     SCRIPT_MODE_PARALLEL,
@@ -692,7 +694,9 @@ async def test_reload_config_handles_load_fails(hass: HomeAssistant, calls) -> N
     assert len(calls) == 2
 
 
-@pytest.mark.parametrize("service", ["turn_off_stop", "turn_off_no_stop", "reload"])
+@pytest.mark.parametrize(
+    "service", ["turn_off_stop", "turn_off_no_stop", "reload", "reload_single"]
+)
 async def test_automation_stops(hass: HomeAssistant, calls, service) -> None:
     """Test that turning off / reloading stops any running actions as appropriate."""
     entity_id = "automation.hello"
@@ -700,6 +704,7 @@ async def test_automation_stops(hass: HomeAssistant, calls, service) -> None:
 
     config = {
         automation.DOMAIN: {
+            "id": "sun",
             "alias": "hello",
             "trigger": {"platform": "event", "event_type": "test_event"},
             "action": [
@@ -737,7 +742,7 @@ async def test_automation_stops(hass: HomeAssistant, calls, service) -> None:
             {ATTR_ENTITY_ID: entity_id, automation.CONF_STOP_ACTIONS: False},
             blocking=True,
         )
-    else:
+    elif service == "reload":
         config[automation.DOMAIN]["alias"] = "goodbye"
         with patch(
             "homeassistant.config.load_yaml_config_file",
@@ -746,6 +751,19 @@ async def test_automation_stops(hass: HomeAssistant, calls, service) -> None:
         ):
             await hass.services.async_call(
                 automation.DOMAIN, SERVICE_RELOAD, blocking=True
+            )
+    else:  # service == "reload_single"
+        config[automation.DOMAIN]["alias"] = "goodbye"
+        with patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value=config,
+        ):
+            await hass.services.async_call(
+                automation.DOMAIN,
+                SERVICE_RELOAD,
+                {CONF_ID: "sun"},
+                blocking=True,
             )
 
     hass.states.async_set(test_entity, "goodbye")
@@ -798,6 +816,238 @@ async def test_reload_unchanged_does_not_stop(
     hass.states.async_set(test_entity, "goodbye")
     await hass.async_block_till_done()
 
+    assert len(calls) == 1
+
+
+async def test_reload_single_unchanged_does_not_stop(
+    hass: HomeAssistant, calls
+) -> None:
+    """Test that reloading stops any running actions as appropriate."""
+    test_entity = "test.entity"
+
+    config = {
+        automation.DOMAIN: {
+            "id": "sun",
+            "alias": "hello",
+            "trigger": {"platform": "event", "event_type": "test_event"},
+            "action": [
+                {"event": "running"},
+                {"wait_template": "{{ is_state('test.entity', 'goodbye') }}"},
+                {"service": "test.automation"},
+            ],
+        }
+    }
+    assert await async_setup_component(hass, automation.DOMAIN, config)
+
+    running = asyncio.Event()
+
+    @callback
+    def running_cb(event):
+        running.set()
+
+    hass.bus.async_listen_once("running", running_cb)
+    hass.states.async_set(test_entity, "hello")
+
+    hass.bus.async_fire("test_event")
+    await running.wait()
+    assert len(calls) == 0
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value=config,
+    ):
+        await hass.services.async_call(
+            automation.DOMAIN,
+            SERVICE_RELOAD,
+            {CONF_ID: "sun"},
+            blocking=True,
+        )
+
+    hass.states.async_set(test_entity, "goodbye")
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+
+
+async def test_reload_single_add_automation(hass: HomeAssistant, calls) -> None:
+    """Test that reloading a single automation."""
+    config1 = {automation.DOMAIN: {}}
+    config2 = {
+        automation.DOMAIN: {
+            "id": "sun",
+            "alias": "hello",
+            "trigger": {"platform": "event", "event_type": "test_event"},
+            "action": [{"service": "test.automation"}],
+        }
+    }
+    assert await async_setup_component(hass, automation.DOMAIN, config1)
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value=config2,
+    ):
+        await hass.services.async_call(
+            automation.DOMAIN,
+            SERVICE_RELOAD,
+            {CONF_ID: "sun"},
+            blocking=True,
+        )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+async def test_reload_single_parallel_calls(hass: HomeAssistant, calls) -> None:
+    """Test reloading single automations in parallel."""
+    config1 = {automation.DOMAIN: {}}
+    config2 = {
+        automation.DOMAIN: [
+            {
+                "id": "sun",
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event_sun"},
+                "action": [{"service": "test.automation"}],
+            },
+            {
+                "id": "moon",
+                "alias": "goodbye",
+                "trigger": {"platform": "event", "event_type": "test_event_moon"},
+                "action": [{"service": "test.automation"}],
+            },
+            {
+                "id": "mars",
+                "alias": "goodbye",
+                "trigger": {"platform": "event", "event_type": "test_event_mars"},
+                "action": [{"service": "test.automation"}],
+            },
+            {
+                "id": "venus",
+                "alias": "goodbye",
+                "trigger": {"platform": "event", "event_type": "test_event_venus"},
+                "action": [{"service": "test.automation"}],
+            },
+        ]
+    }
+    assert await async_setup_component(hass, automation.DOMAIN, config1)
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Trigger multiple reload service calls, each automation is reloaded twice.
+    # This tests the logic in the `ReloadServiceHelper` which avoids redundant
+    # reloads of the same target automation.
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value=config2,
+    ):
+        tasks = [
+            hass.services.async_call(
+                automation.DOMAIN,
+                SERVICE_RELOAD,
+                {CONF_ID: "sun"},
+                blocking=False,
+            ),
+            hass.services.async_call(
+                automation.DOMAIN,
+                SERVICE_RELOAD,
+                {CONF_ID: "moon"},
+                blocking=False,
+            ),
+            hass.services.async_call(
+                automation.DOMAIN,
+                SERVICE_RELOAD,
+                {CONF_ID: "mars"},
+                blocking=False,
+            ),
+            hass.services.async_call(
+                automation.DOMAIN,
+                SERVICE_RELOAD,
+                {CONF_ID: "venus"},
+                blocking=False,
+            ),
+            hass.services.async_call(
+                automation.DOMAIN,
+                SERVICE_RELOAD,
+                {CONF_ID: "sun"},
+                blocking=False,
+            ),
+            hass.services.async_call(
+                automation.DOMAIN,
+                SERVICE_RELOAD,
+                {CONF_ID: "moon"},
+                blocking=False,
+            ),
+            hass.services.async_call(
+                automation.DOMAIN,
+                SERVICE_RELOAD,
+                {CONF_ID: "mars"},
+                blocking=False,
+            ),
+            hass.services.async_call(
+                automation.DOMAIN,
+                SERVICE_RELOAD,
+                {CONF_ID: "venus"},
+                blocking=False,
+            ),
+        ]
+        await asyncio.gather(*tasks)
+        await hass.async_block_till_done()
+
+    # Sanity check to ensure all automations are correctly setup
+    hass.bus.async_fire("test_event_sun")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    hass.bus.async_fire("test_event_moon")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    hass.bus.async_fire("test_event_mars")
+    await hass.async_block_till_done()
+    assert len(calls) == 3
+    hass.bus.async_fire("test_event_venus")
+    await hass.async_block_till_done()
+    assert len(calls) == 4
+
+
+async def test_reload_single_remove_automation(hass: HomeAssistant, calls) -> None:
+    """Test that reloading a single automation."""
+    config1 = {
+        automation.DOMAIN: {
+            "id": "sun",
+            "alias": "hello",
+            "trigger": {"platform": "event", "event_type": "test_event"},
+            "action": [{"service": "test.automation"}],
+        }
+    }
+    config2 = {automation.DOMAIN: {}}
+    assert await async_setup_component(hass, automation.DOMAIN, config1)
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value=config2,
+    ):
+        await hass.services.async_call(
+            automation.DOMAIN,
+            SERVICE_RELOAD,
+            {CONF_ID: "sun"},
+            blocking=True,
+        )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
     assert len(calls) == 1
 
 
@@ -1615,7 +1865,7 @@ async def test_extraction_functions(
 ) -> None:
     """Test extraction functions."""
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
 
     condition_device = device_registry.async_get_or_create(
@@ -2506,6 +2756,7 @@ async def test_recursive_automation_starting_script(
         async def async_automation_triggered(event):
             """Listen to automation_triggered event from the automation integration."""
             automation_triggered.append(event)
+            await asyncio.sleep(0)  # Yield to allow other tasks to run
             hass.states.async_set("sensor.test", str(len(automation_triggered)))
 
         hass.services.async_register("test", "script_done", async_service_handler)
@@ -2650,3 +2901,162 @@ def test_deprecated_constants(
     import_and_test_deprecated_constant(
         caplog, automation, constant_name, replacement.__name__, replacement, "2025.1"
     )
+
+
+async def test_automation_turns_off_other_automation(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test an automation that turns off another automation."""
+    hass.set_state(CoreState.not_running)
+    calls = async_mock_service(hass, "persistent_notification", "create")
+    hass.states.async_set("binary_sensor.presence", "on")
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "state",
+                        "entity_id": "binary_sensor.presence",
+                        "from": "on",
+                    },
+                    "action": {
+                        "service": "automation.turn_off",
+                        "target": {
+                            "entity_id": "automation.automation_1",
+                        },
+                        "data": {
+                            "stop_actions": True,
+                        },
+                    },
+                    "id": "automation_0",
+                    "mode": "single",
+                },
+                {
+                    "trigger": {
+                        "platform": "state",
+                        "entity_id": "binary_sensor.presence",
+                        "from": "on",
+                        "for": {
+                            "hours": 0,
+                            "minutes": 0,
+                            "seconds": 5,
+                        },
+                    },
+                    "action": {
+                        "service": "persistent_notification.create",
+                        "metadata": {},
+                        "data": {
+                            "message": "Test race",
+                        },
+                    },
+                    "id": "automation_1",
+                    "mode": "single",
+                },
+            ]
+        },
+    )
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    hass.states.async_set("binary_sensor.presence", "off")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    await hass.services.async_call(
+        "automation",
+        "turn_on",
+        {"entity_id": "automation.automation_1"},
+        blocking=True,
+    )
+    hass.states.async_set("binary_sensor.presence", "off")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+
+async def test_two_automations_call_restart_script_same_time(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test two automations that call a restart mode script at the same."""
+    hass.states.async_set("binary_sensor.presence", "off")
+    await hass.async_block_till_done()
+    events = []
+
+    @callback
+    def _save_event(event):
+        events.append(event)
+
+    assert await async_setup_component(
+        hass,
+        input_boolean.DOMAIN,
+        {
+            input_boolean.DOMAIN: {
+                "test_1": None,
+            }
+        },
+    )
+    cancel = async_track_state_change_event(hass, "input_boolean.test_1", _save_event)
+
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {
+            script.DOMAIN: {
+                "fire_toggle": {
+                    "sequence": [
+                        {
+                            "service": "input_boolean.toggle",
+                            "target": {"entity_id": "input_boolean.test_1"},
+                        }
+                    ]
+                },
+            }
+        },
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "state",
+                        "entity_id": "binary_sensor.presence",
+                        "to": "on",
+                    },
+                    "action": {
+                        "service": "script.fire_toggle",
+                    },
+                    "id": "automation_0",
+                    "mode": "single",
+                },
+                {
+                    "trigger": {
+                        "platform": "state",
+                        "entity_id": "binary_sensor.presence",
+                        "to": "on",
+                    },
+                    "action": {
+                        "service": "script.fire_toggle",
+                    },
+                    "id": "automation_1",
+                    "mode": "single",
+                },
+            ]
+        },
+    )
+
+    hass.states.async_set("binary_sensor.presence", "on")
+    await hass.async_block_till_done()
+    assert len(events) == 2
+    cancel()
