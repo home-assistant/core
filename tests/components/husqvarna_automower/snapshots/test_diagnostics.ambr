@@ -35,8 +35,8 @@
     'capabilities': dict({
       'headlights': True,
       'position': True,
-      'stay_out_zones': False,
-      'work_areas': False,
+      'stay_out_zones': True,
+      'work_areas': True,
     }),
     'cutting_height': 4,
     'headlight': dict({
@@ -96,6 +96,10 @@
       '123456': dict({
         'cutting_height': 50,
         'name': 'Front lawn',
+      }),
+      '654321': dict({
+        'cutting_height': 25,
+        'name': 'Back lawn',
       }),
     }),
   })
