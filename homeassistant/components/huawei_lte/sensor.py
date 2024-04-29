@@ -192,6 +192,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="cqi1",
                 translation_key="cqi1",
                 icon="mdi:speedometer",
+                entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "dl_mcs": HuaweiSensorEntityDescription(
                 key="dl_mcs",
@@ -282,6 +283,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="nrcqi1",
                 translation_key="nrcqi1",
                 icon="mdi:speedometer",
+                entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "nrdlbandwidth": HuaweiSensorEntityDescription(
                 key="nrdlbandwidth",
