@@ -650,6 +650,12 @@ class _ScriptRun:
         # check if condition already okay
         if condition.async_template(self._hass, wait_template, self._variables, False):
             self._variables["wait"]["completed"] = True
+            self._changed()
+            return
+
+        if timeout == 0:
+            self._changed()
+            self._async_handle_timeout()
             return
 
         futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
@@ -728,7 +734,7 @@ class _ScriptRun:
         )
         trace_set_result(params=params, running_script=running_script)
         response_data = await self._async_run_long_action(
-            self._hass.async_create_task(
+            self._hass.async_create_task_internal(
                 self._hass.services.async_call(
                     **params,
                     blocking=True,
@@ -778,7 +784,7 @@ class _ScriptRun:
                 )
 
         trace_set_result(event=self._action[CONF_EVENT], event_data=event_data)
-        self._hass.bus.async_fire(
+        self._hass.bus.async_fire_internal(
             self._action[CONF_EVENT], event_data, context=self._context
         )
 
@@ -1078,6 +1084,11 @@ class _ScriptRun:
         self._variables["wait"] = {"remaining": timeout, "trigger": None}
         trace_set_result(wait=self._variables["wait"])
 
+        if timeout == 0:
+            self._changed()
+            self._async_handle_timeout()
+            return
+
         futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
             timeout
         )
@@ -1108,6 +1119,14 @@ class _ScriptRun:
             futures, timeout_handle, timeout_future, remove_triggers
         )
 
+    def _async_handle_timeout(self) -> None:
+        """Handle timeout."""
+        self._variables["wait"]["remaining"] = 0.0
+        if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
+            self._log(_TIMEOUT_MSG)
+            trace_set_result(wait=self._variables["wait"], timeout=True)
+            raise _AbortScript from TimeoutError()
+
     async def _async_wait_with_optional_timeout(
         self,
         futures: list[asyncio.Future[None]],
@@ -1118,11 +1137,7 @@ class _ScriptRun:
         try:
             await asyncio.wait(futures, return_when=asyncio.FIRST_COMPLETED)
             if timeout_future and timeout_future.done():
-                self._variables["wait"]["remaining"] = 0.0
-                if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
-                    self._log(_TIMEOUT_MSG)
-                    trace_set_result(wait=self._variables["wait"], timeout=True)
-                    raise _AbortScript from TimeoutError()
+                self._async_handle_timeout()
         finally:
             if timeout_future and not timeout_future.done() and timeout_handle:
                 timeout_handle.cancel()
@@ -1193,7 +1208,7 @@ class _ScriptRun:
     async def _async_run_script(self, script: Script) -> None:
         """Execute a script."""
         result = await self._async_run_long_action(
-            self._hass.async_create_task(
+            self._hass.async_create_task_internal(
                 script.async_run(self._variables, self._context), eager_start=True
             )
         )
@@ -1677,7 +1692,7 @@ class Script:
         script_stack = script_stack_cv.get()
         if (
             self.script_mode in (SCRIPT_MODE_RESTART, SCRIPT_MODE_QUEUED)
-            and (script_stack := script_stack_cv.get()) is not None
+            and script_stack is not None
             and id(self) in script_stack
         ):
             script_execution_set("disallowed_recursion_detected")
@@ -1691,15 +1706,19 @@ class Script:
         run = cls(
             self._hass, self, cast(dict, variables), context, self._log_exceptions
         )
+        has_existing_runs = bool(self._runs)
         self._runs.append(run)
-        if self.script_mode == SCRIPT_MODE_RESTART:
+        if self.script_mode == SCRIPT_MODE_RESTART and has_existing_runs:
             # When script mode is SCRIPT_MODE_RESTART, first add the new run and then
             # stop any other runs. If we stop other runs first, self.is_running will
             # return false after the other script runs were stopped until our task
-            # resumes running.
+            # resumes running. Its important that we check if there are existing
+            # runs before sleeping as otherwise if two runs are started at the exact
+            # same time they will cancel each other out.
             self._log("Restarting")
             # Important: yield to the event loop to allow the script to start in case
-            # the script is restarting itself.
+            # the script is restarting itself so it ends up in the script stack and
+            # the recursion check above will prevent the script from running.
             await asyncio.sleep(0)
             await self.async_stop(update_state=False, spare=run)
 
@@ -1715,9 +1734,7 @@ class Script:
             self._changed()
             raise
 
-    async def _async_stop(
-        self, aws: list[asyncio.Task], update_state: bool, spare: _ScriptRun | None
-    ) -> None:
+    async def _async_stop(self, aws: list[asyncio.Task], update_state: bool) -> None:
         await asyncio.wait(aws)
         if update_state:
             self._changed()
@@ -1734,9 +1751,7 @@ class Script:
         ]
         if not aws:
             return
-        await asyncio.shield(
-            create_eager_task(self._async_stop(aws, update_state, spare))
-        )
+        await asyncio.shield(create_eager_task(self._async_stop(aws, update_state)))
 
     async def _async_get_condition(self, config):
         if isinstance(config, template.Template):
