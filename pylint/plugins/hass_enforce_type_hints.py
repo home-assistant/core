@@ -26,6 +26,7 @@ _PLATFORMS: set[str] = {platform.value for platform in Platform}
 _KNOWN_GENERIC_TYPES: set[str] = {
     "ConfigEntry",
 }
+_KNOWN_GENERIC_TYPES_TUPLE = tuple(_KNOWN_GENERIC_TYPES)
 
 
 class _Special(Enum):
@@ -2980,11 +2981,13 @@ def _is_valid_type(
     ):
         return True
 
-    # Allow subscripts for generic types
+    # Allow subscripts or type aliases for generic types
     if (
         isinstance(node, nodes.Subscript)
         and isinstance(node.value, nodes.Name)
         and node.value.name in _KNOWN_GENERIC_TYPES
+        or isinstance(node, nodes.Name)
+        and node.name.endswith(_KNOWN_GENERIC_TYPES_TUPLE)
     ):
         return True
 

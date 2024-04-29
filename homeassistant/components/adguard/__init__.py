@@ -43,6 +43,7 @@ SERVICE_REFRESH_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
+AdGuardConfigEntry = ConfigEntry["AdGuardData"]
 
 
 @dataclass
@@ -53,9 +54,7 @@ class AdGuardData:
     version: str
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry[AdGuardData]
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> bool:
     """Set up AdGuard Home from a config entry."""
     session = async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL])
     adguard = AdGuardHome(
@@ -118,9 +117,7 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: ConfigEntry[AdGuardData]
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> bool:
     """Unload AdGuard Home config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     loaded_entries = [
