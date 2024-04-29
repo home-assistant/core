@@ -13,7 +13,7 @@ from homeassistant.helpers.integration_platform import (
 from .const import DOMAIN, REG_KEY
 
 if TYPE_CHECKING:
-    from .entity import Group
+    pass
 
 
 async def async_setup(hass: HomeAssistant) -> None:
@@ -54,7 +54,6 @@ class GroupIntegrationRegistry:
         self.on_states_by_domain: dict[str, set[str]] = {}
         self.exclude_domains: set[str] = set()
         self.state_group_mapping: dict[str, tuple[str, str]] = {}
-        self.group_entities: set[Group] = set()
 
     @callback
     def exclude_domain(self, domain: str) -> None:
