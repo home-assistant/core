@@ -17,13 +17,8 @@ from homeassistant.const import (
     CONF_URL,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
-from homeassistant.exceptions import (
-    ConfigEntryError,
-    ConfigEntryNotReady,
-    HomeAssistantError,
-    ServiceValidationError,
-)
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -122,7 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         def __call__(self, **kwargs):
             return super().__call__(websession, **kwargs)
 
-    async def handle_api_call(call: ServiceCall) -> dict:
+    async def handle_api_call(call: ServiceCall) -> None:
         name = call.data[ATTR_NAME]
         path = call.data[ATTR_PATH]
         entries = hass.config_entries.async_entries(DOMAIN)
@@ -133,39 +128,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 api = coordinator.api
                 break
         if api is None:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="service_user_not_configured",
-                translation_placeholders={
-                    "service": f"{DOMAIN}.{SERVICE_API_CALL}",
-                    "user": name,
-                },
-            )
-        for element in path:
-            try:
-                api = api[element]
-            except (KeyError, IndexError) as e:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="sevice_invalid_path",
-                    translation_placeholders={
-                        "service": f"{DOMAIN}.{SERVICE_API_CALL}",
-                        "path": "/".join(path),
-                        "element": element,
-                    },
-                ) from e
-
-        kwargs = call.data.get(ATTR_ARGS, {})
-
+            _LOGGER.error("API_CALL: User '%s' not configured", name)
+            return
         try:
-            data = await api(**kwargs)
-        except (ValueError, TypeError, ClientResponseError) as e:
-            raise HomeAssistantError(e) from e
-
+            for element in path:
+                api = api[element]
+        except KeyError:
+            _LOGGER.error(
+                "API_CALL: Path %s is invalid for API on '{%s}' element", path, element
+            )
+            return
+        kwargs = call.data.get(ATTR_ARGS, {})
+        data = await api(**kwargs)
         hass.bus.async_fire(
             EVENT_API_CALL_SUCCESS, {ATTR_NAME: name, ATTR_PATH: path, ATTR_DATA: data}
         )
-        return {"data": data}
 
     websession = async_get_clientsession(hass)
 
@@ -211,11 +188,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if not hass.services.has_service(DOMAIN, SERVICE_API_CALL):
         hass.services.async_register(
-            DOMAIN,
-            SERVICE_API_CALL,
-            handle_api_call,
-            schema=SERVICE_API_CALL_SCHEMA,
-            supports_response=SupportsResponse.OPTIONAL,
+            DOMAIN, SERVICE_API_CALL, handle_api_call, schema=SERVICE_API_CALL_SCHEMA
         )
 
     return True
