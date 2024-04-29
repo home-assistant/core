@@ -31,6 +31,7 @@
       "pending_notification": { "name": "Notification unread" },
       "reserve_in_use": { "name": "Reserve capacity in use" },
       "salt": { "name": "Salt low" },
+      "sensor": { "name": "Sensor" },
       "pump": { "name": "Pump status" }
     },
     "select": {
