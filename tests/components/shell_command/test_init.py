@@ -263,7 +263,7 @@ async def test_do_not_run_forever(
     ):
         with pytest.raises(
             HomeAssistantError,
-            match="Timed out running command: `mock_sleep 10000`, after: 0.001s",
+            match="Timed out running command: `mock_sleep 10000`, after: 0.001 seconds",
         ):
             await hass.services.async_call(
                 shell_command.DOMAIN,
