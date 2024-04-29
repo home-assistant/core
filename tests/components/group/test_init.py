@@ -51,6 +51,7 @@ async def help_test_mixed_entity_platforms_on_off_state_test(
     entity_and_state1_state_2: tuple[str, str | None, str | None],
     group_state1: str,
     group_state2: str,
+    grouped_groups: bool = False,
 ) -> None:
     """Help test on_off_states on mixed entity platforms."""
 
@@ -80,15 +81,42 @@ async def help_test_mixed_entity_platforms_on_off_state_test(
     mock_platform(hass, "test2.group", MockGroupPlatform2())
     assert await async_setup_component(hass, "test2", {"test2": {}})
 
-    assert await async_setup_component(
-        hass,
-        "group",
-        {
-            "group": {
-                "test": {"entities": [item[0] for item in entity_and_state1_state_2]},
-            }
-        },
-    )
+    if grouped_groups:
+        assert await async_setup_component(
+            hass,
+            "group",
+            {
+                "group": {
+                    "test1": {
+                        "entities": [
+                            item[0]
+                            for item in entity_and_state1_state_2
+                            if item[0].startswith("test1.")
+                        ]
+                    },
+                    "test2": {
+                        "entities": [
+                            item[0]
+                            for item in entity_and_state1_state_2
+                            if item[0].startswith("test2.")
+                        ]
+                    },
+                    "test": {"entities": ["group.test1", "group.test2"]},
+                }
+            },
+        )
+    else:
+        assert await async_setup_component(
+            hass,
+            "group",
+            {
+                "group": {
+                    "test": {
+                        "entities": [item[0] for item in entity_and_state1_state_2]
+                    },
+                }
+            },
+        )
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
@@ -1970,6 +1998,7 @@ async def test_unhide_members_on_remove(
     assert entity_registry.async_get(f"{group_type}.three").hidden_by == hidden_by
 
 
+@pytest.mark.parametrize("grouped_groups", [False, True])
 @pytest.mark.parametrize(
     ("on_off_states1", "on_off_states2"),
     [
@@ -2058,6 +2087,7 @@ async def test_entity_platforms_with_multiple_on_states_no_state_match(
     entity_and_state1_state_2: tuple[str, str | None, str | None],
     group_state1: str,
     group_state2: str,
+    grouped_groups: bool,
 ) -> None:
     """Test custom entity platforms with multiple ON states without state match.
 
@@ -2070,9 +2100,11 @@ async def test_entity_platforms_with_multiple_on_states_no_state_match(
         entity_and_state1_state_2,
         group_state1,
         group_state2,
+        grouped_groups,
     )
 
 
+@pytest.mark.parametrize("grouped_groups", [False, True])
 @pytest.mark.parametrize(
     ("on_off_states1", "on_off_states2"),
     [
@@ -2162,6 +2194,7 @@ async def test_entity_platforms_with_multiple_on_states_with_state_match(
     entity_and_state1_state_2: tuple[str, str | None, str | None],
     group_state1: str,
     group_state2: str,
+    grouped_groups: bool,
 ) -> None:
     """Test custom entity platforms with multiple ON states with a state match.
 
@@ -2174,4 +2207,5 @@ async def test_entity_platforms_with_multiple_on_states_with_state_match(
         entity_and_state1_state_2,
         group_state1,
         group_state2,
+        grouped_groups,
     )
