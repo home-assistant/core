@@ -577,9 +577,7 @@ class HomeAssistant:
         if TYPE_CHECKING:
             target = cast(Callable[[*_Ts], Any], target)
         self.loop.call_soon_threadsafe(
-            functools.partial(
-                self._async_add_hass_job, HassJob(target), *args, eager_start=True
-            )
+            functools.partial(self._async_add_hass_job, HassJob(target), *args)
         )
 
     @overload
@@ -650,7 +648,7 @@ class HomeAssistant:
         # https://github.com/home-assistant/core/pull/71960
         if TYPE_CHECKING:
             target = cast(Callable[[*_Ts], Coroutine[Any, Any, _R] | _R], target)
-        return self._async_add_hass_job(HassJob(target), *args, eager_start=eager_start)
+        return self._async_add_hass_job(HassJob(target), *args)
 
     @overload
     @callback
@@ -700,9 +698,7 @@ class HomeAssistant:
             error_if_core=False,
         )
 
-        return self._async_add_hass_job(
-            hassjob, *args, eager_start=eager_start, background=background
-        )
+        return self._async_add_hass_job(hassjob, *args, background=background)
 
     @overload
     @callback
@@ -710,7 +706,6 @@ class HomeAssistant:
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R]],
         *args: Any,
-        eager_start: bool = False,
         background: bool = False,
     ) -> asyncio.Future[_R] | None: ...
 
@@ -720,7 +715,6 @@ class HomeAssistant:
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
-        eager_start: bool = False,
         background: bool = False,
     ) -> asyncio.Future[_R] | None: ...
 
@@ -729,7 +723,6 @@ class HomeAssistant:
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
-        eager_start: bool = False,
         background: bool = False,
     ) -> asyncio.Future[_R] | None:
         """Add a HassJob from within the event loop.
@@ -751,16 +744,11 @@ class HomeAssistant:
                 hassjob.target = cast(
                     Callable[..., Coroutine[Any, Any, _R]], hassjob.target
                 )
-            # Use loop.create_task
-            # to avoid the extra function call in asyncio.create_task.
-            if eager_start:
-                task = create_eager_task(
-                    hassjob.target(*args), name=hassjob.name, loop=self.loop
-                )
-                if task.done():
-                    return task
-            else:
-                task = self.loop.create_task(hassjob.target(*args), name=hassjob.name)
+            task = create_eager_task(
+                hassjob.target(*args), name=hassjob.name, loop=self.loop
+            )
+            if task.done():
+                return task
         elif hassjob.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
@@ -785,7 +773,9 @@ class HomeAssistant:
         target: target to call.
         """
         self.loop.call_soon_threadsafe(
-            functools.partial(self.async_create_task, target, name, eager_start=True)
+            functools.partial(
+                self.async_create_task_internal, target, name, eager_start=True
+            )
         )
 
     @callback
@@ -796,6 +786,37 @@ class HomeAssistant:
         eager_start: bool = True,
     ) -> asyncio.Task[_R]:
         """Create a task from within the event loop.
+
+        This method must be run in the event loop. If you are using this in your
+        integration, use the create task methods on the config entry instead.
+
+        target: target to call.
+        """
+        # We turned on asyncio debug in April 2024 in the dev containers
+        # in the hope of catching some of the issues that have been
+        # reported. It will take a while to get all the issues fixed in
+        # custom components.
+        #
+        # In 2025.5 we should guard the `verify_event_loop_thread`
+        # check with a check for the `hass.config.debug` flag being set as
+        # long term we don't want to be checking this in production
+        # environments since it is a performance hit.
+        self.verify_event_loop_thread("async_create_task")
+        return self.async_create_task_internal(target, name, eager_start)
+
+    @callback
+    def async_create_task_internal(
+        self,
+        target: Coroutine[Any, Any, _R],
+        name: str | None = None,
+        eager_start: bool = True,
+    ) -> asyncio.Task[_R]:
+        """Create a task from within the event loop, internal use only.
+
+        This method is intended to only be used by core internally
+        and should not be considered a stable API. We will make
+        breaking change to this function in the future and it
+        should not be used in integrations.
 
         This method must be run in the event loop. If you are using this in your
         integration, use the create task methods on the config entry instead.
@@ -914,9 +935,7 @@ class HomeAssistant:
             hassjob.target(*args)
             return None
 
-        return self._async_add_hass_job(
-            hassjob, *args, eager_start=True, background=background
-        )
+        return self._async_add_hass_job(hassjob, *args, background=background)
 
     @overload
     @callback
@@ -972,10 +991,11 @@ class HomeAssistant:
             target = cast(Callable[[*_Ts], Coroutine[Any, Any, _R] | _R], target)
         return self.async_run_hass_job(HassJob(target), *args)
 
-    def block_till_done(self) -> None:
+    def block_till_done(self, wait_background_tasks: bool = False) -> None:
         """Block until all pending work is done."""
         asyncio.run_coroutine_threadsafe(
-            self.async_block_till_done(), self.loop
+            self.async_block_till_done(wait_background_tasks=wait_background_tasks),
+            self.loop,
         ).result()
 
     async def async_block_till_done(self, wait_background_tasks: bool = False) -> None:
@@ -1407,6 +1427,7 @@ class _OneTimeListener(Generic[_DataT]):
 EMPTY_LIST: list[Any] = []
 
 
+@functools.lru_cache
 def _verify_event_type_length_or_raise(event_type: EventType[_DataT] | str) -> None:
     """Verify the length of the event type and raise if too long."""
     if len(event_type) > MAX_LENGTH_EVENT_EVENT_TYPE:
@@ -2204,6 +2225,7 @@ class StateMachine:
         force_update: bool = False,
         context: Context | None = None,
         state_info: StateInfo | None = None,
+        timestamp: float | None = None,
     ) -> None:
         """Set the state of an entity, add entity if it does not exist.
 
@@ -2243,7 +2265,8 @@ class StateMachine:
         # timestamp implementation:
         # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6387
         # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6323
-        timestamp = time.time()
+        if timestamp is None:
+            timestamp = time.time()
         now = dt_util.utc_from_timestamp(timestamp)
 
         if same_state and same_attr:
@@ -2263,8 +2286,6 @@ class StateMachine:
             return
 
         if context is None:
-            if TYPE_CHECKING:
-                assert timestamp is not None
             context = Context(id=ulid_at_time(timestamp))
 
         if same_attr:
@@ -2695,7 +2716,7 @@ class ServiceRegistry:
 
         coro = self._execute_service(handler, service_call)
         if not blocking:
-            self._hass.async_create_task(
+            self._hass.async_create_task_internal(
                 self._run_service_call_catch_exceptions(coro, service_call),
                 f"service call background {service_call.domain}.{service_call.service}",
                 eager_start=True,

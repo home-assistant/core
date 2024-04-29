@@ -87,7 +87,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if not coordinator.last_update_success:
             return
 
-        hass.async_create_task(async_update_alerts(), eager_start=True)
+        hass.async_create_background_task(
+            async_update_alerts(), "homeassistant_alerts update", eager_start=True
+        )
 
     coordinator = AlertUpdateCoordinator(hass)
     coordinator.async_add_listener(async_schedule_update_alerts)
@@ -99,6 +101,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             cooldown=COMPONENT_LOADED_COOLDOWN,
             immediate=False,
             function=coordinator.async_refresh,
+            background=True,
         )
 
         @callback
