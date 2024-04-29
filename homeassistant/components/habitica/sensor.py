@@ -166,7 +166,6 @@ async def async_setup_entry(
 
     name = config_entry.data[CONF_NAME]
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    # await sensor_data.update()
 
     entities: list[SensorEntity] = [
         HabitipySensor(coordinator, description, config_entry)
@@ -195,7 +194,6 @@ class HabitipySensor(CoordinatorEntity[HabiticaDataUpdateCoordinator], SensorEnt
         super().__init__(coordinator, context=entity_description.value_path[0])
         if TYPE_CHECKING:
             assert entry.unique_id
-        self.coordinator = coordinator
         self.entity_description = entity_description
         self._attr_unique_id = f"{entry.unique_id}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
@@ -230,7 +228,6 @@ class HabitipyTaskSensor(
         self._task_name = task_name
         self._task_type = TASKS_TYPES[task_name]
         self._state = None
-        self.coordinator = coordinator
         self._attr_unique_id = f"{entry.unique_id}_{task_name}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
