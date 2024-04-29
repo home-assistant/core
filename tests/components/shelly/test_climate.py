@@ -70,7 +70,7 @@ async def test_climate_hvac_mode(
 
     # Make device online
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Test initial hvac mode - off
     state = hass.states.get(ENTITY_ID)
@@ -131,7 +131,7 @@ async def test_climate_set_temperature(
 
     # Make device online
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.OFF
@@ -198,7 +198,7 @@ async def test_climate_set_preset_mode(
 
     # Make device online
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
@@ -284,7 +284,7 @@ async def test_block_restored_climate(
     # Make device online
     monkeypatch.setattr(mock_block_device, "initialized", True)
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == HVACMode.OFF
     assert hass.states.get(entity_id).attributes.get("temperature") == 4.0
@@ -355,7 +355,7 @@ async def test_block_restored_climate_us_customery(
     monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "targetTemp", 4.0)
     monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "temp", 18.2)
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == HVACMode.OFF
     assert hass.states.get(entity_id).attributes.get("temperature") == 39
@@ -457,7 +457,7 @@ async def test_block_set_mode_connection_error(
 
     # Make device online
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -482,7 +482,7 @@ async def test_block_set_mode_auth_error(
 
     # Make device online
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
 
@@ -540,7 +540,7 @@ async def test_block_restored_climate_auth_error(
         return_value={}, side_effect=InvalidAuthError
     )
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
 
@@ -567,7 +567,7 @@ async def test_device_not_calibrated(
 
     # Make device online
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_status = MOCK_STATUS_COAP.copy()
     mock_status["calibrated"] = False
