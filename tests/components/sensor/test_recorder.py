@@ -1,6 +1,5 @@
 """The tests for sensor recorder platform."""
 
-from collections.abc import Callable
 from datetime import datetime, timedelta
 import math
 from statistics import mean
@@ -36,7 +35,7 @@ from homeassistant.components.recorder.util import get_instance, session_scope
 from homeassistant.components.sensor import ATTR_OPTIONS, DOMAIN, SensorDeviceClass
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, State
-from homeassistant.setup import async_setup_component, setup_component
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
@@ -48,7 +47,6 @@ from tests.components.recorder.common import (
     async_wait_recording_done,
     do_adhoc_statistics,
     statistics_during_period,
-    wait_recording_done,
 )
 from tests.components.sensor.common import MockSensor
 from tests.typing import WebSocketGenerator
@@ -92,14 +90,9 @@ KW_SENSOR_ATTRIBUTES = {
 }
 
 
-@pytest.fixture(autouse=True)
-def set_time_zone():
-    """Set the time zone for the tests."""
-    # Set our timezone to CST/Regina so we can check calculations
-    # This keeps UTC-6 all year round
-    dt_util.set_default_time_zone(dt_util.get_time_zone("America/Regina"))
-    yield
-    dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
+async def async_list_statistic_ids(hass: HomeAssistant) -> list[dict]:
+    """Return all statistic_ids and unit of measurement."""
+    return await hass.async_add_executor_job(list_statistic_ids, hass)
 
 
 @pytest.mark.parametrize(
@@ -136,8 +129,9 @@ def set_time_zone():
         ("weight", "oz", "oz", "oz", "mass", 13.050847, -10, 30),
     ],
 )
-def test_compile_hourly_statistics(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_compile_hourly_statistics(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
@@ -150,24 +144,26 @@ def test_compile_hourly_statistics(
 ) -> None:
     """Test compiling hourly statistics."""
     zero = dt_util.utcnow()
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     attributes = {
         "device_class": device_class,
         "state_class": "measurement",
         "unit_of_measurement": state_unit,
     }
     with freeze_time(zero) as freezer:
-        four, states = record_states(hass, freezer, zero, "sensor.test1", attributes)
+        four, states = await async_record_states(
+            hass, freezer, zero, "sensor.test1", attributes
+        )
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
     )
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=zero)
-    wait_recording_done(hass)
-    statistic_ids = list_statistic_ids(hass)
+    await async_wait_recording_done(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -214,8 +210,9 @@ def test_compile_hourly_statistics(
         ("temperature", "°F", "°F", "°F", "temperature", 27.796610169491526, -10, 60),
     ],
 )
-def test_compile_hourly_statistics_with_some_same_last_updated(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_compile_hourly_statistics_with_some_same_last_updated(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
@@ -231,9 +228,9 @@ def test_compile_hourly_statistics_with_some_same_last_updated(
     If the last updated value is the same we will have a zero duration.
     """
     zero = dt_util.utcnow()
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     entity_id = "sensor.test1"
     attributes = {
         "device_class": device_class,
@@ -243,10 +240,10 @@ def test_compile_hourly_statistics_with_some_same_last_updated(
     attributes = dict(attributes)
     seq = [-10, 15, 30, 60]
 
-    def set_state(entity_id, state, **kwargs):
+    async def set_state(entity_id, state, **kwargs):
         """Set the state."""
-        hass.states.set(entity_id, state, **kwargs)
-        wait_recording_done(hass)
+        hass.states.async_set(entity_id, state, **kwargs)
+        await async_wait_recording_done(hass)
         return hass.states.get(entity_id)
 
     one = zero + timedelta(seconds=1 * 5)
@@ -257,21 +254,21 @@ def test_compile_hourly_statistics_with_some_same_last_updated(
     states = {entity_id: []}
     with freeze_time(one) as freezer:
         states[entity_id].append(
-            set_state(entity_id, str(seq[0]), attributes=attributes)
+            await set_state(entity_id, str(seq[0]), attributes=attributes)
         )
 
         # Record two states at the exact same time
         freezer.move_to(two)
         states[entity_id].append(
-            set_state(entity_id, str(seq[1]), attributes=attributes)
+            await set_state(entity_id, str(seq[1]), attributes=attributes)
         )
         states[entity_id].append(
-            set_state(entity_id, str(seq[2]), attributes=attributes)
+            await set_state(entity_id, str(seq[2]), attributes=attributes)
         )
 
         freezer.move_to(three)
         states[entity_id].append(
-            set_state(entity_id, str(seq[3]), attributes=attributes)
+            await set_state(entity_id, str(seq[3]), attributes=attributes)
         )
 
     hist = history.get_significant_states(
@@ -280,8 +277,8 @@ def test_compile_hourly_statistics_with_some_same_last_updated(
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=zero)
-    wait_recording_done(hass)
-    statistic_ids = list_statistic_ids(hass)
+    await async_wait_recording_done(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -328,8 +325,9 @@ def test_compile_hourly_statistics_with_some_same_last_updated(
         ("temperature", "°F", "°F", "°F", "temperature", 60, -10, 60),
     ],
 )
-def test_compile_hourly_statistics_with_all_same_last_updated(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_compile_hourly_statistics_with_all_same_last_updated(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
@@ -345,9 +343,9 @@ def test_compile_hourly_statistics_with_all_same_last_updated(
     If the last updated value is the same we will have a zero duration.
     """
     zero = dt_util.utcnow()
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     entity_id = "sensor.test1"
     attributes = {
         "device_class": device_class,
@@ -357,10 +355,10 @@ def test_compile_hourly_statistics_with_all_same_last_updated(
     attributes = dict(attributes)
     seq = [-10, 15, 30, 60]
 
-    def set_state(entity_id, state, **kwargs):
+    async def set_state(entity_id, state, **kwargs):
         """Set the state."""
-        hass.states.set(entity_id, state, **kwargs)
-        wait_recording_done(hass)
+        hass.states.async_set(entity_id, state, **kwargs)
+        await async_wait_recording_done(hass)
         return hass.states.get(entity_id)
 
     one = zero + timedelta(seconds=1 * 5)
@@ -371,16 +369,16 @@ def test_compile_hourly_statistics_with_all_same_last_updated(
     states = {entity_id: []}
     with freeze_time(two):
         states[entity_id].append(
-            set_state(entity_id, str(seq[0]), attributes=attributes)
+            await set_state(entity_id, str(seq[0]), attributes=attributes)
         )
         states[entity_id].append(
-            set_state(entity_id, str(seq[1]), attributes=attributes)
+            await set_state(entity_id, str(seq[1]), attributes=attributes)
         )
         states[entity_id].append(
-            set_state(entity_id, str(seq[2]), attributes=attributes)
+            await set_state(entity_id, str(seq[2]), attributes=attributes)
         )
         states[entity_id].append(
-            set_state(entity_id, str(seq[3]), attributes=attributes)
+            await set_state(entity_id, str(seq[3]), attributes=attributes)
         )
 
     hist = history.get_significant_states(
@@ -389,8 +387,8 @@ def test_compile_hourly_statistics_with_all_same_last_updated(
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=zero)
-    wait_recording_done(hass)
-    statistic_ids = list_statistic_ids(hass)
+    await async_wait_recording_done(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -437,8 +435,9 @@ def test_compile_hourly_statistics_with_all_same_last_updated(
         ("temperature", "°F", "°F", "°F", "temperature", 0, 60, 60),
     ],
 )
-def test_compile_hourly_statistics_only_state_is_and_end_of_period(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_compile_hourly_statistics_only_state_is_and_end_of_period(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
@@ -451,9 +450,9 @@ def test_compile_hourly_statistics_only_state_is_and_end_of_period(
 ) -> None:
     """Test compiling hourly statistics when the only state at end of period."""
     zero = dt_util.utcnow()
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     entity_id = "sensor.test1"
     attributes = {
         "device_class": device_class,
@@ -463,10 +462,10 @@ def test_compile_hourly_statistics_only_state_is_and_end_of_period(
     attributes = dict(attributes)
     seq = [-10, 15, 30, 60]
 
-    def set_state(entity_id, state, **kwargs):
+    async def set_state(entity_id, state, **kwargs):
         """Set the state."""
-        hass.states.set(entity_id, state, **kwargs)
-        wait_recording_done(hass)
+        hass.states.async_set(entity_id, state, **kwargs)
+        await async_wait_recording_done(hass)
         return hass.states.get(entity_id)
 
     one = zero + timedelta(seconds=1 * 5)
@@ -478,16 +477,16 @@ def test_compile_hourly_statistics_only_state_is_and_end_of_period(
     states = {entity_id: []}
     with freeze_time(end):
         states[entity_id].append(
-            set_state(entity_id, str(seq[0]), attributes=attributes)
+            await set_state(entity_id, str(seq[0]), attributes=attributes)
         )
         states[entity_id].append(
-            set_state(entity_id, str(seq[1]), attributes=attributes)
+            await set_state(entity_id, str(seq[1]), attributes=attributes)
         )
         states[entity_id].append(
-            set_state(entity_id, str(seq[2]), attributes=attributes)
+            await set_state(entity_id, str(seq[2]), attributes=attributes)
         )
         states[entity_id].append(
-            set_state(entity_id, str(seq[3]), attributes=attributes)
+            await set_state(entity_id, str(seq[3]), attributes=attributes)
         )
 
     hist = history.get_significant_states(
@@ -496,8 +495,8 @@ def test_compile_hourly_statistics_only_state_is_and_end_of_period(
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=zero)
-    wait_recording_done(hass)
-    statistic_ids = list_statistic_ids(hass)
+    await async_wait_recording_done(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -534,8 +533,9 @@ def test_compile_hourly_statistics_only_state_is_and_end_of_period(
         (None, "%", "%", "%", "unitless"),
     ],
 )
-def test_compile_hourly_statistics_purged_state_changes(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_compile_hourly_statistics_purged_state_changes(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
@@ -545,16 +545,18 @@ def test_compile_hourly_statistics_purged_state_changes(
 ) -> None:
     """Test compiling hourly statistics."""
     zero = dt_util.utcnow()
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     attributes = {
         "device_class": device_class,
         "state_class": "measurement",
         "unit_of_measurement": state_unit,
     }
     with freeze_time(zero) as freezer:
-        four, states = record_states(hass, freezer, zero, "sensor.test1", attributes)
+        four, states = await async_record_states(
+            hass, freezer, zero, "sensor.test1", attributes
+        )
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
     )
@@ -564,17 +566,17 @@ def test_compile_hourly_statistics_purged_state_changes(
 
     # Purge all states from the database
     with freeze_time(four):
-        hass.services.call("recorder", "purge", {"keep_days": 0})
-        hass.block_till_done()
-        wait_recording_done(hass)
+        await hass.services.async_call("recorder", "purge", {"keep_days": 0})
+        await hass.async_block_till_done()
+        await async_wait_recording_done(hass)
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
     )
     assert not hist
 
     do_adhoc_statistics(hass, start=zero)
-    wait_recording_done(hass)
-    statistic_ids = list_statistic_ids(hass)
+    await async_wait_recording_done(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -606,41 +608,56 @@ def test_compile_hourly_statistics_purged_state_changes(
 
 
 @pytest.mark.parametrize("attributes", [TEMPERATURE_SENSOR_ATTRIBUTES])
-def test_compile_hourly_statistics_wrong_unit(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_compile_hourly_statistics_wrong_unit(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     attributes,
 ) -> None:
     """Test compiling hourly statistics for sensor with unit not matching device class."""
     zero = dt_util.utcnow()
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     with freeze_time(zero) as freezer:
-        four, states = record_states(hass, freezer, zero, "sensor.test1", attributes)
+        four, states = await async_record_states(
+            hass, freezer, zero, "sensor.test1", attributes
+        )
 
         attributes_tmp = dict(attributes)
         attributes_tmp["unit_of_measurement"] = "invalid"
-        _, _states = record_states(hass, freezer, zero, "sensor.test2", attributes_tmp)
+        _, _states = await async_record_states(
+            hass, freezer, zero, "sensor.test2", attributes_tmp
+        )
         states = {**states, **_states}
         attributes_tmp.pop("unit_of_measurement")
-        _, _states = record_states(hass, freezer, zero, "sensor.test3", attributes_tmp)
+        _, _states = await async_record_states(
+            hass, freezer, zero, "sensor.test3", attributes_tmp
+        )
         states = {**states, **_states}
 
         attributes_tmp = dict(attributes)
         attributes_tmp["state_class"] = "invalid"
-        _, _states = record_states(hass, freezer, zero, "sensor.test4", attributes_tmp)
+        _, _states = await async_record_states(
+            hass, freezer, zero, "sensor.test4", attributes_tmp
+        )
         states = {**states, **_states}
         attributes_tmp.pop("state_class")
-        _, _states = record_states(hass, freezer, zero, "sensor.test5", attributes_tmp)
+        _, _states = await async_record_states(
+            hass, freezer, zero, "sensor.test5", attributes_tmp
+        )
         states = {**states, **_states}
 
         attributes_tmp = dict(attributes)
         attributes_tmp["device_class"] = "invalid"
-        _, _states = record_states(hass, freezer, zero, "sensor.test6", attributes_tmp)
+        _, _states = await async_record_states(
+            hass, freezer, zero, "sensor.test6", attributes_tmp
+        )
         states = {**states, **_states}
         attributes_tmp.pop("device_class")
-        _, _states = record_states(hass, freezer, zero, "sensor.test7", attributes_tmp)
+        _, _states = await async_record_states(
+            hass, freezer, zero, "sensor.test7", attributes_tmp
+        )
         states = {**states, **_states}
 
     hist = history.get_significant_states(
@@ -649,8 +666,8 @@ def test_compile_hourly_statistics_wrong_unit(
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=zero)
-    wait_recording_done(hass)
-    statistic_ids = list_statistic_ids(hass)
+    await async_wait_recording_done(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -838,8 +855,8 @@ async def test_compile_hourly_sum_statistics_amount(
     }
     seq = [10, 15, 20, 10, 30, 40, 50, 60, 70]
     with freeze_time(period0) as freezer:
-        four, eight, states = await hass.async_add_executor_job(
-            record_meter_states, hass, freezer, period0, "sensor.test1", attributes, seq
+        four, eight, states = await async_record_meter_states(
+            hass, freezer, period0, "sensor.test1", attributes, seq
         )
     await async_wait_recording_done(hass)
     hist = history.get_significant_states(
@@ -858,7 +875,7 @@ async def test_compile_hourly_sum_statistics_amount(
     await async_wait_recording_done(hass)
     do_adhoc_statistics(hass, start=period2)
     await async_wait_recording_done(hass)
-    statistic_ids = await hass.async_add_executor_job(list_statistic_ids, hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -994,8 +1011,9 @@ async def test_compile_hourly_sum_statistics_amount(
         ("weight", "kg", "kg", "kg", "mass", 1),
     ],
 )
-def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     state_class,
     device_class,
@@ -1007,9 +1025,9 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
 ) -> None:
     """Test compiling hourly statistics."""
     zero = dt_util.utcnow()
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     attributes = {
         "device_class": device_class,
         "state_class": state_class,
@@ -1031,7 +1049,7 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
             one = one + timedelta(seconds=5)
             attributes = dict(attributes)
             attributes["last_reset"] = dt_util.as_local(one).isoformat()
-            _states = record_meter_state(
+            _states = await async_record_meter_state(
                 hass, freezer, one, "sensor.test1", attributes, seq[i : i + 1]
             )
             states["sensor.test1"].extend(_states["sensor.test1"])
@@ -1042,7 +1060,7 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
             two = two + timedelta(seconds=5)
             attributes = dict(attributes)
             attributes["last_reset"] = dt_util.as_local(two).isoformat()
-            _states = record_meter_state(
+            _states = await async_record_meter_state(
                 hass, freezer, two, "sensor.test1", attributes, seq[i : i + 1]
             )
             states["sensor.test1"].extend(_states["sensor.test1"])
@@ -1060,8 +1078,8 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
 
     do_adhoc_statistics(hass, start=zero)
     do_adhoc_statistics(hass, start=zero + timedelta(minutes=5))
-    wait_recording_done(hass)
-    statistic_ids = list_statistic_ids(hass)
+    await async_wait_recording_done(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -1116,8 +1134,9 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
         ("energy", "kWh", "kWh", "kWh", "energy", 1),
     ],
 )
-def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     state_class,
     device_class,
@@ -1129,9 +1148,9 @@ def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
 ) -> None:
     """Test compiling hourly statistics."""
     zero = dt_util.utcnow()
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     attributes = {
         "device_class": device_class,
         "state_class": state_class,
@@ -1151,7 +1170,7 @@ def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
             attributes["last_reset"] = dt_util.as_local(one).isoformat()
             if i == 3:
                 attributes["last_reset"] = "festivus"  # not a valid time
-            _states = record_meter_state(
+            _states = await async_record_meter_state(
                 hass, freezer, one, "sensor.test1", attributes, seq[i : i + 1]
             )
             states["sensor.test1"].extend(_states["sensor.test1"])
@@ -1168,8 +1187,8 @@ def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
     )
 
     do_adhoc_statistics(hass, start=zero)
-    wait_recording_done(hass)
-    statistic_ids = list_statistic_ids(hass)
+    await async_wait_recording_done(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -1215,8 +1234,9 @@ def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
         ("energy", "kWh", "kWh", "kWh", "energy", 1),
     ],
 )
-def test_compile_hourly_sum_statistics_nan_inf_state(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_compile_hourly_sum_statistics_nan_inf_state(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     state_class,
     device_class,
@@ -1228,9 +1248,9 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
 ) -> None:
     """Test compiling hourly statistics with nan and inf states."""
     zero = dt_util.utcnow()
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     attributes = {
         "device_class": device_class,
         "state_class": state_class,
@@ -1246,7 +1266,7 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
             one = one + timedelta(seconds=5)
             attributes = dict(attributes)
             attributes["last_reset"] = dt_util.as_local(one).isoformat()
-            _states = record_meter_state(
+            _states = await async_record_meter_state(
                 hass, freezer, one, "sensor.test1", attributes, seq[i : i + 1]
             )
             states["sensor.test1"].extend(_states["sensor.test1"])
@@ -1263,8 +1283,8 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
     )
 
     do_adhoc_statistics(hass, start=zero)
-    wait_recording_done(hass)
-    statistic_ids = list_statistic_ids(hass)
+    await async_wait_recording_done(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -1346,8 +1366,9 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
     ],
 )
 @pytest.mark.parametrize("state_class", ["total_increasing"])
-def test_compile_hourly_sum_statistics_negative_state(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_compile_hourly_sum_statistics_negative_state(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     entity_id,
     warning_1,
@@ -1362,18 +1383,17 @@ def test_compile_hourly_sum_statistics_negative_state(
 ) -> None:
     """Test compiling hourly statistics with negative states."""
     zero = dt_util.utcnow()
-    hass = hass_recorder()
     hass.data.pop(loader.DATA_CUSTOM_COMPONENTS)
 
     mocksensor = MockSensor(name="custom_sensor")
     mocksensor._attr_should_poll = False
     setup_test_component_platform(hass, DOMAIN, [mocksensor], built_in=False)
 
-    setup_component(hass, "homeassistant", {})
-    setup_component(
+    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(
         hass, "sensor", {"sensor": [{"platform": "demo"}, {"platform": "test"}]}
     )
-    hass.block_till_done()
+    await hass.async_block_till_done()
     attributes = {
         "device_class": device_class,
         "state_class": state_class,
@@ -1390,7 +1410,7 @@ def test_compile_hourly_sum_statistics_negative_state(
     with freeze_time(zero) as freezer:
         for i in range(len(seq)):
             one = one + timedelta(seconds=5)
-            _states = record_meter_state(
+            _states = await async_record_meter_state(
                 hass, freezer, one, entity_id, attributes, seq[i : i + 1]
             )
             states[entity_id].extend(_states[entity_id])
@@ -1407,8 +1427,8 @@ def test_compile_hourly_sum_statistics_negative_state(
     )
 
     do_adhoc_statistics(hass, start=zero)
-    wait_recording_done(hass)
-    statistic_ids = list_statistic_ids(hass)
+    await async_wait_recording_done(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert {
         "display_unit_of_measurement": display_unit,
         "has_mean": False,
@@ -1462,8 +1482,9 @@ def test_compile_hourly_sum_statistics_negative_state(
         ("weight", "kg", "kg", "kg", "mass", 1),
     ],
 )
-def test_compile_hourly_sum_statistics_total_no_reset(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_compile_hourly_sum_statistics_total_no_reset(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
@@ -1477,9 +1498,9 @@ def test_compile_hourly_sum_statistics_total_no_reset(
     period0_end = period1 = period0 + timedelta(minutes=5)
     period1_end = period2 = period0 + timedelta(minutes=10)
     period2_end = period0 + timedelta(minutes=15)
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     attributes = {
         "device_class": device_class,
         "state_class": "total",
@@ -1487,10 +1508,10 @@ def test_compile_hourly_sum_statistics_total_no_reset(
     }
     seq = [10, 15, 20, 10, 30, 40, 50, 60, 70]
     with freeze_time(period0) as freezer:
-        four, eight, states = record_meter_states(
+        four, eight, states = await async_record_meter_states(
             hass, freezer, period0, "sensor.test1", attributes, seq
         )
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     hist = history.get_significant_states(
         hass,
         period0 - timedelta.resolution,
@@ -1502,12 +1523,12 @@ def test_compile_hourly_sum_statistics_total_no_reset(
     )
 
     do_adhoc_statistics(hass, start=period0)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     do_adhoc_statistics(hass, start=period1)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     do_adhoc_statistics(hass, start=period2)
-    wait_recording_done(hass)
-    statistic_ids = list_statistic_ids(hass)
+    await async_wait_recording_done(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -1575,8 +1596,9 @@ def test_compile_hourly_sum_statistics_total_no_reset(
         ("weight", "kg", "kg", "kg", "mass", 1),
     ],
 )
-def test_compile_hourly_sum_statistics_total_increasing(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_compile_hourly_sum_statistics_total_increasing(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
@@ -1590,9 +1612,9 @@ def test_compile_hourly_sum_statistics_total_increasing(
     period0_end = period1 = period0 + timedelta(minutes=5)
     period1_end = period2 = period0 + timedelta(minutes=10)
     period2_end = period0 + timedelta(minutes=15)
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     attributes = {
         "device_class": device_class,
         "state_class": "total_increasing",
@@ -1600,10 +1622,10 @@ def test_compile_hourly_sum_statistics_total_increasing(
     }
     seq = [10, 15, 20, 10, 30, 40, 50, 60, 70]
     with freeze_time(period0) as freezer:
-        four, eight, states = record_meter_states(
+        four, eight, states = await async_record_meter_states(
             hass, freezer, period0, "sensor.test1", attributes, seq
         )
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     hist = history.get_significant_states(
         hass,
         period0 - timedelta.resolution,
@@ -1615,12 +1637,12 @@ def test_compile_hourly_sum_statistics_total_increasing(
     )
 
     do_adhoc_statistics(hass, start=period0)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     do_adhoc_statistics(hass, start=period1)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     do_adhoc_statistics(hass, start=period2)
-    wait_recording_done(hass)
-    statistic_ids = list_statistic_ids(hass)
+    await async_wait_recording_done(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -1688,8 +1710,9 @@ def test_compile_hourly_sum_statistics_total_increasing(
         ("weight", "kg", "kg", "kg", "mass", 1),
     ],
 )
-def test_compile_hourly_sum_statistics_total_increasing_small_dip(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_compile_hourly_sum_statistics_total_increasing_small_dip(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
@@ -1703,9 +1726,9 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     period0_end = period1 = period0 + timedelta(minutes=5)
     period1_end = period2 = period0 + timedelta(minutes=10)
     period2_end = period0 + timedelta(minutes=15)
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     attributes = {
         "device_class": device_class,
         "state_class": "total_increasing",
@@ -1713,10 +1736,10 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     }
     seq = [10, 15, 20, 19, 30, 40, 39, 60, 70]
     with freeze_time(period0) as freezer:
-        four, eight, states = record_meter_states(
+        four, eight, states = await async_record_meter_states(
             hass, freezer, period0, "sensor.test1", attributes, seq
         )
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     hist = history.get_significant_states(
         hass,
         period0 - timedelta.resolution,
@@ -1728,15 +1751,15 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     )
 
     do_adhoc_statistics(hass, start=period0)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     do_adhoc_statistics(hass, start=period1)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     assert (
         "Entity sensor.test1 has state class total_increasing, but its state is not "
         "strictly increasing."
     ) not in caplog.text
     do_adhoc_statistics(hass, start=period2)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     state = states["sensor.test1"][6].state
     previous_state = float(states["sensor.test1"][5].state)
     last_updated = states["sensor.test1"][6].last_updated.isoformat()
@@ -1746,7 +1769,7 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
         f"last_updated set to {last_updated}. Please create a bug report at "
         "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
     ) in caplog.text
-    statistic_ids = list_statistic_ids(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -1797,17 +1820,17 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
-def test_compile_hourly_energy_statistics_unsupported(
-    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+async def test_compile_hourly_energy_statistics_unsupported(
+    recorder_mock: Recorder, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test compiling hourly statistics."""
     period0 = dt_util.utcnow()
     period0_end = period1 = period0 + timedelta(minutes=5)
     period1_end = period2 = period0 + timedelta(minutes=10)
     period2_end = period0 + timedelta(minutes=15)
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     sns1_attr = {
         "device_class": "energy",
         "state_class": "total",
@@ -1821,18 +1844,18 @@ def test_compile_hourly_energy_statistics_unsupported(
     seq3 = [0, 0, 5, 10, 30, 50, 60, 80, 90]
 
     with freeze_time(period0) as freezer:
-        four, eight, states = record_meter_states(
+        four, eight, states = await async_record_meter_states(
             hass, freezer, period0, "sensor.test1", sns1_attr, seq1
         )
-        _, _, _states = record_meter_states(
+        _, _, _states = await async_record_meter_states(
             hass, freezer, period0, "sensor.test2", sns2_attr, seq2
         )
         states = {**states, **_states}
-        _, _, _states = record_meter_states(
+        _, _, _states = await async_record_meter_states(
             hass, freezer, period0, "sensor.test3", sns3_attr, seq3
         )
     states = {**states, **_states}
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
 
     hist = history.get_significant_states(
         hass,
@@ -1845,12 +1868,12 @@ def test_compile_hourly_energy_statistics_unsupported(
     )
 
     do_adhoc_statistics(hass, start=period0)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     do_adhoc_statistics(hass, start=period1)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     do_adhoc_statistics(hass, start=period2)
-    wait_recording_done(hass)
-    statistic_ids = list_statistic_ids(hass)
+    await async_wait_recording_done(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -1901,17 +1924,17 @@ def test_compile_hourly_energy_statistics_unsupported(
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
-def test_compile_hourly_energy_statistics_multiple(
-    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+async def test_compile_hourly_energy_statistics_multiple(
+    recorder_mock: Recorder, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test compiling multiple hourly statistics."""
     period0 = dt_util.utcnow()
     period0_end = period1 = period0 + timedelta(minutes=5)
     period1_end = period2 = period0 + timedelta(minutes=10)
     period2_end = period0 + timedelta(minutes=15)
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     sns1_attr = {**ENERGY_SENSOR_ATTRIBUTES, "last_reset": None}
     sns2_attr = {**ENERGY_SENSOR_ATTRIBUTES, "last_reset": None}
     sns3_attr = {
@@ -1924,18 +1947,18 @@ def test_compile_hourly_energy_statistics_multiple(
     seq3 = [0, 0, 5, 10, 30, 50, 60, 80, 90]
 
     with freeze_time(period0) as freezer:
-        four, eight, states = record_meter_states(
+        four, eight, states = await async_record_meter_states(
             hass, freezer, period0, "sensor.test1", sns1_attr, seq1
         )
-        _, _, _states = record_meter_states(
+        _, _, _states = await async_record_meter_states(
             hass, freezer, period0, "sensor.test2", sns2_attr, seq2
         )
         states = {**states, **_states}
-        _, _, _states = record_meter_states(
+        _, _, _states = await async_record_meter_states(
             hass, freezer, period0, "sensor.test3", sns3_attr, seq3
         )
     states = {**states, **_states}
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     hist = history.get_significant_states(
         hass,
         period0 - timedelta.resolution,
@@ -1947,12 +1970,12 @@ def test_compile_hourly_energy_statistics_multiple(
     )
 
     do_adhoc_statistics(hass, start=period0)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     do_adhoc_statistics(hass, start=period1)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     do_adhoc_statistics(hass, start=period2)
-    wait_recording_done(hass)
-    statistic_ids = list_statistic_ids(hass)
+    await async_wait_recording_done(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -2111,8 +2134,9 @@ def test_compile_hourly_energy_statistics_multiple(
         ("weight", "oz", 30),
     ],
 )
-def test_compile_hourly_statistics_unchanged(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_compile_hourly_statistics_unchanged(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
@@ -2120,23 +2144,25 @@ def test_compile_hourly_statistics_unchanged(
 ) -> None:
     """Test compiling hourly statistics, with no changes during the hour."""
     zero = dt_util.utcnow()
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     attributes = {
         "device_class": device_class,
         "state_class": "measurement",
         "unit_of_measurement": state_unit,
     }
     with freeze_time(zero) as freezer:
-        four, states = record_states(hass, freezer, zero, "sensor.test1", attributes)
+        four, states = await async_record_states(
+            hass, freezer, zero, "sensor.test1", attributes
+        )
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
     )
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=four)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     stats = statistics_during_period(hass, four, period="5minute")
     assert stats == {
         "sensor.test1": [
@@ -2155,15 +2181,15 @@ def test_compile_hourly_statistics_unchanged(
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
-def test_compile_hourly_statistics_partially_unavailable(
-    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+async def test_compile_hourly_statistics_partially_unavailable(
+    recorder_mock: Recorder, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test compiling hourly statistics, with the sensor being partially unavailable."""
     zero = dt_util.utcnow()
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
-    four, states = record_states_partially_unavailable(
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
+    four, states = await async_record_states_partially_unavailable(
         hass, zero, "sensor.test1", TEMPERATURE_SENSOR_ATTRIBUTES
     )
     hist = history.get_significant_states(
@@ -2172,7 +2198,7 @@ def test_compile_hourly_statistics_partially_unavailable(
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=zero)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {
         "sensor.test1": [
@@ -2215,8 +2241,9 @@ def test_compile_hourly_statistics_partially_unavailable(
         ("weight", "oz", 30),
     ],
 )
-def test_compile_hourly_statistics_unavailable(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_compile_hourly_statistics_unavailable(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
@@ -2228,19 +2255,21 @@ def test_compile_hourly_statistics_unavailable(
     sensor.test2 should have statistics generated
     """
     zero = dt_util.utcnow()
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     attributes = {
         "device_class": device_class,
         "state_class": "measurement",
         "unit_of_measurement": state_unit,
     }
-    four, states = record_states_partially_unavailable(
+    four, states = await async_record_states_partially_unavailable(
         hass, zero, "sensor.test1", attributes
     )
     with freeze_time(zero) as freezer:
-        _, _states = record_states(hass, freezer, zero, "sensor.test2", attributes)
+        _, _states = await async_record_states(
+            hass, freezer, zero, "sensor.test2", attributes
+        )
     states = {**states, **_states}
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
@@ -2248,7 +2277,7 @@ def test_compile_hourly_statistics_unavailable(
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=four)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     stats = statistics_during_period(hass, four, period="5minute")
     assert stats == {
         "sensor.test2": [
@@ -2267,20 +2296,20 @@ def test_compile_hourly_statistics_unavailable(
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
-def test_compile_hourly_statistics_fails(
-    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+async def test_compile_hourly_statistics_fails(
+    recorder_mock: Recorder, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test compiling hourly statistics throws."""
     zero = dt_util.utcnow()
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     with patch(
         "homeassistant.components.sensor.recorder.compile_statistics",
         side_effect=Exception,
     ):
         do_adhoc_statistics(hass, start=zero)
-        wait_recording_done(hass)
+        await async_wait_recording_done(hass)
     assert "Error while processing event StatisticsTask" in caplog.text
 
 
@@ -2334,8 +2363,9 @@ def test_compile_hourly_statistics_fails(
         ("total", "weight", "oz", "oz", "oz", "mass", "sum"),
     ],
 )
-def test_list_statistic_ids(
-    hass_recorder: Callable[..., HomeAssistant],
+async def async_test_list_statistic_ids(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     state_class,
     device_class,
@@ -2346,17 +2376,17 @@ def test_list_statistic_ids(
     statistic_type,
 ) -> None:
     """Test listing future statistic ids."""
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     attributes = {
         "device_class": device_class,
         "last_reset": 0,
         "state_class": state_class,
         "unit_of_measurement": state_unit,
     }
-    hass.states.set("sensor.test1", 0, attributes=attributes)
-    statistic_ids = list_statistic_ids(hass)
+    hass.states.async_set("sensor.test1", 0, attributes=attributes)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -2370,7 +2400,7 @@ def test_list_statistic_ids(
         },
     ]
     for stat_type in ["mean", "sum", "dogs"]:
-        statistic_ids = list_statistic_ids(hass, statistic_type=stat_type)
+        statistic_ids = await async_list_statistic_ids(hass, statistic_type=stat_type)
         if statistic_type == stat_type:
             assert statistic_ids == [
                 {
@@ -2392,31 +2422,32 @@ def test_list_statistic_ids(
     "_attributes",
     [{**ENERGY_SENSOR_ATTRIBUTES, "last_reset": 0}, TEMPERATURE_SENSOR_ATTRIBUTES],
 )
-def test_list_statistic_ids_unsupported(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_list_statistic_ids_unsupported(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     _attributes,
 ) -> None:
     """Test listing future statistic ids for unsupported sensor."""
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     attributes = dict(_attributes)
-    hass.states.set("sensor.test1", 0, attributes=attributes)
+    hass.states.async_set("sensor.test1", 0, attributes=attributes)
     if "last_reset" in attributes:
         attributes.pop("unit_of_measurement")
-        hass.states.set("last_reset.test2", 0, attributes=attributes)
+        hass.states.async_set("last_reset.test2", 0, attributes=attributes)
     attributes = dict(_attributes)
     if "unit_of_measurement" in attributes:
         attributes["unit_of_measurement"] = "invalid"
-        hass.states.set("sensor.test3", 0, attributes=attributes)
+        hass.states.async_set("sensor.test3", 0, attributes=attributes)
         attributes.pop("unit_of_measurement")
-        hass.states.set("sensor.test4", 0, attributes=attributes)
+        hass.states.async_set("sensor.test4", 0, attributes=attributes)
     attributes = dict(_attributes)
     attributes["state_class"] = "invalid"
-    hass.states.set("sensor.test5", 0, attributes=attributes)
+    hass.states.async_set("sensor.test5", 0, attributes=attributes)
     attributes.pop("state_class")
-    hass.states.set("sensor.test6", 0, attributes=attributes)
+    hass.states.async_set("sensor.test6", 0, attributes=attributes)
 
 
 @pytest.mark.parametrize(
@@ -2433,8 +2464,9 @@ def test_list_statistic_ids_unsupported(
         (None, "m³", "m3", "volume", 13.050847, -10, 30),
     ],
 )
-def test_compile_hourly_statistics_changing_units_1(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_compile_hourly_statistics_changing_units_1(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
@@ -2449,22 +2481,24 @@ def test_compile_hourly_statistics_changing_units_1(
     This tests the case where the recorder cannot convert between the units.
     """
     zero = dt_util.utcnow()
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     attributes = {
         "device_class": device_class,
         "state_class": "measurement",
         "unit_of_measurement": state_unit,
     }
     with freeze_time(zero) as freezer:
-        four, states = record_states(hass, freezer, zero, "sensor.test1", attributes)
+        four, states = await async_record_states(
+            hass, freezer, zero, "sensor.test1", attributes
+        )
         attributes["unit_of_measurement"] = state_unit2
-        four, _states = record_states(
+        four, _states = await async_record_states(
             hass, freezer, zero + timedelta(minutes=5), "sensor.test1", attributes
         )
         states["sensor.test1"] += _states["sensor.test1"]
-        four, _states = record_states(
+        four, _states = await async_record_states(
             hass, freezer, zero + timedelta(minutes=10), "sensor.test1", attributes
         )
         states["sensor.test1"] += _states["sensor.test1"]
@@ -2474,9 +2508,9 @@ def test_compile_hourly_statistics_changing_units_1(
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=zero)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     assert "cannot be converted to the unit of previously" not in caplog.text
-    statistic_ids = list_statistic_ids(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -2506,12 +2540,12 @@ def test_compile_hourly_statistics_changing_units_1(
     }
 
     do_adhoc_statistics(hass, start=zero + timedelta(minutes=10))
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     assert (
         f"The unit of sensor.test1 ({state_unit2}) cannot be converted to the unit of "
         f"previously compiled statistics ({state_unit})" in caplog.text
     )
-    statistic_ids = list_statistic_ids(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -2557,8 +2591,9 @@ def test_compile_hourly_statistics_changing_units_1(
         (None, "dogs", "dogs", "dogs", None, 13.050847, -10, 30),
     ],
 )
-def test_compile_hourly_statistics_changing_units_2(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_compile_hourly_statistics_changing_units_2(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
@@ -2575,18 +2610,20 @@ def test_compile_hourly_statistics_changing_units_2(
     converter.
     """
     zero = dt_util.utcnow()
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     attributes = {
         "device_class": device_class,
         "state_class": "measurement",
         "unit_of_measurement": state_unit,
     }
     with freeze_time(zero) as freezer:
-        four, states = record_states(hass, freezer, zero, "sensor.test1", attributes)
+        four, states = await async_record_states(
+            hass, freezer, zero, "sensor.test1", attributes
+        )
         attributes["unit_of_measurement"] = "cats"
-        four, _states = record_states(
+        four, _states = await async_record_states(
             hass, freezer, zero + timedelta(minutes=5), "sensor.test1", attributes
         )
         states["sensor.test1"] += _states["sensor.test1"]
@@ -2596,10 +2633,10 @@ def test_compile_hourly_statistics_changing_units_2(
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=zero + timedelta(seconds=30 * 5))
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     assert "The unit of sensor.test1 is changing" in caplog.text
     assert "and matches the unit of already compiled statistics" not in caplog.text
-    statistic_ids = list_statistic_ids(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -2633,8 +2670,9 @@ def test_compile_hourly_statistics_changing_units_2(
         (None, "dogs", "dogs", "dogs", None, 13.050847, -10, 30),
     ],
 )
-def test_compile_hourly_statistics_changing_units_3(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_compile_hourly_statistics_changing_units_3(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
@@ -2651,22 +2689,24 @@ def test_compile_hourly_statistics_changing_units_3(
     converter.
     """
     zero = dt_util.utcnow()
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     attributes = {
         "device_class": device_class,
         "state_class": "measurement",
         "unit_of_measurement": state_unit,
     }
     with freeze_time(zero) as freezer:
-        four, states = record_states(hass, freezer, zero, "sensor.test1", attributes)
-        four, _states = record_states(
+        four, states = await async_record_states(
+            hass, freezer, zero, "sensor.test1", attributes
+        )
+        four, _states = await async_record_states(
             hass, freezer, zero + timedelta(minutes=5), "sensor.test1", attributes
         )
         states["sensor.test1"] += _states["sensor.test1"]
         attributes["unit_of_measurement"] = "cats"
-        four, _states = record_states(
+        four, _states = await async_record_states(
             hass, freezer, zero + timedelta(minutes=10), "sensor.test1", attributes
         )
         states["sensor.test1"] += _states["sensor.test1"]
@@ -2676,9 +2716,9 @@ def test_compile_hourly_statistics_changing_units_3(
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=zero)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     assert "does not match the unit of already compiled" not in caplog.text
-    statistic_ids = list_statistic_ids(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -2708,12 +2748,12 @@ def test_compile_hourly_statistics_changing_units_3(
     }
 
     do_adhoc_statistics(hass, start=zero + timedelta(minutes=10))
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     assert "The unit of sensor.test1 is changing" in caplog.text
     assert (
         f"matches the unit of already compiled statistics ({state_unit})" in caplog.text
     )
-    statistic_ids = list_statistic_ids(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -2753,8 +2793,9 @@ def test_compile_hourly_statistics_changing_units_3(
         ("kW", "W", "power", 13.050847, -10, 30, 1000),
     ],
 )
-def test_compile_hourly_statistics_convert_units_1(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_compile_hourly_statistics_convert_units_1(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     state_unit_1,
     state_unit_2,
@@ -2769,17 +2810,19 @@ def test_compile_hourly_statistics_convert_units_1(
     This tests the case where the recorder can convert between the units.
     """
     zero = dt_util.utcnow()
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     attributes = {
         "device_class": None,
         "state_class": "measurement",
         "unit_of_measurement": state_unit_1,
     }
     with freeze_time(zero) as freezer:
-        four, states = record_states(hass, freezer, zero, "sensor.test1", attributes)
-        four, _states = record_states(
+        four, states = await async_record_states(
+            hass, freezer, zero, "sensor.test1", attributes
+        )
+        four, _states = await async_record_states(
             hass,
             freezer,
             zero + timedelta(minutes=5),
@@ -2790,9 +2833,9 @@ def test_compile_hourly_statistics_convert_units_1(
     states["sensor.test1"] += _states["sensor.test1"]
 
     do_adhoc_statistics(hass, start=zero)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     assert "does not match the unit of already compiled" not in caplog.text
-    statistic_ids = list_statistic_ids(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -2823,7 +2866,7 @@ def test_compile_hourly_statistics_convert_units_1(
 
     attributes["unit_of_measurement"] = state_unit_2
     with freeze_time(four) as freezer:
-        four, _states = record_states(
+        four, _states = await async_record_states(
             hass, freezer, zero + timedelta(minutes=10), "sensor.test1", attributes
         )
     states["sensor.test1"] += _states["sensor.test1"]
@@ -2832,13 +2875,13 @@ def test_compile_hourly_statistics_convert_units_1(
     )
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
     do_adhoc_statistics(hass, start=zero + timedelta(minutes=10))
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     assert "The unit of sensor.test1 is changing" not in caplog.text
     assert (
         f"matches the unit of already compiled statistics ({state_unit_1})"
         not in caplog.text
     )
-    statistic_ids = list_statistic_ids(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -2909,8 +2952,9 @@ def test_compile_hourly_statistics_convert_units_1(
         (None, "m3", "m³", None, "volume", 13.050847, 13.333333, -10, 30),
     ],
 )
-def test_compile_hourly_statistics_equivalent_units_1(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_compile_hourly_statistics_equivalent_units_1(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
@@ -2924,22 +2968,24 @@ def test_compile_hourly_statistics_equivalent_units_1(
 ) -> None:
     """Test compiling hourly statistics where units change from one hour to the next."""
     zero = dt_util.utcnow()
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     attributes = {
         "device_class": device_class,
         "state_class": "measurement",
         "unit_of_measurement": state_unit,
     }
     with freeze_time(zero) as freezer:
-        four, states = record_states(hass, freezer, zero, "sensor.test1", attributes)
+        four, states = await async_record_states(
+            hass, freezer, zero, "sensor.test1", attributes
+        )
         attributes["unit_of_measurement"] = state_unit2
-        four, _states = record_states(
+        four, _states = await async_record_states(
             hass, freezer, zero + timedelta(minutes=5), "sensor.test1", attributes
         )
         states["sensor.test1"] += _states["sensor.test1"]
-        four, _states = record_states(
+        four, _states = await async_record_states(
             hass, freezer, zero + timedelta(minutes=10), "sensor.test1", attributes
         )
     states["sensor.test1"] += _states["sensor.test1"]
@@ -2949,9 +2995,9 @@ def test_compile_hourly_statistics_equivalent_units_1(
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=zero)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     assert "cannot be converted to the unit of previously" not in caplog.text
-    statistic_ids = list_statistic_ids(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -2981,8 +3027,8 @@ def test_compile_hourly_statistics_equivalent_units_1(
     }
 
     do_adhoc_statistics(hass, start=zero + timedelta(minutes=10))
-    wait_recording_done(hass)
-    statistic_ids = list_statistic_ids(hass)
+    await async_wait_recording_done(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -3033,8 +3079,9 @@ def test_compile_hourly_statistics_equivalent_units_1(
         (None, "m3", "m³", None, 13.333333, -10, 30),
     ],
 )
-def test_compile_hourly_statistics_equivalent_units_2(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_compile_hourly_statistics_equivalent_units_2(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
@@ -3046,18 +3093,20 @@ def test_compile_hourly_statistics_equivalent_units_2(
 ) -> None:
     """Test compiling hourly statistics where units change during an hour."""
     zero = dt_util.utcnow()
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     attributes = {
         "device_class": device_class,
         "state_class": "measurement",
         "unit_of_measurement": state_unit,
     }
     with freeze_time(zero) as freezer:
-        four, states = record_states(hass, freezer, zero, "sensor.test1", attributes)
+        four, states = await async_record_states(
+            hass, freezer, zero, "sensor.test1", attributes
+        )
         attributes["unit_of_measurement"] = state_unit2
-        four, _states = record_states(
+        four, _states = await async_record_states(
             hass, freezer, zero + timedelta(minutes=5), "sensor.test1", attributes
         )
     states["sensor.test1"] += _states["sensor.test1"]
@@ -3067,10 +3116,10 @@ def test_compile_hourly_statistics_equivalent_units_2(
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=zero + timedelta(seconds=30 * 5))
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     assert "The unit of sensor.test1 is changing" not in caplog.text
     assert "and matches the unit of already compiled statistics" not in caplog.text
-    statistic_ids = list_statistic_ids(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -3119,8 +3168,9 @@ def test_compile_hourly_statistics_equivalent_units_2(
         ("power", "kW", "kW", "power", 13.050847, 13.333333, -10, 30),
     ],
 )
-def test_compile_hourly_statistics_changing_device_class_1(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_compile_hourly_statistics_changing_device_class_1(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
@@ -3136,9 +3186,9 @@ def test_compile_hourly_statistics_changing_device_class_1(
     Device class is ignored, meaning changing device class should not influence the statistics.
     """
     zero = dt_util.utcnow()
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
 
     # Record some states for an initial period, the entity has no device class
     attributes = {
@@ -3146,12 +3196,14 @@ def test_compile_hourly_statistics_changing_device_class_1(
         "unit_of_measurement": state_unit,
     }
     with freeze_time(zero) as freezer:
-        four, states = record_states(hass, freezer, zero, "sensor.test1", attributes)
+        four, states = await async_record_states(
+            hass, freezer, zero, "sensor.test1", attributes
+        )
 
     do_adhoc_statistics(hass, start=zero)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     assert "does not match the unit of already compiled" not in caplog.text
-    statistic_ids = list_statistic_ids(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -3183,11 +3235,11 @@ def test_compile_hourly_statistics_changing_device_class_1(
     # Update device class and record additional states in the original UoM
     attributes["device_class"] = device_class
     with freeze_time(zero) as freezer:
-        four, _states = record_states(
+        four, _states = await async_record_states(
             hass, freezer, zero + timedelta(minutes=5), "sensor.test1", attributes
         )
         states["sensor.test1"] += _states["sensor.test1"]
-        four, _states = record_states(
+        four, _states = await async_record_states(
             hass, freezer, zero + timedelta(minutes=10), "sensor.test1", attributes
         )
     states["sensor.test1"] += _states["sensor.test1"]
@@ -3198,8 +3250,8 @@ def test_compile_hourly_statistics_changing_device_class_1(
 
     # Run statistics again, additional statistics is generated
     do_adhoc_statistics(hass, start=zero + timedelta(minutes=10))
-    wait_recording_done(hass)
-    statistic_ids = list_statistic_ids(hass)
+    await async_wait_recording_done(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -3241,11 +3293,11 @@ def test_compile_hourly_statistics_changing_device_class_1(
     # Update device class and record additional states in a different UoM
     attributes["unit_of_measurement"] = statistic_unit
     with freeze_time(zero) as freezer:
-        four, _states = record_states(
+        four, _states = await async_record_states(
             hass, freezer, zero + timedelta(minutes=15), "sensor.test1", attributes
         )
         states["sensor.test1"] += _states["sensor.test1"]
-        four, _states = record_states(
+        four, _states = await async_record_states(
             hass, freezer, zero + timedelta(minutes=20), "sensor.test1", attributes
         )
     states["sensor.test1"] += _states["sensor.test1"]
@@ -3256,8 +3308,8 @@ def test_compile_hourly_statistics_changing_device_class_1(
 
     # Run statistics again, additional statistics is generated
     do_adhoc_statistics(hass, start=zero + timedelta(minutes=20))
-    wait_recording_done(hass)
-    statistic_ids = list_statistic_ids(hass)
+    await async_wait_recording_done(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -3324,8 +3376,9 @@ def test_compile_hourly_statistics_changing_device_class_1(
         ("power", "kW", "kW", "kW", "power", 13.050847, 13.333333, -10, 30),
     ],
 )
-def test_compile_hourly_statistics_changing_device_class_2(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_compile_hourly_statistics_changing_device_class_2(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
@@ -3342,9 +3395,9 @@ def test_compile_hourly_statistics_changing_device_class_2(
     Device class is ignored, meaning changing device class should not influence the statistics.
     """
     zero = dt_util.utcnow()
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
 
     # Record some states for an initial period, the entity has a device class
     attributes = {
@@ -3353,12 +3406,14 @@ def test_compile_hourly_statistics_changing_device_class_2(
         "unit_of_measurement": state_unit,
     }
     with freeze_time(zero) as freezer:
-        four, states = record_states(hass, freezer, zero, "sensor.test1", attributes)
+        four, states = await async_record_states(
+            hass, freezer, zero, "sensor.test1", attributes
+        )
 
     do_adhoc_statistics(hass, start=zero)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     assert "does not match the unit of already compiled" not in caplog.text
-    statistic_ids = list_statistic_ids(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -3390,11 +3445,11 @@ def test_compile_hourly_statistics_changing_device_class_2(
     # Remove device class and record additional states
     attributes.pop("device_class")
     with freeze_time(zero) as freezer:
-        four, _states = record_states(
+        four, _states = await async_record_states(
             hass, freezer, zero + timedelta(minutes=5), "sensor.test1", attributes
         )
         states["sensor.test1"] += _states["sensor.test1"]
-        four, _states = record_states(
+        four, _states = await async_record_states(
             hass, freezer, zero + timedelta(minutes=10), "sensor.test1", attributes
         )
     states["sensor.test1"] += _states["sensor.test1"]
@@ -3405,8 +3460,8 @@ def test_compile_hourly_statistics_changing_device_class_2(
 
     # Run statistics again, additional statistics is generated
     do_adhoc_statistics(hass, start=zero + timedelta(minutes=10))
-    wait_recording_done(hass)
-    statistic_ids = list_statistic_ids(hass)
+    await async_wait_recording_done(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -3462,8 +3517,9 @@ def test_compile_hourly_statistics_changing_device_class_2(
         (None, None, None, None, "unitless", 13.050847, -10, 30),
     ],
 )
-def test_compile_hourly_statistics_changing_state_class(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_compile_hourly_statistics_changing_state_class(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
@@ -3478,9 +3534,9 @@ def test_compile_hourly_statistics_changing_state_class(
     period0 = dt_util.utcnow()
     period0_end = period1 = period0 + timedelta(minutes=5)
     period1_end = period0 + timedelta(minutes=10)
-    hass = hass_recorder()
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     attributes_1 = {
         "device_class": device_class,
         "state_class": "measurement",
@@ -3492,12 +3548,12 @@ def test_compile_hourly_statistics_changing_state_class(
         "unit_of_measurement": state_unit,
     }
     with freeze_time(period0) as freezer:
-        four, states = record_states(
+        four, states = await async_record_states(
             hass, freezer, period0, "sensor.test1", attributes_1
         )
     do_adhoc_statistics(hass, start=period0)
-    wait_recording_done(hass)
-    statistic_ids = list_statistic_ids(hass)
+    await async_wait_recording_done(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -3527,7 +3583,7 @@ def test_compile_hourly_statistics_changing_state_class(
 
     # Add more states, with changed state class
     with freeze_time(period1) as freezer:
-        four, _states = record_states(
+        four, _states = await async_record_states(
             hass, freezer, period1, "sensor.test1", attributes_2
         )
     states["sensor.test1"] += _states["sensor.test1"]
@@ -3537,8 +3593,8 @@ def test_compile_hourly_statistics_changing_state_class(
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=period1)
-    wait_recording_done(hass)
-    statistic_ids = list_statistic_ids(hass)
+    await async_wait_recording_done(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -3595,22 +3651,21 @@ def test_compile_hourly_statistics_changing_state_class(
 
 
 @pytest.mark.timeout(25)
-def test_compile_statistics_hourly_daily_monthly_summary(
-    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+@pytest.mark.freeze_time("2021-09-01 05:00")  # August 31st, 23:00 local time
+async def test_compile_statistics_hourly_daily_monthly_summary(
+    freezer: FrozenDateTimeFactory,
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test compiling hourly statistics + monthly and daily summary."""
+    dt_util.set_default_time_zone(dt_util.get_time_zone("America/Regina"))
+
     zero = dt_util.utcnow()
-    # August 31st, 23:00 local time
-    zero = zero.replace(
-        year=2021, month=9, day=1, hour=5, minute=0, second=0, microsecond=0
-    )
-    with freeze_time(zero):
-        hass = hass_recorder()
-        # Remove this after dropping the use of the hass_recorder fixture
-        hass.config.set_time_zone("America/Regina")
     instance = get_instance(hass)
-    setup_component(hass, "sensor", {})
-    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     attributes = {
         "device_class": None,
         "state_class": "measurement",
@@ -3673,7 +3728,7 @@ def test_compile_statistics_hourly_daily_monthly_summary(
         for i in range(24):
             seq = [-10, 15, 30]
             # test1 has same value in every period
-            four, _states = record_states(
+            four, _states = await async_record_states(
                 hass, freezer, start, "sensor.test1", attributes, seq
             )
             states["sensor.test1"] += _states["sensor.test1"]
@@ -3686,7 +3741,7 @@ def test_compile_statistics_hourly_daily_monthly_summary(
             last_states["sensor.test1"] = seq[-1]
             # test2 values change: min/max at the last state
             seq = [-10 * (i + 1), 15 * (i + 1), 30 * (i + 1)]
-            four, _states = record_states(
+            four, _states = await async_record_states(
                 hass, freezer, start, "sensor.test2", attributes, seq
             )
             states["sensor.test2"] += _states["sensor.test2"]
@@ -3699,7 +3754,7 @@ def test_compile_statistics_hourly_daily_monthly_summary(
             last_states["sensor.test2"] = seq[-1]
             # test3 values change: min/max at the first state
             seq = [-10 * (23 - i + 1), 15 * (23 - i + 1), 30 * (23 - i + 1)]
-            four, _states = record_states(
+            four, _states = await async_record_states(
                 hass, freezer, start, "sensor.test3", attributes, seq
             )
             states["sensor.test3"] += _states["sensor.test3"]
@@ -3714,7 +3769,7 @@ def test_compile_statistics_hourly_daily_monthly_summary(
             seq = [i, i + 0.5, i + 0.75]
             start_meter = start
             for j in range(len(seq)):
-                _states = record_meter_state(
+                _states = await async_record_meter_state(
                     hass,
                     freezer,
                     start_meter,
@@ -3740,16 +3795,16 @@ def test_compile_statistics_hourly_daily_monthly_summary(
         significant_changes_only=False,
     )
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
 
     # Generate 5-minute statistics for two hours
     start = zero
     for _ in range(24):
         do_adhoc_statistics(hass, start=start)
-        wait_recording_done(hass)
+        await async_wait_recording_done(hass)
         start += timedelta(minutes=5)
 
-    statistic_ids = list_statistic_ids(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
@@ -3801,7 +3856,7 @@ def test_compile_statistics_hourly_daily_monthly_summary(
     instance.async_adjust_statistics(
         "sensor.test4", sum_adjustement_start, sum_adjustment, "EUR"
     )
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
 
     stats = statistics_during_period(hass, zero, period="5minute")
     expected_stats = {
@@ -4026,7 +4081,7 @@ def test_compile_statistics_hourly_daily_monthly_summary(
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
-def record_states(
+async def async_record_states(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     zero: datetime,
@@ -4042,10 +4097,10 @@ def record_states(
     if seq is None:
         seq = [-10, 15, 30]
 
-    def set_state(entity_id, state, **kwargs):
+    async def set_state(entity_id, state, **kwargs):
         """Set the state."""
-        hass.states.set(entity_id, state, **kwargs)
-        wait_recording_done(hass)
+        hass.states.async_set(entity_id, state, **kwargs)
+        await async_wait_recording_done(hass)
         return hass.states.get(entity_id)
 
     one = zero + timedelta(seconds=1 * 5)
@@ -4055,13 +4110,19 @@ def record_states(
 
     states = {entity_id: []}
     freezer.move_to(one)
-    states[entity_id].append(set_state(entity_id, str(seq[0]), attributes=attributes))
+    states[entity_id].append(
+        await set_state(entity_id, str(seq[0]), attributes=attributes)
+    )
 
     freezer.move_to(two)
-    states[entity_id].append(set_state(entity_id, str(seq[1]), attributes=attributes))
+    states[entity_id].append(
+        await set_state(entity_id, str(seq[1]), attributes=attributes)
+    )
 
     freezer.move_to(three)
-    states[entity_id].append(set_state(entity_id, str(seq[2]), attributes=attributes))
+    states[entity_id].append(
+        await set_state(entity_id, str(seq[2]), attributes=attributes)
+    )
 
     return four, states
 
@@ -5049,7 +5110,7 @@ async def test_validate_statistics_other_domain(
     await assert_validation_result(client, {})
 
 
-def record_meter_states(
+async def async_record_meter_states(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     zero: datetime,
@@ -5064,7 +5125,7 @@ def record_meter_states(
 
     def set_state(entity_id, state, **kwargs):
         """Set the state."""
-        hass.states.set(entity_id, state, **kwargs)
+        hass.states.async_set(entity_id, state, **kwargs)
         return hass.states.get(entity_id)
 
     one = zero + timedelta(seconds=15 * 5)  # 00:01:15
@@ -5116,7 +5177,7 @@ def record_meter_states(
     return four, eight, states
 
 
-def record_meter_state(
+async def async_record_meter_state(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     zero: datetime,
@@ -5129,29 +5190,29 @@ def record_meter_state(
     We inject a state update for meter sensor.
     """
 
-    def set_state(entity_id, state, **kwargs):
+    async def set_state(entity_id, state, **kwargs):
         """Set the state."""
-        hass.states.set(entity_id, state, **kwargs)
-        wait_recording_done(hass)
+        hass.states.async_set(entity_id, state, **kwargs)
+        await async_wait_recording_done(hass)
         return hass.states.get(entity_id)
 
     states = {entity_id: []}
     freezer.move_to(zero)
-    states[entity_id].append(set_state(entity_id, seq[0], attributes=attributes))
+    states[entity_id].append(await set_state(entity_id, seq[0], attributes=attributes))
 
     return states
 
 
-def record_states_partially_unavailable(hass, zero, entity_id, attributes):
+async def async_record_states_partially_unavailable(hass, zero, entity_id, attributes):
     """Record some test states.
 
     We inject a bunch of state updates temperature sensors.
     """
 
-    def set_state(entity_id, state, **kwargs):
+    async def set_state(entity_id, state, **kwargs):
         """Set the state."""
-        hass.states.set(entity_id, state, **kwargs)
-        wait_recording_done(hass)
+        hass.states.async_set(entity_id, state, **kwargs)
+        await async_wait_recording_done(hass)
         return hass.states.get(entity_id)
 
     one = zero + timedelta(seconds=1 * 5)
@@ -5161,14 +5222,18 @@ def record_states_partially_unavailable(hass, zero, entity_id, attributes):
 
     states = {entity_id: []}
     with freeze_time(one) as freezer:
-        states[entity_id].append(set_state(entity_id, "10", attributes=attributes))
+        states[entity_id].append(
+            await set_state(entity_id, "10", attributes=attributes)
+        )
 
         freezer.move_to(two)
-        states[entity_id].append(set_state(entity_id, "25", attributes=attributes))
+        states[entity_id].append(
+            await set_state(entity_id, "25", attributes=attributes)
+        )
 
         freezer.move_to(three)
         states[entity_id].append(
-            set_state(entity_id, STATE_UNAVAILABLE, attributes=attributes)
+            await set_state(entity_id, STATE_UNAVAILABLE, attributes=attributes)
         )
 
     return four, states
