@@ -73,7 +73,7 @@ async def async_setup_entry(
     except AdGuardHomeConnectionError as exception:
         raise ConfigEntryNotReady from exception
 
-    entry.shared_data = AdGuardData(adguard, version)
+    entry.runtime_data = AdGuardData(adguard, version)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

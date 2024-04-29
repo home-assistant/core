@@ -83,7 +83,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AdGuard Home switch based on a config entry."""
-    data = entry.shared_data
+    data = entry.runtime_data
 
     async_add_entities(
         [AdGuardHomeSwitch(data, entry, description) for description in SWITCHES],

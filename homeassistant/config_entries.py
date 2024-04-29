@@ -275,7 +275,7 @@ class ConfigEntry(Generic[_DataT]):
     domain: str
     title: str
     data: MappingProxyType[str, Any]
-    shared_data: _DataT
+    runtime_data: _DataT
     options: MappingProxyType[str, Any]
     unique_id: str | None
     state: ConfigEntryState
