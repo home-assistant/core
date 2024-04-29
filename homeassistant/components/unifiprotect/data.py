@@ -269,7 +269,12 @@ class ProtectData:
         this will be a no-op. If the websocket is disconnected,
         this will trigger a reconnect and refresh.
         """
-        self._hass.async_create_task(self.async_refresh(), eager_start=True)
+        self._entry.async_create_background_task(
+            self._hass,
+            self.async_refresh(),
+            name=f"{DOMAIN} {self._entry.title} refresh",
+            eager_start=True,
+        )
 
     @callback
     def async_subscribe_device_id(

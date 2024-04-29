@@ -1119,9 +1119,7 @@ def test_daily_statistics_sum(
     timezone,
 ) -> None:
     """Test daily statistics."""
-    dt_util.set_default_time_zone(dt_util.get_time_zone(timezone))
-
-    hass = hass_recorder()
+    hass = hass_recorder(timezone=timezone)
     wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
@@ -1291,8 +1289,6 @@ def test_daily_statistics_sum(
     )
     assert stats == {}
 
-    dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
-
 
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
@@ -1302,9 +1298,7 @@ def test_weekly_statistics_mean(
     timezone,
 ) -> None:
     """Test weekly statistics."""
-    dt_util.set_default_time_zone(dt_util.get_time_zone(timezone))
-
-    hass = hass_recorder()
+    hass = hass_recorder(timezone=timezone)
     wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
@@ -1429,8 +1423,6 @@ def test_weekly_statistics_mean(
     )
     assert stats == {}
 
-    dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
-
 
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
@@ -1440,9 +1432,7 @@ def test_weekly_statistics_sum(
     timezone,
 ) -> None:
     """Test weekly statistics."""
-    dt_util.set_default_time_zone(dt_util.get_time_zone(timezone))
-
-    hass = hass_recorder()
+    hass = hass_recorder(timezone=timezone)
     wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
@@ -1612,8 +1602,6 @@ def test_weekly_statistics_sum(
     )
     assert stats == {}
 
-    dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
-
 
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
@@ -1623,9 +1611,7 @@ def test_monthly_statistics_sum(
     timezone,
 ) -> None:
     """Test monthly statistics."""
-    dt_util.set_default_time_zone(dt_util.get_time_zone(timezone))
-
-    hass = hass_recorder()
+    hass = hass_recorder(timezone=timezone)
     wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
@@ -1851,8 +1837,6 @@ def test_monthly_statistics_sum(
     )
     assert stats == {}
 
-    dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
-
 
 def test_cache_key_for_generate_statistics_during_period_stmt() -> None:
     """Test cache key for _generate_statistics_during_period_stmt."""
@@ -1946,9 +1930,7 @@ def test_change(
     timezone,
 ) -> None:
     """Test deriving change from sum statistic."""
-    dt_util.set_default_time_zone(dt_util.get_time_zone(timezone))
-
-    hass = hass_recorder()
+    hass = hass_recorder(timezone=timezone)
     wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
@@ -2273,8 +2255,6 @@ def test_change(
     )
     assert stats == {}
 
-    dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
-
 
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
@@ -2288,9 +2268,7 @@ def test_change_with_none(
     This tests the behavior when some record has None sum. The calculated change
     is not expected to be correct, but we should not raise on this error.
     """
-    dt_util.set_default_time_zone(dt_util.get_time_zone(timezone))
-
-    hass = hass_recorder()
+    hass = hass_recorder(timezone=timezone)
     wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
@@ -2502,5 +2480,3 @@ def test_change_with_none(
         types={"change"},
     )
     assert stats == {}
-
-    dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))

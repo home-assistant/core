@@ -365,13 +365,7 @@ class CloudPreferences:
     @property
     def strict_connection(self) -> http.const.StrictConnectionMode:
         """Return the strict connection mode."""
-        mode = self._prefs.get(
-            PREF_STRICT_CONNECTION, http.const.StrictConnectionMode.DISABLED
-        )
-
-        if not isinstance(mode, http.const.StrictConnectionMode):
-            mode = http.const.StrictConnectionMode(mode)
-        return mode  # type: ignore[no-any-return]
+        return http.const.StrictConnectionMode.DISABLED
 
     async def get_cloud_user(self) -> str:
         """Return ID of Home Assistant Cloud system user."""
@@ -430,5 +424,5 @@ class CloudPreferences:
             PREF_REMOTE_DOMAIN: None,
             PREF_REMOTE_ALLOW_REMOTE_ENABLE: True,
             PREF_USERNAME: username,
-            PREF_STRICT_CONNECTION: http.const.StrictConnectionMode.DISABLED,
+            PREF_STRICT_CONNECTION: None,
         }
