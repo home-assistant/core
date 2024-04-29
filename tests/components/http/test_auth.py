@@ -26,11 +26,11 @@ from homeassistant.auth.session import SESSION_ID, TEMP_TIMEOUT
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_HASS
 from homeassistant.components.http.auth import (
+    _STRICT_CONNECTION_GUARD_PAGE,
     CONTENT_USER_NAME,
     DATA_SIGN_SECRET,
     SIGN_QUERY_PARAM,
     STORAGE_KEY,
-    STRICT_CONNECTION_GUARD_PAGE,
     async_setup_auth,
     async_sign_path,
     async_user_not_allowed_do_auth,
@@ -886,7 +886,7 @@ async def _guard_page_unauthorized_request(
     assert req.status == HTTPStatus.IM_A_TEAPOT
 
     def read_guard_page() -> str:
-        with open(STRICT_CONNECTION_GUARD_PAGE, encoding="utf-8") as file:
+        with open(_STRICT_CONNECTION_GUARD_PAGE, encoding="utf-8") as file:
             return file.read()
 
     assert await req.text() == await hass.async_add_executor_job(read_guard_page)

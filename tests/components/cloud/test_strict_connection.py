@@ -16,12 +16,9 @@ from yarl import URL
 from homeassistant.auth.models import RefreshToken
 from homeassistant.auth.session import SESSION_ID, TEMP_TIMEOUT
 from homeassistant.components.cloud.const import PREF_STRICT_CONNECTION
+from homeassistant.components.cloud.util import _STRICT_CONNECTION_GUARD_PAGE
 from homeassistant.components.http import KEY_HASS
-from homeassistant.components.http.auth import (
-    STRICT_CONNECTION_GUARD_PAGE,
-    async_setup_auth,
-    async_sign_path,
-)
+from homeassistant.components.http.auth import async_setup_auth, async_sign_path
 from homeassistant.components.http.const import KEY_AUTHENTICATED, StrictConnectionMode
 from homeassistant.components.http.session import COOKIE_NAME, PREFIXED_COOKIE_NAME
 from homeassistant.core import HomeAssistant
@@ -220,7 +217,7 @@ async def _guard_page_unauthorized_request(
     assert req.status == HTTPStatus.IM_A_TEAPOT
 
     def read_guard_page() -> str:
-        with open(STRICT_CONNECTION_GUARD_PAGE, encoding="utf-8") as file:
+        with open(_STRICT_CONNECTION_GUARD_PAGE, encoding="utf-8") as file:
             return file.read()
 
     assert await req.text() == await hass.async_add_executor_job(read_guard_page)
