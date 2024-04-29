@@ -24,6 +24,7 @@
     'context': <ANY>,
     'entity_id': 'climate.device_name',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'fan_only',
   })

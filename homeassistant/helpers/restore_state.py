@@ -1,4 +1,5 @@
 """Support for restoring entity states on startup."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -72,12 +73,11 @@ class StoredState:
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the stored state to be JSON serialized."""
-        result = {
+        return {
             "state": self.state.json_fragment,
             "extra_data": self.extra_data.as_dict() if self.extra_data else None,
             "last_seen": self.last_seen,
         }
-        return result
 
     @classmethod
     def from_dict(cls, json_dict: dict) -> Self:
@@ -143,7 +143,8 @@ class RestoreStateData:
         """Set up up the instance of this data helper."""
         await self.async_load()
 
-        async def hass_start(hass: HomeAssistant) -> None:
+        @callback
+        def hass_start(hass: HomeAssistant) -> None:
             """Start the restore state task."""
             self.async_setup_dump()
 
@@ -235,7 +236,9 @@ class RestoreStateData:
         # Dump the initial states now. This helps minimize the risk of having
         # old states loaded by overwriting the last states once Home Assistant
         # has started and the old states have been read.
-        self.hass.async_create_task(_async_dump_states(), "RestoreStateData dump")
+        self.hass.async_create_task_internal(
+            _async_dump_states(), "RestoreStateData dump"
+        )
 
         # Dump states periodically
         cancel_interval = async_track_time_interval(

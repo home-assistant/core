@@ -1,4 +1,5 @@
 """Tests for Tomorrow.io weather entity."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -22,17 +23,6 @@ from homeassistant.components.tomorrowio.const import (
 )
 from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
-    ATTR_FORECAST,
-    ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_DEW_POINT,
-    ATTR_FORECAST_HUMIDITY,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
-    ATTR_FORECAST_TIME,
-    ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_OZONE,
     ATTR_WEATHER_PRECIPITATION_UNIT,
@@ -67,9 +57,7 @@ def _enable_entity(hass: HomeAssistant, entity_name: str) -> None:
     """Enable disabled entity."""
     ent_reg = async_get(hass)
     entry = ent_reg.async_get(entity_name)
-    updated_entry = ent_reg.async_update_entity(
-        entry.entity_id, **{"disabled_by": None}
-    )
+    updated_entry = ent_reg.async_update_entity(entry.entity_id, disabled_by=None)
     assert updated_entry != entry
     assert updated_entry.disabled is False
 
@@ -217,19 +205,6 @@ async def test_v4_weather(hass: HomeAssistant, tomorrowio_config_entry_update) -
 
     assert weather_state.state == ATTR_CONDITION_SUNNY
     assert weather_state.attributes[ATTR_ATTRIBUTION] == ATTRIBUTION
-    assert len(weather_state.attributes[ATTR_FORECAST]) == 14
-    assert weather_state.attributes[ATTR_FORECAST][0] == {
-        ATTR_FORECAST_CONDITION: ATTR_CONDITION_SUNNY,
-        ATTR_FORECAST_TIME: "2021-03-07T11:00:00+00:00",
-        ATTR_FORECAST_PRECIPITATION: 0,
-        ATTR_FORECAST_PRECIPITATION_PROBABILITY: 0,
-        ATTR_FORECAST_TEMP: 45.9,
-        ATTR_FORECAST_TEMP_LOW: 26.1,
-        ATTR_FORECAST_DEW_POINT: 12.8,
-        ATTR_FORECAST_HUMIDITY: 58,
-        ATTR_FORECAST_WIND_BEARING: 239.6,
-        ATTR_FORECAST_WIND_SPEED: 34.16,  # 9.49 m/s -> km/h
-    }
     assert weather_state.attributes[ATTR_FRIENDLY_NAME] == "Tomorrow.io Daily"
     assert weather_state.attributes[ATTR_WEATHER_HUMIDITY] == 23
     assert weather_state.attributes[ATTR_WEATHER_OZONE] == 46.53
@@ -250,19 +225,6 @@ async def test_v4_weather_legacy_entities(hass: HomeAssistant) -> None:
     weather_state = await _setup_legacy(hass, API_V4_ENTRY_DATA)
     assert weather_state.state == ATTR_CONDITION_SUNNY
     assert weather_state.attributes[ATTR_ATTRIBUTION] == ATTRIBUTION
-    assert len(weather_state.attributes[ATTR_FORECAST]) == 14
-    assert weather_state.attributes[ATTR_FORECAST][0] == {
-        ATTR_FORECAST_CONDITION: ATTR_CONDITION_SUNNY,
-        ATTR_FORECAST_TIME: "2021-03-07T11:00:00+00:00",
-        ATTR_FORECAST_DEW_POINT: 12.8,
-        ATTR_FORECAST_HUMIDITY: 58,
-        ATTR_FORECAST_PRECIPITATION: 0,
-        ATTR_FORECAST_PRECIPITATION_PROBABILITY: 0,
-        ATTR_FORECAST_TEMP: 45.9,
-        ATTR_FORECAST_TEMP_LOW: 26.1,
-        ATTR_FORECAST_WIND_BEARING: 239.6,
-        ATTR_FORECAST_WIND_SPEED: 34.16,  # 9.49 m/s -> km/h
-    }
     assert weather_state.attributes[ATTR_FRIENDLY_NAME] == "Tomorrow.io Daily"
     assert weather_state.attributes[ATTR_WEATHER_HUMIDITY] == 23
     assert weather_state.attributes[ATTR_WEATHER_OZONE] == 46.53

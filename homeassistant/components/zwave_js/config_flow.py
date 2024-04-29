@@ -1,4 +1,5 @@
 """Config flow for Z-Wave JS integration."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -34,7 +35,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import AbortFlow, BaseFlowManager
+from homeassistant.data_entry_flow import AbortFlow, FlowManager
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -182,7 +183,7 @@ class BaseZwaveJSFlow(ConfigEntryBaseFlow, ABC):
 
     @property
     @abstractmethod
-    def flow_manager(self) -> BaseFlowManager:
+    def flow_manager(self) -> FlowManager[ConfigFlowResult]:
         """Return the flow manager of the flow."""
 
     async def async_step_install_addon(

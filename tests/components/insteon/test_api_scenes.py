@@ -1,4 +1,5 @@
 """Test the Insteon Scenes APIs."""
+
 import json
 import os
 from unittest.mock import AsyncMock, patch
@@ -17,7 +18,7 @@ from tests.common import load_fixture
 from tests.typing import WebSocketGenerator
 
 
-@pytest.fixture(name="scene_data", scope="session")
+@pytest.fixture(name="scene_data", scope="module")
 def aldb_data_fixture():
     """Load the controller state fixture data."""
     return json.loads(load_fixture("insteon/scene_data.json"))
@@ -100,9 +101,10 @@ async def test_save_scene(
 
     mock_add_or_update_scene = AsyncMock(return_value=(20, ResponseStatus.SUCCESS))
 
-    with patch.object(
-        pyinsteon.managers.scene_manager, "devices", devices
-    ), patch.object(scenes, "async_add_or_update_scene", mock_add_or_update_scene):
+    with (
+        patch.object(pyinsteon.managers.scene_manager, "devices", devices),
+        patch.object(scenes, "async_add_or_update_scene", mock_add_or_update_scene),
+    ):
         scene = await pyinsteon.managers.scene_manager.async_get_scene(20)
         scene["devices"]["1a1a1a"] = []
         links = _scene_to_array(scene)
@@ -131,9 +133,10 @@ async def test_save_new_scene(
 
     mock_add_or_update_scene = AsyncMock(return_value=(21, ResponseStatus.SUCCESS))
 
-    with patch.object(
-        pyinsteon.managers.scene_manager, "devices", devices
-    ), patch.object(scenes, "async_add_or_update_scene", mock_add_or_update_scene):
+    with (
+        patch.object(pyinsteon.managers.scene_manager, "devices", devices),
+        patch.object(scenes, "async_add_or_update_scene", mock_add_or_update_scene),
+    ):
         scene = await pyinsteon.managers.scene_manager.async_get_scene(20)
         scene["devices"]["1a1a1a"] = []
         links = _scene_to_array(scene)
@@ -162,9 +165,10 @@ async def test_save_scene_error(
 
     mock_add_or_update_scene = AsyncMock(return_value=(20, ResponseStatus.FAILURE))
 
-    with patch.object(
-        pyinsteon.managers.scene_manager, "devices", devices
-    ), patch.object(scenes, "async_add_or_update_scene", mock_add_or_update_scene):
+    with (
+        patch.object(pyinsteon.managers.scene_manager, "devices", devices),
+        patch.object(scenes, "async_add_or_update_scene", mock_add_or_update_scene),
+    ):
         scene = await pyinsteon.managers.scene_manager.async_get_scene(20)
         scene["devices"]["1a1a1a"] = []
         links = _scene_to_array(scene)
@@ -193,9 +197,10 @@ async def test_delete_scene(
 
     mock_delete_scene = AsyncMock(return_value=ResponseStatus.SUCCESS)
 
-    with patch.object(
-        pyinsteon.managers.scene_manager, "devices", devices
-    ), patch.object(scenes, "async_delete_scene", mock_delete_scene):
+    with (
+        patch.object(pyinsteon.managers.scene_manager, "devices", devices),
+        patch.object(scenes, "async_delete_scene", mock_delete_scene),
+    ):
         await ws_client.send_json(
             {
                 ID: 1,

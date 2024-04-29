@@ -1,4 +1,5 @@
 """Support for OpenTherm Gateway climate devices."""
+
 from __future__ import annotations
 
 import logging

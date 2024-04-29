@@ -1,8 +1,11 @@
 """The System Bridge integration."""
+
 from __future__ import annotations
 
 import asyncio
+from dataclasses import asdict
 import logging
+from typing import Any
 
 from systembridgeconnector.exceptions import (
     AuthenticationException,
@@ -12,6 +15,7 @@ from systembridgeconnector.exceptions import (
 from systembridgeconnector.version import Version
 from systembridgemodels.keyboard_key import KeyboardKey
 from systembridgemodels.keyboard_text import KeyboardText
+from systembridgemodels.modules.processes import Process
 from systembridgemodels.open_path import OpenPath
 from systembridgemodels.open_url import OpenUrl
 import voluptuous as vol
@@ -22,6 +26,7 @@ from homeassistant.const import (
     CONF_COMMAND,
     CONF_ENTITY_ID,
     CONF_HOST,
+    CONF_ID,
     CONF_NAME,
     CONF_PATH,
     CONF_PORT,
@@ -29,8 +34,17 @@ from homeassistant.const import (
     CONF_URL,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    ServiceValidationError,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -39,6 +53,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
+from .config_flow import SystemBridgeConfigFlow
 from .const import DOMAIN, MODULES
 from .coordinator import SystemBridgeDataUpdateCoordinator
 
@@ -56,6 +71,8 @@ CONF_BRIDGE = "bridge"
 CONF_KEY = "key"
 CONF_TEXT = "text"
 
+SERVICE_GET_PROCESS_BY_ID = "get_process_by_id"
+SERVICE_GET_PROCESSES_BY_NAME = "get_processes_by_name"
 SERVICE_OPEN_PATH = "open_path"
 SERVICE_POWER_COMMAND = "power_command"
 SERVICE_OPEN_URL = "open_url"
@@ -194,52 +211,131 @@ async def async_setup_entry(
                 raise vol.Invalid(f"Could not find device {device}") from exception
         raise vol.Invalid(f"Device {device} does not exist")
 
-    async def handle_open_path(call: ServiceCall) -> None:
+    async def handle_get_process_by_id(service_call: ServiceCall) -> ServiceResponse:
+        """Handle the get process by id service call."""
+        _LOGGER.debug("Get process by id: %s", service_call.data)
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            service_call.data[CONF_BRIDGE]
+        ]
+        processes: list[Process] = coordinator.data.processes
+
+        # Find process.id from list, raise ServiceValidationError if not found
+        try:
+            return asdict(
+                next(
+                    process
+                    for process in processes
+                    if process.id == service_call.data[CONF_ID]
+                )
+            )
+        except StopIteration as exception:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="process_not_found",
+                translation_placeholders={"id": service_call.data[CONF_ID]},
+            ) from exception
+
+    async def handle_get_processes_by_name(
+        service_call: ServiceCall,
+    ) -> ServiceResponse:
+        """Handle the get process by name service call."""
+        _LOGGER.debug("Get process by name: %s", service_call.data)
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            service_call.data[CONF_BRIDGE]
+        ]
+        processes: list[Process] = coordinator.data.processes
+        # Find processes from list
+        items: list[dict[str, Any]] = [
+            asdict(process)
+            for process in processes
+            if process.name is not None
+            and service_call.data[CONF_NAME].lower() in process.name.lower()
+        ]
+
+        return {
+            "count": len(items),
+            "processes": list(items),
+        }
+
+    async def handle_open_path(service_call: ServiceCall) -> ServiceResponse:
         """Handle the open path service call."""
-        _LOGGER.info("Open: %s", call.data)
+        _LOGGER.debug("Open path: %s", service_call.data)
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            call.data[CONF_BRIDGE]
+            service_call.data[CONF_BRIDGE]
         ]
-        await coordinator.websocket_client.open_path(
-            OpenPath(path=call.data[CONF_PATH])
+        response = await coordinator.websocket_client.open_path(
+            OpenPath(path=service_call.data[CONF_PATH])
         )
+        return asdict(response)
 
-    async def handle_power_command(call: ServiceCall) -> None:
+    async def handle_power_command(service_call: ServiceCall) -> ServiceResponse:
         """Handle the power command service call."""
-        _LOGGER.info("Power command: %s", call.data)
+        _LOGGER.debug("Power command: %s", service_call.data)
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            call.data[CONF_BRIDGE]
+            service_call.data[CONF_BRIDGE]
         ]
-        await getattr(
+        response = await getattr(
             coordinator.websocket_client,
-            POWER_COMMAND_MAP[call.data[CONF_COMMAND]],
+            POWER_COMMAND_MAP[service_call.data[CONF_COMMAND]],
         )()
+        return asdict(response)
 
-    async def handle_open_url(call: ServiceCall) -> None:
+    async def handle_open_url(service_call: ServiceCall) -> ServiceResponse:
         """Handle the open url service call."""
-        _LOGGER.info("Open: %s", call.data)
+        _LOGGER.debug("Open URL: %s", service_call.data)
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            call.data[CONF_BRIDGE]
+            service_call.data[CONF_BRIDGE]
         ]
-        await coordinator.websocket_client.open_url(OpenUrl(url=call.data[CONF_URL]))
+        response = await coordinator.websocket_client.open_url(
+            OpenUrl(url=service_call.data[CONF_URL])
+        )
+        return asdict(response)
 
-    async def handle_send_keypress(call: ServiceCall) -> None:
+    async def handle_send_keypress(service_call: ServiceCall) -> ServiceResponse:
         """Handle the send_keypress service call."""
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            call.data[CONF_BRIDGE]
+            service_call.data[CONF_BRIDGE]
         ]
-        await coordinator.websocket_client.keyboard_keypress(
-            KeyboardKey(key=call.data[CONF_KEY])
+        response = await coordinator.websocket_client.keyboard_keypress(
+            KeyboardKey(key=service_call.data[CONF_KEY])
         )
+        return asdict(response)
 
-    async def handle_send_text(call: ServiceCall) -> None:
+    async def handle_send_text(service_call: ServiceCall) -> ServiceResponse:
         """Handle the send_keypress service call."""
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            call.data[CONF_BRIDGE]
+            service_call.data[CONF_BRIDGE]
         ]
-        await coordinator.websocket_client.keyboard_text(
-            KeyboardText(text=call.data[CONF_TEXT])
+        response = await coordinator.websocket_client.keyboard_text(
+            KeyboardText(text=service_call.data[CONF_TEXT])
         )
+        return asdict(response)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_PROCESS_BY_ID,
+        handle_get_process_by_id,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_ID): cv.positive_int,
+            },
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_PROCESSES_BY_NAME,
+        handle_get_processes_by_name,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_NAME): cv.string,
+            },
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
 
     hass.services.async_register(
         DOMAIN,
@@ -251,6 +347,7 @@ async def async_setup_entry(
                 vol.Required(CONF_PATH): cv.string,
             },
         ),
+        supports_response=SupportsResponse.ONLY,
     )
 
     hass.services.async_register(
@@ -263,6 +360,7 @@ async def async_setup_entry(
                 vol.Required(CONF_COMMAND): vol.In(POWER_COMMAND_MAP),
             },
         ),
+        supports_response=SupportsResponse.ONLY,
     )
 
     hass.services.async_register(
@@ -275,6 +373,7 @@ async def async_setup_entry(
                 vol.Required(CONF_URL): cv.string,
             },
         ),
+        supports_response=SupportsResponse.ONLY,
     )
 
     hass.services.async_register(
@@ -287,6 +386,7 @@ async def async_setup_entry(
                 vol.Required(CONF_KEY): cv.string,
             },
         ),
+        supports_response=SupportsResponse.ONLY,
     )
 
     hass.services.async_register(
@@ -299,6 +399,7 @@ async def async_setup_entry(
                 vol.Required(CONF_TEXT): cv.string,
             },
         ),
+        supports_response=SupportsResponse.ONLY,
     )
 
     # Reload entry when its updated.
@@ -340,13 +441,19 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
+    _LOGGER.debug(
+        "Migrating from version %s.%s",
+        config_entry.version,
+        config_entry.minor_version,
+    )
 
-    if config_entry.version == 1 and config_entry.minor_version == 1:
+    if config_entry.version > SystemBridgeConfigFlow.VERSION:
+        return False
+
+    if config_entry.minor_version < 2:
         # Migrate to CONF_TOKEN, which was added in 1.2
         new_data = dict(config_entry.data)
         new_data.setdefault(CONF_TOKEN, config_entry.data.get(CONF_API_KEY))
-        new_data.pop(CONF_API_KEY, None)
 
         hass.config_entries.async_update_entry(
             config_entry,
@@ -360,5 +467,4 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             config_entry.minor_version,
         )
 
-    # User is trying to downgrade from a future version
-    return False
+    return True

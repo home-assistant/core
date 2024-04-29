@@ -1,10 +1,12 @@
 """Helpers for the data entry flow."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
-from typing import Any
+from typing import Any, Generic
 
 from aiohttp import web
+from typing_extensions import TypeVar
 import voluptuous as vol
 import voluptuous_serialize
 
@@ -14,11 +16,17 @@ from homeassistant.components.http.data_validator import RequestDataValidator
 
 from . import config_validation as cv
 
+_FlowManagerT = TypeVar(
+    "_FlowManagerT",
+    bound=data_entry_flow.FlowManager[Any],
+    default=data_entry_flow.FlowManager,
+)
 
-class _BaseFlowManagerView(HomeAssistantView):
+
+class _BaseFlowManagerView(HomeAssistantView, Generic[_FlowManagerT]):
     """Foundation for flow manager views."""
 
-    def __init__(self, flow_mgr: data_entry_flow.BaseFlowManager) -> None:
+    def __init__(self, flow_mgr: _FlowManagerT) -> None:
         """Initialize the flow manager index view."""
         self._flow_mgr = flow_mgr
 
@@ -48,13 +56,13 @@ class _BaseFlowManagerView(HomeAssistantView):
         return data
 
 
-class FlowManagerIndexView(_BaseFlowManagerView):
+class FlowManagerIndexView(_BaseFlowManagerView[_FlowManagerT]):
     """View to create config flows."""
 
     @RequestDataValidator(
         vol.Schema(
             {
-                vol.Required("handler"): vol.Any(str, list),
+                vol.Required("handler"): str,
                 vol.Optional("show_advanced_options", default=False): cv.boolean,
             },
             extra=vol.ALLOW_EXTRA,
@@ -72,14 +80,9 @@ class FlowManagerIndexView(_BaseFlowManagerView):
         self, request: web.Request, data: dict[str, Any]
     ) -> web.Response:
         """Handle a POST request."""
-        if isinstance(data["handler"], list):
-            handler = tuple(data["handler"])
-        else:
-            handler = data["handler"]
-
         try:
             result = await self._flow_mgr.async_init(
-                handler,  # type: ignore[arg-type]
+                data["handler"],
                 context=self.get_context(data),
             )
         except data_entry_flow.UnknownHandler:
@@ -96,7 +99,7 @@ class FlowManagerIndexView(_BaseFlowManagerView):
         return {"show_advanced_options": data["show_advanced_options"]}
 
 
-class FlowManagerResourceView(_BaseFlowManagerView):
+class FlowManagerResourceView(_BaseFlowManagerView[_FlowManagerT]):
     """View to interact with the flow manager."""
 
     async def get(self, request: web.Request, /, flow_id: str) -> web.Response:

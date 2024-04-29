@@ -1,4 +1,5 @@
 """Support for Vallox date platform."""
+
 from __future__ import annotations
 
 from datetime import date
@@ -20,7 +21,6 @@ class ValloxFilterChangeDateEntity(ValloxEntity, DateEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "filter_change_date"
-    _attr_icon = "mdi:air-filter"
 
     def __init__(
         self,

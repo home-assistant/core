@@ -7,6 +7,7 @@ By default all tests use test fixtures that run in each possible configuration
 mode (e.g. yaml, ConfigEntry, etc) however some tests override and just run in
 relevant modes.
 """
+
 import logging
 from typing import Any
 from unittest.mock import patch
@@ -122,11 +123,12 @@ async def test_setup_device_manager_failure(
     hass: HomeAssistant, caplog, setup_base_platform
 ) -> None:
     """Test device manager api failure."""
-    with patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber.start_async"
-    ), patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber.async_get_device_manager",
-        side_effect=ApiException(),
+    with (
+        patch("homeassistant.components.nest.api.GoogleNestSubscriber.start_async"),
+        patch(
+            "homeassistant.components.nest.api.GoogleNestSubscriber.async_get_device_manager",
+            side_effect=ApiException(),
+        ),
     ):
         await setup_base_platform()
 
@@ -160,7 +162,7 @@ async def test_subscriber_auth_failure(
 async def test_setup_missing_subscriber_id(
     hass: HomeAssistant, warning_caplog, setup_base_platform
 ) -> None:
-    """Test missing susbcriber id from configuration."""
+    """Test missing subscriber id from configuration."""
     await setup_base_platform()
     assert "Configuration option" in warning_caplog.text
 
@@ -204,7 +206,7 @@ async def test_unload_entry(hass: HomeAssistant, setup_platform) -> None:
     assert entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(entry.entry_id)
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_remove_entry(
@@ -226,11 +228,12 @@ async def test_remove_entry(
     assert entry.data.get("subscriber_id") == SUBSCRIBER_ID
     assert entry.data.get("project_id") == PROJECT_ID
 
-    with patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber.subscriber_id"
-    ), patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber.delete_subscription",
-    ) as delete:
+    with (
+        patch("homeassistant.components.nest.api.GoogleNestSubscriber.subscriber_id"),
+        patch(
+            "homeassistant.components.nest.api.GoogleNestSubscriber.delete_subscription",
+        ) as delete,
+    ):
         assert await hass.config_entries.async_remove(entry.entry_id)
         assert delete.called
 

@@ -1,4 +1,5 @@
 """Support for monitoring the Deluge BitTorrent client API."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

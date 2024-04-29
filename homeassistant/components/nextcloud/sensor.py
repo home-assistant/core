@@ -1,4 +1,5 @@
 """Summary data from Nextcoud."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -606,11 +607,9 @@ async def async_setup_entry(
     """Set up the Nextcloud sensors."""
     coordinator: NextcloudDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            NextcloudSensor(coordinator, entry, sensor)
-            for sensor in SENSORS
-            if sensor.key in coordinator.data
-        ]
+        NextcloudSensor(coordinator, entry, sensor)
+        for sensor in SENSORS
+        if sensor.key in coordinator.data
     )
 
 

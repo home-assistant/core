@@ -1,4 +1,5 @@
 """Config flow for System Bridge integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -12,18 +13,19 @@ from systembridgeconnector.exceptions import (
     ConnectionErrorException,
 )
 from systembridgeconnector.websocket_client import WebSocketClient
-from systembridgemodels.modules import GetData, System
+from systembridgemodels.modules import GetData
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+from .data import SystemBridgeData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,25 +47,41 @@ async def _validate_input(
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    host = data[CONF_HOST]
+
+    system_bridge_data = SystemBridgeData()
+
+    async def _async_handle_module(
+        module_name: str,
+        module: Any,
+    ) -> None:
+        """Handle data from the WebSocket client."""
+        _LOGGER.debug("Set new data for: %s", module_name)
+        setattr(system_bridge_data, module_name, module)
 
     websocket_client = WebSocketClient(
-        host,
+        data[CONF_HOST],
         data[CONF_PORT],
-        data[CONF_API_KEY],
+        data[CONF_TOKEN],
+        session=async_get_clientsession(hass),
     )
+
     try:
         async with asyncio.timeout(15):
-            await websocket_client.connect(session=async_get_clientsession(hass))
-            hass.async_create_task(websocket_client.listen())
+            await websocket_client.connect()
+            hass.async_create_task(
+                websocket_client.listen(callback=_async_handle_module)
+            )
             response = await websocket_client.get_data(GetData(modules=["system"]))
-            _LOGGER.debug("Got response: %s", response.json())
-            if response.data is None or not isinstance(response.data, System):
+            _LOGGER.debug("Got response: %s", response)
+            if response is None:
                 raise CannotConnect("No data received")
-            system: System = response.data
+            while system_bridge_data.system is None:
+                await asyncio.sleep(0.2)
     except AuthenticationException as exception:
         _LOGGER.warning(
-            "Authentication error when connecting to %s: %s", data[CONF_HOST], exception
+            "Authentication error when connecting to %s: %s",
+            data[CONF_HOST],
+            exception,
         )
         raise InvalidAuth from exception
     except (
@@ -80,9 +98,9 @@ async def _validate_input(
     except ValueError as exception:
         raise CannotConnect from exception
 
-    _LOGGER.debug("Got System data: %s", system.json())
+    _LOGGER.debug("Got System data: %s", system_bridge_data.system)
 
-    return {"hostname": host, "uuid": system.uuid}
+    return {"hostname": data[CONF_HOST], "uuid": system_bridge_data.system.uuid}
 
 
 async def _async_get_info(
@@ -120,93 +138,6 @@ class SystemBridgeConfigFlow(
         self._name: str | None = None
         self._input: dict[str, Any] = {}
         self._reauth = False
-        self._system_data: System | None = None
-
-    async def _validate_input(
-        self,
-        data: dict[str, Any],
-    ) -> dict[str, str]:
-        """Validate the user input allows us to connect.
-
-        Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-        """
-        host = data[CONF_HOST]
-
-        websocket_client = WebSocketClient(
-            host,
-            data[CONF_PORT],
-            data[CONF_TOKEN],
-        )
-
-        async def async_handle_module(
-            module_name: str,
-            module: Any,
-        ) -> None:
-            """Handle data from the WebSocket client."""
-            _LOGGER.debug("Set new data for: %s", module_name)
-            if module_name == "system":
-                self._system_data = module
-
-        try:
-            async with asyncio.timeout(15):
-                await websocket_client.connect(
-                    session=async_get_clientsession(self.hass)
-                )
-                self.hass.async_create_task(
-                    websocket_client.listen(callback=async_handle_module)
-                )
-                response = await websocket_client.get_data(GetData(modules=["system"]))
-                _LOGGER.debug("Got response: %s", response)
-                if response is None:
-                    raise CannotConnect("No data received")
-                while self._system_data is None:
-                    await asyncio.sleep(0.2)
-        except AuthenticationException as exception:
-            _LOGGER.warning(
-                "Authentication error when connecting to %s: %s",
-                data[CONF_HOST],
-                exception,
-            )
-            raise InvalidAuth from exception
-        except (
-            ConnectionClosedException,
-            ConnectionErrorException,
-        ) as exception:
-            _LOGGER.warning(
-                "Connection error when connecting to %s: %s", data[CONF_HOST], exception
-            )
-            raise CannotConnect from exception
-        except TimeoutError as exception:
-            _LOGGER.warning(
-                "Timed out connecting to %s: %s", data[CONF_HOST], exception
-            )
-            raise CannotConnect from exception
-        except ValueError as exception:
-            raise CannotConnect from exception
-
-        _LOGGER.debug("Got System data: %s", self._system_data)
-
-        return {"hostname": host, "uuid": self._system_data.uuid}
-
-    async def _async_get_info(
-        self,
-        user_input: dict[str, Any],
-    ) -> tuple[dict[str, str], dict[str, str] | None]:
-        errors = {}
-
-        try:
-            info = await self._validate_input(user_input)
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            return errors, info
-
-        return errors, None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -217,7 +148,7 @@ class SystemBridgeConfigFlow(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        errors, info = await self._async_get_info(user_input)
+        errors, info = await _async_get_info(self.hass, user_input)
         if not errors and info is not None:
             # Check if already configured
             await self.async_set_unique_id(info["uuid"], raise_on_progress=False)
@@ -237,7 +168,7 @@ class SystemBridgeConfigFlow(
 
         if user_input is not None:
             user_input = {**self._input, **user_input}
-            errors, info = await self._async_get_info(user_input)
+            errors, info = await _async_get_info(self.hass, user_input)
             if not errors and info is not None:
                 # Check if already configured
                 existing_entry = await self.async_set_unique_id(info["uuid"])

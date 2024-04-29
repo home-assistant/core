@@ -1,4 +1,5 @@
 """Data for all Kaiterra devices."""
+
 import asyncio
 from logging import getLogger
 

@@ -1,4 +1,5 @@
 """Support for System Bridge media players."""
+
 from __future__ import annotations
 
 import datetime as dt
@@ -20,7 +21,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import SystemBridgeCoordinatorData, SystemBridgeDataUpdateCoordinator
+from .coordinator import SystemBridgeDataUpdateCoordinator
+from .data import SystemBridgeData
 from .entity import SystemBridgeEntity
 
 STATUS_CHANGING: Final[str] = "CHANGING"
@@ -51,13 +53,13 @@ MEDIA_SET_REPEAT_MAP: Final[dict[RepeatMode, int]] = {
     RepeatMode.ALL: 2,
 }
 
-MEDIA_PLAYER_DESCRIPTION: Final[
-    MediaPlayerEntityDescription
-] = MediaPlayerEntityDescription(
-    key="media",
-    translation_key="media",
-    icon="mdi:volume-high",
-    device_class=MediaPlayerDeviceClass.RECEIVER,
+MEDIA_PLAYER_DESCRIPTION: Final[MediaPlayerEntityDescription] = (
+    MediaPlayerEntityDescription(
+        key="media",
+        translation_key="media",
+        icon="mdi:volume-high",
+        device_class=MediaPlayerDeviceClass.RECEIVER,
+    )
 )
 
 
@@ -126,7 +128,7 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
         return features
 
     @property
-    def _systembridge_data(self) -> SystemBridgeCoordinatorData:
+    def _systembridge_data(self) -> SystemBridgeData:
         """Return data for the entity."""
         return self.coordinator.data
 

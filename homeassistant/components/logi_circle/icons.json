@@ -1,0 +1,7 @@
+{
+  "services": {
+    "set_config": "mdi:cog",
+    "livestream_snapshot": "mdi:camera",
+    "livestream_record": "mdi:record-rec"
+  }
+}

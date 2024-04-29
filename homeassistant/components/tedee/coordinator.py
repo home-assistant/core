@@ -1,4 +1,5 @@
 """Coordinator for Tedee locks."""
+
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
@@ -99,9 +100,9 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
 
         except TedeeDataUpdateException as ex:
             _LOGGER.debug("Error while updating data: %s", str(ex))
-            raise UpdateFailed("Error while updating data: %s" % str(ex)) from ex
+            raise UpdateFailed(f"Error while updating data: {str(ex)}") from ex
         except (TedeeClientException, TimeoutError) as ex:
-            raise UpdateFailed("Querying API failed. Error: %s" % str(ex)) from ex
+            raise UpdateFailed(f"Querying API failed. Error: {str(ex)}") from ex
 
     def _async_add_remove_locks(self) -> None:
         """Add new locks, remove non-existing locks."""

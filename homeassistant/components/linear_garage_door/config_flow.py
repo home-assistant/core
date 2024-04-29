@@ -1,4 +1,5 @@
 """Config flow for Linear Garage Door integration."""
+
 from __future__ import annotations
 
 from collections.abc import Collection, Mapping, Sequence
@@ -52,14 +53,12 @@ async def validate_input(
     finally:
         await hub.close()
 
-    info = {
+    return {
         "email": data["email"],
         "password": data["password"],
         "sites": sites,
         "device_id": device_id,
     }
-
-    return info
 
 
 class LinearGarageDoorConfigFlow(ConfigFlow, domain=DOMAIN):

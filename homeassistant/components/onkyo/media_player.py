@@ -1,4 +1,5 @@
 """Support for Onkyo Receivers."""
+
 from __future__ import annotations
 
 import logging
@@ -142,7 +143,7 @@ def determine_zones(receiver):
             _LOGGER.debug("Zone 2 not available")
     except ValueError as error:
         if str(error) != TIMEOUT_MESSAGE:
-            raise error
+            raise
         _LOGGER.debug("Zone 2 timed out, assuming no functionality")
     try:
         _LOGGER.debug("Checking for zone 3 capability")
@@ -153,7 +154,7 @@ def determine_zones(receiver):
             _LOGGER.debug("Zone 3 not available")
     except ValueError as error:
         if str(error) != TIMEOUT_MESSAGE:
-            raise error
+            raise
         _LOGGER.debug("Zone 3 timed out, assuming no functionality")
     except AssertionError:
         _LOGGER.error("Zone 3 detection failed")
@@ -441,6 +442,7 @@ class OnkyoDevice(MediaPlayerEntity):
                 "output_color_schema": _tuple_get(values, 6),
                 "output_color_depth": _tuple_get(values, 7),
                 "picture_mode": _tuple_get(values, 8),
+                "dynamic_range": _tuple_get(values, 9),
             }
             self._attr_extra_state_attributes[ATTR_VIDEO_INFORMATION] = info
         else:

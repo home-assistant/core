@@ -1,4 +1,5 @@
 """Tankerkoenig sensor integration."""
+
 from __future__ import annotations
 
 import logging
@@ -90,7 +91,7 @@ class FuelPriceSensor(TankerkoenigCoordinatorEntity, SensorEntity):
         self._fuel_type = fuel_type
         self._attr_translation_key = fuel_type
         self._attr_unique_id = f"{station.id}_{fuel_type}"
-        attrs = {
+        attrs: dict[str, int | str | float | None] = {
             ATTR_BRAND: station.brand,
             ATTR_FUEL_TYPE: fuel_type,
             ATTR_STATION_NAME: station.name,
@@ -101,8 +102,8 @@ class FuelPriceSensor(TankerkoenigCoordinatorEntity, SensorEntity):
         }
 
         if coordinator.show_on_map:
-            attrs[ATTR_LATITUDE] = str(station.lat)
-            attrs[ATTR_LONGITUDE] = str(station.lng)
+            attrs[ATTR_LATITUDE] = station.lat
+            attrs[ATTR_LONGITUDE] = station.lng
         self._attr_extra_state_attributes = attrs
 
     @property

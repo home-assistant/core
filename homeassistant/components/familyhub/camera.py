@@ -1,4 +1,5 @@
 """Family Hub camera for Samsung Refrigerators."""
+
 from __future__ import annotations
 
 from pyfamilyhublocal import FamilyHubCam

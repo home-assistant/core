@@ -1,4 +1,5 @@
 """Support for ISY lights."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -31,13 +32,10 @@ async def async_setup_entry(
     isy_options = entry.options
     restore_light_state = isy_options.get(CONF_RESTORE_LIGHT_STATE, False)
 
-    entities = []
-    for node in isy_data.nodes[Platform.LIGHT]:
-        entities.append(
-            ISYLightEntity(node, restore_light_state, devices.get(node.primary_node))
-        )
-
-    async_add_entities(entities)
+    async_add_entities(
+        ISYLightEntity(node, restore_light_state, devices.get(node.primary_node))
+        for node in isy_data.nodes[Platform.LIGHT]
+    )
 
 
 class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
@@ -116,8 +114,5 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
         if not (last_state := await self.async_get_last_state()):
             return
 
-        if (
-            ATTR_LAST_BRIGHTNESS in last_state.attributes
-            and last_state.attributes[ATTR_LAST_BRIGHTNESS]
-        ):
-            self._last_brightness = last_state.attributes[ATTR_LAST_BRIGHTNESS]
+        if last_brightness := last_state.attributes.get(ATTR_LAST_BRIGHTNESS):
+            self._last_brightness = last_brightness

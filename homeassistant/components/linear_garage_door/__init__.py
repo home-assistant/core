@@ -1,4 +1,5 @@
 """The Linear Garage Door integration."""
+
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,7 +15,7 @@ PLATFORMS: list[Platform] = [Platform.COVER]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Linear Garage Door from a config entry."""
 
-    coordinator = LinearUpdateCoordinator(hass, entry)
+    coordinator = LinearUpdateCoordinator(hass)
 
     await coordinator.async_config_entry_first_refresh()
 

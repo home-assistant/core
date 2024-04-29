@@ -1,4 +1,5 @@
 """Advantage Air parent entity class."""
+
 from typing import Any
 
 from advantage_air import ApiError

@@ -1,4 +1,5 @@
 """The Backup integration."""
+
 from homeassistant.components.hassio import is_hassio
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv

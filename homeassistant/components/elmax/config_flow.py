@@ -1,4 +1,5 @@
 """Config flow for elmax-cloud integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -13,7 +14,6 @@ import voluptuous as vol
 
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .common import (
@@ -118,13 +118,13 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the flow initiated by the user."""
         return await self.async_step_choose_mode(user_input=user_input)
 
     async def async_step_choose_mode(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle local vs cloud mode selection step."""
         return self.async_show_menu(
             step_id="choose_mode",
@@ -136,7 +136,7 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _handle_direct_and_create_entry(
         self, fallback_step_id: str, schema: vol.Schema
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         return await self._test_direct_and_create_entry()
 
     async def _test_direct_and_create_entry(self):
@@ -202,7 +202,7 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_direct(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_direct(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle the direct setup step."""
         self._selected_mode = CONF_ELMAX_MODE_CLOUD
         if user_input is None:
@@ -236,7 +236,9 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
             fallback_step_id=CONF_ELMAX_MODE_DIRECT, schema=tmp_schema
         )
 
-    async def async_step_zeroconf_setup(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_zeroconf_setup(
+        self, user_input: dict[str, Any]
+    ) -> ConfigFlowResult:
         """Handle the direct setup step triggered via zeroconf."""
         if user_input is None:
             return self.async_show_form(
@@ -265,7 +267,7 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _check_unique_and_create_entry(
         self, unique_id: str, title: str, data: Mapping[str, Any]
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         # Make sure this is the only Elmax integration for this specific panel id.
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
@@ -275,7 +277,7 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
             data=data,
         )
 
-    async def async_step_cloud(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_cloud(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle the cloud setup flow."""
         self._selected_mode = CONF_ELMAX_MODE_CLOUD
 
@@ -422,7 +424,7 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
                     if p.hash == self._entry.data[CONF_ELMAX_PANEL_ID]
                 ]
                 if len(panels) < 1:
-                    raise NoOnlinePanelsError()
+                    raise NoOnlinePanelsError
 
                 # Verify the pin is still valid.
                 await client.get_panel_status(
@@ -463,7 +465,7 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
         host: str,
         https_port: int,
         http_port: int,
-    ) -> FlowResult | None:
+    ) -> ConfigFlowResult | None:
         # Look for another entry with the same PANEL_ID (local or remote).
         # If there already is a matching panel, take the change to notify the Coordinator
         # so that it uses the newly discovered IP address. This mitigates the issues
@@ -496,7 +498,7 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle device found via zeroconf."""
         host = discovery_info.host
         https_port = (

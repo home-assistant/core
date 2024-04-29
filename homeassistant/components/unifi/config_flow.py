@@ -5,6 +5,7 @@ Discovery of UniFi Network instances hosted on UDM and UDM Pro devices
 through SSDP. Reauthentication when issue with credentials are reported.
 Configuration of options through options flow.
 """
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -236,9 +237,9 @@ class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
 
         if (port := MODEL_PORTS.get(model_description)) is not None:
             self.config[CONF_PORT] = port
-            self.context[
-                "configuration_url"
-            ] = f"https://{self.config[CONF_HOST]}:{port}"
+            self.context["configuration_url"] = (
+                f"https://{self.config[CONF_HOST]}:{port}"
+            )
 
         return await self.async_step_user()
 
@@ -260,7 +261,7 @@ class UnifiOptionsFlowHandler(OptionsFlow):
         if self.config_entry.entry_id not in self.hass.data[UNIFI_DOMAIN]:
             return self.async_abort(reason="integration_not_setup")
         self.hub = self.hass.data[UNIFI_DOMAIN][self.config_entry.entry_id]
-        self.options[CONF_BLOCK_CLIENT] = self.hub.option_block_clients
+        self.options[CONF_BLOCK_CLIENT] = self.hub.config.option_block_clients
 
         if self.show_advanced_options:
             return await self.async_step_configure_entity_sources()
@@ -278,9 +279,9 @@ class UnifiOptionsFlowHandler(OptionsFlow):
         clients_to_block = {}
 
         for client in self.hub.api.clients.values():
-            clients_to_block[
-                client.mac
-            ] = f"{client.name or client.hostname} ({client.mac})"
+            clients_to_block[client.mac] = (
+                f"{client.name or client.hostname} ({client.mac})"
+            )
 
         return self.async_show_form(
             step_id="simple_options",
@@ -288,11 +289,11 @@ class UnifiOptionsFlowHandler(OptionsFlow):
                 {
                     vol.Optional(
                         CONF_TRACK_CLIENTS,
-                        default=self.hub.option_track_clients,
+                        default=self.hub.config.option_track_clients,
                     ): bool,
                     vol.Optional(
                         CONF_TRACK_DEVICES,
-                        default=self.hub.option_track_devices,
+                        default=self.hub.config.option_track_devices,
                     ): bool,
                     vol.Optional(
                         CONF_BLOCK_CLIENT, default=self.options[CONF_BLOCK_CLIENT]
@@ -361,7 +362,7 @@ class UnifiOptionsFlowHandler(OptionsFlow):
         ssid_filter = {ssid: ssid for ssid in sorted(ssids)}
 
         selected_ssids_to_filter = [
-            ssid for ssid in self.hub.option_ssid_filter if ssid in ssid_filter
+            ssid for ssid in self.hub.config.option_ssid_filter if ssid in ssid_filter
         ]
 
         return self.async_show_form(
@@ -370,26 +371,28 @@ class UnifiOptionsFlowHandler(OptionsFlow):
                 {
                     vol.Optional(
                         CONF_TRACK_CLIENTS,
-                        default=self.hub.option_track_clients,
+                        default=self.hub.config.option_track_clients,
                     ): bool,
                     vol.Optional(
                         CONF_TRACK_WIRED_CLIENTS,
-                        default=self.hub.option_track_wired_clients,
+                        default=self.hub.config.option_track_wired_clients,
                     ): bool,
                     vol.Optional(
                         CONF_TRACK_DEVICES,
-                        default=self.hub.option_track_devices,
+                        default=self.hub.config.option_track_devices,
                     ): bool,
                     vol.Optional(
                         CONF_SSID_FILTER, default=selected_ssids_to_filter
                     ): cv.multi_select(ssid_filter),
                     vol.Optional(
                         CONF_DETECTION_TIME,
-                        default=int(self.hub.option_detection_time.total_seconds()),
+                        default=int(
+                            self.hub.config.option_detection_time.total_seconds()
+                        ),
                     ): int,
                     vol.Optional(
                         CONF_IGNORE_WIRED_BUG,
-                        default=self.hub.option_ignore_wired_bug,
+                        default=self.hub.config.option_ignore_wired_bug,
                     ): bool,
                 }
             ),
@@ -407,9 +410,9 @@ class UnifiOptionsFlowHandler(OptionsFlow):
         clients_to_block = {}
 
         for client in self.hub.api.clients.values():
-            clients_to_block[
-                client.mac
-            ] = f"{client.name or client.hostname} ({client.mac})"
+            clients_to_block[client.mac] = (
+                f"{client.name or client.hostname} ({client.mac})"
+            )
 
         selected_clients_to_block = [
             client
@@ -449,11 +452,11 @@ class UnifiOptionsFlowHandler(OptionsFlow):
                 {
                     vol.Optional(
                         CONF_ALLOW_BANDWIDTH_SENSORS,
-                        default=self.hub.option_allow_bandwidth_sensors,
+                        default=self.hub.config.option_allow_bandwidth_sensors,
                     ): bool,
                     vol.Optional(
                         CONF_ALLOW_UPTIME_SENSORS,
-                        default=self.hub.option_allow_uptime_sensors,
+                        default=self.hub.config.option_allow_uptime_sensors,
                     ): bool,
                 }
             ),

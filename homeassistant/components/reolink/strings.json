@@ -28,7 +28,7 @@
       "api_error": "API error occurred",
       "cannot_connect": "Failed to connect, check the IP address of the camera",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "not_admin": "User needs to be admin, user ''{username}'' has authorisation level ''{userlevel}''",
+      "not_admin": "User needs to be admin, user \"{username}\" has authorisation level \"{userlevel}\"",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "webhook_exception": "Home Assistant URL is not available, go to Settings > System > Network > Home Assistant URL and correct the URLs, see {more_info}"
     },
@@ -270,22 +270,22 @@
       "motion_sensitivity": {
         "name": "Motion sensitivity"
       },
-      "ai_face_sensititvity": {
+      "ai_face_sensitivity": {
         "name": "AI face sensitivity"
       },
-      "ai_person_sensititvity": {
+      "ai_person_sensitivity": {
         "name": "AI person sensitivity"
       },
-      "ai_vehicle_sensititvity": {
+      "ai_vehicle_sensitivity": {
         "name": "AI vehicle sensitivity"
       },
-      "ai_package_sensititvity": {
+      "ai_package_sensitivity": {
         "name": "AI package sensitivity"
       },
-      "ai_pet_sensititvity": {
+      "ai_pet_sensitivity": {
         "name": "AI pet sensitivity"
       },
-      "ai_animal_sensititvity": {
+      "ai_animal_sensitivity": {
         "name": "AI animal sensitivity"
       },
       "ai_face_delay": {
@@ -363,6 +363,9 @@
       "ptz_preset": {
         "name": "PTZ preset"
       },
+      "play_quick_reply_message": {
+        "name": "Play quick reply message"
+      },
       "auto_quick_reply_message": {
         "name": "Auto quick reply message",
         "state": {
@@ -393,6 +396,12 @@
       },
       "ptz_pan_position": {
         "name": "PTZ pan position"
+      },
+      "hdd_storage": {
+        "name": "HDD {hdd_index} storage"
+      },
+      "sd_storage": {
+        "name": "SD {hdd_index} storage"
       }
     },
     "siren": {
@@ -416,7 +425,7 @@
       "auto_focus": {
         "name": "Auto focus"
       },
-      "gaurd_return": {
+      "guard_return": {
         "name": "Guard return"
       },
       "ptz_patrol": {

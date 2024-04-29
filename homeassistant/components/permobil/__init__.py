@@ -1,4 +1,5 @@
 """The MyPermobil integration."""
+
 from __future__ import annotations
 
 import logging
@@ -21,7 +22,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import APPLICATION, DOMAIN
 from .coordinator import MyPermobilCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 

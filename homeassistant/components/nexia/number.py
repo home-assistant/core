@@ -1,4 +1,5 @@
 """Support for Nexia / Trane XL Thermostats."""
+
 from __future__ import annotations
 
 from nexia.home import NexiaHome

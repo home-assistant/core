@@ -1,4 +1,5 @@
 """Component providing support for Reolink binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -36,8 +37,6 @@ class ReolinkBinarySensorEntityDescription(
 ):
     """A class that describes binary sensor entities."""
 
-    icon_off: str = "mdi:motion-sensor-off"
-    icon: str = "mdi:motion-sensor"
     value: Callable[[Host, int], bool]
 
 
@@ -50,7 +49,6 @@ BINARY_SENSORS = (
     ReolinkBinarySensorEntityDescription(
         key=FACE_DETECTION_TYPE,
         translation_key="face",
-        icon="mdi:face-recognition",
         value=lambda api, ch: api.ai_detected(ch, FACE_DETECTION_TYPE),
         supported=lambda api, ch: api.ai_supported(ch, FACE_DETECTION_TYPE),
     ),
@@ -63,16 +61,12 @@ BINARY_SENSORS = (
     ReolinkBinarySensorEntityDescription(
         key=VEHICLE_DETECTION_TYPE,
         translation_key="vehicle",
-        icon="mdi:car",
-        icon_off="mdi:car-off",
         value=lambda api, ch: api.ai_detected(ch, VEHICLE_DETECTION_TYPE),
         supported=lambda api, ch: api.ai_supported(ch, VEHICLE_DETECTION_TYPE),
     ),
     ReolinkBinarySensorEntityDescription(
         key=PET_DETECTION_TYPE,
         translation_key="pet",
-        icon="mdi:dog-side",
-        icon_off="mdi:dog-side-off",
         value=lambda api, ch: api.ai_detected(ch, PET_DETECTION_TYPE),
         supported=lambda api, ch: (
             api.ai_supported(ch, PET_DETECTION_TYPE)
@@ -82,24 +76,18 @@ BINARY_SENSORS = (
     ReolinkBinarySensorEntityDescription(
         key=PET_DETECTION_TYPE,
         translation_key="animal",
-        icon="mdi:paw",
-        icon_off="mdi:paw-off",
         value=lambda api, ch: api.ai_detected(ch, PET_DETECTION_TYPE),
         supported=lambda api, ch: api.supported(ch, "ai_animal"),
     ),
     ReolinkBinarySensorEntityDescription(
         key=PACKAGE_DETECTION_TYPE,
         translation_key="package",
-        icon="mdi:gift-outline",
-        icon_off="mdi:gift-off-outline",
         value=lambda api, ch: api.ai_detected(ch, PACKAGE_DETECTION_TYPE),
         supported=lambda api, ch: api.ai_supported(ch, PACKAGE_DETECTION_TYPE),
     ),
     ReolinkBinarySensorEntityDescription(
         key="visitor",
         translation_key="visitor",
-        icon="mdi:bell-ring-outline",
-        icon_off="mdi:doorbell",
         value=lambda api, ch: api.visitor_detected(ch),
         supported=lambda api, ch: api.is_doorbell(ch),
     ),
@@ -148,13 +136,6 @@ class ReolinkBinarySensorEntity(ReolinkChannelCoordinatorEntity, BinarySensorEnt
             else:
                 key = entity_description.key
             self._attr_translation_key = f"{key}_lens_{self._channel}"
-
-    @property
-    def icon(self) -> str | None:
-        """Icon of the sensor."""
-        if self.is_on is False:
-            return self.entity_description.icon_off
-        return super().icon
 
     @property
     def is_on(self) -> bool:

@@ -1,4 +1,5 @@
 """Tests for the Zodiac config flow."""
+
 from unittest.mock import patch
 
 import pytest
@@ -17,7 +18,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     with patch(
@@ -29,7 +30,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
             user_input={},
         )
 
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "Zodiac"
     assert result.get("data") == {}
     assert result.get("options") == {}
@@ -50,5 +51,5 @@ async def test_single_instance_allowed(
         DOMAIN, context={"source": source}
     )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "single_instance_allowed"

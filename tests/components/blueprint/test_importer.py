@@ -1,4 +1,5 @@
 """Test blueprint importing."""
+
 import json
 from pathlib import Path
 
@@ -12,7 +13,7 @@ from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def community_post():
     """Topic JSON with a codeblock marked as auto syntax."""
     return load_fixture("blueprint/community_post.json")
@@ -118,10 +119,10 @@ async def test_fetch_blueprint_from_community_url(
 
 @pytest.mark.parametrize(
     "url",
-    (
+    [
         "https://raw.githubusercontent.com/balloob/home-assistant-config/main/blueprints/automation/motion_light.yaml",
         "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
-    ),
+    ],
 )
 async def test_fetch_blueprint_from_github_url(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, url: str

@@ -1,4 +1,5 @@
 """Support for EnergyZero sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -29,19 +30,12 @@ from .const import DOMAIN, SERVICE_TYPE_DEVICE_NAMES
 from .coordinator import EnergyZeroData, EnergyZeroDataUpdateCoordinator
 
 
-@dataclass(frozen=True)
-class EnergyZeroSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnergyZeroSensorEntityDescription(SensorEntityDescription):
+    """Describes an EnergyZero sensor entity."""
 
     value_fn: Callable[[EnergyZeroData], float | datetime | None]
     service_type: str
-
-
-@dataclass(frozen=True)
-class EnergyZeroSensorEntityDescription(
-    SensorEntityDescription, EnergyZeroSensorEntityDescriptionMixin
-):
-    """Describes a Pure Energie sensor entity."""
 
 
 SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (

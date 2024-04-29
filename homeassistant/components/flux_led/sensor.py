@@ -1,4 +1,5 @@
 """Support for Magic Home sensors."""
+
 from __future__ import annotations
 
 from homeassistant import config_entries

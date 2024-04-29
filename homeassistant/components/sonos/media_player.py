@@ -1,4 +1,5 @@
 """Support to interface with Sonos players."""
+
 from __future__ import annotations
 
 import datetime
@@ -6,7 +7,7 @@ from functools import partial
 import logging
 from typing import Any
 
-from soco import alarms
+from soco import SoCo, alarms
 from soco.core import (
     MUSIC_SRC_LINE_IN,
     MUSIC_SRC_RADIO,
@@ -14,6 +15,7 @@ from soco.core import (
     PLAY_MODES,
 )
 from soco.data_structures import DidlFavorite
+from soco.ms_data_structures import MusicServiceItem
 from sonos_websocket.exception import SonosWebsocketError
 import voluptuous as vol
 
@@ -548,6 +550,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, is_radio: bool, **kwargs: Any
     ) -> None:
         """Wrap sync calls to async_play_media."""
+        _LOGGER.debug("_play_media media_type %s media_id %s", media_type, media_id)
         enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE)
 
         if media_type == "favorite_item_id":
@@ -625,13 +628,13 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 soco.play_uri(media_id, force_radio=is_radio)
         elif media_type == MediaType.PLAYLIST:
             if media_id.startswith("S:"):
-                item = media_browser.get_media(self.media.library, media_id, media_type)
-                soco.play_uri(item.get_uri())
-                return
-            try:
+                playlist = media_browser.get_media(
+                    self.media.library, media_id, media_type
+                )
+            else:
                 playlists = soco.get_sonos_playlists(complete_result=True)
-                playlist = next(p for p in playlists if p.title == media_id)
-            except StopIteration:
+                playlist = next((p for p in playlists if p.title == media_id), None)
+            if not playlist:
                 _LOGGER.error('Could not find a Sonos playlist named "%s"', media_id)
             else:
                 soco.clear_queue()
@@ -644,9 +647,34 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 _LOGGER.error('Could not find "%s" in the library', media_id)
                 return
 
-            soco.play_uri(item.get_uri())
+            self._play_media_queue(soco, item, enqueue)
         else:
             _LOGGER.error('Sonos does not support a media type of "%s"', media_type)
+
+    def _play_media_queue(
+        self, soco: SoCo, item: MusicServiceItem, enqueue: MediaPlayerEnqueue
+    ):
+        """Manage adding, replacing, playing items onto the sonos queue."""
+        _LOGGER.debug(
+            "_play_media_queue item_id [%s] title [%s] enqueue [%s]",
+            item.item_id,
+            item.title,
+            enqueue,
+        )
+        if enqueue == MediaPlayerEnqueue.REPLACE:
+            soco.clear_queue()
+
+        if enqueue in (MediaPlayerEnqueue.ADD, MediaPlayerEnqueue.REPLACE):
+            soco.add_to_queue(item, timeout=LONG_SERVICE_TIMEOUT)
+            if enqueue == MediaPlayerEnqueue.REPLACE:
+                soco.play_from_queue(0)
+        else:
+            pos = (self.media.queue_position or 0) + 1
+            new_pos = soco.add_to_queue(
+                item, position=pos, timeout=LONG_SERVICE_TIMEOUT
+            )
+            if enqueue == MediaPlayerEnqueue.PLAY:
+                soco.play_from_queue(new_pos - 1)
 
     @soco_error()
     def set_sleep_timer(self, sleep_time: int) -> None:

@@ -1,4 +1,5 @@
 """Test auth of websocket API."""
+
 from unittest.mock import patch
 
 import aiohttp
@@ -220,7 +221,7 @@ async def test_auth_close_after_revoke(
     hass.auth.async_remove_refresh_token(refresh_token)
 
     msg = await websocket_client.receive()
-    assert msg.type == aiohttp.WSMsgType.CLOSED
+    assert msg.type is aiohttp.WSMsgType.CLOSE
     assert websocket_client.closed
 
 

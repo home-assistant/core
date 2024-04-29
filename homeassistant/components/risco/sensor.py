@@ -1,4 +1,5 @@
 """Sensor for Risco Events."""
+
 from __future__ import annotations
 
 from collections.abc import Collection, Mapping
@@ -55,8 +56,8 @@ async def async_setup_entry(
         config_entry.entry_id
     ][EVENTS_COORDINATOR]
     sensors = [
-        RiscoSensor(coordinator, id, [], name, config_entry.entry_id)
-        for id, name in CATEGORIES.items()
+        RiscoSensor(coordinator, category_id, [], name, config_entry.entry_id)
+        for category_id, name in CATEGORIES.items()
     ]
     sensors.append(
         RiscoSensor(

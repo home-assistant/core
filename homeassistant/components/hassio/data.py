@@ -1,4 +1,5 @@
 """Data for Hass.io."""
+
 from __future__ import annotations
 
 import asyncio
@@ -370,9 +371,10 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=has
         # Remove add-ons that are no longer installed from device registry
         supervisor_addon_devices = {
             list(device.identifiers)[0][1]
-            for device in self.dev_reg.devices.values()
-            if self.entry_id in device.config_entries
-            and device.model == SupervisorEntityModel.ADDON
+            for device in self.dev_reg.devices.get_devices_for_config_entry_id(
+                self.entry_id
+            )
+            if device.model == SupervisorEntityModel.ADDON
         }
         if stale_addons := supervisor_addon_devices - set(new_data[DATA_KEY_ADDONS]):
             async_remove_addons_from_dev_reg(self.dev_reg, stale_addons)
@@ -419,7 +421,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=has
             updates[DATA_SUPERVISOR_STATS] = hassio.get_supervisor_stats()
 
         results = await asyncio.gather(*updates.values())
-        for key, result in zip(updates, results):
+        for key, result in zip(updates, results, strict=False):
             data[key] = result
 
         _addon_data = data[DATA_SUPERVISOR_INFO].get("addons", [])
@@ -482,28 +484,28 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=has
         """Update single addon stats."""
         try:
             stats = await self.hassio.get_addon_stats(slug)
-            return (slug, stats)
         except HassioAPIError as err:
             _LOGGER.warning("Could not fetch stats for %s: %s", slug, err)
-        return (slug, None)
+            return (slug, None)
+        return (slug, stats)
 
     async def _update_addon_changelog(self, slug: str) -> tuple[str, str | None]:
         """Return the changelog for an add-on."""
         try:
             changelog = await self.hassio.get_addon_changelog(slug)
-            return (slug, changelog)
         except HassioAPIError as err:
             _LOGGER.warning("Could not fetch changelog for %s: %s", slug, err)
-        return (slug, None)
+            return (slug, None)
+        return (slug, changelog)
 
     async def _update_addon_info(self, slug: str) -> tuple[str, dict[str, Any] | None]:
         """Return the info for an add-on."""
         try:
             info = await self.hassio.get_addon_info(slug)
-            return (slug, info)
         except HassioAPIError as err:
             _LOGGER.warning("Could not fetch info for %s: %s", slug, err)
-        return (slug, None)
+            return (slug, None)
+        return (slug, info)
 
     @callback
     def async_enable_container_updates(

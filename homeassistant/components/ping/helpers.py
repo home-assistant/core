@@ -1,4 +1,5 @@
 """Ping classes shared between platforms."""
+
 import asyncio
 from contextlib import suppress
 import logging
@@ -139,7 +140,6 @@ class PingDataSubProcess(PingData):
             if TYPE_CHECKING:
                 assert match is not None
             rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
-            return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": rtt_mdev}
         except TimeoutError:
             _LOGGER.exception(
                 "Timed out running command: `%s`, after: %ss",
@@ -154,6 +154,7 @@ class PingDataSubProcess(PingData):
             return None
         except AttributeError:
             return None
+        return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": rtt_mdev}
 
     async def async_update(self) -> None:
         """Retrieve the latest details from the host."""

@@ -1,4 +1,5 @@
 """Tests for homekit_controller init."""
+
 from datetime import timedelta
 import pathlib
 from unittest.mock import patch
@@ -154,13 +155,13 @@ async def test_offline_device_raises(hass: HomeAssistant, controller) -> None:
         )
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
     is_connected = True
 
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-    await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.LOADED
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
 
@@ -211,21 +212,23 @@ async def test_ble_device_only_checks_is_available(
         )
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
     is_available = True
 
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-    await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.LOADED
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
     is_available = False
     async_fire_time_changed(hass, utcnow() + timedelta(hours=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get("light.testdevice").state == STATE_UNAVAILABLE
 
     is_available = True
     async_fire_time_changed(hass, utcnow() + timedelta(hours=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
 
@@ -264,6 +267,7 @@ async def test_snapshots(
                 state_dict = dict(state.as_dict())
                 state_dict.pop("context", None)
                 state_dict.pop("last_changed", None)
+                state_dict.pop("last_reported", None)
                 state_dict.pop("last_updated", None)
 
                 state_dict["attributes"] = dict(state_dict["attributes"])

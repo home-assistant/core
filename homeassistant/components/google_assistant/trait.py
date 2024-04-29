@@ -1,4 +1,5 @@
 """Implement the Google Smart Home traits."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -1926,9 +1927,7 @@ class ModesTrait(_Trait):
             # Shortcut since all domains are currently unique
             break
 
-        payload = {"availableModes": modes}
-
-        return payload
+        return {"availableModes": modes}
 
     def query_attributes(self):
         """Return current modes."""
@@ -2103,9 +2102,7 @@ class InputSelectorTrait(_Trait):
             for source in sourcelist
         ]
 
-        payload = {"availableInputs": inputs, "orderedInputs": True}
-
-        return payload
+        return {"availableInputs": inputs, "orderedInputs": True}
 
     def query_attributes(self):
         """Return current modes."""
@@ -2706,10 +2703,9 @@ class SensorStateTrait(_Trait):
     name = TRAIT_SENSOR_STATE
     commands: list[str] = []
 
-    def _air_quality_description_for_aqi(self, aqi):
-        if aqi is None or aqi.isnumeric() is False:
+    def _air_quality_description_for_aqi(self, aqi: float | None) -> str:
+        if aqi is None or aqi < 0:
             return "unknown"
-        aqi = int(aqi)
         if aqi <= 50:
             return "healthy"
         if aqi <= 100:
@@ -2764,11 +2760,17 @@ class SensorStateTrait(_Trait):
         if device_class is None or data is None:
             return {}
 
-        sensor_data = {"name": data[0], "rawValue": self.state.state}
+        try:
+            value = float(self.state.state)
+        except ValueError:
+            value = None
+        if self.state.state == STATE_UNKNOWN:
+            value = None
+        sensor_data = {"name": data[0], "rawValue": value}
 
         if device_class == sensor.SensorDeviceClass.AQI:
             sensor_data["currentSensorState"] = self._air_quality_description_for_aqi(
-                self.state.state
+                value
             )
 
         return {"currentSensorStateData": [sensor_data]}

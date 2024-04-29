@@ -1,4 +1,5 @@
 """Run Home Assistant."""
+
 from __future__ import annotations
 
 import asyncio
@@ -106,6 +107,7 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
     def new_event_loop(self) -> asyncio.AbstractEventLoop:
         """Get the event loop."""
         loop: asyncio.AbstractEventLoop = super().new_event_loop()
+        setattr(loop, "_thread_ident", threading.get_ident())
         loop.set_exception_handler(_async_loop_exception_handler)
         if self.debug:
             loop.set_debug(True)

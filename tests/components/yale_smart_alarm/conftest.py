@@ -1,4 +1,5 @@
 """Fixtures for the Yale Smart Living integration."""
+
 from __future__ import annotations
 
 import json
@@ -55,7 +56,7 @@ async def load_config_entry(
     return (config_entry, client)
 
 
-@pytest.fixture(name="load_json", scope="session")
+@pytest.fixture(name="load_json", scope="package")
 def load_json_from_fixture() -> dict[str, Any]:
     """Load fixture with json data and return."""
 

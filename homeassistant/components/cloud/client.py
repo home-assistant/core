@@ -1,4 +1,5 @@
 """Interface implementation for cloud client."""
+
 from __future__ import annotations
 
 import asyncio
@@ -249,6 +250,7 @@ class CloudClient(Interface):
                 "enabled": self._prefs.remote_enabled,
                 "instance_domain": self.cloud.remote.instance_domain,
                 "alias": self.cloud.remote.alias,
+                "strict_connection": self._prefs.strict_connection,
             },
             "version": HA_VERSION,
             "instance_id": self.prefs.instance_id,

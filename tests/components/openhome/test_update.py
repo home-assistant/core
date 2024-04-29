@@ -1,4 +1,5 @@
 """Tests for the Openhome update platform."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -71,9 +72,10 @@ async def setup_integration(
     )
     entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.openhome.PLATFORMS", [Platform.UPDATE]), patch(
-        "homeassistant.components.openhome.Device", MagicMock()
-    ) as mock_device:
+    with (
+        patch("homeassistant.components.openhome.PLATFORMS", [Platform.UPDATE]),
+        patch("homeassistant.components.openhome.Device", MagicMock()) as mock_device,
+    ):
         mock_device.return_value.init = AsyncMock()
         mock_device.return_value.uuid = MagicMock(return_value="uuid")
         mock_device.return_value.manufacturer = MagicMock(return_value="manufacturer")

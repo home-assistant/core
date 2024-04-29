@@ -1,4 +1,5 @@
 """Test initialization of tedee."""
+
 from unittest.mock import MagicMock
 
 from pytedee_async.exception import TedeeAuthException, TedeeClientException

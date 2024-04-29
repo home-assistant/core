@@ -1,4 +1,5 @@
 """Support for IPP sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -37,19 +38,11 @@ from .coordinator import IPPDataUpdateCoordinator
 from .entity import IPPEntity
 
 
-@dataclass(frozen=True)
-class IPPSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
-
-    value_fn: Callable[[Printer], StateType | datetime]
-
-
-@dataclass(frozen=True)
-class IPPSensorEntityDescription(
-    SensorEntityDescription, IPPSensorEntityDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class IPPSensorEntityDescription(SensorEntityDescription):
     """Describes IPP sensor entity."""
 
+    value_fn: Callable[[Printer], StateType | datetime]
     attributes_fn: Callable[[Printer], dict[Any, StateType]] = lambda _: {}
 
 
@@ -127,7 +120,10 @@ async def async_setup_entry(
                             ATTR_MARKER_TYPE: marker.marker_type,
                         },
                     ),
-                    value_fn=_get_marker_value_fn(index, lambda marker: marker.level),
+                    value_fn=_get_marker_value_fn(
+                        index,
+                        lambda marker: marker.level if marker.level >= 0 else None,
+                    ),
                 ),
             )
         )

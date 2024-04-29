@@ -3,9 +3,10 @@
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from tesla_fleet_api.exceptions import (
     InvalidToken,
-    PaymentRequired,
+    SubscriptionRequired,
     TeslaFleetError,
     VehicleOffline,
 )
@@ -20,6 +21,12 @@ from .const import WAKE_UP_ASLEEP, WAKE_UP_ONLINE
 
 from tests.common import async_fire_time_changed
 
+ERRORS = [
+    (InvalidToken, ConfigEntryState.SETUP_ERROR),
+    (SubscriptionRequired, ConfigEntryState.SETUP_ERROR),
+    (TeslaFleetError, ConfigEntryState.SETUP_RETRY),
+]
+
 
 async def test_load_unload(hass: HomeAssistant) -> None:
     """Test load and unload."""
@@ -31,34 +38,21 @@ async def test_load_unload(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_auth_failure(hass: HomeAssistant, mock_products) -> None:
-    """Test init with an authentication error."""
+@pytest.mark.parametrize(("side_effect", "state"), ERRORS)
+async def test_init_error(
+    hass: HomeAssistant, mock_products, side_effect, state
+) -> None:
+    """Test init with errors."""
 
-    mock_products.side_effect = InvalidToken
+    mock_products.side_effect = side_effect
     entry = await setup_platform(hass)
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.state is state
 
 
-async def test_subscription_failure(hass: HomeAssistant, mock_products) -> None:
-    """Test init with an client response error."""
-
-    mock_products.side_effect = PaymentRequired
-    entry = await setup_platform(hass)
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+# Vehicle Coordinator
 
 
-async def test_other_failure(hass: HomeAssistant, mock_products) -> None:
-    """Test init with an client response error."""
-
-    mock_products.side_effect = TeslaFleetError
-    entry = await setup_platform(hass)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
-# Coordinator
-
-
-async def test_first_refresh(
+async def test_vehicle_first_refresh(
     hass: HomeAssistant,
     mock_wake_up,
     mock_vehicle_data,
@@ -80,7 +74,7 @@ async def test_first_refresh(
     # Wait for the retry
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify we have loaded
     assert entry.state is ConfigEntryState.LOADED
@@ -88,14 +82,17 @@ async def test_first_refresh(
     mock_vehicle_data.assert_called_once()
 
 
-async def test_first_refresh_error(hass: HomeAssistant, mock_wake_up) -> None:
+@pytest.mark.parametrize(("side_effect", "state"), ERRORS)
+async def test_vehicle_first_refresh_error(
+    hass: HomeAssistant, mock_wake_up, side_effect, state
+) -> None:
     """Test first coordinator refresh with an error."""
-    mock_wake_up.side_effect = TeslaFleetError
+    mock_wake_up.side_effect = side_effect
     entry = await setup_platform(hass)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state is state
 
 
-async def test_refresh_offline(
+async def test_vehicle_refresh_offline(
     hass: HomeAssistant, mock_vehicle_data, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test coordinator refresh with an error."""
@@ -111,8 +108,24 @@ async def test_refresh_offline(
     mock_vehicle_data.assert_called_once()
 
 
-async def test_refresh_error(hass: HomeAssistant, mock_vehicle_data) -> None:
+@pytest.mark.parametrize(("side_effect", "state"), ERRORS)
+async def test_vehicle_refresh_error(
+    hass: HomeAssistant, mock_vehicle_data, side_effect, state
+) -> None:
     """Test coordinator refresh with an error."""
-    mock_vehicle_data.side_effect = TeslaFleetError
+    mock_vehicle_data.side_effect = side_effect
     entry = await setup_platform(hass)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state is state
+
+
+# Test Energy Coordinator
+
+
+@pytest.mark.parametrize(("side_effect", "state"), ERRORS)
+async def test_energy_refresh_error(
+    hass: HomeAssistant, mock_live_status, side_effect, state
+) -> None:
+    """Test coordinator refresh with an error."""
+    mock_live_status.side_effect = side_effect
+    entry = await setup_platform(hass)
+    assert entry.state is state

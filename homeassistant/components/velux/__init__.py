@@ -1,4 +1,5 @@
 """Support for VELUX KLF 200 devices."""
+
 from pyvlx import Node, PyVLX, PyVLXException
 import voluptuous as vol
 
