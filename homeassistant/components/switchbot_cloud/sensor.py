@@ -60,9 +60,7 @@ async def async_setup_entry(
     )
 
 
-class SwitchBotCloudSensor(
-    SwitchBotCloudEntity, CoordinatorEntity[SwitchBotCoordinator], SensorEntity
-):
+class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
     """Representation of a SwitchBot Cloud sensor entity."""
 
     def __init__(
