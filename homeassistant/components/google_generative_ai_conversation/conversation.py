@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Literal
 
 from google.api_core.exceptions import ClientError
@@ -31,9 +30,8 @@ from .const import (
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
+    LOGGER,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -97,7 +95,7 @@ class GoogleGenerativeAIConversationEntity(
                 ),
             },
         )
-        _LOGGER.debug("Model: %s", model)
+        LOGGER.debug("Model: %s", model)
 
         if user_input.conversation_id in self.history:
             conversation_id = user_input.conversation_id
@@ -110,7 +108,12 @@ class GoogleGenerativeAIConversationEntity(
         try:
             prompt = self._async_generate_prompt(raw_prompt)
         except TemplateError as err:
+<<<<<<< HEAD
             _LOGGER.error("Error rendering prompt: %s", err)
+=======
+            LOGGER.error("Error rendering prompt: %s", err)
+            intent_response = intent.IntentResponse(language=user_input.language)
+>>>>>>> ee9efa0455 (Move logger and cleanup snapshots)
             intent_response.async_set_error(
                 intent.IntentResponseErrorCode.UNKNOWN,
                 f"Sorry, I had a problem with my template: {err}",
@@ -122,7 +125,7 @@ class GoogleGenerativeAIConversationEntity(
         messages[0] = {"role": "user", "parts": prompt}
         messages[1] = {"role": "model", "parts": "Ok"}
 
-        _LOGGER.debug("Input: '%s' with history: %s", user_input.text, messages)
+        LOGGER.debug("Input: '%s' with history: %s", user_input.text, messages)
 
         chat = model.start_chat(history=messages)
         try:
@@ -133,7 +136,12 @@ class GoogleGenerativeAIConversationEntity(
             genai_types.BlockedPromptException,
             genai_types.StopCandidateException,
         ) as err:
+<<<<<<< HEAD
             _LOGGER.error("Error sending message: %s", err)
+=======
+            LOGGER.error("Error sending message: %s", err)
+            intent_response = intent.IntentResponse(language=user_input.language)
+>>>>>>> ee9efa0455 (Move logger and cleanup snapshots)
             intent_response.async_set_error(
                 intent.IntentResponseErrorCode.UNKNOWN,
                 f"Sorry, I had a problem talking to Google Generative AI: {err}",
@@ -142,6 +150,7 @@ class GoogleGenerativeAIConversationEntity(
                 response=intent_response, conversation_id=conversation_id
             )
 
+<<<<<<< HEAD
         _LOGGER.debug("Response: %s", chat_response.parts)
         if not chat_response.parts:
             intent_response.async_set_error(
@@ -151,6 +160,9 @@ class GoogleGenerativeAIConversationEntity(
             return conversation.ConversationResult(
                 response=intent_response, conversation_id=conversation_id
             )
+=======
+        LOGGER.debug("Response: %s", chat_response.parts)
+>>>>>>> ee9efa0455 (Move logger and cleanup snapshots)
         self.history[conversation_id] = chat.history
         intent_response.async_set_speech(chat_response.text)
         return conversation.ConversationResult(

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from functools import partial
-import logging
 import mimetypes
 from pathlib import Path
 
@@ -24,9 +23,8 @@ from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_CHAT_MODEL, CONF_PROMPT, DEFAULT_CHAT_MODEL, DOMAIN
+from .const import CONF_CHAT_MODEL, CONF_PROMPT, DEFAULT_CHAT_MODEL, DOMAIN, LOGGER
 
-_LOGGER = logging.getLogger(__name__)
 SERVICE_GENERATE_CONTENT = "generate_content"
 CONF_IMAGE_FILENAME = "image_filename"
 
@@ -106,7 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     except ClientError as err:
         if err.reason == "API_KEY_INVALID":
-            _LOGGER.error("Invalid API key: %s", err)
+            LOGGER.error("Invalid API key: %s", err)
             return False
         raise ConfigEntryNotReady(err) from err
 
