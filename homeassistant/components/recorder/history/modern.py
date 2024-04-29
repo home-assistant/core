@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Iterator, MutableMapping
+from collections.abc import Callable, Iterable, Iterator
 from datetime import datetime
 from itertools import groupby
 from operator import itemgetter
@@ -27,6 +27,7 @@ from homeassistant.core import HomeAssistant, State, split_entity_id
 import homeassistant.util.dt as dt_util
 
 from ... import recorder
+from ..const import LAST_REPORTED_SCHEMA_VERSION
 from ..db_schema import SHARED_ATTR_OR_LEGACY_ATTRIBUTES, StateAttributes, States
 from ..filters import Filters
 from ..models import (
@@ -116,7 +117,7 @@ def get_significant_states(
     minimal_response: bool = False,
     no_attributes: bool = False,
     compressed_state_format: bool = False,
-) -> MutableMapping[str, list[State | dict[str, Any]]]:
+) -> dict[str, list[State | dict[str, Any]]]:
     """Wrap get_significant_states_with_session with an sql session."""
     with session_scope(hass=hass, read_only=True) as session:
         return get_significant_states_with_session(
@@ -173,8 +174,7 @@ def _significant_states_stmt(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
     if not include_start_time_state or not run_start_ts:
-        stmt = stmt.order_by(States.metadata_id, States.last_updated_ts)
-        return stmt
+        return stmt.order_by(States.metadata_id, States.last_updated_ts)
     unioned_subquery = union_all(
         _select_from_subquery(
             _get_start_time_state_stmt(
@@ -213,7 +213,7 @@ def get_significant_states_with_session(
     minimal_response: bool = False,
     no_attributes: bool = False,
     compressed_state_format: bool = False,
-) -> MutableMapping[str, list[State | dict[str, Any]]]:
+) -> dict[str, list[State | dict[str, Any]]]:
     """Return states changes during UTC period start_time - end_time.
 
     entity_ids is an optional iterable of entities to include in the results.
@@ -296,14 +296,14 @@ def get_full_significant_states_with_session(
     include_start_time_state: bool = True,
     significant_changes_only: bool = True,
     no_attributes: bool = False,
-) -> MutableMapping[str, list[State]]:
+) -> dict[str, list[State]]:
     """Variant of get_significant_states_with_session.
 
     Difference with get_significant_states_with_session is that it does not
     return minimal responses.
     """
     return cast(
-        MutableMapping[str, list[State]],
+        dict[str, list[State]],
         get_significant_states_with_session(
             hass=hass,
             session=session,
@@ -327,9 +327,10 @@ def _state_changed_during_period_stmt(
     limit: int | None,
     include_start_time_state: bool,
     run_start_ts: float | None,
+    include_last_reported: bool,
 ) -> Select | CompoundSelect:
     stmt = (
-        _stmt_and_join_attributes(no_attributes, False, True)
+        _stmt_and_join_attributes(no_attributes, False, include_last_reported)
         .filter(
             (
                 (States.last_changed_ts == States.last_updated_ts)
@@ -361,22 +362,22 @@ def _state_changed_during_period_stmt(
                     single_metadata_id,
                     no_attributes,
                     False,
-                    True,
+                    include_last_reported,
                 ).subquery(),
                 no_attributes,
                 False,
-                True,
+                include_last_reported,
             ),
             _select_from_subquery(
                 stmt.subquery(),
                 no_attributes,
                 False,
-                True,
+                include_last_reported,
             ),
         ).subquery(),
         no_attributes,
         False,
-        True,
+        include_last_reported,
     )
 
 
@@ -389,8 +390,11 @@ def state_changes_during_period(
     descending: bool = False,
     limit: int | None = None,
     include_start_time_state: bool = True,
-) -> MutableMapping[str, list[State]]:
+) -> dict[str, list[State]]:
     """Return states changes during UTC period start_time - end_time."""
+    has_last_reported = (
+        recorder.get_instance(hass).schema_version >= LAST_REPORTED_SCHEMA_VERSION
+    )
     if not entity_id:
         raise ValueError("entity_id must be provided")
     entity_ids = [entity_id.lower()]
@@ -423,16 +427,18 @@ def state_changes_during_period(
                 limit,
                 include_start_time_state,
                 run_start_ts,
+                has_last_reported,
             ),
             track_on=[
                 bool(end_time_ts),
                 no_attributes,
                 bool(limit),
                 include_start_time_state,
+                has_last_reported,
             ],
         )
         return cast(
-            MutableMapping[str, list[State]],
+            dict[str, list[State]],
             _sorted_states_to_dict(
                 execute_stmt_lambda_element(
                     session, stmt, None, end_time, orm_rows=False
@@ -475,10 +481,10 @@ def _get_last_state_changes_single_stmt(metadata_id: int) -> Select:
 
 
 def _get_last_state_changes_multiple_stmt(
-    number_of_states: int, metadata_id: int
+    number_of_states: int, metadata_id: int, include_last_reported: bool
 ) -> Select:
     return (
-        _stmt_and_join_attributes(False, False, True)
+        _stmt_and_join_attributes(False, False, include_last_reported)
         .where(
             States.state_id
             == (
@@ -498,8 +504,11 @@ def _get_last_state_changes_multiple_stmt(
 
 def get_last_state_changes(
     hass: HomeAssistant, number_of_states: int, entity_id: str
-) -> MutableMapping[str, list[State]]:
+) -> dict[str, list[State]]:
     """Return the last number_of_states."""
+    has_last_reported = (
+        recorder.get_instance(hass).schema_version >= LAST_REPORTED_SCHEMA_VERSION
+    )
     entity_id_lower = entity_id.lower()
     entity_ids = [entity_id_lower]
 
@@ -524,12 +533,13 @@ def get_last_state_changes(
         else:
             stmt = lambda_stmt(
                 lambda: _get_last_state_changes_multiple_stmt(
-                    number_of_states, metadata_id
+                    number_of_states, metadata_id, has_last_reported
                 ),
+                track_on=[has_last_reported],
             )
         states = list(execute_stmt_lambda_element(session, stmt, orm_rows=False))
         return cast(
-            MutableMapping[str, list[State]],
+            dict[str, list[State]],
             _sorted_states_to_dict(
                 reversed(states),
                 None,
@@ -670,7 +680,7 @@ def _sorted_states_to_dict(
     compressed_state_format: bool = False,
     descending: bool = False,
     no_attributes: bool = False,
-) -> MutableMapping[str, list[State | dict[str, Any]]]:
+) -> dict[str, list[State | dict[str, Any]]]:
     """Convert SQL results into JSON friendly data structure.
 
     This takes our state list and turns it into a JSON friendly data

@@ -11,6 +11,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 
+from .const import DOMAIN
+
 if TYPE_CHECKING:
     from homeassistant.components.group import GroupIntegrationRegistry
 
@@ -21,5 +23,13 @@ def async_describe_on_off_states(
 ) -> None:
     """Describe group on off states."""
     registry.on_off_states(
-        {STATE_ON, STATE_PAUSED, STATE_PLAYING, STATE_IDLE}, STATE_OFF
+        DOMAIN,
+        {
+            STATE_ON,
+            STATE_PAUSED,
+            STATE_PLAYING,
+            STATE_IDLE,
+        },
+        STATE_ON,
+        STATE_OFF,
     )

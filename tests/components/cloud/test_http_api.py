@@ -19,6 +19,7 @@ from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY
 from homeassistant.components.cloud.const import DEFAULT_EXPOSED_DOMAINS, DOMAIN
 from homeassistant.components.google_assistant.helpers import GoogleEntity
 from homeassistant.components.homeassistant import exposed_entities
+from homeassistant.components.http.const import StrictConnectionMode
 from homeassistant.components.websocket_api import ERR_INVALID_FORMAT
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
@@ -231,6 +232,7 @@ async def test_login_view_create_pipeline(
     }
 
     assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "assist_pipeline", {})
     assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
     await hass.async_block_till_done()
 
@@ -270,6 +272,7 @@ async def test_login_view_create_pipeline_fail(
     }
 
     assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "assist_pipeline", {})
     assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
     await hass.async_block_till_done()
 
@@ -780,6 +783,7 @@ async def test_websocket_status(
             "google_report_state": True,
             "remote_allow_remote_enable": True,
             "remote_enabled": False,
+            "strict_connection": "disabled",
             "tts_default_voice": ["en-US", "JennyNeural"],
         },
         "alexa_entities": {
@@ -899,6 +903,7 @@ async def test_websocket_update_preferences(
     assert cloud.client.prefs.alexa_enabled
     assert cloud.client.prefs.google_secure_devices_pin is None
     assert cloud.client.prefs.remote_allow_remote_enable is True
+    assert cloud.client.prefs.strict_connection is StrictConnectionMode.DISABLED
 
     client = await hass_ws_client(hass)
 
@@ -910,6 +915,7 @@ async def test_websocket_update_preferences(
             "google_secure_devices_pin": "1234",
             "tts_default_voice": ["en-GB", "RyanNeural"],
             "remote_allow_remote_enable": False,
+            "strict_connection": StrictConnectionMode.DROP_CONNECTION,
         }
     )
     response = await client.receive_json()
@@ -920,6 +926,7 @@ async def test_websocket_update_preferences(
     assert cloud.client.prefs.google_secure_devices_pin == "1234"
     assert cloud.client.prefs.remote_allow_remote_enable is False
     assert cloud.client.prefs.tts_default_voice == ("en-GB", "RyanNeural")
+    assert cloud.client.prefs.strict_connection is StrictConnectionMode.DROP_CONNECTION
 
 
 @pytest.mark.parametrize(

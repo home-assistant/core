@@ -79,7 +79,7 @@ async def test_state(hass: HomeAssistant, mock_socket, now) -> None:
     mock_socket.recv.return_value = b"on"
 
     async_fire_time_changed(hass, now + timedelta(seconds=45))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(TEST_ENTITY)
 

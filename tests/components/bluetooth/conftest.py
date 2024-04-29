@@ -8,21 +8,21 @@ import habluetooth.util as habluetooth_utils
 import pytest
 
 
-@pytest.fixture(name="disable_bluez_manager_socket", autouse=True, scope="session")
+@pytest.fixture(name="disable_bluez_manager_socket", autouse=True, scope="package")
 def disable_bluez_manager_socket():
     """Mock the bluez manager socket."""
     with patch.object(bleak_manager, "get_global_bluez_manager_with_timeout"):
         yield
 
 
-@pytest.fixture(name="disable_dbus_socket", autouse=True, scope="session")
+@pytest.fixture(name="disable_dbus_socket", autouse=True, scope="package")
 def disable_dbus_socket():
     """Mock the dbus message bus to avoid creating a socket."""
     with patch.object(message_bus, "MessageBus"):
         yield
 
 
-@pytest.fixture(name="disable_bluetooth_auto_recovery", autouse=True, scope="session")
+@pytest.fixture(name="disable_bluetooth_auto_recovery", autouse=True, scope="package")
 def disable_bluetooth_auto_recovery():
     """Mock out auto recovery."""
     with patch.object(habluetooth_utils, "recover_adapter"):
@@ -212,6 +212,45 @@ def two_adapters_fixture():
                     "product_id": "aa01",
                     "vendor_id": "cc01",
                     "connection_slots": 2,
+                },
+            },
+        ),
+    ):
+        yield
+
+
+@pytest.fixture(name="crashed_adapter")
+def crashed_adapter_fixture():
+    """Fixture that mocks one crashed adapter on Linux."""
+    with (
+        patch(
+            "homeassistant.components.bluetooth.platform.system",
+            return_value="Linux",
+        ),
+        patch(
+            "habluetooth.scanner.platform.system",
+            return_value="Linux",
+        ),
+        patch(
+            "bluetooth_adapters.systems.platform.system",
+            return_value="Linux",
+        ),
+        patch("habluetooth.scanner.SYSTEM", "Linux"),
+        patch(
+            "bluetooth_adapters.systems.linux.LinuxAdapters.refresh",
+        ),
+        patch(
+            "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
+            {
+                "hci0": {
+                    "address": "00:00:00:00:00:00",
+                    "hw_version": "usb:v1D6Bp0246d053F",
+                    "passive_scan": True,
+                    "sw_version": "homeassistant",
+                    "manufacturer": None,
+                    "product": None,
+                    "product_id": None,
+                    "vendor_id": None,
                 },
             },
         ),

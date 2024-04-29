@@ -183,8 +183,8 @@ def get_schema_version(session_maker: Callable[[], Session]) -> int | None:
     try:
         with session_scope(session=session_maker(), read_only=True) as session:
             return _get_schema_version(session)
-    except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.exception("Error when determining DB schema version: %s", err)
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Error when determining DB schema version")
         return None
 
 
@@ -341,10 +341,10 @@ def _execute_or_collect_error(
     with session_scope(session=session_maker()) as session:
         try:
             session.connection().execute(text(query))
-            return True
         except SQLAlchemyError as err:
             errors.append(str(err))
-    return False
+            return False
+        return True
 
 
 def _drop_index(
@@ -439,11 +439,12 @@ def _add_columns(
                     )
                 )
             )
-            return
         except (InternalError, OperationalError, ProgrammingError):
             # Some engines support adding all columns at once,
             # this error is when they don't
             _LOGGER.info("Unable to use quick column add. Adding 1 by 1")
+        else:
+            return
 
     for column_def in columns_def:
         with session_scope(session=session_maker()) as session:
@@ -491,7 +492,7 @@ def _modify_columns(
     if engine.dialect.name == SupportedDialect.POSTGRESQL:
         columns_def = [
             "ALTER {column} TYPE {type}".format(
-                **dict(zip(["column", "type"], col_def.split(" ", 1)))
+                **dict(zip(["column", "type"], col_def.split(" ", 1), strict=False))
             )
             for col_def in columns_def
         ]
@@ -510,9 +511,10 @@ def _modify_columns(
                     )
                 )
             )
-            return
         except (InternalError, OperationalError):
             _LOGGER.info("Unable to use quick column modify. Modifying 1 by 1")
+        else:
+            return
 
     for column_def in columns_def:
         with session_scope(session=session_maker()) as session:
@@ -1786,8 +1788,8 @@ def initialize_database(session_maker: Callable[[], Session]) -> bool:
         with session_scope(session=session_maker()) as session:
             return _initialize_database(session)
 
-    except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.exception("Error when initialise database: %s", err)
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Error when initialise database")
         return False
 
 

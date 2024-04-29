@@ -488,3 +488,20 @@ async def async_shutdown_device(device: BlockDevice | RpcDevice) -> None:
         await device.shutdown()
     if isinstance(device, BlockDevice):
         device.shutdown()
+
+
+@callback
+def async_remove_shelly_rpc_entities(
+    hass: HomeAssistant, domain: str, mac: str, keys: list[str]
+) -> None:
+    """Remove RPC based Shelly entity."""
+    entity_reg = er_async_get(hass)
+    for key in keys:
+        if entity_id := entity_reg.async_get_entity_id(domain, DOMAIN, f"{mac}-{key}"):
+            LOGGER.debug("Removing entity: %s", entity_id)
+            entity_reg.async_remove(entity_id)
+
+
+def is_rpc_thermostat_mode(ident: int, status: dict[str, Any]) -> bool:
+    """Return True if 'thermostat:<IDent>' is present in the status."""
+    return f"thermostat:{ident}" in status
