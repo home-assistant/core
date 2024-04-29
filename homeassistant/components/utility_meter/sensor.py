@@ -583,7 +583,13 @@ class UtilityMeterSensor(RestoreSensor):
 
     async def async_reset_meter(self, entity_id):
         """Reset meter."""
-        if self._tariff is not None and self._tariff_entity != entity_id:
+        if self._tariff_entity is not None and self._tariff_entity != entity_id:
+            return
+        if (
+            self._tariff_entity is None
+            and entity_id is not None
+            and self.entity_id != entity_id
+        ):
             return
         _LOGGER.debug("Reset utility meter <%s>", self.entity_id)
         self._last_reset = dt_util.utcnow()

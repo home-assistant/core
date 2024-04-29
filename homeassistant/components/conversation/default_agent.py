@@ -175,14 +175,16 @@ class DefaultAgent(ConversationEntity):
         return get_languages()
 
     @core.callback
-    def _filter_entity_registry_changes(self, event_data: dict[str, Any]) -> bool:
+    def _filter_entity_registry_changes(
+        self, event_data: er.EventEntityRegistryUpdatedData
+    ) -> bool:
         """Filter entity registry changed events."""
         return event_data["action"] == "update" and any(
             field in event_data["changes"] for field in _ENTITY_REGISTRY_UPDATE_FIELDS
         )
 
     @core.callback
-    def _filter_state_changes(self, event_data: dict[str, Any]) -> bool:
+    def _filter_state_changes(self, event_data: core.EventStateChangedData) -> bool:
         """Filter state changed events."""
         return not event_data["old_state"] or not event_data["new_state"]
 
@@ -195,24 +197,20 @@ class DefaultAgent(ConversationEntity):
             self.hass.bus.async_listen(
                 ar.EVENT_AREA_REGISTRY_UPDATED,
                 self._async_clear_slot_list,
-                run_immediately=True,
             ),
             self.hass.bus.async_listen(
                 fr.EVENT_FLOOR_REGISTRY_UPDATED,
                 self._async_clear_slot_list,
-                run_immediately=True,
             ),
             self.hass.bus.async_listen(
                 er.EVENT_ENTITY_REGISTRY_UPDATED,
                 self._async_clear_slot_list,
                 event_filter=self._filter_entity_registry_changes,
-                run_immediately=True,
             ),
             self.hass.bus.async_listen(
                 EVENT_STATE_CHANGED,
                 self._async_clear_slot_list,
                 event_filter=self._filter_state_changes,
-                run_immediately=True,
             ),
             async_listen_entity_updates(self.hass, DOMAIN, self._async_clear_slot_list),
         ]
@@ -240,7 +238,7 @@ class DefaultAgent(ConversationEntity):
         slot_lists = self._make_slot_lists()
         intent_context = self._make_intent_context(user_input)
 
-        result = await self.hass.async_add_executor_job(
+        return await self.hass.async_add_executor_job(
             self._recognize,
             user_input,
             lang_intents,
@@ -248,8 +246,6 @@ class DefaultAgent(ConversationEntity):
             intent_context,
             language,
         )
-
-        return result
 
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
@@ -754,9 +750,7 @@ class DefaultAgent(ConversationEntity):
         return lang_intents
 
     @core.callback
-    def _async_clear_slot_list(
-        self, event: core.Event[dict[str, Any]] | None = None
-    ) -> None:
+    def _async_clear_slot_list(self, event: core.Event[Any] | None = None) -> None:
         """Clear slot lists when a registry has changed."""
         self._slot_lists = None
         assert self._unsub_clear_slot_list is not None
@@ -901,8 +895,7 @@ class DefaultAgent(ConversationEntity):
         # Force rebuild on next use
         self._trigger_intents = None
 
-        unregister = functools.partial(self._unregister_trigger, trigger_data)
-        return unregister
+        return functools.partial(self._unregister_trigger, trigger_data)
 
     def _rebuild_trigger_intents(self) -> None:
         """Rebuild the HassIL intents object from the current trigger sentences."""

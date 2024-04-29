@@ -8,6 +8,7 @@ from typing import Any, Literal, TypedDict, cast
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
+from homeassistant.util.event_type import EventType
 
 from . import device_registry as dr, entity_registry as er
 from .normalized_name_base_registry import (
@@ -20,10 +21,30 @@ from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
 DATA_REGISTRY = "area_registry"
-EVENT_AREA_REGISTRY_UPDATED = "area_registry_updated"
+EVENT_AREA_REGISTRY_UPDATED: EventType[EventAreaRegistryUpdatedData] = EventType(
+    "area_registry_updated"
+)
 STORAGE_KEY = "core.area_registry"
 STORAGE_VERSION_MAJOR = 1
 STORAGE_VERSION_MINOR = 6
+
+
+class _AreaStoreData(TypedDict):
+    """Data type for individual area. Used in AreasRegistryStoreData."""
+
+    aliases: list[str]
+    floor_id: str | None
+    icon: str | None
+    id: str
+    labels: list[str]
+    name: str
+    picture: str | None
+
+
+class AreasRegistryStoreData(TypedDict):
+    """Store data type for AreaRegistry."""
+
+    areas: list[_AreaStoreData]
 
 
 class EventAreaRegistryUpdatedData(TypedDict):
@@ -45,7 +66,7 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
     picture: str | None
 
 
-class AreaRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
+class AreaRegistryStore(Store[AreasRegistryStoreData]):
     """Store area registry data."""
 
     async def _async_migrate_func(
@@ -53,7 +74,7 @@ class AreaRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
         old_major_version: int,
         old_minor_version: int,
         old_data: dict[str, list[dict[str, Any]]],
-    ) -> dict[str, Any]:
+    ) -> AreasRegistryStoreData:
         """Migrate to the new version."""
         if old_major_version < 2:
             if old_minor_version < 2:
@@ -84,7 +105,7 @@ class AreaRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
 
         if old_major_version > 1:
             raise NotImplementedError
-        return old_data
+        return old_data  # type: ignore[return-value]
 
 
 class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
@@ -126,7 +147,7 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
         return [data[key] for key in self._floors_index.get(floor, ())]
 
 
-class AreaRegistry(BaseRegistry):
+class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
     """Class to hold a registry of areas."""
 
     areas: AreaRegistryItems
@@ -181,6 +202,7 @@ class AreaRegistry(BaseRegistry):
         picture: str | None = None,
     ) -> AreaEntry:
         """Create a new area."""
+        self.hass.verify_event_loop_thread("async_create")
         normalized_name = normalize_name(name)
 
         if self.async_get_area_by_name(name):
@@ -200,14 +222,16 @@ class AreaRegistry(BaseRegistry):
         assert area.id is not None
         self.areas[area.id] = area
         self.async_schedule_save()
-        self.hass.bus.async_fire(
-            EVENT_AREA_REGISTRY_UPDATED, {"action": "create", "area_id": area.id}
+        self.hass.bus.async_fire_internal(
+            EVENT_AREA_REGISTRY_UPDATED,
+            EventAreaRegistryUpdatedData(action="create", area_id=area.id),
         )
         return area
 
     @callback
     def async_delete(self, area_id: str) -> None:
         """Delete area."""
+        self.hass.verify_event_loop_thread("async_delete")
         device_registry = dr.async_get(self.hass)
         entity_registry = er.async_get(self.hass)
         device_registry.async_clear_area_id(area_id)
@@ -215,8 +239,9 @@ class AreaRegistry(BaseRegistry):
 
         del self.areas[area_id]
 
-        self.hass.bus.async_fire(
-            EVENT_AREA_REGISTRY_UPDATED, {"action": "remove", "area_id": area_id}
+        self.hass.bus.async_fire_internal(
+            EVENT_AREA_REGISTRY_UPDATED,
+            EventAreaRegistryUpdatedData(action="remove", area_id=area_id),
         )
 
         self.async_schedule_save()
@@ -243,8 +268,13 @@ class AreaRegistry(BaseRegistry):
             name=name,
             picture=picture,
         )
+        # Since updated may be the old or the new and we always fire
+        # an event even if nothing has changed we cannot use async_fire_internal
+        # here because we do not know if the thread safety check already
+        # happened or not in _async_update.
         self.hass.bus.async_fire(
-            EVENT_AREA_REGISTRY_UPDATED, {"action": "update", "area_id": area_id}
+            EVENT_AREA_REGISTRY_UPDATED,
+            EventAreaRegistryUpdatedData(action="update", area_id=area_id),
         )
         return updated
 
@@ -282,6 +312,7 @@ class AreaRegistry(BaseRegistry):
         if not new_values:
             return old
 
+        self.hass.verify_event_loop_thread("_async_update")
         new = self.areas[area_id] = dataclasses.replace(old, **new_values)  # type: ignore[arg-type]
 
         self.async_schedule_save()
@@ -314,24 +345,22 @@ class AreaRegistry(BaseRegistry):
         self._area_data = areas.data
 
     @callback
-    def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:
+    def _data_to_save(self) -> AreasRegistryStoreData:
         """Return data of area registry to store in a file."""
-        data = {}
-
-        data["areas"] = [
-            {
-                "aliases": list(entry.aliases),
-                "floor_id": entry.floor_id,
-                "icon": entry.icon,
-                "id": entry.id,
-                "labels": list(entry.labels),
-                "name": entry.name,
-                "picture": entry.picture,
-            }
-            for entry in self.areas.values()
-        ]
-
-        return data
+        return {
+            "areas": [
+                {
+                    "aliases": list(entry.aliases),
+                    "floor_id": entry.floor_id,
+                    "icon": entry.icon,
+                    "id": entry.id,
+                    "labels": list(entry.labels),
+                    "name": entry.name,
+                    "picture": entry.picture,
+                }
+                for entry in self.areas.values()
+            ]
+        }
 
     def _generate_area_id(self, name: str) -> str:
         """Generate area ID."""
@@ -363,32 +392,26 @@ class AreaRegistry(BaseRegistry):
         def _handle_floor_registry_update(event: fr.EventFloorRegistryUpdated) -> None:
             """Update areas that are associated with a floor that has been removed."""
             floor_id = event.data["floor_id"]
-            for area_id, area in self.areas.items():
-                if floor_id == area.floor_id:
-                    self.async_update(area_id, floor_id=None)
+            for area in self.areas.get_areas_for_floor(floor_id):
+                self.async_update(area.id, floor_id=None)
 
         self.hass.bus.async_listen(
             event_type=fr.EVENT_FLOOR_REGISTRY_UPDATED,
             event_filter=_removed_from_registry_filter,
             listener=_handle_floor_registry_update,
-            run_immediately=True,
         )
 
         @callback
         def _handle_label_registry_update(event: lr.EventLabelRegistryUpdated) -> None:
             """Update areas that have a label that has been removed."""
             label_id = event.data["label_id"]
-            for area_id, area in self.areas.items():
-                if label_id in area.labels:
-                    labels = area.labels.copy()
-                    labels.remove(label_id)
-                    self.async_update(area_id, labels=labels)
+            for area in self.areas.get_areas_for_label(label_id):
+                self.async_update(area.id, labels=area.labels - {label_id})
 
         self.hass.bus.async_listen(
             event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
             event_filter=_removed_from_registry_filter,
             listener=_handle_label_registry_update,
-            run_immediately=True,
         )
 
 

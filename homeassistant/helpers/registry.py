@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections import UserDict
-from collections.abc import ValuesView
-from typing import TYPE_CHECKING, Any, Literal, TypeVar
+from collections.abc import Mapping, Sequence, ValuesView
+from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar
 
 from homeassistant.core import CoreState, HomeAssistant, callback
 
@@ -17,6 +17,7 @@ SAVE_DELAY_LONG = 180
 
 
 _DataT = TypeVar("_DataT")
+_StoreDataT = TypeVar("_StoreDataT", bound=Mapping[str, Any] | Sequence[Any])
 
 
 class BaseRegistryItems(UserDict[str, _DataT], ABC):
@@ -64,11 +65,11 @@ class BaseRegistryItems(UserDict[str, _DataT], ABC):
         super().__delitem__(key)
 
 
-class BaseRegistry(ABC):
+class BaseRegistry(ABC, Generic[_StoreDataT]):
     """Class to implement a registry."""
 
     hass: HomeAssistant
-    _store: Store
+    _store: Store[_StoreDataT]
 
     @callback
     def async_schedule_save(self) -> None:
@@ -80,5 +81,5 @@ class BaseRegistry(ABC):
 
     @callback
     @abstractmethod
-    def _data_to_save(self) -> dict[str, Any]:
+    def _data_to_save(self) -> _StoreDataT:
         """Return data of registry to store in a file."""

@@ -33,8 +33,6 @@ from .const import ATTR_DARK, ATTR_ON
 from .deconz_device import DeconzDevice
 from .hub import DeconzHub
 
-_SensorDeviceT = TypeVar("_SensorDeviceT", bound=PydeconzSensorBase)
-
 ATTR_ORIENTATION = "orientation"
 ATTR_TILTANGLE = "tiltangle"
 ATTR_VIBRATIONSTRENGTH = "vibrationstrength"

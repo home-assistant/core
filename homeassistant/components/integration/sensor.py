@@ -466,11 +466,9 @@ class IntegrationSensor(RestoreSensor):
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes of the sensor."""
-        state_attr = {
+        return {
             ATTR_SOURCE_ID: self._source_entity,
         }
-
-        return state_attr
 
     @property
     def extra_restore_state_data(self) -> IntegrationSensorExtraStoredData:

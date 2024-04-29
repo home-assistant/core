@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property
 import logging
-from typing import Any, TypeVar
+from typing import Any
 
 import voluptuous as vol
 
@@ -34,7 +34,6 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 _SlotsType = dict[str, Any]
-_T = TypeVar("_T")
 
 INTENT_TURN_OFF = "HassTurnOff"
 INTENT_TURN_ON = "HassTurnOn"
@@ -611,7 +610,9 @@ class DynamicServiceIntentHandler(IntentHandler):
 
         # Handle service calls in parallel, noting failures as they occur.
         failed_results: list[IntentResponseTarget] = []
-        for state, service_coro in zip(states, asyncio.as_completed(service_coros)):
+        for state, service_coro in zip(
+            states, asyncio.as_completed(service_coros), strict=False
+        ):
             target = IntentResponseTarget(
                 type=IntentResponseTargetType.ENTITY,
                 name=state.name,
@@ -658,7 +659,7 @@ class DynamicServiceIntentHandler(IntentHandler):
             )
 
         await self._run_then_background(
-            hass.async_create_task(
+            hass.async_create_task_internal(
                 hass.services.async_call(
                     domain,
                     service,

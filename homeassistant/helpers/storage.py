@@ -125,7 +125,6 @@ class _StoreManager:
         hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STARTED,
             self._async_schedule_cleanup,
-            run_immediately=True,
         )
 
     @callback
@@ -185,7 +184,6 @@ class _StoreManager:
         self._hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP,
             self._async_cancel_and_cleanup,
-            run_immediately=True,
         )
 
     @callback
@@ -280,7 +278,7 @@ class Store(Generic[_T]):
         if self._load_task:
             return await self._load_task
 
-        load_task = self.hass.async_create_task(
+        load_task = self.hass.async_create_background_task(
             self._async_load(), f"Storage load {self.key}", eager_start=True
         )
         if not load_task.done():
@@ -470,7 +468,7 @@ class Store(Generic[_T]):
             # wrote. Reschedule the timer to the next write time.
             self._async_reschedule_delayed_write(self._next_write_time)
             return
-        self.hass.async_create_task(
+        self.hass.async_create_task_internal(
             self._async_callback_delayed_write(), eager_start=True
         )
 
@@ -479,7 +477,8 @@ class Store(Generic[_T]):
         """Ensure that we write if we quit before delay has passed."""
         if self._unsub_final_write_listener is None:
             self._unsub_final_write_listener = self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_callback_final_write
+                EVENT_HOMEASSISTANT_FINAL_WRITE,
+                self._async_callback_final_write,
             )
 
     @callback
