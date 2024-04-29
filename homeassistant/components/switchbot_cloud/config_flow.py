@@ -7,10 +7,9 @@ from switchbot_api import CannotConnect, InvalidAuth, SwitchBotAPI
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, CONF_SCAN_INTERVAL
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 
-from .const import DEFAULT_SCAN_INTERVAL_SECONDS, DOMAIN, ENTRY_TITLE
+from .const import DOMAIN, ENTRY_TITLE
 
 _LOGGER = getLogger(__name__)
 
@@ -18,9 +17,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_TOKEN): str,
         vol.Required(CONF_API_KEY): str,
-        vol.Required(
-            CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL_SECONDS
-        ): cv.positive_int,
     }
 )
 
@@ -29,7 +25,6 @@ class SwitchBotCloudConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SwitchBot via API."""
 
     VERSION = 1
-    MINOR_VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -56,7 +51,5 @@ class SwitchBotCloudConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=ENTRY_TITLE, data=user_input)
 
         return self.async_show_form(
-            step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
-            errors=errors,
+            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )

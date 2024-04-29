@@ -4,8 +4,7 @@
       "user": {
         "data": {
           "api_token": "[%key:common::config_flow::data::api_token%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "scan_interval": "Scan interval (seconds)"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       }
     },

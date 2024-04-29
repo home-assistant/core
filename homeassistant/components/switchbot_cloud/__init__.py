@@ -41,11 +41,10 @@ def prepare_device(
     api: SwitchBotAPI,
     device: Device | Remote,
     coordinators_by_id: dict[str, SwitchBotCoordinator],
-    config: ConfigEntry,
 ) -> tuple[Device | Remote, SwitchBotCoordinator]:
     """Instantiate coordinator and adds to list for gathering."""
     coordinator = coordinators_by_id.setdefault(
-        device.device_id, SwitchBotCoordinator(hass, api, device, config)
+        device.device_id, SwitchBotCoordinator(hass, api, device)
     )
     return (device, coordinator)
 
@@ -56,7 +55,6 @@ def make_device_data(
     api: SwitchBotAPI,
     devices: list[Device | Remote],
     coordinators_by_id: dict[str, SwitchBotCoordinator],
-    config: ConfigEntry,
 ) -> SwitchbotDevices:
     """Make device data."""
     devices_data = SwitchbotDevices()
@@ -65,7 +63,7 @@ def make_device_data(
             "Air Conditioner"
         ):
             devices_data.climates.append(
-                prepare_device(hass, api, device, coordinators_by_id, config)
+                prepare_device(hass, api, device, coordinators_by_id)
             )
         if (
             isinstance(device, Device)
@@ -73,7 +71,7 @@ def make_device_data(
             or isinstance(device, Remote)
         ):
             devices_data.switches.append(
-                prepare_device(hass, api, device, coordinators_by_id, config)
+                prepare_device(hass, api, device, coordinators_by_id)
             )
         if isinstance(device, Device) and device.device_type in [
             "Meter",
@@ -81,7 +79,7 @@ def make_device_data(
             "WoIOSensor",
         ]:
             devices_data.sensors.append(
-                prepare_device(hass, api, device, coordinators_by_id, config)
+                prepare_device(hass, api, device, coordinators_by_id)
             )
     return devices_data
 
@@ -105,8 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     coordinators_by_id: dict[str, SwitchBotCoordinator] = {}
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config.entry_id] = SwitchbotCloudData(
-        api=api,
-        devices=make_device_data(hass, api, devices, coordinators_by_id, config),
+        api=api, devices=make_device_data(hass, api, devices, coordinators_by_id)
     )
     await hass.config_entries.async_forward_entry_setups(config, PLATFORMS)
     await gather(
