@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import datetime
 import logging
 from typing import Any
 
@@ -57,10 +56,9 @@ class FytaConfigFlow(ConfigFlow, domain=DOMAIN):
         finally:
             await fyta.client.close()
 
-        if isinstance(self.credentials[CONF_EXPIRATION], datetime):
-            self.credentials[CONF_EXPIRATION] = self.credentials[
-                CONF_EXPIRATION
-            ].isoformat()
+        self.credentials[CONF_EXPIRATION] = self.credentials[
+            CONF_EXPIRATION
+        ].isoformat()
 
         return {}
 

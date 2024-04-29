@@ -79,8 +79,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             credentials: dict[str, Any] = await fyta.login()
             await fyta.client.close()
 
-            if isinstance(credentials[CONF_EXPIRATION], datetime):
-                credentials[CONF_EXPIRATION] = credentials[CONF_EXPIRATION].isoformat()
+            credentials[CONF_EXPIRATION] = credentials[CONF_EXPIRATION].isoformat()
 
             new[CONF_ACCESS_TOKEN] = credentials[CONF_ACCESS_TOKEN]
             new[CONF_EXPIRATION] = credentials[CONF_EXPIRATION]
