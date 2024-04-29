@@ -32,6 +32,7 @@
     }
   },
   "services": {
+    "browse_media": "mdi:folder-search",
     "clear_playlist": "mdi:playlist-remove",
     "join": "mdi:group",
     "media_next_track": "mdi:skip-next",
