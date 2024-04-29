@@ -250,7 +250,7 @@ async def async_setup_entry(  # noqa: C901
         with _increase_repr_limit():
             for task in asyncio.all_tasks():
                 if not task.cancelled():
-                    _LOGGER.critical("Task: %s", task)
+                    _LOGGER.critical("Task: %s", _safe_repr(task))
 
     async def _async_dump_scheduled(call: ServiceCall) -> None:
         """Log all scheduled in the event loop."""
