@@ -412,7 +412,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         else:
             self._attr_action = HumidifierAction.IDLE
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def _async_update_humidity(self, humidity: str) -> None:
         """Update hygrostat with latest state from sensor."""
