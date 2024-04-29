@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -43,6 +44,14 @@ def _process_group_platform(
     platform.async_describe_on_off_states(hass, registry)
 
 
+@dataclass(frozen=True, slots=True)
+class SingleStateType:
+    """Dataclass to store a single state type."""
+
+    on_state: str
+    off_state: str
+
+
 class GroupIntegrationRegistry:
     """Class to hold a registry of integrations."""
 
@@ -53,7 +62,7 @@ class GroupIntegrationRegistry:
         self.off_on_mapping: dict[str, str] = {STATE_OFF: STATE_ON}
         self.on_states_by_domain: dict[str, set[str]] = {}
         self.exclude_domains: set[str] = set()
-        self.state_group_mapping: dict[str, tuple[str, str]] = {}
+        self.state_group_mapping: dict[str, SingleStateType] = {}
 
     @callback
     def exclude_domain(self, domain: str) -> None:
@@ -71,6 +80,6 @@ class GroupIntegrationRegistry:
 
         if off_state not in self.off_on_mapping:
             self.off_on_mapping[off_state] = default_on_state
-        self.state_group_mapping[domain] = (default_on_state, off_state)
+        self.state_group_mapping[domain] = SingleStateType(default_on_state, off_state)
 
         self.on_states_by_domain[domain] = on_states
