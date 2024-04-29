@@ -104,7 +104,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 del process
 
             raise HomeAssistantError(
-                f"Timed out running command: `{cmd}`, after: {COMMAND_TIMEOUT}s"
+                translation_domain=DOMAIN,
+                translation_key="timeout",
+                translation_placeholders={
+                    "command": cmd,
+                    "timeout": str(COMMAND_TIMEOUT),
+                },
             ) from err
 
         if stdout_data:
@@ -142,7 +147,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     "Unable to handle non-utf8 output of command: `%s`", cmd
                 )
                 raise HomeAssistantError(
-                    f"Unable to handle non-utf8 output of command: `{cmd}`"
+                    translation_domain=DOMAIN,
+                    translation_key="non_utf8_output",
+                    translation_placeholders={"command": cmd},
                 ) from err
             return service_response
         return None
