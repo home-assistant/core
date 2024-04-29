@@ -23,7 +23,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'bypass',
+    'original_name': 'Bypass',
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -35,7 +35,7 @@
 # name: test_entity_registry[button.fire_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fire bypass',
+      'friendly_name': 'Fire Bypass',
     }),
     'context': <ANY>,
     'entity_id': 'button.fire_bypass',
@@ -69,7 +69,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'bypass',
+    'original_name': 'Bypass',
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -81,7 +81,7 @@
 # name: test_entity_registry[button.gas_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gas bypass',
+      'friendly_name': 'Gas Bypass',
     }),
     'context': <ANY>,
     'entity_id': 'button.gas_bypass',
@@ -115,7 +115,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'bypass',
+    'original_name': 'Bypass',
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -127,7 +127,7 @@
 # name: test_entity_registry[button.motion_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Motion bypass',
+      'friendly_name': 'Motion Bypass',
     }),
     'context': <ANY>,
     'entity_id': 'button.motion_bypass',
@@ -161,7 +161,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'bypass',
+    'original_name': 'Bypass',
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -173,7 +173,7 @@
 # name: test_entity_registry[button.security_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Security bypass',
+      'friendly_name': 'Security Bypass',
     }),
     'context': <ANY>,
     'entity_id': 'button.security_bypass',
@@ -207,7 +207,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Bypass All',
+    'original_name': 'Bypass all',
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -219,7 +219,7 @@
 # name: test_entity_registry[button.test_bypass_all-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test Bypass All',
+      'friendly_name': 'test Bypass all',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_bypass_all',
@@ -253,7 +253,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Clear Bypass',
+    'original_name': 'Clear bypass',
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -265,7 +265,7 @@
 # name: test_entity_registry[button.test_clear_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test Clear Bypass',
+      'friendly_name': 'test Clear bypass',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_clear_bypass',
