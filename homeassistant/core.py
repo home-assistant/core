@@ -815,7 +815,7 @@ class HomeAssistant:
 
         This method is intended to only be used by core internally
         and should not be considered a stable API. We will make
-        breaking change to this function in the future and it
+        breaking changes to this function in the future and it
         should not be used in integrations.
 
         This method must be run in the event loop. If you are using this in your
@@ -1511,7 +1511,7 @@ class EventBus:
 
         This method is intended to only be used by core internally
         and should not be considered a stable API. We will make
-        breaking change to this function in the future and it
+        breaking changes to this function in the future and it
         should not be used in integrations.
 
         This method must be run in the event loop.
