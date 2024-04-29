@@ -377,10 +377,10 @@ def get_entities(
         device_info = device.device_info
         device_sub_type = "std"
         device_path = device.path
-        if "EF" in family:
+        if device_type and "EF" in family:
             device_sub_type = "HobbyBoard"
             family = device_type
-        elif "7E" in family:
+        elif device_type and "7E" in family:
             device_sub_type = "EDS"
             family = device_type
         elif "A6" in family:

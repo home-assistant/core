@@ -15,7 +15,7 @@ PLATFORMS: list[Platform] = [Platform.COVER]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Linear Garage Door from a config entry."""
 
-    coordinator = LinearUpdateCoordinator(hass, entry)
+    coordinator = LinearUpdateCoordinator(hass)
 
     await coordinator.async_config_entry_first_refresh()
 

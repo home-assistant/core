@@ -303,6 +303,7 @@ async def test_cloud_logout(
     assert cloud.is_logged_in is False
 
 
+@pytest.mark.skip(reason="Remove strict connection config option")
 async def test_service_create_temporary_strict_connection_url_strict_connection_disabled(
     hass: HomeAssistant,
 ) -> None:
@@ -323,6 +324,7 @@ async def test_service_create_temporary_strict_connection_url_strict_connection_
         )
 
 
+@pytest.mark.skip(reason="Remove strict connection config option")
 @pytest.mark.parametrize(
     ("mode"),
     [
