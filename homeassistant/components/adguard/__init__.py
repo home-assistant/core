@@ -135,6 +135,5 @@ async def async_unload_entry(
         hass.services.async_remove(DOMAIN, SERVICE_ENABLE_URL)
         hass.services.async_remove(DOMAIN, SERVICE_DISABLE_URL)
         hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
-        del hass.data[DOMAIN]
 
     return unload_ok
