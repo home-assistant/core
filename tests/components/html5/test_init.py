@@ -24,19 +24,23 @@ async def test_setup_entry(
     hass: HomeAssistant,
 ) -> None:
     """Test setup of a good config entry."""
-    with patch("homeassistant.components.html5.create_issue") as mock_create_issue:
+    with patch(
+        "homeassistant.components.html5.async_create_html5_issue"
+    ) as mock_async_create_html5_issue:
         config_entry = MockConfigEntry(domain="html5", data={})
         config_entry.add_to_hass(hass)
         assert await async_setup_component(hass, "html5", {})
-        assert mock_create_issue.call_count == 0
+        assert mock_async_create_html5_issue.call_count == 0
 
 
 async def test_setup_entry_issue(
     hass: HomeAssistant,
 ) -> None:
     """Test setup of an imported config entry with deprecated YAML."""
-    with patch("homeassistant.components.html5.create_issue") as mock_create_issue:
+    with patch(
+        "homeassistant.components.html5.async_create_html5_issue"
+    ) as mock_async_create_html5_issue:
         config_entry = MockConfigEntry(domain="html5", data={})
         config_entry.add_to_hass(hass)
         assert await async_setup_component(hass, "html5", NOTIFY_CONF)
-        assert mock_create_issue.call_count == 1
+        assert mock_async_create_html5_issue.call_count == 1

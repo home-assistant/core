@@ -118,8 +118,8 @@ async def test_step_import_good(hass: HomeAssistant) -> None:
             return_value=True,
         ) as mock_setup_entry,
         patch(
-            "homeassistant.components.html5.config_flow.create_issue"
-        ) as mock_create_issue,
+            "homeassistant.components.html5.config_flow.async_create_html5_issue"
+        ) as mock_async_create_html5_issue,
     ):
         conf = MOCK_CONF.copy()
         conf[ATTR_VAPID_PUB_KEY] = MOCK_CONF_PUB_KEY
@@ -139,8 +139,8 @@ async def test_step_import_good(hass: HomeAssistant) -> None:
         }
 
         assert mock_setup_entry.call_count == 1
-        assert mock_create_issue.call_count == 1
-        assert mock_create_issue.call_args_list[0].args[1] is True
+        assert mock_async_create_html5_issue.call_count == 1
+        assert mock_async_create_html5_issue.call_args_list[0].args[1] is True
 
 
 @pytest.mark.parametrize(
@@ -159,8 +159,8 @@ async def test_step_import_bad(hass: HomeAssistant, key: str, value: str) -> Non
             return_value=True,
         ) as mock_setup_entry,
         patch(
-            "homeassistant.components.html5.config_flow.create_issue"
-        ) as mock_create_issue,
+            "homeassistant.components.html5.config_flow.async_create_html5_issue"
+        ) as mock_async_create_html5_issue,
     ):
         bad_conf = MOCK_CONF.copy()
         bad_conf[key] = value
@@ -173,5 +173,5 @@ async def test_step_import_bad(hass: HomeAssistant, key: str, value: str) -> Non
 
         assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert mock_setup_entry.call_count == 0
-        assert mock_create_issue.call_count == 1
-        assert mock_create_issue.call_args_list[0].args[1] is False
+        assert mock_async_create_html5_issue.call_count == 1
+        assert mock_async_create_html5_issue.call_args_list[0].args[1] is False
