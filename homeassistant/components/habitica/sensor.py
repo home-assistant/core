@@ -30,8 +30,6 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
-SensorType = namedtuple("SensorType", ["name", "icon", "unit", "path"])
-
 
 @dataclass(kw_only=True, frozen=True)
 class HabitipySensorEntityDescription(SensorEntityDescription):
@@ -121,6 +119,7 @@ SENSOR_DESCRIPTIONS: dict[str, HabitipySensorEntityDescription] = {
     ),
 }
 
+SensorType = namedtuple("SensorType", ["name", "icon", "unit", "path"])
 TASKS_TYPES = {
     "habits": SensorType(
         "Habits", "mdi:clipboard-list-outline", "n_of_tasks", ["habits"]
