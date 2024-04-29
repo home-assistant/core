@@ -226,6 +226,7 @@ async def _guard_page_unauthorized_request(
     assert await req.text() == await hass.async_add_executor_job(read_guard_page)
 
 
+@pytest.mark.skip(reason="Remove strict connection config option")
 @pytest.mark.parametrize(
     "test_func",
     [
