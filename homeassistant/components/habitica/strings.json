@@ -59,6 +59,14 @@
       }
     }
   },
+  "exceptions": {
+    "service_user_not_configured": {
+      "message": "Failed to call service {service}. User `{user}` not configured"
+    },
+    "sevice_invalid_path": {
+      "message": "Failed to call service {service}. Path `{path}` is invalid for API on `{element}` element"
+    }
+  },
   "services": {
     "api_call": {
       "name": "API name",
