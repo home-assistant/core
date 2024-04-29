@@ -1,0 +1,26 @@
+[
+  {
+    "title": "A Hard Day's Night",
+    "item_id": "A:ALBUM/A%20Hard%20Day's%20Night",
+    "parent_id": "A:ALBUM",
+    "item_class": "object.container.album.musicAlbum"
+  },
+  {
+    "title": "Abbey Road",
+    "item_id": "A:ALBUM/Abbey%20Road",
+    "parent_id": "A:ALBUM",
+    "item_class": "object.container.album.musicAlbum"
+  },
+  {
+    "title": "Between Good And Evil",
+    "item_id": "A:ALBUM/Between%20Good%20And%20Evil",
+    "parent_id": "A:ALBUM",
+    "item_class": "object.container.album.musicAlbum"
+  },
+  {
+    "title": "Sacred Fire",
+    "item_id": "A:ALBUM/Sacred%20Fire",
+    "parent_id": "A:ALBUM",
+    "item_class": "object.container.album.musicAlbum"
+  }
+]
