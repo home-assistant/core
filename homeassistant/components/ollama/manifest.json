@@ -1,7 +1,6 @@
 {
   "domain": "ollama",
   "name": "Ollama",
-  "after_dependencies": ["assist_pipeline"],
   "codeowners": ["@synesthesiam"],
   "config_flow": true,
   "dependencies": ["conversation"],
