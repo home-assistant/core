@@ -1,6 +1,6 @@
 """Tests for the Google Generative AI Conversation integration conversation platform."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from google.api_core.exceptions import ClientError
 import pytest
@@ -8,7 +8,6 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import area_registry as ar, device_registry as dr, intent
 
 from tests.common import MockConfigEntry
