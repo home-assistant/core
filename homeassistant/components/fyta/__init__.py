@@ -79,10 +79,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             credentials: dict[str, Any] = await fyta.login()
             await fyta.client.close()
 
-            credentials[CONF_EXPIRATION] = credentials[CONF_EXPIRATION].isoformat()
-
             new[CONF_ACCESS_TOKEN] = credentials[CONF_ACCESS_TOKEN]
-            new[CONF_EXPIRATION] = credentials[CONF_EXPIRATION]
+            new[CONF_EXPIRATION] = credentials[CONF_EXPIRATION].isoformat()
 
         hass.config_entries.async_update_entry(
             config_entry, data=new, minor_version=2, version=1
