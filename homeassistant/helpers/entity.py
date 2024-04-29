@@ -66,7 +66,7 @@ from homeassistant.loader import async_suggest_report_issue, bind_hass
 from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.frozen_dataclass_compat import FrozenOrThawed
 
-from . import device_registry as dr, entity_registry as er
+from . import device_registry as dr, entity_registry as er, singleton
 from .device_registry import DeviceInfo, EventDeviceRegistryUpdatedData
 from .event import (
     async_track_device_registry_updated_event,
@@ -98,15 +98,15 @@ CONTEXT_RECENT_TIME_SECONDS = 5  # Time that a context is considered recent
 @callback
 def async_setup(hass: HomeAssistant) -> None:
     """Set up entity sources."""
-    hass.data[DATA_ENTITY_SOURCE] = {}
+    entity_sources(hass)
 
 
 @callback
 @bind_hass
+@singleton.singleton(DATA_ENTITY_SOURCE)
 def entity_sources(hass: HomeAssistant) -> dict[str, EntityInfo]:
     """Get the entity sources."""
-    _entity_sources: dict[str, EntityInfo] = hass.data[DATA_ENTITY_SOURCE]
-    return _entity_sources
+    return {}
 
 
 def generate_entity_id(
@@ -1486,7 +1486,7 @@ class Entity(
         # The check for self.platform guards against integrations not using an
         # EntityComponent and can be removed in HA Core 2024.1
         if self.platform:
-            self.hass.data[DATA_ENTITY_SOURCE].pop(self.entity_id)
+            entity_sources(self.hass).pop(self.entity_id)
 
     @callback
     def _async_registry_updated(
@@ -1497,7 +1497,7 @@ class Entity(
         is_remove = action == "remove"
         self._removed_from_registry = is_remove
         if action == "update" or is_remove:
-            self.hass.async_create_task(
+            self.hass.async_create_task_internal(
                 self._async_process_registry_update_or_remove(event), eager_start=True
             )
 
