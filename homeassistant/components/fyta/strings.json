@@ -39,12 +39,13 @@
           "deleted": "Deleted",
           "doing_great": "Doing great",
           "need_attention": "Needs attention",
-          "need_help": "Needs help"
+          "no_sensor": "No sensor"
         }
       },
       "temperature_status": {
         "name": "Temperature state",
         "state": {
+          "no_data": "No data",
           "too_low": "Too low",
           "low": "Low",
           "perfect": "Perfect",
@@ -55,6 +56,7 @@
       "light_status": {
         "name": "Light state",
         "state": {
+          "no_data": "[%key:component::fyta::entity::sensor::temperature_status::state::no_data%]",
           "too_low": "[%key:component::fyta::entity::sensor::temperature_status::state::too_low%]",
           "low": "[%key:component::fyta::entity::sensor::temperature_status::state::low%]",
           "perfect": "[%key:component::fyta::entity::sensor::temperature_status::state::perfect%]",
@@ -65,6 +67,7 @@
       "moisture_status": {
         "name": "Moisture state",
         "state": {
+          "no_data": "[%key:component::fyta::entity::sensor::temperature_status::state::no_data%]",
           "too_low": "[%key:component::fyta::entity::sensor::temperature_status::state::too_low%]",
           "low": "[%key:component::fyta::entity::sensor::temperature_status::state::low%]",
           "perfect": "[%key:component::fyta::entity::sensor::temperature_status::state::perfect%]",
@@ -75,6 +78,7 @@
       "salinity_status": {
         "name": "Salinity state",
         "state": {
+          "no_data": "[%key:component::fyta::entity::sensor::temperature_status::state::no_data%]",
           "too_low": "[%key:component::fyta::entity::sensor::temperature_status::state::too_low%]",
           "low": "[%key:component::fyta::entity::sensor::temperature_status::state::low%]",
           "perfect": "[%key:component::fyta::entity::sensor::temperature_status::state::perfect%]",

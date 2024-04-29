@@ -34,8 +34,9 @@ class FytaSensorEntityDescription(SensorEntityDescription):
     )
 
 
-PLANT_STATUS_LIST: list[str] = ["deleted", "doing_great", "need_attention", "need_help"]
+PLANT_STATUS_LIST: list[str] = ["deleted", "doing_great", "need_attention", "no_sensor"]
 PLANT_MEASUREMENT_STATUS_LIST: list[str] = [
+    "no_data",
     "too_low",
     "low",
     "perfect",
