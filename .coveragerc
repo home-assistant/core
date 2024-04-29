@@ -64,7 +64,6 @@ omit =
     homeassistant/components/alarmdecoder/sensor.py
     homeassistant/components/alpha_vantage/sensor.py
     homeassistant/components/amazon_polly/*
-    homeassistant/components/ambiclimate/climate.py
     homeassistant/components/ambient_station/__init__.py
     homeassistant/components/ambient_station/binary_sensor.py
     homeassistant/components/ambient_station/entity.py
