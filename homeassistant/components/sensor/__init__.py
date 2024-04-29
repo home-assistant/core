@@ -566,8 +566,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             self._invalid_state_class_reported = True
             report_issue = self._suggest_report_issue()
 
-            # This should raise in Home Assistant Core 2023.6
-            _LOGGER.warning(
+            _LOGGER.error(
                 "Entity %s (%s) is using state class '%s' which "
                 "is impossible considering device class ('%s') it is using; "
                 "expected %s%s; "
@@ -580,6 +579,16 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 "None or one of " if classes else "None",
                 ", ".join(f"'{value.value}'" for value in classes),
                 report_issue,
+            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_state_class",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "entity_type": str(type(self)),
+                    "state_class": state_class,
+                    "device_class": device_class,
+                },
             )
 
         # Checks below only apply if there is a value
@@ -728,8 +737,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             self._invalid_unit_of_measurement_reported = True
             report_issue = self._suggest_report_issue()
 
-            # This should raise in Home Assistant Core 2023.6
-            _LOGGER.warning(
+            _LOGGER.error(
                 (
                     "Entity %s (%s) is using native unit of measurement '%s' which "
                     "is not a valid unit for the device class ('%s') it is using; "
@@ -743,6 +751,18 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 device_class,
                 [str(unit) if unit else "no unit of measurement" for unit in units],
                 report_issue,
+            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_uom",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "entity_type": str(type(self)),
+                    "uom": native_unit_of_measurement
+                    if native_unit_of_measurement
+                    else "None",
+                    "device_class": device_class,
+                },
             )
 
         return value

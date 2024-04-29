@@ -277,5 +277,13 @@
     "wind_speed": {
       "name": "Wind speed"
     }
+  },
+  "exceptions": {
+    "invalid_state_class": {
+      "message": "Entity {entity_id} ({entity_type}) is using state class {state_class} which is impossible considering device class ({device_class})"
+    },
+    "invalid_uom": {
+      "message": "Entity {entity_id} ({entity_type}) is using native unit of measurement {uom} which is not a valid unit for the device class ({device_class})"
+    }
   }
 }
