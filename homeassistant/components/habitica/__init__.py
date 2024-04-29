@@ -1,7 +1,9 @@
 """The habitica integration."""
 
+from http import HTTPStatus
 import logging
 
+from aiohttp import ClientResponseError
 from habitipy.aio import HabitipyAsync
 import voluptuous as vol
 
@@ -15,7 +17,13 @@ from homeassistant.const import (
     CONF_URL,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -30,6 +38,7 @@ from .const import (
     EVENT_API_CALL_SUCCESS,
     SERVICE_API_CALL,
 )
+from .coordinator import HabiticaDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -113,55 +122,100 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         def __call__(self, **kwargs):
             return super().__call__(websession, **kwargs)
 
-    async def handle_api_call(call: ServiceCall) -> None:
+    async def handle_api_call(call: ServiceCall) -> dict:
         name = call.data[ATTR_NAME]
         path = call.data[ATTR_PATH]
         entries = hass.config_entries.async_entries(DOMAIN)
         api = None
         for entry in entries:
             if entry.data[CONF_NAME] == name:
-                api = hass.data[DOMAIN].get(entry.entry_id)
+                coordinator = hass.data[DOMAIN][entry.entry_id]
+                api = coordinator.api
                 break
         if api is None:
-            _LOGGER.error("API_CALL: User '%s' not configured", name)
-            return
-        try:
-            for element in path:
-                api = api[element]
-        except KeyError:
-            _LOGGER.error(
-                "API_CALL: Path %s is invalid for API on '{%s}' element", path, element
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_user_not_configured",
+                translation_placeholders={
+                    "service": f"{DOMAIN}.{SERVICE_API_CALL}",
+                    "user": name,
+                },
             )
-            return
+        for element in path:
+            try:
+                api = api[element]
+            except (KeyError, IndexError) as e:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="sevice_invalid_path",
+                    translation_placeholders={
+                        "service": f"{DOMAIN}.{SERVICE_API_CALL}",
+                        "path": "/".join(path),
+                        "element": element,
+                    },
+                ) from e
+
         kwargs = call.data.get(ATTR_ARGS, {})
-        data = await api(**kwargs)
+
+        try:
+            data = await api(**kwargs)
+        except (ValueError, TypeError, ClientResponseError) as e:
+            raise HomeAssistantError(e) from e
+
         hass.bus.async_fire(
             EVENT_API_CALL_SUCCESS, {ATTR_NAME: name, ATTR_PATH: path, ATTR_DATA: data}
         )
+        return {"data": data}
 
-    data = hass.data.setdefault(DOMAIN, {})
-    config = entry.data
     websession = async_get_clientsession(hass)
-    url = config[CONF_URL]
-    username = config[CONF_API_USER]
-    password = config[CONF_API_KEY]
-    name = config.get(CONF_NAME)
-    config_dict = {"url": url, "login": username, "password": password}
-    api = HAHabitipyAsync(config_dict)
-    user = await api.user.get()
-    if name is None:
+
+    url = entry.data[CONF_URL]
+    username = entry.data[CONF_API_USER]
+    password = entry.data[CONF_API_KEY]
+
+    api = HAHabitipyAsync(
+        {
+            "url": url,
+            "login": username,
+            "password": password,
+        }
+    )
+    try:
+        user = await api.user.get(userFields="profile")
+    except ClientResponseError as e:
+        if e.status == HTTPStatus.TOO_MANY_REQUESTS:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="setup_rate_limit_exception",
+            ) from e
+        if e.status == HTTPStatus.UNAUTHORIZED:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="setup_authentication_exception",
+            ) from e
+        raise ConfigEntryNotReady(e) from e
+
+    if not entry.data.get(CONF_NAME):
         name = user["profile"]["name"]
         hass.config_entries.async_update_entry(
             entry,
             data={**entry.data, CONF_NAME: name},
         )
-    data[entry.entry_id] = api
+
+    coordinator = HabiticaDataUpdateCoordinator(hass, api)
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     if not hass.services.has_service(DOMAIN, SERVICE_API_CALL):
         hass.services.async_register(
-            DOMAIN, SERVICE_API_CALL, handle_api_call, schema=SERVICE_API_CALL_SCHEMA
+            DOMAIN,
+            SERVICE_API_CALL,
+            handle_api_call,
+            schema=SERVICE_API_CALL_SCHEMA,
+            supports_response=SupportsResponse.OPTIONAL,
         )
 
     return True
