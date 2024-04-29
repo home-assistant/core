@@ -361,8 +361,10 @@ async def test_preset_mode_validation(
 @pytest.mark.parametrize(
     "supported_features_at_int",
     [
-        1,
-        1 | 128 | 256,
+        ClimateEntityFeature.TARGET_TEMPERATURE.value,
+        ClimateEntityFeature.TARGET_TEMPERATURE.value
+        | ClimateEntityFeature.TURN_ON.value
+        | ClimateEntityFeature.TURN_OFF.value,
     ],
 )
 def test_deprecated_supported_features_ints(
