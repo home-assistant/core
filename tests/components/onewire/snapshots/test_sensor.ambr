@@ -278,6 +278,18 @@
     }),
   ])
 # ---
+# name: test_sensors[16.111111111111]
+  list([
+  ])
+# ---
+# name: test_sensors[16.111111111111].1
+  list([
+  ])
+# ---
+# name: test_sensors[16.111111111111].2
+  list([
+  ])
+# ---
 # name: test_sensors[1D.111111111111]
   list([
     DeviceRegistryEntrySnapshot({

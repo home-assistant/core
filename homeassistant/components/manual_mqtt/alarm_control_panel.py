@@ -355,7 +355,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         self._async_validate_code(code, STATE_ALARM_DISARMED)
         self._state = STATE_ALARM_DISARMED
         self._state_ts = dt_util.utcnow()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
