@@ -63,8 +63,8 @@ def get_thumbnail_url_full(
                 media_content_id,
                 media_content_type,
             )
-        s = getattr(item, "album_art_uri", "")
-        return s.replace("'", "%27").replace("(", "%28").replace(")", "%29")
+        album_art: str = getattr(item, "album_art_uri", "")
+        return album_art.replace("'", "%27").replace("(", "%28").replace(")", "%29")
 
     return urllib.parse.unquote(
         get_browse_image_url(
