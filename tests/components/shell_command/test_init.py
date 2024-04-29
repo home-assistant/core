@@ -11,7 +11,7 @@ import pytest
 
 from homeassistant.components import shell_command
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.setup import async_setup_component
 
 
@@ -258,7 +258,7 @@ async def test_do_not_run_forever(
             side_effect=mock_create_subprocess_shell,
         ),
     ):
-        with pytest.raises(TimeoutError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 shell_command.DOMAIN,
                 "test_service",
