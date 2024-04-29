@@ -65,7 +65,7 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
             credentials[CONF_EXPIRATION] = credentials[CONF_EXPIRATION].isoformat()
 
         new_config_entry = {**self.config_entry.data}
-        new_config_entry["access_token"] = credentials[CONF_ACCESS_TOKEN]
+        new_config_entry[CONF_ACCESS_TOKEN] = credentials[CONF_ACCESS_TOKEN]
         new_config_entry[CONF_EXPIRATION] = credentials[CONF_EXPIRATION]
 
         self.hass.config_entries.async_update_entry(
