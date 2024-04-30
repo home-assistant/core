@@ -17,7 +17,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.setup import async_setup_component
 
-from .test_common import DEFAULT_CONFIG, remove_device
+from .test_common import DEFAULT_CONFIG
 
 from tests.common import async_fire_mqtt_message, async_get_device_automations
 from tests.typing import MqttMockHAClient, WebSocketGenerator
@@ -849,7 +849,9 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     assert len(calls) == 1
 
     # Remove the device
-    await remove_device(hass, await hass_ws_client(hass), device_entry.id)
+    config_entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    client = await hass_ws_client(hass)
+    await client.remove_device(device_entry.id, config_entry_id)
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(
@@ -1139,7 +1141,9 @@ async def test_attach_unknown_remove_device_from_registry(
     )
 
     # Remove the device
-    await remove_device(hass, await hass_ws_client(hass), device_entry.id)
+    config_entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    client = await hass_ws_client(hass)
+    await client.remove_device(device_entry.id, config_entry_id)
     await hass.async_block_till_done()
 
 

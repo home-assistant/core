@@ -6,7 +6,7 @@ from unittest.mock import ANY, patch
 
 import pytest
 
-from homeassistant.components.tasmota.const import DEFAULT_PREFIX
+from homeassistant.components.tasmota.const import DEFAULT_PREFIX, DOMAIN
 from homeassistant.components.tasmota.discovery import ALREADY_DISCOVERED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -17,7 +17,7 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 
 from .conftest import setup_tasmota_helper
-from .test_common import DEFAULT_CONFIG, DEFAULT_CONFIG_9_0_0_3, remove_device
+from .test_common import DEFAULT_CONFIG, DEFAULT_CONFIG_9_0_0_3
 
 from tests.common import MockConfigEntry, async_fire_mqtt_message
 from tests.typing import MqttMockHAClient, WebSocketGenerator
@@ -446,7 +446,9 @@ async def test_device_remove_stale(
     assert device_entry is not None
 
     # Remove the device
-    await remove_device(hass, await hass_ws_client(hass), device_entry.id)
+    config_entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    client = await hass_ws_client(hass)
+    await client.remove_device(device_entry.id, config_entry_id)
 
     # Verify device entry is removed
     device_entry = device_reg.async_get_device(

@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .test_common import DEFAULT_CONFIG, DEFAULT_SENSOR_CONFIG, remove_device
+from .test_common import DEFAULT_CONFIG, DEFAULT_SENSOR_CONFIG
 
 from tests.common import (
     MockConfigEntry,
@@ -49,7 +49,9 @@ async def test_device_remove(
     )
     assert device_entry is not None
 
-    await remove_device(hass, await hass_ws_client(hass), device_entry.id)
+    config_entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    client = await hass_ws_client(hass)
+    await client.remove_device(device_entry.id, config_entry_id)
     await hass.async_block_till_done()
 
     # Verify device entry is removed
@@ -98,9 +100,8 @@ async def test_device_remove_non_tasmota_device(
     )
     assert device_entry is not None
 
-    await remove_device(
-        hass, await hass_ws_client(hass), device_entry.id, config_entry.entry_id
-    )
+    client = await hass_ws_client(hass)
+    await client.remove_device(device_entry.id, config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Verify device entry is removed
@@ -131,7 +132,9 @@ async def test_device_remove_stale_tasmota_device(
     )
     assert device_entry is not None
 
-    await remove_device(hass, await hass_ws_client(hass), device_entry.id)
+    config_entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    client = await hass_ws_client(hass)
+    await client.remove_device(device_entry.id, config_entry_id)
     await hass.async_block_till_done()
 
     # Verify device entry is removed
