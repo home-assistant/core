@@ -634,15 +634,7 @@ async def test_remove_config_entry_device(
     assert hass.states.get(entity_id)
 
     client = await hass_ws_client(hass)
-    await client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": config_entry.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await client.receive_json()
+    response = await client.remove_device(device_entry.id, config_entry.entry_id)
     assert response["success"]
     await hass.async_block_till_done()
 
@@ -671,15 +663,7 @@ async def test_remove_config_entry_device_no_node(
     )
 
     client = await hass_ws_client(hass)
-    await client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": config_entry.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await client.receive_json()
+    response = await client.remove_device(device_entry.id, config_entry.entry_id)
     assert response["success"]
     await hass.async_block_till_done()
 
