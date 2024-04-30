@@ -956,7 +956,11 @@ class MQTT:
 
     @callback
     def _async_queue_resubscribe(self) -> None:
-        """Resubscribe on reconnect."""
+        """Queue subscriptions on reconnect.
+
+        self._async_perform_subscriptions must be called
+        after this method to actually subscribe.
+        """
         self._max_qos.clear()
         self._retained_topics.clear()
         # Group subscriptions to only re-subscribe once for each topic.
