@@ -109,7 +109,7 @@ def event_message(iden: int, event: Any) -> dict[str, Any]:
     return {"id": iden, "type": "event", "event": event}
 
 
-def cached_event_message(iden: int, event: Event) -> bytes:
+def cached_event_message(iden_bytes: bytes, event: Event) -> bytes:
     """Return an event message.
 
     Serialize to json once per message.
@@ -122,7 +122,7 @@ def cached_event_message(iden: int, event: Event) -> bytes:
         (
             _partial_cached_event_message(event)[:-1],
             b',"id":',
-            str(iden).encode(),
+            iden_bytes,
             b"}",
         )
     )
@@ -141,7 +141,9 @@ def _partial_cached_event_message(event: Event) -> bytes:
     )
 
 
-def cached_state_diff_message(iden: int, event: Event[EventStateChangedData]) -> bytes:
+def cached_state_diff_message(
+    iden_bytes: bytes, event: Event[EventStateChangedData]
+) -> bytes:
     """Return an event message.
 
     Serialize to json once per message.
@@ -154,7 +156,7 @@ def cached_state_diff_message(iden: int, event: Event[EventStateChangedData]) ->
         (
             _partial_cached_state_diff_message(event)[:-1],
             b',"id":',
-            str(iden).encode(),
+            iden_bytes,
             b"}",
         )
     )
