@@ -105,7 +105,7 @@ def pong_message(iden: int) -> dict[str, Any]:
 def _forward_events_check_permissions(
     send_message: Callable[[bytes | str | dict[str, Any] | Callable[[], str]], None],
     user: User,
-    iden_bytes: bytes,
+    message_id_as_bytes: bytes,
     event: Event,
 ) -> None:
     """Forward state changed events to websocket."""
@@ -118,17 +118,17 @@ def _forward_events_check_permissions(
         and not permissions.check_entity(event.data["entity_id"], POLICY_READ)
     ):
         return
-    send_message(messages.cached_event_message(iden_bytes, event))
+    send_message(messages.cached_event_message(message_id_as_bytes, event))
 
 
 @callback
 def _forward_events_unconditional(
     send_message: Callable[[bytes | str | dict[str, Any] | Callable[[], str]], None],
-    iden_bytes: bytes,
+    message_id_as_bytes: bytes,
     event: Event,
 ) -> None:
     """Forward events to websocket."""
-    send_message(messages.cached_event_message(iden_bytes, event))
+    send_message(messages.cached_event_message(message_id_as_bytes, event))
 
 
 @callback
@@ -152,18 +152,18 @@ def handle_subscribe_events(
         )
         raise Unauthorized(user_id=connection.user.id)
 
-    iden_bytes = str(msg["id"]).encode()
+    message_id_as_bytes = str(msg["id"]).encode()
 
     if event_type == EVENT_STATE_CHANGED:
         forward_events = partial(
             _forward_events_check_permissions,
             connection.send_message,
             connection.user,
-            iden_bytes,
+            message_id_as_bytes,
         )
     else:
         forward_events = partial(
-            _forward_events_unconditional, connection.send_message, iden_bytes
+            _forward_events_unconditional, connection.send_message, message_id_as_bytes
         )
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
@@ -368,7 +368,7 @@ def _forward_entity_changes(
     send_message: Callable[[str | bytes | dict[str, Any] | Callable[[], str]], None],
     entity_ids: set[str],
     user: User,
-    iden_bytes: bytes,
+    message_id_as_bytes: bytes,
     event: Event[EventStateChangedData],
 ) -> None:
     """Forward entity state changed events to websocket."""
@@ -384,7 +384,7 @@ def _forward_entity_changes(
         and not permissions.check_entity(event.data["entity_id"], POLICY_READ)
     ):
         return
-    send_message(messages.cached_state_diff_message(iden_bytes, event))
+    send_message(messages.cached_state_diff_message(message_id_as_bytes, event))
 
 
 @callback
@@ -403,7 +403,7 @@ def handle_subscribe_entities(
     # state changed events or we will introduce a race condition
     # where some states are missed
     states = _async_get_allowed_states(hass, connection)
-    iden_bytes = str(msg["id"]).encode()
+    message_id_as_bytes = str(msg["id"]).encode()
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
         EVENT_STATE_CHANGED,
         partial(
@@ -411,7 +411,7 @@ def handle_subscribe_entities(
             connection.send_message,
             entity_ids,
             connection.user,
-            iden_bytes,
+            message_id_as_bytes,
         ),
     )
     connection.send_result(msg["id"])
