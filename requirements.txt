@@ -24,6 +24,7 @@ pip>=21.3.1
 python-slugify==4.0.1
 PyYAML==6.0.1
 requests==2.31.0
+shortuuid==1.0.13
 typing-extensions>=4.7.0,<5.0
 ulid-transform==0.8.1
 voluptuous==0.13.1

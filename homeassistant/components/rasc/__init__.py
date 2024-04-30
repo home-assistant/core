@@ -103,9 +103,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(RESCHEDULING_TRIGGER, default=PROACTIVE): vol.In(
                     supported_rescheduling_triggers
                 ),
-                vol.Optional(OPTIMAL_SCHEDULE_METRIC, default=[]): vol.In(
-                    supported_optimal_metrics
-                ),
+                vol.Optional(
+                    OPTIMAL_SCHEDULE_METRIC, default=MIN_AVG_RTN_LATENCY
+                ): vol.In(supported_optimal_metrics),
                 vol.Optional(RESCHEDULING_WINDOW, default=10.0): cv.positive_float,
                 vol.Optional(ROUTINE_PRIORITY_POLICY, default=EARLIEST): vol.In(
                     supported_routine_priority_policies
