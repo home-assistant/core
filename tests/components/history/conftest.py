@@ -3,15 +3,15 @@
 import pytest
 
 from homeassistant.components import history
+from homeassistant.components.recorder import Recorder
 from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
-from homeassistant.setup import setup_component
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture
-def hass_history(hass_recorder):
+async def hass_history(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Home Assistant fixture with history."""
-    hass = hass_recorder()
-
     config = history.CONFIG_SCHEMA(
         {
             history.DOMAIN: {
@@ -26,6 +26,4 @@ def hass_history(hass_recorder):
             }
         }
     )
-    assert setup_component(hass, history.DOMAIN, config)
-
-    return hass
+    assert await async_setup_component(hass, history.DOMAIN, config)
