@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass, fields
 from datetime import timedelta
+from functools import partial
 import logging
 from typing import TYPE_CHECKING, Literal
 
@@ -130,7 +131,14 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-en
             )
         else:
             updated = self.wemo.subscription_update(event_type, params)
-            self.hass.create_task(self._async_subscription_callback(updated))
+            self.hass.loop.call_soon_threadsafe(
+                partial(
+                    self.hass.async_create_background_task,
+                    self._async_subscription_callback(updated),
+                    f"{self.name} subscription_callback",
+                    eager_start=True,
+                )
+            )
 
     async def async_shutdown(self) -> None:
         """Unregister push subscriptions and remove from coordinators dict."""

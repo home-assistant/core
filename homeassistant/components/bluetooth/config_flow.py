@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
+import platform
 from typing import Any, cast
 
 from bluetooth_adapters import (
     ADAPTER_ADDRESS,
     ADAPTER_MANUFACTURER,
+    DEFAULT_ADDRESS,
     AdapterDetails,
     adapter_human_name,
     adapter_model,
-    adapter_unique_name,
     get_adapters,
 )
 import voluptuous as vol
@@ -26,6 +27,7 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import models
 from .const import CONF_ADAPTER, CONF_DETAILS, CONF_PASSIVE, DOMAIN
+from .util import adapter_title
 
 OPTIONS_SCHEMA = vol.Schema(
     {
@@ -43,14 +45,6 @@ def adapter_display_info(adapter: str, details: AdapterDetails) -> str:
     model = adapter_model(details)
     manufacturer = details[ADAPTER_MANUFACTURER] or "Unknown"
     return f"{name} {manufacturer} {model}"
-
-
-def adapter_title(adapter: str, details: AdapterDetails) -> str:
-    """Return the adapter title."""
-    unique_name = adapter_unique_name(adapter, details[ADAPTER_ADDRESS])
-    model = adapter_model(details)
-    manufacturer = details[ADAPTER_MANUFACTURER] or "Unknown"
-    return f"{manufacturer} {model} ({unique_name})"
 
 
 class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -133,10 +127,15 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         bluetooth_adapters = get_adapters()
         await bluetooth_adapters.refresh()
         self._adapters = bluetooth_adapters.adapters
+        system = platform.system()
         unconfigured_adapters = [
             adapter
             for adapter, details in self._adapters.items()
             if details[ADAPTER_ADDRESS] not in configured_addresses
+            # DEFAULT_ADDRESS is perfectly valid on MacOS but on
+            # Linux it means the adapter is not yet configured
+            # or crashed
+            and not (system == "Linux" and details[ADAPTER_ADDRESS] == DEFAULT_ADDRESS)
         ]
         if not unconfigured_adapters:
             ignored_adapters = len(

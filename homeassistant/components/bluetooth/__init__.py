@@ -86,6 +86,7 @@ from .manager import HomeAssistantBluetoothManager
 from .match import BluetoothCallbackMatcher, IntegrationMatcher
 from .models import BluetoothCallback, BluetoothChange
 from .storage import BluetoothStorage
+from .util import adapter_title
 
 if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
@@ -151,6 +152,7 @@ async def _async_start_adapter_discovery(
         cooldown=BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
         immediate=False,
         function=_async_rediscover_adapters,
+        background=True,
     )
 
     @hass_callback
@@ -196,6 +198,17 @@ async def _async_start_adapter_discovery(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the bluetooth integration."""
+    if platform.system() == "Linux":
+        # Remove any config entries that are using the default address
+        # that were created from discovering adapters in a crashed state
+        #
+        # DEFAULT_ADDRESS is perfectly valid on MacOS but on
+        # Linux it means the adapter is not yet configured
+        # or crashed
+        for entry in list(hass.config_entries.async_entries(DOMAIN)):
+            if entry.unique_id == DEFAULT_ADDRESS:
+                await hass.config_entries.async_remove(entry.entry_id)
+
     bluetooth_adapters = get_adapters()
     bluetooth_storage = BluetoothStorage(hass)
     slot_manager = BleakSlotManager()
@@ -257,13 +270,19 @@ async def async_discover_adapters(
     adapters: dict[str, AdapterDetails],
 ) -> None:
     """Discover adapters and start flows."""
-    if platform.system() == "Windows":
+    system = platform.system()
+    if system == "Windows":
         # We currently do not have a good way to detect if a bluetooth device is
         # available on Windows. We will just assume that it is not unless they
         # actively add it.
         return
 
     for adapter, details in adapters.items():
+        if system == "Linux" and details[ADAPTER_ADDRESS] == DEFAULT_ADDRESS:
+            # DEFAULT_ADDRESS is perfectly valid on MacOS but on
+            # Linux it means the adapter is not yet configured
+            # or crashed so we should not try to start a flow for it.
+            continue
         discovery_flow.async_create_flow(
             hass,
             DOMAIN,
@@ -315,6 +334,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from err
     adapters = await manager.async_get_bluetooth_adapters()
     details = adapters[adapter]
+    if entry.title == address:
+        hass.config_entries.async_update_entry(
+            entry, title=adapter_title(adapter, details)
+        )
     slots: int = details.get(ADAPTER_CONNECTION_SLOTS) or DEFAULT_CONNECTION_SLOTS
     entry.async_on_unload(async_register_scanner(hass, scanner, connection_slots=slots))
     await async_update_device(hass, entry, adapter, details)

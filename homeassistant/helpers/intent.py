@@ -659,7 +659,7 @@ class DynamicServiceIntentHandler(IntentHandler):
             )
 
         await self._run_then_background(
-            hass.async_create_task(
+            hass.async_create_task_internal(
                 hass.services.async_call(
                     domain,
                     service,
