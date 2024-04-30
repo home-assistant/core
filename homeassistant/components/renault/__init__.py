@@ -3,7 +3,7 @@
 import aiohttp
 from renault_api.gigya.exceptions import GigyaException
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -21,6 +21,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Renault component."""
     setup_services(hass)
     return True
+
 
 RenaultConfigEntry = ConfigEntry[RenaultHub]
 
