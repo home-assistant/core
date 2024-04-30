@@ -917,7 +917,7 @@ async def test_options_flow_multipan_uninstall(
         result = await hass.config_entries.options.async_configure(result["flow_id"])
         await hass.async_block_till_done(wait_background_tasks=True)
         result = await hass.config_entries.options.async_configure(result["flow_id"])
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
     # We've reverted the firmware back to Zigbee
     assert config_entry.data["firmware"] == "ezsp"
