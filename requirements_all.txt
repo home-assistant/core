@@ -1078,7 +1078,7 @@ hole==0.8.0
 holidays==0.47
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240426.0
+home-assistant-frontend==20240429.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.4.24
@@ -1902,7 +1902,7 @@ pyisy==3.1.14
 pyitachip2ir==0.0.7
 
 # homeassistant.components.jvc_projector
-pyjvcprojector==1.0.9
+pyjvcprojector==1.0.11
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.1
