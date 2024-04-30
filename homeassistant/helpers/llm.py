@@ -12,17 +12,10 @@ from typing import Any
 import voluptuous as vol
 from voluptuous_openapi import UNSUPPORTED, convert
 
-from homeassistant.core import Context, HomeAssistant, State, callback
-from homeassistant.util import dt as dt_util
+from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 
-from . import (
-    area_registry as ar,
-    config_validation as cv,
-    entity_registry as er,
-    floor_registry as fr,
-    intent,
-    template,
-)
+from . import area_registry as ar, config_validation as cv, floor_registry as fr, intent
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,10 +78,8 @@ def async_register_tool(hass: HomeAssistant, tool: Tool) -> None:
     if (tools := hass.data.get(DATA_KEY)) is None:
         tools = hass.data[DATA_KEY] = {}
 
-    assert tool.specification is not None, "tool specification cannot be None"
-
     if tool.name in tools:
-        _LOGGER.warning("Tool %s is being overwritten by %s", tool.name, tool)
+        raise HomeAssistantError(f"Tool {tool.name} is already registered")
 
     tools[tool.name] = tool
 
@@ -158,135 +149,6 @@ async def async_call_tool(
     return json_response
 
 
-EXPORTED_ATTRIBUTES = [
-    "device_class",
-    "message",
-    "all_day",
-    "start_time",
-    "end_time",
-    "location",
-    "description",
-    "hvac_modes",
-    "min_temp",
-    "max_temp",
-    "fan_modes",
-    "preset_modes",
-    "swing_modes",
-    "current_temperature",
-    "temperature",
-    "target_temp_high",
-    "target_temp_low",
-    "fan_mode",
-    "preset_mode",
-    "swing_mode",
-    "hvac_action",
-    "aux_heat",
-    "current_position",
-    "current_tilt_position",
-    "latitude",
-    "longitude",
-    "percentage",
-    "direction",
-    "oscillating",
-    "available_modes",
-    "max_humidity",
-    "min_humidity",
-    "action",
-    "current_humidity",
-    "humidity",
-    "mode",
-    "faces",
-    "total_faces",
-    "min",
-    "max",
-    "step",
-    "min_color_temp_kelvin",
-    "max_color_temp_kelvin",
-    "min_mireds",
-    "max_mireds",
-    "effect_list",
-    "supported_color_modes",
-    "color_mode",
-    "brightness",
-    "color_temp_kelvin",
-    "color_temp",
-    "hs_color",
-    "rgb_color",
-    "xy_color",
-    "rgbw_color",
-    "rgbww_color",
-    "effect",
-    "sound_mode_list",
-    "volume_level",
-    "is_volume_muted",
-    "media_content_type",
-    "media_duration",
-    "media_position",
-    "media_title",
-    "media_artist",
-    "media_album_name",
-    "media_track",
-    "media_series_title",
-    "media_season",
-    "media_episode",
-    "app_name",
-    "sound_mode",
-    "shuffle",
-    "repeat",
-    "source",
-    "options",
-    "battery_level",
-    "available_tones",
-    "elevation",
-    "rising",
-    "fan_speed_list",
-    "fan_speed",
-    "status",
-    "cleaned_area",
-    "operation_list",
-    "operation_mode",
-    "away_mode",
-    "temperature_unit",
-    "pressure",
-    "pressure_unit",
-    "wind_speed",
-    "wind_speed_unit",
-    "dew_point",
-    "cloud_coverage",
-    "persons",
-]
-
-
-def _format_state(hass: HomeAssistant, entity_state: State) -> dict[str, Any]:
-    """Format state for better understanding by a LLM."""
-    entity_registry = er.async_get(hass)
-    entity_state = template.TemplateState(hass, entity_state, collect=False)
-
-    result: dict[str, Any] = {
-        "name": entity_state.name,
-        "entity_id": entity_state.entity_id,
-        "state": entity_state.state_with_unit,
-        "last_changed": dt_util.get_age(entity_state.last_changed) + " ago",
-    }
-
-    if registry_entry := entity_registry.async_get(entity_state.entity_id):
-        if area_name := template.area_name(hass, entity_state.entity_id):
-            result["area"] = area_name
-        if floor_name := template.floor_name(hass, entity_state.entity_id):
-            result["floor"] = floor_name
-        if len(registry_entry.aliases):
-            result["aliases"] = list(registry_entry.aliases)
-
-    attributes: dict[str, Any] = {}
-    for attribute, value in entity_state.attributes.items():
-        if attribute in EXPORTED_ATTRIBUTES:
-            attributes[attribute] = value
-    if attributes:
-        result["attributes"] = attributes
-
-    return result
-
-
 def custom_serializer(schema: Any) -> Any:
     """Serialize additional types in OpenAPI-compatible format."""
     from homeassistant.util.color import (  # pylint: disable=import-outside-toplevel
@@ -318,16 +180,13 @@ class IntentTool(Tool):
         self,
         intent_type: str,
         slot_schema: vol.Schema | None = None,
-        description: str | None = None,
     ) -> None:
         """Init the class."""
         if slot_schema is None:
             slot_schema = vol.Schema({})
-        if description is None:
-            description = f"Execute Home Assistant {intent_type} intent"
         super().__init__(
             intent_type,
-            description,
+            f"Execute Home Assistant {intent_type} intent",
             convert(slot_schema, custom_serializer=custom_serializer),
         )
 
@@ -396,13 +255,4 @@ class IntentTool(Tool):
         intent_response = await intent.async_handle(
             hass, platform, self.name, slots, text_input, context, language, assistant
         )
-        response = intent_response.as_dict()
-        if intent_response.matched_states:
-            response["data"]["matched_states"] = [
-                _format_state(hass, state) for state in intent_response.matched_states
-            ]
-        if intent_response.unmatched_states:
-            response["data"]["unmatched_states"] = [
-                _format_state(hass, state) for state in intent_response.unmatched_states
-            ]
-        return response
+        return intent_response.as_dict()

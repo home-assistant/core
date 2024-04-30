@@ -6,38 +6,16 @@ import pytest
 import voluptuous as vol
 from voluptuous_openapi import UNSUPPORTED
 
-from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import Context, HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
     config_validation as cv,
-    entity_registry as er,
     floor_registry as fr,
     intent,
     llm,
 )
 from homeassistant.util.color import color_name_to_rgb
-
-
-async def test_tool() -> None:
-    """Test llm.Tool class."""
-    test_parameters = {
-        "type": "object",
-        "properties": {
-            "test_arg": {
-                "type": "integer",
-                "description": "Test arg description",
-            },
-        },
-        "required": ["test_arg"],
-    }
-    tool = llm.Tool("test_name", "test_description", test_parameters)
-    assert tool.name == "test_name"
-    assert tool.description == "test_description"
-    assert tool.parameters == test_parameters
-    assert str(tool) == "<Tool - test_name>"
-    with pytest.raises(NotImplementedError):
-        await tool.async_call(None, None, None, None, None, None, None, None, None)
 
 
 def test_async_register(hass: HomeAssistant) -> None:
@@ -51,20 +29,16 @@ def test_async_register(hass: HomeAssistant) -> None:
 
 
 def test_async_register_overwrite(hass: HomeAssistant) -> None:
-    """Test registering multiple tools with the same name, ensuring the last one overwrites the previous one and a warning is emitted."""
+    """Test registering multiple tools with the same name, ensuring the second time an exception is raised."""
     tool1 = llm.Tool("test_tool", "test_tool_1")
     tool2 = llm.Tool("test_tool", "test_tool_2")
 
-    with patch.object(llm._LOGGER, "warning") as mock_warning:
-        llm.async_register_tool(hass, tool1)
+    llm.async_register_tool(hass, tool1)
+    with pytest.raises(HomeAssistantError):
         llm.async_register_tool(hass, tool2)
 
-        mock_warning.assert_called_once_with(
-            "Tool %s is being overwritten by %s", "test_tool", tool2
-        )
-
-    assert hass.data[llm.DATA_KEY]["test_tool"] == tool2
-    assert list(llm.async_get_tools(hass)) == [tool2]
+    assert hass.data[llm.DATA_KEY]["test_tool"] == tool1
+    assert list(llm.async_get_tools(hass)) == [tool1]
 
 
 def test_async_remove(hass: HomeAssistant) -> None:
@@ -187,119 +161,6 @@ async def test_call_tool_no_existing(hass: HomeAssistant) -> None:
     assert response == '{"error": "KeyError", "error_text": "\'test_tool\'"}'
 
 
-def test_format_state(hass: HomeAssistant) -> None:
-    """Test foratting of an entity state."""
-    state1 = State(
-        "light.kitchen", "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
-    )
-
-    assert llm._format_state(hass, state1) == {
-        "name": "kitchen light",
-        "entity_id": "light.kitchen",
-        "state": "on",
-        "last_changed": "0 seconds ago",
-    }
-
-
-def test_format_state_with_attributes(hass: HomeAssistant) -> None:
-    """Test foratting of an entity state with attributes."""
-    state1 = State(
-        "light.kitchen",
-        "on",
-        attributes={
-            ATTR_FRIENDLY_NAME: "kitchen light",
-            "extra_attr": "filtered out",
-            "brightness": "100",
-        },
-    )
-
-    assert llm._format_state(hass, state1) == {
-        "name": "kitchen light",
-        "entity_id": "light.kitchen",
-        "state": "on",
-        "last_changed": "0 seconds ago",
-        "attributes": {"brightness": "100"},
-    }
-
-
-def test_format_state_with_alias(
-    hass: HomeAssistant,
-    area_registry: ar.AreaRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test foratting of an entity state with an alias assigned in entity registry."""
-    state1 = State(
-        "light.kitchen", "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
-    )
-    entity_registry.async_get_or_create(
-        "light", "demo", "1234", suggested_object_id="kitchen"
-    )
-    entity_registry.async_update_entity(state1.entity_id, aliases={"küchenlicht"})
-
-    assert llm._format_state(hass, state1) == {
-        "name": "kitchen light",
-        "entity_id": "light.kitchen",
-        "state": "on",
-        "last_changed": "0 seconds ago",
-        "aliases": ["küchenlicht"],
-    }
-
-
-def test_format_state_with_area(
-    hass: HomeAssistant,
-    area_registry: ar.AreaRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test foratting of an entity state with area assigned in area registry."""
-    state1 = State(
-        "light.kitchen", "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
-    )
-    area_kitchen = area_registry.async_get_or_create("kitchen")
-    entity_registry.async_get_or_create(
-        "light", "demo", "1234", suggested_object_id="kitchen"
-    )
-    entity_registry.async_update_entity(state1.entity_id, area_id=area_kitchen.id)
-
-    assert llm._format_state(hass, state1) == {
-        "name": "kitchen light",
-        "entity_id": "light.kitchen",
-        "state": "on",
-        "last_changed": "0 seconds ago",
-        "area": "kitchen",
-    }
-
-
-def test_format_state_with_floor(
-    hass: HomeAssistant,
-    area_registry: ar.AreaRegistry,
-    entity_registry: er.EntityRegistry,
-    floor_registry: fr.FloorRegistry,
-) -> None:
-    """Test foratting of an entity state with area and a floor assigned in floor registry."""
-    state1 = State(
-        "light.kitchen", "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
-    )
-
-    area_kitchen = area_registry.async_get_or_create("kitchen")
-    floor_1 = floor_registry.async_create("first floor", aliases={"ground floor"})
-    area_kitchen = area_registry.async_update(
-        area_kitchen.id, floor_id=floor_1.floor_id
-    )
-    entity_registry.async_get_or_create(
-        "light", "demo", "1234", suggested_object_id="kitchen"
-    )
-    entity_registry.async_update_entity(state1.entity_id, area_id=area_kitchen.id)
-
-    assert llm._format_state(hass, state1) == {
-        "name": "kitchen light",
-        "entity_id": "light.kitchen",
-        "state": "on",
-        "last_changed": "0 seconds ago",
-        "area": "kitchen",
-        "floor": "first floor",
-    }
-
-
 def test_custom_serializer() -> None:
     """Test custom serializer."""
     assert llm.custom_serializer(cv.string) == {"type": "string"}
@@ -358,24 +219,8 @@ async def test_intent_tool(hass: HomeAssistant) -> None:
         "card": {},
         "data": {
             "failed": [],
-            "matched_states": [
-                {
-                    "entity_id": "light.matched",
-                    "last_changed": "0 seconds ago",
-                    "name": "matched",
-                    "state": "on",
-                }
-            ],
             "success": [],
             "targets": [],
-            "unmatched_states": [
-                {
-                    "entity_id": "light.unmatched",
-                    "last_changed": "0 seconds ago",
-                    "name": "unmatched",
-                    "state": "on",
-                }
-            ],
         },
         "language": "*",
         "response_type": "action_done",
@@ -398,9 +243,8 @@ async def test_intent_tool_with_area_and_floor(
                 vol.Optional("floor"): cv.string,
             },
         ),
-        description="test_description",
     )
-    assert tool.description == "test_description"
+    assert tool.description == "Execute Home Assistant test_intent intent"
     assert tool.parameters == {
         "type": "object",
         "properties": {
