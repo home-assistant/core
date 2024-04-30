@@ -533,7 +533,7 @@ class Entity(
     _attr_assumed_state: bool = False
     _attr_attribution: str | None = None
     _attr_available: bool = True
-    _attr_capability_attributes: Mapping[str, Any] | None = None
+    _attr_capability_attributes: dict[str, Any] | None = None
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
     _attr_entity_category: EntityCategory | None
@@ -744,7 +744,7 @@ class Entity(
         return self._attr_state
 
     @cached_property
-    def capability_attributes(self) -> Mapping[str, Any] | None:
+    def capability_attributes(self) -> dict[str, Any] | None:
         """Return the capability attributes.
 
         Attributes that explain the capabilities of an entity.
