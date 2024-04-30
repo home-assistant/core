@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from http import HTTPStatus
+import logging
 import socket
 from typing import Any
 
@@ -11,14 +12,10 @@ import aiohttp
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 
-from . import (
-    _LOGGER,
-    STEP_USER_DATA_SCHEMA,
-    V1_API_SCHEMA,
-    V3_API_SCHEMA,
-    validate_input,
-)
+from . import STEP_USER_DATA_SCHEMA, V1_API_SCHEMA, V3_API_SCHEMA, validate_input
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -43,7 +40,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user_v1(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Version 3 configuration."""
+        """Version 1 configuration."""
         _LOGGER.debug(
             "config_flow.py:ConfigFlow.async_step_user_v1: ", extra=user_input
         )
@@ -75,13 +72,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             _LOGGER.debug(
-                "config_flow.py:ConfigFlow.async_step_user: validation passed: ",
+                "config_flow.py:ConfigFlow.async_step_user_v1: validation passed: ",
                 extra=user_input,
             )
             return self.async_create_entry(title=info["title"], data=user_input)
 
         _LOGGER.debug(
-            "config_flow.py:ConfigFlow.async_step_user: validation failed: ",
+            "config_flow.py:ConfigFlow.async_step_user_v1: validation failed: ",
             extra=user_input,
         )
 
@@ -94,7 +91,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user_v3(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Version 1 configuration."""
+        """Version 3 configuration."""
         if user_input is None:
             return self.async_show_form(step_id="user_v3", data_schema=V3_API_SCHEMA)
 
@@ -123,13 +120,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             _LOGGER.debug(
-                "config_flow.py:ConfigFlow.async_step_user: validation passed:",
+                "config_flow.py:ConfigFlow.async_step_user_v3: validation passed:",
                 extra=user_input,
             )
             return self.async_create_entry(title=info["title"], data=user_input)
 
         _LOGGER.debug(
-            "config_flow.py:ConfigFlow.async_step_user: validation failed: ",
+            "config_flow.py:ConfigFlow.async_step_user_v3: validation failed: ",
             extra=user_input,
         )
 
