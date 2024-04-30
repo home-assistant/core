@@ -6,7 +6,7 @@ from datetime import timedelta
 from enum import IntFlag
 from functools import cached_property, partial
 import logging
-from typing import Any, final, override
+from typing import Any, final, overload, override
 
 import voluptuous as vol
 
@@ -175,9 +175,23 @@ class NotifyEntity(RestoreEntity):
         self.async_write_ha_state()
         await self.async_send_message(**kwargs)
 
+    @overload
+    def send_message(self, message: str) -> None: ...
+
+    @overload
+    def send_message(self, message: str, title: str | None = None) -> None: ...
+
     def send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
         raise NotImplementedError
+
+    @overload
+    async def async_send_message(self, message: str) -> None: ...
+
+    @overload
+    async def async_send_message(
+        self, message: str, title: str | None = None
+    ) -> None: ...
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
