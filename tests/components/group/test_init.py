@@ -2144,7 +2144,7 @@ async def test_entity_platforms_with_multiple_on_states_no_state_match(
         ),
         # All entities have ON state `on_milk`
         # but the group state will default to on_beer
-        # wicht is the default ON state for both integrations.
+        # which is the default ON state for both integrations.
         (
             [
                 ("test1.ent1", "off_water", "on_milk"),
