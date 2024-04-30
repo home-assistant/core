@@ -12,10 +12,10 @@ from python_homeassistant_analytics import (
     HomeassistantAnalyticsNotModifiedError,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from . import AnalyticsInsightsConfigEntry
 from .const import (
     CONF_TRACKED_CUSTOM_INTEGRATIONS,
     CONF_TRACKED_INTEGRATIONS,
@@ -35,7 +35,7 @@ class AnalyticsData:
 class HomeassistantAnalyticsDataUpdateCoordinator(DataUpdateCoordinator[AnalyticsData]):
     """A Homeassistant Analytics Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: AnalyticsInsightsConfigEntry
 
     def __init__(
         self, hass: HomeAssistant, client: HomeassistantAnalyticsClient
