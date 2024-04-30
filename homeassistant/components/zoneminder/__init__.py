@@ -55,7 +55,7 @@ SET_RUN_STATE_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ZoneMinder component."""
 
     hass.data[DOMAIN] = {}
@@ -99,7 +99,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 state_name,
             )
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_SET_RUN_STATE, set_active_state, schema=SET_RUN_STATE_SCHEMA
     )
 
