@@ -851,7 +851,8 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     # Remove the device
     config_entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
     client = await hass_ws_client(hass)
-    await client.remove_device(device_entry.id, config_entry_id)
+    response = await client.remove_device(device_entry.id, config_entry_id)
+    assert response["success"]
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(
@@ -1143,7 +1144,8 @@ async def test_attach_unknown_remove_device_from_registry(
     # Remove the device
     config_entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
     client = await hass_ws_client(hass)
-    await client.remove_device(device_entry.id, config_entry_id)
+    response = await client.remove_device(device_entry.id, config_entry_id)
+    assert response["success"]
     await hass.async_block_till_done()
 
 

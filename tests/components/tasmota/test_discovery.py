@@ -448,7 +448,8 @@ async def test_device_remove_stale(
     # Remove the device
     config_entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
     client = await hass_ws_client(hass)
-    await client.remove_device(device_entry.id, config_entry_id)
+    response = await client.remove_device(device_entry.id, config_entry_id)
+    assert response["success"]
 
     # Verify device entry is removed
     device_entry = device_reg.async_get_device(

@@ -51,7 +51,8 @@ async def test_device_remove(
 
     config_entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
     client = await hass_ws_client(hass)
-    await client.remove_device(device_entry.id, config_entry_id)
+    response = await client.remove_device(device_entry.id, config_entry_id)
+    assert response["success"]
     await hass.async_block_till_done()
 
     # Verify device entry is removed
@@ -101,7 +102,8 @@ async def test_device_remove_non_tasmota_device(
     assert device_entry is not None
 
     client = await hass_ws_client(hass)
-    await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    assert response["success"]
     await hass.async_block_till_done()
 
     # Verify device entry is removed
@@ -134,7 +136,8 @@ async def test_device_remove_stale_tasmota_device(
 
     config_entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
     client = await hass_ws_client(hass)
-    await client.remove_device(device_entry.id, config_entry_id)
+    response = await client.remove_device(device_entry.id, config_entry_id)
+    assert response["success"]
     await hass.async_block_till_done()
 
     # Verify device entry is removed
