@@ -884,9 +884,6 @@ class MQTT:
         await self._async_perform_subscriptions()
         await self._ha_started.wait()  # Wait for Home Assistant to start
         await self._discovery_cooldown()  # Wait for MQTT discovery to cool down
-        # Check subscriptions again to ensure we are subscribed
-        # in case anything pending was added while HA was starting
-        await self._async_perform_subscriptions()
         # Update subscribe cooldown period to a shorter time
         self._subscribe_debouncer.set_timeout(SUBSCRIBE_COOLDOWN)
         await self.async_publish(
