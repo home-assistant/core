@@ -419,7 +419,9 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
 
     # Remove MQTT from the device
     mqtt_config_entry = hass.config_entries.async_entries(MQTT_DOMAIN)[0]
-    response = await ws_client.remove_device(device_entry.id, mqtt_config_entry.entry_id)
+    response = await ws_client.remove_device(
+        device_entry.id, mqtt_config_entry.entry_id
+    )
     assert response["success"]
     tag_mock.reset_mock()
 
