@@ -324,8 +324,6 @@ class BaseRescheduler(TimeLineScheduler):
     ) -> set[ActionEntity]:
         """Find source actions of routines or independent actions affected by overtime.
 
-        TODO: should I change this recursively? for all affected routines.until the affected entities don't increase in number.
-
         These actions are not running right now, they are scheduled into the future.
         """
         affected_actions = dict[str, ActionEntity]()
@@ -428,24 +426,23 @@ class BaseRescheduler(TimeLineScheduler):
                         found = True
                         continue
                     if found and action_routine_id not in postsets[routine_id]:
-                        postsets[routine_id] |= {action_routine_id}
+                        postsets[routine_id].add(action_routine_id)
 
         while postsets:
-            # TODO: should this be before or after? should change immutable order update too  # pylint: disable=fixme
-            before = set[str]()
+            last = set[str]()
             for routine_id, postset in postsets.items():
                 if not postset:
-                    before.add(routine_id)
+                    last.add(routine_id)
                     break
-            if not before:
+            if not last:
                 raise ValueError("There is a cycle in the serialization order.")
 
-            for routine_id in before:
+            for routine_id in last:
                 postsets.pop(routine_id)
-                for routine_id, postset in postsets.items():
-                    postset.discard(routine_id)
+            for postset in postsets.values():
+                postset.difference_update(last)
 
-            routine_ranks: dict[str, float] = self._routine_ranks(routine_ids=before)
+            routine_ranks: dict[str, float] = self._routine_ranks(routine_ids=last)
             if self._routine_prioriy_policy in (EARLIEST, SHORTEST):
                 routine_order = dict(sorted(routine_ranks.items(), key=lambda x: x[1]))
             elif self._routine_prioriy_policy in (LATEST, LONGEST):
@@ -523,8 +520,7 @@ class BaseRescheduler(TimeLineScheduler):
     ) -> dict[str, ActionEntity]:
         """Apply the existing serialization order as routine action dependencies.
 
-        TODO: do I need to do this for the source actions with already scheduled parents?
-
+        Add dependencies among unscheduled actions.
         This method relies on pointers to add all dependencies.
         """
         entity_descheduled_actions = dict[str, dict[str, list[ActionEntity]]]()
