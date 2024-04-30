@@ -4,11 +4,16 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_credentials": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {
+        "menu_options": {
+          "login": "Authenticate with your email/username and password",
+          "api_credentials": "Authenticate with API credentials"
+        },
         "data": {
           "url": "[%key:common::config_flow::data::url%]",
           "name": "Override for Habitica’s username. Will be used for service calls",
@@ -16,6 +21,13 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "description": "Connect your Habitica profile to allow monitoring of your user's profile and tasks. Note that api_id and api_key must be gotten from https://habitica.com/user/settings/api"
+      },
+      "login": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "username": "Email or username (case-sensitive)",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     }
   },
