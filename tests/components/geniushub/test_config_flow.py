@@ -28,29 +28,26 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
-    assert not result["errors"]
 
 
 async def test_form_s_v1(hass: HomeAssistant) -> None:
     """Test manually setting up."""
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": SOURCE_USER}, data={"option_1_or_2": False}
+        const.DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user_v1"
-    assert not result["errors"]
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
 
 
 async def test_form_s_v3(hass: HomeAssistant) -> None:
     """Test manually setting up."""
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": SOURCE_USER}, data={"option_1_or_2": True}
+        const.DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user_v3"
-    assert not result["errors"]
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
 
 
 async def test_form_v1(
@@ -58,9 +55,7 @@ async def test_form_v1(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test form V1."""
-    entry = MockConfigEntry(
-        domain=const.DOMAIN, unique_id="aabbccddeeff", data={"option_1_or_2": False}
-    )
+    entry = MockConfigEntry(domain=const.DOMAIN, unique_id="aabbccddeeff")
     entry.add_to_hass(hass)
 
     mock_dev_id = "aabbccddee"
@@ -69,11 +64,11 @@ async def test_form_v1(
     )
 
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": "user_v1"}, data={"option_1_or_2": False}
+        const.DOMAIN, context={"source": "option_1"}
     )
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "option_1"
 
 
 async def test_form_v3(
@@ -81,9 +76,7 @@ async def test_form_v3(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test form V3."""
-    entry = MockConfigEntry(
-        domain=const.DOMAIN, unique_id="aabbccddeeff", data={"option_1_or_2": True}
-    )
+    entry = MockConfigEntry(domain=const.DOMAIN, unique_id="aabbccddeeff")
     entry.add_to_hass(hass)
 
     mock_dev_id = "aabbccddee"
@@ -92,10 +85,10 @@ async def test_form_v3(
     )
 
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": "user_v3"}, data={"option_1_or_2": True}
+        const.DOMAIN, context={"source": "option_2"}
     )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "option_2"
 
 
 async def test_form_v1_good_data(
@@ -107,7 +100,6 @@ async def test_form_v1_good_data(
         domain=const.DOMAIN,
         unique_id="aabbccddeeff",
         data={
-            "option_1_or_2": False,
             CONF_HOST: GENIUS_HOST,
             CONF_PASSWORD: GENIUS_PASSWORD,
             CONF_USERNAME: GENIUS_USERNAME,
@@ -126,15 +118,14 @@ async def test_form_v1_good_data(
     ) as mock_validate_input:
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "user_v1"},
+            context={"source": "option_1"},
             data={
-                "option_1_or_2": False,
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
                 CONF_USERNAME: GENIUS_USERNAME,
             },
         )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert "errors" not in result
     assert len(mock_validate_input.mock_calls) == 1
 
@@ -148,7 +139,6 @@ async def test_form_v1_ClientResponseError(
         domain=const.DOMAIN,
         unique_id="aabbccddeeff",
         data={
-            "option_1_or_2": False,
             CONF_HOST: GENIUS_HOST,
             CONF_PASSWORD: GENIUS_PASSWORD,
             CONF_USERNAME: GENIUS_USERNAME,
@@ -167,15 +157,14 @@ async def test_form_v1_ClientResponseError(
     ) as mock_validate_input:
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "user_v1"},
+            context={"source": "option_1"},
             data={
-                "option_1_or_2": False,
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
                 CONF_USERNAME: GENIUS_USERNAME,
             },
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_host"
     assert len(mock_validate_input.mock_calls) == 1
 
@@ -189,7 +178,6 @@ async def test_form_v1_UNAUTHORIZED(
         domain=const.DOMAIN,
         unique_id="aabbccddeeff",
         data={
-            "option_1_or_2": False,
             CONF_HOST: GENIUS_HOST,
             CONF_PASSWORD: GENIUS_PASSWORD,
             CONF_USERNAME: GENIUS_USERNAME,
@@ -208,16 +196,15 @@ async def test_form_v1_UNAUTHORIZED(
     ) as mock_validate_input:
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "user_v1"},
+            context={"source": "option_1"},
             data={
-                "option_1_or_2": False,
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
                 CONF_USERNAME: GENIUS_USERNAME,
             },
         )
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"]["base"] == "unauthorized_token"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == "unauthorized"
     assert len(mock_validate_input.mock_calls) == 1
 
 
@@ -230,7 +217,6 @@ async def test_form_v1_timeout(
         domain=const.DOMAIN,
         unique_id="aabbccddeeff",
         data={
-            "option_1_or_2": False,
             CONF_HOST: GENIUS_HOST,
             CONF_PASSWORD: GENIUS_PASSWORD,
             CONF_USERNAME: GENIUS_USERNAME,
@@ -249,15 +235,14 @@ async def test_form_v1_timeout(
     ) as mock_validate_input:
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "user_v1"},
+            context={"source": "option_1"},
             data={
-                "option_1_or_2": False,
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
                 CONF_USERNAME: GENIUS_USERNAME,
             },
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
     assert len(mock_validate_input.mock_calls) == 1
 
@@ -271,7 +256,6 @@ async def test_form_v1_invalid_host(
         domain=const.DOMAIN,
         unique_id="aabbccddeeff",
         data={
-            "option_1_or_2": False,
             CONF_HOST: GENIUS_HOST,
             CONF_PASSWORD: GENIUS_PASSWORD,
             CONF_USERNAME: GENIUS_USERNAME,
@@ -290,15 +274,14 @@ async def test_form_v1_invalid_host(
     ) as mock_validate_input:
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "user_v1"},
+            context={"source": "option_1"},
             data={
-                "option_1_or_2": False,
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
                 CONF_USERNAME: GENIUS_USERNAME,
             },
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_host"
     assert len(mock_validate_input.mock_calls) == 1
 
@@ -312,7 +295,6 @@ async def test_form_v1_Exception(
         domain=const.DOMAIN,
         unique_id="aabbccddeeff",
         data={
-            "option_1_or_2": False,
             CONF_HOST: GENIUS_HOST,
             CONF_PASSWORD: GENIUS_PASSWORD,
             CONF_USERNAME: GENIUS_USERNAME,
@@ -331,15 +313,14 @@ async def test_form_v1_Exception(
     ) as mock_validate_input:
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "user_v1"},
+            context={"source": "option_1"},
             data={
-                "option_1_or_2": False,
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
                 CONF_USERNAME: GENIUS_USERNAME,
             },
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "unknown"
     assert len(mock_validate_input.mock_calls) == 1
 
@@ -353,7 +334,6 @@ async def test_form_v3_good_data(
         domain=const.DOMAIN,
         unique_id="aabbccddeeff",
         data={
-            "option_1_or_2": True,
             CONF_HOST: GENIUS_HOST,
             CONF_PASSWORD: GENIUS_PASSWORD,
             CONF_USERNAME: GENIUS_USERNAME,
@@ -372,15 +352,14 @@ async def test_form_v3_good_data(
     ) as mock_validate_input:
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "user_v3"},
+            context={"source": "option_2"},
             data={
-                "option_1_or_2": True,
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
                 CONF_USERNAME: GENIUS_USERNAME,
             },
         )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert "errors" not in result
     assert len(mock_validate_input.mock_calls) == 1
 
@@ -394,7 +373,6 @@ async def test_form_v3_ClientResponseError(
         domain=const.DOMAIN,
         unique_id="aabbccddeeff",
         data={
-            "option_1_or_2": True,
             CONF_HOST: GENIUS_HOST,
             CONF_PASSWORD: GENIUS_PASSWORD,
             CONF_USERNAME: GENIUS_USERNAME,
@@ -413,15 +391,14 @@ async def test_form_v3_ClientResponseError(
     ) as mock_validate_input:
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "user_v3"},
+            context={"source": "option_2"},
             data={
-                "option_1_or_2": True,
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
                 CONF_USERNAME: GENIUS_USERNAME,
             },
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_host"
     assert len(mock_validate_input.mock_calls) == 1
 
@@ -435,7 +412,6 @@ async def test_form_v3_UNAUTHORIZED(
         domain=const.DOMAIN,
         unique_id="aabbccddeeff",
         data={
-            "option_1_or_2": True,
             CONF_HOST: GENIUS_HOST,
             CONF_PASSWORD: GENIUS_PASSWORD,
             CONF_USERNAME: GENIUS_USERNAME,
@@ -454,16 +430,15 @@ async def test_form_v3_UNAUTHORIZED(
     ) as mock_validate_input:
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "user_v3"},
+            context={"source": "option_2"},
             data={
-                "option_1_or_2": True,
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
                 CONF_USERNAME: GENIUS_USERNAME,
             },
         )
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"]["base"] == "unauthorized"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == "unauthorized_token"
     assert len(mock_validate_input.mock_calls) == 1
 
 
@@ -476,7 +451,6 @@ async def test_form_v3_timeout(
         domain=const.DOMAIN,
         unique_id="aabbccddeeff",
         data={
-            "option_1_or_2": True,
             CONF_HOST: GENIUS_HOST,
             CONF_PASSWORD: GENIUS_PASSWORD,
             CONF_USERNAME: GENIUS_USERNAME,
@@ -495,15 +469,14 @@ async def test_form_v3_timeout(
     ) as mock_validate_input:
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "user_v3"},
+            context={"source": "option_2"},
             data={
-                "option_1_or_2": True,
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
                 CONF_USERNAME: GENIUS_USERNAME,
             },
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
     assert len(mock_validate_input.mock_calls) == 1
 
@@ -517,7 +490,6 @@ async def test_form_v3_invalid_host(
         domain=const.DOMAIN,
         unique_id="aabbccddeeff",
         data={
-            "option_1_or_2": True,
             CONF_HOST: GENIUS_HOST,
             CONF_PASSWORD: GENIUS_PASSWORD,
             CONF_USERNAME: GENIUS_USERNAME,
@@ -536,15 +508,14 @@ async def test_form_v3_invalid_host(
     ) as mock_validate_input:
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "user_v3"},
+            context={"source": "option_2"},
             data={
-                "option_1_or_2": True,
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
                 CONF_USERNAME: GENIUS_USERNAME,
             },
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_host"
     assert len(mock_validate_input.mock_calls) == 1
 
@@ -558,7 +529,6 @@ async def test_form_v3_Exception(
         domain=const.DOMAIN,
         unique_id="aabbccddeeff",
         data={
-            "option_1_or_2": True,
             CONF_HOST: GENIUS_HOST,
             CONF_PASSWORD: GENIUS_PASSWORD,
             CONF_USERNAME: GENIUS_USERNAME,
@@ -577,15 +547,14 @@ async def test_form_v3_Exception(
     ) as mock_validate_input:
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "user_v3"},
+            context={"source": "option_2"},
             data={
-                "option_1_or_2": True,
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
                 CONF_USERNAME: GENIUS_USERNAME,
             },
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "unknown"
     assert len(mock_validate_input.mock_calls) == 1
 
@@ -599,7 +568,6 @@ async def test_form_v1_ClientConnectionError(
         domain=const.DOMAIN,
         unique_id="aabbccddeeff",
         data={
-            "option_1_or_2": True,
             CONF_HOST: GENIUS_HOST,
             CONF_PASSWORD: GENIUS_PASSWORD,
             CONF_USERNAME: GENIUS_USERNAME,
@@ -618,15 +586,14 @@ async def test_form_v1_ClientConnectionError(
     ) as mock_validate_input:
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "user_v1"},
+            context={"source": "option_1"},
             data={
-                "option_1_or_2": True,
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
                 CONF_USERNAME: GENIUS_USERNAME,
             },
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
     assert len(mock_validate_input.mock_calls) == 1
 
@@ -640,7 +607,6 @@ async def test_form_v3_ClientConnectionError(
         domain=const.DOMAIN,
         unique_id="aabbccddeeff",
         data={
-            "option_1_or_2": True,
             CONF_HOST: GENIUS_HOST,
             CONF_PASSWORD: GENIUS_PASSWORD,
             CONF_USERNAME: GENIUS_USERNAME,
@@ -659,14 +625,13 @@ async def test_form_v3_ClientConnectionError(
     ) as mock_validate_input:
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "user_v3"},
+            context={"source": "option_2"},
             data={
-                "option_1_or_2": True,
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
                 CONF_USERNAME: GENIUS_USERNAME,
             },
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
     assert len(mock_validate_input.mock_calls) == 1
