@@ -469,7 +469,7 @@ beautifulsoup4==4.12.3
 bellows==0.38.2
 
 # homeassistant.components.bmw_connected_drive
-bimmer-connected[china]==0.14.6
+bimmer-connected[china]==0.15.2
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
@@ -494,7 +494,7 @@ bluecurrent-api==1.2.3
 bluemaestro-ble==0.2.3
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.19.0
+bluetooth-adapters==0.19.1
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.4.2
