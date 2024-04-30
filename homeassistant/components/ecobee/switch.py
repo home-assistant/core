@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
 from datetime import datetime
 import logging
 from typing import Any
@@ -22,14 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
-@dataclass(frozen=True, kw_only=True)
-class EcobeeSwitchEntityDescription(SwitchEntity):
-    """Class describing Ecobee switch entities."""
-
-    ecobee_setting_key: str
-    set_fn: Callable[[EcobeeData, int, int], Awaitable]
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -37,7 +27,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the ecobee thermostat switch entity."""
     data: EcobeeData = hass.data[DOMAIN]
-    _LOGGER.debug("Adding ventilators 20 min switch if present")
 
     async_add_entities(
         (
@@ -52,6 +41,9 @@ async def async_setup_entry(
 class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
     """A Switch class, representing 20 min timer for an ecobee thermostat with ventilator attached."""
 
+    _attr_has_entity_name = True
+    _attr_name = "Ventilator 20m Timer"
+
     def __init__(
         self,
         data: EcobeeData,
@@ -59,14 +51,14 @@ class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
     ) -> None:
         """Initialize ecobee ventilator platform."""
         super().__init__(data, thermostat_index)
-        self._attr_unique_id = "ventilator_20m_timer"
-        self._attr_native_value = False
+        self._attr_unique_id = f"{self.base_unique_id}_ventilator_20m_timer"
+        self._attr_is_on = False
         self.update_without_throttle = False
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Get the latest state from the thermostat."""
-        return self._attr_native_value
+        return self._attr_is_on
 
     async def async_update(self) -> None:
         """Get the latest state from the thermostat."""
@@ -77,16 +69,17 @@ class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
         else:
             await self.data.update()
 
-        ventilatorOffDateTime = self.thermostat["settings"]["ventilatorOffDateTime"]
+        ventilator_off_date_time = self.thermostat["settings"]["ventilatorOffDateTime"]
 
         time_zone_delay = datetime.strptime(
             self.thermostat["utcTime"], DATE_FORMAT
         ) - datetime.strptime(self.thermostat["thermostatTime"], DATE_FORMAT)
 
-        self._attr_native_value = (
-            ventilatorOffDateTime is not None
-            and ventilatorOffDateTime != ""
-            and datetime.strptime(ventilatorOffDateTime, DATE_FORMAT) + time_zone_delay
+        self._attr_is_on = (
+            ventilator_off_date_time is not None
+            and ventilator_off_date_time != ""
+            and datetime.strptime(ventilator_off_date_time, DATE_FORMAT)
+            + time_zone_delay
             >= datetime.now()
         )
 
