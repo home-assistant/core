@@ -7,8 +7,14 @@ from unittest.mock import AsyncMock, patch
 from pydrawise.schema import (
     Controller,
     ControllerHardware,
+    ControllerWaterUseSummary,
+    CustomSensorTypeEnum,
+    LocalizedValueType,
     ScheduledZoneRun,
     ScheduledZoneRuns,
+    Sensor,
+    SensorModel,
+    SensorStatus,
     User,
     Zone,
 )
@@ -53,12 +59,18 @@ def mock_pydrawise(
     user: User,
     controller: Controller,
     zones: list[Zone],
+    sensors: list[Sensor],
+    controller_water_use_summary: ControllerWaterUseSummary,
 ) -> Generator[AsyncMock, None, None]:
     """Mock Hydrawise."""
     with patch("pydrawise.client.Hydrawise", autospec=True) as mock_pydrawise:
         user.controllers = [controller]
         controller.zones = zones
+        controller.sensors = sensors
         mock_pydrawise.return_value.get_user.return_value = user
+        mock_pydrawise.return_value.get_water_use_summary.return_value = (
+            controller_water_use_summary
+        )
         yield mock_pydrawise.return_value
 
 
@@ -86,7 +98,48 @@ def controller() -> Controller:
         ),
         last_contact_time=datetime.fromtimestamp(1693292420),
         online=True,
+        sensors=[],
     )
+
+
+@pytest.fixture
+def sensors() -> list[Sensor]:
+    """Hydrawise sensor fixtures."""
+    return [
+        Sensor(
+            id=337844,
+            name="Rain sensor ",
+            model=SensorModel(
+                id=3318,
+                name="Rain Sensor (normally closed wire)",
+                active=True,
+                off_level=1,
+                off_timer=0,
+                divisor=0.0,
+                flow_rate=0.0,
+                sensor_type=CustomSensorTypeEnum.LEVEL_CLOSED,
+            ),
+            status=SensorStatus(water_flow=None, active=False),
+        ),
+        Sensor(
+            id=337845,
+            name="Flow meter",
+            model=SensorModel(
+                id=3324,
+                name="1, 1½ or 2 inch NPT Flow Meter",
+                active=True,
+                off_level=0,
+                off_timer=0,
+                divisor=0.52834,
+                flow_rate=3.7854,
+                sensor_type=CustomSensorTypeEnum.FLOW,
+            ),
+            status=SensorStatus(
+                water_flow=LocalizedValueType(value=577.0044752010709, unit="gal"),
+                active=None,
+            ),
+        ),
+    ]
 
 
 @pytest.fixture
@@ -121,6 +174,18 @@ def zones() -> list[Zone]:
             ),
         ),
     ]
+
+
+@pytest.fixture
+def controller_water_use_summary() -> ControllerWaterUseSummary:
+    """Mock water use summary for the controller."""
+    return ControllerWaterUseSummary(
+        total_use=345.6,
+        total_active_use=332.6,
+        total_inactive_use=13.0,
+        active_use_by_zone_id={5965394: 120.1, 5965395: 212.5},
+        unit="gal",
+    )
 
 
 @pytest.fixture

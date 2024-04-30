@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 
 from freezegun.api import FrozenDateTimeFactory
-from pydrawise.schema import Zone
+from pydrawise.schema import Controller, Zone
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -44,3 +44,56 @@ async def test_suspended_state(
     next_cycle = hass.states.get("sensor.zone_one_next_cycle")
     assert next_cycle is not None
     assert next_cycle.state == "9999-12-31T23:59:59+00:00"
+
+
+async def test_sensor_and_water_state(
+    hass: HomeAssistant,
+    controller: Controller,
+    mock_add_config_entry: Callable[[], Awaitable[MockConfigEntry]],
+) -> None:
+    """Test rain sensor, flow sensor, and water use in the presence of flow and rain sensors."""
+    await mock_add_config_entry()
+
+    sensor = hass.states.get("sensor.zone_one_daily_active_water_use")
+    assert sensor is not None
+    assert sensor.state == "454.6279552584"
+
+    sensor = hass.states.get("sensor.zone_two_daily_active_water_use")
+    assert sensor is not None
+    assert sensor.state == "804.4000041"
+
+    sensor = hass.states.get("sensor.home_controller_daily_active_water_use")
+    assert sensor is not None
+    assert sensor.state == "1259.0279593584"
+
+    sensor = hass.states.get("sensor.home_controller_daily_inactive_water_use")
+    assert sensor is not None
+    assert sensor.state == "49.210353192"
+
+    sensor = hass.states.get("binary_sensor.home_controller_rain_sensor")
+    assert sensor is not None
+    assert sensor.state == "off"
+
+    sensor = hass.states.get("binary_sensor.home_controller_connectivity")
+    assert sensor is not None
+    assert sensor.state == "on"
+
+
+async def test_no_sensor_and_water_state2(
+    hass: HomeAssistant,
+    controller: Controller,
+    mock_add_config_entry: Callable[[], Awaitable[MockConfigEntry]],
+) -> None:
+    """Test rain sensor, flow sensor, and water use in the absence of flow and rain sensors."""
+    controller.sensors = []
+    await mock_add_config_entry()
+
+    assert hass.states.get("sensor.zone_one_daily_active_water_use") is None
+    assert hass.states.get("sensor.zone_two_daily_active_water_use") is None
+    assert hass.states.get("sensor.home_controller_daily_active_water_use") is None
+    assert hass.states.get("sensor.home_controller_daily_inactive_water_use") is None
+    assert hass.states.get("binary_sensor.home_controller_rain_sensor") is None
+
+    sensor = hass.states.get("binary_sensor.home_controller_connectivity")
+    assert sensor is not None
+    assert sensor.state == "on"

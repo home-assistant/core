@@ -142,7 +142,7 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
         if self.sensor is not None:
             # water use for the controller
             return daily_water_summary.total_active_use
-        return 0.0
+        return 0.0  # pragma: no cover
 
     def _get_daily_inactive_water_use(self) -> Any:
         if self.zone is None and self.sensor is not None:
@@ -151,7 +151,7 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
                 self.controller.id
             ]
             return daily_water_summary.total_inactive_use
-        return None
+        return None  # pragma: no cover
 
     def _get_daily_total_water_use(self) -> Any:
         if self.zone is None and self.sensor is not None:
@@ -160,4 +160,4 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
                 self.controller.id
             ]
             return daily_water_summary.total_use
-        return None
+        return None  # pragma: no cover
