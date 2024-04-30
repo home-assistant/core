@@ -28,6 +28,7 @@
     "error": {
       "cannot_connect": "Cannot connect: {reason}",
       "invalid_auth": "Invalid authentication: {reason}",
+      "unexpected_envoy": "Unexpected Envoy: {reason}",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
+from types import MappingProxyType
 from typing import Any
 
 from awesomeversion import AwesomeVersion
@@ -224,15 +225,13 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         assert entry
 
-        host: Any = (user_input or entry.data).get(CONF_HOST)
-        username: Any = (user_input or entry.data).get(CONF_USERNAME)
-        password: Any = (user_input or entry.data).get(CONF_PASSWORD)
+        suggested_values: dict[str, Any] | MappingProxyType[str, Any] = (
+            user_input or entry.data
+        )
 
-        suggested_values = {
-            CONF_HOST: host,
-            CONF_USERNAME: username,
-            CONF_PASSWORD: password,
-        }
+        host: Any = suggested_values.get(CONF_HOST)
+        username: Any = suggested_values.get(CONF_USERNAME)
+        password: Any = suggested_values.get(CONF_PASSWORD)
 
         if user_input is not None:
             try:
@@ -252,10 +251,12 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if not self.unique_id:
-                    await self.async_set_unique_id(envoy.serial_number)
-
-                if self.unique_id:
+                if self.unique_id != envoy.serial_number:
+                    errors["base"] = "unexpected_envoy"
+                    description_placeholders = {
+                        "reason": f"target: {self.unique_id}, actual: {envoy.serial_number}"
+                    }
+                else:
                     # If envoy exists in configuration update fields and exit
                     self._abort_if_unique_id_configured(
                         {
@@ -265,9 +266,11 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                         },
                         error="reconfigure_successful",
                     )
+        if not self.unique_id:
+            await self.async_set_unique_id(entry.unique_id)
 
         self.context["title_placeholders"] = {
-            CONF_SERIAL: (self.unique_id or entry.unique_id),
+            CONF_SERIAL: self.unique_id,
             CONF_HOST: host,
         }
 

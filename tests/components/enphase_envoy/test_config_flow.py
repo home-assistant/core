@@ -733,6 +733,63 @@ async def test_reconfigure_nochange(
     assert config_entry.data["password"] == "test-password"
 
 
+async def test_reconfigure_otherenvoy(
+    hass: HomeAssistant, config_entry, setup_enphase_envoy, mock_envoy
+) -> None:
+    """Test entering ip of other envoy and prevent changing it based on serial."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": config_entry.entry_id,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    # let mock return different serial from first time, sim it's other one on changed ip
+    mock_envoy.serial_number = "45678"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "1.1.1.2",
+            "username": "test-username",
+            "password": "new-password",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unexpected_envoy"}
+
+    # entry should still be original entry
+    assert config_entry.data["host"] == "1.1.1.1"
+    assert config_entry.data["username"] == "test-username"
+    assert config_entry.data["password"] == "test-password"
+
+    # set serial back to original to finsich flow
+    mock_envoy.serial_number = "1234"
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            "host": "1.1.1.1",
+            "username": "test-username",
+            "password": "new-password",
+        },
+    )
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reconfigure_successful"
+
+    # updated original entry
+    assert config_entry.data["host"] == "1.1.1.1"
+    assert config_entry.data["username"] == "test-username"
+    assert config_entry.data["password"] == "new-password"
+
+
 @pytest.mark.parametrize(
     "mock_authenticate",
     [
