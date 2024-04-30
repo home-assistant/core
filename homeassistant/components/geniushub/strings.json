@@ -3,24 +3,25 @@
     "step": {
       "user": {
         "title": "Genius Hub Configuration",
-        "data": {
-          "option_1_or_2": "Configuration option 1 or 2."
+        "menu_options": {
+          "option_1": "Option 1: Hub hostname/address with user credentials",
+          "option_2": "Option 2: Hub token only"
         }
       },
-      "user_v1": {
-        "title": "Genius Hub Configuration Option 2",
-        "data": {
-          "token": "The Hub Token of the Genius Hub.",
-          "mac": "The MAC address of the Hub’s ethernet port."
-        }
-      },
-      "user_v3": {
+      "option_1": {
         "title": "Genius Hub Configuration Option 1",
         "data": {
           "host": "The hostname/IP address of the Genius Hub.",
           "mac": "The MAC address of the Hub’s ethernet port.",
           "password": "Your Genius Hub password.",
           "username": "Your Genius Hub username."
+        }
+      },
+      "option_2": {
+        "title": "Genius Hub Configuration Option 2",
+        "data": {
+          "token": "The Hub Token of the Genius Hub.",
+          "mac": "The MAC address of the Hub’s ethernet port."
         }
       }
     },

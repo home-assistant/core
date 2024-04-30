@@ -93,10 +93,6 @@ V3_API_SCHEMA = vol.Schema(
     extra=vol.PREVENT_EXTRA,
 )
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {vol.Optional("option_1_or_2", default=True): bool}, extra=vol.PREVENT_EXTRA
-)
-
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Any(V3_API_SCHEMA, V1_API_SCHEMA)}, extra=vol.ALLOW_EXTRA
 )
@@ -140,7 +136,7 @@ async def validate_input(
 ) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
+    Data has the keys with values provided by the user.
     """
     hass_data = dict(hass_data_in)
     if CONF_HOST in hass_data:
