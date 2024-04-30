@@ -1065,7 +1065,7 @@ class Entity(
         entry = self.registry_entry
 
         capability_attr = self.capability_attributes
-        attr = dict(capability_attr) if capability_attr else {}
+        attr = capability_attr.copy() if capability_attr else {}
         shadowed_attr = {}
 
         available = self.available  # only call self.available once per update cycle
