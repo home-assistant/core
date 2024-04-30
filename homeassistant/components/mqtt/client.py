@@ -877,7 +877,7 @@ class MQTT:
 
         await self._wait_for_mid(mid)
 
-    async def _resubscribe_and_publish_birth_message(
+    async def _async_resubscribe_and_publish_birth_message(
         self, birth_message: PublishMessage
     ) -> None:
         """Resubscribe to all topics and publish birth message."""
@@ -943,7 +943,7 @@ class MQTT:
             birth_message = PublishMessage(**birth)
             self.config_entry.async_create_background_task(
                 self.hass,
-                self._resubscribe_and_publish_birth_message(birth_message),
+                self._async_resubscribe_and_publish_birth_message(birth_message),
                 name="mqtt re-subscribe and birth",
             )
         else:
