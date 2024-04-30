@@ -128,3 +128,46 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             errors=errors,
         )
+
+    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
+        """Import the yaml config."""
+        self._async_abort_entries_match(user_input)
+        errors = {}
+
+        try:
+            info = await validate_input(self.hass, user_input)
+
+        except socket.gaierror:
+            errors["base"] = "invalid_host"
+
+        except aiohttp.ClientResponseError as err:
+            if err.status == HTTPStatus.UNAUTHORIZED:
+                errors["base"] = "unauthorized"
+            else:
+                errors["base"] = "invalid_host"
+
+        except TimeoutError:
+            errors["base"] = "cannot_connect"
+
+        except aiohttp.ClientConnectionError:
+            errors["base"] = "cannot_connect"
+
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        else:
+            _LOGGER.debug(
+                "ConfigFlow.async_step_import: validation passed:",
+                extra=user_input,
+            )
+            return self.async_create_entry(title=info["title"], data=user_input)
+
+        _LOGGER.debug(
+            "ConfigFlow.async_step_import: validation failed: ",
+            extra=user_input,
+        )
+
+        return self.async_show_form(
+            step_id="user",
+            errors=errors,
+        )
