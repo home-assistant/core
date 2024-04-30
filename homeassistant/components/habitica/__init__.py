@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SENSORS,
     CONF_URL,
+    CONF_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -145,7 +146,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HabiticaConfigEntry) -> 
             EVENT_API_CALL_SUCCESS, {ATTR_NAME: name, ATTR_PATH: path, ATTR_DATA: data}
         )
 
-    websession = async_get_clientsession(hass)
+    websession = async_get_clientsession(
+        hass, verify_ssl=entry.data.get(CONF_VERIFY_SSL, True)
+    )
 
     url = entry.data[CONF_URL]
     username = entry.data[CONF_API_USER]
