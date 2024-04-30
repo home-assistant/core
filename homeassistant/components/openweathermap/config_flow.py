@@ -57,7 +57,8 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
 
             api_key_valid = None
             try:
-                api_key_valid = await _is_owm_api_key_valid(user_input[CONF_API_KEY])
+                owm_client = OWMClient(user_input[CONF_API_KEY])
+                api_key_valid = await owm_client.validate_key()
             except RequestError as error:
                 errors["base"] = "cannot_connect"
                 description_placeholders["error"] = str(error)
