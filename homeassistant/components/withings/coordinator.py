@@ -1,8 +1,10 @@
 """Withings coordinator."""
 
+from __future__ import annotations
+
 from abc import abstractmethod
 from datetime import date, datetime, timedelta
-from typing import TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 from aiowithings import (
     Activity,
@@ -23,7 +25,8 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from . import WithingsConfigEntry
+if TYPE_CHECKING:
+    from . import WithingsConfigEntry
 from .const import LOGGER
 
 _T = TypeVar("_T")
