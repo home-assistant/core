@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 import math
 from statistics import mean
+from typing import Literal
 from unittest.mock import patch
 
 from freezegun import freeze_time
@@ -90,9 +91,15 @@ KW_SENSOR_ATTRIBUTES = {
 }
 
 
-async def async_list_statistic_ids(hass: HomeAssistant) -> list[dict]:
+async def async_list_statistic_ids(
+    hass: HomeAssistant,
+    statistic_ids: set[str] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
+) -> list[dict]:
     """Return all statistic_ids and unit of measurement."""
-    return await hass.async_add_executor_job(list_statistic_ids, hass)
+    return await hass.async_add_executor_job(
+        list_statistic_ids, hass, statistic_ids, statistic_type
+    )
 
 
 @pytest.mark.parametrize(
@@ -2363,7 +2370,7 @@ async def test_compile_hourly_statistics_fails(
         ("total", "weight", "oz", "oz", "oz", "mass", "sum"),
     ],
 )
-async def async_test_list_statistic_ids(
+async def test_list_statistic_ids(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
