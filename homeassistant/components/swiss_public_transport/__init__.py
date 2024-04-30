@@ -78,7 +78,7 @@ async def async_migrate_entry(
         # This means the user has downgraded from a future version
         return False
 
-    if config_entry.minor_version == 1:
+    if config_entry.version == 1 and config_entry.minor_version == 1:
         # Remove wrongly registered devices and entries
         new_unique_id = unique_id_from_config(config_entry.data)
         entity_registry = er.async_get(hass)
@@ -109,9 +109,9 @@ async def async_migrate_entry(
             config_entry, unique_id=new_unique_id, minor_version=2
         )
 
-    if config_entry.minor_version == 2:
-        # Via stations now available
-        hass.config_entries.async_update_entry(config_entry, minor_version=3)
+    if config_entry.version == 1 and config_entry.minor_version == 2:
+        # Via stations now available, migrate to version 2.1
+        hass.config_entries.async_update_entry(config_entry, version=2, minor_version=1)
 
     _LOGGER.debug(
         "Migration to version %s.%s successful",
