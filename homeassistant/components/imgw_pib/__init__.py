@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 
 from aiohttp import ClientError
@@ -14,15 +15,24 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_STATION_ID, DOMAIN
+from .const import CONF_STATION_ID
 from .coordinator import ImgwPibDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
+ImgwPibConfigEntry = ConfigEntry["ImgwPibData"]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+@dataclass
+class ImgwPibData:
+    """Data for the IMGW-PIB integration."""
+
+    coordinator: ImgwPibDataUpdateCoordinator
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ImgwPibConfigEntry) -> bool:
     """Set up IMGW-PIB from a config entry."""
     station_id: str = entry.data[CONF_STATION_ID]
 
@@ -40,17 +50,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = ImgwPibDataUpdateCoordinator(hass, imgwpib, station_id)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = ImgwPibData(coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ImgwPibConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
