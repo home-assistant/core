@@ -292,7 +292,7 @@ class ConfigEntry:
     update_listeners: list[UpdateListenerType]
     _async_cancel_retry_setup: Callable[[], Any] | None
     _on_unload: list[Callable[[], Coroutine[Any, Any, None] | None]] | None
-    reload_lock: asyncio.Lock
+    setup_lock: asyncio.Lock
     _reauth_lock: asyncio.Lock
     _reconfigure_lock: asyncio.Lock
     _tasks: set[asyncio.Future[Any]]
@@ -400,7 +400,7 @@ class ConfigEntry:
         _setter(self, "_on_unload", None)
 
         # Reload lock to prevent conflicting reloads
-        _setter(self, "reload_lock", asyncio.Lock())
+        _setter(self, "setup_lock", asyncio.Lock())
         # Reauth lock to prevent concurrent reauth flows
         _setter(self, "_reauth_lock", asyncio.Lock())
         # Reconfigure lock to prevent concurrent reconfigure flows
@@ -699,19 +699,17 @@ class ConfigEntry:
         # has started so we do not block shutdown
         if not hass.is_stopping:
             hass.async_create_background_task(
-                self._async_setup_retry(hass),
+                self.async_setup_locked(hass),
                 f"config entry retry {self.domain} {self.title}",
                 eager_start=True,
             )
 
-    async def _async_setup_retry(self, hass: HomeAssistant) -> None:
-        """Retry setup.
-
-        We hold the reload lock during setup retry to ensure
-        that nothing can reload the entry while we are retrying.
-        """
-        async with self.reload_lock:
-            await self.async_setup(hass)
+    async def async_setup_locked(
+        self, hass: HomeAssistant, integration: loader.Integration | None = None
+    ) -> None:
+        """Set up while holding the setup lock."""
+        async with self.setup_lock:
+            await self.async_setup(hass, integration=integration)
 
     @callback
     def async_shutdown(self) -> None:
@@ -1791,7 +1789,15 @@ class ConfigEntries:
         # attempts.
         entry.async_cancel_retry_setup()
 
-        async with entry.reload_lock:
+        if entry.domain not in self.hass.config.components:
+            # If the component is not loaded, just load it as
+            # the config entry will be loaded as well. We need
+            # to do this before holding the lock to avoid a
+            # deadlock.
+            await async_setup_component(self.hass, entry.domain, self._hass_config)
+            return entry.state is ConfigEntryState.LOADED
+
+        async with entry.setup_lock:
             unload_result = await self.async_unload(entry_id)
 
             if not unload_result or entry.disabled_by:

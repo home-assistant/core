@@ -449,7 +449,7 @@ async def _async_setup_component(
         await asyncio.gather(
             *(
                 create_eager_task(
-                    entry.async_setup(hass, integration=integration),
+                    entry.async_setup_locked(hass, integration=integration),
                     name=f"config entry setup {entry.title} {entry.domain} {entry.entry_id}",
                 )
                 for entry in entries
