@@ -2563,7 +2563,7 @@ slackclient==2.5.0
 slixmpp==1.8.5
 
 # homeassistant.components.smart_meter_texas
-smart-meter-texas==0.4.7
+smart-meter-texas==0.5.5
 
 # homeassistant.components.smhi
 smhi-pkg==1.0.16
