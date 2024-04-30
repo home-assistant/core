@@ -403,6 +403,9 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
         self._async_refresh_finished()
 
+        if not self.last_update_success and not previous_update_success:
+            return
+
         if (
             self.always_update
             or self.last_update_success != previous_update_success
