@@ -825,7 +825,7 @@ async def test_as_dict(snapshot: SnapshotAssertion) -> None:
         "error_reason_translation_placeholders",
         "_async_cancel_retry_setup",
         "_on_unload",
-        "reload_lock",
+        "setup_lock",
         "_reauth_lock",
         "_tasks",
         "_background_tasks",
