@@ -747,13 +747,15 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         return value
 
-    def _suggested_precision_or_none(self) -> int | None:
-        """Return suggested display precision, or None if not set."""
+    def _display_precision_or_none(self) -> int | None:
+        """Return display precision, or None if not set."""
         assert self.registry_entry
-        if (sensor_options := self.registry_entry.options.get(DOMAIN)) and (
-            precision := sensor_options.get("suggested_display_precision")
-        ) is not None:
-            return cast(int, precision)
+        if not (sensor_options := self.registry_entry.options.get(DOMAIN)):
+            return None
+
+        for option in ("display_precision", "suggested_display_precision"):
+            if (precision := sensor_options.get(option)) is not None:
+                return cast(int, precision)
         return None
 
     def _update_suggested_precision(self) -> None:
@@ -784,11 +786,6 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ratio_log = floor(ratio_log) if ratio_log > 0 else ceil(ratio_log)
             display_precision = max(0, display_precision + ratio_log)
 
-        if display_precision is None and (
-            DOMAIN not in self.registry_entry.options
-            or "suggested_display_precision" not in self.registry_entry.options
-        ):
-            return
         sensor_options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
         if (
             "suggested_display_precision" in sensor_options
@@ -835,7 +832,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         Called when the entity registry entry has been updated and before the sensor is
         added to the state machine.
         """
-        self._sensor_option_display_precision = self._suggested_precision_or_none()
+        self._sensor_option_display_precision = self._display_precision_or_none()
         assert self.registry_entry
         if (
             sensor_options := self.registry_entry.options.get(f"{DOMAIN}.private")

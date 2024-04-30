@@ -44,7 +44,7 @@ async def apply_stop_hass(stop_hass: None) -> None:
     """Make sure all hass are stopped."""
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="module", autouse=True)
 def mock_http_start_stop() -> Generator[None, None, None]:
     """Mock HTTP start and stop."""
     with (
@@ -119,6 +119,38 @@ async def test_config_does_not_turn_off_debug(hass: HomeAssistant) -> None:
     hass.config.debug = True
 
     await bootstrap.async_from_config_dict({CONF_DEBUG: False}, hass)
+    assert hass.config.debug is True
+
+
+@pytest.mark.parametrize("hass_config", [{"frontend": {}}])
+async def test_asyncio_debug_on_turns_hass_debug_on(
+    mock_hass_config: None,
+    mock_enable_logging: Mock,
+    mock_is_virtual_env: Mock,
+    mock_mount_local_lib_path: AsyncMock,
+    mock_ensure_config_exists: AsyncMock,
+    mock_process_ha_config_upgrade: Mock,
+) -> None:
+    """Test that asyncio debug turns on hass debug."""
+    asyncio.get_running_loop().set_debug(True)
+
+    verbose = Mock()
+    log_rotate_days = Mock()
+    log_file = Mock()
+    log_no_color = Mock()
+
+    hass = await bootstrap.async_setup_hass(
+        runner.RuntimeConfig(
+            config_dir=get_test_config_dir(),
+            verbose=verbose,
+            log_rotate_days=log_rotate_days,
+            log_file=log_file,
+            log_no_color=log_no_color,
+            skip_pip=True,
+            recovery_mode=False,
+        ),
+    )
+
     assert hass.config.debug is True
 
 

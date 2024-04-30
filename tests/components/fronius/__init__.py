@@ -126,17 +126,3 @@ async def enable_all_entities(hass, freezer, config_entry_id, time_till_next_upd
     freezer.tick(time_till_next_update)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-
-
-async def remove_device(ws_client, device_id, config_entry_id):
-    """Remove config entry from a device."""
-    await ws_client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": config_entry_id,
-            "device_id": device_id,
-        }
-    )
-    response = await ws_client.receive_json()
-    return response["success"]
