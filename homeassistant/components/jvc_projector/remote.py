@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Iterable
 import logging
 from typing import Any
@@ -74,11 +75,13 @@ class JvcProjectorRemote(JvcProjectorEntity, RemoteEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.device.power_on()
+        await asyncio.sleep(1)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.device.power_off()
+        await asyncio.sleep(1)
         await self.coordinator.async_refresh()
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:

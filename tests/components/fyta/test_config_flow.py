@@ -1,5 +1,6 @@
 """Test the fyta config flow."""
 
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
 from fyta_cli.fyta_exceptions import (
@@ -10,8 +11,8 @@ from fyta_cli.fyta_exceptions import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.fyta.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.fyta.const import CONF_EXPIRATION, DOMAIN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -19,10 +20,12 @@ from tests.common import MockConfigEntry
 
 USERNAME = "fyta_user"
 PASSWORD = "fyta_pass"
+ACCESS_TOKEN = "123xyz"
+EXPIRATION = datetime.fromisoformat("2024-12-31T10:00:00").astimezone(UTC)
 
 
 async def test_user_flow(
-    hass: HomeAssistant, mock_fyta: AsyncMock, mock_setup_entry
+    hass: HomeAssistant, mock_fyta: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test we get the form."""
 
@@ -39,7 +42,12 @@ async def test_user_flow(
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == USERNAME
-    assert result2["data"] == {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+    assert result2["data"] == {
+        CONF_USERNAME: USERNAME,
+        CONF_PASSWORD: PASSWORD,
+        CONF_ACCESS_TOKEN: ACCESS_TOKEN,
+        CONF_EXPIRATION: "2024-12-31T10:00:00+00:00",
+    }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -57,7 +65,7 @@ async def test_form_exceptions(
     exception: Exception,
     error: dict[str, str],
     mock_fyta: AsyncMock,
-    mock_setup_entry,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test we can handle Form exceptions."""
 
@@ -89,6 +97,8 @@ async def test_form_exceptions(
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_ACCESS_TOKEN] == ACCESS_TOKEN
+    assert result["data"][CONF_EXPIRATION] == "2024-12-31T10:00:00+00:00"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -134,14 +144,19 @@ async def test_reauth(
     exception: Exception,
     error: dict[str, str],
     mock_fyta: AsyncMock,
-    mock_setup_entry,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reauth-flow works."""
 
     entry = MockConfigEntry(
         domain=DOMAIN,
         title=USERNAME,
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        data={
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+            CONF_ACCESS_TOKEN: ACCESS_TOKEN,
+            CONF_EXPIRATION: "2024-06-30T10:00:00+00:00",
+        },
     )
     entry.add_to_hass(hass)
 
@@ -157,7 +172,8 @@ async def test_reauth(
 
     # tests with connection error
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+        result["flow_id"],
+        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     await hass.async_block_till_done()
 
@@ -178,5 +194,5 @@ async def test_reauth(
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_USERNAME] == "other_username"
     assert entry.data[CONF_PASSWORD] == "other_password"
-
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert entry.data[CONF_ACCESS_TOKEN] == ACCESS_TOKEN
+    assert entry.data[CONF_EXPIRATION] == "2024-12-31T10:00:00+00:00"

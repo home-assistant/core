@@ -183,7 +183,7 @@ aioaseko==0.1.1
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.4.3
+aioautomower==2024.4.4
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.0.0
@@ -497,7 +497,7 @@ bluemaestro-ble==0.2.3
 bluetooth-adapters==0.19.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==1.4.1
+bluetooth-auto-recovery==1.4.2
 
 # homeassistant.components.bluetooth
 # homeassistant.components.ld2410_ble
@@ -610,7 +610,7 @@ discovery30303==0.2.1
 dremel3dpy==2.1.1
 
 # homeassistant.components.drop_connect
-dropmqttapi==1.0.2
+dropmqttapi==1.0.3
 
 # homeassistant.components.dsmr
 dsmr-parser==1.3.1
@@ -735,7 +735,7 @@ freebox-api==1.1.0
 fritzconnection[qr]==1.13.2
 
 # homeassistant.components.fyta
-fyta_cli==0.3.5
+fyta_cli==0.4.1
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
@@ -803,7 +803,7 @@ googlemaps==2.5.1
 gotailwind==0.2.2
 
 # homeassistant.components.govee_ble
-govee-ble==0.31.0
+govee-ble==0.31.2
 
 # homeassistant.components.govee_light_local
 govee-local-api==1.4.4
@@ -821,7 +821,7 @@ greeneye_monitor==3.0.3
 gridnet==5.0.0
 
 # homeassistant.components.growatt_server
-growattServer==1.3.0
+growattServer==1.5.0
 
 # homeassistant.components.google_sheets
 gspread==5.5.0
@@ -880,7 +880,7 @@ hole==0.8.0
 holidays==0.47
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240424.1
+home-assistant-frontend==20240429.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.4.24
@@ -1311,7 +1311,7 @@ pyDuotecno==2024.3.2
 pyElectra==1.2.0
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.31.0
+pyRFXtrx==0.31.1
 
 # homeassistant.components.tibber
 pyTibber==0.28.2
@@ -1417,7 +1417,7 @@ pyevilgenius==2.0.0
 pyezviz==0.2.1.2
 
 # homeassistant.components.fibaro
-pyfibaro==0.7.7
+pyfibaro==0.7.8
 
 # homeassistant.components.fido
 pyfido==2.1.2
@@ -1483,7 +1483,7 @@ pyiss==1.0.1
 pyisy==3.1.14
 
 # homeassistant.components.jvc_projector
-pyjvcprojector==1.0.9
+pyjvcprojector==1.0.11
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.1
@@ -1635,7 +1635,7 @@ pyqwikswitch==0.93
 pyrainbird==4.0.2
 
 # homeassistant.components.risco
-pyrisco==0.6.0
+pyrisco==0.6.1
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6
@@ -1982,7 +1982,7 @@ simplisafe-python==2024.01.0
 slackclient==2.5.0
 
 # homeassistant.components.smart_meter_texas
-smart-meter-texas==0.4.7
+smart-meter-texas==0.5.5
 
 # homeassistant.components.smhi
 smhi-pkg==1.0.16
@@ -2111,7 +2111,7 @@ tololib==1.1.0
 toonapi==0.3.0
 
 # homeassistant.components.totalconnect
-total-connect-client==2023.12.1
+total-connect-client==2024.4
 
 # homeassistant.components.tplink_omada
 tplink-omada-client==1.3.12
@@ -2303,7 +2303,7 @@ zigpy-znp==0.12.1
 zigpy==0.64.0
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.55.3
+zwave-js-server-python==0.55.4
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
