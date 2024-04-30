@@ -64,7 +64,11 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[_T]):
         self, notification_category: NotificationCategory
     ) -> None:
         """Update data when webhook is called."""
-        LOGGER.debug("Withings webhook triggered for %s", notification_category)
+        LOGGER.debug(
+            "Withings webhook triggered for category %s for user %s",
+            notification_category,
+            self.config_entry.unique_id,
+        )
         await self.async_request_refresh()
 
     async def _async_update_data(self) -> _T:
