@@ -29,6 +29,7 @@ from .const import LOGGER
 
 if TYPE_CHECKING:
     from . import WithingsConfigEntry
+
 _T = TypeVar("_T")
 
 UPDATE_INTERVAL = timedelta(minutes=10)
