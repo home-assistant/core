@@ -149,7 +149,7 @@ async def async_setup_entry(
         )
 
     websession = async_get_clientsession(
-        hass, verify_ssl=entry.data.get(CONF_VERIFY_SSL, True)
+        hass, verify_ssl=config_entry.data.get(CONF_VERIFY_SSL, True)
     )
 
     url = config_entry.data[CONF_URL]
@@ -165,7 +165,7 @@ async def async_setup_entry(
         },
     )
     try:
-        user = await api.user.get(userFields="profile")
+        user = await api.user.get(userFields="auth")
     except ClientResponseError as e:
         if e.status == HTTPStatus.TOO_MANY_REQUESTS:
             raise ConfigEntryNotReady(
