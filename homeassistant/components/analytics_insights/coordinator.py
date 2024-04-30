@@ -16,14 +16,15 @@ from python_homeassistant_analytics import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-if TYPE_CHECKING:
-    from . import AnalyticsInsightsConfigEntry
 from .const import (
     CONF_TRACKED_CUSTOM_INTEGRATIONS,
     CONF_TRACKED_INTEGRATIONS,
     DOMAIN,
     LOGGER,
 )
+
+if TYPE_CHECKING:
+    from . import AnalyticsInsightsConfigEntry
 
 
 @dataclass(frozen=True)
