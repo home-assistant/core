@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 
-from bimmer_connected.tests import ALL_CHARGING_SETTINGS, ALL_STATES
+from bimmer_connected.tests import ALL_CHARGING_SETTINGS, ALL_PROFILES, ALL_STATES
 from bimmer_connected.tests.common import MyBMWMockRouter
 from bimmer_connected.vehicle import remote_services
 import pytest
@@ -23,6 +23,7 @@ def bmw_fixture(
             "WBA00000000DEMO03",
             "WBY00000000REXI01",
         ],
+        profiles=ALL_PROFILES,
         states=ALL_STATES,
         charging_settings=ALL_CHARGING_SETTINGS,
     )
