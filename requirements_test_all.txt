@@ -880,7 +880,7 @@ hole==0.8.0
 holidays==0.47
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240426.0
+home-assistant-frontend==20240429.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.4.24
@@ -1483,7 +1483,7 @@ pyiss==1.0.1
 pyisy==3.1.14
 
 # homeassistant.components.jvc_projector
-pyjvcprojector==1.0.9
+pyjvcprojector==1.0.11
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.1
@@ -1982,7 +1982,7 @@ simplisafe-python==2024.01.0
 slackclient==2.5.0
 
 # homeassistant.components.smart_meter_texas
-smart-meter-texas==0.4.7
+smart-meter-texas==0.5.5
 
 # homeassistant.components.smhi
 smhi-pkg==1.0.16
