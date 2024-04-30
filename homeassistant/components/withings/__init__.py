@@ -113,14 +113,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return token
 
     client.refresh_token_function = _refresh_token
+    user_id = entry.unique_id
+    assert user_id
     withings_data = WithingsData(
         client=client,
-        measurement_coordinator=WithingsMeasurementDataUpdateCoordinator(hass, client),
-        sleep_coordinator=WithingsSleepDataUpdateCoordinator(hass, client),
-        bed_presence_coordinator=WithingsBedPresenceDataUpdateCoordinator(hass, client),
-        goals_coordinator=WithingsGoalsDataUpdateCoordinator(hass, client),
-        activity_coordinator=WithingsActivityDataUpdateCoordinator(hass, client),
-        workout_coordinator=WithingsWorkoutDataUpdateCoordinator(hass, client),
+        measurement_coordinator=WithingsMeasurementDataUpdateCoordinator(
+            hass, client, user_id
+        ),
+        sleep_coordinator=WithingsSleepDataUpdateCoordinator(hass, client, user_id),
+        bed_presence_coordinator=WithingsBedPresenceDataUpdateCoordinator(
+            hass, client, user_id
+        ),
+        goals_coordinator=WithingsGoalsDataUpdateCoordinator(hass, client, user_id),
+        activity_coordinator=WithingsActivityDataUpdateCoordinator(
+            hass, client, user_id
+        ),
+        workout_coordinator=WithingsWorkoutDataUpdateCoordinator(hass, client, user_id),
     )
 
     for coordinator in withings_data.coordinators:
