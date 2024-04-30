@@ -63,6 +63,13 @@ def get_thumbnail_url_full(
                 media_content_id,
                 media_content_type,
             )
+        # The album_art_uri has the following format:
+        # http://speaker_ip/getaa?u=<path_to_file>&v=<version>
+        # The received URI is url encoded; with the parameters double url encoded
+        # The exception are the ', (, and ) characters are not encoded at all, which prevents
+        # the art from being displayed in the media browser.
+        # To fix; we remove one layerof URL encoding; and replace these characters within
+        # the URL encoded parameters.
         album_art: str = urllib.parse.unquote(getattr(item, "album_art_uri", ""))
         return album_art.replace("'", "%27").replace("(", "%28").replace(")", "%29")
 
