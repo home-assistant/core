@@ -18,12 +18,12 @@ from aiowithings import (
     aggregate_measurements,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
+from . import WithingsConfigEntry
 from .const import LOGGER
 
 _T = TypeVar("_T")
@@ -34,7 +34,7 @@ UPDATE_INTERVAL = timedelta(minutes=10)
 class WithingsDataUpdateCoordinator(DataUpdateCoordinator[_T]):
     """Base coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: WithingsConfigEntry
     _default_update_interval: timedelta | None = UPDATE_INTERVAL
     _last_valid_update: datetime | None = None
     webhooks_connected: bool = False

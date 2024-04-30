@@ -160,7 +160,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> bool:
     """Unload Withings config entry."""
     webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
 
@@ -296,7 +296,9 @@ async def async_unsubscribe_webhooks(client: WithingsClient) -> None:
         )
 
 
-async def _async_cloudhook_generate_url(hass: HomeAssistant, entry: ConfigEntry) -> str:
+async def _async_cloudhook_generate_url(
+    hass: HomeAssistant, entry: WithingsConfigEntry
+) -> str:
     """Generate the full URL for a webhook_id."""
     if CONF_CLOUDHOOK_URL not in entry.data:
         webhook_id = entry.data[CONF_WEBHOOK_ID]
@@ -311,7 +313,7 @@ async def _async_cloudhook_generate_url(hass: HomeAssistant, entry: ConfigEntry)
     return str(entry.data[CONF_CLOUDHOOK_URL])
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_remove_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> None:
     """Cleanup when entry is removed."""
     if cloud.async_active_subscription(hass):
         try:
