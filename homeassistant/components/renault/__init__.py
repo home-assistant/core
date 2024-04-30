@@ -15,6 +15,7 @@ from .renault_hub import RenaultHub
 from .services import setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+RenaultConfigEntry = ConfigEntry[RenaultHub]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -23,7 +24,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: RenaultConfigEntry
+) -> bool:
     """Load a config entry."""
     renault_hub = RenaultHub(hass, config_entry.data[CONF_LOCALE])
     try:
@@ -36,19 +39,20 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if not login_success:
         raise ConfigEntryAuthFailed
 
-    hass.data.setdefault(DOMAIN, {})
     try:
         await renault_hub.async_initialise(config_entry)
     except aiohttp.ClientError as exc:
         raise ConfigEntryNotReady from exc
 
-    hass.data[DOMAIN][config_entry.entry_id] = renault_hub
+    config_entry.runtime_data = renault_hub
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: RenaultConfigEntry
+) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
