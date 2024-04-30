@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from pydrawise.schema import Zone
+from pydrawise import Zone
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -120,10 +120,7 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
 
     def _update_attrs(self) -> None:
         """Update state attributes."""
-        specific_getter = getattr(self, f"_get_{self.entity_description.key}")
-        value = specific_getter()
-        if value is not None:
-            self._attr_native_value = value
+        self._attr_native_value = getattr(self, f"_get_{self.entity_description.key}")()
 
     def _get_watering_time(self) -> int:
         if (current_run := self.zone.scheduled_runs.current_run) is not None:
@@ -137,12 +134,14 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
 
     def _get_daily_active_water_use(self) -> Any:
         daily_water_summary = self.coordinator.data.daily_water_use[self.controller.id]
-        if self.zone is None and self.sensor is not None:
-            # water use for the controller
-            return daily_water_summary.total_active_use
         if self.zone is not None:
             # water use for the zone
-            return daily_water_summary.active_use_by_zone_id.get(self.zone.id, 0.0)
+            return float(
+                daily_water_summary.active_use_by_zone_id.get(self.zone.id, 0.0)
+            )
+        if self.sensor is not None:
+            # water use for the controller
+            return daily_water_summary.total_active_use
         return 0.0
 
     def _get_daily_inactive_water_use(self) -> Any:
