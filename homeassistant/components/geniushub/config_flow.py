@@ -27,7 +27,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """User config step for determine v1 or v3."""
-        _LOGGER.debug("config_flow.py:ConfigFlow.async_step_user")
+        _LOGGER.debug("ConfigFlow.async_step_user")
         return self.async_show_menu(
             step_id="user",
             menu_options=["option_1", "option_2"],
@@ -37,9 +37,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Version 3 configuration."""
-        _LOGGER.debug(
-            "config_flow.py:ConfigFlow.async_step_option_1: ", extra=user_input
-        )
+        _LOGGER.debug("ConfigFlow.async_step_option_1: ", extra=user_input)
         if user_input is None:
             return self.async_show_form(step_id="option_1", data_schema=V3_API_SCHEMA)
 
@@ -68,13 +66,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             _LOGGER.debug(
-                "config_flow.py:ConfigFlow.async_step_option_1: validation passed:",
+                "ConfigFlow.async_step_option_1: validation passed:",
                 extra=user_input,
             )
             return self.async_create_entry(title=info["title"], data=user_input)
 
         _LOGGER.debug(
-            "config_flow.py:ConfigFlow.async_step_option_1: validation failed: ",
+            "ConfigFlow.async_step_option_1: validation failed: ",
             extra=user_input,
         )
 
@@ -87,9 +85,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Version 1 configuration."""
-        _LOGGER.debug(
-            "config_flow.py:ConfigFlow.async_step_option_2: ", extra=user_input
-        )
+        _LOGGER.debug("ConfigFlow.async_step_option_2: ", extra=user_input)
         if user_input is None:
             return self.async_show_form(step_id="option_2", data_schema=V1_API_SCHEMA)
 
@@ -118,13 +114,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             _LOGGER.debug(
-                "config_flow.py:ConfigFlow.async_step_option_2: validation passed: ",
+                "ConfigFlow.async_step_option_2: validation passed: ",
                 extra=user_input,
             )
             return self.async_create_entry(title=info["title"], data=user_input)
 
         _LOGGER.debug(
-            "config_flow.py:ConfigFlow.async_step_option_2: validation failed: ",
+            "ConfigFlow.async_step_option_2: validation failed: ",
             extra=user_input,
         )
 
