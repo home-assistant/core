@@ -11,23 +11,12 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PRECISION_HALVES, Platform, UnitOfTemperature
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
-from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
-    async_get_current_platform,
-)
-from homeassistant.util import dt as dt_util
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, DOMAINS_AND_TYPES
 from .device import BroadlinkDevice
 from .entity import BroadlinkEntity
-
-SERVICE_SYNC_TIME = "sync_time"
 
 
 async def async_setup_entry(
@@ -40,14 +29,6 @@ async def async_setup_entry(
 
     if device.api.type in DOMAINS_AND_TYPES[Platform.CLIMATE]:
         async_add_entities([BroadlinkThermostat(device)])
-
-    platform = async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SYNC_TIME,
-        {},
-        "async_sync_time",
-        supports_response=SupportsResponse.NONE,
-    )
 
 
 class BroadlinkThermostat(BroadlinkEntity, ClimateEntity):
@@ -108,15 +89,3 @@ class BroadlinkThermostat(BroadlinkEntity, ClimateEntity):
 
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
-
-    async def async_sync_time(self) -> ServiceResponse:
-        """Sync the current time to the device."""
-        now = dt_util.now()
-        await self._device.async_request(
-            self._device.api.set_time,
-            hour=now.hour,
-            minute=now.minute,
-            second=now.second,
-            day=now.weekday() + 1,
-        )
-        return None
