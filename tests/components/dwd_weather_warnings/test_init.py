@@ -44,7 +44,7 @@ async def test_load_invalid_registry_entry(
     entry = await init_integration(
         hass, MockConfigEntry(domain=DOMAIN, data=INVALID_DATA)
     )
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_load_missing_device_tracker(
@@ -52,7 +52,7 @@ async def test_load_missing_device_tracker(
 ) -> None:
     """Test loading the integration with a missing device tracker."""
     entry = await init_integration(hass, mock_tracker_entry)
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_load_missing_required_attribute(
@@ -68,7 +68,7 @@ async def test_load_missing_required_attribute(
 
     await hass.config_entries.async_setup(mock_tracker_entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_tracker_entry.state == ConfigEntryState.SETUP_RETRY
+    assert mock_tracker_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_load_valid_device_tracker(
@@ -96,5 +96,5 @@ async def test_load_valid_device_tracker(
     await hass.config_entries.async_setup(mock_tracker_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_tracker_entry.state == ConfigEntryState.LOADED
+    assert mock_tracker_entry.state is ConfigEntryState.LOADED
     assert mock_tracker_entry.entry_id in hass.data[DOMAIN]
