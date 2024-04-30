@@ -1136,6 +1136,9 @@ iglo==1.2.7
 # homeassistant.components.ihc
 ihcsdk==2.8.5
 
+# homeassistant.components.imgw_pib
+imgw_pib==1.0.0
+
 # homeassistant.components.incomfort
 incomfort-client==0.5.0
 
