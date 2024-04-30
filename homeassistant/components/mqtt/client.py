@@ -918,7 +918,7 @@ class MQTT:
             result_code,
         )
 
-        birth = self.conf.get(CONF_BIRTH_MESSAGE, DEFAULT_BIRTH)
+        birth: dict[str, Any] = self.conf.get(CONF_BIRTH_MESSAGE, DEFAULT_BIRTH)
         self._async_queue_resubscribe()
 
         if birth:
