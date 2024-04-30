@@ -71,13 +71,7 @@ def async_register(hass: HomeAssistant, handler: IntentHandler) -> None:
 
     if handler.intent_type not in LLM_SKIP_AUTO_ADD_TOOL:
         if isinstance(handler, DynamicServiceIntentHandler) and handler.extra_slots:
-            slot_schema: dict[Any, Any] | None = {
-                **handler.slot_schema,
-                **{
-                    vol.Required(key): schema
-                    for key, schema in handler.extra_slots.items()
-                },
-            }
+            slot_schema = handler._slot_schema  # pylint: disable=protected-access
         else:
             slot_schema = handler.slot_schema
         llm_tool = llm.IntentTool(handler.intent_type, slot_schema)
