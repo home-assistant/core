@@ -25,19 +25,13 @@ from .coordinator import CoordinatorDataT, NextDnsConnectionUpdateCoordinator
 PARALLEL_UPDATES = 1
 
 
-@dataclass(frozen=True)
-class NextDnsBinarySensorRequiredKeysMixin(Generic[CoordinatorDataT]):
-    """Mixin for required keys."""
-
-    state: Callable[[CoordinatorDataT, str], bool]
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class NextDnsBinarySensorEntityDescription(
-    BinarySensorEntityDescription,
-    NextDnsBinarySensorRequiredKeysMixin[CoordinatorDataT],
+    BinarySensorEntityDescription, Generic[CoordinatorDataT]
 ):
     """NextDNS binary sensor entity description."""
+
+    state: Callable[[CoordinatorDataT, str], bool]
 
 
 SENSORS = (
