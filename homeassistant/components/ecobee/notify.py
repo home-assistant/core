@@ -85,6 +85,6 @@ class EcobeeNotifyEntity(EcobeeBaseEntity, NotifyEntity):
             f"{self.thermostat["identifier"]}_notify_{thermostat_index}"
         )
 
-    def send_message(self, message: str) -> None:
+    def send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
         self.data.ecobee.send_message(self.thermostat_index, message)
