@@ -141,9 +141,3 @@ def setup_services(hass: HomeAssistant) -> None:
         charge_set_schedules,
         schema=SERVICE_CHARGE_SET_SCHEDULES_SCHEMA,
     )
-
-
-def unload_services(hass: HomeAssistant) -> None:
-    """Unload Renault services."""
-    for service in SERVICES:
-        hass.services.async_remove(DOMAIN, service)
