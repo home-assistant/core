@@ -19,7 +19,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
@@ -68,7 +67,6 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
         from Habitica.com by authenticating with login and password.
         """
         errors: dict[str, str] = {}
-
         if user_input is not None:
             try:
                 session = async_get_clientsession(self.hass)
@@ -87,12 +85,12 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
 
             except ClientResponseError as ex:
                 if ex.status == HTTPStatus.UNAUTHORIZED:
-                    errors = {"base": "invalid_credentials"}
+                    errors["base"] = "invalid_auth"
                 else:
                     errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
-                errors = {"base": "unknown"}
+                errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(login_response["id"])
                 self._abort_if_unique_id_configured()
@@ -123,7 +121,6 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
         Advanced configuration allows connecting to Habitica instances
         hosted on different domains or to self-hosted instances.
         """
-
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
@@ -143,12 +140,12 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except ClientResponseError as ex:
                 if ex.status == HTTPStatus.UNAUTHORIZED:
-                    errors = {"base": "invalid_credentials"}
+                    errors["base"] = "invalid_auth"
                 else:
                     errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
-                errors = {"base": "unknown"}
+                errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(user_input[CONF_API_USER])
                 self._abort_if_unique_id_configured()
@@ -182,11 +179,3 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
         return await self.async_step_user(import_data)
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
