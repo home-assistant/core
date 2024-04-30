@@ -25,10 +25,10 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-if TYPE_CHECKING:
-    from . import WithingsConfigEntry
 from .const import LOGGER
 
+if TYPE_CHECKING:
+    from . import WithingsConfigEntry
 _T = TypeVar("_T")
 
 UPDATE_INTERVAL = timedelta(minutes=10)
