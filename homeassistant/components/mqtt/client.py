@@ -924,9 +924,11 @@ class MQTT:
         if birth:
 
             async def publish_birth_message(birth_message: PublishMessage) -> None:
+                await self._async_perform_subscriptions()
                 await self._ha_started.wait()  # Wait for Home Assistant to start
                 await self._discovery_cooldown()  # Wait for MQTT discovery to cool down
-                # Ensure the queue is empty before publishing the birth message
+                # Check subscriptions again to ensure we are subscribed
+                # in case anything pending was while HA was starting
                 await self._async_perform_subscriptions()
                 # Update subscribe cooldown period to a shorter time
                 self._subscribe_debouncer.set_timeout(SUBSCRIBE_COOLDOWN)
