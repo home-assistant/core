@@ -67,15 +67,15 @@ class HassIOIngress(HomeAssistantView):
         """Initialize a Hass.io ingress view."""
         self._host = host
         self._websession = websession
+        self._url = URL(f"http://{host}")
 
     @lru_cache
     def _create_url(self, token: str, path: str) -> URL:
         """Create URL to service."""
         base_path = f"/ingress/{token}/"
-        url = f"http://{self._host}{base_path}{quote(path)}"
 
         try:
-            target_url = URL(url)
+            target_url = self._url.join(URL(f"{base_path}{quote(path)}"))
         except ValueError as err:
             raise HTTPBadRequest from err
 
