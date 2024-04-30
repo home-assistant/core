@@ -3,7 +3,7 @@
 import aiohttp
 from renault_api.gigya.exceptions import GigyaException
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -22,8 +22,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     setup_services(hass)
     return True
 
+RenaultConfigEntry = ConfigEntry[RenaultHub]
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: RenaultConfigEntry
+) -> bool:
     """Load a config entry."""
     renault_hub = RenaultHub(hass, config_entry.data[CONF_LOCALE])
     try:
@@ -36,19 +40,20 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if not login_success:
         raise ConfigEntryAuthFailed
 
-    hass.data.setdefault(DOMAIN, {})
     try:
         await renault_hub.async_initialise(config_entry)
     except aiohttp.ClientError as exc:
         raise ConfigEntryNotReady from exc
 
-    hass.data[DOMAIN][config_entry.entry_id] = renault_hub
+    config_entry.runtime_data = renault_hub
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: RenaultConfigEntry
+) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
