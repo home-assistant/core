@@ -176,7 +176,7 @@
   },
   "exceptions": {
     "invalid_favorite": {
-      "message": "Could not find a Sonos favorite named {name}"
+      "message": "Could not find a Sonos favorite: {name}"
     }
   }
 }
