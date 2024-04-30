@@ -918,13 +918,16 @@ class MQTT:
             result_code,
         )
 
-        self.hass.async_create_task(self._async_resubscribe())
+        birth = self.conf.get(CONF_BIRTH_MESSAGE, DEFAULT_BIRTH)
+        self._async_queue_resubscribe()
 
-        if birth := self.conf.get(CONF_BIRTH_MESSAGE, DEFAULT_BIRTH):
+        if birth:
 
             async def publish_birth_message(birth_message: PublishMessage) -> None:
                 await self._ha_started.wait()  # Wait for Home Assistant to start
                 await self._discovery_cooldown()  # Wait for MQTT discovery to cool down
+                # Ensure the queue is empty before publishing the birth message
+                await self._async_perform_subscriptions()
                 # Update subscribe cooldown period to a shorter time
                 self._subscribe_debouncer.set_timeout(SUBSCRIBE_COOLDOWN)
                 await self.async_publish(
@@ -942,11 +945,17 @@ class MQTT:
             )
         else:
             # Update subscribe cooldown period to a shorter time
+            self.config_entry.async_create_background_task(
+                self.hass,
+                self._async_perform_subscriptions(),
+                name="mqtt re-subscriptions",
+            )
             self._subscribe_debouncer.set_timeout(SUBSCRIBE_COOLDOWN)
 
         self._async_connection_result(True)
 
-    async def _async_resubscribe(self) -> None:
+    @callback
+    def _async_queue_resubscribe(self) -> None:
         """Resubscribe on reconnect."""
         self._max_qos.clear()
         self._retained_topics.clear()
@@ -962,7 +971,6 @@ class MQTT:
             ],
             queue_only=True,
         )
-        await self._async_perform_subscriptions()
 
     @lru_cache(None)  # pylint: disable=method-cache-max-size-none
     def _matching_subscriptions(self, topic: str) -> list[Subscription]:
@@ -1049,7 +1057,9 @@ class MQTT:
         # The callback signature for on_unsubscribe is different from on_subscribe
         # see https://github.com/eclipse/paho.mqtt.python/issues/687
         # properties and reasoncodes are not used in Home Assistant
-        self.hass.async_create_task(self._mqtt_handle_mid(mid))
+        self.config_entry.async_create_task(
+            self.hass, self._mqtt_handle_mid(mid), name=f"mqtt handle mid {mid}"
+        )
 
     async def _mqtt_handle_mid(self, mid: int) -> None:
         # Create the mid event if not created, either _mqtt_handle_mid or _wait_for_mid
