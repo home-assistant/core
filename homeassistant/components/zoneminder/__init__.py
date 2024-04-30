@@ -78,7 +78,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.data[DOMAIN][host_name] = zm_client
 
         try:
-            success = zm_client.login() and success
+            success = await hass.async_add_executor_job(zm_client.login) and success
         except RequestsConnectionError as ex:
             _LOGGER.error(
                 "ZoneMinder connection failure to %s: %s",
