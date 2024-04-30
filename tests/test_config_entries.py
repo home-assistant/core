@@ -1632,7 +1632,6 @@ async def test_entry_reload_succeed(
     mock_platform(hass, "comp.config_flow", None)
 
     assert await manager.async_reload(entry.entry_id)
-    assert len(async_unload_entry.mock_calls) == 1
     assert len(async_setup.mock_calls) == 1
     assert len(async_setup_entry.mock_calls) == 1
     assert entry.state is config_entries.ConfigEntryState.LOADED
@@ -1707,6 +1706,8 @@ async def test_entry_reload_error(
         ),
     )
 
+    hass.config.components.add("comp")
+
     with pytest.raises(config_entries.OperationNotAllowed, match=str(state)):
         assert await manager.async_reload(entry.entry_id)
 
@@ -1738,8 +1739,11 @@ async def test_entry_disable_succeed(
         ),
     )
     mock_platform(hass, "comp.config_flow", None)
+    hass.config.components.add("comp")
 
     # Disable
+    assert len(async_setup.mock_calls) == 0
+    assert len(async_setup_entry.mock_calls) == 0
     assert await manager.async_set_disabled_by(
         entry.entry_id, config_entries.ConfigEntryDisabler.USER
     )
@@ -1751,7 +1755,7 @@ async def test_entry_disable_succeed(
     # Enable
     assert await manager.async_set_disabled_by(entry.entry_id, None)
     assert len(async_unload_entry.mock_calls) == 1
-    assert len(async_setup.mock_calls) == 1
+    assert len(async_setup.mock_calls) == 0
     assert len(async_setup_entry.mock_calls) == 1
     assert entry.state is config_entries.ConfigEntryState.LOADED
 
@@ -1775,6 +1779,7 @@ async def test_entry_disable_without_reload_support(
         ),
     )
     mock_platform(hass, "comp.config_flow", None)
+    hass.config.components.add("comp")
 
     # Disable
     assert not await manager.async_set_disabled_by(
@@ -1951,7 +1956,7 @@ async def test_reload_entry_entity_registry_works(
     )
     await hass.async_block_till_done()
 
-    assert len(mock_unload_entry.mock_calls) == 2
+    assert len(mock_unload_entry.mock_calls) == 1
 
 
 async def test_unique_id_persisted(
@@ -3392,6 +3397,7 @@ async def test_entry_reload_calls_on_unload_listeners(
         ),
     )
     mock_platform(hass, "comp.config_flow", None)
+    hass.config.components.add("comp")
 
     mock_unload_callback = Mock()
 
@@ -3944,8 +3950,9 @@ async def test_deprecated_disabled_by_str_set(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test deprecated str set disabled_by enumizes and logs a warning."""
-    entry = MockConfigEntry()
+    entry = MockConfigEntry(domain="comp")
     entry.add_to_manager(manager)
+    hass.config.components.add("comp")
     assert await manager.async_set_disabled_by(
         entry.entry_id, config_entries.ConfigEntryDisabler.USER.value
     )
@@ -3985,6 +3992,7 @@ async def test_entry_reload_concurrency(
         ),
     )
     mock_platform(hass, "comp.config_flow", None)
+    hass.config.components.add("comp")
     tasks = [
         asyncio.create_task(manager.async_reload(entry.entry_id)) for _ in range(15)
     ]
@@ -4074,6 +4082,7 @@ async def test_disallow_entry_reload_with_setup_in_progress(
         domain="comp", state=config_entries.ConfigEntryState.SETUP_IN_PROGRESS
     )
     entry.add_to_hass(hass)
+    hass.config.components.add("comp")
 
     with pytest.raises(
         config_entries.OperationNotAllowed,
