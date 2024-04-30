@@ -877,6 +877,25 @@ class MQTT:
 
         await self._wait_for_mid(mid)
 
+    async def _resubscribe_and_publish_birth_message(
+        self, birth_message: PublishMessage
+    ) -> None:
+        """Resubscribe to all topics and publish birth message."""
+        await self._async_perform_subscriptions()
+        await self._ha_started.wait()  # Wait for Home Assistant to start
+        await self._discovery_cooldown()  # Wait for MQTT discovery to cool down
+        # Check subscriptions again to ensure we are subscribed
+        # in case anything pending was added while HA was starting
+        await self._async_perform_subscriptions()
+        # Update subscribe cooldown period to a shorter time
+        self._subscribe_debouncer.set_timeout(SUBSCRIBE_COOLDOWN)
+        await self.async_publish(
+            topic=birth_message.topic,
+            payload=birth_message.payload,
+            qos=birth_message.qos,
+            retain=birth_message.retain,
+        )
+
     @callback
     def _async_mqtt_on_connect(
         self,
@@ -918,39 +937,21 @@ class MQTT:
             result_code,
         )
 
-        birth: dict[str, Any] = self.conf.get(CONF_BIRTH_MESSAGE, DEFAULT_BIRTH)
         self._async_queue_resubscribe()
-
-        if birth:
-
-            async def publish_birth_message(birth_message: PublishMessage) -> None:
-                await self._async_perform_subscriptions()
-                await self._ha_started.wait()  # Wait for Home Assistant to start
-                await self._discovery_cooldown()  # Wait for MQTT discovery to cool down
-                # Check subscriptions again to ensure we are subscribed
-                # in case anything pending was added while HA was starting
-                await self._async_perform_subscriptions()
-                # Update subscribe cooldown period to a shorter time
-                self._subscribe_debouncer.set_timeout(SUBSCRIBE_COOLDOWN)
-                await self.async_publish(
-                    topic=birth_message.topic,
-                    payload=birth_message.payload,
-                    qos=birth_message.qos,
-                    retain=birth_message.retain,
-                )
-
+        birth: dict[str, Any]
+        if birth := self.conf.get(CONF_BIRTH_MESSAGE, DEFAULT_BIRTH):
             birth_message = PublishMessage(**birth)
             self.config_entry.async_create_background_task(
                 self.hass,
-                publish_birth_message(birth_message),
-                name="mqtt birth message",
+                self._resubscribe_and_publish_birth_message(birth_message),
+                name="mqtt re-subscribe and birth",
             )
         else:
             # Update subscribe cooldown period to a shorter time
             self.config_entry.async_create_background_task(
                 self.hass,
                 self._async_perform_subscriptions(),
-                name="mqtt re-subscriptions",
+                name="mqtt re-subscribe",
             )
             self._subscribe_debouncer.set_timeout(SUBSCRIBE_COOLDOWN)
 
