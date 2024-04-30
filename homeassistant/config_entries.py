@@ -21,9 +21,10 @@ from functools import cached_property
 import logging
 from random import randint
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Self, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Generic, Self, cast
 
 from async_interrupt import interrupt
+from typing_extensions import TypeVar
 
 from . import data_entry_flow, loader
 from .components import persistent_notification
@@ -124,6 +125,7 @@ SAVE_DELAY = 1
 
 DISCOVERY_COOLDOWN = 1
 
+_DataT = TypeVar("_DataT", default=Any)
 _R = TypeVar("_R")
 
 
@@ -266,13 +268,14 @@ class ConfigFlowResult(FlowResult, total=False):
     version: int
 
 
-class ConfigEntry:
+class ConfigEntry(Generic[_DataT]):
     """Hold a configuration entry."""
 
     entry_id: str
     domain: str
     title: str
     data: MappingProxyType[str, Any]
+    runtime_data: _DataT
     options: MappingProxyType[str, Any]
     unique_id: str | None
     state: ConfigEntryState
@@ -698,7 +701,7 @@ class ConfigEntry:
         # Check again when we fire in case shutdown
         # has started so we do not block shutdown
         if not hass.is_stopping:
-            hass.async_create_task(
+            hass.async_create_background_task(
                 self._async_setup_retry(hass),
                 f"config entry retry {self.domain} {self.title}",
                 eager_start=True,
@@ -1087,7 +1090,7 @@ class ConfigEntry:
 
         target: target to call.
         """
-        task = hass.async_create_task(
+        task = hass.async_create_task_internal(
             target, f"{name} {self.title} {self.domain} {self.entry_id}", eager_start
         )
         if eager_start and task.done():
@@ -1157,6 +1160,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
             cooldown=DISCOVERY_COOLDOWN,
             immediate=True,
             function=self._async_discovery,
+            background=True,
         )
 
     async def async_wait_import_flow_initialized(self, handler: str) -> None:
@@ -1642,7 +1646,7 @@ class ConfigEntries:
         # starting a new flow with the 'unignore' step. If the integration doesn't
         # implement async_step_unignore then this will be a no-op.
         if entry.source == SOURCE_IGNORE:
-            self.hass.async_create_task(
+            self.hass.async_create_task_internal(
                 self.hass.config_entries.flow.async_init(
                     entry.domain,
                     context={"source": SOURCE_UNIGNORE},

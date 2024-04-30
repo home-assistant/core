@@ -15,7 +15,7 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import JsonObjectType
@@ -91,7 +91,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         try:
             async with asyncio.timeout(COMMAND_TIMEOUT):
                 stdout_data, stderr_data = await process.communicate()
-        except TimeoutError:
+        except TimeoutError as err:
             _LOGGER.error(
                 "Timed out running command: `%s`, after: %ss", cmd, COMMAND_TIMEOUT
             )
@@ -103,7 +103,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     process._transport.close()  # type: ignore[attr-defined]
                 del process
 
-            raise
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="timeout",
+                translation_placeholders={
+                    "command": cmd,
+                    "timeout": str(COMMAND_TIMEOUT),
+                },
+            ) from err
 
         if stdout_data:
             _LOGGER.debug(
@@ -135,11 +142,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     service_response["stdout"] = stdout_data.decode("utf-8").strip()
                 if stderr_data:
                     service_response["stderr"] = stderr_data.decode("utf-8").strip()
-            except UnicodeDecodeError:
+            except UnicodeDecodeError as err:
                 _LOGGER.exception(
                     "Unable to handle non-utf8 output of command: `%s`", cmd
                 )
-                raise
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="non_utf8_output",
+                    translation_placeholders={"command": cmd},
+                ) from err
             return service_response
         return None
 

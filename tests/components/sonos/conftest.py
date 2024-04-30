@@ -596,7 +596,7 @@ def mock_get_source_ip(mock_get_source_ip):
     return mock_get_source_ip
 
 
-@pytest.fixture(name="zgs_discovery", scope="session")
+@pytest.fixture(name="zgs_discovery", scope="package")
 def zgs_discovery_fixture():
     """Load ZoneGroupState discovery payload and return it."""
     return load_fixture("sonos/zgs_discovery.xml")

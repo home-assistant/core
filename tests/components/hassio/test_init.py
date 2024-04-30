@@ -1098,7 +1098,7 @@ async def test_setup_hardware_integration(
         ) as mock_setup_entry,
     ):
         result = await async_setup_component(hass, "hassio", {"hassio": {}})
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert result
     assert aioclient_mock.call_count == 19

@@ -233,30 +233,14 @@ async def test_remove_device(
 
     # try to delete good_device
     ws_client = await hass_ws_client(hass)
-    await ws_client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": entry.entry_id,
-            "device_id": good_device.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(good_device.id, entry.entry_id)
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
     await hass.async_block_till_done()
 
     # try to delete orphan_device
     ws_client = await hass_ws_client(hass)
-    await ws_client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": entry.entry_id,
-            "device_id": orphan_device.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(orphan_device.id, entry.entry_id)
     assert response["success"]
     await hass.async_block_till_done()
 
