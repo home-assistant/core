@@ -10,7 +10,7 @@ import os
 import socket
 import ssl
 from tempfile import NamedTemporaryFile
-from typing import Any, Final, TypedDict, cast
+from typing import Any, Final, Required, TypedDict, cast
 from urllib.parse import quote_plus, urljoin
 
 from aiohttp import web
@@ -36,6 +36,7 @@ from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
+    SupportsResponse,
     callback,
 )
 from homeassistant.exceptions import (
@@ -145,6 +146,9 @@ HTTP_SCHEMA: Final = vol.All(
                 [SSL_INTERMEDIATE, SSL_MODERN]
             ),
             vol.Optional(CONF_USE_X_FRAME_OPTIONS, default=True): cv.boolean,
+            vol.Optional(
+                CONF_STRICT_CONNECTION, default=StrictConnectionMode.DISABLED
+            ): vol.Coerce(StrictConnectionMode),
         }
     ),
 )
@@ -168,6 +172,7 @@ class ConfData(TypedDict, total=False):
     login_attempts_threshold: int
     ip_ban_enabled: bool
     ssl_profile: str
+    strict_connection: Required[StrictConnectionMode]
 
 
 @bind_hass
@@ -234,7 +239,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         login_threshold=login_threshold,
         is_ban_enabled=is_ban_enabled,
         use_x_frame_options=use_x_frame_options,
-        strict_connection_non_cloud=StrictConnectionMode.DISABLED,
+        strict_connection_non_cloud=conf[CONF_STRICT_CONNECTION],
     )
 
     async def stop_server(event: Event) -> None:
@@ -615,7 +620,7 @@ def _setup_services(hass: HomeAssistant, conf: ConfData) -> None:
             if not user.is_admin:
                 raise Unauthorized(context=call.context)
 
-        if StrictConnectionMode.DISABLED is StrictConnectionMode.DISABLED:
+        if conf[CONF_STRICT_CONNECTION] is StrictConnectionMode.DISABLED:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="strict_connection_not_enabled_non_cloud",
@@ -647,3 +652,10 @@ def _setup_services(hass: HomeAssistant, conf: ConfData) -> None:
             "url": f"https://login.home-assistant.io?u={quote_plus(url)}",
             "direct_url": url,
         }
+
+    hass.services.async_register(
+        DOMAIN,
+        "create_temporary_strict_connection_url",
+        create_temporary_strict_connection_url,
+        supports_response=SupportsResponse.ONLY,
+    )
