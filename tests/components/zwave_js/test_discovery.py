@@ -155,6 +155,7 @@ async def test_shelly_001p10_disabled_entities(
         assert updated_entry != entry
         assert updated_entry.disabled is False
 
+    # Test if the main entity from endpoint 1 was created 
     state = hass.states.get("cover.wave_shutter")
     assert state
 
