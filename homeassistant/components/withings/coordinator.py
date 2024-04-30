@@ -40,16 +40,15 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[_T]):
     webhooks_connected: bool = False
     coordinator_name: str = ""
 
-    def __init__(
-        self, hass: HomeAssistant, client: WithingsClient, user_id: str
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
         """Initialize the Withings data coordinator."""
         super().__init__(
             hass,
             LOGGER,
-            name=f"Withings {user_id} {self.coordinator_name}",
+            name="",
             update_interval=self._default_update_interval,
         )
+        self.name = f"Withings {self.config_entry.unique_id} {self.coordinator_name}"
         self._client = client
         self.notification_categories: set[NotificationCategory] = set()
 
@@ -86,11 +85,9 @@ class WithingsMeasurementDataUpdateCoordinator(
 
     coordinator_name: str = "measurements"
 
-    def __init__(
-        self, hass: HomeAssistant, client: WithingsClient, user_id: str
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
         """Initialize the Withings data coordinator."""
-        super().__init__(hass, client, user_id)
+        super().__init__(hass, client)
         self.notification_categories = {
             NotificationCategory.WEIGHT,
             NotificationCategory.PRESSURE,
@@ -122,11 +119,9 @@ class WithingsSleepDataUpdateCoordinator(
 
     coordinator_name: str = "sleep"
 
-    def __init__(
-        self, hass: HomeAssistant, client: WithingsClient, user_id: str
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
         """Initialize the Withings data coordinator."""
-        super().__init__(hass, client, user_id)
+        super().__init__(hass, client)
         self.notification_categories = {
             NotificationCategory.SLEEP,
         }
@@ -175,11 +170,9 @@ class WithingsBedPresenceDataUpdateCoordinator(WithingsDataUpdateCoordinator[Non
     in_bed: bool | None = None
     _default_update_interval = None
 
-    def __init__(
-        self, hass: HomeAssistant, client: WithingsClient, user_id: str
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
         """Initialize the Withings data coordinator."""
-        super().__init__(hass, client, user_id)
+        super().__init__(hass, client)
         self.notification_categories = {
             NotificationCategory.IN_BED,
             NotificationCategory.OUT_BED,
@@ -219,11 +212,9 @@ class WithingsActivityDataUpdateCoordinator(
     coordinator_name: str = "activity"
     _previous_data: Activity | None = None
 
-    def __init__(
-        self, hass: HomeAssistant, client: WithingsClient, user_id: str
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
         """Initialize the Withings data coordinator."""
-        super().__init__(hass, client, user_id)
+        super().__init__(hass, client)
         self.notification_categories = {
             NotificationCategory.ACTIVITY,
         }
@@ -260,11 +251,9 @@ class WithingsWorkoutDataUpdateCoordinator(
     coordinator_name: str = "workout"
     _previous_data: Workout | None = None
 
-    def __init__(
-        self, hass: HomeAssistant, client: WithingsClient, user_id: str
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
         """Initialize the Withings data coordinator."""
-        super().__init__(hass, client, user_id)
+        super().__init__(hass, client)
         self.notification_categories = {
             NotificationCategory.ACTIVITY,
         }
