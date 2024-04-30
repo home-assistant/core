@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from python_homeassistant_analytics import (
     CustomIntegration,
@@ -15,7 +16,8 @@ from python_homeassistant_analytics import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from . import AnalyticsInsightsConfigEntry
+if TYPE_CHECKING:
+    from . import AnalyticsInsightsConfigEntry
 from .const import (
     CONF_TRACKED_CUSTOM_INTEGRATIONS,
     CONF_TRACKED_INTEGRATIONS,
