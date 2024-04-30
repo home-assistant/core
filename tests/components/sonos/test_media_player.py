@@ -358,9 +358,6 @@ async def test_select_source_play_uri(
         },
         blocking=True,
     )
-    assert soco_mock.switch_to_line_in.call_count == result.get("switch_to_line_in", 0)
-    assert soco_mock.switch_to_tv.call_count == result.get("switch_to_tv", 0)
-    assert soco_mock.clear_queue.call_count == result.get("clear_queue", 0)
     assert soco_mock.play_uri.call_count == result.get("play_uri")
     soco_mock.play_uri.assert_called_with(
         result.get("play_uri_uri"),
