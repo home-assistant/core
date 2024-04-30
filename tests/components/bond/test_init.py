@@ -24,7 +24,6 @@ from .common import (
     patch_bond_version,
     patch_setup_entry,
     patch_start_bpup,
-    remove_device,
     setup_bond_entity,
     setup_platform,
 )
@@ -318,45 +317,30 @@ async def test_device_remove_devices(
     assert entity.unique_id == "test-hub-id_test-device-id"
 
     device_entry = device_registry.async_get(entity.device_id)
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), device_entry.id, config_entry.entry_id
-        )
-        is False
-    )
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "test-hub-id", "remove-device-id")},
     )
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), dead_device_entry.id, config_entry.entry_id
-        )
-        is True
-    )
+    response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
+    assert response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "wrong-hub-id", "test-device-id")},
     )
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), dead_device_entry.id, config_entry.entry_id
-        )
-        is True
-    )
+    response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
+    assert response["success"]
 
     hub_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "test-hub-id")},
     )
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), hub_device_entry.id, config_entry.entry_id
-        )
-        is False
-    )
+    response = await client.remove_device(hub_device_entry.id, config_entry.entry_id)
+    assert not response["success"]
 
 
 async def test_smart_by_bond_v3_firmware(hass: HomeAssistant) -> None:
