@@ -73,7 +73,7 @@ data = {
 V1_API_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TOKEN, default=data.get(CONF_TOKEN)): cv.string,
-        vol.Optional(
+        vol.Required(
             CONF_MAC, default=data.get(CONF_MAC)
         ): cv.string,  # vol.Match(MAC_ADDRESS_REGEXP),
     },

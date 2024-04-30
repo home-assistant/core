@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from http import HTTPStatus
-import logging
 import socket
 from typing import Any
 
@@ -12,10 +11,14 @@ import aiohttp
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 
-from . import STEP_USER_DATA_SCHEMA, V1_API_SCHEMA, V3_API_SCHEMA, validate_input
+from . import (
+    _LOGGER,
+    STEP_USER_DATA_SCHEMA,
+    V1_API_SCHEMA,
+    V3_API_SCHEMA,
+    validate_input,
+)
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
