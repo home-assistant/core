@@ -4001,6 +4001,46 @@ async def test_entry_reload_concurrency(
     assert loaded == 1
 
 
+async def test_entry_reload_concurrency_not_setup_setup(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test multiple reload calls do not cause a reload race."""
+    entry = MockConfigEntry(domain="comp", state=config_entries.ConfigEntryState.LOADED)
+    entry.add_to_hass(hass)
+
+    async_setup = AsyncMock(return_value=True)
+    loaded = 0
+
+    async def _async_setup_entry(*args, **kwargs):
+        await asyncio.sleep(0)
+        nonlocal loaded
+        loaded += 1
+        return loaded == 1
+
+    async def _async_unload_entry(*args, **kwargs):
+        await asyncio.sleep(0)
+        nonlocal loaded
+        loaded -= 1
+        return loaded == 0
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=async_setup,
+            async_setup_entry=_async_setup_entry,
+            async_unload_entry=_async_unload_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+    tasks = [
+        asyncio.create_task(manager.async_reload(entry.entry_id)) for _ in range(15)
+    ]
+    await asyncio.gather(*tasks)
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert loaded == 1
+
+
 async def test_unique_id_update_while_setup_in_progress(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
