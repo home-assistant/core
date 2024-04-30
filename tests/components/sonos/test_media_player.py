@@ -361,25 +361,12 @@ async def test_select_source_play_uri(
     assert soco_mock.switch_to_line_in.call_count == result.get("switch_to_line_in", 0)
     assert soco_mock.switch_to_tv.call_count == result.get("switch_to_tv", 0)
     assert soco_mock.clear_queue.call_count == result.get("clear_queue", 0)
-    if result.get("add_to_queue"):
-        assert soco_mock.add_to_queue.call_count == result.get("add_to_queue")
-        assert soco_mock.add_to_queue.call_args_list[0].args[0].item_id == result.get(
-            "add_to_queue_item_id"
-        )
-        assert (
-            soco_mock.add_to_queue.call_args_list[0].kwargs["timeout"]
-            == LONG_SERVICE_TIMEOUT
-        )
-    if result.get("play_from_queue"):
-        assert soco_mock.play_from_queue.call_count == result.get("play_from_queue")
-        soco_mock.play_from_queue.assert_called_with(0)
-    if result.get("play_uri"):
-        assert soco_mock.play_uri.call_count == result.get("play_uri")
-        soco_mock.play_uri.assert_called_with(
-            result.get("play_uri_uri"),
-            title=result.get("play_uri_title"),
-            timeout=LONG_SERVICE_TIMEOUT,
-        )
+    assert soco_mock.play_uri.call_count == result.get("play_uri")
+    soco_mock.play_uri.assert_called_with(
+        result.get("play_uri_uri"),
+        title=result.get("play_uri_title"),
+        timeout=LONG_SERVICE_TIMEOUT,
+    )
 
 
 @pytest.mark.parametrize(
