@@ -50,23 +50,9 @@ class MotionMountEntity(Entity):
     def update_name(self) -> None:
         """Update the name of the associated device."""
         # Update the name in the device registry if needed
-
-        mac = format_mac(self.mm.mac.hex())
-        device_registry = dr.async_get(self.hass)
-
-        # Find the device...
-        if mac == EMPTY_MAC:
-            device = device_registry.async_get_device(
-                identifiers={(DOMAIN, self._base_unique_id)}
-            )
-        else:
-            device = device_registry.async_get_device(
-                connections={(dr.CONNECTION_NETWORK_MAC, mac)}
-            )
-
-        # ...and perform update
-        if device is not None and device.name != self.mm.name:
-            device_registry.async_update_device(device.id, name=self.mm.name)
+        if self.device_entry is not None and self.device_entry.name != self.mm.name:
+            device_registry = dr.async_get(self.hass)
+            device_registry.async_update_device(self.device_entry.id, name=self.mm.name)
 
     async def async_added_to_hass(self) -> None:
         """Store register state change callback."""
