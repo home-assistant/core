@@ -23,7 +23,6 @@ from homeassistant.util.dt import utcnow
 
 from .common import (
     Helper,
-    remove_device,
     setup_accessories_from_file,
     setup_test_accessories,
     setup_test_accessories_with_controller,
@@ -99,19 +98,16 @@ async def test_device_remove_devices(
     entity = entity_registry.entities[ALIVE_DEVICE_ENTITY_ID]
 
     live_device_entry = device_registry.async_get(entity.device_id)
-    assert (
-        await remove_device(await hass_ws_client(hass), live_device_entry.id, entry_id)
-        is False
-    )
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(live_device_entry.id, entry_id)
+    assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={("homekit_controller:accessory-id", "E9:88:E7:B8:B4:40:aid:1")},
     )
-    assert (
-        await remove_device(await hass_ws_client(hass), dead_device_entry.id, entry_id)
-        is True
-    )
+    response = await client.remove_device(dead_device_entry.id, entry_id)
+    assert response["success"]
 
 
 async def test_offline_device_raises(hass: HomeAssistant, controller) -> None:
