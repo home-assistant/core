@@ -46,6 +46,7 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
+        description_placeholders = {}
 
         if user_input is not None:
             latitude = user_input[CONF_LATITUDE]
@@ -57,8 +58,9 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
             api_key_valid = None
             try:
                 api_key_valid = await _is_owm_api_key_valid(user_input[CONF_API_KEY])
-            except RequestError:
+            except RequestError as error:
                 errors["base"] = "cannot_connect"
+                description_placeholders["error"] = str(error)
 
             if api_key_valid is False:
                 errors["base"] = "invalid_api_key"
@@ -84,7 +86,12 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        return self.async_show_form(
+            step_id="user",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
 
 
 class OpenWeatherMapOptionsFlow(OptionsFlow):
