@@ -358,23 +358,34 @@ async def test_preset_mode_validation(
     assert exc.value.translation_key == "not_valid_fan_mode"
 
 
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+@pytest.mark.parametrize(
+    "supported_features_at_int",
+    [
+        ClimateEntityFeature.TARGET_TEMPERATURE.value,
+        ClimateEntityFeature.TARGET_TEMPERATURE.value
+        | ClimateEntityFeature.TURN_ON.value
+        | ClimateEntityFeature.TURN_OFF.value,
+    ],
+)
+def test_deprecated_supported_features_ints(
+    caplog: pytest.LogCaptureFixture, supported_features_at_int: int
+) -> None:
     """Test deprecated supported features ints."""
 
     class MockClimateEntity(ClimateEntity):
         @property
         def supported_features(self) -> int:
             """Return supported features."""
-            return 1
+            return supported_features_at_int
 
     entity = MockClimateEntity()
-    assert entity.supported_features is ClimateEntityFeature(1)
+    assert entity.supported_features is ClimateEntityFeature(supported_features_at_int)
     assert "MockClimateEntity" in caplog.text
     assert "is using deprecated supported features values" in caplog.text
     assert "Instead it should use" in caplog.text
     assert "ClimateEntityFeature.TARGET_TEMPERATURE" in caplog.text
     caplog.clear()
-    assert entity.supported_features is ClimateEntityFeature(1)
+    assert entity.supported_features is ClimateEntityFeature(supported_features_at_int)
     assert "is using deprecated supported features values" not in caplog.text
 
 
