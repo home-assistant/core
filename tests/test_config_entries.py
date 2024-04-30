@@ -5025,3 +5025,48 @@ async def test_updating_non_added_entry_raises(hass: HomeAssistant) -> None:
 
     with pytest.raises(config_entries.UnknownEntry, match=entry.entry_id):
         hass.config_entries.async_update_entry(entry, unique_id="new_id")
+
+
+async def test_reload_during_setup(hass: HomeAssistant) -> None:
+    """Test reload during setup waits."""
+    entry = MockConfigEntry(domain="comp", data={"value": "initial"})
+    entry.add_to_hass(hass)
+
+    setup_start_future = hass.loop.create_future()
+    setup_finish_future = hass.loop.create_future()
+    in_setup = False
+    setup_calls = 0
+
+    async def mock_async_setup_entry(hass, entry):
+        """Mock setting up an entry."""
+        nonlocal in_setup
+        nonlocal setup_calls
+        setup_calls += 1
+        assert not in_setup
+        in_setup = True
+        setup_start_future.set_result(None)
+        await setup_finish_future
+        in_setup = False
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=mock_async_setup_entry,
+            async_unload_entry=AsyncMock(return_value=True),
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    setup_task = hass.async_create_task(async_setup_component(hass, "comp", {}))
+
+    await setup_start_future  # ensure we are in the setup
+    reload_task = hass.async_create_task(
+        hass.config_entries.async_reload(entry.entry_id)
+    )
+    await asyncio.sleep(0)
+    setup_finish_future.set_result(None)
+    await setup_task
+    await reload_task
+    assert setup_calls == 2
