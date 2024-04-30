@@ -3,7 +3,7 @@
 import motionmount
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_CONNECTIONS, ATTR_IDENTIFIERS, ATTR_NAME
+from homeassistant.const import ATTR_CONNECTIONS, ATTR_IDENTIFIERS
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity import Entity
@@ -49,29 +49,24 @@ class MotionMountEntity(Entity):
 
     def update_name(self) -> None:
         """Update the name of the associated device."""
-        # Check whether we need to update our name
-        if self.device_info and self.device_info[ATTR_NAME] != self.mm.name:
-            device_info = self.device_info
-            device_info[ATTR_NAME] = self.mm.name
-            self._attr_device_info = device_info
+        # Update the name in the device registry if needed
 
-            # Also update the name in the device registry if needed
-            mac = format_mac(self.mm.mac.hex())
-            device_registry = dr.async_get(self.hass)
+        mac = format_mac(self.mm.mac.hex())
+        device_registry = dr.async_get(self.hass)
 
-            # Find the device
-            if mac == EMPTY_MAC:
-                device = device_registry.async_get_device(
-                    identifiers={(DOMAIN, self._base_unique_id)}
-                )
-            else:
-                device = device_registry.async_get_device(
-                    connections={(dr.CONNECTION_NETWORK_MAC, mac)}
-                )
+        # Find the device...
+        if mac == EMPTY_MAC:
+            device = device_registry.async_get_device(
+                identifiers={(DOMAIN, self._base_unique_id)}
+            )
+        else:
+            device = device_registry.async_get_device(
+                connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+            )
 
-            # And perform update
-            if device is not None and device.name != self.mm.name:
-                device_registry.async_update_device(device.id, name=self.mm.name)
+        # ...and perform update
+        if device is not None and device.name != self.mm.name:
+            device_registry.async_update_device(device.id, name=self.mm.name)
 
     async def async_added_to_hass(self) -> None:
         """Store register state change callback."""
