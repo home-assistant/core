@@ -2850,15 +2850,7 @@ async def test_mqtt_ws_remove_discovered_device(
 
     client = await hass_ws_client(hass)
     mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": mqtt_config_entry.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await client.receive_json()
+    response = await client.remove_device(device_entry.id, mqtt_config_entry.entry_id)
     assert response["success"]
 
     # Verify device entry is cleared

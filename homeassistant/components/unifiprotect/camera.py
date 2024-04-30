@@ -155,7 +155,7 @@ async def async_setup_entry(
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         if not isinstance(device, UFPCamera):
-            return  # type: ignore[unreachable]
+            return
 
         entities = _async_camera_entities(hass, entry, data, ufp_device=device)
         async_add_entities(entities)
