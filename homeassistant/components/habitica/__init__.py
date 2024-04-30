@@ -162,7 +162,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HabiticaConfigEntry) -> 
         }
     )
     try:
-        user = await api.user.get(userFields="profile")
+        user = await api.user.get(userFields="auth")
     except ClientResponseError as e:
         if e.status == HTTPStatus.TOO_MANY_REQUESTS:
             raise ConfigEntryNotReady(
@@ -171,11 +171,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HabiticaConfigEntry) -> 
             ) from e
         raise ConfigEntryNotReady(e) from e
 
-    if not entry.data.get(CONF_NAME):
-        name = user["profile"]["name"]
+    if entry.data.get(CONF_NAME) != user["auth"]["local"]["username"]:
         hass.config_entries.async_update_entry(
             entry,
-            data={**entry.data, CONF_NAME: name},
+            data={**entry.data, CONF_NAME: user["auth"]["local"]["username"]},
         )
 
     coordinator = HabiticaDataUpdateCoordinator(hass, api)
