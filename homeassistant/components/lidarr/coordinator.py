@@ -34,6 +34,7 @@ T = TypeVar(
     | LidarrAlbum,
 )
 
+
 class LidarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
     """Data update coordinator for the Lidarr integration."""
 
@@ -73,6 +74,7 @@ class LidarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
         """Fetch the actual data."""
         raise NotImplementedError
 
+
 class DiskSpaceDataUpdateCoordinator(
     LidarrDataUpdateCoordinator[list[LidarrRootFolder]]
 ):
@@ -84,12 +86,14 @@ class DiskSpaceDataUpdateCoordinator(
             list[LidarrRootFolder], await self.api_client.async_get_root_folders()
         )
 
+
 class HealthDataUpdateCoordinator(LidarrDataUpdateCoordinator[list[Health]]):
     """Health update coordinator."""
 
     async def _fetch_data(self) -> list[Health]:
         """Fetch the health data."""
         return await self.api_client.async_get_failed_health_checks()
+
 
 class QueueDataUpdateCoordinator(LidarrDataUpdateCoordinator[LidarrQueue]):
     """Queue update coordinator."""
@@ -98,12 +102,14 @@ class QueueDataUpdateCoordinator(LidarrDataUpdateCoordinator[LidarrQueue]):
         """Fetch the album count in queue."""
         return await self.api_client.async_get_queue(page_size=DEFAULT_MAX_RECORDS)
 
+
 class StatusDataUpdateCoordinator(LidarrDataUpdateCoordinator[str]):
     """Status update coordinator for Lidarr."""
 
     async def _fetch_data(self) -> str:
         """Fetch the data."""
         return (await self.api_client.async_get_system_status()).version
+
 
 class WantedDataUpdateCoordinator(LidarrDataUpdateCoordinator[LidarrAlbum]):
     """Wanted update coordinator."""

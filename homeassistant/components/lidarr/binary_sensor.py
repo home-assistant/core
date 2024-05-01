@@ -1,4 +1,5 @@
 """Support for Lidarr binary sensors."""
+
 from __future__ import annotations
 
 from aiopyarr import Health
