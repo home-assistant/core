@@ -5,13 +5,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aiohttp import ClientError, ClientSession
+from aiohttp import ClientError
 from imgw_pib import ImgwPib
 from imgw_pib.exceptions import ApiError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -23,16 +22,6 @@ from homeassistant.helpers.selector import (
 from .const import CONF_STATION_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def validate_input(
-    hass: HomeAssistant, client_session: ClientSession, station_id: str
-) -> dict[str, Any]:
-    """Validate the user input allows us to connect."""
-    imgwpib = await ImgwPib.create(client_session, hydrological_station_id=station_id)
-    hydrological_data = await imgwpib.get_hydrological_data()
-
-    return {"title": f"{hydrological_data.river} ({hydrological_data.station})"}
 
 
 class ImgwPibFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -55,14 +44,18 @@ class ImgwPibFlowHandler(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             try:
-                info = await validate_input(self.hass, client_session, station_id)
+                imgwpib = await ImgwPib.create(
+                    client_session, hydrological_station_id=station_id
+                )
+                hydrological_data = await imgwpib.get_hydrological_data()
             except (ClientError, TimeoutError, ApiError):
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                title = f"{hydrological_data.river} ({hydrological_data.station})"
+                return self.async_create_entry(title=title, data=user_input)
 
         try:
             imgwpib = await ImgwPib.create(client_session)
