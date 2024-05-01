@@ -82,7 +82,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-DISCOVERY_COOLDOWN = 2
+DISCOVERY_COOLDOWN = 5
 INITIAL_SUBSCRIBE_COOLDOWN = 1.0
 SUBSCRIBE_COOLDOWN = 0.1
 UNSUBSCRIBE_COOLDOWN = 0.1
@@ -347,6 +347,12 @@ class EnsureJobAfterCooldown:
         self._async_cancel_timer()
         self._task = create_eager_task(self._async_job())
         self._task.add_done_callback(self._async_task_done)
+
+    async def async_fire(self) -> None:
+        """Execute the job immediately."""
+        if self._task:
+            await self._task
+        self._async_execute()
 
     @callback
     def _async_cancel_timer(self) -> None:
@@ -840,7 +846,7 @@ class MQTT:
 
         for topic, qos in subscriptions.items():
             _LOGGER.debug("Subscribing to %s, mid: %s, qos: %s", topic, mid, qos)
-        self._last_subscribe = time.time()
+        self._last_subscribe = time.monotonic()
 
         if result == 0:
             await self._wait_for_mid(mid)
@@ -870,6 +876,8 @@ class MQTT:
         await self._ha_started.wait()  # Wait for Home Assistant to start
         await self._discovery_cooldown()  # Wait for MQTT discovery to cool down
         # Update subscribe cooldown period to a shorter time
+        # and make sure we flush the debouncer
+        await self._subscribe_debouncer.async_fire()
         self._subscribe_debouncer.set_timeout(SUBSCRIBE_COOLDOWN)
         await self.async_publish(
             topic=birth_message.topic,
@@ -1115,7 +1123,7 @@ class MQTT:
 
     async def _discovery_cooldown(self) -> None:
         """Wait until all discovery and subscriptions are processed."""
-        now = time.time()
+        now = time.monotonic()
         # Reset discovery and subscribe cooldowns
         self._mqtt_data.last_discovery = now
         self._last_subscribe = now
@@ -1127,7 +1135,7 @@ class MQTT:
         )
         while now < wait_until:
             await asyncio.sleep(wait_until - now)
-            now = time.time()
+            now = time.monotonic()
             last_discovery = self._mqtt_data.last_discovery
             last_subscribe = (
                 now if self._pending_subscriptions else self._last_subscribe
