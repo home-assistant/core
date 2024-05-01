@@ -48,7 +48,9 @@ def next_departuredate(departure: list[str]) -> date:
 class TVDataUpdateCoordinator(DataUpdateCoordinator):
     """A Trafikverket Data Update Coordinator."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Trafikverket coordinator."""
         super().__init__(
             hass,
@@ -57,12 +59,12 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=TIME_BETWEEN_UPDATES,
         )
         self._ferry_api = TrafikverketFerry(
-            async_get_clientsession(hass), entry.data[CONF_API_KEY]
+            async_get_clientsession(hass), self.config_entry.data[CONF_API_KEY]
         )
-        self._from: str = entry.data[CONF_FROM]
-        self._to: str = entry.data[CONF_TO]
-        self._time: time | None = dt_util.parse_time(entry.data[CONF_TIME])
-        self._weekdays: list[str] = entry.data[CONF_WEEKDAY]
+        self._from: str = self.config_entry.data[CONF_FROM]
+        self._to: str = self.config_entry.data[CONF_TO]
+        self._time: time | None = dt_util.parse_time(self.config_entry.data[CONF_TIME])
+        self._weekdays: list[str] = self.config_entry.data[CONF_WEEKDAY]
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Trafikverket."""
