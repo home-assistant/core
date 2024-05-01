@@ -295,7 +295,10 @@ class MatterLight(MatterEntity, LightEntity):
             # brightness support
             if self._entity_info.endpoint.has_attribute(
                 None, clusters.LevelControl.Attributes.CurrentLevel
-            ):
+            ) and self._entity_info.endpoint.device_types != {device_types.OnOffLight}:
+                # We need to filter out the OnOffLight device type here because
+                # that can have an optional LevelControl cluster present
+                # which we should ignore.
                 supported_color_modes.add(ColorMode.BRIGHTNESS)
                 self._supports_brightness = True
             # colormode(s)
@@ -406,11 +409,11 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterLight,
         required_attributes=(
             clusters.OnOff.Attributes.OnOff,
-            clusters.LevelControl.Attributes.CurrentLevel,
             clusters.ColorControl.Attributes.CurrentHue,
             clusters.ColorControl.Attributes.CurrentSaturation,
         ),
         optional_attributes=(
+            clusters.LevelControl.Attributes.CurrentLevel,
             clusters.ColorControl.Attributes.ColorTemperatureMireds,
             clusters.ColorControl.Attributes.ColorMode,
             clusters.ColorControl.Attributes.CurrentX,
@@ -426,11 +429,11 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterLight,
         required_attributes=(
             clusters.OnOff.Attributes.OnOff,
-            clusters.LevelControl.Attributes.CurrentLevel,
             clusters.ColorControl.Attributes.CurrentX,
             clusters.ColorControl.Attributes.CurrentY,
         ),
         optional_attributes=(
+            clusters.LevelControl.Attributes.CurrentLevel,
             clusters.ColorControl.Attributes.ColorTemperatureMireds,
             clusters.ColorControl.Attributes.ColorMode,
             clusters.ColorControl.Attributes.CurrentHue,
@@ -450,37 +453,5 @@ DISCOVERY_SCHEMAS = [
             clusters.ColorControl.Attributes.ColorTemperatureMireds,
         ),
         optional_attributes=(clusters.ColorControl.Attributes.ColorMode,),
-    ),
-    # Additional schema to match generic dimmable lights with incorrect/missing device type
-    MatterDiscoverySchema(
-        platform=Platform.LIGHT,
-        entity_description=LightEntityDescription(
-            key="MatterDimmableLightFallback", name=None
-        ),
-        entity_class=MatterLight,
-        required_attributes=(
-            clusters.OnOff.Attributes.OnOff,
-            clusters.LevelControl.Attributes.CurrentLevel,
-        ),
-        optional_attributes=(
-            clusters.ColorControl.Attributes.ColorMode,
-            clusters.ColorControl.Attributes.CurrentHue,
-            clusters.ColorControl.Attributes.CurrentSaturation,
-            clusters.ColorControl.Attributes.CurrentX,
-            clusters.ColorControl.Attributes.CurrentY,
-            clusters.ColorControl.Attributes.ColorTemperatureMireds,
-        ),
-        # important: make sure to rule out all device types that are also based on the
-        # onoff and levelcontrol clusters !
-        not_device_type=(
-            device_types.Fan,
-            device_types.GenericSwitch,
-            device_types.OnOffPlugInUnit,
-            device_types.HeatingCoolingUnit,
-            device_types.Pump,
-            device_types.CastingVideoClient,
-            device_types.VideoRemoteControl,
-            device_types.Speaker,
-        ),
     ),
 ]
