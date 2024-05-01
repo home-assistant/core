@@ -2087,6 +2087,23 @@ async def test_handle_mqtt_on_callback(
         assert "No ACK from MQTT server" not in caplog.text
 
 
+async def test_handle_mqtt_on_callback_after_timeout(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    mqtt_client_mock: MqttMockPahoClient,
+) -> None:
+    """Test receiving an ACK after a timeout."""
+    mqtt_mock = await mqtt_mock_entry()
+    # Simulate the mid future getting a timeout
+    mqtt_mock()._async_get_mid_future(100).set_exception(asyncio.TimeoutError)
+    # Simulate an ACK for mid == 100, being received after the timeout
+    mqtt_client_mock.on_publish(mqtt_client_mock, None, 100)
+    await hass.async_block_till_done()
+    assert "No ACK from MQTT server" not in caplog.text
+    assert "InvalidStateError" not in caplog.text
+
+
 async def test_publish_error(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
