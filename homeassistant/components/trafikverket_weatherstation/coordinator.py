@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from pytrafikverket.exceptions import (
     InvalidAuthentication,
@@ -12,13 +13,14 @@ from pytrafikverket.exceptions import (
 )
 from pytrafikverket.trafikverket_weather import TrafikverketWeather, WeatherStationInfo
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+if TYPE_CHECKING:
+    from . import TVWeatherConfigEntry
 from .const import CONF_STATION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +30,7 @@ TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 class TVDataUpdateCoordinator(DataUpdateCoordinator[WeatherStationInfo]):
     """A Sensibo Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: TVWeatherConfigEntry
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Sensibo coordinator."""

@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from .const import PLATFORMS
 from .coordinator import TVDataUpdateCoordinator
 
-TVWeatherConfigEntry = ConfigEntry["TVDataUpdateCoordinator"]
+TVWeatherConfigEntry = ConfigEntry[TVDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TVWeatherConfigEntry) -> bool:
