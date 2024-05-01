@@ -19,9 +19,10 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import CONF_STATION, DOMAIN
+
 if TYPE_CHECKING:
     from . import TVWeatherConfigEntry
-from .const import CONF_STATION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 TIME_BETWEEN_UPDATES = timedelta(minutes=10)
