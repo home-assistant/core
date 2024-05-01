@@ -14,8 +14,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import HYDROLOGICAL_DATA, HYDROLOGICAL_STATIONS
 
 
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test we get the form."""
+async def test_create_entry(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test that the user step works."""
     with (
         patch("homeassistant.components.imgw_pib.ImgwPib.update_hydrological_stations"),
         patch(
