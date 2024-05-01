@@ -82,8 +82,8 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-DISCOVERY_COOLDOWN = 2
-INITIAL_SUBSCRIBE_COOLDOWN = 1.0
+DISCOVERY_COOLDOWN = 5
+INITIAL_SUBSCRIBE_COOLDOWN = 2.0
 SUBSCRIBE_COOLDOWN = 0.1
 UNSUBSCRIBE_COOLDOWN = 0.1
 TIMEOUT_ACK = 10
@@ -840,7 +840,7 @@ class MQTT:
 
         for topic, qos in subscriptions.items():
             _LOGGER.debug("Subscribing to %s, mid: %s, qos: %s", topic, mid, qos)
-        self._last_subscribe = time.time()
+        self._last_subscribe = time.monotonic()
 
         if result == 0:
             await self._wait_for_mid(mid)
@@ -1115,7 +1115,7 @@ class MQTT:
 
     async def _discovery_cooldown(self) -> None:
         """Wait until all discovery and subscriptions are processed."""
-        now = time.time()
+        now = time.monotonic()
         # Reset discovery and subscribe cooldowns
         self._mqtt_data.last_discovery = now
         self._last_subscribe = now
@@ -1127,7 +1127,7 @@ class MQTT:
         )
         while now < wait_until:
             await asyncio.sleep(wait_until - now)
-            now = time.time()
+            now = time.monotonic()
             last_discovery = self._mqtt_data.last_discovery
             last_subscribe = (
                 now if self._pending_subscriptions else self._last_subscribe
