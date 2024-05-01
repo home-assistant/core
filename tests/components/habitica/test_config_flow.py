@@ -31,25 +31,23 @@ MOCK_DATA_ADVANCED_STEP = {
 }
 
 
-async def test_user_menu(hass: HomeAssistant) -> None:
-    """Test if we get the menu selection."""
+async def test_form_login(hass: HomeAssistant) -> None:
+    """Test we get the login form."""
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.MENU
-    assert result["menu_options"] == ["login", "advanced"]
+    assert "login" in result["menu_options"]
     assert result["step_id"] == "user"
-
-
-async def test_form_login(hass: HomeAssistant) -> None:
-    """Test we get the login form."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "login"}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
+    assert result["step_id"] == "login"
 
     mock_obj = MagicMock()
     mock_obj.user.auth.local.login.post = AsyncMock()
@@ -97,6 +95,14 @@ async def test_form_login(hass: HomeAssistant) -> None:
 )
 async def test_form_login_errors(hass: HomeAssistant, raise_error, text_error) -> None:
     """Test we handle invalid credentials error."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "login"}
     )
@@ -118,6 +124,21 @@ async def test_form_login_errors(hass: HomeAssistant, raise_error, text_error) -
 
 async def test_form_advanced(hass: HomeAssistant) -> None:
     """Test we get the form."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert "advanced" in result["menu_options"]
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "advanced"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+    assert result["step_id"] == "advanced"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "advanced"}
@@ -170,6 +191,14 @@ async def test_form_advanced_errors(
     hass: HomeAssistant, raise_error, text_error
 ) -> None:
     """Test we handle invalid credentials error."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "advanced"}
     )
