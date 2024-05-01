@@ -28,19 +28,17 @@ class BroadlinkDateTime(BroadlinkEntity, DateTimeEntity):
     """Representation of a Broadlink date and time."""
 
     _attr_has_entity_name = True
+    _attr_native_value: datetime | None = None
 
     def __init__(self, device) -> None:
         """Initialize the sensor."""
         super().__init__(device)
 
         self._attr_unique_id = f"{device.unique_id}-datetime"
-        self._update_internal_state()
 
-    def _update_internal_state(self, value: datetime | None = None) -> None:
-        """Update internal state to immediately reflect user interaction in the UI."""
-        if value is not None:
-            self._attr_native_value = value
-        elif (data := self._coordinator.data) is None or "dayofweek" not in data:
+    def _update_state(self, data) -> None:
+        """Update the state of the entity."""
+        if data is None or "dayofweek" not in data:
             self._attr_native_value = None
         else:
             now = dt_util.now()
@@ -59,10 +57,6 @@ class BroadlinkDateTime(BroadlinkEntity, DateTimeEntity):
                 second=data["sec"],
             )
 
-    def _update_state(self, data):
-        """Update the state of the entity."""
-        self._update_internal_state()
-
     async def async_set_value(self, value: datetime) -> None:
         """Change the value."""
         value = dt_util.as_local(value)
@@ -73,5 +67,5 @@ class BroadlinkDateTime(BroadlinkEntity, DateTimeEntity):
             second=value.second,
             day=value.weekday() + 1,
         )
-        self._update_internal_state(value)
+        self._attr_native_value = value
         self.async_write_ha_state()
