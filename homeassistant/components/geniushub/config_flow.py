@@ -41,6 +41,7 @@ class GeniusHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="v3_api", data_schema=V3_API_SCHEMA)
 
+        self._async_abort_entries_match(user_input)
         errors = {}
 
         try:
@@ -89,6 +90,7 @@ class GeniusHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="v1_api", data_schema=V1_API_SCHEMA)
 
+        self._async_abort_entries_match(user_input)
         errors = {}
 
         try:
