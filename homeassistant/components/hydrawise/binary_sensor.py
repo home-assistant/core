@@ -28,7 +28,6 @@ RAIN_SENSOR_BINARY_SENSOR: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="rain_sensor",
         translation_key="rain_sensor",
-        icon="mdi:weather-pouring",
         device_class=BinarySensorDeviceClass.MOISTURE,
     ),
 )

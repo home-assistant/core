@@ -183,7 +183,7 @@ def controller_water_use_summary() -> ControllerWaterUseSummary:
         total_use=345.6,
         total_active_use=332.6,
         total_inactive_use=13.0,
-        active_use_by_zone_id={5965394: 120.1, 5965395: 212.5},
+        active_use_by_zone_id={5965394: 120.1, 5965395: 0.0},
         unit="gal",
     )
 

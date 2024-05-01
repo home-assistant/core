@@ -60,7 +60,7 @@ async def test_sensor_and_water_state(
 
     sensor = hass.states.get("sensor.zone_two_daily_active_water_use")
     assert sensor is not None
-    assert sensor.state == "804.4000041"
+    assert sensor.state == "0.0"
 
     sensor = hass.states.get("sensor.home_controller_daily_active_water_use")
     assert sensor is not None

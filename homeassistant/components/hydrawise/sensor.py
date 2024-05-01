@@ -26,7 +26,6 @@ FLOW_CONTROLLER_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="daily_total_water_use",
         translation_key="daily_total_water_use",
-        icon="mdi:water-pump",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=1,
@@ -34,7 +33,6 @@ FLOW_CONTROLLER_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="daily_active_water_use",
         translation_key="daily_active_water_use",
-        icon="mdi:water-pump",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=1,
@@ -42,7 +40,6 @@ FLOW_CONTROLLER_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="daily_inactive_water_use",
         translation_key="daily_inactive_water_use",
-        icon="mdi:water-pump",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=1,
@@ -53,7 +50,6 @@ FLOW_ZONE_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="daily_active_water_use",
         translation_key="daily_active_water_use",
-        icon="mdi:water-pump",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=1,
@@ -64,19 +60,16 @@ ZONE_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="next_cycle",
         translation_key="next_cycle",
-        icon="mdi:clock-outline",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     SensorEntityDescription(
         key="watering_time",
         translation_key="watering_time",
-        icon="mdi:timer-outline",
         native_unit_of_measurement=UnitOfTime.MINUTES,
     ),
 )
 
-TWO_YEAR_SECONDS = 60 * 60 * 24 * 365 * 2
-WATERING_TIME_ICON = "mdi:water-pump"
+FLOW_MEASUREMENT_KEYS = [x.key for x in FLOW_CONTROLLER_SENSORS]
 
 
 async def async_setup_entry(
@@ -117,6 +110,13 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
     """A sensor implementation for Hydrawise device."""
 
     zone: Zone
+
+    @property
+    def icon(self) -> str | None:
+        """Icon of the entity based on the value."""
+        if self.entity_description.key in FLOW_MEASUREMENT_KEYS and self.state < 0.01:
+            return "mdi:water-outline"
+        return None
 
     def _update_attrs(self) -> None:
         """Update state attributes."""
