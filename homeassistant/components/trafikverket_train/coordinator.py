@@ -90,7 +90,9 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
         self.to_station: StationInfo = to_station
         self._time: time | None = dt_util.parse_time(self.config_entry.data[CONF_TIME])
         self._weekdays: list[str] = self.config_entry.data[CONF_WEEKDAY]
-        self._filter_product = self.config_entry.options.get(CONF_FILTER_PRODUCT)
+        self._filter_product: str | None = self.config_entry.options.get(
+            CONF_FILTER_PRODUCT
+        )
 
     async def _async_update_data(self) -> TrainData:
         """Fetch data from Trafikverket."""
