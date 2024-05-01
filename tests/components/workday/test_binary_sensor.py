@@ -47,17 +47,17 @@ from tests.common import async_fire_time_changed
 @pytest.mark.parametrize(
     ("config", "expected_state", "expected_state_weekend"),
     [
-        (TEST_CONFIG_NO_COUNTRY, "on", "on"),
-        (TEST_CONFIG_WITH_PROVINCE, "off", "on"),
-        (TEST_CONFIG_NO_PROVINCE, "off", "on"),
-        (TEST_CONFIG_WITH_STATE, "on", "on"),
-        (TEST_CONFIG_NO_STATE, "on", "on"),
-        (TEST_CONFIG_EXAMPLE_1, "on", "on"),
-        (TEST_CONFIG_EXAMPLE_2, "off", "on"),
-        (TEST_CONFIG_TOMORROW, "off", "on"),
-        (TEST_CONFIG_DAY_AFTER_TOMORROW, "off", "on"),
-        (TEST_CONFIG_YESTERDAY, "on", "on"),
-        (TEST_CONFIG_NO_LANGUAGE_CONFIGURED, "off", "on"),
+        (TEST_CONFIG_NO_COUNTRY, "on", "off"),
+        (TEST_CONFIG_WITH_PROVINCE, "off", "off"),
+        (TEST_CONFIG_NO_PROVINCE, "off", "off"),
+        (TEST_CONFIG_WITH_STATE, "on", "off"),
+        (TEST_CONFIG_NO_STATE, "on", "off"),
+        (TEST_CONFIG_EXAMPLE_1, "on", "off"),
+        (TEST_CONFIG_EXAMPLE_2, "off", "off"),
+        (TEST_CONFIG_TOMORROW, "off", "off"),
+        (TEST_CONFIG_DAY_AFTER_TOMORROW, "off", "off"),
+        (TEST_CONFIG_YESTERDAY, "on", "off"),  # Friday was good Friday
+        (TEST_CONFIG_NO_LANGUAGE_CONFIGURED, "off", "off"),
     ],
 )
 async def test_setup(
@@ -68,7 +68,7 @@ async def test_setup(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test setup from various configs."""
-    freezer.move_to(datetime(2022, 4, 15, 12, tzinfo=UTC))  # Monday
+    freezer.move_to(datetime(2022, 4, 15, 12, tzinfo=UTC))  # Friday
     await init_integration(hass, config)
 
     state = hass.states.get("binary_sensor.workday_sensor")
@@ -81,7 +81,7 @@ async def test_setup(
         "days_offset": config["days_offset"],
     }
 
-    freezer.tick(timedelta(days=5))  # Saturday
+    freezer.tick(timedelta(days=1))  # Saturday
     async_fire_time_changed(hass)
 
     state = hass.states.get("binary_sensor.workday_sensor")
