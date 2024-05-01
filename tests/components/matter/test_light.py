@@ -18,13 +18,21 @@ from .common import (
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
-    ("fixture", "entity_id"),
+    ("fixture", "entity_id", "supported_color_modes"),
     [
-        ("extended-color-light", "light.mock_extended_color_light"),
-        ("color-temperature-light", "light.mock_color_temperature_light"),
-        ("dimmable-light", "light.mock_dimmable_light"),
-        ("onoff-light", "light.mock_onoff_light"),
-        ("onoff-light-with-levelcontrol-present", "light.d215s"),
+        (
+            "extended-color-light",
+            "light.mock_extended_color_light",
+            ["color_temp", "hs", "xy"],
+        ),
+        (
+            "color-temperature-light",
+            "light.mock_color_temperature_light",
+            ["color_temp"],
+        ),
+        ("dimmable-light", "light.mock_dimmable_light", ["brightness"]),
+        ("onoff-light", "light.mock_onoff_light", ["onoff"]),
+        ("onoff-light-with-levelcontrol-present", "light.d215s", ["onoff"]),
     ],
 )
 async def test_light_turn_on_off(
@@ -32,6 +40,7 @@ async def test_light_turn_on_off(
     matter_client: MagicMock,
     fixture: str,
     entity_id: str,
+    supported_color_modes: list[str],
 ) -> None:
     """Test basic light discovery and turn on/off."""
 
@@ -52,14 +61,7 @@ async def test_light_turn_on_off(
     # check the supported_color_modes
     # especially important is the onoff light device type that does have
     # a levelcontrol cluster present which we should ignore
-    if fixture in ("onoff-light", "onoff-light-with-levelcontrol-present"):
-        assert state.attributes["supported_color_modes"] == ["onoff"]
-    elif fixture == "extended-color-light":
-        assert state.attributes["supported_color_modes"] == ["color_temp", "hs", "xy"]
-    elif fixture == "color-temperature-light":
-        assert state.attributes["supported_color_modes"] == ["color_temp"]
-    elif fixture == "dimmable-light":
-        assert state.attributes["supported_color_modes"] == ["brightness"]
+    assert state.attributes["supported_color_modes"] == supported_color_modes
 
     # Test that the light is on
     set_node_attribute(light_node, 1, 6, 0, True)
