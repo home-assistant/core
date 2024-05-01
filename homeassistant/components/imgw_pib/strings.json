@@ -13,7 +13,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_station_list": "Unable to get the list of hydrological stations."
+      "cannot_connect": "Failed to connect"
     }
   },
   "entity": {

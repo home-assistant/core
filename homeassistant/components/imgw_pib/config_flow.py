@@ -61,7 +61,7 @@ class ImgwPibFlowHandler(ConfigFlow, domain=DOMAIN):
             imgwpib = await ImgwPib.create(client_session)
             await imgwpib.update_hydrological_stations()
         except (ClientError, TimeoutError, ApiError):
-            return self.async_abort(reason="no_station_list")
+            return self.async_abort(reason="cannot_connect")
 
         options: list[SelectOptionDict] = [
             SelectOptionDict(value=station_id, label=station_name)

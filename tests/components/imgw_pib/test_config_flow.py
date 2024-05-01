@@ -66,7 +66,7 @@ async def test_form_no_station_list(hass: HomeAssistant, exc: Exception) -> None
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "no_station_list"
+    assert result["reason"] == "cannot_connect"
 
 
 @pytest.mark.parametrize(
