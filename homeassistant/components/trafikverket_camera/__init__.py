@@ -25,7 +25,7 @@ TVCameraConfigEntry = ConfigEntry["TVDataUpdateCoordinator"]
 async def async_setup_entry(hass: HomeAssistant, entry: TVCameraConfigEntry) -> bool:
     """Set up Trafikverket Camera from a config entry."""
 
-    coordinator = TVDataUpdateCoordinator(hass, entry)
+    coordinator = TVDataUpdateCoordinator(hass)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 

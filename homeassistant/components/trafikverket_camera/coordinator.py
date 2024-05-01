@@ -39,7 +39,9 @@ class CameraData:
 class TVDataUpdateCoordinator(DataUpdateCoordinator[CameraData]):
     """A Trafikverket Data Update Coordinator."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Trafikverket coordinator."""
         super().__init__(
             hass,
@@ -48,8 +50,10 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[CameraData]):
             update_interval=TIME_BETWEEN_UPDATES,
         )
         self.session = async_get_clientsession(hass)
-        self._camera_api = TrafikverketCamera(self.session, entry.data[CONF_API_KEY])
-        self._id = entry.data[CONF_ID]
+        self._camera_api = TrafikverketCamera(
+            self.session, self.config_entry.data[CONF_API_KEY]
+        )
+        self._id = self.config_entry.data[CONF_ID]
 
     async def _async_update_data(self) -> CameraData:
         """Fetch data from Trafikverket."""
