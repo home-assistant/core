@@ -1096,11 +1096,10 @@ class MQTT:
         """Wait for ACK from broker."""
         # Create the mid event if not created, either _async_get_mid_future
         # or _async_wait_for_mid may be executed first.
-        future = self._async_get_mid_future(mid)
         loop = self.hass.loop
         timer_handle = loop.call_later(TIMEOUT_ACK, self._async_timeout_mid, mid)
         try:
-            await future
+            await self._async_get_mid_future(mid)
         except TimeoutError:
             _LOGGER.warning(
                 "No ACK from MQTT server in %s seconds (mid: %s)", TIMEOUT_ACK, mid
