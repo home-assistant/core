@@ -141,17 +141,17 @@ async def test_mqtt_connects_on_home_assistant_mqtt_setup(
     assert mqtt_client_mock.connect.call_count == 1
 
 
-async def test_mqtt_disconnects_on_home_assistant_stop(
+async def test_mqtt_does_not_disconnect_on_home_assistant_stop(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
-    """Test if client stops on HA stop."""
+    """Test if client is not disconnected on HA stop."""
     await mqtt_mock_entry()
     hass.bus.fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
-    assert mqtt_client_mock.disconnect.call_count == 1
+    assert mqtt_client_mock.disconnect.call_count == 0
 
 
 async def test_mqtt_await_ack_at_disconnect(
@@ -1873,6 +1873,7 @@ async def test_reload_entry_with_restored_subscriptions(
     # Setup the MQTT entry
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
     entry.add_to_hass(hass)
+    hass.config.components.add(mqtt.DOMAIN)
     mqtt_client_mock.connect.return_value = 0
     with patch("homeassistant.config.load_yaml_config_file", return_value={}):
         await entry.async_setup(hass)
@@ -2539,6 +2540,75 @@ async def test_delayed_birth_message(
     [
         {
             mqtt.CONF_BROKER: "mock-broker",
+            mqtt.CONF_BIRTH_MESSAGE: {
+                mqtt.ATTR_TOPIC: "homeassistant/status",
+                mqtt.ATTR_PAYLOAD: "online",
+                mqtt.ATTR_QOS: 0,
+                mqtt.ATTR_RETAIN: False,
+            },
+        }
+    ],
+)
+async def test_subscription_done_when_birth_message_is_sent(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_config_entry_data,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test sending birth message until initial subscription has been completed."""
+    mqtt_mock = await mqtt_mock_entry()
+
+    hass.set_state(CoreState.starting)
+    birth = asyncio.Event()
+
+    await hass.async_block_till_done()
+
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data=mqtt_config_entry_data)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    mqtt_component_mock = MagicMock(
+        return_value=hass.data["mqtt"].client,
+        wraps=hass.data["mqtt"].client,
+    )
+    mqtt_component_mock._mqttc = mqtt_client_mock
+
+    hass.data["mqtt"].client = mqtt_component_mock
+    mqtt_mock = hass.data["mqtt"].client
+    mqtt_mock.reset_mock()
+
+    @callback
+    def wait_birth(msg: ReceiveMessage) -> None:
+        """Handle birth message."""
+        birth.set()
+
+    mqtt_client_mock.reset_mock()
+    with patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0):
+        await mqtt.async_subscribe(hass, "homeassistant/status", wait_birth)
+        mqtt_client_mock.on_connect(None, None, 0, 0)
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        # We wait until we receive a birth message
+        await asyncio.wait_for(birth.wait(), 1)
+        # Assert we already have subscribed at the client
+        # for new config payloads at the time we the birth message is received
+        assert ("homeassistant/+/+/config", 0) in help_all_subscribe_calls(
+            mqtt_client_mock
+        )
+        assert ("homeassistant/+/+/+/config", 0) in help_all_subscribe_calls(
+            mqtt_client_mock
+        )
+        mqtt_client_mock.publish.assert_called_with(
+            "homeassistant/status", "online", 0, False
+        )
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_entry_data",
+    [
+        {
+            mqtt.CONF_BROKER: "mock-broker",
             mqtt.CONF_WILL_MESSAGE: {
                 mqtt.ATTR_TOPIC: "death",
                 mqtt.ATTR_PAYLOAD: "death",
@@ -2850,15 +2920,7 @@ async def test_mqtt_ws_remove_discovered_device(
 
     client = await hass_ws_client(hass)
     mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": mqtt_config_entry.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await client.receive_json()
+    response = await client.remove_device(device_entry.id, mqtt_config_entry.entry_id)
     assert response["success"]
 
     # Verify device entry is cleared

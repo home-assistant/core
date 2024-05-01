@@ -152,6 +152,7 @@ async def _async_start_adapter_discovery(
         cooldown=BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
         immediate=False,
         function=_async_rediscover_adapters,
+        background=True,
     )
 
     @hass_callback
