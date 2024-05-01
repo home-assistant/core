@@ -22,10 +22,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-if TYPE_CHECKING:
-    from . import TVTrainConfigEntry
 from .const import CONF_FILTER_PRODUCT, CONF_TIME, DOMAIN
 from .util import next_departuredate
+
+if TYPE_CHECKING:
+    from . import TVTrainConfigEntry
 
 
 @dataclass
