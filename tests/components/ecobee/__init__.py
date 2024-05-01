@@ -67,6 +67,7 @@ GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP = {
     "modelNumber": "athenaSmart",
     "utcTime": "2022-01-01 10:00:00",
     "thermostatTime": "2022-01-01 6:00:00",
+    "location": {"timeZone": "America/Toronto"},
     "program": {
         "climates": [
             {"name": "Climate1", "climateRef": "c1"},
