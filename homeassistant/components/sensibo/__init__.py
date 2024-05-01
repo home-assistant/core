@@ -21,7 +21,7 @@ SensiboConfigEntry = ConfigEntry["SensiboDataUpdateCoordinator"]
 async def async_setup_entry(hass: HomeAssistant, entry: SensiboConfigEntry) -> bool:
     """Set up Sensibo from a config entry."""
 
-    coordinator = SensiboDataUpdateCoordinator(hass, entry)
+    coordinator = SensiboDataUpdateCoordinator(hass)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
