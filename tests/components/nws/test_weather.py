@@ -188,18 +188,8 @@ async def test_error_observation(
 ) -> None:
     """Test error during update observation."""
     utc_time = dt_util.utcnow()
-    with (
-        patch("homeassistant.components.nws.utcnow") as mock_utc,
-        patch("homeassistant.components.nws.weather.utcnow") as mock_utc_weather,
-    ):
-
-        def increment_time(time):
-            mock_utc.return_value += time
-            mock_utc_weather.return_value += time
-            async_fire_time_changed(hass, mock_utc.return_value)
-
+    with patch("homeassistant.components.nws.utcnow") as mock_utc:
         mock_utc.return_value = utc_time
-        mock_utc_weather.return_value = utc_time
         instance = mock_simple_nws.return_value
         # first update fails
         instance.update_observation.side_effect = aiohttp.ClientError
@@ -213,37 +203,6 @@ async def test_error_observation(
         await hass.async_block_till_done()
 
         instance.update_observation.assert_called_once()
-
-        state = hass.states.get("weather.abc")
-        assert state
-        assert state.state == STATE_UNAVAILABLE
-
-        # second update happens faster and succeeds
-        instance.update_observation.side_effect = None
-        increment_time(timedelta(minutes=1))
-        await hass.async_block_till_done()
-
-        assert instance.update_observation.call_count == 2
-
-        state = hass.states.get("weather.abc")
-        assert state
-        assert state.state == ATTR_CONDITION_SUNNY
-
-        # third udate fails, but data is cached
-        instance.update_observation.side_effect = aiohttp.ClientError
-
-        increment_time(timedelta(minutes=10))
-        await hass.async_block_till_done()
-
-        assert instance.update_observation.call_count == 3
-
-        state = hass.states.get("weather.abc")
-        assert state
-        assert state.state == ATTR_CONDITION_SUNNY
-
-        # after 20 minutes data caching expires, data is no longer shown
-        increment_time(timedelta(minutes=10))
-        await hass.async_block_till_done()
 
         state = hass.states.get("weather.abc")
         assert state

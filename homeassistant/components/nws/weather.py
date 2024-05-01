@@ -35,7 +35,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.dt import utcnow
 from homeassistant.util.unit_conversion import SpeedConverter, TemperatureConverter
 
 from . import NWSData, base_unique_id, device_info
@@ -47,7 +46,6 @@ from .const import (
     DOMAIN,
     FORECAST_VALID_TIME,
     HOURLY,
-    OBSERVATION_VALID_TIME,
 )
 
 PARALLEL_UPDATES = 0
@@ -285,19 +283,6 @@ class NWSWeather(CoordinatorWeatherEntity):
     def _async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Return the twice daily forecast in native units."""
         return self._forecast(self.nws.forecast, DAYNIGHT)
-
-    @property
-    def available(self) -> bool:
-        """Return if state is available."""
-
-        if self.coordinator.last_update_success_time:
-            last_success_time = (
-                utcnow() - self.coordinator.last_update_success_time
-                < OBSERVATION_VALID_TIME
-            )
-        else:
-            last_success_time = False
-        return self.coordinator.last_update_success or last_success_time
 
     async def async_update(self) -> None:
         """Update the entity.
