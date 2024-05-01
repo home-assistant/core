@@ -122,28 +122,41 @@ class DioChaconShade(RestoreEntity, CoverEntity):
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
 
-        _LOGGER.debug("Close cover %s , %s", self._target_id, self._attr_name)
-
-        self._attr_is_closing = True
-        self.async_write_ha_state()
-
-        await self.dio_chacon_client.move_shutter_direction(
-            self._target_id, ShutterMoveEnum.DOWN
+        _LOGGER.debug(
+            "Close cover %s , %s, %s",
+            self._target_id,
+            self._attr_name,
+            self._attr_is_closed,
         )
+
+        # closes effectively only if cover is not already closing and not fully closed
+        if not self._attr_is_closing and not self._attr_is_closed:
+            self._attr_is_closing = True
+            self.async_write_ha_state()
+            await self.dio_chacon_client.move_shutter_direction(
+                self._target_id, ShutterMoveEnum.DOWN
+            )
 
         # Closed signal is managed via a callback _on_device_state_changed
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
 
-        _LOGGER.debug("Open cover %s , %s", self._target_id, self._attr_name)
-
-        self._attr_is_opening = True
-        self.async_write_ha_state()
-
-        await self.dio_chacon_client.move_shutter_direction(
-            self._target_id, ShutterMoveEnum.UP
+        _LOGGER.debug(
+            "Open cover %s , %s, %s",
+            self._target_id,
+            self._attr_name,
+            self.current_cover_position,
         )
+
+        # opens effectively only if cover is not already opening and not fully opened
+        if not self._attr_is_opening and self.current_cover_position != 100:
+            self._attr_is_opening = True
+            self.async_write_ha_state()
+
+            await self.dio_chacon_client.move_shutter_direction(
+                self._target_id, ShutterMoveEnum.UP
+            )
 
         # Opened signal is managed via a callback _on_device_state_changed
 
