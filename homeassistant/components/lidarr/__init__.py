@@ -22,8 +22,8 @@ from .coordinator import (
     LidarrDataUpdateCoordinator,
     QueueDataUpdateCoordinator,
     StatusDataUpdateCoordinator,
-    WantedDataUpdateCoordinator,
     T,
+    WantedDataUpdateCoordinator,
 )
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
