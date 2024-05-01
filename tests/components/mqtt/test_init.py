@@ -2074,16 +2074,17 @@ async def test_handle_mqtt_on_callback(
 ) -> None:
     """Test receiving an ACK callback before waiting for it."""
     await mqtt_mock_entry()
-    # Simulate an ACK for mid == 2, this will call mqtt_mock._async_get_mid_future(mid)
-    mqtt_client_mock.on_publish(mqtt_client_mock, None, 2)
-    await hass.async_block_till_done()
-    # Make sure the ACK has been received
-    await hass.async_block_till_done()
-    # Now call publish without call back, this will call _async_wait_for_mid(msg_info.mid)
-    await mqtt.async_publish(hass, "no_callback/test-topic", "test-payload")
-    # Since the mid event was already set, we should not see any timeout warning in the log
-    await hass.async_block_till_done()
-    assert "No ACK from MQTT server" not in caplog.text
+    with patch.object(mqtt_client_mock, "get_mid", return_value=100):
+        # Simulate an ACK for mid == 2, this will call mqtt_mock._async_get_mid_future(mid)
+        mqtt_client_mock.on_publish(mqtt_client_mock, None, 100)
+        await hass.async_block_till_done()
+        # Make sure the ACK has been received
+        await hass.async_block_till_done()
+        # Now call publish without call back, this will call _async_wait_for_mid(msg_info.mid)
+        await mqtt.async_publish(hass, "no_callback/test-topic", "test-payload")
+        # Since the mid event was already set, we should not see any timeout warning in the log
+        await hass.async_block_till_done()
+        assert "No ACK from MQTT server" not in caplog.text
 
 
 async def test_publish_error(
