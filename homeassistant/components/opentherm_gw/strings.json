@@ -201,11 +201,11 @@
         },
         "transp_cmd": {
           "name": "Command",
-          "description": "The command to be send to the OpenTherm Gateway."
+          "description": "The command to be sent to the OpenTherm Gateway."
         },
         "transp_arg": {
           "name": "Argument",
-           "description": "The argument of the command to be send to the OpenTherm Gateway."
+           "description": "The argument of the command to be sent to the OpenTherm Gateway."
         }
       }
     }
