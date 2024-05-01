@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_URL
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -201,7 +201,6 @@ class HabitipySensor(CoordinatorEntity[HabiticaDataUpdateCoordinator], SensorEnt
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
             model=NAME,
-            name=entry.data[CONF_NAME],
             configuration_url=entry.data[CONF_URL],
             identifiers={(DOMAIN, entry.unique_id)},
         )
@@ -232,7 +231,6 @@ class HabitipyTaskSensor(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
             model=NAME,
-            name=entry.data[CONF_NAME],
             configuration_url=entry.data[CONF_URL],
             identifiers={(DOMAIN, entry.unique_id)},
         )

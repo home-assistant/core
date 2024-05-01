@@ -2,6 +2,7 @@
 
 from http import HTTPStatus
 import logging
+from typing import TYPE_CHECKING
 
 from aiohttp import ClientResponseError
 from habitipy.aio import HabitipyAsync
@@ -133,7 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HabiticaConfigEntry) -> 
                 api = entry.runtime_data.api
                 break
         if api is None:
-            _LOGGER.error("API_CALL: User '%s' not configured", name)
+            _LOGGER.error("API_CALL: User '%s' not configured", entry.title)
             return
         try:
             for element in path:
@@ -146,7 +147,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HabiticaConfigEntry) -> 
         kwargs = call.data.get(ATTR_ARGS, {})
         data = await api(**kwargs)
         hass.bus.async_fire(
-            EVENT_API_CALL_SUCCESS, {ATTR_NAME: name, ATTR_PATH: path, ATTR_DATA: data}
+            EVENT_API_CALL_SUCCESS,
+            {ATTR_NAME: entry.title, ATTR_PATH: path, ATTR_DATA: data},
         )
 
     websession = async_get_clientsession(

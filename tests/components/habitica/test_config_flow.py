@@ -77,10 +77,8 @@ async def test_form_login(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-username"
-    assert result["data"] == {
-        **MOCK_DATA_ADVANCED_STEP,
-        CONF_USERNAME: "test-username",
-    }
+    assert result["data"] == MOCK_DATA_ADVANCED_STEP
+
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -171,10 +169,7 @@ async def test_form_advanced(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test-username"
-    assert result2["data"] == {
-        **MOCK_DATA_ADVANCED_STEP,
-        CONF_USERNAME: "test-username",
-    }
+    assert result2["data"] == MOCK_DATA_ADVANCED_STEP
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
