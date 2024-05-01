@@ -163,14 +163,14 @@ async def test_call_tool_no_existing(hass: HomeAssistant) -> None:
 
 def test_custom_serializer() -> None:
     """Test custom serializer."""
-    assert llm.custom_serializer(cv.string) == {"type": "string"}
-    assert llm.custom_serializer(cv.boolean) == {"type": "boolean"}
-    assert llm.custom_serializer(color_name_to_rgb) == {"type": "string"}
-    assert llm.custom_serializer(cv.multi_select(["alpha", "beta"])) == {
+    assert llm.default_custom_serializer(cv.string) == {"type": "string"}
+    assert llm.default_custom_serializer(cv.boolean) == {"type": "boolean"}
+    assert llm.default_custom_serializer(color_name_to_rgb) == {"type": "string"}
+    assert llm.default_custom_serializer(cv.multi_select(["alpha", "beta"])) == {
         "enum": ["alpha", "beta"]
     }
-    assert llm.custom_serializer(lambda x: x) == {}
-    assert llm.custom_serializer("unsupported") == UNSUPPORTED
+    assert llm.default_custom_serializer(lambda x: x) == {}
+    assert llm.default_custom_serializer("unsupported") == UNSUPPORTED
 
 
 async def test_intent_tool(hass: HomeAssistant) -> None:
@@ -178,7 +178,7 @@ async def test_intent_tool(hass: HomeAssistant) -> None:
     tool = llm.IntentTool("test_intent")
     assert tool.name == "test_intent"
     assert tool.description == "Execute Home Assistant test_intent intent"
-    assert tool.parameters == llm.NO_PARAMETERS
+    assert tool.parameters == vol.Schema({})
     assert str(tool) == "<IntentTool - test_intent>"
 
     test_context = Context()
@@ -234,25 +234,28 @@ async def test_intent_tool_with_area_and_floor(
     floor_registry: fr.FloorRegistry,
 ) -> None:
     """Test llm.IntentTool call with area and floor."""
-    tool = llm.IntentTool(
-        "test_intent",
-        vol.Schema(
-            {
-                vol.Optional("test_arg", description="test arg description"): cv.string,
-                vol.Optional("area"): cv.string,
-                vol.Optional("floor"): cv.string,
-            },
-        ),
+    schema = vol.Schema(
+        {
+            vol.Optional("test_arg", description="test arg description"): cv.string,
+            vol.Optional("area"): cv.string,
+            vol.Optional("floor"): cv.string,
+        }
     )
+    tool = llm.IntentTool("test_intent", schema)
     assert tool.description == "Execute Home Assistant test_intent intent"
-    assert tool.parameters == {
-        "type": "object",
-        "properties": {
-            "test_arg": {"type": "string", "description": "test arg description"},
-            "area": {"type": "string"},
-            "floor": {"type": "string"},
+    assert tool.parameters == schema
+    assert tool.as_dict() == {
+        "name": "test_intent",
+        "description": "Execute Home Assistant test_intent intent",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "test_arg": {"type": "string", "description": "test arg description"},
+                "area": {"type": "string"},
+                "floor": {"type": "string"},
+            },
+            "required": [],
         },
-        "required": [],
     }
 
     area_kitchen = area_registry.async_get_or_create("kitchen")

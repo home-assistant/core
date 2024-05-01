@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
+from functools import cached_property
 import json
 import logging
 from types import FunctionType
@@ -21,7 +22,29 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_KEY = "llm_tool"
 
-NO_PARAMETERS = {"type": "object", "properties": {}, "required": []}
+
+def default_custom_serializer(schema: Any) -> Any:
+    """Serialize additional types in OpenAPI-compatible format."""
+    from homeassistant.util.color import (  # pylint: disable=import-outside-toplevel
+        color_name_to_rgb,
+    )
+
+    if schema is cv.string:
+        return {"type": "string"}
+
+    if schema is cv.boolean:
+        return {"type": "boolean"}
+
+    if schema is color_name_to_rgb:
+        return {"type": "string"}
+
+    if isinstance(schema, cv.multi_select):
+        return {"enum": schema.options}
+
+    if isinstance(schema, FunctionType):
+        return {}
+
+    return UNSUPPORTED
 
 
 class Tool:
@@ -29,26 +52,32 @@ class Tool:
 
     name: str
     description: str
-    parameters: dict[str, Any]
-
-    @property
-    def specification(self) -> dict[str, Any]:
-        """Get the tool specification."""
-        return {
-            "name": self.name,
-            "description": self.description,
-            "parameters": self.parameters,
-        }
+    parameters: vol.Schema
+    custom_serializer: Callable[[Any], Any]
 
     def __init__(
-        self, name: str, description: str, parameters: dict[str, Any] | None = None
+        self,
+        name: str,
+        description: str,
+        parameters: vol.Schema = vol.Schema({}),
+        custom_serializer: Callable[[Any], Any] = default_custom_serializer,
     ) -> None:
         """Init the class."""
-        if parameters is None:
-            parameters = NO_PARAMETERS
         self.name = name
         self.description = description
         self.parameters = parameters
+        self.custom_serializer = custom_serializer
+
+    @cached_property
+    def specification(self) -> dict[str, Any]:
+        """Get the tool specification in OpenAPI-compatible format."""
+        return {
+            "name": self.name,
+            "description": self.description,
+            "parameters": convert(
+                self.parameters, custom_serializer=self.custom_serializer
+            ),
+        }
 
     @abstractmethod
     async def async_call(
@@ -66,6 +95,10 @@ class Tool:
     ) -> Any:
         """Call the tool."""
         raise NotImplementedError
+
+    def as_dict(self) -> dict[str, Any]:
+        """Get the tool specification in OpenAPI-compatible format."""
+        return self.specification
 
     def __repr__(self) -> str:
         """Represent a string of a Tool."""
@@ -149,30 +182,6 @@ async def async_call_tool(
     return json_response
 
 
-def custom_serializer(schema: Any) -> Any:
-    """Serialize additional types in OpenAPI-compatible format."""
-    from homeassistant.util.color import (  # pylint: disable=import-outside-toplevel
-        color_name_to_rgb,
-    )
-
-    if schema is cv.string:
-        return {"type": "string"}
-
-    if schema is cv.boolean:
-        return {"type": "boolean"}
-
-    if schema is color_name_to_rgb:
-        return {"type": "string"}
-
-    if isinstance(schema, cv.multi_select):
-        return {"enum": schema.options}
-
-    if isinstance(schema, FunctionType):
-        return {}
-
-    return UNSUPPORTED
-
-
 class IntentTool(Tool):
     """LLM Tool representing an Intent."""
 
@@ -187,7 +196,7 @@ class IntentTool(Tool):
         super().__init__(
             intent_type,
             f"Execute Home Assistant {intent_type} intent",
-            convert(slot_schema, custom_serializer=custom_serializer),
+            slot_schema,
         )
 
     async def async_call(

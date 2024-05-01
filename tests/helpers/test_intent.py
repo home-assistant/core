@@ -284,10 +284,7 @@ def test_async_register_dynamic_service_intent_handler(hass: HomeAssistant) -> N
     llm_tool = hass.data[llm.DATA_KEY]["test_intent"]
     assert llm_tool.name == "test_intent"
     assert isinstance(llm_tool, llm.IntentTool)
-    assert llm_tool.parameters["properties"] == {
-        "extra_slot": {"type": "string"},
-        "test_slot": {"type": "string"},
-    }
+    assert llm_tool.parameters.schema == {"extra_slot": str, "test_slot": str}
 
 
 def test_async_register_overwrite(hass: HomeAssistant) -> None:
