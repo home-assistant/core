@@ -30,7 +30,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity, SensiboMotionBaseEntity
 
@@ -235,7 +234,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Sensibo sensor platform."""
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: SensiboDataUpdateCoordinator = entry.runtime_data
 
     entities: list[SensiboMotionSensor | SensiboDeviceSensor] = []
 

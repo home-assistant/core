@@ -56,7 +56,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Sensibo number platform."""
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: SensiboDataUpdateCoordinator = entry.runtime_data
 
     async_add_entities(
         SensiboSelect(coordinator, device_id, description)

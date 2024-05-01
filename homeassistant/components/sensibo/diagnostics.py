@@ -8,7 +8,6 @@ from homeassistant.components.diagnostics.util import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
 
 TO_REDACT = {
@@ -34,7 +33,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for Sensibo config entry."""
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: SensiboDataUpdateCoordinator = entry.runtime_data
     diag_data = {}
     diag_data["raw"] = async_redact_data(coordinator.data.raw, TO_REDACT)
     for device, device_data in coordinator.data.parsed.items():

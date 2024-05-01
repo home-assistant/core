@@ -121,7 +121,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Sensibo climate entry."""
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: SensiboDataUpdateCoordinator = entry.runtime_data
 
     entities = [
         SensiboClimate(coordinator, device_id)
