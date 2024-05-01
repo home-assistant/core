@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import UnitOfLength, UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -89,11 +89,9 @@ class ImgwPibSensorEntity(
 
         self._attr_unique_id = f"{coordinator.station_id}_{description.key}"
         self._attr_device_info = coordinator.device_info
-        self._attr_native_value = description.value(coordinator.data)
         self.entity_description = description
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_native_value = self.entity_description.value(self.coordinator.data)
-        self.async_write_ha_state()
+    @property
+    def native_value(self) -> StateType:
+        """Return the value reported by the sensor."""
+        return self.entity_description.value(self.coordinator.data)
