@@ -12,7 +12,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import ATTR_DURATION, DOMAIN, GeniusZone
 
@@ -28,10 +27,17 @@ SET_SWITCH_OVERRIDE_SCHEMA = {
 }
 
 
-def _do_setup(
+async def async_setup_entry(
     hass: HomeAssistant,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+    """Set up the Genius Hub switch entities."""
+    config = hass.data[DOMAIN][entry.entry_id]
+    # Update our config to include new repos and remove those that have been removed.
+    if entry.options:
+        config.update(entry.options)
+
     broker = hass.data[DOMAIN]["broker"]
 
     async_add_entities(
@@ -51,33 +57,6 @@ def _do_setup(
         SET_SWITCH_OVERRIDE_SCHEMA,
         "async_turn_on",
     )
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the Genius Hub switch entities."""
-    config = hass.data[DOMAIN][entry.entry_id]
-    # Update our config to include new repos and remove those that have been removed.
-    if entry.options:
-        config.update(entry.options)
-
-    _do_setup(hass, async_add_entities)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Genius Hub switch entities."""
-    if discovery_info is None:
-        return
-
-    _do_setup(hass, async_add_entities)
 
 
 class GeniusSwitch(GeniusZone, SwitchEntity):

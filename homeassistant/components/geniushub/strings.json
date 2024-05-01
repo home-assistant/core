@@ -4,24 +4,24 @@
       "user": {
         "title": "Genius Hub Configuration",
         "menu_options": {
-          "option_1": "Option 1: Hub hostname/address with user credentials",
-          "option_2": "Option 2: Hub token only"
+          "v3_api": "Local (recommended): IP address and user credentials",
+          "v1_api": "Cloud: API token and MAC address"
         }
       },
-      "option_1": {
-        "title": "Genius Hub Configuration Option 1",
+      "v3_api": {
+        "title": "Genius Hub Local Configuration",
         "data": {
-          "host": "The hostname/IP address of the Genius Hub.",
-          "mac": "The MAC address of the Hub’s ethernet port.",
-          "password": "Your Genius Hub password.",
-          "username": "Your Genius Hub username."
+          "host": "[%key:common::config_flow::data::ip%]",
+          "mac": "MAC address",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         }
       },
-      "option_2": {
-        "title": "Genius Hub Configuration Option 2",
+      "v1_api": {
+        "title": "Genius Hub Cloud Configuration",
         "data": {
-          "token": "The Hub Token of the Genius Hub.",
-          "mac": "The MAC address of the Hub’s ethernet port."
+          "token": "[%key:common::config_flow::data::access_token%]",
+          "mac": "MAC address"
         }
       }
     },

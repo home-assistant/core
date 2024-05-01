@@ -43,14 +43,7 @@ from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
-from .const import (
-    DEFAULT_GENIISHUB_MAC,
-    DEFAULT_GENIISHUB_TOKEN,
-    DEFAULT_GENIUSHUB_HOST,
-    DEFAULT_GENIUSHUB_PASSWORD,
-    DEFAULT_GENIUSHUB_USERNAME,
-    DOMAIN,
-)
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,35 +62,21 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 MAC_ADDRESS_REGEXP = r"^([0-9A-F]{2}:){5}([0-9A-F]{2})$"
 
-data = {
-    CONF_MAC: DEFAULT_GENIISHUB_MAC,
-    CONF_TOKEN: DEFAULT_GENIISHUB_TOKEN,
-    CONF_HOST: DEFAULT_GENIUSHUB_HOST,
-    CONF_PASSWORD: DEFAULT_GENIUSHUB_PASSWORD,
-    CONF_USERNAME: DEFAULT_GENIUSHUB_USERNAME,
-}
-
 V1_API_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_TOKEN, default=data.get(CONF_TOKEN)): cv.string,
-        vol.Required(
-            CONF_MAC, default=data.get(CONF_MAC)
-        ): cv.string,  # vol.Match(MAC_ADDRESS_REGEXP),
-    },
-    extra=vol.PREVENT_EXTRA,
+        vol.Required(CONF_TOKEN): cv.string,
+        vol.Required(CONF_MAC): cv.string,  # vol.Match(MAC_ADDRESS_REGEXP),
+    }
 )
 
 
 V3_API_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST, default=data.get(CONF_HOST)): cv.string,
-        vol.Required(CONF_USERNAME, default=data.get(CONF_USERNAME)): cv.string,
-        vol.Required(CONF_PASSWORD, default=data.get(CONF_PASSWORD)): cv.string,
-        vol.Optional(
-            CONF_MAC, default=data.get(CONF_MAC)
-        ): cv.string,  # vol.Match(MAC_ADDRESS_REGEXP),
-    },
-    extra=vol.PREVENT_EXTRA,
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_MAC): cv.string,  # vol.Match(MAC_ADDRESS_REGEXP),
+    }
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -151,16 +130,11 @@ async def validate_input(
     else:
         args = (hass_data.pop(CONF_TOKEN),)
 
-    hub_uid = hass_data.pop(CONF_MAC, None)
-
     client = GeniusHub(*args, **hass_data, session=async_get_clientsession(hass))
-
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN]["broker"] = GeniusBroker(hass, client, hub_uid)
 
     await client.update()
 
-    _LOGGER.debug("config_flow.py:validate_input: ", extra=hass_data)
+    _LOGGER.debug("__init__.py:validate_input: ", extra=hass_data)
 
     return {"title": args}
 
@@ -178,7 +152,7 @@ async def _async_import(hass: HomeAssistant, base_config: ConfigType) -> None:
             hass,
             HOMEASSISTANT_DOMAIN,
             f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2024.7.0",
+            breaks_in_ha_version="2024.12.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
@@ -193,7 +167,7 @@ async def _async_import(hass: HomeAssistant, base_config: ConfigType) -> None:
         hass,
         DOMAIN,
         f"deprecated_yaml_import_issue_{result['reason']}",
-        breaks_in_ha_version="2024.7.0",
+        breaks_in_ha_version="2024.12.0",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=IssueSeverity.WARNING,
@@ -203,32 +177,6 @@ async def _async_import(hass: HomeAssistant, base_config: ConfigType) -> None:
             "integration_title": "Genius Hub",
         },
     )
-
-
-async def do_setup(hass: HomeAssistant, kwargs):
-    """Create a Genius Hub client and broker."""
-    if CONF_HOST in kwargs:
-        args = (kwargs.pop(CONF_HOST),)
-    else:
-        args = (kwargs.pop(CONF_TOKEN),)
-    hub_uid = kwargs.pop(CONF_MAC, None)
-
-    client = GeniusHub(*args, **kwargs, session=async_get_clientsession(hass))
-
-    broker = hass.data[DOMAIN]["broker"] = GeniusBroker(hass, client, hub_uid)
-
-    try:
-        await client.update()
-    except aiohttp.ClientResponseError as err:
-        _LOGGER.error("Setup failed, check your configuration, %s", err)
-        return False
-    broker.make_debug_log_entries()
-
-    async_track_time_interval(hass, broker.async_update, SCAN_INTERVAL)
-
-    setup_service_functions(hass, broker)
-
-    return True
 
 
 async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
@@ -242,15 +190,29 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     """Create a Genius Hub system."""
     hass.data.setdefault(DOMAIN, {})
     hass_data = dict(config.data)
-    # # Registers update listener to update config entry when options are updated.
-    # unsub_options_update_listener = entry.add_update_listener(options_update_listener)
-    # # Store a reference to the unsubscribe function to cleanup if an entry is unloaded.
-    # hass_data["unsub_options_update_listener"] = unsub_options_update_listener
     hass.data[DOMAIN][config.entry_id] = hass_data
 
-    result = await do_setup(hass, hass_data)
-    if not result:
+    # Create a Genius Hub client and broker
+    if CONF_HOST in hass_data:
+        args = (hass_data.pop(CONF_HOST),)
+    else:
+        args = (hass_data.pop(CONF_TOKEN),)
+    hub_uid = hass_data.pop(CONF_MAC, None)
+
+    client = GeniusHub(*args, **hass_data, session=async_get_clientsession(hass))
+
+    broker = hass.data[DOMAIN]["broker"] = GeniusBroker(hass, client, hub_uid)
+
+    try:
+        await client.update()
+    except aiohttp.ClientResponseError as err:
+        _LOGGER.error("Setup failed, check your configuration, %s", err)
         return False
+    broker.make_debug_log_entries()
+
+    async_track_time_interval(hass, broker.async_update, SCAN_INTERVAL)
+
+    setup_service_functions(hass, broker)
 
     for platform in PLATFORMS:
         hass.async_create_task(

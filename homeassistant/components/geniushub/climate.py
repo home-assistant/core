@@ -13,7 +13,6 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, GeniusHeatingZone
 
@@ -27,22 +26,6 @@ GH_PRESET_TO_HA = {v: k for k, v in HA_PRESET_TO_GH.items()}
 GH_ZONES = ["radiator", "wet underfloor"]
 
 
-def _do_setup(
-    hass: HomeAssistant,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    broker = hass.data[DOMAIN]["broker"]
-
-    async_add_entities(
-        [
-            GeniusClimateZone(broker, z)
-            for z in broker.client.zone_objs
-            if z.data.get("type") in GH_ZONES
-        ],
-        update_before_add=True,
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -54,20 +37,16 @@ async def async_setup_entry(
     if entry.options:
         config.update(entry.options)
 
-    _do_setup(hass, async_add_entities)
+    broker = hass.data[DOMAIN]["broker"]
 
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Genius Hub climate entities."""
-    if discovery_info is None:
-        return
-
-    _do_setup(hass, async_add_entities)
+    async_add_entities(
+        [
+            GeniusClimateZone(broker, z)
+            for z in broker.client.zone_objs
+            if z.data.get("type") in GH_ZONES
+        ],
+        update_before_add=True,
+    )
 
 
 class GeniusClimateZone(GeniusHeatingZone, ClimateEntity):
