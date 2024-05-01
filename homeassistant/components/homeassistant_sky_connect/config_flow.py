@@ -597,6 +597,21 @@ class HomeAssistantSkyConnectMultiPanOptionsFlowHandler(
         """Return the name of the hardware."""
         return self._hw_variant.full_name
 
+    async def async_step_flashing_complete(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Finish flashing and update the config entry."""
+        self.hass.config_entries.async_update_entry(
+            entry=self.config_entry,
+            data={
+                **self.config_entry.data,
+                "firmware": ApplicationType.EZSP.value,
+            },
+            options=self.config_entry.options,
+        )
+
+        return await super().async_step_flashing_complete(user_input)
+
 
 class HomeAssistantSkyConnectOptionsFlowHandler(
     BaseFirmwareInstallFlow, OptionsFlowWithConfigEntry
