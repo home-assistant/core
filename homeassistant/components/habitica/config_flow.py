@@ -178,4 +178,4 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                 "integration_title": "Habitica",
             },
         )
-        return await self.async_step_user(import_data)
+        return await self.async_step_advanced(import_data)

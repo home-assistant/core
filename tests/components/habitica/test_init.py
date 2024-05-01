@@ -51,6 +51,7 @@ def common_requests(aioclient_mock):
         "https://habitica.com/api/v3/user",
         json={
             "data": {
+                "auth": {"local": {"username": TEST_USER_NAME}},
                 "api_user": "test-api-user",
                 "profile": {"name": TEST_USER_NAME},
                 "stats": {
