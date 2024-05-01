@@ -15,7 +15,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_registry = dr.async_get(hass)
     if device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)}):
         device_registry.async_clear_config_entry(entry.entry_id)
-    coordinator = DwdWeatherWarningsCoordinator(hass, entry)
+    coordinator = DwdWeatherWarningsCoordinator(hass)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
