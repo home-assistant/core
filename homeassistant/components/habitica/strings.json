@@ -60,9 +60,6 @@
     }
   },
   "exceptions": {
-    "service_user_not_configured": {
-      "message": "Failed to call service {service}. User `{user}` not configured"
-    },
     "sevice_invalid_path": {
       "message": "Failed to call service {service}. Path `{path}` is invalid for API on `{element}` element"
     }
@@ -72,9 +69,9 @@
       "name": "API name",
       "description": "Calls Habitica API.",
       "fields": {
-        "name": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "description": "Habitica's username to call for."
+        "config_entry": {
+          "name": "Habitica user",
+          "description": "The Habitica user to call for"
         },
         "path": {
           "name": "[%key:common::config_flow::data::path%]",

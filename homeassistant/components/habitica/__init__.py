@@ -9,7 +9,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_NAME,
     CONF_API_KEY,
     CONF_NAME,
     CONF_SENSORS,
@@ -25,16 +24,16 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import ConfigEntrySelector
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_ARGS,
-    ATTR_DATA,
+    ATTR_CONFIG_ENTRY,
     ATTR_PATH,
     CONF_API_USER,
     DEFAULT_URL,
     DOMAIN,
-    EVENT_API_CALL_SUCCESS,
     SERVICE_API_CALL,
 )
 
@@ -87,7 +86,7 @@ PLATFORMS = [Platform.SENSOR]
 
 SERVICE_API_CALL_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_NAME): str,
+        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
         vol.Required(ATTR_PATH): vol.All(cv.ensure_list, [str]),
         vol.Optional(ATTR_ARGS): dict,
     }
@@ -121,23 +120,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return super().__call__(websession, **kwargs)
 
     async def handle_api_call(call: ServiceCall) -> ServiceResponse:
-        name = call.data[ATTR_NAME]
         path = call.data[ATTR_PATH]
-        entries = hass.config_entries.async_entries(DOMAIN)
-        api = None
-        for entry in entries:
-            if entry.data[CONF_NAME] == name:
-                api = hass.data[DOMAIN].get(entry.entry_id)
-                break
-        if api is None:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="service_user_not_configured",
-                translation_placeholders={
-                    "service": f"{DOMAIN}.{SERVICE_API_CALL}",
-                    "user": name,
-                },
-            )
+        entry_id: str = call.data[ATTR_CONFIG_ENTRY]
+
+        api = hass.data[DOMAIN][entry_id]
+
         for element in path:
             try:
                 api = api[element]
@@ -159,9 +146,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except (ValueError, TypeError, ClientResponseError) as e:
             raise HomeAssistantError(e) from e
 
-        hass.bus.async_fire(
-            EVENT_API_CALL_SUCCESS, {ATTR_NAME: name, ATTR_PATH: path, ATTR_DATA: data}
-        )
         return {"data": data}
 
     data = hass.data.setdefault(DOMAIN, {})
