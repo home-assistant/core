@@ -1056,8 +1056,6 @@ class MQTT:
         # The callback signature for on_unsubscribe is different from on_subscribe
         # see https://github.com/eclipse/paho.mqtt.python/issues/687
         # properties and reason codes are not used in Home Assistant
-        # Create the mid event if not created, either _mqtt_handle_mid or _wait_for_mid
-        # may be executed first.
         future = self._async_get_mid_future(mid)
         if future.done():
             _LOGGER.warning("Received duplicate mid: %s", mid)
