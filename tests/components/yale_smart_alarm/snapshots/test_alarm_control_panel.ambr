@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_binary_sensor[load_platforms0][alarm_control_panel.yale_smart_alarm-entry]
+# name: test_alarm_control_panel[load_platforms0][alarm_control_panel.yale_smart_alarm-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -32,7 +32,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[load_platforms0][alarm_control_panel.yale_smart_alarm-state]
+# name: test_alarm_control_panel[load_platforms0][alarm_control_panel.yale_smart_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'changed_by': None,
