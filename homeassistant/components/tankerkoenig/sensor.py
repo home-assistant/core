@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from aiotankerkoenig import GasType, PriceInfo, Station
+from aiotankerkoenig import GasType, Station
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CURRENCY_EURO
@@ -109,5 +109,5 @@ class FuelPriceSensor(TankerkoenigCoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> float:
         """Return the current price for the fuel type."""
-        info: PriceInfo = self.coordinator.data[self._station_id]
+        info = self.coordinator.data[self._station_id]
         return getattr(info, self._fuel_type)
