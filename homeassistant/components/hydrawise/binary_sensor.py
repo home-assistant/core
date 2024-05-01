@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import cast
-
 from pydrawise.schema import Zone
 
 from homeassistant.components.binary_sensor import (
@@ -67,5 +65,5 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
         if self.entity_description.key == "status":
             self._attr_is_on = self.coordinator.last_update_success
         elif self.entity_description.key == "is_watering":
-            zone = cast(Zone, self.zone)
-            self._attr_is_on = zone.scheduled_runs.current_run is not None
+            assert self.zone is not None
+            self._attr_is_on = self.zone.scheduled_runs.current_run is not None
