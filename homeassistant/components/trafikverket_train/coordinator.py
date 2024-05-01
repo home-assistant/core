@@ -22,7 +22,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_TIME, DOMAIN
+from .const import CONF_FILTER_PRODUCT, CONF_TIME, DOMAIN
 from .util import next_departuredate
 
 
@@ -65,13 +65,13 @@ def _get_as_joined(information: list[str] | None) -> str | None:
 class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
     """A Trafikverket Data Update Coordinator."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
         to_station: StationInfo,
         from_station: StationInfo,
-        filter_product: str | None,
     ) -> None:
         """Initialize the Trafikverket coordinator."""
         super().__init__(
@@ -81,13 +81,13 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
             update_interval=TIME_BETWEEN_UPDATES,
         )
         self._train_api = TrafikverketTrain(
-            async_get_clientsession(hass), entry.data[CONF_API_KEY]
+            async_get_clientsession(hass), self.config_entry.data[CONF_API_KEY]
         )
         self.from_station: StationInfo = from_station
         self.to_station: StationInfo = to_station
-        self._time: time | None = dt_util.parse_time(entry.data[CONF_TIME])
-        self._weekdays: list[str] = entry.data[CONF_WEEKDAY]
-        self._filter_product = filter_product
+        self._time: time | None = dt_util.parse_time(self.config_entry.data[CONF_TIME])
+        self._weekdays: list[str] = self.config_entry.data[CONF_WEEKDAY]
+        self._filter_product = self.config_entry.options.get(CONF_FILTER_PRODUCT)
 
     async def _async_update_data(self) -> TrainData:
         """Fetch data from Trafikverket."""
