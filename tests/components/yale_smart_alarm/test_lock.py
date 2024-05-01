@@ -10,7 +10,14 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from yalesmartalarmclient.lock import YaleDoorManAPI
 
-from homeassistant.const import Platform
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.const import (
+    ATTR_CODE,
+    ATTR_ENTITY_ID,
+    SERVICE_LOCK,
+    SERVICE_UNLOCK,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -51,4 +58,28 @@ async def test_lock_service_calls(
     data["data"] = data.pop("DEVICES")
 
     client.auth.get_authenticated = Mock(return_value=data)
+    client.auth.post_authenticated = Mock(return_value={"code": "000"})
     client.lock_api = YaleDoorManAPI(client.auth)
+
+    state = hass.states.get("lock.device1")
+    assert state.state == "locked"
+
+    await hass.services.async_call(
+        LOCK_DOMAIN,
+        SERVICE_UNLOCK,
+        {ATTR_ENTITY_ID: "lock.device1", ATTR_CODE: "123456"},
+        blocking=True,
+    )
+    client.auth.post_authenticated.assert_called_once()
+    state = hass.states.get("lock.device1")
+    assert state.state == "unlocked"
+    client.auth.post_authenticated.reset_mock()
+    await hass.services.async_call(
+        LOCK_DOMAIN,
+        SERVICE_LOCK,
+        {ATTR_ENTITY_ID: "lock.device1", ATTR_CODE: "123456"},
+        blocking=True,
+    )
+    client.auth.post_authenticated.assert_called_once()
+    state = hass.states.get("lock.device1")
+    assert state.state == "locked"
