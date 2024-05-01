@@ -86,6 +86,7 @@ from .manager import HomeAssistantBluetoothManager
 from .match import BluetoothCallbackMatcher, IntegrationMatcher
 from .models import BluetoothCallback, BluetoothChange
 from .storage import BluetoothStorage
+from .util import adapter_title
 
 if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
@@ -151,6 +152,7 @@ async def _async_start_adapter_discovery(
         cooldown=BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
         immediate=False,
         function=_async_rediscover_adapters,
+        background=True,
     )
 
     @hass_callback
@@ -332,6 +334,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from err
     adapters = await manager.async_get_bluetooth_adapters()
     details = adapters[adapter]
+    if entry.title == address:
+        hass.config_entries.async_update_entry(
+            entry, title=adapter_title(adapter, details)
+        )
     slots: int = details.get(ADAPTER_CONNECTION_SLOTS) or DEFAULT_CONNECTION_SLOTS
     entry.async_on_unload(async_register_scanner(hass, scanner, connection_slots=slots))
     await async_update_device(hass, entry, adapter, details)

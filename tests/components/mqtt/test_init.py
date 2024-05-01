@@ -4,17 +4,22 @@ import asyncio
 from copy import deepcopy
 from datetime import datetime, timedelta
 import json
+import socket
 import ssl
 from typing import Any, TypedDict
 from unittest.mock import ANY, MagicMock, call, mock_open, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import paho.mqtt.client as paho_mqtt
 import pytest
 import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
-from homeassistant.components.mqtt.client import EnsureJobAfterCooldown
+from homeassistant.components.mqtt.client import (
+    RECONNECT_INTERVAL_SECONDS,
+    EnsureJobAfterCooldown,
+)
 from homeassistant.components.mqtt.mixins import MQTT_ENTITY_DEVICE_INFO_SCHEMA
 from homeassistant.components.mqtt.models import (
     MessageCallbackType,
@@ -136,17 +141,17 @@ async def test_mqtt_connects_on_home_assistant_mqtt_setup(
     assert mqtt_client_mock.connect.call_count == 1
 
 
-async def test_mqtt_disconnects_on_home_assistant_stop(
+async def test_mqtt_does_not_disconnect_on_home_assistant_stop(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
-    """Test if client stops on HA stop."""
+    """Test if client is not disconnected on HA stop."""
     await mqtt_mock_entry()
     hass.bus.fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
-    assert mqtt_client_mock.loop_stop.call_count == 1
+    assert mqtt_client_mock.disconnect.call_count == 0
 
 
 async def test_mqtt_await_ack_at_disconnect(
@@ -161,8 +166,14 @@ async def test_mqtt_await_ack_at_disconnect(
         rc = 0
 
     with patch("paho.mqtt.client.Client") as mock_client:
-        mock_client().connect = MagicMock(return_value=0)
-        mock_client().publish = MagicMock(return_value=FakeInfo())
+        mqtt_client = mock_client.return_value
+        mqtt_client.connect = MagicMock(
+            return_value=0,
+            side_effect=lambda *args, **kwargs: hass.loop.call_soon_threadsafe(
+                mqtt_client.on_connect, mqtt_client, None, 0, 0, 0
+            ),
+        )
+        mqtt_client.publish = MagicMock(return_value=FakeInfo())
         entry = MockConfigEntry(
             domain=mqtt.DOMAIN,
             data={"certificate": "auto", mqtt.CONF_BROKER: "test-broker"},
@@ -1669,6 +1680,7 @@ async def test_not_calling_subscribe_when_unsubscribed_within_cooldown(
     the subscribe cool down period has ended.
     """
     mqtt_mock = await mqtt_mock_entry()
+    mqtt_client_mock.subscribe.reset_mock()
     # Fake that the client is connected
     mqtt_mock().connected = True
 
@@ -1861,6 +1873,7 @@ async def test_reload_entry_with_restored_subscriptions(
     # Setup the MQTT entry
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
     entry.add_to_hass(hass)
+    hass.config.components.add(mqtt.DOMAIN)
     mqtt_client_mock.connect.return_value = 0
     with patch("homeassistant.config.load_yaml_config_file", return_value={}):
         await entry.async_setup(hass)
@@ -1925,6 +1938,7 @@ async def test_canceling_debouncer_on_shutdown(
     """Test canceling the debouncer when HA shuts down."""
 
     mqtt_mock = await mqtt_mock_entry()
+    mqtt_client_mock.subscribe.reset_mock()
 
     # Fake that the client is connected
     mqtt_mock().connected = True
@@ -2008,7 +2022,7 @@ async def test_initial_setup_logs_error(
     """Test for setup failure if initial client connection fails."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
     entry.add_to_hass(hass)
-    mqtt_client_mock.connect.return_value = 1
+    mqtt_client_mock.connect.side_effect = MagicMock(return_value=1)
     try:
         assert await hass.config_entries.async_setup(entry.entry_id)
     except HomeAssistantError:
@@ -2031,6 +2045,24 @@ async def test_logs_error_if_no_connect_broker(
         "Unable to connect to the MQTT broker: Connection Refused: broker unavailable."
         in caplog.text
     )
+
+
+@pytest.mark.parametrize("return_code", [4, 5])
+async def test_triggers_reauth_flow_if_auth_fails(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    mqtt_client_mock: MqttMockPahoClient,
+    return_code: int,
+) -> None:
+    """Test re-auth is triggered if authentication is failing."""
+    await mqtt_mock_entry()
+    # test with rc = 4 -> CONNACK_REFUSED_NOT_AUTHORIZED and 5 -> CONNACK_REFUSED_BAD_USERNAME_PASSWORD
+    mqtt_client_mock.on_connect(mqtt_client_mock, None, None, return_code)
+    await hass.async_block_till_done()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
 
 
 @patch("homeassistant.components.mqtt.client.TIMEOUT_ACK", 0.3)
@@ -2230,7 +2262,12 @@ async def test_handle_mqtt_timeout_on_callback(
         mock_client = mock_client.return_value
         mock_client.publish.return_value = FakeInfo()
         mock_client.subscribe.side_effect = _mock_ack
-        mock_client.connect.return_value = 0
+        mock_client.connect = MagicMock(
+            return_value=0,
+            side_effect=lambda *args, **kwargs: hass.loop.call_soon_threadsafe(
+                mock_client.on_connect, mock_client, None, 0, 0, 0
+            ),
+        )
 
         entry = MockConfigEntry(
             domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"}
@@ -2493,6 +2530,75 @@ async def test_delayed_birth_message(
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await birth.wait()
+        mqtt_client_mock.publish.assert_called_with(
+            "homeassistant/status", "online", 0, False
+        )
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_entry_data",
+    [
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            mqtt.CONF_BIRTH_MESSAGE: {
+                mqtt.ATTR_TOPIC: "homeassistant/status",
+                mqtt.ATTR_PAYLOAD: "online",
+                mqtt.ATTR_QOS: 0,
+                mqtt.ATTR_RETAIN: False,
+            },
+        }
+    ],
+)
+async def test_subscription_done_when_birth_message_is_sent(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_config_entry_data,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test sending birth message until initial subscription has been completed."""
+    mqtt_mock = await mqtt_mock_entry()
+
+    hass.set_state(CoreState.starting)
+    birth = asyncio.Event()
+
+    await hass.async_block_till_done()
+
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data=mqtt_config_entry_data)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    mqtt_component_mock = MagicMock(
+        return_value=hass.data["mqtt"].client,
+        wraps=hass.data["mqtt"].client,
+    )
+    mqtt_component_mock._mqttc = mqtt_client_mock
+
+    hass.data["mqtt"].client = mqtt_component_mock
+    mqtt_mock = hass.data["mqtt"].client
+    mqtt_mock.reset_mock()
+
+    @callback
+    def wait_birth(msg: ReceiveMessage) -> None:
+        """Handle birth message."""
+        birth.set()
+
+    mqtt_client_mock.reset_mock()
+    with patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0):
+        await mqtt.async_subscribe(hass, "homeassistant/status", wait_birth)
+        mqtt_client_mock.on_connect(None, None, 0, 0)
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        # We wait until we receive a birth message
+        await asyncio.wait_for(birth.wait(), 1)
+        # Assert we already have subscribed at the client
+        # for new config payloads at the time we the birth message is received
+        assert ("homeassistant/+/+/config", 0) in help_all_subscribe_calls(
+            mqtt_client_mock
+        )
+        assert ("homeassistant/+/+/+/config", 0) in help_all_subscribe_calls(
+            mqtt_client_mock
+        )
         mqtt_client_mock.publish.assert_called_with(
             "homeassistant/status", "online", 0, False
         )
@@ -2814,15 +2920,7 @@ async def test_mqtt_ws_remove_discovered_device(
 
     client = await hass_ws_client(hass)
     mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": mqtt_config_entry.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await client.receive_json()
+    response = await client.remove_device(device_entry.id, mqtt_config_entry.entry_id)
     assert response["success"]
 
     # Verify device entry is cleared
@@ -3015,14 +3113,16 @@ async def test_debug_info_multiple_devices(
     for dev in devices:
         data = json.dumps(dev["config"])
         domain = dev["domain"]
-        id = dev["config"]["device"]["identifiers"][0]
-        async_fire_mqtt_message(hass, f"homeassistant/{domain}/{id}/config", data)
+        device_id = dev["config"]["device"]["identifiers"][0]
+        async_fire_mqtt_message(
+            hass, f"homeassistant/{domain}/{device_id}/config", data
+        )
         await hass.async_block_till_done()
 
     for dev in devices:
         domain = dev["domain"]
-        id = dev["config"]["device"]["identifiers"][0]
-        device = device_registry.async_get_device(identifiers={("mqtt", id)})
+        device_id = dev["config"]["device"]["identifiers"][0]
+        device = device_registry.async_get_device(identifiers={("mqtt", device_id)})
         assert device is not None
 
         debug_info_data = debug_info.info_for_device(hass, device.id)
@@ -3040,7 +3140,7 @@ async def test_debug_info_multiple_devices(
             assert len(debug_info_data["triggers"]) == 1
             discovery_data = debug_info_data["triggers"][0]["discovery_data"]
 
-        assert discovery_data["topic"] == f"homeassistant/{domain}/{id}/config"
+        assert discovery_data["topic"] == f"homeassistant/{domain}/{device_id}/config"
         assert discovery_data["payload"] == dev["config"]
 
 
@@ -3098,8 +3198,10 @@ async def test_debug_info_multiple_entities_triggers(
         data = json.dumps(c["config"])
         domain = c["domain"]
         # Use topic as discovery_id
-        id = c["config"].get("topic", c["config"].get("state_topic"))
-        async_fire_mqtt_message(hass, f"homeassistant/{domain}/{id}/config", data)
+        discovery_id = c["config"].get("topic", c["config"].get("state_topic"))
+        async_fire_mqtt_message(
+            hass, f"homeassistant/{domain}/{discovery_id}/config", data
+        )
         await hass.async_block_till_done()
 
     device_id = config[0]["config"]["device"]["identifiers"][0]
@@ -3113,7 +3215,7 @@ async def test_debug_info_multiple_entities_triggers(
         # Test we get debug info for each entity and trigger
         domain = c["domain"]
         # Use topic as discovery_id
-        id = c["config"].get("topic", c["config"].get("state_topic"))
+        discovery_id = c["config"].get("topic", c["config"].get("state_topic"))
 
         if c["domain"] != "device_automation":
             discovery_data = [e["discovery_data"] for e in debug_info_data["entities"]]
@@ -3125,7 +3227,7 @@ async def test_debug_info_multiple_entities_triggers(
             discovery_data = [e["discovery_data"] for e in debug_info_data["triggers"]]
 
         assert {
-            "topic": f"homeassistant/{domain}/{id}/config",
+            "topic": f"homeassistant/{domain}/{discovery_id}/config",
             "payload": c["config"],
         } in discovery_data
 
@@ -4144,3 +4246,179 @@ async def test_multi_platform_discovery(
             )
             is not None
         )
+
+
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+async def test_auto_reconnect(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test reconnection is automatically done."""
+    mqtt_mock = await mqtt_mock_entry()
+    await hass.async_block_till_done()
+    assert mqtt_mock.connected is True
+    mqtt_client_mock.reconnect.reset_mock()
+
+    mqtt_client_mock.disconnect()
+    mqtt_client_mock.on_disconnect(None, None, 0)
+    await hass.async_block_till_done()
+
+    mqtt_client_mock.reconnect.side_effect = OSError("foo")
+    async_fire_time_changed(
+        hass, utcnow() + timedelta(seconds=RECONNECT_INTERVAL_SECONDS)
+    )
+    await hass.async_block_till_done()
+    assert len(mqtt_client_mock.reconnect.mock_calls) == 1
+    assert "Error re-connecting to MQTT server due to exception: foo" in caplog.text
+
+    mqtt_client_mock.reconnect.side_effect = None
+    async_fire_time_changed(
+        hass, utcnow() + timedelta(seconds=RECONNECT_INTERVAL_SECONDS)
+    )
+    await hass.async_block_till_done()
+    assert len(mqtt_client_mock.reconnect.mock_calls) == 2
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+
+    mqtt_client_mock.disconnect()
+    mqtt_client_mock.on_disconnect(None, None, 0)
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass, utcnow() + timedelta(seconds=RECONNECT_INTERVAL_SECONDS)
+    )
+    await hass.async_block_till_done()
+    # Should not reconnect after stop
+    assert len(mqtt_client_mock.reconnect.mock_calls) == 2
+
+
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+async def test_server_sock_connect_and_disconnect(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
+) -> None:
+    """Test handling the socket connected and disconnected."""
+    mqtt_mock = await mqtt_mock_entry()
+    await hass.async_block_till_done()
+    assert mqtt_mock.connected is True
+
+    mqtt_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_SUCCESS
+
+    client, server = socket.socketpair(
+        family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0
+    )
+    client.setblocking(False)
+    server.setblocking(False)
+    mqtt_client_mock.on_socket_open(mqtt_client_mock, None, client)
+    mqtt_client_mock.on_socket_register_write(mqtt_client_mock, None, client)
+    await hass.async_block_till_done()
+
+    server.close()  # mock the server closing the connection on us
+
+    unsub = await mqtt.async_subscribe(hass, "test-topic", record_calls)
+
+    mqtt_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_CONN_LOST
+    mqtt_client_mock.on_socket_unregister_write(mqtt_client_mock, None, client)
+    mqtt_client_mock.on_socket_close(mqtt_client_mock, None, client)
+    mqtt_client_mock.on_disconnect(mqtt_client_mock, None, client)
+    await hass.async_block_till_done()
+    unsub()
+
+    # Should have failed
+    assert len(calls) == 0
+
+
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+async def test_client_sock_failure_after_connect(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
+) -> None:
+    """Test handling the socket connected and disconnected."""
+    mqtt_mock = await mqtt_mock_entry()
+    # Fake that the client is connected
+    mqtt_mock().connected = True
+    await hass.async_block_till_done()
+    assert mqtt_mock.connected is True
+
+    mqtt_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_SUCCESS
+
+    client, server = socket.socketpair(
+        family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0
+    )
+    client.setblocking(False)
+    server.setblocking(False)
+    mqtt_client_mock.on_socket_open(mqtt_client_mock, None, client)
+    mqtt_client_mock.on_socket_register_writer(mqtt_client_mock, None, client)
+    await hass.async_block_till_done()
+
+    mqtt_client_mock.loop_write.side_effect = OSError("foo")
+    client.close()  # close the client socket out from under the client
+
+    assert mqtt_mock.connected is True
+    unsub = await mqtt.async_subscribe(hass, "test-topic", record_calls)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
+    await hass.async_block_till_done()
+
+    unsub()
+    # Should have failed
+    assert len(calls) == 0
+
+
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+async def test_loop_write_failure(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test handling the socket connected and disconnected."""
+    mqtt_mock = await mqtt_mock_entry()
+    await hass.async_block_till_done()
+    assert mqtt_mock.connected is True
+
+    mqtt_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_SUCCESS
+
+    client, server = socket.socketpair(
+        family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0
+    )
+    client.setblocking(False)
+    server.setblocking(False)
+    mqtt_client_mock.on_socket_open(mqtt_client_mock, None, client)
+    mqtt_client_mock.on_socket_register_write(mqtt_client_mock, None, client)
+    mqtt_client_mock.loop_write.return_value = paho_mqtt.MQTT_ERR_CONN_LOST
+    mqtt_client_mock.loop_read.return_value = paho_mqtt.MQTT_ERR_CONN_LOST
+
+    # Fill up the outgoing buffer to ensure that loop_write
+    # and loop_read are called that next time control is
+    # returned to the event loop
+    try:
+        for _ in range(1000):
+            server.send(b"long" * 100)
+    except BlockingIOError:
+        pass
+
+    server.close()
+    # Once for the reader callback
+    await hass.async_block_till_done()
+    # Another for the writer callback
+    await hass.async_block_till_done()
+    # Final for the disconnect callback
+    await hass.async_block_till_done()
+
+    assert "Disconnected from MQTT server mock-broker:1883 (7)" in caplog.text

@@ -48,7 +48,7 @@ from .const import (
     DEFAULT_CONF_OLD_DISCOVERY,
     DEFAULT_DEVICE_NAME,
     DEFAULT_HOST,
-    DEFAULT_PORT,
+    DEFAULT_SSL,
     DEFAULT_USERNAME,
     DOMAIN,
     FRITZ_EXCEPTIONS,
@@ -184,9 +184,10 @@ class FritzBoxTools(
         self,
         hass: HomeAssistant,
         password: str,
+        port: int,
         username: str = DEFAULT_USERNAME,
         host: str = DEFAULT_HOST,
-        port: int = DEFAULT_PORT,
+        use_tls: bool = DEFAULT_SSL,
     ) -> None:
         """Initialize FritzboxTools class."""
         super().__init__(
@@ -211,6 +212,7 @@ class FritzBoxTools(
         self.password = password
         self.port = port
         self.username = username
+        self.use_tls = use_tls
         self.has_call_deflections: bool = False
         self._model: str | None = None
         self._current_firmware: str | None = None
@@ -230,11 +232,13 @@ class FritzBoxTools(
 
     def setup(self) -> None:
         """Set up FritzboxTools class."""
+
         self.connection = FritzConnection(
             address=self.host,
             port=self.port,
             user=self.username,
             password=self.password,
+            use_tls=self.use_tls,
             timeout=60.0,
             pool_maxsize=30,
         )
@@ -439,7 +443,10 @@ class FritzBoxTools(
                 )
         except Exception as ex:  # pylint: disable=[broad-except]
             if not self.hass.is_stopping:
-                raise HomeAssistantError("Error refreshing hosts info") from ex
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="error_refresh_hosts_info",
+                ) from ex
 
         hosts: dict[str, Device] = {}
         if hosts_attributes:
@@ -726,7 +733,9 @@ class FritzBoxTools(
         _LOGGER.debug("FRITZ!Box service: %s", service_call.service)
 
         if not self.connection:
-            raise HomeAssistantError("Unable to establish a connection")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="unable_to_connect"
+            )
 
         try:
             if service_call.service == SERVICE_REBOOT:
@@ -761,9 +770,13 @@ class FritzBoxTools(
                 return
 
         except (FritzServiceError, FritzActionError) as ex:
-            raise HomeAssistantError("Service or parameter unknown") from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="service_parameter_unknown"
+            ) from ex
         except FritzConnectionException as ex:
-            raise HomeAssistantError("Service not supported") from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="service_not_supported"
+            ) from ex
 
 
 class AvmWrapper(FritzBoxTools):  # pylint: disable=hass-enforce-coordinator-module

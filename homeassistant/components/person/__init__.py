@@ -55,6 +55,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from . import group as group_pre_import  # noqa: F401
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,8 +66,6 @@ ATTR_DEVICE_TRACKERS = "device_trackers"
 CONF_DEVICE_TRACKERS = "device_trackers"
 CONF_USER_ID = "user_id"
 CONF_PICTURE = "picture"
-
-DOMAIN = "person"
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 2

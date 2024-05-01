@@ -127,8 +127,8 @@ build.json @home-assistant/supervisor
 /tests/components/aprilaire/ @chamberlain2007
 /homeassistant/components/aprs/ @PhilRW
 /tests/components/aprs/ @PhilRW
-/homeassistant/components/aranet/ @aschmitz @thecode
-/tests/components/aranet/ @aschmitz @thecode
+/homeassistant/components/aranet/ @aschmitz @thecode @anrijs
+/tests/components/aranet/ @aschmitz @thecode @anrijs
 /homeassistant/components/arcam_fmj/ @elupus
 /tests/components/arcam_fmj/ @elupus
 /homeassistant/components/arris_tg2492lg/ @vanbalken
@@ -398,6 +398,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/environment_canada/ @gwww @michaeldavie
 /tests/components/environment_canada/ @gwww @michaeldavie
 /homeassistant/components/ephember/ @ttroy50
+/homeassistant/components/epic_games_store/ @hacf-fr @Quentame
+/tests/components/epic_games_store/ @hacf-fr @Quentame
 /homeassistant/components/epion/ @lhgravendeel
 /tests/components/epion/ @lhgravendeel
 /homeassistant/components/epson/ @pszafer
@@ -548,14 +550,14 @@ build.json @home-assistant/supervisor
 /tests/components/group/ @home-assistant/core
 /homeassistant/components/guardian/ @bachya
 /tests/components/guardian/ @bachya
-/homeassistant/components/habitica/ @ASMfreaK @leikoilja
-/tests/components/habitica/ @ASMfreaK @leikoilja
+/homeassistant/components/habitica/ @ASMfreaK @leikoilja @tr4nt0r
+/tests/components/habitica/ @ASMfreaK @leikoilja @tr4nt0r
 /homeassistant/components/hardkernel/ @home-assistant/core
 /tests/components/hardkernel/ @home-assistant/core
 /homeassistant/components/hardware/ @home-assistant/core
 /tests/components/hardware/ @home-assistant/core
-/homeassistant/components/harmony/ @ehendrix23 @bramkragten @bdraco @mkeesey @Aohzan
-/tests/components/harmony/ @ehendrix23 @bramkragten @bdraco @mkeesey @Aohzan
+/homeassistant/components/harmony/ @ehendrix23 @bdraco @mkeesey @Aohzan
+/tests/components/harmony/ @ehendrix23 @bdraco @mkeesey @Aohzan
 /homeassistant/components/hassio/ @home-assistant/supervisor
 /tests/components/hassio/ @home-assistant/supervisor
 /homeassistant/components/hdmi_cec/ @inytar
@@ -648,6 +650,8 @@ build.json @home-assistant/supervisor
 /tests/components/image_upload/ @home-assistant/core
 /homeassistant/components/imap/ @jbouwh
 /tests/components/imap/ @jbouwh
+/homeassistant/components/imgw_pib/ @bieniu
+/tests/components/imgw_pib/ @bieniu
 /homeassistant/components/improv_ble/ @emontnemery
 /tests/components/improv_ble/ @emontnemery
 /homeassistant/components/incomfort/ @zxdavb
@@ -875,8 +879,8 @@ build.json @home-assistant/supervisor
 /tests/components/motioneye/ @dermotduffy
 /homeassistant/components/motionmount/ @RJPoelstra
 /tests/components/motionmount/ @RJPoelstra
-/homeassistant/components/mqtt/ @emontnemery @jbouwh
-/tests/components/mqtt/ @emontnemery @jbouwh
+/homeassistant/components/mqtt/ @emontnemery @jbouwh @bdraco
+/tests/components/mqtt/ @emontnemery @jbouwh @bdraco
 /homeassistant/components/msteams/ @peroyvind
 /homeassistant/components/mullvad/ @meichthys
 /tests/components/mullvad/ @meichthys
@@ -1284,8 +1288,8 @@ build.json @home-assistant/supervisor
 /tests/components/snmp/ @nmaggioni
 /homeassistant/components/snooz/ @AustinBrunkhorst
 /tests/components/snooz/ @AustinBrunkhorst
-/homeassistant/components/solaredge/ @frenck
-/tests/components/solaredge/ @frenck
+/homeassistant/components/solaredge/ @frenck @bdraco
+/tests/components/solaredge/ @frenck @bdraco
 /homeassistant/components/solaredge_local/ @drobtravels @scheric
 /homeassistant/components/solarlog/ @Ernst79
 /tests/components/solarlog/ @Ernst79
