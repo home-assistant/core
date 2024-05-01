@@ -187,7 +187,6 @@ class WazeTravelTimeData:
             excl_filter = self.config_entry.options.get(CONF_EXCL_FILTER)
             realtime = self.config_entry.options[CONF_REALTIME]
             vehicle_type = self.config_entry.options[CONF_VEHICLE_TYPE]
-            vehicle_type = "" if vehicle_type.upper() == "CAR" else vehicle_type.upper()
             avoid_toll_roads = self.config_entry.options[CONF_AVOID_TOLL_ROADS]
             avoid_subscription_roads = self.config_entry.options[
                 CONF_AVOID_SUBSCRIPTION_ROADS

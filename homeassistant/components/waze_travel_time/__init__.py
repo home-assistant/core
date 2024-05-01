@@ -97,9 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             client=client,
             origin=service.data[CONF_ORIGIN],
             destination=service.data[CONF_DESTINATION],
-            vehicle_type=""
-            if service.data[CONF_VEHICLE_TYPE].upper() == "CAR"
-            else service.data[CONF_VEHICLE_TYPE].upper(),
+            vehicle_type=service.data[CONF_VEHICLE_TYPE],
             avoid_toll_roads=service.data[CONF_AVOID_TOLL_ROADS],
             avoid_subscription_roads=service.data[CONF_AVOID_SUBSCRIPTION_ROADS],
             avoid_ferries=service.data[CONF_AVOID_FERRIES],
@@ -137,6 +135,7 @@ async def async_get_travel_times(
         destination,
     )
     routes = []
+    vehicle_type = "" if vehicle_type.upper() == "CAR" else vehicle_type.upper()
     try:
         routes = await client.calc_routes(
             origin,
