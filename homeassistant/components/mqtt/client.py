@@ -1122,7 +1122,6 @@ class MQTT:
             )
         finally:
             timer_handle.cancel()
-            # Cleanup ACK sync buffer
             del self._pending_operations[mid]
 
     async def _discovery_cooldown(self) -> None:
