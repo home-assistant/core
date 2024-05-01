@@ -9,7 +9,7 @@ from homeassistant.components.dwd_weather_warnings.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, STATE_HOME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import init_integration
 
@@ -32,6 +32,41 @@ async def test_load_unload_entry(
 
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert entry.entry_id not in hass.data[DOMAIN]
+
+
+async def test_removing_old_device(
+    hass: HomeAssistant,
+    mock_identifier_entry: MockConfigEntry,
+    mock_dwdwfsapi: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test removing old device when reconfiguring the integration."""
+
+    mock_identifier_entry.add_to_hass(hass)
+
+    device_registry.async_get_or_create(
+        identifiers={(DOMAIN, mock_identifier_entry.entry_id)},
+        config_entry_id=mock_identifier_entry.entry_id,
+        name="DWD Weather Warnings",
+        manufacturer="Deutscher Wetterdienst",
+    )
+
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, mock_identifier_entry.entry_id)}
+        )
+        is not None
+    )
+
+    await hass.config_entries.async_setup(mock_identifier_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, mock_identifier_entry.entry_id)}
+        )
+        is None
+    )
 
 
 async def test_load_invalid_registry_entry(
