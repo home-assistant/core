@@ -13,11 +13,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import SensiboConfigEntry
 from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity, SensiboMotionBaseEntity
 
@@ -114,11 +114,13 @@ DESCRIPTION_BY_MODELS = {"pure": PURE_SENSOR_TYPES}
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SensiboConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Sensibo binary sensor platform."""
 
-    coordinator: SensiboDataUpdateCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
     entities: list[SensiboMotionSensor | SensiboDeviceSensor] = []
 
