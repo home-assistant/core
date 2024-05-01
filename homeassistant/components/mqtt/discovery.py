@@ -177,7 +177,7 @@ async def async_start(  # noqa: C901
     @callback
     def async_discovery_message_received(msg: ReceiveMessage) -> None:  # noqa: C901
         """Process the received message."""
-        mqtt_data.last_discovery = time.time()
+        mqtt_data.last_discovery = time.monotonic()
         payload = msg.payload
         topic = msg.topic
         topic_trimmed = topic.replace(f"{discovery_topic}/", "", 1)
@@ -370,7 +370,7 @@ async def async_start(  # noqa: C901
         )
     )
 
-    mqtt_data.last_discovery = time.time()
+    mqtt_data.last_discovery = time.monotonic()
     mqtt_integrations = await async_get_mqtt(hass)
 
     for integration, topics in mqtt_integrations.items():
