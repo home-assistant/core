@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from .const import PLATFORMS
 from .coordinator import TVDataUpdateCoordinator
 
-TVFerryConfigEntry = ConfigEntry["TVDataUpdateCoordinator"]
+TVFerryConfigEntry = ConfigEntry[TVDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TVFerryConfigEntry) -> bool:

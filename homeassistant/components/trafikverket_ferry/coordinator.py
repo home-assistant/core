@@ -4,13 +4,12 @@ from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pytrafikverket import TrafikverketFerry
 from pytrafikverket.exceptions import InvalidAuthentication, NoFerryFound
 from pytrafikverket.trafikverket_ferry import FerryStop
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -18,6 +17,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
+if TYPE_CHECKING:
+    from . import TVFerryConfigEntry
 from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,7 +49,7 @@ def next_departuredate(departure: list[str]) -> date:
 class TVDataUpdateCoordinator(DataUpdateCoordinator):
     """A Trafikverket Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: TVFerryConfigEntry
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Trafikverket coordinator."""
