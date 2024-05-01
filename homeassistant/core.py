@@ -1797,8 +1797,6 @@ class State:
         last_updated_timestamp = last_updated.timestamp()
         if self.last_changed == last_updated:
             self.__dict__["last_changed_timestamp"] = last_updated_timestamp
-        if self.last_reported == last_updated:
-            self.__dict__["last_reported_timestamp"] = last_updated_timestamp
         self.last_updated_timestamp = last_updated_timestamp
 
     @cached_property
@@ -1816,6 +1814,8 @@ class State:
     @cached_property
     def last_reported_timestamp(self) -> float:
         """Timestamp of last report."""
+        if self.last_reported == self.last_updated:
+            return self.last_updated_timestamp
         return self.last_reported.timestamp()
 
     @cached_property
