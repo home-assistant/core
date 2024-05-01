@@ -16,7 +16,6 @@ import aiohttp
 import requests
 
 from homeassistant import config_entries
-from homeassistant.components.rasc.decorator import rasc_track_service
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import (
@@ -403,7 +402,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         ):
             self.async_update_listeners()
 
-    @rasc_track_service
     async def track_entity_state(
         self, _entity: entity.Entity, delay: timedelta | None = None
     ) -> None:

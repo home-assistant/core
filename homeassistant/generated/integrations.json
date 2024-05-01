@@ -4589,6 +4589,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "rascalrescheduler": {
+      "name": "Rascal Rescheduler",
+      "integration_type": "hub",
+      "config_flow": false,
+      "iot_class": "local_polling"
+    },
     "raspberry_pi": {
       "name": "Raspberry Pi",
       "integrations": {

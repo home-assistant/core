@@ -6,7 +6,7 @@ import logging
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,9 +45,3 @@ class VirtualDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_update_data(self) -> None:
         """Fetch all device and sensor data from api."""
-        # try:
-        #     await self.device.update(update_children=self.update_children)
-        # except SmartDeviceException as ex:
-        #     raise UpdateFailed(ex) from ex
-        # finally:
-        #     self.update_children = True

@@ -1,6 +1,7 @@
 """Provides functionality to interact with climate devices."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import functools as ft
@@ -9,11 +10,16 @@ from typing import Any, final
 
 import voluptuous as vol
 
+from homeassistant.components.rasc.decorator import rasc_target_state
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    CONF_EVENT,
+    CONF_SERVICE,
+    CONF_SERVICE_DATA,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
+    RASC_START,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -588,6 +594,54 @@ class ClimateEntity(Entity):
     def max_humidity(self) -> int:
         """Return the maximum humidity."""
         return self._attr_max_humidity
+
+    def async_get_action_target_state(
+        self, action: dict[str, Any]
+    ) -> dict[str, Any] | None:
+        """Return expected state when action is complete."""
+
+        def _target_start_state(
+            current: float | None, target_complete_state: float
+        ) -> Callable[[float], bool]:
+            @rasc_target_state(target_complete_state)
+            def match(value: float) -> bool:
+                if current is None:
+                    if target_complete_state > self._attr_min_temp:
+                        return value == self._attr_min_temp
+                    return value == self._attr_max_temp
+                if target_complete_state > current:
+                    return value > current
+                if target_complete_state < current:
+                    return value < current
+                return value == current
+
+            return match
+
+        def _target_complete_state(
+            target_complete_state: bool | float,
+        ) -> Callable[[bool | float], bool]:
+            @rasc_target_state(target_complete_state)
+            def match(value: bool | float) -> bool:
+                return value == target_complete_state
+
+            return match
+
+        target: dict[str, Any] = {}
+
+        service_data = action[CONF_SERVICE_DATA]
+        if action[CONF_SERVICE] == SERVICE_SET_HVAC_MODE:
+            target["hvac_mode"] = _target_complete_state(service_data[ATTR_HVAC_MODE])
+        elif action[CONF_SERVICE] == SERVICE_SET_TEMPERATURE:
+            if action[CONF_EVENT] == RASC_START:
+                target["current_temperature"] = _target_start_state(
+                    self.current_temperature, service_data[ATTR_TEMPERATURE]
+                )
+            else:
+                target["current_temperature"] = _target_complete_state(
+                    service_data[ATTR_TEMPERATURE]
+                )
+
+        return target
 
 
 async def async_service_aux_heat(

@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 import random
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -21,11 +21,14 @@ from . import get_entity_configs
 from .const import (
     ATTR_GROUP_NAME,
     COMPONENT_DOMAIN,
+    COMPONENT_NETWORK,
     CONF_COORDINATED,
     CONF_INITIAL_VALUE,
+    CONF_SIMULATE_NETWORK,
 )
 from .coordinator import VirtualDataUpdateCoordinator
 from .entity import CoordinatedVirtualEntity, VirtualEntity, virtual_schema
+from .network import NetworkProxy
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,14 +80,23 @@ async def async_setup_entry(
         entry.entry_id
     ]
     entities: list[VirtualLock] = []
-    for entity in get_entity_configs(
+    for entity_config in get_entity_configs(
         hass, entry.data[ATTR_GROUP_NAME], PLATFORM_DOMAIN
     ):
-        entity = LOCK_SCHEMA(entity)
-        if CONF_COORDINATED in entity:
-            entities.append(CoordinatedVirtualLock(hass, entity, coordinator))
+        entity_config = LOCK_SCHEMA(entity_config)
+        if entity_config[CONF_COORDINATED]:
+            entity = cast(
+                VirtualLock, CoordinatedVirtualLock(hass, entity_config, coordinator)
+            )
         else:
-            entities.append(VirtualLock(hass, entity))
+            entity = VirtualLock(hass, entity_config)
+
+        if entity_config[CONF_SIMULATE_NETWORK]:
+            entity = cast(VirtualLock, NetworkProxy(entity))
+            hass.data[COMPONENT_NETWORK][entity.entity_id] = entity
+
+        entities.append(entity)
+
     async_add_entities(entities)
 
 

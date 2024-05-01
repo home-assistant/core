@@ -57,7 +57,7 @@ if TYPE_CHECKING:
 from homeassistant.helpers.template import device_entities
 from homeassistant.helpers.typing import ConfigType
 
-from .abstraction import RASC
+from .abstraction import RASCAbstraction
 from .const import CONF_TRANSITION, DOMAIN
 from .entity import (
     ActionEntity,
@@ -148,7 +148,7 @@ def create_routine(
     action_script: Sequence[dict[str, Any]],
 ) -> BaseRoutineEntity:
     """Create a routine based on the given action script."""
-    rasc: Optional[RASC] = hass.data[DOMAIN]
+    rasc: Optional[RASCAbstraction] = hass.data[DOMAIN]
     if not rasc:
         raise ValueError("RASC is not initialized.")
     next_parents: list[ActionEntity] = []
@@ -236,15 +236,17 @@ def _create_routine(
     entities: dict[str, ActionEntity],
 ) -> list[ActionEntity]:
     """Create a routine based on the given action script."""
-    rasc: RASC = hass.data[DOMAIN]
+    rasc: Optional[RASCAbstraction] = hass.data[DOMAIN]
+    if not rasc:
+        raise ValueError("RASC is not initialized.")
 
     next_parents: list[ActionEntity] = []
     # print("script:", script)
     if CONF_PARALLEL in script:
         for item in list(script.values())[0]:
             leaf_entities = _create_routine(hass, item, config, parents, entities)
-            for action_entity in leaf_entities:
-                next_parents.append(action_entity)
+            for entity in leaf_entities:
+                next_parents.append(entity)
 
     elif CONF_SEQUENCE in script:
         next_parents = parents
@@ -284,8 +286,8 @@ def _create_routine(
                 transition = None
             target_entities = get_target_entities(hass, script)
             estimated_duration = 0.0
-            for entity in target_entities:
-                entity_id = get_entity_id_from_number(hass, entity)
+            for target_entity in target_entities:
+                entity_id = get_entity_id_from_number(hass, target_entity)
                 estimated_duration = max(
                     estimated_duration,
                     rasc.get_action_length_estimate(
@@ -333,8 +335,8 @@ def _create_routine(
             transition = None
         target_entities = get_target_entities(hass, script)
         estimated_duration = 0.0
-        for entity in target_entities:
-            entity_id = get_entity_id_from_number(hass, entity)
+        for target_entity in target_entities:
+            entity_id = get_entity_id_from_number(hass, target_entity)
             estimated_duration = max(
                 estimated_duration,
                 rasc.get_action_length_estimate(
@@ -2258,19 +2260,17 @@ class RascalScheduler(BaseScheduler):
             key: value for key, value in lock_leasing_status.items() if value == "pre"
         }
 
+        idx1 = self._serialization_order.index(routine.routine_id)
         for key in filtered_status:
-            idx1 = self._serialization_order.index(routine_info.routine_id)
             idx2 = self._serialization_order.index(key)
 
             if idx1 > idx2:
-                self._remove_routine_from_serialization_order(routine_info.routine_id)
+                self._remove_routine_from_serialization_order(routine.routine_id)
                 self._serialization_order.insert_before(
-                    key, routine_info.routine_id, routine_info
+                    key, routine.routine_id, routine_info
                 )
 
-        _LOGGER.debug(
-            "Add routine %s to the serialization order", routine_info.routine_id
-        )
+        _LOGGER.debug("Add routine %s to the serialization order", routine.routine_id)
         output_all(_LOGGER, serialization_order=self._serialization_order)
 
     def _remove_routine_from_serialization_order(self, routine_id: str) -> None:
@@ -2644,7 +2644,11 @@ class RascalScheduler(BaseScheduler):
             self._hass, routine, datetime.now()
         )
         while not success:
-            if not lock_leasing_status:
+            if (
+                not lock_leasing_status
+                or "next_start_time" not in lock_leasing_status
+                or not lock_leasing_status["next_start_time"]
+            ):
                 raise ValueError(
                     "Failed to reschedule the routine {}. There should be a next start time for rescheduling".format(
                         routine.routine_id
@@ -2890,6 +2894,12 @@ class RascalScheduler(BaseScheduler):
 
     def _return_lock(self, action_id: str, entity_id: str) -> bool:
         """Check if the given action returns the lock."""
+        if entity_id not in self._lineage_table.lock_queues:
+            raise ValueError("Entity %s has no schedule." % entity_id)
+        if action_id not in self._lineage_table.lock_queues[entity_id]:
+            raise ValueError(
+                f"Action {action_id} has not been scheduled on entity {entity_id}."
+            )
 
         next_action = self._lineage_table.lock_queues[entity_id].next(action_id)
         if not next_action:
@@ -2985,6 +2995,12 @@ class RascalScheduler(BaseScheduler):
             entity_id,
             state,
         )
+        if entity_id not in self._lineage_table.lock_queues:
+            raise ValueError("Entity %s has no schedule." % entity_id)
+        if action_id not in self._lineage_table.lock_queues[entity_id]:
+            raise ValueError(
+                f"Action {action_id} has not been scheduled on entity {entity_id}."
+            )
         action = self._lineage_table.lock_queues[entity_id].get(action_id)
         if action:
             action.lock_state = state
@@ -2999,12 +3015,24 @@ class RascalScheduler(BaseScheduler):
             entity_id,
             new_state,
         )
+        if entity_id not in self._lineage_table.lock_queues:
+            raise ValueError("Entity %s has no schedule." % entity_id)
+        if action_id not in self._lineage_table.lock_queues[entity_id]:
+            raise ValueError(
+                f"Action {action_id} has not been scheduled on entity {entity_id}."
+            )
         action = self._lineage_table.lock_queues[entity_id].get(action_id)
         if action:
             action.action_state = new_state
 
     async def _async_wait_until(self, action_id: str, entity_id: str) -> None:
         """Wait until the time reaches the end time of the action."""
+        if entity_id not in self._lineage_table.lock_queues:
+            raise ValueError("Entity %s has no schedule." % entity_id)
+        if action_id not in self._lineage_table.lock_queues[entity_id]:
+            raise ValueError(
+                f"Action {action_id} has not been scheduled on entity {entity_id}."
+            )
         action = self._lineage_table.lock_queues[entity_id].get(action_id)
         if not action:
             return
@@ -3127,7 +3155,7 @@ class RascalScheduler(BaseScheduler):
 
     def _start_ready_routines_fcfs_post(self, entity_id: str) -> None:
         """Start the ready routine by fcfs_post."""
-        if self._lock_waitlist[entity_id]:
+        if entity_id in self._lock_waitlist and self._lock_waitlist[entity_id]:
             next_routine_info = self._wait_queue[self._lock_waitlist[entity_id][0]]
             if not next_routine_info:
                 raise ValueError(
@@ -3148,8 +3176,8 @@ class RascalScheduler(BaseScheduler):
                     serialization_order=self._serialization_order,
                 )
 
-            self._remove_routine_from_wait_queue(next_routine.routine_id)
-            self._start_routine(next_routine)
+                self._remove_routine_from_wait_queue(next_routine.routine_id)
+                self._start_routine(next_routine)
 
     def _start_ready_routines_jit(self, entity_id: str) -> None:
         """Start the ready routine by jit."""
@@ -3181,10 +3209,16 @@ class RascalScheduler(BaseScheduler):
             else:
                 return
 
-    def _start_ready_routines_tl(self, action_id: str, entity: str) -> None:
+    def _start_ready_routines_tl(self, action_id: str, entity_id: str) -> None:
         """Test and start the ready routine."""
+        if entity_id not in self._lineage_table.lock_queues:
+            raise ValueError("Entity %s has no schedule." % entity_id)
+        if action_id not in self._lineage_table.lock_queues[entity_id]:
+            raise ValueError(
+                f"Action {action_id} has not been scheduled on entity {entity_id}."
+            )
 
-        next_action = self._lineage_table.lock_queues[entity].next(action_id)
+        next_action = self._lineage_table.lock_queues[entity_id].next(action_id)
 
         if not next_action:
             return

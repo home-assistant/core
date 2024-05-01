@@ -1,7 +1,6 @@
-"""The rasc integration."""
+"""The rasc abstraction."""
 from __future__ import annotations
 
-from abc import ABC
 import asyncio
 from collections.abc import Callable, Coroutine
 import datetime
@@ -10,13 +9,12 @@ import json
 import time
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
+import numpy as np
+
 from homeassistant.components import notify
 from homeassistant.const import (
-    ATTR_ACTION_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
-    ATTR_GROUP_ID,
-    ATTR_SERVICE,
     CONF_EVENT,
     CONF_SERVICE,
     CONF_SERVICE_DATA,
@@ -27,26 +25,24 @@ from homeassistant.core import (
     Service,
     ServiceCall,
     ServiceResponse,
+    callback,
 )
 from homeassistant.helpers.dynamic_polling import get_best_distribution, get_polls
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import device_entities
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.dt as dt_util
 
-from .const import LOGGER, RASC_ACK, RASC_COMPLETE, RASC_RESPONSE, RASC_START
-
-if TYPE_CHECKING:
-    from homeassistant.helpers.entity_platform import EntityPlatform
-    from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-
+from .const import DEFAULT_FAILURE_TIMEOUT, LOGGER, RASC_ACK, RASC_COMPLETE, RASC_START
+from .helpers import fire
 
 _R = TypeVar("_R")
 
 
-class RASC(ABC):
+class RASCAbstraction:
     """RASC Component."""
 
     def __init__(self, logger, domain, hass: HomeAssistant) -> None:
@@ -82,35 +78,10 @@ class RASC(ABC):
             for entity in entities:
                 self._states[entity.entity_id].start_tracking(platform)
 
-    def _init_states(self, context: Context, service_call: ServiceCall):
-        component = self.hass.data.get(service_call.domain)
-        if not component or not hasattr(component, "async_get_platforms"):
-            return
-        entity_ids = self._get_entity_ids(service_call)
-        platforms = component.async_get_platforms(entity_ids)
-        for _, entities in platforms:
-            for entity in entities:
-                self._states[entity.entity_id] = self._get_rasc_state(
-                    context, entity, service_call
-                )
-
-    def _get_current_entity_state(self, entity: Entity) -> dict[str, Any]:
-        return entity.get_current_state
-
-    def _get_action_complete_percentage(self, state: RASCState) -> float:
-        entity = state.entity
-        request_state = state.request_state
-        action = {
-            CONF_SERVICE: state.service_call.service,
-            CONF_SERVICE_DATA: state.service_call.data,
-        }
-        return entity.get_action_complete_percentage(request_state, action)
-
     def _get_action_length_estimate(self, state: RASCState) -> float:
-        prev_length_estimate = state.length_estimate
-        current_progress = self._get_action_complete_percentage(state)
-        state.length_estimate = prev_length_estimate / current_progress
-        return state.length_estimate
+        if not state.start_time:
+            raise ValueError("start_time must be provided.")
+        return state.compl_time_estimation - state.start_time
 
     def get_action_length_estimate(
         self,
@@ -134,9 +105,7 @@ class RASC(ABC):
             if not history:
                 return transition
             dist = get_best_distribution(history)
-            if not quart:
-                quart = 0.99
-            return dist.ppf(quart)
+            return dist.mean()
 
         return self._get_action_length_estimate(state)
 
@@ -144,7 +113,6 @@ class RASC(ABC):
         self, context: Context, entity: Entity, service_call: ServiceCall
     ) -> RASCState:
         """Get RASC state on the given Event e."""
-        request_state = self._get_current_entity_state(entity)
         params = {
             CONF_SERVICE: service_call.service,
             CONF_SERVICE_DATA: service_call.data,
@@ -156,155 +124,145 @@ class RASC(ABC):
             entity.async_get_action_target_state({CONF_EVENT: RASC_COMPLETE, **params})
         ) or {}
         return RASCState(
+            self.hass,
             context,
             entity,
             service_call,
-            request_state,
             start_state,
             complete_state,
             self._store,
         )
 
-    def _match_state(self, state: RASCState, rules: dict[str, Any]) -> bool:
-        matched = True
-        if not rules:
-            raise ValueError("no entry in rules.")
-        for attr, match in rules.items():
-            entity_attr = getattr(state.entity, attr)
-            if entity_attr is None:
-                LOGGER.warning(
-                    "Entity %s does not have attribute %s", state.entity.entity_id, attr
-                )
-                continue
-            if not match(entity_attr):
-                matched = False
-                break
-        return matched
+    async def _prepare_ack(
+        self, context: Context, handler: Service, service_call: ServiceCall
+    ) -> ServiceResponse:
+        entity_ids = self._get_entity_ids(service_call)
 
-    async def _update_state(self, state: RASCState) -> None:
-        """Update RASC and fire responses if any."""
-
-        # check complete state
-        complete_state_matched = self._match_state(state, state.complete_state)
-        # prevent hazardous changes
-        transition = state.transition
-        if complete_state_matched and (
-            transition is None or state.time_elapsed > transition / 2
-        ):
-            # fire start response if haven't
-            if not state.started:
-                await state.set_started()
-                self._fire_by_state(RASC_START, state)
-
-            self._fire_by_state(RASC_COMPLETE, state)
-            await state.set_completed()
-            self._update_store(
-                state.entity,
-                state.service_call.service,
-                state.transition,
-                time_to_complete=state.time_elapsed,
-            )
-
-            return
-
-        start_state_matched = self._match_state(state, state.start_state)
-        if start_state_matched and not state.started:
-            self._fire_by_state(RASC_START, state)
-            await state.set_started()
-            self._update_store(
-                state.entity,
-                state.service_call.service,
-                state.transition,
-                time_to_start=state.time_elapsed,
-            )
-        return
-
-    def _update_store(
-        self,
-        entity: Entity,
-        action: str,
-        transition: float,
-        time_to_start: float | None = None,
-        time_to_complete: float | None = None,
-    ):
-        key = ",".join((entity.entity_id, action, str(transition)))
-        histories = self._store.histories
-        if key not in histories:
-            histories[key] = RASCHistory()
-
-        if time_to_start:
-            histories[key].append_s(time_to_start)
-        if time_to_complete:
-            histories[key].append_c(time_to_complete)
-
-        self.hass.loop.create_task(self._store.async_save())
-
-    def _fire_by_state(self, rasc_type: str, state: RASCState | None = None):
-        if state is None:
-            entity_id = None
-            action_id = None
-            action = None
-            group_id = None
+        response: ServiceResponse = None
+        job = handler.job
+        target = job.target
+        if job.job_type == HassJobType.Coroutinefunction:
+            if TYPE_CHECKING:
+                target = cast(Callable[..., Coroutine[Any, Any, _R]], target)
+            response = await target(service_call)
+        elif job.job_type == HassJobType.Callback:
+            if TYPE_CHECKING:
+                target = cast(Callable[..., _R], target)
+            response = target(service_call)
         else:
-            entity_id = state.entity.entity_id
-            action_id = (
-                state.service_call.data[ATTR_ACTION_ID]
-                if ATTR_ACTION_ID in state.service_call.data
-                else None
-            )
-            action = state.service_call.service
-            group_id = state.service_call.data.get(ATTR_GROUP_ID)
-        self._fire(rasc_type, entity_id, action_id, action, group_id)
+            if TYPE_CHECKING:
+                target = cast(Callable[..., _R], target)
+            response = await self.hass.async_add_executor_job(target, service_call)
 
-    def _fire(
-        self,
-        rasc_type: str,
-        entity_id: str | None,
-        action_id: str | None,
-        action: str | None,
-        group_id: str | None = None,
-    ):
-        LOGGER.info("%s %s: %s", entity_id, action, rasc_type)
-        self.hass.bus.async_fire(
-            RASC_RESPONSE,
-            {
-                "type": rasc_type,
-                ATTR_SERVICE: action,
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_ACTION_ID: action_id,
-                ATTR_GROUP_ID: group_id,
-            },
-        )
+        # TODO: track entities independently (service._handle_entity_call) # pylint: disable=fixme
+        # start tracking after receiving ack
+        for entity_id in entity_ids:
+            fire(
+                self.hass,
+                RASC_ACK,
+                entity_id,
+                service_call.service,
+                LOGGER,
+                service_call.data,
+            )
+        self._track_service(context, service_call)
+        return response
+
+    async def _prepare_start(
+        self, context: Context, service_call: ServiceCall
+    ) -> ServiceResponse:
+        entity_ids = self._get_entity_ids(service_call)
+
+        def check_started() -> bool:
+            for entity_id in entity_ids:
+                if (
+                    not self._states[entity_id].started
+                    and not self._states[entity_id].failed
+                ):
+                    return False
+            return True
+
+        async with context.cv:
+            await context.cv.wait_for(check_started)
+            context.cv.notify_all()
+            if any(not self._states[entity_id].started for entity_id in entity_ids):
+                raise ServiceFailureError("Service failed before started")
+            return entity_ids
+
+    async def _prepare_compl(
+        self, context: Context, service_call: ServiceCall
+    ) -> ServiceResponse:
+        entity_ids = self._get_entity_ids(service_call)
+
+        def check_completed() -> bool:
+            for entity_id in entity_ids:
+                if (
+                    not self._states[entity_id].completed
+                    and not self._states[entity_id].failed
+                ):
+                    return False
+            return True
+
+        async with context.cv:
+            await context.cv.wait_for(check_completed)
+            context.cv.notify_all()
+            if any(not self._states[entity_id].completed for entity_id in entity_ids):
+                raise ServiceFailureError("Service failed before completed")
+            return entity_ids
+
+    async def _failure_handler(
+        self, context: Context, service_call: ServiceCall
+    ) -> None:
+        entity_ids = self._get_entity_ids(service_call)
+
+        async with context.cv:
+            await context.cv.wait_for(
+                lambda: all(
+                    self._states[entity_id].failed or self._states[entity_id].completed
+                    for entity_id in entity_ids
+                )
+            )
+            context.cv.notify_all()
+
+            successful_actions = []
+            failed_actions = []
+            for entity_id in entity_ids:
+                if self._states[entity_id].failed:
+                    failed_actions.append(entity_id)
+                else:
+                    successful_actions.append(entity_id)
+                del self._states[entity_id]
+            message = {
+                "action": service_call.service,
+                "successful": successful_actions,
+                "failed": failed_actions,
+            }
+            if failed_actions:
+                # prevent infinite recursion
+                if service_call.domain != notify.DOMAIN:
+                    notification = {
+                        "message": json.dumps(message, indent=2),
+                        "title": "Action Failed",
+                    }
+                    await self.hass.services.async_call(
+                        notify.DOMAIN,
+                        notify.SERVICE_PERSISTENT_NOTIFICATION,
+                        notification,
+                    )
 
     async def async_load(self) -> None:
         """Load persistent store."""
         await self._store.async_load()
 
+    @callback
     async def async_on_push_event(self, entity: Entity) -> None:
         """Handle update event from push-based entity."""
-        await self.update(entity)
-
-    async def update(
-        self,
-        entity: Entity,
-        platform: EntityPlatform | DataUpdateCoordinator | None = None,
-    ) -> None:
-        """Update rasc state."""
         rasc_state = self._states.get(entity.entity_id)
         if not rasc_state:
             return
-        await self._update_state(rasc_state)
         if rasc_state.completed or rasc_state.failed:
-            # TODO: add garbage collection # pylint: disable=fixme
-            # del self._states[entity.entity_id]
             return
-        # if the entity is push-based, no need to get polling interval
-        if not entity.should_poll or platform is None:
-            return
-
-        polling_interval = rasc_state.get_polling_interval()
-        await asyncio.sleep(polling_interval.total_seconds())
-        await platform.track_entity_state(entity)
+        await rasc_state.update()
 
     def execute_service(
         self, handler: Service, service_call: ServiceCall
@@ -316,126 +274,43 @@ class RASC(ABC):
         """Execute a service."""
 
         # for response wait-notify
-        s_cv = asyncio.Condition()
-        c_cv = asyncio.Condition()
-        f_cv = asyncio.Condition()
-        context = Context(s_cv, c_cv, f_cv)
+        context = Context()
 
-        self._init_states(context, service_call)
-
-        async def a_future(
-            context: Context, handler: Service, service_call: ServiceCall
-        ) -> ServiceResponse:
-            entity_ids = self._get_entity_ids(service_call)
-            action_id = service_call.data.get(ATTR_ACTION_ID)
-
-            response: ServiceResponse = None
-            job = handler.job
-            target = job.target
-            if job.job_type == HassJobType.Coroutinefunction:
-                if TYPE_CHECKING:
-                    target = cast(Callable[..., Coroutine[Any, Any, _R]], target)
-                response = await target(service_call)
-            elif job.job_type == HassJobType.Callback:
-                if TYPE_CHECKING:
-                    target = cast(Callable[..., _R], target)
-                response = target(service_call)
-            else:
-                if TYPE_CHECKING:
-                    target = cast(Callable[..., _R], target)
-                response = await self.hass.async_add_executor_job(target, service_call)
-
-            # TODO: track entities independently (service._handle_entity_call) # pylint: disable=fixme
-            # start tracking after receiving ack
-            for entity_id in entity_ids:
-                self._fire(RASC_ACK, entity_id, action_id, service_call.service)
-            self._track_service(context, service_call)
-            return response
-
-        async def s_future(
-            context: Context, service_call: ServiceCall
-        ) -> ServiceResponse:
-            entity_ids = self._get_entity_ids(service_call)
-
-            def check_started() -> bool:
-                for entity_id in entity_ids:
-                    if not self._states[entity_id].started:
-                        return False
-                return True
-
-            async with context.s_cv:
-                await context.s_cv.wait_for(check_started)
-                return entity_ids
-
-        async def c_future(
-            context: Context, service_call: ServiceCall
-        ) -> ServiceResponse:
-            entity_ids = self._get_entity_ids(service_call)
-
-            def check_completed() -> bool:
-                for entity_id in entity_ids:
-                    if not self._states[entity_id].completed:
-                        return False
-                return True
-
-            async with context.c_cv:
-                await context.c_cv.wait_for(check_completed)
-                # notify failure detector to end listening
-                async with context.f_cv:
-                    context.f_cv.notify()
-                return entity_ids
-
-        async def failure_timeout(context: Context, service_call: ServiceCall) -> None:
-            entity_ids = self._get_entity_ids(service_call)
-
-            async with context.f_cv:
-                await context.f_cv.wait_for(
-                    lambda: all(
-                        self._states[entity_id].failed
-                        or self._states[entity_id].completed
-                        for entity_id in entity_ids
-                    )
-                )
-
-                successful_actions = []
-                failed_actions = []
-                for entity_id in entity_ids:
-                    if self._states[entity_id].failed:
-                        failed_actions.append(entity_id)
-                    else:
-                        successful_actions.append(entity_id)
-                message = {
-                    "action": service_call.service,
-                    "successful": successful_actions,
-                    "failed": failed_actions,
-                }
-                if failed_actions:
-                    # prevent infinite recursion
-                    if service_call.domain != notify.DOMAIN:
-                        notification = {
-                            "message": json.dumps(message, indent=2),
-                            "title": "Action Failed",
-                        }
-                        await self.hass.services.async_call(
-                            notify.DOMAIN,
-                            notify.SERVICE_PERSISTENT_NOTIFICATION,
-                            notification,
-                        )
-
-        self.hass.async_create_task(failure_timeout(context, service_call))
-        return (
-            self.hass.async_create_task(a_future(context, handler, service_call)),
-            self.hass.async_create_task(s_future(context, service_call)),
-            self.hass.async_create_task(c_future(context, service_call)),
+        # create async task for A, S, C
+        ack_task = self.hass.async_create_task(
+            self._prepare_ack(context, handler, service_call)
+        )
+        start_task = self.hass.async_create_task(
+            self._prepare_start(context, service_call)
+        )
+        compl_task = self.hass.async_create_task(
+            self._prepare_compl(context, service_call)
         )
 
+        # failure detection task
+        self.hass.async_create_task(self._failure_handler(context, service_call))
 
-class StateDetector(ABC):
+        return (ack_task, start_task, compl_task)
+
+
+class StateDetector:
     """RASC State Detector."""
 
-    def __init__(self, history: list[float] | None) -> None:
+    def __init__(
+        self,
+        history: list[float] | None,
+        complete_state: dict[str, Any] | None = None,
+        worst_Q: float = 2.0,
+        failure_callback: Any = None,
+    ) -> None:
         """Init State Detector."""
-        super().__init__()
+        # for failure detection
+        self._complete_state: dict[str, Any] = complete_state or {}
+        self._progress: dict[str, Any] = {}
+        self._next_q: float = 1
+        self._check_failure = False
+
+        self._worst_Q = worst_Q
         # no history is found, polling statically
         if history is None or len(history) == 0:
             self._static = True
@@ -453,25 +328,93 @@ class StateDetector(ABC):
         # TODO: put this in bg # pylint: disable=fixme
         dist = get_best_distribution(history)
         self._attr_upper_bound = dist.ppf(0.99)
-        self._polls = get_polls(dist, self._attr_upper_bound)
+        self._polls = get_polls(dist, worst_case_delta=worst_Q)
+        self._last_updated = None
+        self._failure_callback = failure_callback
 
     @property
     def upper_bound(self) -> float | None:
         """Return upper bound."""
         return self._attr_upper_bound
 
+    @property
+    def check_failure(self):
+        """Return true if checking failure."""
+        return self._check_failure
+
+    @check_failure.setter
+    def check_failure(self, value: bool):
+        """Set checking failure."""
+        self._check_failure = value
+
+    async def add_progress(self, progress):
+        """Add progress."""
+        if not self.check_failure:
+            return
+        if not bool(self._progress):
+            self._last_updated = time.time()
+        for key, state in progress.items():
+            if key not in self._progress:
+                self._progress[key] = []
+            self._progress[key].append((state, time.time()))
+        await self._update_next_q()
+
+    def compl_time_estimation(self) -> float:
+        """Return completion time estimation."""
+        max_predicted_time = 0
+        for key, progress in self._progress.items():
+            if len({p[0] for p in progress}) > 2:
+                x = [item[0] for item in progress]
+                y = [item[1] for item in progress]
+                z = np.polyfit(x, y, 2)
+                p = np.poly1d(z)
+                predicted_time = p(self._complete_state[key].value)
+                if predicted_time > max_predicted_time:
+                    max_predicted_time = predicted_time
+        return max_predicted_time
+
+    async def _update_next_q(self):
+        next_q = self._next_q
+        modified = False
+        for key, progress in self._progress.items():
+            if len(progress) > 1 and progress[-1][0] != progress[-2][0]:
+                self._last_updated = time.time()
+            if len({p[0] for p in progress}) > 2:
+                x = [item[0] for item in progress]
+                y = [item[1] for item in progress]
+                z = np.polyfit(x, y, 2)
+                p = np.poly1d(z)
+                predicted_time = p(self._complete_state[key].value)
+                time_diff = predicted_time - progress[0][1]
+                if time_diff > next_q:
+                    modified = True
+                    next_q = time_diff
+
+        # check failure
+        if time.time() - self._last_updated > self._worst_Q * 2 + 1:
+            if self._failure_callback:
+                await self._failure_callback()
+
+        if modified:
+            self._next_q = min(next_q, self._worst_Q)
+        else:
+            self._next_q = min(2 * self._next_q, self._worst_Q)
+
     def next_interval(self) -> timedelta:
         """Get next interval."""
         if self._static:
-            return timedelta(seconds=1)
+            return timedelta(seconds=self._worst_Q)
         if self._cur_poll < len(self._polls):
             cur = self._cur_poll
             self._cur_poll += 1
-            return timedelta(seconds=self._polls[cur])
-        return timedelta(seconds=1)
+            if cur == 0:
+                return timedelta(seconds=self._polls[cur])
+            return timedelta(seconds=(self._polls[cur] - self._polls[cur - 1]))
+
+        return timedelta(seconds=self._next_q)
 
 
-class RASCHistory(ABC):
+class RASCHistory:
     """RASC History."""
 
     def __init__(
@@ -492,29 +435,26 @@ class RASCHistory(ABC):
         self.ct_history.append(complete_time)
 
 
-class RASCState(ABC):
+class RASCState:
     """RASC State."""
 
     def __init__(
         self,
+        hass: HomeAssistant,
         context: Context,
         entity: Entity,
         service_call: ServiceCall,
-        request_state: dict[str, StateType],
         start_state: dict[str, Any],
         complete_state: dict[str, Any],
         store: RASCStore,
-        length_estimate: float = 0,
     ) -> None:
         """Init rasc state."""
-        transition: float = service_call.data.get("transition", 0)
-        self.request_state = request_state
-        self.start_state = start_state
-        self.complete_state = complete_state
-        self.transition = transition
-        self.length_estimate = length_estimate
-        self.service_call = service_call
-        self.entity = entity
+        self.hass = hass
+        self._start_state = start_state
+        self._complete_state = complete_state
+        self._transition = service_call.data.get("transition", 0)
+        self._service_call = service_call
+        self._entity = entity
         self._attr_failed = False
         self._attr_started = False
         self._attr_completed = False
@@ -526,6 +466,10 @@ class RASCState(ABC):
         self._s_detector: StateDetector | None = None
         self._c_detector: StateDetector | None = None
         self._exec_time: float | None = None
+        # polling component
+        self._platform: EntityPlatform | DataUpdateCoordinator | None = None
+        # failure detection
+        self._current_state = self._request_state = entity.__dict__
 
     @property
     def time_elapsed(self) -> float:
@@ -533,6 +477,11 @@ class RASCState(ABC):
         if not self._exec_time:
             return 0
         return time.time() - self._exec_time
+
+    @property
+    def entity(self) -> Entity:
+        """Return the entity."""
+        return self._entity
 
     @property
     def failed(self) -> bool:
@@ -545,49 +494,94 @@ class RASCState(ABC):
         return self._attr_started
 
     @property
+    def start_time(self) -> float | None:
+        """Return the start time."""
+        return self._exec_time
+
+    @property
     def completed(self) -> bool:
         """Return if the action has completed."""
         return self._attr_completed
 
-    def start_tracking(self, platform: EntityPlatform | DataUpdateCoordinator) -> None:
-        """Start tracking the state."""
-        self._next_response = RASC_START
-        self._exec_time = time.time()
-        coordinator: DataUpdateCoordinator | None = getattr(
-            self.entity, "coordinator", None
-        )
-        if self.entity.should_poll or coordinator:
-            key = ",".join(
-                (self.entity.entity_id, self.service_call.service, str(self.transition))
-            )
-            history = self._store.histories.get(key, RASCHistory())
-            self._s_detector = StateDetector(history.st_history)
-            self._c_detector = StateDetector(history.ct_history)
-            # fire failure if exceed upper_bound
-            if self._s_detector.upper_bound and self._c_detector.upper_bound:
-                upper_bound = (
-                    self._s_detector.upper_bound + self._c_detector.upper_bound
-                )
-                async_track_point_in_time(
-                    self.entity.hass,
-                    self.set_failed,
-                    # TODO: get closer upper_bound # pylint: disable=fixme
-                    dt_util.utcnow() + timedelta(seconds=upper_bound * 1.5),
-                )
-            # let platform state polling the state
-            next_interval = self.get_polling_interval()
-            # poll by coordinator
-            if coordinator:
-                self._tracking_task = self.entity.hass.async_create_task(
-                    coordinator.track_entity_state(self.entity, next_interval)
-                )
-            # poll by entity platform
-            else:
-                self._tracking_task = self.entity.hass.async_create_task(
-                    platform.track_entity_state(self.entity, next_interval)
-                )
+    @property
+    def compl_time_estimation(self) -> float:
+        """Return the completion time estimation."""
+        if not self._c_detector:
+            raise ValueError("No complete state detector.")
+        return self._c_detector.compl_time_estimation()
 
-    def get_polling_interval(self) -> timedelta:
+    async def _track(self) -> None:
+        if not self._platform:
+            return
+        # let platform state polling the state
+        next_interval = self._get_polling_interval()
+        await self._platform.track_entity_state(self._entity, next_interval)
+        await self.update()
+
+        if self.completed or self.failed:
+            return
+
+        await self._track()
+
+    async def _check_failure(self, _: datetime.datetime) -> None:
+        if self._c_detector is not None:
+            self._c_detector.check_failure = True
+
+    async def on_failure_detected(self) -> None:
+        """Call when StateDetector detects a failure."""
+        await self.set_failed()
+
+    def _match_target_state(self, target_state: dict[str, Any]) -> bool:
+        matched = True
+        if not target_state:
+            raise ValueError("no entry in rules.")
+
+        for attr, match in target_state.items():
+            entity_attr = getattr(self._entity, attr)
+            if entity_attr is None:
+                LOGGER.warning(
+                    "Entity %s does not have attribute %s", self._entity.entity_id, attr
+                )
+                continue
+            if not match(entity_attr):
+                matched = False
+                break
+        return matched
+
+    async def _update_current_state(self) -> None:
+        progress: dict[str, Any] = {}
+        for attr in self._complete_state:
+            progress[attr] = getattr(self._entity, attr)
+            curr_value = getattr(self._entity, attr)
+            prev_value = self._current_state.get(attr)
+            if curr_value is None:
+                LOGGER.warning(
+                    "Entity %s does not have attribute %s", self._entity.entity_id, attr
+                )
+                continue
+
+            if curr_value != prev_value:
+                self._current_state[attr] = curr_value
+
+        if self._c_detector is not None:
+            await self._c_detector.add_progress(progress)
+
+    def _update_store(self, tts: bool = False, ttc: bool = False):
+        key = ",".join(
+            (self._entity.entity_id, self._service_call.service, str(self._transition))
+        )
+        histories = self._store.histories
+        if key not in histories:
+            histories[key] = RASCHistory()
+
+        if tts:
+            histories[key].append_s(self.time_elapsed)
+        if ttc:
+            histories[key].append_c(self.time_elapsed)
+
+        self.hass.loop.create_task(self._store.async_save())
+
+    def _get_polling_interval(self) -> timedelta:
         """Get polling interval."""
         if self._next_response == RASC_START:
             if not self._s_detector:
@@ -599,33 +593,129 @@ class RASCState(ABC):
             return self._c_detector.next_interval()
         return timedelta(seconds=1)
 
-    async def set_failed(self, _: datetime.datetime):
+    @callback
+    async def update(self) -> None:
+        """Handle callback function after polling."""
+
+        entity_id = self._entity.entity_id
+        action = self._service_call.service
+        # check complete state
+        complete_state_matched = self._match_target_state(self._complete_state)
+        # prevent hazardous changes
+        transition = self._transition
+        if complete_state_matched and (
+            transition is None or self.time_elapsed > transition / 2
+        ):
+            # fire start response if haven't
+            if not self.started:
+                await self.set_started()
+                self._update_store(tts=True)
+                fire(
+                    self.hass,
+                    RASC_START,
+                    entity_id,
+                    action,
+                    LOGGER,
+                    self._service_call.data,
+                )
+
+            await self.set_completed()
+            self._update_store(ttc=True)
+            fire(
+                self.hass,
+                RASC_COMPLETE,
+                entity_id,
+                action,
+                LOGGER,
+                self._service_call.data,
+            )
+
+            return
+
+        start_state_matched = self._match_target_state(self._start_state)
+        if start_state_matched and not self.started:
+            fire(
+                self.hass,
+                RASC_START,
+                entity_id,
+                action,
+                LOGGER,
+                self._service_call.data,
+            )
+            await self.set_started()
+            self._update_store(tts=True)
+
+        # update current state
+        await self._update_current_state()
+
+    def start_tracking(self, platform: EntityPlatform | DataUpdateCoordinator) -> None:
+        """Start tracking the state."""
+        self._next_response = RASC_START
+        self._exec_time = time.time()
+        coordinator: DataUpdateCoordinator | None = getattr(
+            self._entity, "coordinator", None
+        )
+        # push-based devices dont need adaptive polling
+        if not self._entity.should_poll and not coordinator:
+            return
+
+        if coordinator:
+            self._platform = coordinator
+        else:
+            self._platform = platform
+        # retrieve history by key
+        key = ",".join(
+            (self._entity.entity_id, self._service_call.service, str(self._transition))
+        )
+        history = self._store.histories.get(key, RASCHistory())
+        self._s_detector = StateDetector(history.st_history)
+        self._c_detector = StateDetector(
+            history.ct_history,
+            self._complete_state,
+            failure_callback=self.on_failure_detected,
+        )
+        # fire failure if exceed upper_bound
+        if self._s_detector.upper_bound and self._c_detector.upper_bound:
+            upper_bound = self._s_detector.upper_bound + self._c_detector.upper_bound
+        else:
+            upper_bound = DEFAULT_FAILURE_TIMEOUT
+        async_track_point_in_time(
+            self.hass,
+            self._check_failure,
+            dt_util.utcnow() + timedelta(seconds=upper_bound),
+        )
+
+        self._tracking_task = self.hass.async_create_task(self._track())
+
+    async def set_failed(self):
         """Set failed."""
         if self._tracking_task:
             self._tracking_task.cancel()
             self._tracking_task = None
         self._attr_failed = True
-        async with self._context.f_cv:
-            self._context.f_cv.notify()
+        async with self._context.cv:
+            self._context.cv.notify_all()
 
     async def set_started(self):
         """Set started."""
         self._exec_time = time.time()
         self._attr_started = True
         self._next_response = RASC_COMPLETE
-        async with self._context.s_cv:
-            self._context.s_cv.notify()
+        async with self._context.cv:
+            self._context.cv.notify_all()
 
     async def set_completed(self):
         """Set completed."""
+        if not self._attr_started:
+            self._attr_started = True
         self._attr_completed = True
         self._next_response = None
-        async with self._context.c_cv:
-            self._context.c_cv.notify()
+        async with self._context.cv:
+            self._context.cv.notify_all()
 
 
-class RASCStore(ABC):
-    """RASC permanent store."""
+class RASCStore:
+    """RASC perminent store."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new config object."""
@@ -639,29 +729,34 @@ class RASCStore(ABC):
         """Load stored data."""
         async with self._init_lock:
             if (data := await self._store.async_load()) is None:
-                data = cast(dict[str, dict[str, list[float]]], {})
+                data = cast(dict[str, dict[str, dict[str, list[float]]]], {})
 
-            self.histories = {key: RASCHistory(**hist) for key, hist in data.items()}
+            self.histories = {
+                key: RASCHistory(**hist)
+                for key, hist in data.get("history", {}).items()
+            }
 
     async def async_save(self) -> None:
         """Store data."""
         await self._store.async_save(
             {
-                key: {
-                    "st_history": hist.st_history,
-                    "ct_history": hist.ct_history,
+                "history": {
+                    key: {
+                        "st_history": hist.st_history,
+                        "ct_history": hist.ct_history,
+                    }
+                    for key, hist in self.histories.items()
                 }
-                for key, hist in self.histories.items()
             }
         )
 
-    class _ConfigStore(Store[dict[str, dict[str, list[float]]]]):
+    class _ConfigStore(Store[dict[str, dict[str, dict[str, list[float]]]]]):
         def __init__(self, hass: HomeAssistant) -> None:
             """Initialize storage class."""
             super().__init__(
                 hass,
                 1,
-                "rasc.history",
+                "rasc",
                 private=True,
                 atomic_writes=True,
             )
@@ -670,10 +765,14 @@ class RASCStore(ABC):
 class Context:
     """RASC Context."""
 
-    def __init__(
-        self, s_cv: asyncio.Condition, c_cv: asyncio.Condition, f_cv: asyncio.Condition
-    ) -> None:
+    def __init__(self) -> None:
         """Initialize context."""
-        self.s_cv = s_cv
-        self.c_cv = c_cv
-        self.f_cv = f_cv
+        self.cv = asyncio.Condition()
+
+
+class ServiceFailureError(Exception):
+    """RASC failure error."""
+
+    def __init__(self, message) -> None:
+        """Initialize error."""
+        super().__init__(message)

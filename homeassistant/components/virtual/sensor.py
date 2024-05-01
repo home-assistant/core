@@ -1,6 +1,7 @@
 """Provide support for a virtual sensor."""
 
 import logging
+from typing import cast
 
 import voluptuous as vol
 
@@ -32,13 +33,16 @@ from .const import (
     ATTR_GROUP_NAME,
     ATTR_VALUE,
     COMPONENT_DOMAIN,
+    COMPONENT_NETWORK,
     COMPONENT_SERVICES,
     CONF_CLASS,
     CONF_COORDINATED,
     CONF_INITIAL_VALUE,
+    CONF_SIMULATE_NETWORK,
 )
 from .coordinator import VirtualDataUpdateCoordinator
 from .entity import CoordinatedVirtualEntity, VirtualEntity, virtual_schema
+from .network import NetworkProxy
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -114,14 +118,23 @@ async def async_setup_entry(
         entry.entry_id
     ]
     entities: list[VirtualSensor] = []
-    for entity in get_entity_configs(
+    for entity_config in get_entity_configs(
         hass, entry.data[ATTR_GROUP_NAME], PLATFORM_DOMAIN
     ):
-        entity = SENSOR_SCHEMA(entity)
-        if CONF_COORDINATED in entity:
-            entities.append(CoordinatedVirtualSensor(entity, coordinator))
+        entity_config = SENSOR_SCHEMA(entity_config)
+        if entity_config[CONF_COORDINATED]:
+            entity = cast(
+                VirtualSensor, CoordinatedVirtualSensor(entity_config, coordinator)
+            )
         else:
-            entities.append(VirtualSensor(entity))
+            entity = VirtualSensor(entity_config)
+
+        if entity_config[CONF_SIMULATE_NETWORK]:
+            entity = cast(VirtualSensor, NetworkProxy(entity))
+            hass.data[COMPONENT_NETWORK][entity.entity_id] = entity
+
+        entities.append(entity)
+
     async_add_entities(entities)
 
     async def async_virtual_service(call):

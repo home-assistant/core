@@ -51,7 +51,7 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 
-from .abstraction import RASC
+from .abstraction import RASCAbstraction
 from .const import DOMAIN, LOGGER
 from .entity import ActionEntity, Queue, get_entity_id_from_number
 from .metrics import ScheduleMetrics
@@ -245,7 +245,8 @@ class BaseRescheduler(TimeLineScheduler):
             if not entities:
                 raise ValueError(f"Action {action_id} has no target entities.")
             max_prev_action_end_time = None
-            for entity_id in entities:
+            for target_entity in entities:
+                entity_id = get_entity_id_from_number(self._hass, target_entity)
                 prev_action_lock = lock_queues[entity_id].prev(action_id)
                 if not prev_action_lock:
                     continue
@@ -530,7 +531,8 @@ class BaseRescheduler(TimeLineScheduler):
                 if action.action_id not in descheduled_actions:
                     continue
                 target_entities = get_target_entities(self._hass, action.action)
-                for entity_id in target_entities:
+                for target_entity in target_entities:
+                    entity_id = get_entity_id_from_number(self._hass, target_entity)
                     if entity_id not in entity_descheduled_actions:
                         entity_descheduled_actions[entity_id] = dict[
                             str, list[ActionEntity]
@@ -582,7 +584,8 @@ class BaseRescheduler(TimeLineScheduler):
             if routine_id not in old_serialization_order:
                 continue
             target_entities = get_target_entities(self._hass, action.action)
-            for entity_id in target_entities:
+            for target_entity in target_entities:
+                entity_id = get_entity_id_from_number(self._hass, target_entity)
                 if entity_id not in pre_actions_per_entity:
                     pre_actions_per_entity[entity_id] = set[ActionEntity]()
                 pre_actions_per_entity[entity_id].add(action)
@@ -594,7 +597,8 @@ class BaseRescheduler(TimeLineScheduler):
             # add dependencies to the earlier serialized routines' actions
             # on the same entity to maintain the serializability order
             target_entities = get_target_entities(self._hass, action.action)
-            for entity_id in target_entities:
+            for target_entity in target_entities:
+                entity_id = get_entity_id_from_number(self._hass, target_entity)
                 if entity_id not in pre_actions_per_entity:
                     continue
                 for pre_action in pre_actions_per_entity[entity_id]:
@@ -645,7 +649,8 @@ class BaseRescheduler(TimeLineScheduler):
 
         target_entities = get_target_entities(self._hass, action.action)
         dt_action_st = string_to_datetime(action_st)
-        for entity_id in target_entities:
+        for target_entity in target_entities:
+            entity_id = get_entity_id_from_number(self._hass, target_entity)
             dt_action_end = dt_action_st + action.duration
             action_end = datetime_to_string(dt_action_end)
             free_slot = self._find_slot_including_time_range(
@@ -740,7 +745,8 @@ class BaseRescheduler(TimeLineScheduler):
                         continue
 
             target_entities = get_target_entities(self._hass, action.action)
-            for entity_id in target_entities:
+            for target_entity in target_entities:
+                entity_id = get_entity_id_from_number(self._hass, target_entity)
                 if entity_id not in wait_queues:
                     wait_queues[entity_id] = list[tuple[timedelta, ActionEntity]]()
                 if entity_id not in next_slots:
@@ -806,9 +812,13 @@ class BaseRescheduler(TimeLineScheduler):
                 # eligible children are those whose parents are all scheduled
                 for parent in child.parents:
                     target_entities = get_target_entities(self._hass, parent.action)
+                    entity_ids = [
+                        get_entity_id_from_number(self._hass, target_entity)
+                        for target_entity in target_entities
+                    ]
                     if any(
                         parent not in self._lineage_table.lock_queues[parent_entity_id]
-                        for parent_entity_id in target_entities
+                        for parent_entity_id in entity_ids
                     ):
                         break
                 else:
@@ -816,7 +826,8 @@ class BaseRescheduler(TimeLineScheduler):
 
                 # reinitialize the affected entities' wait queue and next slot if need be
                 target_entities = get_target_entities(self._hass, child.action)
-                for entity_id in target_entities:
+                for target_entity in target_entities:
+                    entity_id = get_entity_id_from_number(self._hass, target_entity)
                     if entity_id not in wait_queues:
                         wait_queues[entity_id] = list[tuple[timedelta, ActionEntity]]()
                     heapq.heappush(wait_queues[entity_id], (child.duration, child))
@@ -940,9 +951,13 @@ class BaseRescheduler(TimeLineScheduler):
             # eligible children are those whose parents are all scheduled
             for parent in child.parents:
                 target_entities = get_target_entities(self._hass, parent.action)
+                entity_ids = [
+                    get_entity_id_from_number(self._hass, target_entity)
+                    for target_entity in target_entities
+                ]
                 if any(
                     parent not in self._lineage_table.lock_queues[parent_entity_id]
-                    for parent_entity_id in target_entities
+                    for parent_entity_id in entity_ids
                 ):
                     break
             else:
@@ -950,7 +965,8 @@ class BaseRescheduler(TimeLineScheduler):
 
             # reinitialize the affected entities' wait queue and next slot if need be
             target_entities = get_target_entities(self._hass, child.action)
-            for entity_id in target_entities:
+            for target_entity in target_entities:
+                entity_id = get_entity_id_from_number(self._hass, target_entity)
                 if entity_id not in wait_queues:
                     wait_queues[entity_id] = set[ActionEntity]()
                 wait_queues[entity_id].add(child)
@@ -1066,7 +1082,8 @@ class BaseRescheduler(TimeLineScheduler):
                         continue
 
             target_entities = get_target_entities(self._hass, action.action)
-            for entity_id in target_entities:
+            for target_entity in target_entities:
+                entity_id = get_entity_id_from_number(self._hass, target_entity)
                 if entity_id not in wait_queues:
                     wait_queues[entity_id] = set[ActionEntity]()
                 if entity_id not in next_slots:
@@ -1258,7 +1275,8 @@ class BaseRescheduler(TimeLineScheduler):
             return set[ActionEntity]()
         target_entities = get_target_entities(self._hass, action.action)
         next_actions = set[ActionEntity]()
-        for entity_id in target_entities:
+        for target_entity in target_entities:
+            entity_id = get_entity_id_from_number(self._hass, target_entity)
             lock_queue = self._lineage_table.lock_queues[entity_id]
             next_action_lock = lock_queue.next(action.action_id)
             if not next_action_lock:
@@ -1346,7 +1364,8 @@ class BaseRescheduler(TimeLineScheduler):
                     continue
                 target_entities = get_target_entities(self._hass, action.action)
                 scheduled = True
-                for entity_id in target_entities:
+                for target_entity in target_entities:
+                    entity_id = get_entity_id_from_number(self._hass, target_entity)
                     if entity_id not in self._lineage_table.lock_queues:
                         raise ValueError("Entity %s has no schedule." % entity_id)
                     if action_id not in self._lineage_table.lock_queues[entity_id]:
@@ -1382,11 +1401,14 @@ class BaseRescheduler(TimeLineScheduler):
     ) -> list[ActionEntity]:
         """Find the actions on the entity from the bfs result."""
         routine_actions = self._routine_actions_bfs(routine_id)
-        return [
-            action
-            for action in routine_actions
-            if entity_id in get_target_entities(self._hass, action.action)
-        ]
+        actions = list[ActionEntity]()
+        for action in routine_actions:
+            target_entities = get_target_entities(self._hass, action.action)
+            for target_entity in target_entities:
+                target_entity_id = get_entity_id_from_number(self._hass, target_entity)
+                if target_entity_id == entity_id and action not in actions:
+                    actions.append(action)
+        return actions
 
     def _find_actions_breaking_routine_order(
         self, dependent_actions: list[ActionEntity], time: datetime
@@ -1427,7 +1449,8 @@ class BaseRescheduler(TimeLineScheduler):
             if not parent_action_id:
                 raise ValueError("The parent action does not have an action ID.")
             target_entities = get_target_entities(self._hass, parent_action.action)
-            for entity_id in target_entities:
+            for target_entity in target_entities:
+                entity_id = get_entity_id_from_number(self._hass, target_entity)
                 parent_lock = self._lineage_table.lock_queues[entity_id][
                     parent_action_id
                 ]
@@ -1452,7 +1475,8 @@ class BaseRescheduler(TimeLineScheduler):
                 "Action %s does not have any target entities." % action.action_id
             )
         earliest_action_start = None
-        for entity_id in target_entities:
+        for target_entity in target_entities:
+            entity_id = get_entity_id_from_number(self._hass, target_entity)
             if entity_id not in self._lineage_table.lock_queues:
                 raise ValueError("Entity %s has no schedule." % entity_id)
             if action.action_id not in self._lineage_table.lock_queues[entity_id]:
@@ -1600,12 +1624,16 @@ class BaseRescheduler(TimeLineScheduler):
             if not max_parent_end_time or max_parent_end_time <= action_start_time:
                 continue
             target_entities = get_target_entities(self._hass, action.action)
+            entity_ids = [
+                get_entity_id_from_number(self._hass, target_entity)
+                for target_entity in target_entities
+            ]
             action_length = action.duration
             (
                 new_slot_st,
                 _,
             ) = self._identify_first_common_idle_time_after(
-                target_entities, max_parent_end_time, action_length
+                entity_ids, max_parent_end_time, action_length
             )
             tasks = []
             for entity in target_entities:
@@ -1637,7 +1665,10 @@ class BaseRescheduler(TimeLineScheduler):
                     max_parent_end_time = self._max_parent_end_time(action)
                     # max end time of the actions from routines serialized before this routine
                     max_routine_end_time = new_end_time
-                    for target_entity_id in target_entities:
+                    for target_entity in target_entities:
+                        target_entity_id = get_entity_id_from_number(
+                            self._hass, target_entity
+                        )
                         if (
                             not max_routine_end_time
                             or end_time_per_entity[target_entity_id]
@@ -1713,12 +1744,16 @@ class BaseRescheduler(TimeLineScheduler):
             if not action.action_id:
                 raise ValueError("An independent action does not have an action ID.")
             target_entities = get_target_entities(self._hass, action.action)
+            entity_ids = [
+                get_entity_id_from_number(self._hass, target_entity)
+                for target_entity in target_entities
+            ]
             action_length = action.duration or timedelta(0)
             (
                 new_slot_st,
                 _,
             ) = self._identify_first_common_idle_time_after(
-                target_entities, new_end_time, action_length
+                entity_ids, new_end_time, action_length
             )
             tasks = []
             for entity in target_entities:
@@ -1783,7 +1818,8 @@ class BaseRescheduler(TimeLineScheduler):
             parent_target_entities = get_target_entities(
                 self._hass, parent_action.action
             )
-            for parent_entity_id in parent_target_entities:
+            for parent_entity in parent_target_entities:
+                parent_entity_id = get_entity_id_from_number(self._hass, parent_entity)
                 if (
                     parent_action_id
                     not in self._lineage_table.lock_queues[parent_entity_id]
@@ -2253,7 +2289,7 @@ class RascalRescheduler:
             return extra
 
         def _get_extra_proactive() -> float:
-            rasc: RASC = self._hass.data[DOMAIN]
+            rasc: RASCAbstraction = self._hass.data[DOMAIN]
             action_length_estimate = generate_duration(
                 rasc.get_action_length_estimate(
                     entity_id, action.service, action.transition

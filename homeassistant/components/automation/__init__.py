@@ -6,15 +6,18 @@ import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any, Optional, Protocol, cast
+from typing import Any, Optional, Protocol, cast
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.components.rasc.entity import BaseRoutineEntity
-from homeassistant.components.rasc.log import output_routine
-from homeassistant.components.rasc.scheduler import RascalScheduler, create_routine
+from homeassistant.components.rasc.scheduler import (
+    RascalScheduler,
+    create_routine,
+    output_routine,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -109,9 +112,6 @@ from .const import (
 )
 from .helpers import async_get_blueprints
 from .trace import trace_automation
-
-if TYPE_CHECKING:
-    from homeassistant.components.rasc import RascalScheduler
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 

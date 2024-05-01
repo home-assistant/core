@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING, Any, Protocol
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.rasc.decorator import rasc_track_service
 from homeassistant.components.rasc.scheduler import (
     add_entity_in_lineage,
     delete_entity_in_lineage,
@@ -893,7 +892,6 @@ class EntityPlatform:
             ]:
                 await asyncio.gather(*tasks)
 
-    @rasc_track_service
     async def track_entity_state(
         self, entity: Entity, delay: timedelta | None = None
     ) -> None:

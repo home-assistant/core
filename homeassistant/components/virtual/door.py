@@ -5,20 +5,16 @@ from datetime import timedelta
 import logging
 from typing import Any, cast
 
-import numpy as np
 import voluptuous as vol
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
-    ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
-    ATTR_TILT_POSITION,
     DOMAIN as PLATFORM_DOMAIN,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.components.rasc.helpers import Dataset, load_dataset
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_CLOSED
 from homeassistant.core import HomeAssistant
@@ -83,20 +79,20 @@ async def async_setup_entry(
     coordinator: VirtualDataUpdateCoordinator = hass.data[COMPONENT_DOMAIN][
         entry.entry_id
     ]
-    entities: list[VirtualCover] = []
+    entities: list[VirtualDoor] = []
     for entity_config in get_entity_configs(
         hass, entry.data[ATTR_GROUP_NAME], PLATFORM_DOMAIN
     ):
         entity_config = COVER_SCHEMA(entity_config)
         if entity_config[CONF_COORDINATED]:
             entity = cast(
-                VirtualCover, CoordinatedVirtualCover(entity_config, coordinator)
+                VirtualDoor, CoordinatedVirtualDoor(entity_config, coordinator)
             )
         else:
-            entity = VirtualCover(entity_config)
+            entity = VirtualDoor(entity_config)
 
         if entity_config[CONF_SIMULATE_NETWORK]:
-            entity = cast(VirtualCover, NetworkProxy(entity))
+            entity = cast(VirtualDoor, NetworkProxy(entity))
             hass.data[COMPONENT_NETWORK][entity.entity_id] = entity
 
         entities.append(entity)
@@ -104,16 +100,14 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class VirtualCover(VirtualEntity, CoverEntity):
+class VirtualDoor(VirtualEntity, CoverEntity):
     """Representation of a Virtual cover."""
 
     def __init__(self, config):
         """Initialize the Virtual cover device."""
         super().__init__(config, PLATFORM_DOMAIN)
 
-        self._attr_device_class = config.get(CONF_CLASS, CoverDeviceClass.SHADE)
-        if self._attr_device_class == CoverDeviceClass.DOOR:
-            self._dataset = load_dataset(Dataset.DOOR)
+        self._attr_device_class = config.get(CONF_CLASS)
         self._attr_supported_features = CoverEntityFeature(
             CoverEntityFeature.OPEN
             | CoverEntityFeature.CLOSE
@@ -121,18 +115,7 @@ class VirtualCover(VirtualEntity, CoverEntity):
             | CoverEntityFeature.STOP
         )
 
-        if self._attr_device_class in [
-            CoverDeviceClass.AWNING,
-            CoverDeviceClass.BLIND,
-            CoverDeviceClass.CURTAIN,
-            CoverDeviceClass.SHADE,
-        ]:
-            self._attr_supported_features |= CoverEntityFeature(
-                CoverEntityFeature.OPEN_TILT
-                | CoverEntityFeature.CLOSE_TILT
-                | CoverEntityFeature.SET_TILT_POSITION
-                | CoverEntityFeature.STOP_TILT
-            )
+        self._attr_device_class = CoverDeviceClass.DOOR
 
         self._change_time: timedelta = config.get(CONF_CHANGE_TIME)
 
@@ -160,10 +143,6 @@ class VirtualCover(VirtualEntity, CoverEntity):
                 for name, value in (
                     (ATTR_DEVICE_CLASS, self._attr_device_class),
                     (ATTR_CURRENT_POSITION, self._attr_current_cover_position),
-                    (
-                        ATTR_CURRENT_TILT_POSITION,
-                        self._attr_current_cover_tilt_position,
-                    ),
                 )
                 if value is not None
             }
@@ -182,30 +161,26 @@ class VirtualCover(VirtualEntity, CoverEntity):
         self._update_attributes()
 
     def _close_cover(self) -> None:
-        self._attr_current_cover_position = 0
         self._attr_is_opening = False
         self._attr_is_closing = False
         self._attr_is_closed = True
         self._update_attributes()
 
     def _open_cover(self) -> None:
-        self._attr_current_cover_position = 100
         self._attr_is_opening = False
         self._attr_is_closing = False
         self._attr_is_closed = False
         self._update_attributes()
 
     async def _start_operation(self):
-        if self._attr_device_class == CoverDeviceClass.DOOR:
-            action_length = np.random.choice(self._dataset["close"])
-        else:
-            action_length = self._change_time.total_seconds()
         try:
             if self.is_opening:
                 target_position = 100.0
             elif self.is_closing:
                 target_position = 0.0
-            step = (target_position - self._attr_current_cover_position) / action_length
+            step = (
+                target_position - self._attr_current_cover_position
+            ) / self._change_time.total_seconds()
             while True:
                 self._attr_current_cover_position += step
                 if self._attr_current_cover_position >= 100:
@@ -229,10 +204,7 @@ class VirtualCover(VirtualEntity, CoverEntity):
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        if (
-            self._change_time == DEFAULT_CHANGE_TIME
-            and self._attr_device_class != CoverDeviceClass.DOOR
-        ):
+        if self._change_time == DEFAULT_CHANGE_TIME:
             self._open_cover()
         else:
             self._opening()
@@ -241,10 +213,7 @@ class VirtualCover(VirtualEntity, CoverEntity):
 
     def close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        if (
-            self._change_time == DEFAULT_CHANGE_TIME
-            and self._attr_device_class != CoverDeviceClass.DOOR
-        ):
+        if self._change_time == DEFAULT_CHANGE_TIME:
             self._close_cover()
         else:
             self._closing()
@@ -257,11 +226,6 @@ class VirtualCover(VirtualEntity, CoverEntity):
             task.cancel()
         self.cover_tasks.clear()
 
-    def open_cover_tilt(self, **kwargs: Any) -> None:
-        """Open the cover tilt."""
-        self._attr_current_cover_tilt_position = 100
-        self._update_attributes()
-
     def close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         self._attr_current_cover_tilt_position = 0
@@ -272,20 +236,11 @@ class VirtualCover(VirtualEntity, CoverEntity):
         self._attr_current_cover_position = kwargs[ATTR_POSITION]
         self._update_attributes()
 
-    def stop_cover_tilt(self, **kwargs: Any) -> None:
-        """Stop the cover."""
-        raise NotImplementedError()
 
-    def set_cover_tilt_position(self, **kwargs: Any) -> None:
-        """Move the cover tilt to a specific position."""
-        self._attr_current_cover_tilt_position = kwargs[ATTR_TILT_POSITION]
-        self._update_attributes()
-
-
-class CoordinatedVirtualCover(CoordinatedVirtualEntity, VirtualCover):
+class CoordinatedVirtualDoor(CoordinatedVirtualEntity, VirtualDoor):
     """Representation of a Virtual switch."""
 
     def __init__(self, config, coordinator):
         """Initialize the Virtual switch device."""
         CoordinatedVirtualEntity.__init__(self, coordinator)
-        VirtualCover.__init__(self, config)
+        VirtualDoor.__init__(self, config)

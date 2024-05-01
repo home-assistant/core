@@ -55,7 +55,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .abstraction import RASC
+from .abstraction import RASCAbstraction
 from .const import DOMAIN, LOGGER
 from .rescheduler import RascalRescheduler
 from .scheduler import RascalScheduler
@@ -127,7 +127,7 @@ LOGGER.level = logging.DEBUG
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the RASC component."""
-    component = hass.data[DOMAIN] = RASC(LOGGER, DOMAIN, hass)
+    component = hass.data[DOMAIN] = RASCAbstraction(LOGGER, DOMAIN, hass)
     LOGGER.debug("RASC config: %s", config[DOMAIN])
     scheduler = hass.data[DOMAIN_RASCALSCHEDULER] = RascalScheduler(
         hass, config[DOMAIN]

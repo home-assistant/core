@@ -8,10 +8,10 @@ from datetime import timedelta
 import json
 import logging
 import re
-import shortuuid
 import time
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Optional, TypeVar
 
+import shortuuid
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -560,10 +560,10 @@ class Queue(Generic[_KT, _VT]):
     __slots__ = ("_keys", "_data")
 
     _keys: list[_KT]
-    _data: dict[_KT, _VT | None]
+    _data: dict[_KT, Optional[_VT]]
 
     def __init__(
-        self, queue: dict[_KT, _VT | None] | Queue[_KT, _VT] | None = None
+        self, queue: dict[_KT, Optional[_VT]] | Queue[_KT, _VT] | None = None
     ) -> None:
         """Initialize a queue entity."""
         self._data = {}
@@ -578,11 +578,11 @@ class Queue(Generic[_KT, _VT]):
                     "The provided queue does not support items() method and cannot be treated as a mapping"
                 )
 
-    def __getitem__(self, key: _KT) -> _VT | None:
+    def __getitem__(self, key: _KT) -> Optional[_VT]:
         """Get item."""
         return self._data[key]
 
-    def __setitem__(self, key: _KT, value: _VT | None) -> None:
+    def __setitem__(self, key: _KT, value: Optional[_VT]) -> None:
         """Set item."""
         self._keys.append(key)
         self._data[key] = value
@@ -608,24 +608,24 @@ class Queue(Generic[_KT, _VT]):
         """Get keys."""
         yield from self._keys
 
-    def items(self) -> Iterator[tuple[_KT, _VT | None]]:
+    def items(self) -> Iterator[tuple[_KT, Optional[_VT]]]:
         """Get keys and values."""
         for key in self._keys:
             yield key, self._data[key]
 
-    def values(self) -> Iterator[_VT | None]:
+    def values(self) -> Iterator[Optional[_VT]]:
         """Get values."""
         for key in self._keys:
             yield self._data[key]
 
-    def get(self, key: _KT, default=None) -> _VT | None:
+    def get(self, key: _KT, default=None) -> Optional[_VT]:
         """Get the value with the key."""
         try:
             return self._data[key]
         except KeyError:
             return default
 
-    def getitem(self, index: int) -> _VT | None:
+    def getitem(self, index: int) -> Optional[_VT]:
         """Get item in the index position."""
         try:
             key = self._keys[index]
@@ -633,7 +633,7 @@ class Queue(Generic[_KT, _VT]):
         except KeyError as e:
             raise KeyError("Key does not found while doing getitem.") from e
 
-    def pop(self, key: _KT, default=None) -> _VT | None:
+    def pop(self, key: _KT, default=None) -> Optional[_VT]:
         """Pop the value according to the key."""
         value = self.get(key, default)
         del self._data[key]
@@ -652,14 +652,14 @@ class Queue(Generic[_KT, _VT]):
             self._keys.append(key)
             self._data[key] = value
 
-    def updateitem(self, key: _KT, value: _VT | None) -> None:
+    def updateitem(self, key: _KT, value: Optional[_VT]) -> None:
         """Update the item."""
         try:
             self._data[key] = value
         except KeyError as e:
             raise KeyError("Key does not found while updating item.") from e
 
-    def setdefault(self, key: _KT, default: _VT | None) -> _VT | None:
+    def setdefault(self, key: _KT, default: Optional[_VT]) -> Optional[_VT]:
         """Return the value of the item with the specified key. If the key does not exist, insert the key with the specified value."""
         try:
             return self[key]
@@ -667,7 +667,7 @@ class Queue(Generic[_KT, _VT]):
             self[key] = default
             return self[key]
 
-    def top(self) -> tuple[_KT, _VT | None] | tuple[None, None]:
+    def top(self) -> tuple[_KT, Optional[_VT]] | tuple[None, None]:
         """Get the first item in the queue."""
         if not self._keys:
             return None, None
@@ -676,7 +676,7 @@ class Queue(Generic[_KT, _VT]):
         value = self._data[key]
         return key, value
 
-    def end(self) -> tuple[_KT, _VT | None] | tuple[None, None]:
+    def end(self) -> tuple[_KT, Optional[_VT]] | tuple[None, None]:
         """Get the last element in the queue."""
         if not self._keys:
             return None, None
@@ -685,7 +685,7 @@ class Queue(Generic[_KT, _VT]):
         value = self._data[key]
         return key, value
 
-    def insert_before(self, key: _KT, new_key: _KT, value: _VT | None) -> None:
+    def insert_before(self, key: _KT, new_key: _KT, value: Optional[_VT]) -> None:
         """Insert the new_key before the key with the value."""
         try:
             self._keys.insert(self._keys.index(key), new_key)
@@ -693,7 +693,7 @@ class Queue(Generic[_KT, _VT]):
         except ValueError:
             raise KeyError(key) from ValueError
 
-    def insert_after(self, key: _KT, new_key: _KT, value: _VT | None) -> None:
+    def insert_after(self, key: _KT, new_key: _KT, value: Optional[_VT]) -> None:
         """Insert the new_key after the key with the value."""
         try:
             self._keys.insert(self._keys.index(key) + 1, new_key)
@@ -708,7 +708,7 @@ class Queue(Generic[_KT, _VT]):
         except Exception as e:
             raise KeyError("An error occurred while getting the key index.") from e
 
-    def next(self, key: _KT | None) -> _VT | None:
+    def next(self, key: Optional[_KT]) -> Optional[_VT]:
         """Return the next item with the key."""
         if key is None:
             return None
@@ -718,14 +718,14 @@ class Queue(Generic[_KT, _VT]):
             return self._data[key]
         return None
 
-    def nextitem(self, index: int) -> _VT | None:
+    def nextitem(self, index: int) -> Optional[_VT]:
         """Return the next item with the index."""
         if index + 1 < len(self._keys):
             key = self._keys[index + 1]
             return self._data[key]
         return None
 
-    def prev(self, key: _KT) -> _VT | None:
+    def prev(self, key: _KT) -> Optional[_VT]:
         """Return the previous item with the key."""
         index = self._keys.index(key)
         if index - 1 >= 0:

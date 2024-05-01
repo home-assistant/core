@@ -1,13 +1,8 @@
-"""This component provides support for a virtual sensor.
-
-This class adds persistence to an entity.
-"""
+"""Base entity class for virtual devices."""
 
 import logging
-import pprint
 
 import voluptuous as vol
-from .coordinator import VirtualDataUpdateCoordinator
 
 from homeassistant.const import ATTR_ENTITY_ID
 import homeassistant.helpers.config_validation as cv
@@ -16,12 +11,34 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from .const import *
+from .const import (
+    ATTR_AVAILABLE,
+    ATTR_DEVICE_ID,
+    ATTR_PERSISTENT,
+    ATTR_UNIQUE_ID,
+    COMPONENT_DOMAIN,
+    COMPONENT_MANUFACTURER,
+    COMPONENT_MODEL,
+    CONF_COORDINATED,
+    CONF_INITIAL_AVAILABILITY,
+    CONF_INITIAL_VALUE,
+    CONF_NAME,
+    CONF_PERSISTENT,
+    CONF_PUSH,
+    CONF_SIMULATE_NETWORK,
+    DEFAULT_AVAILABILITY,
+    DEFAULT_COORDINATED,
+    DEFAULT_PERSISTENT,
+    DEFAULT_PUSH,
+    DEFAULT_SIMULATE_NETWORK,
+)
+from .coordinator import VirtualDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def virtual_schema(default_initial_value: str, extra_attrs):
+    """Define basic virtual schema."""
     schema = {
         vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_INITIAL_VALUE, default=default_initial_value): cv.string,
@@ -31,6 +48,9 @@ def virtual_schema(default_initial_value: str, extra_attrs):
         vol.Optional(CONF_PERSISTENT, default=DEFAULT_PERSISTENT): cv.boolean,
         vol.Optional(CONF_COORDINATED, default=DEFAULT_COORDINATED): cv.boolean,
         vol.Optional(CONF_PUSH, default=DEFAULT_PUSH): cv.boolean,
+        vol.Optional(
+            CONF_SIMULATE_NETWORK, default=DEFAULT_SIMULATE_NETWORK
+        ): cv.boolean,
         vol.Optional(ATTR_DEVICE_ID, default="NOTYET"): cv.string,
         vol.Optional(ATTR_ENTITY_ID, default="NOTYET"): cv.string,
         vol.Optional(ATTR_UNIQUE_ID, default="NOTYET"): cv.string,
@@ -47,7 +67,7 @@ class VirtualEntity(RestoreEntity):
 
     def __init__(self, config, domain):
         """Initialize an Virtual Sensor."""
-        _LOGGER.debug(f"creating-virtual-{domain}={config}")
+        # _LOGGER.debug(f"creating-virtual-{domain}={config}")
         self._config = config
         self._attr_should_poll = not config.get(CONF_PUSH)
         self._persistent = config.get(CONF_PERSISTENT)
@@ -72,23 +92,24 @@ class VirtualEntity(RestoreEntity):
             self._attr_unique_id = slugify(self._attr_name)
 
         if config.get(ATTR_DEVICE_ID) != "NOTYET":
-            _LOGGER.debug("setting up device info")
+            # _LOGGER.debug("setting up device info")
             self._attr_device_info = DeviceInfo(
                 identifiers={(COMPONENT_DOMAIN, config.get(ATTR_DEVICE_ID))},
                 manufacturer=COMPONENT_MANUFACTURER,
                 model=COMPONENT_MODEL,
             )
 
-        _LOGGER.info(f"VirtualEntity {self._attr_name} created")
+        self._attr_owd: float | None = None
+        # _LOGGER.info(f"VirtualEntity {self._attr_name} created")
 
     def _create_state(self, config):
-        _LOGGER.info(f"VirtualEntity {self.unique_id}: creating initial state")
+        # _LOGGER.info(f"VirtualEntity {self.unique_id}: creating initial state")
         self._attr_available = config.get(CONF_INITIAL_AVAILABILITY)
 
     def _restore_state(self, state, config):
-        _LOGGER.info(f"VirtualEntity {self.unique_id}: restoring state")
-        _LOGGER.debug(f"VirtualEntity:: state={pprint.pformat(state.state)}")
-        _LOGGER.debug(f"VirtualEntity:: attr={pprint.pformat(state.attributes)}")
+        # _LOGGER.info(f"VirtualEntity {self.unique_id}: restoring state")
+        # _LOGGER.debug(f"VirtualEntity:: state={pprint.pformat(state.state)}")
+        # _LOGGER.debug(f"VirtualEntity:: attr={pprint.pformat(state.attributes)}")
         self._attr_available = state.attributes.get(ATTR_AVAILABLE)
 
     def _update_attributes(self):
@@ -105,6 +126,7 @@ class VirtualEntity(RestoreEntity):
             )
 
     async def async_added_to_hass(self) -> None:
+        """Initialize virtual devices state."""
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
         if not self._persistent or not state:
@@ -118,9 +140,20 @@ class VirtualEntity(RestoreEntity):
         await super().async_will_remove_from_hass()
 
     def set_available(self, value):
+        """Set availability of device."""
         self._attr_available = value
         self._update_attributes()
         self.async_schedule_update_ha_state()
+
+    @property
+    def owd(self) -> float:
+        """Return one way delay."""
+        return self._attr_owd or 0
+
+    @owd.setter
+    def owd(self, value: float) -> None:
+        """Set one way delay."""
+        self._attr_owd = value
 
 
 class CoordinatedVirtualEntity(CoordinatorEntity[VirtualDataUpdateCoordinator]):

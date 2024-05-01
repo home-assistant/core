@@ -1,10 +1,8 @@
-"""This component provides support for virtual components."""
+"""The virtual component integration."""
 
-from distutils import util
 import logging
 
 import voluptuous as vol
-from homeassistant.components.virtual.coordinator import VirtualDataUpdateCoordinator
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_SOURCE, Platform
@@ -18,7 +16,20 @@ from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.typing import ConfigType
 
 from .cfg import BlendedCfg
-from .const import *
+from .const import (
+    ATTR_DEVICE_ID,
+    ATTR_ENTITIES,
+    ATTR_FILE_NAME,
+    ATTR_GROUP_NAME,
+    COMPONENT_DOMAIN,
+    COMPONENT_MANUFACTURER,
+    COMPONENT_MODEL,
+    COMPONENT_NETWORK,
+    COMPONENT_SERVICES,
+    CONF_NAME,
+)
+from .coordinator import VirtualDataUpdateCoordinator
+from .network import simulate_device_networks
 
 __version__ = "0.9.0a6"
 
@@ -38,6 +49,7 @@ SERVICE_SCHEMA = vol.Schema(
 VIRTUAL_PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.COVER,
+    Platform.CLIMATE,
     Platform.DEVICE_TRACKER,
     Platform.FAN,
     Platform.LIGHT,
@@ -52,6 +64,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[COMPONENT_DOMAIN] = {}
     hass.data[COMPONENT_SERVICES] = {}
+    hass.data[COMPONENT_NETWORK] = {}
 
     # See if we have already imported the data. If we haven't then do it now.
     config_entry = _async_find_matching_config_entry(hass)
@@ -85,30 +98,26 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 @callback
 def _async_find_matching_config_entry(hass):
-    """If we have anything in config_entries for virtual we consider it
-    configured and will ignore the YAML.
-    """
+    """If we have anything in config_entries for virtual we consider it configured and will ignore the YAML."""
     for entry in hass.config_entries.async_entries(COMPONENT_DOMAIN):
         return entry
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    _LOGGER.debug(f"async setup {entry.data}")
+    """Set up entry."""
 
     # Set up hass data if necessary
     if COMPONENT_DOMAIN not in hass.data:
         hass.data[COMPONENT_DOMAIN] = {}
         hass.data[COMPONENT_SERVICES] = {}
+        hass.data[COMPONENT_NETWORK] = {}
 
     # Get the config.
-    _LOGGER.debug("creating new cfg")
     vcfg = BlendedCfg(entry.data)
     vcfg.load()
 
     # create the devices.
-    _LOGGER.debug("creating the devices")
     for device in vcfg.devices:
-        _LOGGER.debug(f"creating-device={device}")
         await _async_get_or_create_virtual_device_in_registry(hass, entry, device)
 
     # Update the component data.
@@ -121,21 +130,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         }
     )
     hass.data[COMPONENT_DOMAIN][entry.entry_id] = VirtualDataUpdateCoordinator(hass)
-    _LOGGER.debug(f"update hass data {hass.data[COMPONENT_DOMAIN]}")
 
     # Create the entities.
-    _LOGGER.debug("creating the entities")
     await hass.config_entries.async_forward_entry_setups(entry, VIRTUAL_PLATFORMS)
+
+    # Simulate device network
+    simulate_device_networks(hass.data[COMPONENT_NETWORK])
 
     # Install service handler.
     @verify_domain_control(hass, COMPONENT_DOMAIN)
     async def async_virtual_service_set_available(call) -> None:
         """Call virtual service handler."""
-        _LOGGER.info(f"{call.service} service called")
+        _LOGGER.info("%s service called", call.service)
         await async_virtual_set_availability_service(hass, call)
 
     if not hasattr(hass.data[COMPONENT_SERVICES], COMPONENT_DOMAIN):
-        _LOGGER.debug("installing handlers")
         hass.data[COMPONENT_SERVICES][COMPONENT_DOMAIN] = "installed"
         hass.services.async_register(
             COMPONENT_DOMAIN, SERVICE_AVAILABILE, async_virtual_service_set_available
@@ -146,8 +155,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    _LOGGER.debug(f"unloading virtual group {entry.data[ATTR_GROUP_NAME]}")
-    # _LOGGER.debug(f"before hass={hass.data[COMPONENT_DOMAIN]}")
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, VIRTUAL_PLATFORMS
     )
@@ -155,7 +162,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         bcfg = BlendedCfg(entry.data)
         bcfg.delete()
         hass.data[COMPONENT_DOMAIN].pop(entry.data[ATTR_GROUP_NAME])
-    # _LOGGER.debug(f"after hass={hass.data[COMPONENT_DOMAIN]}")
 
     return unload_ok
 
@@ -175,6 +181,7 @@ async def _async_get_or_create_virtual_device_in_registry(
 
 
 def get_entity_configs(hass, group_name, domain):
+    """Get entity configs."""
     return (
         hass.data.get(COMPONENT_DOMAIN, {})
         .get(group_name, {})
@@ -184,6 +191,7 @@ def get_entity_configs(hass, group_name, domain):
 
 
 def get_entity_from_domain(hass, domain, entity_id):
+    """Get entity from domain."""
     component = hass.data.get(domain)
     if component is None:
         raise HomeAssistantError(f"{domain} component not set up")
@@ -196,13 +204,14 @@ def get_entity_from_domain(hass, domain, entity_id):
 
 
 async def async_virtual_set_availability_service(hass, call):
+    """Set availability service."""
     entities = call.data["entity_id"]
     value = call.data["value"]
 
-    if type(value) is not bool:
-        value = bool(util.strtobool(value))
+    if not isinstance(value, bool):
+        value = value in ("y", "yes", "t", "true", "on", "1")
 
     for entity_id in entities:
         domain = entity_id.split(".")[0]
-        _LOGGER.info(f"{entity_id} set_avilable(value={value})")
+        _LOGGER.info("%s set_avilable(value=%r)", entity_id, value)
         get_entity_from_domain(hass, domain, entity_id).set_available(value)

@@ -10,7 +10,7 @@ from typing import Any, Protocol, cast
 
 import voluptuous as vol
 
-from homeassistant.components.rasc.decorator import rasc_push_event
+from homeassistant.components.rasc.decorator import rasc_push_event, rasc_target_state
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -485,27 +485,28 @@ class GroupEntity(Entity):
     _action_tracker: dict[str, str] = {}
     _attr_rasc_state: str = "unknown"
 
+    # rasc
     @property
     def rasc_state(self) -> str:
         """Return rasc state."""
         return self._attr_rasc_state
 
-    # rasc
     def _preprocessing(self, data: dict[str, Any]) -> None:
-        # action_id = uuid.uuidv4()
-        # action_tracker = {}
         self._action_tracker = {}
         self._attr_rasc_state = "unknown"
         for entity_id in self._entity_ids:
             self._action_tracker[entity_id] = RASC_ACK
-        # self._action_trackers[action_id] = (False, action_tracker)
         data[ATTR_GROUP_ID] = self.unique_id
 
     @callback
     async def _handle_rasc_response(self, e: Event) -> None:
         if e.data.get(ATTR_GROUP_ID) != self.unique_id:
             return
-        await self._update_rasc_state(e.data[ATTR_ENTITY_ID], e.data["type"])
+        if isinstance(e.data.get(ATTR_ENTITY_ID), list):
+            for entity_id in e.data.get(ATTR_ENTITY_ID, []):
+                await self._update_rasc_state(entity_id, e.data["type"])
+        else:
+            await self._update_rasc_state(e.data[ATTR_ENTITY_ID], e.data["type"])
 
     @rasc_push_event
     async def _update_rasc_state(self, entity_id: str, rasc_type: str) -> None:
@@ -614,6 +615,7 @@ class GroupEntity(Entity):
         """Return expected state when action is complete."""
 
         def _target_complete_state(current: str) -> Callable[[str], bool]:
+            @rasc_target_state(current)
             def match(value: str | None) -> bool:
                 if value is None:
                     return False

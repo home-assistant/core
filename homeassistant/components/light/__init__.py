@@ -12,6 +12,7 @@ from typing import Any, Self, cast, final
 
 import voluptuous as vol
 
+from homeassistant.components.rasc.decorator import rasc_target_state
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EVENT,
@@ -1077,14 +1078,6 @@ class LightEntity(ToggleEntity):
         """Flag supported features."""
         return self._attr_supported_features
 
-    @property
-    def get_current_state(self) -> dict[str, Any]:
-        """Return the current state."""
-        state = super().get_current_state
-        if self.state_attributes:
-            state.update(self.state_attributes)
-        return state
-
     def async_get_action_target_state(
         self, action: dict[str, Any]
     ) -> dict[str, Any] | None:
@@ -1111,6 +1104,7 @@ class LightEntity(ToggleEntity):
         def _target_start_state(
             current: int | float | None, target_complete_state: int | float
         ) -> Callable[[int | float], bool]:
+            @rasc_target_state(target_complete_state)
             def match(value: int | float) -> bool:
                 if current is None:
                     if target_complete_state > 0:
@@ -1127,6 +1121,7 @@ class LightEntity(ToggleEntity):
         def _target_complete_state(
             target_complete_state: int | float,
         ) -> Callable[[int | float], bool]:
+            @rasc_target_state(target_complete_state)
             def match(value: int | float) -> bool:
                 return value == target_complete_state
 
@@ -1176,91 +1171,3 @@ class LightEntity(ToggleEntity):
                     service_data[ATTR_BRIGHTNESS]
                 )
         return target
-
-    def get_action_complete_percentage(
-        self, request_state: dict[str, Any], action: dict[str, Any]
-    ) -> float:
-        """Return the percentage of completion of an action.
-
-        None is unknown, 0 is not started, 1 is complete.
-        """
-        if CONF_SERVICE_DATA not in action:
-            return 0.0
-
-        service_data = action[CONF_SERVICE_DATA]
-        if ATTR_TRANSITION not in service_data:
-            target_states = self.async_get_action_target_state(action)
-            if not target_states:
-                return 1.0
-            for attr, match in target_states.items():
-                entity_attr = getattr(self, attr)
-                if not match(entity_attr):
-                    return 0.0
-            return 1.0
-
-        if ATTR_BRIGHTNESS in service_data:
-            start_brightness: int = request_state.get("brightness", 0)
-            target_brightness: int = service_data[ATTR_BRIGHTNESS] or 255
-            if not self.brightness:
-                return 0.0
-            if start_brightness <= target_brightness:
-                current_progress = self.brightness - start_brightness
-                target_progress = target_brightness - start_brightness
-            else:
-                current_progress = start_brightness - self.brightness
-                target_progress = start_brightness - target_brightness
-            return current_progress / target_progress
-        if ATTR_BRIGHTNESS_PCT in service_data:
-            start_brightness = request_state.get("brightness", 0)
-            target_brightness = round(
-                (service_data[ATTR_BRIGHTNESS_PCT] * 255.0) / 100.0
-            )
-            if not self.brightness:
-                return 0.0
-            if start_brightness <= target_brightness:
-                current_progress = self.brightness - start_brightness
-                target_progress = target_brightness - start_brightness
-            else:
-                current_progress = start_brightness - self.brightness
-                target_progress = start_brightness - target_brightness
-            return current_progress / target_progress
-        if ATTR_BRIGHTNESS_STEP in service_data:
-            start_brightness = request_state.get("brightness", 0)
-            target_brightness = min(
-                255, max(0, start_brightness + service_data[ATTR_BRIGHTNESS_STEP])
-            )
-            if not self.brightness:
-                return 0.0
-            if start_brightness <= target_brightness:
-                current_progress = self.brightness - start_brightness
-                target_progress = target_brightness - start_brightness
-            else:
-                current_progress = start_brightness - self.brightness
-                target_progress = start_brightness - target_brightness
-            return current_progress / target_progress
-        if ATTR_BRIGHTNESS_STEP_PCT in service_data:
-            start_brightness = request_state.get("brightness", 0)
-            target_brightness = round(
-                min(
-                    100,
-                    max(0, start_brightness + service_data[ATTR_BRIGHTNESS_STEP_PCT]),
-                )
-                * 255.0
-                / 100.0
-            )
-            if not self.brightness:
-                return 0.0
-            if start_brightness <= target_brightness:
-                current_progress = self.brightness - start_brightness
-                target_progress = target_brightness - start_brightness
-            else:
-                current_progress = start_brightness - self.brightness
-                target_progress = start_brightness - target_brightness
-            return current_progress / target_progress
-
-        _LOGGER.debug(
-            "light action completion percentage with transition "
-            "but no brightness change -- service data: %s",
-            service_data,
-        )
-        return 0.0

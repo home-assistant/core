@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import math
+from typing import cast
 
 import voluptuous as vol
 
@@ -31,11 +32,14 @@ from . import get_entity_configs
 from .const import (
     ATTR_GROUP_NAME,
     COMPONENT_DOMAIN,
+    COMPONENT_NETWORK,
     CONF_COORDINATED,
     CONF_INITIAL_VALUE,
+    CONF_SIMULATE_NETWORK,
 )
 from .coordinator import VirtualDataUpdateCoordinator
 from .entity import CoordinatedVirtualEntity, VirtualEntity, virtual_schema
+from .network import NetworkProxy
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -119,14 +123,23 @@ async def async_setup_entry(
         entry.entry_id
     ]
     entities: list[VirtualLight] = []
-    for entity in get_entity_configs(
+    for entity_config in get_entity_configs(
         hass, entry.data[ATTR_GROUP_NAME], PLATFORM_DOMAIN
     ):
-        entity = LIGHT_SCHEMA(entity)
-        if CONF_COORDINATED in entity:
-            entities.append(CoordinatedVirtualLight(entity, coordinator))
+        entity_config = LIGHT_SCHEMA(entity_config)
+        if entity_config[CONF_COORDINATED]:
+            entity = cast(
+                VirtualLight, CoordinatedVirtualLight(entity_config, coordinator)
+            )
         else:
-            entities.append(VirtualLight(entity))
+            entity = VirtualLight(entity_config)
+
+        if entity_config[CONF_SIMULATE_NETWORK]:
+            entity = cast(VirtualLight, NetworkProxy(entity))
+            hass.data[COMPONENT_NETWORK][entity.entity_id] = entity
+
+        entities.append(entity)
+
     async_add_entities(entities)
 
 
@@ -158,12 +171,12 @@ class VirtualLight(VirtualEntity, LightEntity):
 
         self._attr_is_on = config.get(CONF_INITIAL_VALUE).lower() == STATE_ON
 
-        if self._attr_supported_features & ColorMode.BRIGHTNESS:
+        if ColorMode.BRIGHTNESS in self._attr_supported_color_modes:
             self._attr_brightness = config.get(CONF_INITIAL_BRIGHTNESS)
-        if self._attr_supported_features & ColorMode.HS:
+        if ColorMode.HS in self._attr_supported_color_modes:
             self._attr_color_mode = ColorMode.HS
             self._attr_hs_color = config.get(CONF_INITIAL_COLOR)
-        if self._attr_supported_features & ColorMode.COLOR_TEMP:
+        if ColorMode.COLOR_TEMP in self._attr_supported_color_modes:
             self._attr_color_mode = ColorMode.COLOR_TEMP
             self._attr_color_temp = config.get(CONF_INITIAL_COLOR_TEMP)
         if self._attr_supported_features & LightEntityFeature.EFFECT:
@@ -176,16 +189,16 @@ class VirtualLight(VirtualEntity, LightEntity):
 
         self._attr_is_on = state.state.lower() == STATE_ON
 
-        if self._attr_supported_features & ColorMode.BRIGHTNESS:
+        if ColorMode.BRIGHTNESS in self._attr_supported_color_modes:
             self._attr_brightness = state.attributes.get(
                 ATTR_BRIGHTNESS, config.get(CONF_INITIAL_BRIGHTNESS)
             )
-        if self._attr_supported_features & ColorMode.HS:
+        if ColorMode.HS in self._attr_supported_color_modes:
             self._attr_color_mode = ColorMode.HS
             self._attr_hs_color = state.attributes.get(
                 ATTR_HS_COLOR, config.get(CONF_INITIAL_COLOR)
             )
-        if self._attr_supported_features & ColorMode.COLOR_TEMP:
+        if ColorMode.COLOR_TEMP in self._attr_supported_color_modes:
             self._attr_color_mode = ColorMode.COLOR_TEMP
             self._attr_color_temp = state.attributes.get(
                 ATTR_COLOR_TEMP, config.get(CONF_INITIAL_COLOR_TEMP)

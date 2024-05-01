@@ -12,6 +12,7 @@ from typing import Any, final
 
 import voluptuous as vol
 
+from homeassistant.components.rasc.decorator import rasc_target_state
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EVENT,
@@ -394,20 +395,6 @@ class FanEntity(ToggleEntity):
             return self._attr_preset_modes
         return None
 
-    @property
-    def get_current_state(self) -> dict[str, Any]:
-        """Return the current state of the entity."""
-        current_state: dict[str, Any] = {"is_on": self.is_on}
-        if self.supported_features & FanEntityFeature.SET_SPEED:
-            current_state["percentage"] = self.percentage
-        if self.supported_features & FanEntityFeature.DIRECTION:
-            current_state["current_direction"] = self.current_direction
-        if self.supported_features & FanEntityFeature.OSCILLATE:
-            current_state["oscillating"] = self.oscillating
-        if self.supported_features & FanEntityFeature.PRESET_MODE:
-            current_state["preset_mode"] = self.preset_mode
-        return current_state
-
     def async_get_action_target_state(  # noqa: C901
         self, action: dict[str, Any]
     ) -> dict[str, Any] | None:
@@ -416,6 +403,7 @@ class FanEntity(ToggleEntity):
         def _target_start_state(
             current: int | float | str | None, target_complete_state: int | float | str
         ) -> Callable[[int | float | str], bool]:
+            @rasc_target_state(target_complete_state)
             def match(value: int | float | str) -> bool:
                 if (
                     isinstance(value, str)
@@ -450,6 +438,7 @@ class FanEntity(ToggleEntity):
         def _target_complete_state(
             target_complete_state: int | str,
         ) -> Callable[[int | str], bool]:
+            @rasc_target_state(target_complete_state)
             def match(value: int | str) -> bool:
                 return value == target_complete_state
 
@@ -535,87 +524,3 @@ class FanEntity(ToggleEntity):
                 )
 
         return target
-
-    def get_action_complete_percentage(
-        self, request_state: dict[str, Any], action: dict[str, Any]
-    ) -> float:
-        """Return the percentage of completion of an action.
-
-        None is unknown, 0 is not started, 1 is complete.
-        """
-        if CONF_SERVICE not in action:
-            return 0.0
-
-        if action[CONF_SERVICE] in (SERVICE_TURN_OFF, SERVICE_TOGGLE):
-            return super().get_action_complete_percentage(request_state, action)
-        if action[CONF_SERVICE] == SERVICE_TURN_ON:
-            if CONF_SERVICE_DATA not in action:
-                return 0.0
-            if ATTR_PERCENTAGE in action[CONF_SERVICE_DATA]:
-                complete_percentage: int | None = action[CONF_SERVICE_DATA][
-                    ATTR_PERCENTAGE
-                ]
-                if not complete_percentage or not self.percentage:
-                    return 0.0
-                return self.percentage / complete_percentage
-            if ATTR_PRESET_MODE in action[CONF_SERVICE_DATA]:
-                if self.preset_mode == action[CONF_SERVICE_DATA][ATTR_PRESET_MODE]:
-                    return 1.0
-                return 0.0
-        if action[CONF_SERVICE] == SERVICE_SET_PERCENTAGE:
-            if (
-                CONF_SERVICE_DATA not in action
-                or ATTR_PERCENTAGE not in action[CONF_SERVICE_DATA]
-            ):
-                return 0.0
-            complete_percentage = action[CONF_SERVICE_DATA][ATTR_PERCENTAGE]
-            if not complete_percentage or not self.percentage:
-                return 0.0
-            start_percentage: int = request_state.get("percentage", 0)
-            if start_percentage <= complete_percentage:
-                current_progress = self.percentage - start_percentage
-                target_progress = complete_percentage - start_percentage
-            else:
-                current_progress = start_percentage - self.percentage
-                target_progress = start_percentage - complete_percentage
-            return current_progress / target_progress
-        if action[CONF_SERVICE] == SERVICE_INCREASE_SPEED:
-            if (
-                CONF_SERVICE_DATA not in action
-                or ATTR_PERCENTAGE_STEP not in action[CONF_SERVICE_DATA]
-            ):
-                return 0.0
-            step: int | None = action[CONF_SERVICE_DATA][ATTR_PERCENTAGE_STEP]
-            if not step or not self.percentage:
-                return 0.0
-            start_percentage = request_state.get("percentage", 0)
-            complete_percentage = start_percentage + step
-            complete_percentage = min(100, complete_percentage)
-            current_progress = self.percentage - start_percentage
-            target_progress = complete_percentage - start_percentage
-            return current_progress / target_progress
-        if action[CONF_SERVICE] == SERVICE_DECREASE_SPEED:
-            if (
-                CONF_SERVICE_DATA not in action
-                or ATTR_PERCENTAGE_STEP not in action[CONF_SERVICE_DATA]
-            ):
-                return 0.0
-            step = action[CONF_SERVICE_DATA][ATTR_PERCENTAGE_STEP]
-            if not step or not self.percentage:
-                return 0.0
-            start_percentage = request_state.get("percentage", 0)
-            complete_percentage = start_percentage - step
-            complete_percentage = max(0, complete_percentage)
-            current_progress = start_percentage - self.percentage
-            target_progress = start_percentage - complete_percentage
-            return current_progress / target_progress
-        if action[CONF_SERVICE] == SERVICE_SET_DIRECTION:
-            if (
-                CONF_SERVICE_DATA not in action
-                or ATTR_DIRECTION not in action[CONF_SERVICE_DATA]
-            ):
-                return 0.0
-            if self.current_direction == action[CONF_SERVICE_DATA][ATTR_DIRECTION]:
-                return 1.0
-            return 0.0
-        return 0.0

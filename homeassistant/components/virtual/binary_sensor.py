@@ -1,6 +1,7 @@
 """Provide support for a virtual binary sensor."""
 
 import logging
+from typing import cast
 
 import voluptuous as vol
 
@@ -19,13 +20,16 @@ from . import get_entity_configs, get_entity_from_domain
 from .const import (
     ATTR_GROUP_NAME,
     COMPONENT_DOMAIN,
+    COMPONENT_NETWORK,
     COMPONENT_SERVICES,
     CONF_CLASS,
     CONF_COORDINATED,
     CONF_INITIAL_VALUE,
+    CONF_SIMULATE_NETWORK,
 )
 from .coordinator import VirtualDataUpdateCoordinator
 from .entity import CoordinatedVirtualEntity, VirtualEntity, virtual_schema
+from .network import NetworkProxy
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,14 +75,24 @@ async def async_setup_entry(
         entry.entry_id
     ]
     entities: list[VirtualBinarySensor] = []
-    for entity in get_entity_configs(
+    for entity_config in get_entity_configs(
         hass, entry.data[ATTR_GROUP_NAME], PLATFORM_DOMAIN
     ):
-        entity = BINARY_SENSOR_SCHEMA(entity)
-        if CONF_COORDINATED in entity:
-            entities.append(CoordinatedVirtualBinarySensor(entity, coordinator))
+        entity_config = BINARY_SENSOR_SCHEMA(entity_config)
+        if entity_config[CONF_COORDINATED]:
+            entity = cast(
+                VirtualBinarySensor,
+                CoordinatedVirtualBinarySensor(entity_config, coordinator),
+            )
         else:
-            entities.append(VirtualBinarySensor(entity))
+            entity = VirtualBinarySensor(entity_config)
+
+        if entity_config[CONF_SIMULATE_NETWORK]:
+            entity = cast(VirtualBinarySensor, NetworkProxy(entity))
+            hass.data[COMPONENT_NETWORK][entity.entity_id] = entity
+
+        entities.append(entity)
+
     async_add_entities(entities)
 
     async def async_virtual_service(call):

@@ -6,7 +6,7 @@ Borrowed heavily from components/demo/fan.py
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -26,9 +26,16 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import get_entity_configs
-from .const import ATTR_GROUP_NAME, COMPONENT_DOMAIN, CONF_COORDINATED
+from .const import (
+    ATTR_GROUP_NAME,
+    COMPONENT_DOMAIN,
+    COMPONENT_NETWORK,
+    CONF_COORDINATED,
+    CONF_SIMULATE_NETWORK,
+)
 from .coordinator import VirtualDataUpdateCoordinator
 from .entity import CoordinatedVirtualEntity, VirtualEntity, virtual_schema
+from .network import NetworkProxy
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,14 +77,21 @@ async def async_setup_entry(
         entry.entry_id
     ]
     entities: list[VirtualFan] = []
-    for entity in get_entity_configs(
+    for entity_config in get_entity_configs(
         hass, entry.data[ATTR_GROUP_NAME], PLATFORM_DOMAIN
     ):
-        entity = FAN_SCHEMA(entity)
-        if CONF_COORDINATED in entity:
-            entities.append(CoordinatedVirtualFan(entity, coordinator))
+        entity_config = FAN_SCHEMA(entity_config)
+        if entity_config[CONF_COORDINATED]:
+            entity = cast(VirtualFan, CoordinatedVirtualFan(entity_config, coordinator))
         else:
-            entities.append(VirtualFan(entity))
+            entity = VirtualFan(entity_config)
+
+        if entity_config[CONF_SIMULATE_NETWORK]:
+            entity = cast(VirtualFan, NetworkProxy(entity))
+            hass.data[COMPONENT_NETWORK][entity.entity_id] = entity
+
+        entities.append(entity)
+
     async_add_entities(entities)
 
 
