@@ -2779,7 +2779,7 @@ unifiled==0.11
 universal-silabs-flasher==0.0.18
 
 # homeassistant.components.upb
-upb-lib==0.5.4
+upb-lib==0.5.6
 
 # homeassistant.components.upcloud
 upcloud-api==2.0.0
