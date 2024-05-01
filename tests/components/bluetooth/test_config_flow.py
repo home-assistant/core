@@ -99,9 +99,7 @@ async def test_async_step_user_linux_one_adapter(
             result["flow_id"], user_input={}
         )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert (
-        result2["title"] == "ACME Bluetooth Adapter 5.0 (cc01:aa01) (00:00:00:00:00:01)"
-    )
+    assert result2["title"] == "ACME Bluetooth Adapter 5.0 (00:00:00:00:00:01)"
     assert result2["data"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -144,9 +142,7 @@ async def test_async_step_user_linux_two_adapters(
             result["flow_id"], user_input={CONF_ADAPTER: "hci1"}
         )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert (
-        result2["title"] == "ACME Bluetooth Adapter 5.0 (cc01:aa01) (00:00:00:00:00:02)"
-    )
+    assert result2["title"] == "ACME Bluetooth Adapter 5.0 (00:00:00:00:00:02)"
     assert result2["data"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
 

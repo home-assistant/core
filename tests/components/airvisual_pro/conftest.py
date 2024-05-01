@@ -56,7 +56,7 @@ def disconnect_fixture():
     return AsyncMock()
 
 
-@pytest.fixture(name="data", scope="session")
+@pytest.fixture(name="data", scope="package")
 def data_fixture():
     """Define an update coordinator data example."""
     return json.loads(load_fixture("data.json", "airvisual_pro"))
