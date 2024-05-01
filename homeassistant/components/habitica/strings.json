@@ -12,7 +12,7 @@
       "user": {
         "menu_options": {
           "login": "Login to Habitica",
-          "advanced": "Advanced Configuration"
+          "advanced": "Login to other instances"
         },
         "description": "Connect your Habitica profile to allow monitoring of your user's profile and tasks."
       },
@@ -29,7 +29,7 @@
           "api_key": "API Token",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
-        "description": "You can retrieve your Habitica `User ID` and `API Token` from here https://habitica.com/user/settings/api"
+        "description": "You can retrieve your `User ID` and `API Token` from **Settings -> Site Data** on Habitica or the instance you want to connect to"
       }
     }
   },
