@@ -37,6 +37,7 @@ async def async_setup_entry(
     data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(AugustLock(data, lock) for lock in data.locks)
 
+
 class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
     """Representation of an August lock."""
 
