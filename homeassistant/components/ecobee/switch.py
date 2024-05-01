@@ -58,11 +58,6 @@ class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
             self.thermostat["location"]["timeZone"]
         )
 
-    @property
-    def is_on(self) -> bool | None:
-        """Get the latest state from the thermostat."""
-        return self._attr_is_on
-
     async def async_update(self) -> None:
         """Get the latest state from the thermostat."""
 
