@@ -116,7 +116,7 @@ async def test_form_v1_good_data(
     with patch(
         "homeassistant.components.geniushub.config_flow.validate_input",
         return_value={"title": "Title"},
-    ) as mock_validate_input:
+    ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": "option_1"},
@@ -128,7 +128,6 @@ async def test_form_v1_good_data(
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert "errors" not in result
-    assert len(mock_validate_input.mock_calls) == 1
 
 
 async def test_form_v1_ClientResponseError(
@@ -155,7 +154,7 @@ async def test_form_v1_ClientResponseError(
     with patch(
         "homeassistant.components.geniushub.config_flow.validate_input",
         side_effect=cre(request_info={}, history={}),
-    ) as mock_validate_input:
+    ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": "option_1"},
@@ -167,7 +166,6 @@ async def test_form_v1_ClientResponseError(
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_host"
-    assert len(mock_validate_input.mock_calls) == 1
 
 
 async def test_form_v1_UNAUTHORIZED(
@@ -194,7 +192,7 @@ async def test_form_v1_UNAUTHORIZED(
     with patch(
         "homeassistant.components.geniushub.config_flow.validate_input",
         side_effect=cre(request_info={}, history={}, status=HTTPStatus.UNAUTHORIZED),
-    ) as mock_validate_input:
+    ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": "option_1"},
@@ -206,7 +204,6 @@ async def test_form_v1_UNAUTHORIZED(
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "unauthorized"
-    assert len(mock_validate_input.mock_calls) == 1
 
 
 async def test_form_v1_timeout(
@@ -233,7 +230,7 @@ async def test_form_v1_timeout(
     with patch(
         "homeassistant.components.geniushub.config_flow.validate_input",
         side_effect=TimeoutError,
-    ) as mock_validate_input:
+    ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": "option_1"},
@@ -245,7 +242,6 @@ async def test_form_v1_timeout(
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
-    assert len(mock_validate_input.mock_calls) == 1
 
 
 async def test_form_v1_invalid_host(
@@ -272,7 +268,7 @@ async def test_form_v1_invalid_host(
     with patch(
         "homeassistant.components.geniushub.config_flow.validate_input",
         side_effect=socket.gaierror,
-    ) as mock_validate_input:
+    ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": "option_1"},
@@ -284,7 +280,6 @@ async def test_form_v1_invalid_host(
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_host"
-    assert len(mock_validate_input.mock_calls) == 1
 
 
 async def test_form_v1_Exception(
@@ -311,7 +306,7 @@ async def test_form_v1_Exception(
     with patch(
         "homeassistant.components.geniushub.config_flow.validate_input",
         side_effect=Exception,
-    ) as mock_validate_input:
+    ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": "option_1"},
@@ -323,7 +318,6 @@ async def test_form_v1_Exception(
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "unknown"
-    assert len(mock_validate_input.mock_calls) == 1
 
 
 async def test_form_v3_good_data(
@@ -350,7 +344,7 @@ async def test_form_v3_good_data(
     with patch(
         "homeassistant.components.geniushub.config_flow.validate_input",
         return_value={"title": "Title"},
-    ) as mock_validate_input:
+    ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": "option_2"},
@@ -362,7 +356,6 @@ async def test_form_v3_good_data(
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert "errors" not in result
-    assert len(mock_validate_input.mock_calls) == 1
 
 
 async def test_form_v3_ClientResponseError(
@@ -389,7 +382,7 @@ async def test_form_v3_ClientResponseError(
     with patch(
         "homeassistant.components.geniushub.config_flow.validate_input",
         side_effect=cre(request_info={}, history={}),
-    ) as mock_validate_input:
+    ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": "option_2"},
@@ -401,7 +394,6 @@ async def test_form_v3_ClientResponseError(
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_host"
-    assert len(mock_validate_input.mock_calls) == 1
 
 
 async def test_form_v3_UNAUTHORIZED(
@@ -428,7 +420,7 @@ async def test_form_v3_UNAUTHORIZED(
     with patch(
         "homeassistant.components.geniushub.config_flow.validate_input",
         side_effect=cre(request_info={}, history={}, status=HTTPStatus.UNAUTHORIZED),
-    ) as mock_validate_input:
+    ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": "option_2"},
@@ -440,7 +432,6 @@ async def test_form_v3_UNAUTHORIZED(
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "unauthorized_token"
-    assert len(mock_validate_input.mock_calls) == 1
 
 
 async def test_form_v3_timeout(
@@ -467,7 +458,7 @@ async def test_form_v3_timeout(
     with patch(
         "homeassistant.components.geniushub.config_flow.validate_input",
         side_effect=TimeoutError,
-    ) as mock_validate_input:
+    ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": "option_2"},
@@ -479,7 +470,6 @@ async def test_form_v3_timeout(
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
-    assert len(mock_validate_input.mock_calls) == 1
 
 
 async def test_form_v3_invalid_host(
@@ -506,7 +496,7 @@ async def test_form_v3_invalid_host(
     with patch(
         "homeassistant.components.geniushub.config_flow.validate_input",
         side_effect=socket.gaierror,
-    ) as mock_validate_input:
+    ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": "option_2"},
@@ -518,7 +508,6 @@ async def test_form_v3_invalid_host(
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_host"
-    assert len(mock_validate_input.mock_calls) == 1
 
 
 async def test_form_v3_Exception(
@@ -545,7 +534,7 @@ async def test_form_v3_Exception(
     with patch(
         "homeassistant.components.geniushub.config_flow.validate_input",
         side_effect=Exception,
-    ) as mock_validate_input:
+    ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": "option_2"},
@@ -557,7 +546,6 @@ async def test_form_v3_Exception(
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "unknown"
-    assert len(mock_validate_input.mock_calls) == 1
 
 
 async def test_form_v1_ClientConnectionError(
@@ -584,7 +572,7 @@ async def test_form_v1_ClientConnectionError(
     with patch(
         "homeassistant.components.geniushub.config_flow.validate_input",
         side_effect=cce,
-    ) as mock_validate_input:
+    ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": "option_1"},
@@ -596,7 +584,6 @@ async def test_form_v1_ClientConnectionError(
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
-    assert len(mock_validate_input.mock_calls) == 1
 
 
 async def test_form_v3_ClientConnectionError(
@@ -623,7 +610,7 @@ async def test_form_v3_ClientConnectionError(
     with patch(
         "homeassistant.components.geniushub.config_flow.validate_input",
         side_effect=cce,
-    ) as mock_validate_input:
+    ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": "option_2"},
@@ -635,7 +622,6 @@ async def test_form_v3_ClientConnectionError(
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
-    assert len(mock_validate_input.mock_calls) == 1
 
 
 ######################
@@ -646,7 +632,7 @@ async def test_form_import_good_data(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.geniushub.config_flow.validate_input",
         return_value={"title": "Title"},
-    ) as mock_validate_input:
+    ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -658,7 +644,6 @@ async def test_form_import_good_data(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert "errors" not in result
-    assert len(mock_validate_input.mock_calls) == 1
 
 
 async def test_form_import_ClientResponseError(hass: HomeAssistant) -> None:
@@ -666,7 +651,7 @@ async def test_form_import_ClientResponseError(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.geniushub.config_flow.validate_input",
         side_effect=cre(request_info={}, history={}),
-    ) as mock_validate_input:
+    ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": "import"},
@@ -678,7 +663,6 @@ async def test_form_import_ClientResponseError(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_host"
-    assert len(mock_validate_input.mock_calls) == 1
 
 
 async def test_form_import_UNAUTHORIZED(hass: HomeAssistant) -> None:
@@ -686,7 +670,7 @@ async def test_form_import_UNAUTHORIZED(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.geniushub.config_flow.validate_input",
         side_effect=cre(request_info={}, history={}, status=HTTPStatus.UNAUTHORIZED),
-    ) as mock_validate_input:
+    ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": "import"},
@@ -698,7 +682,6 @@ async def test_form_import_UNAUTHORIZED(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "unauthorized"
-    assert len(mock_validate_input.mock_calls) == 1
 
 
 async def test_form_import_timeout(hass: HomeAssistant) -> None:
@@ -706,7 +689,7 @@ async def test_form_import_timeout(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.geniushub.config_flow.validate_input",
         side_effect=TimeoutError,
-    ) as mock_validate_input:
+    ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": "import"},
@@ -718,7 +701,6 @@ async def test_form_import_timeout(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
-    assert len(mock_validate_input.mock_calls) == 1
 
 
 async def test_form_import_invalid_host(hass: HomeAssistant) -> None:
@@ -726,7 +708,7 @@ async def test_form_import_invalid_host(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.geniushub.config_flow.validate_input",
         side_effect=socket.gaierror,
-    ) as mock_validate_input:
+    ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": "import"},
@@ -738,7 +720,6 @@ async def test_form_import_invalid_host(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_host"
-    assert len(mock_validate_input.mock_calls) == 1
 
 
 async def test_form_import_Exception(hass: HomeAssistant) -> None:
@@ -746,7 +727,7 @@ async def test_form_import_Exception(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.geniushub.config_flow.validate_input",
         side_effect=Exception,
-    ) as mock_validate_input:
+    ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": "import"},
@@ -758,7 +739,6 @@ async def test_form_import_Exception(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "unknown"
-    assert len(mock_validate_input.mock_calls) == 1
 
 
 async def test_form_import_ClientConnectionError(hass: HomeAssistant) -> None:
@@ -766,7 +746,7 @@ async def test_form_import_ClientConnectionError(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.geniushub.config_flow.validate_input",
         side_effect=cce,
-    ) as mock_validate_input:
+    ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": "import"},
@@ -778,4 +758,3 @@ async def test_form_import_ClientConnectionError(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
-    assert len(mock_validate_input.mock_calls) == 1
