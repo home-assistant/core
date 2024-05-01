@@ -45,6 +45,7 @@ from homeassistant.core import (
     DOMAIN as HA_DOMAIN,
     CoreState,
     Event,
+    EventStateChangedData,
     HomeAssistant,
     State,
     callback,
@@ -54,7 +55,6 @@ from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     async_track_state_change_event,
     async_track_time_interval,
 )
@@ -279,7 +279,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                 STATE_UNAVAILABLE,
                 STATE_UNKNOWN,
             ):
-                self.hass.create_task(self._check_switch_initial_state())
+                self.hass.async_create_task(
+                    self._check_switch_initial_state(), eager_start=True
+                )
 
         if self.hass.state is CoreState.running:
             _async_startup()
@@ -443,7 +445,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         if new_state is None:
             return
         if old_state is None:
-            self.hass.create_task(self._check_switch_initial_state())
+            self.hass.async_create_task(
+                self._check_switch_initial_state(), eager_start=True
+            )
         self.async_write_ha_state()
 
     @callback

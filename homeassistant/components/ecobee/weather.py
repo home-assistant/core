@@ -184,11 +184,6 @@ class EcobeeWeather(WeatherEntity):
             return forecasts
         return None
 
-    @property
-    def forecast(self) -> list[Forecast] | None:
-        """Return the forecast array."""
-        return self._forecast()
-
     async def async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         return self._forecast()

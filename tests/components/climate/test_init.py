@@ -23,12 +23,14 @@ from homeassistant.components.climate.const import (
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_SWING_MODE,
+    SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from tests.common import (
@@ -356,23 +358,34 @@ async def test_preset_mode_validation(
     assert exc.value.translation_key == "not_valid_fan_mode"
 
 
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+@pytest.mark.parametrize(
+    "supported_features_at_int",
+    [
+        ClimateEntityFeature.TARGET_TEMPERATURE.value,
+        ClimateEntityFeature.TARGET_TEMPERATURE.value
+        | ClimateEntityFeature.TURN_ON.value
+        | ClimateEntityFeature.TURN_OFF.value,
+    ],
+)
+def test_deprecated_supported_features_ints(
+    caplog: pytest.LogCaptureFixture, supported_features_at_int: int
+) -> None:
     """Test deprecated supported features ints."""
 
     class MockClimateEntity(ClimateEntity):
         @property
         def supported_features(self) -> int:
             """Return supported features."""
-            return 1
+            return supported_features_at_int
 
     entity = MockClimateEntity()
-    assert entity.supported_features is ClimateEntityFeature(1)
+    assert entity.supported_features is ClimateEntityFeature(supported_features_at_int)
     assert "MockClimateEntity" in caplog.text
     assert "is using deprecated supported features values" in caplog.text
     assert "Instead it should use" in caplog.text
     assert "ClimateEntityFeature.TARGET_TEMPERATURE" in caplog.text
     caplog.clear()
-    assert entity.supported_features is ClimateEntityFeature(1)
+    assert entity.supported_features is ClimateEntityFeature(supported_features_at_int)
     assert "is using deprecated supported features values" not in caplog.text
 
 
@@ -771,3 +784,309 @@ async def test_sync_toggle(hass: HomeAssistant) -> None:
     await climate.async_toggle()
 
     assert climate.toggle.called
+
+
+ISSUE_TRACKER = "https://blablabla.com"
+
+
+@pytest.mark.parametrize(
+    (
+        "manifest_extra",
+        "translation_key",
+        "translation_placeholders_extra",
+        "report",
+        "module",
+    ),
+    [
+        (
+            {},
+            "deprecated_climate_aux_no_url",
+            {},
+            "report it to the author of the 'test' custom integration",
+            "custom_components.test.climate",
+        ),
+        (
+            {"issue_tracker": ISSUE_TRACKER},
+            "deprecated_climate_aux_url_custom",
+            {"issue_tracker": ISSUE_TRACKER},
+            "create a bug report at https://blablabla.com",
+            "custom_components.test.climate",
+        ),
+    ],
+)
+async def test_issue_aux_property_deprecated(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config_flow_fixture: None,
+    manifest_extra: dict[str, str],
+    translation_key: str,
+    translation_placeholders_extra: dict[str, str],
+    report: str,
+    module: str,
+) -> None:
+    """Test the issue is raised on deprecated auxiliary heater attributes."""
+
+    class MockClimateEntityWithAux(MockClimateEntity):
+        """Mock climate class with mocked aux heater."""
+
+        _attr_supported_features = (
+            ClimateEntityFeature.AUX_HEAT | ClimateEntityFeature.TARGET_TEMPERATURE
+        )
+
+        @property
+        def is_aux_heat(self) -> bool | None:
+            """Return true if aux heater.
+
+            Requires ClimateEntityFeature.AUX_HEAT.
+            """
+            return True
+
+        async def async_turn_aux_heat_on(self) -> None:
+            """Turn auxiliary heater on."""
+            await self.hass.async_add_executor_job(self.turn_aux_heat_on)
+
+        async def async_turn_aux_heat_off(self) -> None:
+            """Turn auxiliary heater off."""
+            await self.hass.async_add_executor_job(self.turn_aux_heat_off)
+
+    # Fake the module is custom component or built in
+    MockClimateEntityWithAux.__module__ = module
+
+    climate_entity = MockClimateEntityWithAux(
+        name="Testing",
+        entity_id="climate.testing",
+    )
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
+        return True
+
+    async def async_setup_entry_climate_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Set up test weather platform via config entry."""
+        async_add_entities([climate_entity])
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=async_setup_entry_init,
+            partial_manifest=manifest_extra,
+        ),
+        built_in=False,
+    )
+    mock_platform(
+        hass,
+        "test.climate",
+        MockPlatform(async_setup_entry=async_setup_entry_climate_platform),
+    )
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert climate_entity.state == HVACMode.HEAT
+
+    issues = ir.async_get(hass)
+    issue = issues.async_get_issue("climate", "deprecated_climate_aux_test")
+    assert issue
+    assert issue.issue_domain == "test"
+    assert issue.issue_id == "deprecated_climate_aux_test"
+    assert issue.translation_key == translation_key
+    assert (
+        issue.translation_placeholders
+        == {"platform": "test"} | translation_placeholders_extra
+    )
+
+    assert (
+        "test::MockClimateEntityWithAux implements the `is_aux_heat` property or uses "
+        "the auxiliary  heater methods in a subclass of ClimateEntity which is deprecated "
+        f"and will be unsupported from Home Assistant 2024.10. Please {report}"
+    ) in caplog.text
+
+    # Assert we only log warning once
+    caplog.clear()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "climate.test",
+            "temperature": "25",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert ("implements the `is_aux_heat` property") not in caplog.text
+
+
+@pytest.mark.parametrize(
+    (
+        "manifest_extra",
+        "translation_key",
+        "translation_placeholders_extra",
+        "report",
+        "module",
+    ),
+    [
+        (
+            {"issue_tracker": ISSUE_TRACKER},
+            "deprecated_climate_aux_url",
+            {"issue_tracker": ISSUE_TRACKER},
+            "create a bug report at https://blablabla.com",
+            "homeassistant.components.test.climate",
+        ),
+    ],
+)
+async def test_no_issue_aux_property_deprecated_for_core(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config_flow_fixture: None,
+    manifest_extra: dict[str, str],
+    translation_key: str,
+    translation_placeholders_extra: dict[str, str],
+    report: str,
+    module: str,
+) -> None:
+    """Test the no issue on deprecated auxiliary heater attributes for core integrations."""
+
+    class MockClimateEntityWithAux(MockClimateEntity):
+        """Mock climate class with mocked aux heater."""
+
+        _attr_supported_features = ClimateEntityFeature.AUX_HEAT
+
+        @property
+        def is_aux_heat(self) -> bool | None:
+            """Return true if aux heater.
+
+            Requires ClimateEntityFeature.AUX_HEAT.
+            """
+            return True
+
+        async def async_turn_aux_heat_on(self) -> None:
+            """Turn auxiliary heater on."""
+            await self.hass.async_add_executor_job(self.turn_aux_heat_on)
+
+        async def async_turn_aux_heat_off(self) -> None:
+            """Turn auxiliary heater off."""
+            await self.hass.async_add_executor_job(self.turn_aux_heat_off)
+
+    # Fake the module is custom component or built in
+    MockClimateEntityWithAux.__module__ = module
+
+    climate_entity = MockClimateEntityWithAux(
+        name="Testing",
+        entity_id="climate.testing",
+    )
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
+        return True
+
+    async def async_setup_entry_climate_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Set up test weather platform via config entry."""
+        async_add_entities([climate_entity])
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=async_setup_entry_init,
+            partial_manifest=manifest_extra,
+        ),
+        built_in=False,
+    )
+    mock_platform(
+        hass,
+        "test.climate",
+        MockPlatform(async_setup_entry=async_setup_entry_climate_platform),
+    )
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert climate_entity.state == HVACMode.HEAT
+
+    issues = ir.async_get(hass)
+    issue = issues.async_get_issue("climate", "deprecated_climate_aux_test")
+    assert not issue
+
+    assert (
+        "test::MockClimateEntityWithAux implements the `is_aux_heat` property or uses "
+        "the auxiliary  heater methods in a subclass of ClimateEntity which is deprecated "
+        f"and will be unsupported from Home Assistant 2024.10. Please {report}"
+    ) not in caplog.text
+
+
+async def test_no_issue_no_aux_property(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config_flow_fixture: None,
+) -> None:
+    """Test the issue is raised on deprecated auxiliary heater attributes."""
+
+    climate_entity = MockClimateEntity(
+        name="Testing",
+        entity_id="climate.testing",
+    )
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
+        return True
+
+    async def async_setup_entry_climate_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Set up test weather platform via config entry."""
+        async_add_entities([climate_entity])
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=async_setup_entry_init,
+        ),
+        built_in=False,
+    )
+    mock_platform(
+        hass,
+        "test.climate",
+        MockPlatform(async_setup_entry=async_setup_entry_climate_platform),
+    )
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert climate_entity.state == HVACMode.HEAT
+
+    issues = ir.async_get(hass)
+    assert len(issues.issues) == 0
+
+    assert (
+        "test::MockClimateEntityWithAux implements the `is_aux_heat` property or uses "
+        "the auxiliary  heater methods in a subclass of ClimateEntity which is deprecated "
+        "and will be unsupported from Home Assistant 2024.10."
+    ) not in caplog.text

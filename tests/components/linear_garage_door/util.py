@@ -12,6 +12,7 @@ async def async_init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Initialize mock integration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
+        entry_id="acefdd4b3a4a0911067d1cf51414201e",
         data={
             "email": "test-email",
             "password": "test-password",
@@ -21,40 +22,61 @@ async def async_init_integration(hass: HomeAssistant) -> MockConfigEntry:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.linear_garage_door.coordinator.Linear.login",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.linear_garage_door.coordinator.Linear.get_devices",
-        return_value=[
-            {"id": "test1", "name": "Test Garage 1", "subdevices": ["GDO", "Light"]},
-            {"id": "test2", "name": "Test Garage 2", "subdevices": ["GDO", "Light"]},
-            {"id": "test3", "name": "Test Garage 3", "subdevices": ["GDO", "Light"]},
-            {"id": "test4", "name": "Test Garage 4", "subdevices": ["GDO", "Light"]},
-        ],
-    ), patch(
-        "homeassistant.components.linear_garage_door.coordinator.Linear.get_device_state",
-        side_effect=lambda id: {
-            "test1": {
-                "GDO": {"Open_B": "true", "Open_P": "100"},
-                "Light": {"On_B": "true", "On_P": "100"},
-            },
-            "test2": {
-                "GDO": {"Open_B": "false", "Open_P": "0"},
-                "Light": {"On_B": "false", "On_P": "0"},
-            },
-            "test3": {
-                "GDO": {"Open_B": "false", "Opening_P": "0"},
-                "Light": {"On_B": "false", "On_P": "0"},
-            },
-            "test4": {
-                "GDO": {"Open_B": "true", "Opening_P": "100"},
-                "Light": {"On_B": "true", "On_P": "100"},
-            },
-        }[id],
-    ), patch(
-        "homeassistant.components.linear_garage_door.coordinator.Linear.close",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.linear_garage_door.coordinator.Linear.login",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.linear_garage_door.coordinator.Linear.get_devices",
+            return_value=[
+                {
+                    "id": "test1",
+                    "name": "Test Garage 1",
+                    "subdevices": ["GDO", "Light"],
+                },
+                {
+                    "id": "test2",
+                    "name": "Test Garage 2",
+                    "subdevices": ["GDO", "Light"],
+                },
+                {
+                    "id": "test3",
+                    "name": "Test Garage 3",
+                    "subdevices": ["GDO", "Light"],
+                },
+                {
+                    "id": "test4",
+                    "name": "Test Garage 4",
+                    "subdevices": ["GDO", "Light"],
+                },
+            ],
+        ),
+        patch(
+            "homeassistant.components.linear_garage_door.coordinator.Linear.get_device_state",
+            side_effect=lambda id: {
+                "test1": {
+                    "GDO": {"Open_B": "true", "Open_P": "100"},
+                    "Light": {"On_B": "true", "On_P": "100"},
+                },
+                "test2": {
+                    "GDO": {"Open_B": "false", "Open_P": "0"},
+                    "Light": {"On_B": "false", "On_P": "0"},
+                },
+                "test3": {
+                    "GDO": {"Open_B": "false", "Opening_P": "0"},
+                    "Light": {"On_B": "false", "On_P": "0"},
+                },
+                "test4": {
+                    "GDO": {"Open_B": "true", "Opening_P": "100"},
+                    "Light": {"On_B": "true", "On_P": "100"},
+                },
+            }[id],
+        ),
+        patch(
+            "homeassistant.components.linear_garage_door.coordinator.Linear.close",
+            return_value=True,
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

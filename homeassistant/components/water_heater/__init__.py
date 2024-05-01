@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import timedelta
 from enum import IntFlag
 import functools as ft
+from functools import cached_property
 import logging
-from typing import TYPE_CHECKING, Any, final
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -43,17 +43,10 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import group as group_pre_import  # noqa: F401
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
+from .const import DOMAIN
 
 DEFAULT_MIN_TEMP = 110
 DEFAULT_MAX_TEMP = 140
-
-DOMAIN = "water_heater"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -231,7 +224,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return PRECISION_WHOLE
 
     @property
-    def capability_attributes(self) -> Mapping[str, Any]:
+    def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         data: dict[str, Any] = {
             ATTR_MIN_TEMP: show_temp(

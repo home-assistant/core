@@ -174,11 +174,6 @@ class ECWeather(SingleCoordinatorWeatherEntity):
             return icon_code_to_condition(int(icon_code))
         return ""
 
-    @property
-    def forecast(self) -> list[Forecast] | None:
-        """Return the forecast array."""
-        return get_forecast(self.ec_data, False)
-
     @callback
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
@@ -227,7 +222,9 @@ def get_forecast(ec_data, hourly) -> list[Forecast] | None:
 
         forecast_array.append(today)
 
-        for day, high, low in zip(range(1, 6), range(0, 9, 2), range(1, 10, 2)):
+        for day, high, low in zip(
+            range(1, 6), range(0, 9, 2), range(1, 10, 2), strict=False
+        ):
             forecast_array.append(
                 {
                     ATTR_FORECAST_TIME: (

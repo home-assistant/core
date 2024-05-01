@@ -146,6 +146,14 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
         title = f"{model} - {serial}"
         return self.async_create_entry(title=title, data=self.config)
 
+    async def async_step_reconfigure(
+        self, user_input: Mapping[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Trigger a reconfiguration flow."""
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert entry
+        return await self._redo_configuration(entry.data, keep_password=True)
+
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
@@ -154,14 +162,19 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
             CONF_NAME: entry_data[CONF_NAME],
             CONF_HOST: entry_data[CONF_HOST],
         }
+        return await self._redo_configuration(entry_data, keep_password=False)
 
+    async def _redo_configuration(
+        self, entry_data: Mapping[str, Any], keep_password: bool
+    ) -> ConfigFlowResult:
+        """Re-run configuration step."""
+        protocol = entry_data.get(CONF_PROTOCOL, "http")
+        password = entry_data[CONF_PASSWORD] if keep_password else ""
         self.discovery_schema = {
-            vol.Required(
-                CONF_PROTOCOL, default=entry_data.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)
-            ): str,
+            vol.Required(CONF_PROTOCOL, default=protocol): vol.In(PROTOCOL_CHOICES),
             vol.Required(CONF_HOST, default=entry_data[CONF_HOST]): str,
             vol.Required(CONF_USERNAME, default=entry_data[CONF_USERNAME]): str,
-            vol.Required(CONF_PASSWORD): str,
+            vol.Required(CONF_PASSWORD, default=password): str,
             vol.Required(CONF_PORT, default=entry_data[CONF_PORT]): int,
         }
 

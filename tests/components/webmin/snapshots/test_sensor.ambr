@@ -43,6 +43,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.192_168_1_1_load_15m',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.37',
   })
@@ -91,6 +92,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.192_168_1_1_load_1m',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.29',
   })
@@ -139,6 +141,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.192_168_1_1_load_5m',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.36',
   })
@@ -195,6 +198,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.192_168_1_1_memory_free',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '27.2087860107422',
   })
@@ -251,6 +255,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.192_168_1_1_memory_total',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '31.248420715332',
   })
@@ -307,6 +312,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.192_168_1_1_swap_free',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.85430908203125',
   })
@@ -363,6 +369,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.192_168_1_1_swap_total',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.86260986328125',
   })
