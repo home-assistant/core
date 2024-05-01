@@ -51,16 +51,18 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Optional(CONF_REALTIME): BooleanSelector(),
         vol.Required(CONF_VEHICLE_TYPE): SelectSelector(
             SelectSelectorConfig(
-                options=sorted(VEHICLE_TYPES),
+                options=VEHICLE_TYPES,
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_VEHICLE_TYPE,
+                sort=True,
             )
         ),
         vol.Required(CONF_UNITS): SelectSelector(
             SelectSelectorConfig(
-                options=sorted(UNITS),
+                options=UNITS,
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_UNITS,
+                sort=True,
             )
         ),
         vol.Optional(CONF_AVOID_TOLL_ROADS): BooleanSelector(),
@@ -76,9 +78,10 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Required(CONF_DESTINATION): TextSelector(),
         vol.Required(CONF_REGION): SelectSelector(
             SelectSelectorConfig(
-                options=sorted(REGIONS),
+                options=REGIONS,
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_REGION,
+                sort=True,
             )
         ),
     }
