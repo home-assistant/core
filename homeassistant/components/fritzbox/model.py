@@ -4,9 +4,16 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
-from pyfritzhome import FritzhomeDevice
+from pyfritzhome import Fritzhome, FritzhomeDevice
+
+from homeassistant.config_entries import ConfigEntry
+
+if TYPE_CHECKING:
+    from .coordinator import FritzboxDataUpdateCoordinator
+
+FritzboxConfigEntry = ConfigEntry["FritzboxRuntimeData"]
 
 
 class ClimateExtraAttributes(TypedDict, total=False):
@@ -24,3 +31,11 @@ class FritzEntityDescriptionMixinBase:
     """Bases description mixin for Fritz!Smarthome entities."""
 
     suitable: Callable[[FritzhomeDevice], bool]
+
+
+@dataclass
+class FritzboxRuntimeData:
+    """Fritzbox runtime data class."""
+
+    coordinator: FritzboxDataUpdateCoordinator
+    fritz: Fritzhome

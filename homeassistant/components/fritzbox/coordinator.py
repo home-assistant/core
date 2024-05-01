@@ -5,17 +5,17 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 
-from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
+from pyfritzhome import FritzhomeDevice, LoginError
 from pyfritzhome.devicetypes import FritzhomeTemplate
 from requests.exceptions import ConnectionError as RequestConnectionError, HTTPError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_CONNECTIONS, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
+from .model import FritzboxConfigEntry
 
 
 @dataclass
@@ -29,7 +29,7 @@ class FritzboxCoordinatorData:
 class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorData]):
     """Fritzbox Smarthome device data update coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: FritzboxConfigEntry
     configuration_url: str
 
     def __init__(self, hass: HomeAssistant, name: str, has_templates: bool) -> None:
@@ -41,9 +41,7 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
             update_interval=timedelta(seconds=30),
         )
 
-        self.fritz: Fritzhome = hass.data[DOMAIN][self.config_entry.entry_id][
-            CONF_CONNECTIONS
-        ]
+        self.fritz = self.config_entry.runtime_data.fritz
         self.configuration_url = self.fritz.get_prefixed_host()
         self.has_templates = has_templates
         self.new_devices: set[str] = set()

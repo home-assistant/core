@@ -9,7 +9,6 @@ from pyfritzhome.devicetypes.fritzhomeentitybase import FritzhomeEntityBase
 from requests.exceptions import ConnectionError as RequestConnectionError
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -24,11 +23,12 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_CONNECTIONS, CONF_COORDINATOR, DOMAIN, LOGGER, PLATFORMS
+from .const import DOMAIN, LOGGER, PLATFORMS
 from .coordinator import FritzboxDataUpdateCoordinator
+from .model import FritzboxConfigEntry, FritzboxRuntimeData
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FritzboxConfigEntry) -> bool:
     """Set up the AVM FRITZ!SmartHome platforms."""
     fritz = Fritzhome(
         host=entry.data[CONF_HOST],
@@ -42,11 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
     except LoginError as err:
         raise ConfigEntryAuthFailed from err
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        CONF_CONNECTIONS: fritz,
-    }
 
     has_templates = await hass.async_add_executor_job(fritz.has_templates)
     LOGGER.debug("enable smarthome templates: %s", has_templates)
@@ -75,7 +70,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = FritzboxDataUpdateCoordinator(hass, entry.entry_id, has_templates)
     await coordinator.async_setup()
-    hass.data[DOMAIN][entry.entry_id][CONF_COORDINATOR] = coordinator
+
+    entry.runtime_data = FritzboxRuntimeData(coordinator, fritz)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -90,25 +86,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FritzboxConfigEntry) -> bool:
     """Unloading the AVM FRITZ!SmartHome platforms."""
-    fritz = hass.data[DOMAIN][entry.entry_id][CONF_CONNECTIONS]
-    await hass.async_add_executor_job(fritz.logout)
+    await hass.async_add_executor_job(entry.runtime_data.fritz.logout)
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: ConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, entry: FritzboxConfigEntry, device: DeviceEntry
 ) -> bool:
     """Remove Fritzbox config entry from a device."""
-    coordinator: FritzboxDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        CONF_COORDINATOR
-    ]
+    coordinator = entry.runtime_data.coordinator
 
     for identifier in device.identifiers:
         if identifier[0] == DOMAIN and (
