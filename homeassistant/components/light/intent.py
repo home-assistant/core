@@ -84,6 +84,7 @@ class SetIntentHandler(intent.IntentHandler):
                 area=area,
                 domains=domains,
                 device_classes=device_classes,
+                assistant=intent_obj.assistant,
             )
         )
 
