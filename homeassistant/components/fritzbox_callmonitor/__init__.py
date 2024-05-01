@@ -1,9 +1,5 @@
 """The fritzbox_callmonitor integration."""
 
-from __future__ import annotations
-
-from collections.abc import Callable
-from dataclasses import dataclass
 import logging
 
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
@@ -19,15 +15,7 @@ from .const import CONF_PHONEBOOK, CONF_PREFIXES, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
-FritzBoxCallMonitorConfigEntry = ConfigEntry["FritzBoxCallMonitorData"]
-
-
-@dataclass
-class FritzBoxCallMonitorData:
-    """Store FritzBox Call Monitor data."""
-
-    phonebook: FritzBoxPhonebook
-    update_listener: Callable[[], None]
+FritzBoxCallMonitorConfigEntry = ConfigEntry[FritzBoxPhonebook]
 
 
 async def async_setup_entry(
@@ -60,11 +48,8 @@ async def async_setup_entry(
         _LOGGER.error("Unable to connect to AVM FRITZ!Box call monitor: %s", ex)
         raise ConfigEntryNotReady from ex
 
-    config_entry.runtime_data = FritzBoxCallMonitorData(
-        phonebook=fritzbox_phonebook,
-        update_listener=config_entry.add_update_listener(update_listener),
-    )
-
+    config_entry.runtime_data = fritzbox_phonebook
+    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
@@ -74,13 +59,7 @@ async def async_unload_entry(
     hass: HomeAssistant, config_entry: FritzBoxCallMonitorConfigEntry
 ) -> bool:
     """Unloading the fritzbox_callmonitor platforms."""
-
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-
-    config_entry.runtime_data.update_listener()
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
 async def update_listener(

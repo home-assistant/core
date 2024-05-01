@@ -51,7 +51,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the fritzbox_callmonitor sensor from config_entry."""
-    fritzbox_phonebook = config_entry.runtime_data.phonebook
+    fritzbox_phonebook = config_entry.runtime_data
 
     phonebook_id: int = config_entry.data[CONF_PHONEBOOK]
     prefixes: list[str] | None = config_entry.options.get(CONF_PREFIXES)
