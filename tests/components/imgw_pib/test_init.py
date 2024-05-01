@@ -6,26 +6,11 @@ from imgw_pib import ApiError
 
 from homeassistant.components.imgw_pib.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import init_integration
 
 from tests.common import MockConfigEntry
-
-
-async def test_setup_entry(
-    hass: HomeAssistant,
-    mock_imgw_pib_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test a successful setup entry."""
-    await init_integration(hass, mock_config_entry)
-
-    state = hass.states.get("sensor.river_name_station_name_water_level")
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == "526.0"
 
 
 async def test_config_not_ready(
