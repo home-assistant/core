@@ -1143,16 +1143,10 @@ async def test_bootstrap_empty_integrations(
     await hass.async_block_till_done()
 
 
-@pytest.mark.parametrize("integration", ["mqtt_eventstream", "mqtt_statestream"])
-@pytest.mark.parametrize("load_registries", [False])
-async def test_bootstrap_dependencies(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    integration: str,
-) -> None:
-    """Test dependencies are set up correctly,."""
+@pytest.fixture(name="mock_mqtt_config_flow")
+def mock_mqtt_config_flow_fixture() -> Generator[None, None, None]:
+    """Mock MQTT config flow."""
 
-    # Prepare MQTT config entry
     @HANDLERS.register("mqtt")
     class MockConfigFlow:
         """Mock the MQTT config flow."""
@@ -1160,6 +1154,19 @@ async def test_bootstrap_dependencies(
         VERSION = 1
         MINOR_VERSION = 1
 
+    yield
+    HANDLERS.pop("mqtt")
+
+
+@pytest.mark.parametrize("integration", ["mqtt_eventstream", "mqtt_statestream"])
+@pytest.mark.parametrize("load_registries", [False])
+async def test_bootstrap_dependencies(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    integration: str,
+    mock_mqtt_config_flow: None,
+) -> None:
+    """Test dependencies are set up correctly,."""
     entry = MockConfigEntry(domain="mqtt", data={"broker": "test-broker"})
     entry.add_to_hass(hass)
 
