@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 import logging
 from typing import Any
 
@@ -10,6 +9,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import EcobeeData
 from .const import DOMAIN
@@ -54,6 +54,9 @@ class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
         self._attr_unique_id = f"{self.base_unique_id}_ventilator_20m_timer"
         self._attr_is_on = False
         self.update_without_throttle = False
+        self._operating_timezone = dt_util.get_time_zone(
+            self.thermostat["location"]["timeZone"]
+        )
 
     @property
     def is_on(self) -> bool | None:
@@ -71,16 +74,13 @@ class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
 
         ventilator_off_date_time = self.thermostat["settings"]["ventilatorOffDateTime"]
 
-        time_zone_delay = datetime.strptime(
-            self.thermostat["utcTime"], DATE_FORMAT
-        ) - datetime.strptime(self.thermostat["thermostatTime"], DATE_FORMAT)
-
         self._attr_is_on = (
             ventilator_off_date_time is not None
             and ventilator_off_date_time != ""
-            and datetime.strptime(ventilator_off_date_time, DATE_FORMAT)
-            + time_zone_delay
-            >= datetime.now()
+            and dt_util.parse_datetime(
+                ventilator_off_date_time, raise_on_error=True
+            ).replace(tzinfo=self._operating_timezone)
+            >= dt_util.now(self._operating_timezone)
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
