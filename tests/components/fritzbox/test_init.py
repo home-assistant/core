@@ -254,7 +254,7 @@ async def test_raise_config_entry_not_ready_when_offline(hass: HomeAssistant) ->
     )
     entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.fritzbox.Fritzhome.login",
+        "homeassistant.components.fritzbox.coordinator.Fritzhome.login",
         side_effect=RequestConnectionError(),
     ) as mock_login:
         await hass.config_entries.async_setup(entry.entry_id)
@@ -275,7 +275,7 @@ async def test_raise_config_entry_error_when_login_fail(hass: HomeAssistant) -> 
     )
     entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.fritzbox.Fritzhome.login",
+        "homeassistant.components.fritzbox.coordinator.Fritzhome.login",
         side_effect=LoginError("user"),
     ) as mock_login:
         await hass.config_entries.async_setup(entry.entry_id)
