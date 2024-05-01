@@ -25,19 +25,12 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    CoreState,
-    Event,
-    HassJob,
-    HomeAssistant,
-    callback,
-)
+from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import create_eager_task
@@ -427,24 +420,21 @@ class MQTT:
             UNSUBSCRIBE_COOLDOWN, self._async_perform_unsubscribes
         )
         self._pending_unsubscribes: set[str] = set()  # topic
-
-        if self.hass.state is CoreState.running:
-            self._ha_started.set()
-        else:
-
-            @callback
-            def ha_started(_: Event) -> None:
-                self._ha_started.set()
-
-            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, ha_started)
-
-        async def async_stop_mqtt(_event: Event) -> None:
-            """Stop MQTT component."""
-            await self.async_disconnect()
-
-        self._cleanup_on_unload.append(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt)
+        self._cleanup_on_unload.extend(
+            (
+                async_at_started(hass, self._async_ha_started),
+                hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self._async_ha_stop),
+            )
         )
+
+    @callback
+    def _async_ha_started(self, _hass: HomeAssistant) -> None:
+        """Handle HA started."""
+        self._ha_started.set()
+
+    async def _async_ha_stop(self, _event: Event) -> None:
+        """Handle HA stop."""
+        await self.async_disconnect()
 
     def start(
         self,
