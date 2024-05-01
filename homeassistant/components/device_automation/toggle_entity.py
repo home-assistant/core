@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import (
+    ATTR_ACTION_ID,
     ATTR_ENTITY_ID,
     CONF_CONDITION,
     CONF_ENTITY_ID,
@@ -118,7 +119,10 @@ async def async_call_action_from_config(
     else:
         action = "toggle"
 
-    service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
+    service_data = {
+        ATTR_ACTION_ID: variables[ATTR_ACTION_ID] if variables else None,
+        ATTR_ENTITY_ID: config[CONF_ENTITY_ID],
+    }
 
     await hass.services.async_call(
         domain, action, service_data, blocking=True, context=context

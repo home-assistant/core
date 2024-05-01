@@ -4577,12 +4577,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "rasc": {
-      "name": "RASC Abstraction",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
-    },
     "raspberry_pi": {
       "name": "Raspberry Pi",
       "integrations": {

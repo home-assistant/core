@@ -1232,4 +1232,10 @@ LOCK_STATE_RELEASED: Final = "released"
 LOCK_STATE_LEASED: Final = "leased"
 
 
-POST_LEASE: Final = False
+FCFS: Final = "fcfs"
+FCFS_POST: Final = "fcfs_post"
+JIT: Final = "jit"
+TIMELINE: Final = "tl"
+SCHEDULING_POLICY: Final = "scheduling_policy"
+
+TIMELINE_UNIT: Final = 1

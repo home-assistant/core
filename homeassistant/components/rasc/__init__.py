@@ -11,7 +11,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .abstraction import RASCAbstraction
 from .const import DOMAIN, LOGGER
-from .scheduler import RascalSchedulerEntity
+from .scheduler import RascalScheduler
 
 DEFAULT_NAME = "RASCal Abstraction"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -24,7 +24,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the RASC component."""
     component = hass.data[DOMAIN] = RASCAbstraction(LOGGER, DOMAIN, hass)
-    hass.data[DOMAIN_RASCALSCHEDULER] = RascalSchedulerEntity(hass)
+    hass.data[DOMAIN_RASCALSCHEDULER] = RascalScheduler(hass)
 
     await component.async_load()
 

@@ -6,13 +6,14 @@ import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 import logging
-from typing import Any, Protocol, cast
+from typing import TYPE_CHECKING, Any, Optional, Protocol, cast
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.components.rasc.entity import BaseRoutineEntity
+from homeassistant.components.rasc.log import output_routine
 from homeassistant.components.rasc.scheduler import create_routine
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -108,6 +109,9 @@ from .const import (
 )
 from .helpers import async_get_blueprints
 from .trace import trace_automation
+
+if TYPE_CHECKING:
+    from homeassistant.components.rasc import RascalScheduler
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -588,14 +592,14 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         if enable_automation:
             await self.async_enable()
 
-        if self.raw_config:
+        if self.raw_config and self.unique_id:
             self._routine = create_routine(
                 hass=self.hass,
                 name=self.raw_config["alias"],
-                routine_id=self.unique_id,
+                routine_id=str(self.unique_id),
                 action_script=self.raw_config["action"],
             )
-            self._routine.output()
+            output_routine(str(self.unique_id), self._routine.actions)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on and update the state."""
@@ -698,16 +702,26 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
             try:
                 with trace_path("action"):
-                    # change to execute rascal scheduler
-                    rascal = self.hass.data.get(DOMAIN_RASCALSCHEDULER)
+                    # Access the Rascal Scheduler instance
+                    rascal_scheduler: Optional[RascalScheduler] = self.hass.data.get(
+                        DOMAIN_RASCALSCHEDULER
+                    )
 
-                    if rascal and self._routine:
-                        routine_entity = self._routine.duplicate(
-                            variables, trigger_context
-                        )
-                        routine_entity.output()
-                        rascal.init_routine(routine_entity)
+                    # Check if the Rascal Scheduler is available and a routine is set
+                    if (
+                        rascal_scheduler
+                        and self._routine
+                        and not self._routine.abort_if_within_timeout()
+                    ):
+                        # Duplicate the routine with the provided variables and trigger context
+                        # This step creates a new routine ready for initialization
 
+                        routine = self._routine.duplicate(variables, trigger_context)
+
+                        # Initialize the routine
+                        rascal_scheduler.initialize_routine(routine)
+                    else:
+                        return
                     # await self.action_script.async_run(
                     #     variables, trigger_context, started_action
                     # )
