@@ -18,7 +18,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_URL
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -168,7 +168,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the habitica sensors."""
 
-    name = config_entry.data[CONF_NAME]
     sensor_data = HabitipyData(hass.data[DOMAIN][config_entry.entry_id])
     await sensor_data.update()
 
@@ -177,7 +176,7 @@ async def async_setup_entry(
         for description in SENSOR_DESCRIPTIONS.values()
     ]
     entities.extend(
-        HabitipyTaskSensor(name, task_type, sensor_data, config_entry)
+        HabitipyTaskSensor(config_entry.title, task_type, sensor_data, config_entry)
         for task_type in TASKS_TYPES
     )
     async_add_entities(entities, True)
@@ -258,7 +257,6 @@ class HabitipySensor(SensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
             model=NAME,
-            name=entry.data[CONF_NAME],
             configuration_url=entry.data[CONF_URL],
             identifiers={(DOMAIN, entry.unique_id)},
         )
@@ -287,7 +285,6 @@ class HabitipyTaskSensor(SensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
             model=NAME,
-            name=entry.data[CONF_NAME],
             configuration_url=entry.data[CONF_URL],
             identifiers={(DOMAIN, entry.unique_id)},
         )

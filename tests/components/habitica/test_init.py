@@ -6,27 +6,19 @@ import pytest
 
 from homeassistant.components.habitica.const import (
     ATTR_ARGS,
-    ATTR_DATA,
+    ATTR_CONFIG_ENTRY,
     ATTR_PATH,
     DEFAULT_URL,
     DOMAIN,
-    EVENT_API_CALL_SUCCESS,
     SERVICE_API_CALL,
 )
 from homeassistant.components.habitica.sensor import TASKS_TYPES
-from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, async_capture_events
+from tests.common import MockConfigEntry
 
 TEST_API_CALL_ARGS = {"text": "Use API from Home Assistant", "type": "todo"}
 TEST_USER_NAME = "test_user"
-
-
-@pytest.fixture
-def capture_api_call_success(hass):
-    """Capture api_call events."""
-    return async_capture_events(hass, EVENT_API_CALL_SUCCESS)
 
 
 @pytest.fixture
@@ -55,7 +47,7 @@ def common_requests(aioclient_mock):
                 "api_user": "test-api-user",
                 "profile": {"name": TEST_USER_NAME},
                 "stats": {
-                    "class": "test-class",
+                    "class": "warrior",
                     "con": 1,
                     "exp": 2,
                     "gp": 3,
@@ -108,7 +100,7 @@ async def test_entry_setup_unload(
 
 
 async def test_service_call(
-    hass: HomeAssistant, habitica_entry, common_requests, capture_api_call_success
+    hass: HomeAssistant, habitica_entry, common_requests
 ) -> None:
     """Test integration setup, service call and unload."""
 
@@ -117,22 +109,19 @@ async def test_service_call(
 
     assert hass.services.has_service(DOMAIN, SERVICE_API_CALL)
 
-    assert len(capture_api_call_success) == 0
-
     TEST_SERVICE_DATA = {
-        ATTR_NAME: "test_user",
+        ATTR_CONFIG_ENTRY: habitica_entry.entry_id,
         ATTR_PATH: ["tasks", "user", "post"],
         ATTR_ARGS: TEST_API_CALL_ARGS,
     }
-    await hass.services.async_call(
-        DOMAIN, SERVICE_API_CALL, TEST_SERVICE_DATA, blocking=True
+    service_response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_API_CALL,
+        TEST_SERVICE_DATA,
+        blocking=True,
+        return_response=True,
     )
-
-    assert len(capture_api_call_success) == 1
-    captured_data = capture_api_call_success[0].data
-    captured_data[ATTR_ARGS] = captured_data[ATTR_DATA]
-    del captured_data[ATTR_DATA]
-    assert captured_data == TEST_SERVICE_DATA
+    assert service_response == {"data": TEST_API_CALL_ARGS}
 
     assert await hass.config_entries.async_unload(habitica_entry.entry_id)
 
