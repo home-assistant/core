@@ -348,6 +348,12 @@ class EnsureJobAfterCooldown:
         self._task = create_eager_task(self._async_job())
         self._task.add_done_callback(self._async_task_done)
 
+    async def async_fire(self) -> None:
+        """Execute the job immediately."""
+        if self._task:
+            await self._task
+        self._async_execute()
+
     @callback
     def _async_cancel_timer(self) -> None:
         """Cancel any pending task."""
@@ -870,6 +876,8 @@ class MQTT:
         await self._ha_started.wait()  # Wait for Home Assistant to start
         await self._discovery_cooldown()  # Wait for MQTT discovery to cool down
         # Update subscribe cooldown period to a shorter time
+        # and make sure we flush the debouncer
+        await self._subscribe_debouncer.async_fire()
         self._subscribe_debouncer.set_timeout(SUBSCRIBE_COOLDOWN)
         await self.async_publish(
             topic=birth_message.topic,
