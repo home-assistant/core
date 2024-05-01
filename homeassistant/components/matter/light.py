@@ -405,16 +405,11 @@ class MatterLight(MatterEntity, LightEntity):
             device_info.softwareVersionString,
         ) in TRANSITION_BLOCKLIST:
             self._transitions_disabled = True
-        LOGGER.warning(
-            "Detected a device that has been reported to have firmware issues "
-            "with light transitions. Transitions will be disabled for this light"
-        )
+            LOGGER.warning(
+                "Detected a device that has been reported to have firmware issues "
+                "with light transitions. Transitions will be disabled for this light"
+            )
 
-
-# vendorid (attributeKey 0/40/2)
-# productid (attributeKey 0/40/4)
-# hw version (attributeKey 0/40/8)
-# sw version (attributeKey 0/40/10)
 
 # Discovery schema(s) to map Matter Attributes to HA entities
 DISCOVERY_SCHEMAS = [
