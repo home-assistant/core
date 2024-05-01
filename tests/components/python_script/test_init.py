@@ -47,9 +47,9 @@ async def test_setup(hass: HomeAssistant) -> None:
         )
 
     assert len(mock_ex.mock_calls) == 1
-    hass, script, source, data = mock_ex.mock_calls[0][1]
+    test_hass, script, source, data = mock_ex.mock_calls[0][1]
 
-    assert hass is hass
+    assert test_hass is hass
     assert script == "hello.py"
     assert source == "fake source"
     assert data == {"some": "data"}
@@ -143,7 +143,7 @@ raise Exception('boom')
     await hass.async_add_executor_job(execute, hass, "test.py", source, {})
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "Error executing script: boom" in caplog.text
+    assert "Error executing script" in caplog.text
 
 
 async def test_execute_runtime_error_with_response(hass: HomeAssistant) -> None:

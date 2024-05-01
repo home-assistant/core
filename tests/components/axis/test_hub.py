@@ -2,7 +2,7 @@
 
 from ipaddress import ip_address
 from unittest import mock
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 
 import axis as axislib
 import pytest
@@ -91,7 +91,8 @@ async def test_device_support_mqtt(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_config_entry
 ) -> None:
     """Successful setup."""
-    mqtt_mock.async_subscribe.assert_called_with(f"axis/{MAC}/#", mock.ANY, 0, "utf-8")
+    mqtt_call = call(f"axis/{MAC}/#", mock.ANY, 0, "utf-8")
+    assert mqtt_call in mqtt_mock.async_subscribe.call_args_list
 
     topic = f"axis/{MAC}/event/tns:onvif/Device/tns:axis/Sensor/PIR/$source/sensor/0"
     message = (
@@ -107,6 +108,16 @@ async def test_device_support_mqtt(
     pir = hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_pir_0")
     assert pir.state == STATE_ON
     assert pir.name == f"{NAME} PIR 0"
+
+
+@pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_MQTT])
+@pytest.mark.parametrize("mqtt_status_code", [401])
+async def test_device_support_mqtt_low_privilege(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_config_entry
+) -> None:
+    """Successful setup."""
+    mqtt_call = call(f"{MAC}/#", mock.ANY, 0, "utf-8")
+    assert mqtt_call not in mqtt_mock.async_subscribe.call_args_list
 
 
 async def test_update_address(

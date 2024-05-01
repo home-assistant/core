@@ -6,12 +6,13 @@ import asyncio
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
 from copy import deepcopy
+from functools import cached_property
 import inspect
 from json import JSONDecodeError, JSONEncoder
 import logging
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_FINAL_WRITE,
@@ -33,12 +34,6 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.file import WriteError
 
 from . import json as json_helper
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from ..backports.functools import cached_property
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-warn-return-any
 # mypy: no-check-untyped-defs
@@ -130,7 +125,6 @@ class _StoreManager:
         hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STARTED,
             self._async_schedule_cleanup,
-            run_immediately=True,
         )
 
     @callback
@@ -190,7 +184,6 @@ class _StoreManager:
         self._hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP,
             self._async_cancel_and_cleanup,
-            run_immediately=True,
         )
 
     @callback
@@ -475,7 +468,7 @@ class Store(Generic[_T]):
             # wrote. Reschedule the timer to the next write time.
             self._async_reschedule_delayed_write(self._next_write_time)
             return
-        self.hass.async_create_task(
+        self.hass.async_create_task_internal(
             self._async_callback_delayed_write(), eager_start=True
         )
 
@@ -484,7 +477,8 @@ class Store(Generic[_T]):
         """Ensure that we write if we quit before delay has passed."""
         if self._unsub_final_write_listener is None:
             self._unsub_final_write_listener = self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_callback_final_write
+                EVENT_HOMEASSISTANT_FINAL_WRITE,
+                self._async_callback_final_write,
             )
 
     @callback
