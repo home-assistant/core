@@ -1111,9 +1111,8 @@ class MQTT:
         # Create the mid event if not created, either _mqtt_handle_mid or _wait_for_mid
         # may be executed first.
         future = self._async_get_mid_future(mid)
-        timer_handle = self.hass.loop.call_later(
-            TIMEOUT_ACK, self._async_timeout_mid, future
-        )
+        loop = self.hass.loop
+        timer_handle = loop.call_later(TIMEOUT_ACK, self._async_timeout_mid, future)
         try:
             await future
         except TimeoutError:
