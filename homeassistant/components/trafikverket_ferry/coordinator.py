@@ -17,9 +17,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
+from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
+
 if TYPE_CHECKING:
     from . import TVFerryConfigEntry
-from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 TIME_BETWEEN_UPDATES = timedelta(minutes=5)
