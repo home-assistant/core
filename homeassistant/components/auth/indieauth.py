@@ -127,9 +127,9 @@ def verify_client_id(client_id: str) -> bool:
     """Verify that the client id is valid."""
     try:
         _parse_client_id(client_id)
-        return True
     except ValueError:
         return False
+    return True
 
 
 def _parse_url(url: str) -> ParseResult:

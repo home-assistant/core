@@ -362,10 +362,6 @@ class EntityPlatform:
                 pending = self._tasks.copy()
                 self._tasks.clear()
                 await asyncio.gather(*pending)
-
-            hass.config.components.add(full_name)
-            self._setup_complete = True
-            return True
         except PlatformNotReady as ex:
             tries += 1
             wait_time = min(tries, 6) * PLATFORM_NOT_READY_BASE_WAIT_TIME
@@ -417,6 +413,10 @@ class EntityPlatform:
                 self.domain,
             )
             return False
+        else:
+            hass.config.components.add(full_name)
+            self._setup_complete = True
+            return True
         finally:
             warn_task.cancel()
 
@@ -477,7 +477,7 @@ class EntityPlatform:
         self, new_entities: Iterable[Entity], update_before_add: bool = False
     ) -> None:
         """Schedule adding entities for a single platform async."""
-        task = self.hass.async_create_task(
+        task = self.hass.async_create_task_internal(
             self.async_add_entities(new_entities, update_before_add=update_before_add),
             f"EntityPlatform async_add_entities {self.domain}.{self.platform_name}",
             eager_start=True,
@@ -801,7 +801,7 @@ class EntityPlatform:
                 get_initial_options=entity.get_initial_entity_options,
                 has_entity_name=entity.has_entity_name,
                 hidden_by=hidden_by,
-                known_object_ids=self.entities.keys(),
+                known_object_ids=self.entities,
                 original_device_class=entity.device_class,
                 original_icon=entity.icon,
                 original_name=entity_name,
@@ -839,11 +839,13 @@ class EntityPlatform:
             if self.entity_namespace is not None:
                 suggested_object_id = f"{self.entity_namespace} {suggested_object_id}"
             entity.entity_id = entity_registry.async_generate_entity_id(
-                self.domain, suggested_object_id, self.entities.keys()
+                self.domain, suggested_object_id, self.entities
             )
 
         # Make sure it is valid in case an entity set the value themselves
-        if not valid_entity_id(entity.entity_id):
+        # Avoid calling valid_entity_id if we already know it is valid
+        # since it already made it in the registry
+        if not entity.registry_entry and not valid_entity_id(entity.entity_id):
             entity.add_to_platform_abort()
             raise HomeAssistantError(f"Invalid entity ID: {entity.entity_id}")
 

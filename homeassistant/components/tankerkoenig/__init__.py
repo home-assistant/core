@@ -21,7 +21,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = TankerkoenigDataUpdateCoordinator(
         hass,
-        entry,
         name=entry.unique_id or DOMAIN,
         update_interval=DEFAULT_SCAN_INTERVAL,
     )

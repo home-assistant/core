@@ -136,7 +136,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             await self.async_shutdown()
 
         self._unsub_shutdown = self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _on_hass_stop, run_immediately=True
+            EVENT_HOMEASSISTANT_STOP, _on_hass_stop
         )
 
     @callback
@@ -378,14 +378,12 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 self.config_entry.async_start_reauth(self.hass)
         except NotImplementedError as err:
             self.last_exception = err
-            raise err
+            raise
 
         except Exception as err:  # pylint: disable=broad-except
             self.last_exception = err
             self.last_update_success = False
-            self.logger.exception(
-                "Unexpected error fetching %s data: %s", self.name, err
-            )
+            self.logger.exception("Unexpected error fetching %s data", self.name)
 
         else:
             if not self.last_update_success:

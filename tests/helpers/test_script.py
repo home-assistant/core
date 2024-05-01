@@ -16,7 +16,7 @@ import voluptuous as vol
 
 # Otherwise can't test just this file (import order issue)
 from homeassistant import config_entries, exceptions
-import homeassistant.components.scene as scene
+from homeassistant.components import scene
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
@@ -3322,7 +3322,9 @@ async def test_multiple_runs_repeat_choose(
 
     events = async_capture_events(hass, "abc")
     for _ in range(max_runs):
-        hass.async_create_task(script_obj.async_run(context=Context()))
+        hass.async_create_task(
+            script_obj.async_run(context=Context()), eager_start=False
+        )
     await hass.async_block_till_done()
 
     assert "WARNING" not in caplog.text

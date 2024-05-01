@@ -11,6 +11,7 @@ The tests below exercise both cases during integration setup.
 import time
 from unittest.mock import patch
 
+from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 import pytest
 
 from homeassistant.components.nest.const import API_URL, OAUTH2_TOKEN, SDM_SCOPES
@@ -55,7 +56,7 @@ async def test_auth(
 
     async def async_new_subscriber(
         creds, subscription_name, event_loop, async_callback
-    ):
+    ) -> GoogleNestSubscriber | None:
         """Capture credentials for tests."""
         nonlocal captured_creds
         captured_creds = creds
@@ -123,7 +124,7 @@ async def test_auth_expired_token(
 
     async def async_new_subscriber(
         creds, subscription_name, event_loop, async_callback
-    ):
+    ) -> GoogleNestSubscriber | None:
         """Capture credentials for tests."""
         nonlocal captured_creds
         captured_creds = creds

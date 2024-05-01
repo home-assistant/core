@@ -107,9 +107,6 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, Any] = {}
 
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         if not self._all_region_codes_sorted:
             nina: Nina = Nina(async_get_clientsession(self.hass))
 

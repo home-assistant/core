@@ -51,7 +51,7 @@ class BMWLock(BMWBaseEntity, LockEntity):
         super().__init__(coordinator, vehicle)
 
         self._attr_unique_id = f"{vehicle.vin}-lock"
-        self.door_lock_state_available = DOOR_LOCK_STATE in vehicle.available_attributes
+        self.door_lock_state_available = vehicle.is_lsc_enabled
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the car."""

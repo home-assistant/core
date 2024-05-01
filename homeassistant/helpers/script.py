@@ -9,11 +9,11 @@ from contextvars import ContextVar
 from copy import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from functools import partial
+from functools import cached_property, partial
 import itertools
 import logging
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
+from typing import Any, Literal, TypedDict, TypeVar, cast
 
 import async_interrupt
 import voluptuous as vol
@@ -106,12 +106,6 @@ from .trace import (
 )
 from .trigger import async_initialize_triggers, async_validate_trigger_config
 from .typing import UNDEFINED, ConfigType, UndefinedType
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
@@ -240,16 +234,16 @@ async def trace_action(
         yield trace_element
     except _AbortScript as ex:
         trace_element.set_error(ex.__cause__ or ex)
-        raise ex
-    except _ConditionFail as ex:
+        raise
+    except _ConditionFail:
         # Clear errors which may have been set when evaluating the condition
         trace_element.set_error(None)
-        raise ex
-    except _StopScript as ex:
-        raise ex
+        raise
+    except _StopScript:
+        raise
     except Exception as ex:
         trace_element.set_error(ex)
-        raise ex
+        raise
     finally:
         trace_stack_pop(trace_stack_cv)
 
@@ -472,7 +466,7 @@ class _ScriptRun:
             if not self._script.top_level:
                 # We already consumed the response, do not pass it on
                 err.response = None
-                raise err
+                raise
         except Exception:
             script_execution_set("error")
             raise
@@ -740,7 +734,7 @@ class _ScriptRun:
         )
         trace_set_result(params=params, running_script=running_script)
         response_data = await self._async_run_long_action(
-            self._hass.async_create_task(
+            self._hass.async_create_task_internal(
                 self._hass.services.async_call(
                     **params,
                     blocking=True,
@@ -790,7 +784,7 @@ class _ScriptRun:
                 )
 
         trace_set_result(event=self._action[CONF_EVENT], event_data=event_data)
-        self._hass.bus.async_fire(
+        self._hass.bus.async_fire_internal(
             self._action[CONF_EVENT], event_data, context=self._context
         )
 
@@ -832,8 +826,7 @@ class _ScriptRun:
 
             return True
 
-        result = traced_test_conditions(self._hass, self._variables)
-        return result
+        return traced_test_conditions(self._hass, self._variables)
 
     @async_trace_path("repeat")
     async def _async_repeat_step(self):  # noqa: C901
@@ -1215,7 +1208,7 @@ class _ScriptRun:
     async def _async_run_script(self, script: Script) -> None:
         """Execute a script."""
         result = await self._async_run_long_action(
-            self._hass.async_create_task(
+            self._hass.async_create_task_internal(
                 script.async_run(self._variables, self._context), eager_start=True
             )
         )
@@ -1272,7 +1265,7 @@ async def _async_stop_scripts_after_shutdown(
         _LOGGER.warning("Stopping scripts running too long after shutdown: %s", names)
         await asyncio.gather(
             *(
-                script["instance"].async_stop(update_state=False)
+                create_eager_task(script["instance"].async_stop(update_state=False))
                 for script in running_scripts
             )
         )
@@ -1291,7 +1284,10 @@ async def _async_stop_scripts_at_shutdown(hass: HomeAssistant, event: Event) -> 
         names = ", ".join([script["instance"].name for script in running_scripts])
         _LOGGER.debug("Stopping scripts running at shutdown: %s", names)
         await asyncio.gather(
-            *(script["instance"].async_stop() for script in running_scripts)
+            *(
+                create_eager_task(script["instance"].async_stop())
+                for script in running_scripts
+            )
         )
 
 
@@ -1696,7 +1692,7 @@ class Script:
         script_stack = script_stack_cv.get()
         if (
             self.script_mode in (SCRIPT_MODE_RESTART, SCRIPT_MODE_QUEUED)
-            and (script_stack := script_stack_cv.get()) is not None
+            and script_stack is not None
             and id(self) in script_stack
         ):
             script_execution_set("disallowed_recursion_detected")
@@ -1710,13 +1706,20 @@ class Script:
         run = cls(
             self._hass, self, cast(dict, variables), context, self._log_exceptions
         )
+        has_existing_runs = bool(self._runs)
         self._runs.append(run)
-        if self.script_mode == SCRIPT_MODE_RESTART:
+        if self.script_mode == SCRIPT_MODE_RESTART and has_existing_runs:
             # When script mode is SCRIPT_MODE_RESTART, first add the new run and then
             # stop any other runs. If we stop other runs first, self.is_running will
             # return false after the other script runs were stopped until our task
-            # resumes running.
+            # resumes running. Its important that we check if there are existing
+            # runs before sleeping as otherwise if two runs are started at the exact
+            # same time they will cancel each other out.
             self._log("Restarting")
+            # Important: yield to the event loop to allow the script to start in case
+            # the script is restarting itself so it ends up in the script stack and
+            # the recursion check above will prevent the script from running.
+            await asyncio.sleep(0)
             await self.async_stop(update_state=False, spare=run)
 
         if started_action:
@@ -1731,9 +1734,7 @@ class Script:
             self._changed()
             raise
 
-    async def _async_stop(
-        self, aws: list[asyncio.Task], update_state: bool, spare: _ScriptRun | None
-    ) -> None:
+    async def _async_stop(self, aws: list[asyncio.Task], update_state: bool) -> None:
         await asyncio.wait(aws)
         if update_state:
             self._changed()
@@ -1746,11 +1747,11 @@ class Script:
         # asyncio.shield as asyncio.shield yields to the event loop, which would cause
         # us to wait for script runs added after the call to async_stop.
         aws = [
-            asyncio.create_task(run.async_stop()) for run in self._runs if run != spare
+            create_eager_task(run.async_stop()) for run in self._runs if run != spare
         ]
         if not aws:
             return
-        await asyncio.shield(self._async_stop(aws, update_state, spare))
+        await asyncio.shield(create_eager_task(self._async_stop(aws, update_state)))
 
     async def _async_get_condition(self, config):
         if isinstance(config, template.Template):

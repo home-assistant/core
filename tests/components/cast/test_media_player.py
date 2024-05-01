@@ -271,9 +271,11 @@ async def test_start_discovery_called_once(
 ) -> None:
     """Test pychromecast.start_discovery called exactly once."""
     await async_setup_cast(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert castbrowser_mock.return_value.start_discovery.call_count == 1
 
     await async_setup_cast(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert castbrowser_mock.return_value.start_discovery.call_count == 1
 
 
@@ -453,11 +455,13 @@ async def test_stop_discovery_called_on_stop(
     """Test pychromecast.stop_discovery called on shutdown."""
     # start_discovery should be called with empty config
     await async_setup_cast(hass, {})
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert castbrowser_mock.return_value.start_discovery.call_count == 1
 
     # stop discovery should be called on shutdown
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert castbrowser_mock.return_value.stop_discovery.call_count == 1
 
 

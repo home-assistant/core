@@ -1408,7 +1408,7 @@ async def test_async_get_component_concurrent_loads(
     modules_without_integration = {
         k: v
         for k, v in sys.modules.items()
-        if k != config_flow_module_name and k != integration.pkg_path
+        if k not in (config_flow_module_name, integration.pkg_path)
     }
     with (
         patch.dict(
@@ -1469,6 +1469,50 @@ async def test_async_get_component_deadlock_fallback(
     )
     assert "loaded_executor=False" in caplog.text
     assert module is module_mock
+
+
+async def test_async_get_component_deadlock_fallback_module_not_found(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Verify async_get_component fallback behavior.
+
+    Ensure that fallback is not triggered on ModuleNotFoundError.
+    """
+    executor_import_integration = _get_test_integration(
+        hass, "executor_import", True, import_executor=True
+    )
+    assert executor_import_integration.import_executor is True
+    module_mock = MagicMock(__file__="__init__.py")
+    import_attempts = 0
+
+    def mock_import(module: str, *args: Any, **kwargs: Any) -> Any:
+        nonlocal import_attempts
+        if module == "homeassistant.components.executor_import":
+            import_attempts += 1
+
+        if import_attempts == 1:
+            raise ModuleNotFoundError(
+                "homeassistant.components.executor_import not found",
+                name="homeassistant.components.executor_import",
+            )
+
+        return module_mock
+
+    assert "homeassistant.components.executor_import" not in sys.modules
+    assert "custom_components.executor_import" not in sys.modules
+    with (
+        patch("homeassistant.loader.importlib.import_module", mock_import),
+        pytest.raises(
+            ModuleNotFoundError, match="homeassistant.components.executor_import"
+        ),
+    ):
+        await executor_import_integration.async_get_component()
+
+    # We should not have tried to fall back to the event loop import
+    assert "loaded_executor=False" not in caplog.text
+    assert "homeassistant.components.executor_import" not in sys.modules
+    assert "custom_components.executor_import" not in sys.modules
+    assert import_attempts == 1
 
 
 async def test_async_get_component_raises_after_import_failure(
@@ -1549,6 +1593,52 @@ async def test_async_get_platform_deadlock_fallback(
     assert "executor=['config_flow']" in caplog.text
     assert "loop=['config_flow']" in caplog.text
     assert module is module_mock
+
+
+async def test_async_get_platform_deadlock_fallback_module_not_found(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Verify async_get_platform fallback behavior.
+
+    Ensure that fallback is not triggered on ModuleNotFoundError.
+    """
+    executor_import_integration = _get_test_integration(
+        hass, "executor_import", True, import_executor=True
+    )
+    assert executor_import_integration.import_executor is True
+    module_mock = MagicMock()
+    import_attempts = 0
+
+    def mock_import(module: str, *args: Any, **kwargs: Any) -> Any:
+        nonlocal import_attempts
+        if module == "homeassistant.components.executor_import.config_flow":
+            import_attempts += 1
+
+        if import_attempts == 1:
+            raise ModuleNotFoundError(
+                "Not found homeassistant.components.executor_import.config_flow",
+                name="homeassistant.components.executor_import.config_flow",
+            )
+
+        return module_mock
+
+    assert "homeassistant.components.executor_import" not in sys.modules
+    assert "custom_components.executor_import" not in sys.modules
+    with (
+        patch("homeassistant.loader.importlib.import_module", mock_import),
+        pytest.raises(
+            ModuleNotFoundError,
+            match="homeassistant.components.executor_import.config_flow",
+        ),
+    ):
+        await executor_import_integration.async_get_platform("config_flow")
+
+    # We should not have tried to fall back to the event loop import
+    assert "executor=['config_flow']" in caplog.text
+    assert "loop=['config_flow']" not in caplog.text
+    assert "homeassistant.components.executor_import" not in sys.modules
+    assert "custom_components.executor_import" not in sys.modules
+    assert import_attempts == 1
 
 
 async def test_async_get_platform_raises_after_import_failure(
@@ -1796,7 +1886,7 @@ async def test_async_get_platforms_concurrent_loads(
     modules_without_button = {
         k: v
         for k, v in sys.modules.items()
-        if k != button_module_name and k != integration.pkg_path
+        if k not in (button_module_name, integration.pkg_path)
     }
     with (
         patch.dict(
@@ -1838,3 +1928,34 @@ async def test_has_services(hass: HomeAssistant, enable_custom_integrations) -> 
     assert integration.has_services is False
     integration = await loader.async_get_integration(hass, "test_with_services")
     assert integration.has_services is True
+
+
+async def test_hass_helpers_use_reported(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_integration_frame: Mock
+) -> None:
+    """Test that use of hass.components is reported."""
+    integration_frame = frame.IntegrationFrame(
+        custom_integration=True,
+        _frame=mock_integration_frame,
+        integration="test_integration_frame",
+        module="custom_components.test_integration_frame",
+        relative_filename="custom_components/test_integration_frame/__init__.py",
+    )
+
+    with (
+        patch.object(frame, "_REPORTED_INTEGRATIONS", new=set()),
+        patch(
+            "homeassistant.helpers.frame.get_integration_frame",
+            return_value=integration_frame,
+        ),
+        patch(
+            "homeassistant.helpers.aiohttp_client.async_get_clientsession",
+            return_value=None,
+        ),
+    ):
+        hass.helpers.aiohttp_client.async_get_clientsession()
+
+        assert (
+            "Detected that custom integration 'test_integration_frame' "
+            "accesses hass.helpers.aiohttp_client. This is deprecated"
+        ) in caplog.text

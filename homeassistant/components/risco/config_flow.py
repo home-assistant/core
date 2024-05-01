@@ -105,9 +105,9 @@ async def validate_local_input(
         )
         try:
             await risco.connect()
-        except CannotConnectError as e:
+        except CannotConnectError:
             if comm_delay >= MAX_COMMUNICATION_DELAY:
-                raise e
+                raise
             comm_delay += 1
         else:
             break

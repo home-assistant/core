@@ -133,8 +133,8 @@ async def test_error_on_login(
     await hass.async_block_till_done()
 
     registry = er.async_get(hass)
-    for id in ENTITY_IDS.values():
-        assert not registry.async_is_registered(id)
+    for entity_id in ENTITY_IDS.values():
+        assert not registry.async_is_registered(entity_id)
 
 
 def _check_state(hass, category, entity_id):
@@ -184,8 +184,8 @@ async def test_cloud_setup(
 ) -> None:
     """Test entity setup."""
     registry = er.async_get(hass)
-    for id in ENTITY_IDS.values():
-        assert registry.async_is_registered(id)
+    for entity_id in ENTITY_IDS.values():
+        assert registry.async_is_registered(entity_id)
 
     save_mock.assert_awaited_once_with({LAST_EVENT_TIMESTAMP_KEY: TEST_EVENTS[0].time})
     for category, entity_id in ENTITY_IDS.items():
@@ -213,5 +213,5 @@ async def test_local_setup(
 ) -> None:
     """Test entity setup."""
     registry = er.async_get(hass)
-    for id in ENTITY_IDS.values():
-        assert not registry.async_is_registered(id)
+    for entity_id in ENTITY_IDS.values():
+        assert not registry.async_is_registered(entity_id)

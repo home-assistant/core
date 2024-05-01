@@ -38,8 +38,9 @@ def mock_browse_by_idstring(
     search_type: str, idstring: str, start=0, max_items=100, full_album_art_uri=False
 ) -> list[MockMusicServiceItem]:
     """Mock the call to browse_by_id_string."""
-    if search_type == "albums" and (
-        idstring == "A:ALBUM/Abbey%20Road" or idstring == "A:ALBUM/Abbey Road"
+    if search_type == "albums" and idstring in (
+        "A:ALBUM/Abbey%20Road",
+        "A:ALBUM/Abbey Road",
     ):
         return [
             MockMusicServiceItem(

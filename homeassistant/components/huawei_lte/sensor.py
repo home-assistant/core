@@ -79,9 +79,9 @@ def format_last_reset_elapsed_seconds(value: str | None) -> datetime | None:
     try:
         last_reset = datetime.now() - timedelta(seconds=int(value))
         last_reset.replace(microsecond=0)
-        return last_reset
     except ValueError:
         return None
+    return last_reset
 
 
 def signal_icon(limits: Sequence[int], value: StateType) -> str:

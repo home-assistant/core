@@ -67,6 +67,11 @@ from homeassistant.components.modbus.const import (
     CONF_SWAP_BYTE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
+    CONF_SWING_MODE_REGISTER,
+    CONF_SWING_MODE_SWING_BOTH,
+    CONF_SWING_MODE_SWING_OFF,
+    CONF_SWING_MODE_SWING_ON,
+    CONF_SWING_MODE_VALUES,
     CONF_TARGET_TEMP,
     CONF_VIRTUAL_COUNT,
     DEFAULT_SCAN_INTERVAL,
@@ -85,6 +90,7 @@ from homeassistant.components.modbus.validators import (
     check_config,
     check_hvac_target_temp_registers,
     duplicate_fan_mode_validator,
+    duplicate_swing_mode_validator,
     hvac_fixedsize_reglist_validator,
     nan_validator,
     register_int_list_validator,
@@ -630,6 +636,42 @@ async def test_check_config_sensor(hass: HomeAssistant, do_config) -> None:
                 ],
             }
         ],
+        [  # Testing Swing modes
+            {
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_TIMEOUT: 3,
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 0,
+                        CONF_SWING_MODE_REGISTER: {
+                            CONF_ADDRESS: 120,
+                            CONF_SWING_MODE_VALUES: {
+                                CONF_SWING_MODE_SWING_ON: 0,
+                                CONF_SWING_MODE_SWING_BOTH: 1,
+                            },
+                        },
+                    },
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME + " 2",
+                        CONF_ADDRESS: 119,
+                        CONF_SLAVE: 0,
+                        CONF_TARGET_TEMP: 118,
+                        CONF_SWING_MODE_REGISTER: {
+                            CONF_ADDRESS: [120],
+                            CONF_SWING_MODE_VALUES: {
+                                CONF_SWING_MODE_SWING_ON: 0,
+                                CONF_SWING_MODE_SWING_BOTH: 1,
+                            },
+                        },
+                    },
+                ],
+            }
+        ],
         [
             {
                 CONF_NAME: TEST_MODBUS_NAME,
@@ -734,6 +776,29 @@ async def test_check_config_climate(hass: HomeAssistant, do_config) -> None:
                 CONF_FAN_MODE_REGISTER: {
                     CONF_ADDRESS: 117,
                 },
+                CONF_SWING_MODE_REGISTER: {
+                    CONF_ADDRESS: 117,
+                },
+            },
+        ],
+        [
+            {
+                CONF_NAME: TEST_ENTITY_NAME,
+                CONF_ADDRESS: 1,
+                CONF_TARGET_TEMP: [117],
+                CONF_HVAC_MODE_REGISTER: {
+                    CONF_ADDRESS: 117,
+                    CONF_HVAC_MODE_VALUES: {
+                        CONF_HVAC_MODE_COOL: 0,
+                        CONF_HVAC_MODE_HEAT: 1,
+                        CONF_HVAC_MODE_HEAT_COOL: 2,
+                        CONF_HVAC_MODE_DRY: 3,
+                    },
+                },
+                CONF_HVAC_ONOFF_REGISTER: 117,
+                CONF_SWING_MODE_REGISTER: {
+                    CONF_ADDRESS: [117],
+                },
             },
         ],
     ],
@@ -744,6 +809,7 @@ async def test_climate_conflict_addresses(do_config) -> None:
     assert CONF_HVAC_MODE_REGISTER not in do_config[0]
     assert CONF_HVAC_ONOFF_REGISTER not in do_config[0]
     assert CONF_FAN_MODE_REGISTER not in do_config[0]
+    assert CONF_SWING_MODE_REGISTER not in do_config[0]
 
 
 @pytest.mark.parametrize(
@@ -763,6 +829,25 @@ async def test_duplicate_fan_mode_validator(do_config) -> None:
     """Test duplicate modbus validator."""
     duplicate_fan_mode_validator(do_config)
     assert len(do_config[CONF_FAN_MODE_VALUES]) == 2
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_ADDRESS: 11,
+            CONF_SWING_MODE_VALUES: {
+                CONF_SWING_MODE_SWING_ON: 7,
+                CONF_SWING_MODE_SWING_OFF: 9,
+                CONF_SWING_MODE_SWING_BOTH: 9,
+            },
+        }
+    ],
+)
+async def test_duplicate_swing_mode_validator(do_config) -> None:
+    """Test duplicate modbus validator."""
+    duplicate_swing_mode_validator(do_config)
+    assert len(do_config[CONF_SWING_MODE_VALUES]) == 2
 
 
 @pytest.mark.parametrize(
@@ -1281,7 +1366,6 @@ async def mock_modbus_read_pymodbus_fixture(
     do_type,
     do_scan_interval,
     do_return,
-    do_exception,
     caplog,
     mock_pymodbus,
     freezer: FrozenDateTimeFactory,
@@ -1289,10 +1373,6 @@ async def mock_modbus_read_pymodbus_fixture(
     """Load integration modbus using mocked pymodbus."""
     caplog.clear()
     caplog.set_level(logging.ERROR)
-    mock_pymodbus.read_coils.side_effect = do_exception
-    mock_pymodbus.read_discrete_inputs.side_effect = do_exception
-    mock_pymodbus.read_input_registers.side_effect = do_exception
-    mock_pymodbus.read_holding_registers.side_effect = do_exception
     mock_pymodbus.read_coils.return_value = do_return
     mock_pymodbus.read_discrete_inputs.return_value = do_return
     mock_pymodbus.read_input_registers.return_value = do_return
@@ -1561,7 +1641,7 @@ async def test_shutdown(
     ],
 )
 async def test_stop_restart(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_pymodbus_return
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_modbus
 ) -> None:
     """Run test for service stop."""
 
@@ -1572,7 +1652,7 @@ async def test_stop_restart(
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == "17"
 
-    mock_pymodbus_return.reset_mock()
+    mock_modbus.reset_mock()
     caplog.clear()
     data = {
         ATTR_HUB: TEST_MODBUS_NAME,
@@ -1580,23 +1660,23 @@ async def test_stop_restart(
     await hass.services.async_call(DOMAIN, SERVICE_STOP, data, blocking=True)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-    assert mock_pymodbus_return.close.called
+    assert mock_modbus.close.called
     assert f"modbus {TEST_MODBUS_NAME} communication closed" in caplog.text
 
-    mock_pymodbus_return.reset_mock()
+    mock_modbus.reset_mock()
     caplog.clear()
     await hass.services.async_call(DOMAIN, SERVICE_RESTART, data, blocking=True)
     await hass.async_block_till_done()
-    assert not mock_pymodbus_return.close.called
-    assert mock_pymodbus_return.connect.called
+    assert not mock_modbus.close.called
+    assert mock_modbus.connect.called
     assert f"modbus {TEST_MODBUS_NAME} communication open" in caplog.text
 
-    mock_pymodbus_return.reset_mock()
+    mock_modbus.reset_mock()
     caplog.clear()
     await hass.services.async_call(DOMAIN, SERVICE_RESTART, data, blocking=True)
     await hass.async_block_till_done()
-    assert mock_pymodbus_return.close.called
-    assert mock_pymodbus_return.connect.called
+    assert mock_modbus.close.called
+    assert mock_modbus.connect.called
     assert f"modbus {TEST_MODBUS_NAME} communication closed" in caplog.text
     assert f"modbus {TEST_MODBUS_NAME} communication open" in caplog.text
 
@@ -1626,7 +1706,7 @@ async def test_write_no_client(hass: HomeAssistant, mock_modbus) -> None:
 async def test_integration_reload(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    mock_pymodbus_return,
+    mock_modbus,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Run test for integration reload."""
@@ -1647,7 +1727,7 @@ async def test_integration_reload(
 
 @pytest.mark.parametrize("do_config", [{}])
 async def test_integration_reload_failed(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_pymodbus_return
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_modbus
 ) -> None:
     """Run test for integration connect failure on reload."""
     caplog.set_level(logging.INFO)
@@ -1656,9 +1736,7 @@ async def test_integration_reload_failed(
     yaml_path = get_fixture_path("configuration.yaml", "modbus")
     with (
         mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path),
-        mock.patch.object(
-            mock_pymodbus_return, "connect", side_effect=ModbusException("error")
-        ),
+        mock.patch.object(mock_modbus, "connect", side_effect=ModbusException("error")),
     ):
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
         await hass.async_block_till_done()
@@ -1669,7 +1747,7 @@ async def test_integration_reload_failed(
 
 @pytest.mark.parametrize("do_config", [{}])
 async def test_integration_setup_failed(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_pymodbus_return
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_modbus
 ) -> None:
     """Run test for integration setup on reload."""
     with mock.patch.object(

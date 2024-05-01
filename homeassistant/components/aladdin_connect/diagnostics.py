@@ -23,8 +23,6 @@ async def async_get_config_entry_diagnostics(
 
     acc: AladdinConnectClient = hass.data[DOMAIN][config_entry.entry_id]
 
-    diagnostics_data = {
+    return {
         "doors": async_redact_data(acc.doors, TO_REDACT),
     }
-
-    return diagnostics_data

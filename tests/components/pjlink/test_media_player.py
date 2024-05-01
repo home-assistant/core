@@ -9,7 +9,7 @@ from pypjlink import MUTE_AUDIO
 from pypjlink.projector import ProjectorError
 import pytest
 
-import homeassistant.components.media_player as media_player
+from homeassistant.components import media_player
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component

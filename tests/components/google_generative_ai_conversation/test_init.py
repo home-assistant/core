@@ -152,7 +152,7 @@ async def test_conversation_agent(
     mock_init_component,
 ) -> None:
     """Test GoogleGenerativeAIAgent."""
-    agent = await conversation._get_agent_manager(hass).async_get_agent(
+    agent = conversation.get_agent_manager(hass).async_get_agent(
         mock_config_entry.entry_id
     )
     assert agent.supported_languages == "*"
