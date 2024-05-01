@@ -22,10 +22,12 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import ConfigEntrySelector
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_ARGS,
+    ATTR_CONFIG_ENTRY,
     ATTR_DATA,
     ATTR_PATH,
     CONF_API_USER,
@@ -87,7 +89,7 @@ PLATFORMS = [Platform.SENSOR]
 
 SERVICE_API_CALL_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_NAME): str,
+        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
         vol.Required(ATTR_PATH): vol.All(cv.ensure_list, [str]),
         vol.Optional(ATTR_ARGS): dict,
     }
@@ -124,6 +126,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HabiticaConfigEntry) -> 
         name = call.data[ATTR_NAME]
         path = call.data[ATTR_PATH]
         entries = hass.config_entries.async_entries(DOMAIN)
+
         api = None
         for entry in entries:
             if entry.data[CONF_NAME] == name:

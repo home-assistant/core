@@ -83,9 +83,9 @@
       "name": "API name",
       "description": "Calls Habitica API.",
       "fields": {
-        "name": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "description": "Habitica's username to call for."
+        "config_entry": {
+          "name": "Habitica user",
+          "description": "The Habitica user to call for"
         },
         "path": {
           "name": "[%key:common::config_flow::data::path%]",
