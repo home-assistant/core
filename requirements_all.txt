@@ -2908,7 +2908,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==2.4.2
 
 # homeassistant.components.august
-yalexs==3.0.1
+yalexs==3.1.0
 
 # homeassistant.components.yeelight
 yeelight==0.7.14
