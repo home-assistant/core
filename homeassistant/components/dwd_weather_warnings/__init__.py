@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import DwdWeatherWarningsCoordinator
@@ -11,6 +12,8 @@ from .coordinator import DwdWeatherWarningsCoordinator
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
+    device_registry = dr.async_get(hass)
+    device_registry.async_clear_config_entry(entry.entry_id)
     coordinator = DwdWeatherWarningsCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 

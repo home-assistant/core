@@ -37,7 +37,6 @@ from .const import (
     ATTR_REGION_NAME,
     ATTR_WARNING_COUNT,
     CURRENT_WARNING_SENSOR,
-    DEFAULT_NAME,
     DOMAIN,
 )
 from .coordinator import DwdWeatherWarningsCoordinator
@@ -60,12 +59,12 @@ async def async_setup_entry(
     """Set up entities from config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
+    unique_id = entry.unique_id
+    assert unique_id
+
     async_add_entities(
-        [
-            DwdWeatherWarningsSensor(coordinator, entry, description)
-            for description in SENSOR_TYPES
-        ],
-        True,
+        DwdWeatherWarningsSensor(coordinator, description, unique_id)
+        for description in SENSOR_TYPES
     )
 
 
@@ -80,18 +79,18 @@ class DwdWeatherWarningsSensor(
     def __init__(
         self,
         coordinator: DwdWeatherWarningsCoordinator,
-        entry: ConfigEntry,
         description: SensorEntityDescription,
+        unique_id: str,
     ) -> None:
         """Initialize a DWD-Weather-Warnings sensor."""
         super().__init__(coordinator)
 
         self.entity_description = description
-        self._attr_unique_id = f"{entry.unique_id}-{description.key}"
+        self._attr_unique_id = f"{unique_id}-{description.key}"
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name=f"{DEFAULT_NAME} {entry.title}",
+            identifiers={(DOMAIN, unique_id)},
+            name=coordinator.api.warncell_name,
             entry_type=DeviceEntryType.SERVICE,
         )
 
