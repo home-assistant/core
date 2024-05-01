@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, STATE_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceEntryType
 
 from . import init_integration
 
@@ -47,8 +48,8 @@ async def test_removing_old_device(
     device_registry.async_get_or_create(
         identifiers={(DOMAIN, mock_identifier_entry.entry_id)},
         config_entry_id=mock_identifier_entry.entry_id,
-        name="DWD Weather Warnings",
-        manufacturer="Deutscher Wetterdienst",
+        entry_type=DeviceEntryType.SERVICE,
+        name="test",
     )
 
     assert (
