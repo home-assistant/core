@@ -995,11 +995,11 @@ class LightTemplate(TemplateEntity, LightEntity):
             self._color_mode = ColorMode.COLOR_TEMP
         elif self._hs_color is not None:
             self._color_mode = ColorMode.HS
-        elif self._rgb_color is not None:
-            self._color_mode = ColorMode.RGB
-        elif self._rgbw_color is not None:
-            self._color_mode = ColorMode.RGBW
         elif self._rgbww_color is not None:
             self._color_mode = ColorMode.RGBWW
+        elif self._rgbw_color is not None:
+            self._color_mode = ColorMode.RGBW
+        elif self._rgb_color is not None:
+            self._color_mode = ColorMode.RGB
         else:
             self._color_mode = ColorMode.UNKNOWN
