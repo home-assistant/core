@@ -296,10 +296,9 @@ class MatterLight(MatterEntity, LightEntity):
             if self._entity_info.endpoint.has_attribute(
                 None, clusters.LevelControl.Attributes.CurrentLevel
             ) and self._entity_info.endpoint.device_types != {device_types.OnOffLight}:
-                # if endpoint has LevelControl and is not OnOffLight device type
-                # this filter is important because OnOffLight can have an optional LevelControl
-                # cluster present to provide a consistent user experience when the device is
-                # grouped with additional dimmable lights and the "with on/off" commands are used.
+                # We need to filter out the OnOffLight device type here because
+                # that can have an optional LevelControl cluster present
+                # which we should ignore.
                 supported_color_modes.add(ColorMode.BRIGHTNESS)
                 self._supports_brightness = True
             # colormode(s)
