@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from pydrawise.schema import Sensor, Zone
+from typing import Any
+
+from pydrawise import Sensor, Zone
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -19,8 +21,7 @@ from .entity import HydrawiseEntity
 
 CONTROLLER_BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
-        key="status",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        key="status", device_class=BinarySensorDeviceClass.CONNECTIVITY
     ),
 )
 
@@ -80,11 +81,15 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
 
     def _update_attrs(self) -> None:
         """Update state attributes."""
-        if self.entity_description.key == "status":
-            self._attr_is_on = self.coordinator.last_update_success
-        elif self.entity_description.key == "is_watering":
-            assert self.zone is not None
-            self._attr_is_on = self.zone.scheduled_runs.current_run is not None
-        elif self.entity_description.key == "rain_sensor":
-            assert self.sensor is not None
-            self._attr_is_on = self.sensor.status.active
+        self._attr_is_on = getattr(self, f"_get_{self.entity_description.key}")()
+
+    def _get_status(self) -> bool:
+        return self.coordinator.last_update_success
+
+    def _get_rain_sensor(self) -> Any:
+        assert self.sensor is not None
+        return self.sensor.status.active
+
+    def _get_is_watering(self) -> bool:
+        assert self.zone is not None
+        return self.zone.scheduled_runs.current_run is not None
