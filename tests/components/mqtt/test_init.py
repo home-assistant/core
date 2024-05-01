@@ -2075,7 +2075,7 @@ async def test_handle_mqtt_on_callback(
     """Test receiving an ACK callback before waiting for it."""
     await mqtt_mock_entry()
     with patch.object(mqtt_client_mock, "get_mid", return_value=100):
-        # Simulate an ACK for mid == 2, this will call mqtt_mock._async_get_mid_future(mid)
+        # Simulate an ACK for mid == 100, this will call mqtt_mock._async_get_mid_future(mid)
         mqtt_client_mock.on_publish(mqtt_client_mock, None, 100)
         await hass.async_block_till_done()
         # Make sure the ACK has been received
