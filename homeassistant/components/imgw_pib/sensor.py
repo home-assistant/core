@@ -75,6 +75,7 @@ class ImgwPibSensorEntity(
 ):
     """Define IMGW-PIB sensor entity."""
 
+    _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
     entity_description: ImgwPibSensorEntityDescription
 
@@ -88,7 +89,6 @@ class ImgwPibSensorEntity(
 
         self._attr_unique_id = f"{coordinator.station_id}_{description.key}"
         self._attr_device_info = coordinator.device_info
-        self._attr_attribution = ATTRIBUTION
         self._attr_native_value = description.value(coordinator.data)
         self.entity_description = description
 
