@@ -15,13 +15,13 @@ from pytrafikverket.exceptions import (
 )
 from pytrafikverket.trafikverket_camera import CameraInfo, TrafikverketCamera
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from . import TVCameraConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,7 +39,7 @@ class CameraData:
 class TVDataUpdateCoordinator(DataUpdateCoordinator[CameraData]):
     """A Trafikverket Data Update Coordinator."""
 
-    def __init__(self, hass: HomeAssistant, entry: TVCameraConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the Trafikverket coordinator."""
         super().__init__(
             hass,
