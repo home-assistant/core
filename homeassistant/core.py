@@ -1793,11 +1793,9 @@ class State:
         # The recorder or the websocket_api will always call the timestamps,
         # so we will set the timestamp values here to avoid the overhead of
         # the function call in the property we know will always be called.
-        last_updated = self.last_updated
-        last_updated_timestamp = last_updated.timestamp()
-        if self.last_changed == last_updated:
-            self.__dict__["last_changed_timestamp"] = last_updated_timestamp
-        self.last_updated_timestamp = last_updated_timestamp
+        self.last_updated_timestamp = self.last_updated.timestamp()
+        if self.last_changed == self.last_updated:
+            self.__dict__["last_changed_timestamp"] = self.last_updated_timestamp
 
     @cached_property
     def name(self) -> str:
