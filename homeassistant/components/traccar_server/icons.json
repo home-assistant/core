@@ -1,5 +1,14 @@
 {
   "entity": {
+    "binary_sensor": {
+      "status": {
+        "default": "mdi:access-point-minus",
+        "state": {
+          "off": "mdi:access-point-off",
+          "on": "mdi:access-point"
+        }
+      }
+    },
     "sensor": {
       "altitude": {
         "default": "mdi:altimeter"
