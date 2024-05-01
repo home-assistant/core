@@ -1087,9 +1087,9 @@ class MQTT:
         )
 
     @callback
-    def _async_timeout_mid(self, future: asyncio.Future[None]) -> None:
+    def _async_timeout_mid(self, mid: int) -> None:
         """Timeout waiting for a mid."""
-        if not future.done():
+        if (future := self._pending_operations.get(mid)) and not future.done():
             future.set_exception(asyncio.TimeoutError)
 
     async def _async_wait_for_mid(self, mid: int) -> None:
@@ -1098,7 +1098,7 @@ class MQTT:
         # or _async_wait_for_mid may be executed first.
         future = self._async_get_mid_future(mid)
         loop = self.hass.loop
-        timer_handle = loop.call_later(TIMEOUT_ACK, self._async_timeout_mid, future)
+        timer_handle = loop.call_later(TIMEOUT_ACK, self._async_timeout_mid, mid)
         try:
             await future
         except TimeoutError:
