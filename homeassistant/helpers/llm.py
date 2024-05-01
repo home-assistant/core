@@ -166,6 +166,11 @@ class IntentTool(Tool):
         """Init the class."""
         if slot_schema is None:
             slot_schema = vol.Schema({})
+        else:
+            slot_schema = vol.Schema(
+                {key: val.schema["value"] for key, val in slot_schema.schema.items()}
+            )
+
         super().__init__(
             intent_type,
             f"Execute Home Assistant {intent_type} intent",

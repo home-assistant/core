@@ -204,7 +204,14 @@ async def test_intent_tool_with_area_and_floor(
             vol.Optional("floor"): cv.string,
         }
     )
-    tool = llm.IntentTool("test_intent", schema)
+    slot_schema = vol.Schema(
+        {
+            key: vol.Schema({"value": validator}, extra=vol.ALLOW_EXTRA)
+            for key, validator in schema.schema.items()
+        },
+        extra=vol.ALLOW_EXTRA,
+    )
+    tool = llm.IntentTool("test_intent", slot_schema)
     assert tool.description == "Execute Home Assistant test_intent intent"
     assert tool.parameters == schema
     assert tool.as_dict() == {
