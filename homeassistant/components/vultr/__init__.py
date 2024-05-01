@@ -3,98 +3,86 @@
 from datetime import timedelta
 import logging
 
-import voluptuous as vol
-from vultr import Vultr as VultrAPI
-
-from homeassistant.components import persistent_notification
-from homeassistant.const import CONF_API_KEY, Platform
-from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import Throttle
+import requests
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_AUTO_BACKUPS = "auto_backups"
+
 ATTR_ALLOWED_BANDWIDTH = "allowed_bandwidth_gb"
-ATTR_COST_PER_MONTH = "cost_per_month"
-ATTR_CURRENT_BANDWIDTH_USED = "current_bandwidth_gb"
-ATTR_CREATED_AT = "created_at"
+
+ATTR_CURRENT_BANDWIDTH_IN = "current_bandwidth_gb_in"
+ATTR_CURRENT_BANDWIDTH_OUT = "current_bandwidth_gb_out"
+ATTR_CREATED_AT = "date_created"
 ATTR_DISK = "disk"
-ATTR_SUBSCRIPTION_ID = "subid"
-ATTR_SUBSCRIPTION_NAME = "label"
-ATTR_IPV4_ADDRESS = "ipv4_address"
-ATTR_IPV6_ADDRESS = "ipv6_address"
-ATTR_MEMORY = "memory"
+ATTR_INSTANCE_ID = "id"
+ATTR_INSTANCE_LABEL = "label"
+ATTR_IPV4_ADDRESS = "main_ip"
+ATTR_ACCOUNT_BALANCE = "balance"
+ATTR_MEMORY = "ram"
 ATTR_OS = "os"
+
 ATTR_PENDING_CHARGES = "pending_charges"
+
 ATTR_REGION = "region"
-ATTR_VCPUS = "vcpus"
-
-CONF_SUBSCRIPTION = "subscription"
-
-DATA_VULTR = "data_vultr"
+ATTR_VCPUS = "vcpu_count"
+CONF_INSTANCE_ID = "instance_id"
 DOMAIN = "vultr"
 
 NOTIFICATION_ID = "vultr_notification"
 NOTIFICATION_TITLE = "Vultr Setup"
 
-VULTR_PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
-
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_API_KEY): cv.string})}, extra=vol.ALLOW_EXTRA
-)
-
-
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Vultr component."""
-    api_key = config[DOMAIN].get(CONF_API_KEY)
-
-    vultr = Vultr(api_key)
-
-    try:
-        vultr.update()
-    except RuntimeError as ex:
-        _LOGGER.error("Failed to make update API request because: %s", ex)
-        persistent_notification.create(
-            hass,
-            f"Error: {ex}",
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID,
-        )
-        return False
-
-    hass.data[DATA_VULTR] = vultr
-    return True
+DEFAULT_NAME = "Vultr {}"
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 
 class Vultr:
     """Handle all communication with the Vultr API."""
 
+    url = "https://api.vultr.com/v2"
+
     def __init__(self, api_key):
         """Initialize the Vultr connection."""
-
         self._api_key = api_key
-        self.data = None
-        self.api = VultrAPI(self._api_key)
+        self.api_key = api_key
+        self.s = requests.session()
+        if self.api_key:
+            self.s.headers.update({"Authorization": f"Bearer {self.api_key}"})
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Use the data from Vultr API."""
-        self.data = self.api.server_list()
+    def _get(self, url):
+        r = self.s.get(url, timeout=10)
+        if not r.ok:
+            r.raise_for_status()
+        return r.json()
 
-    def _force_update(self):
-        """Use the data from Vultr API."""
-        self.data = self.api.server_list()
+    def _post(self, url, data):
+        r = self.s.post(url, json=data, timeout=10)
+        if not r.ok:
+            r.raise_for_status()
+        return r.json()
 
-    def halt(self, subscription):
-        """Halt a subscription (hard power off)."""
-        self.api.server_halt(subscription)
-        self._force_update()
+    def get_instance(self, instance_id: str):
+        """Retrieve Vultr instance details."""
+        url = f"{self.url}/instances/{instance_id}"
+        return self._get(url)["instance"]
 
-    def start(self, subscription):
-        """Start a subscription."""
-        self.api.server_start(subscription)
-        self._force_update()
+    def get_account_info(self):
+        """Retrieve Vultr account info."""
+        url = f"{self.url}/account"
+        return self._get(url)["account"]
+
+    def get_account_bandwidth_info(self):
+        """Retrieve Vultr account bandwidth info."""
+        url = f"{self.url}/account/bandwidth"
+        return self._get(url)["bandwidth"]["currentMonthToDate"]
+
+    def halt(self, instance_id: str):
+        """Halt an instance (hard power off)."""
+        data = {"instance_ids": [instance_id]}
+        url = f"{self.url}/instances/halt"
+        self._post(url, data)
+
+    def start(self, instance_id: str):
+        """Start an instance."""
+        data = {"instance_ids": [instance_id]}
+        url = f"{self.url}/instances/start"
+        self._post(url, data)

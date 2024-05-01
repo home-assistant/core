@@ -1,0 +1,46 @@
+{
+  "bandwidth": {
+    "previousMonth": {
+      "timestampStart": "1709251200",
+      "timestampEnd": "1711929600",
+      "gb_in": 4,
+      "gb_out": 3,
+      "totalInstanceHours": 672,
+      "totalInstanceCount": 1,
+      "instanceBandwidthCredits": 3072,
+      "freeBandwidthCredits": 2048,
+      "purchasedBandwidthCredits": 0,
+      "overage": 0,
+      "overage_unit_cost": 0.01,
+      "overage_cost": 0
+    },
+    "currentMonthToDate": {
+      "timestampStart": "1711929600",
+      "timestampEnd": "1714330703",
+      "gb_in": 2,
+      "gb_out": 3,
+      "totalInstanceHours": 667,
+      "totalInstanceCount": 1,
+      "instanceBandwidthCredits": 3049,
+      "freeBandwidthCredits": 2048,
+      "purchasedBandwidthCredits": 0,
+      "overage": 0,
+      "overage_unit_cost": 0.01,
+      "overage_cost": 0
+    },
+    "currentMonthProjected": {
+      "timestampStart": "1711929600",
+      "timestampEnd": "1714521600",
+      "gb_in": 2,
+      "gb_out": 3,
+      "totalInstanceHours": 672,
+      "totalInstanceCount": 1,
+      "instanceBandwidthCredits": 3072,
+      "freeBandwidthCredits": 2048,
+      "purchasedBandwidthCredits": 0,
+      "overage": 0,
+      "overage_unit_cost": 0.01,
+      "overage_cost": 0
+    }
+  }
+}

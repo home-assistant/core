@@ -1,14 +1,8 @@
 """Test configuration for the Vultr tests."""
 
-import json
-from unittest.mock import patch
-
 import pytest
 
-from homeassistant.components import vultr
 from homeassistant.core import HomeAssistant
-
-from .const import VALID_CONFIG
 
 from tests.common import load_fixture
 
@@ -17,13 +11,30 @@ from tests.common import load_fixture
 def valid_config(hass: HomeAssistant, requests_mock):
     """Load a valid config."""
     requests_mock.get(
-        "https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567",
-        text=load_fixture("account_info.json", "vultr"),
+        "https://api.vultr.com/v2/instances/db731ada-1326-4186-85dc-c88b899c6639",
+        text=load_fixture(
+            "instance_db731ada-1326-4186-85dc-c88b899c6639.json", "vultr"
+        ),
+    )
+    requests_mock.get(
+        "https://api.vultr.com/v2/instances/db731ada-1326-4186-85dc-c88b899c6640",
+        text=load_fixture(
+            "instance_db731ada-1326-4186-85dc-c88b899c6640.json", "vultr"
+        ),
     )
 
-    with patch(
-        "vultr.Vultr.server_list",
-        return_value=json.loads(load_fixture("server_list.json", "vultr")),
-    ):
-        # Setup hub
-        vultr.setup(hass, VALID_CONFIG)
+    requests_mock.get(
+        "https://api.vultr.com/v2/instances/db731ada-1326-4186-85dc-c88b899c6641",
+        text=load_fixture(
+            "instance_db731ada-1326-4186-85dc-c88b899c6641.json", "vultr"
+        ),
+    )
+
+    requests_mock.get(
+        "https://api.vultr.com/v2/account",
+        text=load_fixture("account_info.json", "vultr"),
+    )
+    requests_mock.get(
+        "https://api.vultr.com/v2/account/bandwidth",
+        text=load_fixture("account_bandwidth.json", "vultr"),
+    )

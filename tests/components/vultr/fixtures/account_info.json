@@ -1,6 +1,27 @@
 {
-  "balance": "-123.00",
-  "pending_charges": "3.38",
-  "last_payment_date": "2017-08-11 15:04:04",
-  "last_payment_amount": "-10.00"
+  "account": {
+    "balance": 0,
+    "pending_charges": 27.64,
+    "name": "Test User",
+    "email": "test@gmail.com",
+    "acls": [
+      "manage_users",
+      "subscriptions_view",
+      "subscriptions",
+      "billing",
+      "support",
+      "provisioning",
+      "dns",
+      "abuse",
+      "upgrade",
+      "firewall",
+      "alerts",
+      "objstore",
+      "loadbalancer",
+      "vke",
+      "vcr"
+    ],
+    "last_payment_date": "2024-04-01T17:29:56+00:00",
+    "last_payment_amount": -27.84
+  }
 }

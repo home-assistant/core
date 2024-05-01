@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from unittest.mock import patch
 
 import pytest
@@ -11,23 +10,31 @@ import voluptuous as vol
 from homeassistant.components import vultr as base_vultr
 from homeassistant.components.vultr import (
     ATTR_ALLOWED_BANDWIDTH,
-    ATTR_AUTO_BACKUPS,
-    ATTR_COST_PER_MONTH,
     ATTR_CREATED_AT,
     ATTR_IPV4_ADDRESS,
-    ATTR_SUBSCRIPTION_ID,
-    CONF_SUBSCRIPTION,
+    CONF_INSTANCE_ID,
     switch as vultr,
 )
-from homeassistant.const import CONF_NAME, CONF_PLATFORM
+from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
-
-from tests.common import load_fixture
+from homeassistant.exceptions import PlatformNotReady
 
 CONFIGS = [
-    {CONF_SUBSCRIPTION: "576965", CONF_NAME: "A Server"},
-    {CONF_SUBSCRIPTION: "123456", CONF_NAME: "Failed Server"},
-    {CONF_SUBSCRIPTION: "555555", CONF_NAME: vultr.DEFAULT_NAME},
+    {
+        CONF_API_KEY: "123",
+        CONF_INSTANCE_ID: "db731ada-1326-4186-85dc-c88b899c6639",
+        CONF_NAME: "A Server",
+    },
+    {
+        CONF_API_KEY: "123",
+        CONF_INSTANCE_ID: "db731ada-1326-4186-85dc-c88b899c6640",
+        CONF_NAME: "Stopped Server",
+    },
+    {
+        CONF_API_KEY: "123",
+        CONF_INSTANCE_ID: "db731ada-1326-4186-85dc-c88b899c6641",
+        CONF_NAME: vultr.DEFAULT_NAME,
+    },
 ]
 
 
@@ -55,59 +62,39 @@ def test_switch(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
 
     assert len(hass_devices) == 3
 
-    tested = 0
-
-    for device in hass_devices:
-        if device.subscription == "555555":
-            assert device.name == "Vultr {}"
-            tested += 1
+    for index, device in enumerate(hass_devices):
+        # Test pre data retrieval
+        assert device.name == CONFIGS[index][CONF_NAME]
 
         device.update()
         device_attrs = device.extra_state_attributes
 
-        if device.subscription == "555555":
+        if device.instance_id == CONFIGS[2][CONF_INSTANCE_ID]:
             assert device.name == "Vultr Another Server"
-            tested += 1
 
-        if device.name == "A Server":
+        if device.instance_id == CONFIGS[0][CONF_INSTANCE_ID]:
             assert device.is_on is True
             assert device.state == "on"
             assert device.icon == "mdi:server"
-            assert device_attrs[ATTR_ALLOWED_BANDWIDTH] == "1000"
-            assert device_attrs[ATTR_AUTO_BACKUPS] == "yes"
-            assert device_attrs[ATTR_IPV4_ADDRESS] == "123.123.123.123"
-            assert device_attrs[ATTR_COST_PER_MONTH] == "10.05"
-            assert device_attrs[ATTR_CREATED_AT] == "2013-12-19 14:45:41"
-            assert device_attrs[ATTR_SUBSCRIPTION_ID] == "576965"
-            tested += 1
+            assert device_attrs[ATTR_ALLOWED_BANDWIDTH] == 1000
+            assert device_attrs[ATTR_IPV4_ADDRESS] == "45.77.107.183"
+            assert device_attrs[ATTR_CREATED_AT] == "2020-09-18T20:30:45+00:00"
 
-        elif device.name == "Failed Server":
+        elif device.instance_id == CONFIGS[1][CONF_INSTANCE_ID]:
             assert device.is_on is False
             assert device.state == "off"
             assert device.icon == "mdi:server-off"
-            assert device_attrs[ATTR_ALLOWED_BANDWIDTH] == "1000"
-            assert device_attrs[ATTR_AUTO_BACKUPS] == "no"
-            assert device_attrs[ATTR_IPV4_ADDRESS] == "192.168.100.50"
-            assert device_attrs[ATTR_COST_PER_MONTH] == "73.25"
-            assert device_attrs[ATTR_CREATED_AT] == "2014-10-13 14:45:41"
-            assert device_attrs[ATTR_SUBSCRIPTION_ID] == "123456"
-            tested += 1
-
-    assert tested == 4
+            assert device_attrs[ATTR_ALLOWED_BANDWIDTH] == 2000
+            assert device_attrs[ATTR_IPV4_ADDRESS] == "45.77.107.184"
+            assert device_attrs[ATTR_CREATED_AT] == "2020-09-18T20:57:45+00:00"
 
 
 @pytest.mark.usefixtures("valid_config")
 def test_turn_on(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
-    """Test turning a subscription on."""
-    with (
-        patch(
-            "vultr.Vultr.server_list",
-            return_value=json.loads(load_fixture("server_list.json", "vultr")),
-        ),
-        patch("vultr.Vultr.server_start") as mock_start,
-    ):
+    """Test turning an instance on."""
+    with patch("homeassistant.components.vultr.Vultr.start") as mock_start:
         for device in hass_devices:
-            if device.name == "Failed Server":
+            if device.instance_id == CONFIGS[1][CONF_INSTANCE_ID]:
                 device.update()
                 device.turn_on()
 
@@ -117,16 +104,10 @@ def test_turn_on(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
 
 @pytest.mark.usefixtures("valid_config")
 def test_turn_off(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
-    """Test turning a subscription off."""
-    with (
-        patch(
-            "vultr.Vultr.server_list",
-            return_value=json.loads(load_fixture("server_list.json", "vultr")),
-        ),
-        patch("vultr.Vultr.server_halt") as mock_halt,
-    ):
+    """Test turning an instance off."""
+    with patch("homeassistant.components.vultr.Vultr.halt") as mock_halt:
         for device in hass_devices:
-            if device.name == "A Server":
+            if device.instance_id == CONFIGS[0][CONF_INSTANCE_ID]:
                 device.update()
                 device.turn_off()
 
@@ -150,12 +131,12 @@ def test_invalid_switches(hass: HomeAssistant) -> None:
         hass_devices.extend(devices)
 
     bad_conf = {}  # No subscription
-
-    vultr.setup_platform(hass, bad_conf, add_entities, None)
+    with pytest.raises(PlatformNotReady):
+        vultr.setup_platform(hass, bad_conf, add_entities, None)
 
     bad_conf = {
         CONF_NAME: "Missing Server",
-        CONF_SUBSCRIPTION: "665544",
+        CONF_INSTANCE_ID: "665544",
     }  # Sub not associated with API key (not in server_list)
-
-    vultr.setup_platform(hass, bad_conf, add_entities, None)
+    with pytest.raises(PlatformNotReady):
+        vultr.setup_platform(hass, bad_conf, add_entities, None)
