@@ -43,6 +43,18 @@ COLOR_MODE_MAP = {
 }
 DEFAULT_TRANSITION = 0.2
 
+# there's a bug in (at least) Espressif's implementation of light transitions
+# on devices based on Matter 1.0. Mark potential devices with this issue.
+# https://github.com/home-assistant/core/issues/113775
+# vendorid (attributeKey 0/40/2)
+# productid (attributeKey 0/40/4)
+# hw version (attributeKey 0/40/8)
+# sw version (attributeKey 0/40/10)
+TRANSITION_BLOCKLIST = (
+    (4488, 514, "1.0", "1.0.0"),
+    (5010, 769, "3.0", "1.0.0"),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -61,6 +73,7 @@ class MatterLight(MatterEntity, LightEntity):
     _supports_brightness = False
     _supports_color = False
     _supports_color_temperature = False
+    _transitions_disabled = False
 
     async def _set_xy_color(
         self, xy_color: tuple[float, float], transition: float = 0.0
@@ -260,6 +273,8 @@ class MatterLight(MatterEntity, LightEntity):
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         transition = kwargs.get(ATTR_TRANSITION, DEFAULT_TRANSITION)
+        if self._transitions_disabled:
+            transition = 0
 
         if self.supported_color_modes is not None:
             if hs_color is not None and ColorMode.HS in self.supported_color_modes:
@@ -336,8 +351,12 @@ class MatterLight(MatterEntity, LightEntity):
 
             supported_color_modes = filter_supported_color_modes(supported_color_modes)
             self._attr_supported_color_modes = supported_color_modes
+            self._check_transition_blocklist()
             # flag support for transition as soon as we support setting brightness and/or color
-            if supported_color_modes != {ColorMode.ONOFF}:
+            if (
+                supported_color_modes != {ColorMode.ONOFF}
+                and not self._transitions_disabled
+            ):
                 self._attr_supported_features |= LightEntityFeature.TRANSITION
 
             LOGGER.debug(
@@ -376,6 +395,26 @@ class MatterLight(MatterEntity, LightEntity):
         else:
             self._attr_color_mode = ColorMode.ONOFF
 
+    def _check_transition_blocklist(self) -> None:
+        """Check if this device is reported to have non working transitions."""
+        device_info = self._endpoint.device_info
+        if (
+            device_info.vendorID,
+            device_info.productID,
+            device_info.hardwareVersionString,
+            device_info.softwareVersionString,
+        ) in TRANSITION_BLOCKLIST:
+            self._transitions_disabled = True
+        LOGGER.warning(
+            "Detected a device that has been reported to have firmware issues "
+            "with light transitions. Transitions will be disabled for this light"
+        )
+
+
+# vendorid (attributeKey 0/40/2)
+# productid (attributeKey 0/40/4)
+# hw version (attributeKey 0/40/8)
+# sw version (attributeKey 0/40/10)
 
 # Discovery schema(s) to map Matter Attributes to HA entities
 DISCOVERY_SCHEMAS = [
