@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_binary_sensor[load_platforms0][lock.device1-entry]
+# name: test_lock[load_platforms0][lock.device1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -32,7 +32,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[load_platforms0][lock.device1-state]
+# name: test_lock[load_platforms0][lock.device1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'code_format': '^\\d{6}$',
@@ -47,7 +47,7 @@
     'state': 'locked',
   })
 # ---
-# name: test_binary_sensor[load_platforms0][lock.device2-entry]
+# name: test_lock[load_platforms0][lock.device2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -80,7 +80,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[load_platforms0][lock.device2-state]
+# name: test_lock[load_platforms0][lock.device2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'code_format': '^\\d{6}$',
@@ -95,7 +95,7 @@
     'state': 'unlocked',
   })
 # ---
-# name: test_binary_sensor[load_platforms0][lock.device3-entry]
+# name: test_lock[load_platforms0][lock.device3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -128,7 +128,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[load_platforms0][lock.device3-state]
+# name: test_lock[load_platforms0][lock.device3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'code_format': '^\\d{6}$',
@@ -143,7 +143,7 @@
     'state': 'locked',
   })
 # ---
-# name: test_binary_sensor[load_platforms0][lock.device7-entry]
+# name: test_lock[load_platforms0][lock.device7-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -176,7 +176,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[load_platforms0][lock.device7-state]
+# name: test_lock[load_platforms0][lock.device7-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'code_format': '^\\d{6}$',
@@ -191,7 +191,7 @@
     'state': 'unlocked',
   })
 # ---
-# name: test_binary_sensor[load_platforms0][lock.device8-entry]
+# name: test_lock[load_platforms0][lock.device8-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -224,7 +224,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[load_platforms0][lock.device8-state]
+# name: test_lock[load_platforms0][lock.device8-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'code_format': '^\\d{6}$',
@@ -239,7 +239,7 @@
     'state': 'unlocked',
   })
 # ---
-# name: test_binary_sensor[load_platforms0][lock.device9-entry]
+# name: test_lock[load_platforms0][lock.device9-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -272,7 +272,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[load_platforms0][lock.device9-state]
+# name: test_lock[load_platforms0][lock.device9-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'code_format': '^\\d{6}$',
