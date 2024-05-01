@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerBaseEntity
+from .entity import AutomowerControlEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,7 +135,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AutomowerNumberEntity(AutomowerBaseEntity, NumberEntity):
+class AutomowerNumberEntity(AutomowerControlEntity, NumberEntity):
     """Defining the AutomowerNumberEntity with AutomowerNumberEntityDescription."""
 
     entity_description: AutomowerNumberEntityDescription
@@ -168,7 +168,7 @@ class AutomowerNumberEntity(AutomowerBaseEntity, NumberEntity):
             ) from exception
 
 
-class AutomowerWorkAreaNumberEntity(AutomowerBaseEntity, NumberEntity):
+class AutomowerWorkAreaNumberEntity(AutomowerControlEntity, NumberEntity):
     """Defining the AutomowerWorkAreaNumberEntity with AutomowerWorkAreaNumberEntityDescription."""
 
     entity_description: AutomowerWorkAreaNumberEntityDescription
