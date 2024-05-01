@@ -443,7 +443,10 @@ class FritzBoxTools(
                 )
         except Exception as ex:  # pylint: disable=[broad-except]
             if not self.hass.is_stopping:
-                raise HomeAssistantError("Error refreshing hosts info") from ex
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="error_refresh_hosts_info",
+                ) from ex
 
         hosts: dict[str, Device] = {}
         if hosts_attributes:
@@ -730,7 +733,9 @@ class FritzBoxTools(
         _LOGGER.debug("FRITZ!Box service: %s", service_call.service)
 
         if not self.connection:
-            raise HomeAssistantError("Unable to establish a connection")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="unable_to_connect"
+            )
 
         try:
             if service_call.service == SERVICE_REBOOT:
@@ -765,9 +770,13 @@ class FritzBoxTools(
                 return
 
         except (FritzServiceError, FritzActionError) as ex:
-            raise HomeAssistantError("Service or parameter unknown") from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="service_parameter_unknown"
+            ) from ex
         except FritzConnectionException as ex:
-            raise HomeAssistantError("Service not supported") from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="service_not_supported"
+            ) from ex
 
 
 class AvmWrapper(FritzBoxTools):  # pylint: disable=hass-enforce-coordinator-module

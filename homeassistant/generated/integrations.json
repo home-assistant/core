@@ -2565,11 +2565,6 @@
       "integration_type": "virtual",
       "supported_by": "netatmo"
     },
-    "homeassistant_sky_connect": {
-      "name": "Home Assistant SkyConnect",
-      "integration_type": "device",
-      "config_flow": true
-    },
     "homematic": {
       "name": "Homematic",
       "integrations": {
