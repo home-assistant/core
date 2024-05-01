@@ -83,15 +83,7 @@ async def test_remove_device(
         assert device_entry
 
         client = await hass_ws_client(hass)
-        await client.send_json(
-            {
-                "id": 1,
-                "type": "config/device_registry/remove_config_entry",
-                "config_entry_id": entry.entry_id,
-                "device_id": device_entry.id,
-            }
-        )
-        response = await client.receive_json()
+        response = await client.remove_device(device_entry.id, entry.entry_id)
         assert response["success"]
         assert device_registry.async_get_device(identifiers={(DOMAIN, "Test")}) is None
         assert hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test") is None
