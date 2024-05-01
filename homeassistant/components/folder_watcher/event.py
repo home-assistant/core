@@ -89,6 +89,7 @@ class FolderWatcherEventEntity(EventEntity):
     @callback
     def _async_handle_event(self, event: str) -> None:
         """Handle the event."""
+        # Fix add additional attributes as with the bus event firing
         self._trigger_event(event)
         self.async_write_ha_state()
 
