@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from pytrafikverket import TrafikverketTrain
 from pytrafikverket.exceptions import (
@@ -14,7 +15,6 @@ from pytrafikverket.exceptions import (
 )
 from pytrafikverket.trafikverket_train import StationInfo, TrainStop
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_WEEKDAY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -22,6 +22,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
+if TYPE_CHECKING:
+    from . import TVTrainConfigEntry
 from .const import CONF_FILTER_PRODUCT, CONF_TIME, DOMAIN
 from .util import next_departuredate
 
@@ -65,7 +67,7 @@ def _get_as_joined(information: list[str] | None) -> str | None:
 class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
     """A Trafikverket Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: TVTrainConfigEntry
 
     def __init__(
         self,

@@ -19,7 +19,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import CONF_FROM, CONF_TO, PLATFORMS
 from .coordinator import TVDataUpdateCoordinator
 
-TVTrainConfigEntry = ConfigEntry["TVDataUpdateCoordinator"]
+TVTrainConfigEntry = ConfigEntry[TVDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TVTrainConfigEntry) -> bool:
