@@ -61,7 +61,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add a IMGW-PIB sensor entity from a config_entry."""
-    coordinator: ImgwPibDataUpdateCoordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data.coordinator
 
     async_add_entities(
         ImgwPibSensorEntity(coordinator, description)
