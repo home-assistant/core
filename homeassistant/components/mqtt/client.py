@@ -1089,6 +1089,9 @@ class MQTT:
     @callback
     def _async_timeout_mid(self, mid: int) -> None:
         """Timeout waiting for a mid."""
+        # If the timeout is reached, and _async_wait_for_mid has already completed
+        # the future, it will be removed from the _pending_operations dict so we
+        # need to check if it is still there.
         if (future := self._pending_operations.get(mid)) and not future.done():
             future.set_exception(asyncio.TimeoutError)
 
