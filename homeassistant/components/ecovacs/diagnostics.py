@@ -7,12 +7,11 @@ from typing import Any
 from deebot_client.capabilities import Capabilities
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_OVERRIDE_MQTT_URL, CONF_OVERRIDE_REST_URL, DOMAIN
-from .controller import EcovacsController
+from . import EcovacsConfigEntry
+from .const import CONF_OVERRIDE_MQTT_URL, CONF_OVERRIDE_REST_URL
 
 REDACT_CONFIG = {
     CONF_USERNAME,
@@ -25,10 +24,10 @@ REDACT_DEVICE = {"did", CONF_NAME, "homeId"}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: EcovacsConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    controller: EcovacsController = hass.data[DOMAIN][config_entry.entry_id]
+    controller = config_entry.runtime_data
     diag: dict[str, Any] = {
         "config": async_redact_data(config_entry.as_dict(), REDACT_CONFIG)
     }
