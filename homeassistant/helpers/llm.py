@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import Callable, Iterable
+from dataclasses import dataclass
 from functools import cached_property
-import json
 import logging
 from types import FunctionType
 from typing import Any
@@ -47,6 +47,22 @@ def default_custom_serializer(schema: Any) -> Any:
     return UNSUPPORTED
 
 
+@dataclass(slots=True)
+class ToolInput:
+    """Tool input to be processed."""
+
+    tool_name: str
+    tool_args: dict[str, Any]
+    platform: str
+    context: Context | None
+    user_prompt: str | None
+    language: str | None
+    agent_id: str | None
+    conversation_id: str | None
+    device_id: str | None
+    assistant: str | None
+
+
 class Tool:
     """LLM Tool base class."""
 
@@ -80,19 +96,7 @@ class Tool:
         }
 
     @abstractmethod
-    async def async_call(
-        self,
-        hass: HomeAssistant,
-        platform: str,
-        text_input: str | None,
-        context: Context,
-        language: str | None,
-        agent_id: str | None,
-        conversation_id: str | None,
-        device_id: str | None,
-        assistant: str | None,
-        **kwargs: Any,
-    ) -> Any:
+    async def async_call(self, hass: HomeAssistant, tool_input: ToolInput) -> Any:
         """Call the tool."""
         raise NotImplementedError
 
@@ -136,50 +140,19 @@ def async_get_tools(hass: HomeAssistant) -> Iterable[Tool]:
 
 
 @callback
-async def async_call_tool(
-    hass: HomeAssistant,
-    platform: str,
-    tool_name: str,
-    json_args: str = "{}",
-    text_input: str | None = None,
-    context: Context | None = None,
-    language: str | None = None,
-    agent_id: str | None = None,
-    conversation_id: str | None = None,
-    device_id: str | None = None,
-    assistant: str | None = None,
-) -> str:
-    """Call a LLM tool, parse args and return the response."""
+async def async_call_tool(hass: HomeAssistant, tool_input: ToolInput) -> Any:
+    """Call a LLM tool, validate args and return the response."""
     if (tools := hass.data.get(DATA_KEY)) is None:
         tools = {}
 
-    if context is None:
-        context = Context()
+    tool = tools[tool_input.tool_name]
 
-    try:
-        tool = tools[tool_name]
-        tool_args = json.loads(json_args)
-        response = await tool.async_call(
-            hass,
-            platform,
-            text_input,
-            context,
-            language,
-            agent_id,
-            conversation_id,
-            device_id,
-            assistant,
-            **tool_args,
-        )
-        json_response = json.dumps(response)
+    if tool_input.context is None:
+        tool_input.context = Context()
 
-    except Exception as e:  # pylint: disable=broad-exception-caught
-        response = {"error": type(e).__name__}
-        if str(e):
-            response["error_text"] = str(e)
-        json_response = json.dumps(response)
+    tool_input.tool_args = tool.parameters(tool_input.tool_args)
 
-    return json_response
+    return await tool.async_call(hass, tool_input)
 
 
 class IntentTool(Tool):
@@ -199,21 +172,9 @@ class IntentTool(Tool):
             slot_schema,
         )
 
-    async def async_call(
-        self,
-        hass: HomeAssistant,
-        platform: str,
-        text_input: str | None,
-        context: Context,
-        language: str | None,
-        agent_id: str | None,
-        conversation_id: str | None,
-        device_id: str | None,
-        assistant: str | None,
-        **kwargs: Any,
-    ) -> Any:
+    async def async_call(self, hass: HomeAssistant, tool_input: ToolInput) -> Any:
         """Handle the intent."""
-        slots = {key: {"value": val} for key, val in kwargs.items()}
+        slots = {key: {"value": val} for key, val in tool_input.tool_args.items()}
 
         if "area" in slots:
             areas = ar.async_get(hass)
@@ -262,6 +223,13 @@ class IntentTool(Tool):
                 slots["floor"]["text"] = id_or_name
 
         intent_response = await intent.async_handle(
-            hass, platform, self.name, slots, text_input, context, language, assistant
+            hass,
+            tool_input.platform,
+            self.name,
+            slots,
+            tool_input.user_prompt,
+            tool_input.context,
+            tool_input.language,
+            tool_input.assistant,
         )
         return intent_response.as_dict()

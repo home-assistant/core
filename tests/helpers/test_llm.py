@@ -78,87 +78,49 @@ async def test_call_tool(hass: HomeAssistant) -> None:
     """Test calling an llm tool."""
     tool = AsyncMock()
     tool.name = "test_tool"
+    tool.parameters = vol.Schema({"test_arg": str})
     tool.async_call.return_value = {"result": "test_response"}
 
     llm.async_register_tool(hass, tool)
     test_context = Context()
 
-    response = await llm.async_call_tool(
-        hass,
-        "test_platform",
-        "test_tool",
-        '{"test_arg": "test_value"}',
-        "test_text",
-        test_context,
-        "en",
-        "test_agent",
-        "test_conversation_id",
-        "test_device_id",
-        "test_assistant",
+    tool_input = llm.ToolInput(
+        tool_name="test_tool",
+        tool_args={"test_arg": "test_value"},
+        platform="test_platform",
+        context=test_context,
+        user_prompt="test_text",
+        language="en",
+        agent_id="test_agent",
+        conversation_id="test_conversation_id",
+        device_id="test_device_id",
+        assistant="test_assistant",
     )
 
-    tool.async_call.assert_awaited_once_with(
-        hass,
-        "test_platform",
-        "test_text",
-        test_context,
-        "en",
-        "test_agent",
-        "test_conversation_id",
-        "test_device_id",
-        "test_assistant",
-        test_arg="test_value",
-    )
-    assert response == '{"result": "test_response"}'
+    response = await llm.async_call_tool(hass, tool_input)
 
-
-async def test_call_tool_exception(hass: HomeAssistant) -> None:
-    """Test calling an llm tool ith exception."""
-    tool = AsyncMock()
-    tool.name = "test_tool"
-    tool.async_call.side_effect = RuntimeError("Test exception")
-
-    llm.async_register_tool(hass, tool)
-    test_context = Context()
-
-    response = await llm.async_call_tool(
-        hass,
-        "test_platform",
-        "test_tool",
-        '{"test_arg": "test_value"}',
-        "test_text",
-        test_context,
-        "en",
-        "test_agent",
-        "test_conversation_id",
-        "test_device_id",
-        "test_assistant",
-    )
-
-    tool.async_call.assert_awaited_once_with(
-        hass,
-        "test_platform",
-        "test_text",
-        test_context,
-        "en",
-        "test_agent",
-        "test_conversation_id",
-        "test_device_id",
-        "test_assistant",
-        test_arg="test_value",
-    )
-    assert response == '{"error": "RuntimeError", "error_text": "Test exception"}'
+    tool.async_call.assert_awaited_once_with(hass, tool_input)
+    assert response == {"result": "test_response"}
 
 
 async def test_call_tool_no_existing(hass: HomeAssistant) -> None:
     """Test calling an llm tool where no config exists."""
-    response = await llm.async_call_tool(
-        hass,
-        "test_platform",
-        "test_tool",
-    )
-
-    assert response == '{"error": "KeyError", "error_text": "\'test_tool\'"}'
+    with pytest.raises(KeyError):
+        await llm.async_call_tool(
+            hass,
+            llm.ToolInput(
+                "test_tool",
+                {},
+                "test_platform",
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            ),
+        )
 
 
 def test_custom_serializer() -> None:
@@ -185,22 +147,23 @@ async def test_intent_tool(hass: HomeAssistant) -> None:
     intent_response = intent.IntentResponse("*")
     intent_response.matched_states = [State("light.matched", "on")]
     intent_response.unmatched_states = [State("light.unmatched", "on")]
+    tool_input = llm.ToolInput(
+        tool_name="test_tool",
+        tool_args={"area": "kitchen", "floor": "ground_floor"},
+        platform="test_platform",
+        context=test_context,
+        user_prompt="test_text",
+        language="*",
+        agent_id="test_agent",
+        conversation_id="test_conversation_id",
+        device_id="test_device_id",
+        assistant="test_assistant",
+    )
+
     with patch(
         "homeassistant.helpers.intent.async_handle", return_value=intent_response
     ) as mock_intent_handle:
-        response = await tool.async_call(
-            hass,
-            "test_platform",
-            "test_text",
-            test_context,
-            "*",
-            "test_agent",
-            "test_conversation_id",
-            "test_device_id",
-            "test_assistant",
-            area="kitchen",
-            floor="ground_floor",
-        )
+        response = await tool.async_call(hass, tool_input)
 
     mock_intent_handle.assert_awaited_once_with(
         hass,
@@ -267,24 +230,24 @@ async def test_intent_tool_with_area_and_floor(
     floor_registry.async_create("second floor")
 
     test_context = Context()
+
+    tool_input = llm.ToolInput(
+        tool_name="test_tool",
+        tool_args={"test_arg": "test_value", "area": "küche", "floor": "ground floor"},
+        platform="test_platform",
+        context=test_context,
+        user_prompt="test_text",
+        language="*",
+        agent_id="test_agent",
+        conversation_id="test_conversation_id",
+        device_id="test_device_id",
+        assistant="test_assistant",
+    )
     with patch(
         "homeassistant.helpers.intent.async_handle",
         return_value=intent.IntentResponse("*"),
     ) as mock_intent_handle:
-        response = await tool.async_call(
-            hass,
-            "test_platform",
-            "test_text",
-            test_context,
-            "*",
-            "test_agent",
-            "test_conversation_id",
-            "test_device_id",
-            "test_assistant",
-            test_arg="test_value",
-            area="küche",
-            floor="ground floor",
-        )
+        response = await tool.async_call(hass, tool_input)
 
     mock_intent_handle.assert_awaited_once_with(
         hass,
