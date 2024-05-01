@@ -611,7 +611,7 @@ class MQTT:
             qos,
         )
         _raise_on_error(msg_info.rc)
-        await self._wait_for_mid(msg_info.mid)
+        await self._async_wait_for_mid(msg_info.mid)
 
     async def async_connect(self, client_available: asyncio.Future[bool]) -> None:
         """Connect to the host. Does not process messages yet."""
@@ -843,7 +843,7 @@ class MQTT:
         self._last_subscribe = time.time()
 
         if result == 0:
-            await self._wait_for_mid(mid)
+            await self._async_wait_for_mid(mid)
         else:
             _raise_on_error(result)
 
@@ -860,7 +860,7 @@ class MQTT:
         for topic in topics:
             _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
 
-        await self._wait_for_mid(mid)
+        await self._async_wait_for_mid(mid)
 
     async def _async_resubscribe_and_publish_birth_message(
         self, birth_message: PublishMessage
@@ -1046,11 +1046,7 @@ class MQTT:
         # The callback signature for on_unsubscribe is different from on_subscribe
         # see https://github.com/eclipse/paho.mqtt.python/issues/687
         # properties and reason codes are not used in Home Assistant
-        future = self._async_get_mid_future(mid)
-        if future.done():
-            _LOGGER.warning("Received duplicate mid: %s", mid)
-            return
-        future.set_result(None)
+        self._async_get_mid_future(mid).set_result(None)
 
     @callback
     def _async_get_mid_future(self, mid: int) -> asyncio.Future[None]:
@@ -1096,10 +1092,10 @@ class MQTT:
         if not future.done():
             future.set_exception(asyncio.TimeoutError)
 
-    async def _wait_for_mid(self, mid: int) -> None:
+    async def _async_wait_for_mid(self, mid: int) -> None:
         """Wait for ACK from broker."""
-        # Create the mid event if not created, either _mqtt_handle_mid or _wait_for_mid
-        # may be executed first.
+        # Create the mid event if not created, either _async_get_mid_future
+        # or _async_wait_for_mid may be executed first.
         future = self._async_get_mid_future(mid)
         loop = self.hass.loop
         timer_handle = loop.call_later(TIMEOUT_ACK, self._async_timeout_mid, future)
