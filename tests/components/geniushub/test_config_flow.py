@@ -65,11 +65,11 @@ async def test_form_v1(
     )
 
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": "option_1"}
+        const.DOMAIN, context={"source": "v3_api"}
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "option_1"
+    assert result["step_id"] == "v3_api"
 
 
 async def test_form_v3(
@@ -86,10 +86,10 @@ async def test_form_v3(
     )
 
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": "option_2"}
+        const.DOMAIN, context={"source": "v1_api"}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "option_2"
+    assert result["step_id"] == "v1_api"
 
 
 async def test_form_v1_good_data(
@@ -119,7 +119,7 @@ async def test_form_v1_good_data(
     ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "option_1"},
+            context={"source": "v3_api"},
             data={
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
@@ -157,7 +157,7 @@ async def test_form_v1_ClientResponseError(
     ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "option_1"},
+            context={"source": "v3_api"},
             data={
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
@@ -195,7 +195,7 @@ async def test_form_v1_UNAUTHORIZED(
     ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "option_1"},
+            context={"source": "v3_api"},
             data={
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
@@ -233,7 +233,7 @@ async def test_form_v1_timeout(
     ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "option_1"},
+            context={"source": "v3_api"},
             data={
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
@@ -271,7 +271,7 @@ async def test_form_v1_invalid_host(
     ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "option_1"},
+            context={"source": "v3_api"},
             data={
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
@@ -309,7 +309,7 @@ async def test_form_v1_Exception(
     ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "option_1"},
+            context={"source": "v3_api"},
             data={
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
@@ -347,7 +347,7 @@ async def test_form_v3_good_data(
     ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "option_2"},
+            context={"source": "v1_api"},
             data={
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
@@ -385,7 +385,7 @@ async def test_form_v3_ClientResponseError(
     ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "option_2"},
+            context={"source": "v1_api"},
             data={
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
@@ -423,7 +423,7 @@ async def test_form_v3_UNAUTHORIZED(
     ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "option_2"},
+            context={"source": "v1_api"},
             data={
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
@@ -461,7 +461,7 @@ async def test_form_v3_timeout(
     ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "option_2"},
+            context={"source": "v1_api"},
             data={
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
@@ -499,7 +499,7 @@ async def test_form_v3_invalid_host(
     ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "option_2"},
+            context={"source": "v1_api"},
             data={
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
@@ -537,7 +537,7 @@ async def test_form_v3_Exception(
     ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "option_2"},
+            context={"source": "v1_api"},
             data={
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
@@ -575,7 +575,7 @@ async def test_form_v1_ClientConnectionError(
     ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "option_1"},
+            context={"source": "v3_api"},
             data={
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
@@ -613,7 +613,7 @@ async def test_form_v3_ClientConnectionError(
     ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
-            context={"source": "option_2"},
+            context={"source": "v1_api"},
             data={
                 CONF_HOST: GENIUS_HOST,
                 CONF_PASSWORD: GENIUS_PASSWORD,
