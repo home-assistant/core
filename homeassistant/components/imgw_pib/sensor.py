@@ -64,11 +64,9 @@ async def async_setup_entry(
     coordinator: ImgwPibDataUpdateCoordinator = entry.runtime_data.coordinator
 
     async_add_entities(
-        [
-            ImgwPibSensorEntity(coordinator, description)
-            for description in SENSOR_TYPES
-            if getattr(coordinator.data, description.key).value is not None
-        ]
+        ImgwPibSensorEntity(coordinator, description)
+        for description in SENSOR_TYPES
+        if getattr(coordinator.data, description.key).value is not None
     )
 
 
