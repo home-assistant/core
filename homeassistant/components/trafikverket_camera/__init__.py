@@ -19,7 +19,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
-TVCameraConfigEntry = ConfigEntry["TVDataUpdateCoordinator"]
+TVCameraConfigEntry = ConfigEntry[TVDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TVCameraConfigEntry) -> bool:

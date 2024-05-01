@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from io import BytesIO
 import logging
+from typing import TYPE_CHECKING
 
 from pytrafikverket.exceptions import (
     InvalidAuthentication,
@@ -15,13 +16,14 @@ from pytrafikverket.exceptions import (
 )
 from pytrafikverket.trafikverket_camera import CameraInfo, TrafikverketCamera
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+if TYPE_CHECKING:
+    from . import TVCameraConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,7 +41,7 @@ class CameraData:
 class TVDataUpdateCoordinator(DataUpdateCoordinator[CameraData]):
     """A Trafikverket Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: TVCameraConfigEntry
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Trafikverket coordinator."""
