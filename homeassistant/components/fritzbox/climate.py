@@ -29,7 +29,8 @@ from .const import (
     ATTR_STATE_WINDOW_OPEN,
     LOGGER,
 )
-from .model import ClimateExtraAttributes, FritzboxConfigEntry
+from .coordinator import FritzboxConfigEntry
+from .model import ClimateExtraAttributes
 
 OPERATION_LIST = [HVACMode.HEAT, HVACMode.OFF]
 
@@ -51,7 +52,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the FRITZ!SmartHome thermostat from ConfigEntry."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
 
     @callback
     def _add_entities(devices: set[str] | None = None) -> None:

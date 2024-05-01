@@ -18,7 +18,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxDeviceEntity
-from .model import FritzboxConfigEntry, FritzEntityDescriptionMixinBase
+from .coordinator import FritzboxConfigEntry
+from .model import FritzEntityDescriptionMixinBase
 
 
 @dataclass(frozen=True)
@@ -68,7 +69,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the FRITZ!SmartHome binary sensor from ConfigEntry."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
 
     @callback
     def _add_entities(devices: set[str] | None = None) -> None:

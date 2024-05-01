@@ -9,7 +9,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxEntity
 from .const import DOMAIN
-from .model import FritzboxConfigEntry
+from .coordinator import FritzboxConfigEntry
 
 
 async def async_setup_entry(
@@ -18,7 +18,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the FRITZ!SmartHome template from ConfigEntry."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
 
     @callback
     def _add_entities(templates: set[str] | None = None) -> None:
