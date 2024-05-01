@@ -923,6 +923,9 @@ idasen-ha==2.5.1
 # homeassistant.components.network
 ifaddr==0.2.0
 
+# homeassistant.components.imgw_pib
+imgw_pib==1.0.0
+
 # homeassistant.components.influxdb
 influxdb-client==1.24.0
 
@@ -1751,7 +1754,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.6.2.1
 
 # homeassistant.components.matter
-python-matter-server==5.7.0
+python-matter-server==5.10.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
