@@ -466,10 +466,10 @@ base36==0.1.1
 beautifulsoup4==4.12.3
 
 # homeassistant.components.zha
-bellows==0.38.2
+bellows==0.38.3
 
 # homeassistant.components.bmw_connected_drive
-bimmer-connected[china]==0.14.6
+bimmer-connected[china]==0.15.2
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
@@ -494,7 +494,7 @@ bluecurrent-api==1.2.3
 bluemaestro-ble==0.2.3
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.19.0
+bluetooth-adapters==0.19.1
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.4.2
@@ -880,7 +880,7 @@ hole==0.8.0
 holidays==0.47
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240429.0
+home-assistant-frontend==20240501.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.4.24
@@ -922,6 +922,9 @@ idasen-ha==2.5.1
 
 # homeassistant.components.network
 ifaddr==0.2.0
+
+# homeassistant.components.imgw_pib
+imgw_pib==1.0.0
 
 # homeassistant.components.influxdb
 influxdb-client==1.24.0
@@ -1183,7 +1186,7 @@ openhomedevice==2.2.0
 openwebifpy==4.2.4
 
 # homeassistant.components.opower
-opower==0.4.3
+opower==0.4.4
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1751,7 +1754,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.6.2.1
 
 # homeassistant.components.matter
-python-matter-server==5.7.0
+python-matter-server==5.10.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2258,7 +2261,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==2.4.2
 
 # homeassistant.components.august
-yalexs==3.0.1
+yalexs==3.1.0
 
 # homeassistant.components.yeelight
 yeelight==0.7.14
