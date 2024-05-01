@@ -53,7 +53,7 @@
         },
         "dev_id": {
           "name": "Device ID",
-          "description": "ID of the device (find the ID in `known_devices.yaml`)."
+          "description": "ID of the device."
         },
         "host_name": {
           "name": "Hostname",
