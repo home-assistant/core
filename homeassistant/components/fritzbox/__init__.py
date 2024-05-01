@@ -25,7 +25,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LOGGER, PLATFORMS
 from .coordinator import FritzboxDataUpdateCoordinator
-from .model import FritzboxConfigEntry, FritzboxRuntimeData
+from .model import FritzboxConfigEntry
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FritzboxConfigEntry) -> bool:
@@ -42,6 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzboxConfigEntry) -> 
         raise ConfigEntryNotReady from err
     except LoginError as err:
         raise ConfigEntryAuthFailed from err
+
+    entry.runtime_data.fritz = fritz
 
     has_templates = await hass.async_add_executor_job(fritz.has_templates)
     LOGGER.debug("enable smarthome templates: %s", has_templates)
@@ -71,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzboxConfigEntry) -> 
     coordinator = FritzboxDataUpdateCoordinator(hass, entry.entry_id, has_templates)
     await coordinator.async_setup()
 
-    entry.runtime_data = FritzboxRuntimeData(coordinator, fritz)
+    entry.runtime_data.coordinator = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
