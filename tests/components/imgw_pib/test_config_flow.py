@@ -6,8 +6,8 @@ from aiohttp import ClientError
 from imgw_pib.exceptions import ApiError
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.imgw_pib.const import CONF_STATION_ID, DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -25,7 +25,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         ),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
+            DOMAIN, context={"source": SOURCE_USER}
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -63,7 +63,7 @@ async def test_form_no_station_list(hass: HomeAssistant, exc: Exception) -> None
         side_effect=exc,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
+            DOMAIN, context={"source": SOURCE_USER}
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
@@ -91,7 +91,7 @@ async def test_form_with_exceptions(
         ),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
+            DOMAIN, context={"source": SOURCE_USER}
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
