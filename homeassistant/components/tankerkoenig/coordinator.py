@@ -31,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 TankerkoenigConfigEntry = ConfigEntry["TankerkoenigDataUpdateCoordinator"]
 
 
-class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
+class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInfo]]):
     """Get the latest data from the API."""
 
     config_entry: TankerkoenigConfigEntry
