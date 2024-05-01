@@ -11,10 +11,13 @@ import pytest
 import requests
 
 from homeassistant import config_entries
+from homeassistant.components.button import ButtonEntity
+from homeassistant.components.event import EventEntity
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import update_coordinator
+from homeassistant.helpers.entity import Entity
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -747,3 +750,40 @@ async def test_timestamp_date_update_coordinator(hass: HomeAssistant) -> None:
     unsub()
     await crd.async_refresh()
     assert len(last_update_success_times) == 1
+
+
+@pytest.mark.parametrize(
+    "entity",
+    [ButtonEntity, EventEntity],
+)
+async def test_not_registered_listener(hass: HomeAssistant, entity: Entity) -> None:
+    """Test not registering listener for ButtonEntity and EventEntity."""
+
+    async def refresh() -> int:
+        return 1
+
+    crd = update_coordinator.DataUpdateCoordinator[int](
+        hass,
+        _LOGGER,
+        name="test",
+        update_method=refresh,
+        update_interval=timedelta(seconds=10),
+    )
+    assert not crd._listeners
+
+    class TestEntity(update_coordinator.CoordinatorEntity, entity):
+        """Representation of a Test entity."""
+
+        def __init__(
+            self, coordinator: update_coordinator.DataUpdateCoordinator[int]
+        ) -> None:
+            """Initialize the entity."""
+            super().__init__(coordinator)
+
+    test_entity = TestEntity(crd)
+    await test_entity.async_added_to_hass()
+
+    # Don't register listener for ButtonEntity and EventEntity
+    assert test_entity._no_use_coordinator is True
+    # Should not register any listener on coordinator
+    assert not crd._listeners
