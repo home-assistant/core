@@ -1046,7 +1046,11 @@ class MQTT:
         # The callback signature for on_unsubscribe is different from on_subscribe
         # see https://github.com/eclipse/paho.mqtt.python/issues/687
         # properties and reason codes are not used in Home Assistant
-        self._async_get_mid_future(mid).set_result(None)
+        future = self._async_get_mid_future(mid)
+        if future.done() and future.exception():
+            # Timed out
+            return
+        future.set_result(None)
 
     @callback
     def _async_get_mid_future(self, mid: int) -> asyncio.Future[None]:
@@ -1087,22 +1091,20 @@ class MQTT:
         )
 
     @callback
-    def _async_timeout_mid(self, mid: int) -> None:
+    def _async_timeout_mid(self, future: asyncio.Future[None]) -> None:
         """Timeout waiting for a mid."""
-        # If the timeout is reached, and _async_wait_for_mid has already completed
-        # the future, it will be removed from the _pending_operations dict so we
-        # need to check if it is still there.
-        if (future := self._pending_operations.get(mid)) and not future.done():
+        if not future.done():
             future.set_exception(asyncio.TimeoutError)
 
     async def _async_wait_for_mid(self, mid: int) -> None:
         """Wait for ACK from broker."""
-        # Create the mid event if not created, either _async_get_mid_future
-        # or _async_wait_for_mid may be executed first.
+        # Create the mid event if not created, either _mqtt_handle_mid or _async_wait_for_mid
+        # may be executed first.
+        future = self._async_get_mid_future(mid)
         loop = self.hass.loop
-        timer_handle = loop.call_later(TIMEOUT_ACK, self._async_timeout_mid, mid)
+        timer_handle = loop.call_later(TIMEOUT_ACK, self._async_timeout_mid, future)
         try:
-            await self._async_get_mid_future(mid)
+            await future
         except TimeoutError:
             _LOGGER.warning(
                 "No ACK from MQTT server in %s seconds (mid: %s)", TIMEOUT_ACK, mid
