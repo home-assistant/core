@@ -1,4 +1,5 @@
 """Fixtures for Trafikverket Train integration tests."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -24,6 +25,25 @@ async def load_integration_from_entry(
     get_train_stop: TrainStop,
 ) -> MockConfigEntry:
     """Set up the Trafikverket Train integration in Home Assistant."""
+
+    async def setup_config_entry_with_mocked_data(config_entry_id: str) -> None:
+        """Set up a config entry with mocked trafikverket data."""
+        with (
+            patch(
+                "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",
+                return_value=get_trains,
+            ),
+            patch(
+                "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_train_stop",
+                return_value=get_train_stop,
+            ),
+            patch(
+                "homeassistant.components.trafikverket_train.TrafikverketTrain.async_get_train_station",
+            ),
+        ):
+            await hass.config_entries.async_setup(config_entry_id)
+            await hass.async_block_till_done()
+
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         source=SOURCE_USER,
@@ -33,6 +53,8 @@ async def load_integration_from_entry(
         unique_id="stockholmc-uppsalac--['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']",
     )
     config_entry.add_to_hass(hass)
+    await setup_config_entry_with_mocked_data(config_entry.entry_id)
+
     config_entry2 = MockConfigEntry(
         domain=DOMAIN,
         source=SOURCE_USER,
@@ -41,18 +63,7 @@ async def load_integration_from_entry(
         unique_id="stockholmc-uppsalac-1100-['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']",
     )
     config_entry2.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",
-        return_value=get_trains,
-    ), patch(
-        "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_train_stop",
-        return_value=get_train_stop,
-    ), patch(
-        "homeassistant.components.trafikverket_train.TrafikverketTrain.async_get_train_station",
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await setup_config_entry_with_mocked_data(config_entry2.entry_id)
 
     return config_entry
 

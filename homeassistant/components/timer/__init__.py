@@ -1,4 +1,5 @@
 """Support for Timers."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -324,12 +325,12 @@ class Timer(collection.CollectionEntity, RestoreEntity):
 
         self._end = start + self._remaining
 
+        self.async_write_ha_state()
         self.hass.bus.async_fire(event, {ATTR_ENTITY_ID: self.entity_id})
 
         self._listener = async_track_point_in_utc_time(
             self.hass, self._async_finished, self._end
         )
-        self.async_write_ha_state()
 
     @callback
     def async_change(self, duration: timedelta) -> None:
@@ -350,11 +351,11 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._listener()
         self._end += duration
         self._remaining = self._end - dt_util.utcnow().replace(microsecond=0)
+        self.async_write_ha_state()
         self.hass.bus.async_fire(EVENT_TIMER_CHANGED, {ATTR_ENTITY_ID: self.entity_id})
         self._listener = async_track_point_in_utc_time(
             self.hass, self._async_finished, self._end
         )
-        self.async_write_ha_state()
 
     @callback
     def async_pause(self) -> None:
@@ -367,8 +368,8 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._remaining = self._end - dt_util.utcnow().replace(microsecond=0)
         self._state = STATUS_PAUSED
         self._end = None
-        self.hass.bus.async_fire(EVENT_TIMER_PAUSED, {ATTR_ENTITY_ID: self.entity_id})
         self.async_write_ha_state()
+        self.hass.bus.async_fire(EVENT_TIMER_PAUSED, {ATTR_ENTITY_ID: self.entity_id})
 
     @callback
     def async_cancel(self) -> None:
@@ -380,10 +381,10 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._end = None
         self._remaining = None
         self._running_duration = self._configured_duration
+        self.async_write_ha_state()
         self.hass.bus.async_fire(
             EVENT_TIMER_CANCELLED, {ATTR_ENTITY_ID: self.entity_id}
         )
-        self.async_write_ha_state()
 
     @callback
     def async_finish(self) -> None:
@@ -399,11 +400,11 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._end = None
         self._remaining = None
         self._running_duration = self._configured_duration
+        self.async_write_ha_state()
         self.hass.bus.async_fire(
             EVENT_TIMER_FINISHED,
             {ATTR_ENTITY_ID: self.entity_id, ATTR_FINISHED_AT: end.isoformat()},
         )
-        self.async_write_ha_state()
 
     @callback
     def _async_finished(self, time: datetime) -> None:
@@ -417,11 +418,11 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._end = None
         self._remaining = None
         self._running_duration = self._configured_duration
+        self.async_write_ha_state()
         self.hass.bus.async_fire(
             EVENT_TIMER_FINISHED,
             {ATTR_ENTITY_ID: self.entity_id, ATTR_FINISHED_AT: end.isoformat()},
         )
-        self.async_write_ha_state()
 
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""

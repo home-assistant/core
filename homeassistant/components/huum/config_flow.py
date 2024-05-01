@@ -1,4 +1,5 @@
 """Config flow for huum integration."""
+
 from __future__ import annotations
 
 import logging
@@ -8,9 +9,8 @@ from huum.exceptions import Forbidden, NotAuthenticated
 from huum.huum import Huum
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -25,14 +25,14 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class HuumConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class HuumConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for huum."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:

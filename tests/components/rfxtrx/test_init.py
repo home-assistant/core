@@ -1,4 +1,5 @@
 """The tests for the Rfxtrx component."""
+
 from __future__ import annotations
 
 from unittest.mock import ANY, call
@@ -111,15 +112,7 @@ async def test_ws_device_remove(
 
     # Ask to remove existing device
     client = await hass_ws_client(hass)
-    await client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": mock_entry.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await client.receive_json()
+    response = await client.remove_device(device_entry.id, mock_entry.entry_id)
     assert response["success"]
 
     # Verify device entry is removed
@@ -212,6 +205,7 @@ async def test_reconnect(rfxtrx, hass: HomeAssistant) -> None:
         rfxtrx.event_callback,
         rfxtrxmod.ConnectionLost(),
     )
+    await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
     rfxtrx.connect.call_count = 2

@@ -1,4 +1,5 @@
 """Support for Google Maps location sharing."""
+
 from __future__ import annotations
 
 from datetime import timedelta

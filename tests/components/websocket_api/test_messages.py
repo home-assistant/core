@@ -1,4 +1,5 @@
 """Test Websocket API messages module."""
+
 import pytest
 
 from homeassistant.components.websocket_api.messages import (
@@ -31,11 +32,11 @@ async def test_cached_event_message(hass: HomeAssistant) -> None:
     assert len(events) == 2
     lru_event_cache.cache_clear()
 
-    msg0 = cached_event_message(2, events[0])
-    assert msg0 == cached_event_message(2, events[0])
+    msg0 = cached_event_message(b"2", events[0])
+    assert msg0 == cached_event_message(b"2", events[0])
 
-    msg1 = cached_event_message(2, events[1])
-    assert msg1 == cached_event_message(2, events[1])
+    msg1 = cached_event_message(b"2", events[1])
+    assert msg1 == cached_event_message(b"2", events[1])
 
     assert msg0 != msg1
 
@@ -44,7 +45,7 @@ async def test_cached_event_message(hass: HomeAssistant) -> None:
     assert cache_info.misses == 2
     assert cache_info.currsize == 2
 
-    cached_event_message(2, events[1])
+    cached_event_message(b"2", events[1])
     cache_info = lru_event_cache.cache_info()
     assert cache_info.hits == 3
     assert cache_info.misses == 2
@@ -69,9 +70,9 @@ async def test_cached_event_message_with_different_idens(hass: HomeAssistant) ->
 
     lru_event_cache.cache_clear()
 
-    msg0 = cached_event_message(2, events[0])
-    msg1 = cached_event_message(3, events[0])
-    msg2 = cached_event_message(4, events[0])
+    msg0 = cached_event_message(b"2", events[0])
+    msg1 = cached_event_message(b"3", events[0])
+    msg2 = cached_event_message(b"4", events[0])
 
     assert msg0 != msg1
     assert msg0 != msg2

@@ -1,4 +1,5 @@
 """Test different accessory types: HumidifierDehumidifier."""
+
 from pyhap.accessory_driver import AccessoryDriver
 from pyhap.const import (
     CATEGORY_HUMIDIFIER,

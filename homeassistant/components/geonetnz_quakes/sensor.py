@@ -1,4 +1,5 @@
 """Feed Entity Manager Sensor support for GeoNet NZ Quakes Feeds."""
+
 from __future__ import annotations
 
 import logging

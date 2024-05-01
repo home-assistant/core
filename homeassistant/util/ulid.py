@@ -1,4 +1,5 @@
 """Helpers to generate ulids."""
+
 from __future__ import annotations
 
 from ulid_transform import (

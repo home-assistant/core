@@ -1,4 +1,5 @@
 """Config flow for Vodafone Station integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -14,12 +15,12 @@ from homeassistant.components.device_tracker import (
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
+    ConfigFlowResult,
     OptionsFlow,
     OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import _LOGGER, DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN
 
@@ -69,7 +70,7 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -101,7 +102,9 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=user_form_schema(user_input), errors=errors
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauth flow."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         assert self.entry
@@ -110,7 +113,7 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle reauth confirm."""
         assert self.entry
         errors = {}
@@ -153,7 +156,7 @@ class VodafoneStationOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle options flow."""
 
         if user_input is not None:

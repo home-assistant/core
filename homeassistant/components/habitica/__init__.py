@@ -1,4 +1,5 @@
 """The habitica integration."""
+
 import logging
 
 from habitipy.aio import HabitipyAsync
@@ -29,9 +30,10 @@ from .const import (
     EVENT_API_CALL_SUCCESS,
     SERVICE_API_CALL,
 )
-from .sensor import SENSORS_TYPES
 
 _LOGGER = logging.getLogger(__name__)
+
+SENSORS_TYPES = ["name", "hp", "maxHealth", "mp", "maxMP", "exp", "toNextLevel", "lvl"]
 
 INSTANCE_SCHEMA = vol.All(
     cv.deprecated(CONF_SENSORS),

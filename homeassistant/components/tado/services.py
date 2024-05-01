@@ -1,4 +1,5 @@
 """Services for the Tado integration."""
+
 import logging
 
 import voluptuous as vol

@@ -1,4 +1,5 @@
 """Config flow for habitica integration."""
+
 from __future__ import annotations
 
 import logging
@@ -7,9 +8,12 @@ from aiohttp import ClientResponseError
 from habitipy.aio import HabitipyAsync
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_URL
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import CONF_API_USER, DEFAULT_URL, DOMAIN
 
@@ -25,9 +29,7 @@ DATA_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(
-    hass: core.HomeAssistant, data: dict[str, str]
-) -> dict[str, str]:
+async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str, str]:
     """Validate the user input allows us to connect."""
 
     websession = async_get_clientsession(hass)
@@ -45,10 +47,10 @@ async def validate_input(
             CONF_API_USER: data[CONF_API_USER],
         }
     except ClientResponseError as ex:
-        raise InvalidAuth() from ex
+        raise InvalidAuth from ex
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for habitica."""
 
     VERSION = 1
@@ -78,8 +80,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data):
         """Import habitica config from configuration.yaml."""
+
+        async_create_issue(
+            self.hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            is_fixable=False,
+            breaks_in_ha_version="2024.11.0",
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Habitica",
+            },
+        )
         return await self.async_step_user(import_data)
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""

@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "sensor": {
+      "oxydo_reduction_potential": {
+        "default": "mdi:pool"
+      },
+      "ph": {
+        "default": "mdi:pool"
+      },
+      "tds": {
+        "default": "mdi:pool"
+      },
+      "rssi": {
+        "default": "mdi:wifi"
+      },
+      "salt": {
+        "default": "mdi:pool"
+      }
+    }
+  }
+}

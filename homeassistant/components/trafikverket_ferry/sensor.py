@@ -1,4 +1,5 @@
 """Ferry information for departures, provided by Trafikverket."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -28,30 +29,21 @@ ATTR_TO = "to_harbour"
 ATTR_MODIFIED_TIME = "modified_time"
 ATTR_OTHER_INFO = "other_info"
 
-ICON = "mdi:ferry"
 SCAN_INTERVAL = timedelta(minutes=5)
 
 
-@dataclass(frozen=True)
-class TrafikverketRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class TrafikverketSensorEntityDescription(SensorEntityDescription):
+    """Describes Trafikverket sensor entity."""
 
     value_fn: Callable[[dict[str, Any]], StateType | datetime]
     info_fn: Callable[[dict[str, Any]], StateType | list] | None
-
-
-@dataclass(frozen=True)
-class TrafikverketSensorEntityDescription(
-    SensorEntityDescription, TrafikverketRequiredKeysMixin
-):
-    """Describes Trafikverket sensor entity."""
 
 
 SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     TrafikverketSensorEntityDescription(
         key="departure_time",
         translation_key="departure_time",
-        icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: as_utc(data["departure_time"]),
         info_fn=lambda data: cast(list[str], data["departure_information"]),
@@ -59,21 +51,18 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     TrafikverketSensorEntityDescription(
         key="departure_from",
         translation_key="departure_from",
-        icon="mdi:ferry",
         value_fn=lambda data: cast(str, data["departure_from"]),
         info_fn=lambda data: cast(list[str], data["departure_information"]),
     ),
     TrafikverketSensorEntityDescription(
         key="departure_to",
         translation_key="departure_to",
-        icon="mdi:ferry",
         value_fn=lambda data: cast(str, data["departure_to"]),
         info_fn=lambda data: cast(list[str], data["departure_information"]),
     ),
     TrafikverketSensorEntityDescription(
         key="departure_modified",
         translation_key="departure_modified",
-        icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: as_utc(data["departure_modified"]),
         info_fn=lambda data: cast(list[str], data["departure_information"]),
@@ -82,7 +71,6 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     TrafikverketSensorEntityDescription(
         key="departure_time_next",
         translation_key="departure_time_next",
-        icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: as_utc(data["departure_time_next"]),
         info_fn=None,
@@ -91,7 +79,6 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     TrafikverketSensorEntityDescription(
         key="departure_time_next_next",
         translation_key="departure_time_next_next",
-        icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: as_utc(data["departure_time_next_next"]),
         info_fn=None,

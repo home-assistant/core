@@ -1,4 +1,5 @@
 """Test the Android TV Remote config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
@@ -24,7 +25,7 @@ async def test_user_flow_success(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert "host" in result["data_schema"].schema
     assert not result["errors"]
@@ -43,7 +44,7 @@ async def test_user_flow_success(
         result["flow_id"], {"host": host}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
     assert "pin" in result["data_schema"].schema
     assert not result["errors"]
@@ -57,7 +58,7 @@ async def test_user_flow_success(
         result["flow_id"], {"pin": pin}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == name
     assert result["data"] == {"host": host, "name": name, "mac": mac}
     assert result["context"]["source"] == "user"
@@ -84,7 +85,7 @@ async def test_user_flow_cannot_connect(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert "host" in result["data_schema"].schema
     assert not result["errors"]
@@ -98,7 +99,7 @@ async def test_user_flow_cannot_connect(
         result["flow_id"], {"host": host}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert "host" in result["data_schema"].schema
     assert result["errors"] == {"base": "cannot_connect"}
@@ -126,7 +127,7 @@ async def test_user_flow_pairing_invalid_auth(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert "host" in result["data_schema"].schema
     assert not result["errors"]
@@ -144,7 +145,7 @@ async def test_user_flow_pairing_invalid_auth(
         result["flow_id"], {"host": host}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
     assert "pin" in result["data_schema"].schema
     assert not result["errors"]
@@ -158,7 +159,7 @@ async def test_user_flow_pairing_invalid_auth(
         result["flow_id"], {"pin": pin}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
     assert "pin" in result["data_schema"].schema
     assert result["errors"] == {"base": "invalid_auth"}
@@ -188,7 +189,7 @@ async def test_user_flow_pairing_connection_closed(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert "host" in result["data_schema"].schema
     assert not result["errors"]
@@ -206,7 +207,7 @@ async def test_user_flow_pairing_connection_closed(
         result["flow_id"], {"host": host}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
     assert "pin" in result["data_schema"].schema
     assert not result["errors"]
@@ -220,7 +221,7 @@ async def test_user_flow_pairing_connection_closed(
         result["flow_id"], {"pin": pin}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
     assert "pin" in result["data_schema"].schema
     assert not result["errors"]
@@ -250,7 +251,7 @@ async def test_user_flow_pairing_connection_closed_followed_by_cannot_connect(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert "host" in result["data_schema"].schema
     assert not result["errors"]
@@ -268,7 +269,7 @@ async def test_user_flow_pairing_connection_closed_followed_by_cannot_connect(
         result["flow_id"], {"host": host}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
     assert "pin" in result["data_schema"].schema
     assert not result["errors"]
@@ -282,7 +283,7 @@ async def test_user_flow_pairing_connection_closed_followed_by_cannot_connect(
         result["flow_id"], {"pin": pin}
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
     mock_api.async_finish_pairing.assert_called_with(pin)
@@ -323,11 +324,12 @@ async def test_user_flow_already_configured_host_changed_reloads_entry(
         state=ConfigEntryState.LOADED,
     )
     mock_config_entry.add_to_hass(hass)
+    hass.config.components.add(DOMAIN)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert "host" in result["data_schema"].schema
     assert not result["errors"]
@@ -339,7 +341,7 @@ async def test_user_flow_already_configured_host_changed_reloads_entry(
         result["flow_id"], {"host": host}
     )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
     mock_api.async_generate_cert_if_missing.assert_called()
@@ -386,7 +388,7 @@ async def test_user_flow_already_configured_host_not_changed_no_reload_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert "host" in result["data_schema"].schema
     assert not result["errors"]
@@ -398,7 +400,7 @@ async def test_user_flow_already_configured_host_not_changed_no_reload_entry(
         result["flow_id"], {"host": host}
     )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
     mock_api.async_generate_cert_if_missing.assert_called()
@@ -441,7 +443,7 @@ async def test_zeroconf_flow_success(
             properties={"bt": mac},
         ),
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
     assert not result["data_schema"]
 
@@ -460,7 +462,7 @@ async def test_zeroconf_flow_success(
         result["flow_id"], user_input={}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
     assert "pin" in result["data_schema"].schema
     assert not result["errors"]
@@ -474,7 +476,7 @@ async def test_zeroconf_flow_success(
         result["flow_id"], {"pin": pin}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == name
     assert result["data"] == {
         "host": host,
@@ -519,7 +521,7 @@ async def test_zeroconf_flow_cannot_connect(
             properties={"bt": mac},
         ),
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
     assert not result["data_schema"]
 
@@ -530,7 +532,7 @@ async def test_zeroconf_flow_cannot_connect(
         result["flow_id"], user_input={}
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
     mock_api.async_generate_cert_if_missing.assert_called()
@@ -570,7 +572,7 @@ async def test_zeroconf_flow_pairing_invalid_auth(
             properties={"bt": mac},
         ),
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
     assert not result["data_schema"]
 
@@ -581,7 +583,7 @@ async def test_zeroconf_flow_pairing_invalid_auth(
         result["flow_id"], user_input={}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
     assert "pin" in result["data_schema"].schema
     assert not result["errors"]
@@ -595,7 +597,7 @@ async def test_zeroconf_flow_pairing_invalid_auth(
         result["flow_id"], {"pin": pin}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
     assert "pin" in result["data_schema"].schema
     assert result["errors"] == {"base": "invalid_auth"}
@@ -639,6 +641,7 @@ async def test_zeroconf_flow_already_configured_host_changed_reloads_entry(
         state=ConfigEntryState.LOADED,
     )
     mock_config_entry.add_to_hass(hass)
+    hass.config.components.add(DOMAIN)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -653,7 +656,7 @@ async def test_zeroconf_flow_already_configured_host_changed_reloads_entry(
             properties={"bt": mac},
         ),
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     await hass.async_block_till_done()
@@ -706,7 +709,7 @@ async def test_zeroconf_flow_already_configured_host_not_changed_no_reload_entry
             properties={"bt": mac},
         ),
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     await hass.async_block_till_done()
@@ -739,7 +742,7 @@ async def test_zeroconf_flow_abort_if_mac_is_missing(
             properties={},
         ),
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -768,6 +771,7 @@ async def test_reauth_flow_success(
         state=ConfigEntryState.LOADED,
     )
     mock_config_entry.add_to_hass(hass)
+    hass.config.components.add(DOMAIN)
 
     mock_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
@@ -784,7 +788,7 @@ async def test_reauth_flow_success(
     mock_api.async_start_pairing = AsyncMock(return_value=None)
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
     assert "pin" in result["data_schema"].schema
     assert not result["errors"]
@@ -798,7 +802,7 @@ async def test_reauth_flow_success(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"pin": pin}
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
     mock_api.async_finish_pairing.assert_called_with(pin)
@@ -853,7 +857,7 @@ async def test_reauth_flow_cannot_connect(
     mock_api.async_start_pairing = AsyncMock(side_effect=CannotConnect())
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -879,7 +883,7 @@ async def test_options_flow(
 
     # Trigger options flow, first time
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     data_schema = result["data_schema"].schema
     assert set(data_schema) == {"enable_ime"}
@@ -888,7 +892,7 @@ async def test_options_flow(
         result["flow_id"],
         user_input={"enable_ime": False},
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_config_entry.options == {"enable_ime": False}
     await hass.async_block_till_done()
 
@@ -901,7 +905,7 @@ async def test_options_flow(
         result["flow_id"],
         user_input={"enable_ime": False},
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_config_entry.options == {"enable_ime": False}
     await hass.async_block_till_done()
 
@@ -914,7 +918,7 @@ async def test_options_flow(
         result["flow_id"],
         user_input={"enable_ime": True},
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_config_entry.options == {"enable_ime": True}
     await hass.async_block_till_done()
 

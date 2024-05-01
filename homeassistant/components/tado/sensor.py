@@ -1,4 +1,5 @@
 """Support for Tado sensors for each zone."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -36,18 +37,11 @@ from .entity import TadoHomeEntity, TadoZoneEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class TadoSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class TadoSensorEntityDescription(SensorEntityDescription):
+    """Describes Tado sensor entity."""
 
     state_fn: Callable[[Any], StateType]
-
-
-@dataclass(frozen=True)
-class TadoSensorEntityDescription(
-    SensorEntityDescription, TadoSensorEntityDescriptionMixin
-):
-    """Describes Tado sensor entity."""
 
     attributes_fn: Callable[[Any], dict[Any, StateType]] | None = None
     data_category: str | None = None

@@ -1,22 +1,29 @@
 """Test the Profiler config flow."""
+
 from datetime import timedelta
 from functools import lru_cache
+import logging
 import os
 from pathlib import Path
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from lru import LRU
+import objgraph
 import pytest
 
 from homeassistant.components.profiler import (
     _LRU_CACHE_WRAPPER_OBJECT,
     _SQLALCHEMY_LRU_OBJECT,
+    CONF_ENABLED,
     CONF_SECONDS,
     SERVICE_DUMP_LOG_OBJECTS,
+    SERVICE_LOG_CURRENT_TASKS,
     SERVICE_LOG_EVENT_LOOP_SCHEDULED,
     SERVICE_LOG_THREAD_FRAMES,
     SERVICE_LRU_STATS,
     SERVICE_MEMORY,
+    SERVICE_SET_ASYNCIO_DEBUG,
     SERVICE_START,
     SERVICE_START_LOG_OBJECT_SOURCES,
     SERVICE_START_LOG_OBJECTS,
@@ -95,7 +102,9 @@ async def test_memory_usage(hass: HomeAssistant, tmp_path: Path) -> None:
 
 
 async def test_object_growth_logging(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test we can setup and the service and we can dump objects to the log."""
 
@@ -108,30 +117,31 @@ async def test_object_growth_logging(
     assert hass.services.has_service(DOMAIN, SERVICE_START_LOG_OBJECTS)
     assert hass.services.has_service(DOMAIN, SERVICE_STOP_LOG_OBJECTS)
 
-    with patch("objgraph.growth"):
+    with patch.object(objgraph, "growth"):
         await hass.services.async_call(
-            DOMAIN, SERVICE_START_LOG_OBJECTS, {CONF_SCAN_INTERVAL: 10}, blocking=True
+            DOMAIN, SERVICE_START_LOG_OBJECTS, {CONF_SCAN_INTERVAL: 1}, blocking=True
         )
         with pytest.raises(HomeAssistantError, match="Object logging already started"):
             await hass.services.async_call(
                 DOMAIN,
                 SERVICE_START_LOG_OBJECTS,
-                {CONF_SCAN_INTERVAL: 10},
+                {CONF_SCAN_INTERVAL: 1},
                 blocking=True,
             )
 
         assert "Growth" in caplog.text
+        await hass.async_block_till_done(wait_background_tasks=True)
         caplog.clear()
 
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
-        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert "Growth" in caplog.text
 
     await hass.services.async_call(DOMAIN, SERVICE_STOP_LOG_OBJECTS, {}, blocking=True)
     caplog.clear()
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=21))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert "Growth" not in caplog.text
 
     with pytest.raises(HomeAssistantError, match="Object logging not running"):
@@ -139,17 +149,18 @@ async def test_object_growth_logging(
             DOMAIN, SERVICE_STOP_LOG_OBJECTS, {}, blocking=True
         )
 
-    with patch("objgraph.growth"):
+    with patch.object(objgraph, "growth"):
         await hass.services.async_call(
             DOMAIN, SERVICE_START_LOG_OBJECTS, {CONF_SCAN_INTERVAL: 10}, blocking=True
         )
+        await hass.async_block_till_done(wait_background_tasks=True)
         caplog.clear()
 
     assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert "Growth" not in caplog.text
 
 
@@ -205,6 +216,28 @@ async def test_log_thread_frames(
     await hass.services.async_call(DOMAIN, SERVICE_LOG_THREAD_FRAMES, {}, blocking=True)
 
     assert "SyncWorker_0" in caplog.text
+    caplog.clear()
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_log_current_tasks(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we can log current tasks."""
+
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(DOMAIN, SERVICE_LOG_CURRENT_TASKS)
+
+    await hass.services.async_call(DOMAIN, SERVICE_LOG_CURRENT_TASKS, {}, blocking=True)
+
+    assert "test_log_current_tasks" in caplog.text
     caplog.clear()
 
     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -322,18 +355,19 @@ async def test_log_object_sources(
         caplog.clear()
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert "No new object growth found" in caplog.text
 
     fake_object2 = FakeObject()
 
-    with patch("gc.collect"), patch(
-        "gc.get_objects", return_value=[fake_object, fake_object2]
+    with (
+        patch("gc.collect"),
+        patch("gc.get_objects", return_value=[fake_object, fake_object2]),
     ):
         caplog.clear()
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=21))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert "New object FakeObject (1/2)" in caplog.text
 
     many_objects = [FakeObject() for _ in range(30)]
@@ -341,7 +375,7 @@ async def test_log_object_sources(
         caplog.clear()
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert "New object FakeObject (2/30)" in caplog.text
         assert "New objects overflowed by {'FakeObject': 25}" in caplog.text
 
@@ -351,7 +385,7 @@ async def test_log_object_sources(
     caplog.clear()
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=41))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert "FakeObject" not in caplog.text
     assert "No new object growth found" not in caplog.text
 
@@ -359,7 +393,7 @@ async def test_log_object_sources(
     await hass.async_block_till_done()
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=51))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert "FakeObject" not in caplog.text
     assert "No new object growth found" not in caplog.text
 
@@ -367,3 +401,48 @@ async def test_log_object_sources(
         await hass.services.async_call(
             DOMAIN, SERVICE_STOP_LOG_OBJECT_SOURCES, {}, blocking=True
         )
+
+
+async def test_set_asyncio_debug(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test setting asyncio debug."""
+
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(DOMAIN, SERVICE_SET_ASYNCIO_DEBUG)
+
+    hass.loop.set_debug(False)
+    original_level = logging.getLogger().getEffectiveLevel()
+    logging.getLogger().setLevel(logging.WARNING)
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SET_ASYNCIO_DEBUG, {CONF_ENABLED: False}, blocking=True
+    )
+    # Ensure logging level is only increased if we enable
+    assert logging.getLogger().getEffectiveLevel() == logging.WARNING
+
+    await hass.services.async_call(DOMAIN, SERVICE_SET_ASYNCIO_DEBUG, {}, blocking=True)
+    assert hass.loop.get_debug() is True
+
+    # Ensure logging is at least at INFO level
+    assert logging.getLogger().getEffectiveLevel() == logging.INFO
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SET_ASYNCIO_DEBUG, {CONF_ENABLED: False}, blocking=True
+    )
+    assert hass.loop.get_debug() is False
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SET_ASYNCIO_DEBUG, {CONF_ENABLED: True}, blocking=True
+    )
+    assert hass.loop.get_debug() is True
+
+    logging.getLogger().setLevel(original_level)
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

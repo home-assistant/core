@@ -1,4 +1,5 @@
 """Tests for the Bluetooth integration API."""
+
 import time
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice

@@ -1,4 +1,5 @@
 """Helper methods for common tasks."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -38,15 +39,13 @@ _ReturnFuncType = Callable[Concatenate[_T, _P], _R | None]
 @overload
 def soco_error(
     errorcodes: None = ...,
-) -> Callable[[_FuncType[_T, _P, _R]], _FuncType[_T, _P, _R]]:
-    ...
+) -> Callable[[_FuncType[_T, _P, _R]], _FuncType[_T, _P, _R]]: ...
 
 
 @overload
 def soco_error(
     errorcodes: list[str],
-) -> Callable[[_FuncType[_T, _P, _R]], _ReturnFuncType[_T, _P, _R]]:
-    ...
+) -> Callable[[_FuncType[_T, _P, _R]], _ReturnFuncType[_T, _P, _R]]: ...
 
 
 def soco_error(

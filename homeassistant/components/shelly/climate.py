@@ -1,4 +1,5 @@
 """Climate support for Shelly."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -131,7 +132,11 @@ def async_setup_rpc_entry(
     climate_ids = []
     for id_ in climate_key_ids:
         climate_ids.append(id_)
-
+        # There are three configuration scenarios for WallDisplay:
+        # - relay mode (no thermostat)
+        # - thermostat mode using the internal relay as an actuator
+        # - thermostat mode using an external (from another device) relay as
+        #   an actuator
         if is_rpc_thermostat_internal_actuator(coordinator.device.status):
             # Wall Display relay is used as the thermostat actuator,
             # we need to remove a switch entity
@@ -318,7 +323,7 @@ class BlockSleepingClimate(
                 f" {repr(err)}"
             ) from err
         except InvalidAuthError:
-            self.coordinator.entry.async_start_reauth(self.hass)
+            await self.coordinator.async_shutdown_device_and_start_reauth()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -435,7 +440,10 @@ class BlockSleepingClimate(
                     ]["schedule_profile_names"],
                 ]
             except InvalidAuthError:
-                self.coordinator.entry.async_start_reauth(self.hass)
+                self.hass.async_create_task(
+                    self.coordinator.async_shutdown_device_and_start_reauth(),
+                    eager_start=True,
+                )
             else:
                 self.async_write_ha_state()
 

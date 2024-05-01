@@ -1,4 +1,5 @@
 """Support for DROP sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -19,6 +20,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -39,9 +41,6 @@ from .entity import DROPEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-FLOW_ICON = "mdi:shower-head"
-GAUGE_ICON = "mdi:gauge"
-TDS_ICON = "mdi:water-opacity"
 
 # Sensor type constants
 CURRENT_FLOW_RATE = "current_flow_rate"
@@ -72,8 +71,8 @@ SENSORS: list[DROPSensorEntityDescription] = [
     DROPSensorEntityDescription(
         key=CURRENT_FLOW_RATE,
         translation_key=CURRENT_FLOW_RATE,
-        icon="mdi:shower-head",
-        native_unit_of_measurement="gpm",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
         suggested_display_precision=1,
         value_fn=lambda device: device.drop_api.current_flow_rate(),
         state_class=SensorStateClass.MEASUREMENT,
@@ -81,8 +80,8 @@ SENSORS: list[DROPSensorEntityDescription] = [
     DROPSensorEntityDescription(
         key=PEAK_FLOW_RATE,
         translation_key=PEAK_FLOW_RATE,
-        icon="mdi:shower-head",
-        native_unit_of_measurement="gpm",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
         suggested_display_precision=1,
         value_fn=lambda device: device.drop_api.peak_flow_rate(),
         state_class=SensorStateClass.MEASUREMENT,
@@ -161,7 +160,6 @@ SENSORS: list[DROPSensorEntityDescription] = [
     DROPSensorEntityDescription(
         key=INLET_TDS,
         translation_key=INLET_TDS,
-        icon=TDS_ICON,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
@@ -170,7 +168,6 @@ SENSORS: list[DROPSensorEntityDescription] = [
     DROPSensorEntityDescription(
         key=OUTLET_TDS,
         translation_key=OUTLET_TDS,
-        icon=TDS_ICON,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
@@ -179,7 +176,6 @@ SENSORS: list[DROPSensorEntityDescription] = [
     DROPSensorEntityDescription(
         key=CARTRIDGE_1_LIFE,
         translation_key=CARTRIDGE_1_LIFE,
-        icon=GAUGE_ICON,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -189,7 +185,6 @@ SENSORS: list[DROPSensorEntityDescription] = [
     DROPSensorEntityDescription(
         key=CARTRIDGE_2_LIFE,
         translation_key=CARTRIDGE_2_LIFE,
-        icon=GAUGE_ICON,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -199,7 +194,6 @@ SENSORS: list[DROPSensorEntityDescription] = [
     DROPSensorEntityDescription(
         key=CARTRIDGE_3_LIFE,
         translation_key=CARTRIDGE_3_LIFE,
-        icon=GAUGE_ICON,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,

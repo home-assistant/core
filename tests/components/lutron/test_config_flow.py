@@ -1,4 +1,5 @@
 """Test the lutron config flow."""
+
 from email.message import Message
 from unittest.mock import AsyncMock, patch
 from urllib.error import HTTPError
@@ -26,18 +27,19 @@ async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"), patch(
-        "homeassistant.components.lutron.config_flow.Lutron.guid", "12345678901"
+    with (
+        patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"),
+        patch("homeassistant.components.lutron.config_flow.Lutron.guid", "12345678901"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=MOCK_DATA_STEP,
         )
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].title == "Lutron"
 
         assert result["data"] == MOCK_DATA_STEP
@@ -61,7 +63,7 @@ async def test_flow_failure(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch(
@@ -73,18 +75,19 @@ async def test_flow_failure(
             user_input=MOCK_DATA_STEP,
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": text_error}
 
-    with patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"), patch(
-        "homeassistant.components.lutron.config_flow.Lutron.guid", "12345678901"
+    with (
+        patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"),
+        patch("homeassistant.components.lutron.config_flow.Lutron.guid", "12345678901"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=MOCK_DATA_STEP,
         )
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].title == "Lutron"
 
         assert result["data"] == MOCK_DATA_STEP
@@ -98,29 +101,31 @@ async def test_flow_incorrect_guid(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"), patch(
-        "homeassistant.components.lutron.config_flow.Lutron.guid", "12345"
+    with (
+        patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"),
+        patch("homeassistant.components.lutron.config_flow.Lutron.guid", "12345"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=MOCK_DATA_STEP,
         )
 
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "cannot_connect"}
 
-    with patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"), patch(
-        "homeassistant.components.lutron.config_flow.Lutron.guid", "12345678901"
+    with (
+        patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"),
+        patch("homeassistant.components.lutron.config_flow.Lutron.guid", "12345678901"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=MOCK_DATA_STEP,
         )
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_single_instance_allowed(hass: HomeAssistant) -> None:
@@ -132,7 +137,7 @@ async def test_flow_single_instance_allowed(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -148,15 +153,16 @@ async def test_import(
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test import flow."""
-    with patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"), patch(
-        "homeassistant.components.lutron.config_flow.Lutron.guid", "12345678901"
+    with (
+        patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"),
+        patch("homeassistant.components.lutron.config_flow.Lutron.guid", "12345678901"),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_DATA_IMPORT
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == MOCK_DATA_IMPORT
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -181,21 +187,22 @@ async def test_import_flow_failure(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_DATA_IMPORT
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
 
 
 async def test_import_flow_guid_failure(hass: HomeAssistant) -> None:
     """Test handling errors while importing."""
 
-    with patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"), patch(
-        "homeassistant.components.lutron.config_flow.Lutron.guid", "123"
+    with (
+        patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"),
+        patch("homeassistant.components.lutron.config_flow.Lutron.guid", "123"),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_DATA_IMPORT
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -211,5 +218,5 @@ async def test_import_already_configured(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_DATA_IMPORT
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"

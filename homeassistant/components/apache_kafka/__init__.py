@@ -1,4 +1,5 @@
 """Support for Apache Kafka."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -18,11 +19,10 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA, EntityFilter
-from homeassistant.helpers.event import EventStateChangedData
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import ssl as ssl_util
 
 DOMAIN = "apache_kafka"
@@ -116,7 +116,7 @@ class KafkaManager:
         )
         self._topic = topic
 
-    def _encode_event(self, event: EventType[EventStateChangedData]) -> bytes | None:
+    def _encode_event(self, event: Event[EventStateChangedData]) -> bytes | None:
         """Translate events into a binary JSON payload."""
         state = event.data["new_state"]
         if (
@@ -132,14 +132,14 @@ class KafkaManager:
 
     async def start(self) -> None:
         """Start the Kafka manager."""
-        self._hass.bus.async_listen(EVENT_STATE_CHANGED, self.write)  # type: ignore[arg-type]
+        self._hass.bus.async_listen(EVENT_STATE_CHANGED, self.write)
         await self._producer.start()
 
     async def shutdown(self, _: Event) -> None:
         """Shut the manager down."""
         await self._producer.stop()
 
-    async def write(self, event: EventType[EventStateChangedData]) -> None:
+    async def write(self, event: Event[EventStateChangedData]) -> None:
         """Write a binary payload to Kafka."""
         payload = self._encode_event(event)
 

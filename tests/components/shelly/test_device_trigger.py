@@ -1,4 +1,5 @@
 """The tests for Shelly device triggers."""
+
 from unittest.mock import Mock
 
 from aioshelly.const import MODEL_BUTTON1
@@ -95,11 +96,11 @@ async def test_get_triggers_rpc_device(
             CONF_PLATFORM: "device",
             CONF_DEVICE_ID: device.id,
             CONF_DOMAIN: DOMAIN,
-            CONF_TYPE: type,
+            CONF_TYPE: trigger_type,
             CONF_SUBTYPE: "button1",
             "metadata": {},
         }
-        for type in [
+        for trigger_type in [
             "btn_down",
             "btn_up",
             "single_push",
@@ -129,11 +130,11 @@ async def test_get_triggers_button(
             CONF_PLATFORM: "device",
             CONF_DEVICE_ID: device.id,
             CONF_DOMAIN: DOMAIN,
-            CONF_TYPE: type,
+            CONF_TYPE: trigger_type,
             CONF_SUBTYPE: "button",
             "metadata": {},
         }
-        for type in ["single", "double", "triple", "long"]
+        for trigger_type in ["single", "double", "triple", "long"]
     ]
 
     triggers = await async_get_device_automations(

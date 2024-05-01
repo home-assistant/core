@@ -1,4 +1,5 @@
 """Support for Blink Motion detection switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -74,7 +75,8 @@ class BlinkSwitch(CoordinatorEntity[BlinkUpdateCoordinator], SwitchEntity):
 
         except TimeoutError as er:
             raise HomeAssistantError(
-                "Blink failed to arm camera motion detection"
+                translation_domain=DOMAIN,
+                translation_key="failed_arm_motion",
             ) from er
 
         await self.coordinator.async_refresh()
@@ -86,7 +88,8 @@ class BlinkSwitch(CoordinatorEntity[BlinkUpdateCoordinator], SwitchEntity):
 
         except TimeoutError as er:
             raise HomeAssistantError(
-                "Blink failed to dis-arm camera motion detection"
+                translation_domain=DOMAIN,
+                translation_key="failed_disarm_motion",
             ) from er
 
         await self.coordinator.async_refresh()

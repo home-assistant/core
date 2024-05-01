@@ -6,7 +6,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any, Generic
+from typing import Any
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
@@ -82,21 +82,21 @@ WIRELESS_DISCONNECTION = (
 @callback
 def async_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
-    if obj_id in hub.option_supported_clients:
+    if obj_id in hub.config.option_supported_clients:
         return True
 
-    if not hub.option_track_clients:
+    if not hub.config.option_track_clients:
         return False
 
     client = hub.api.clients[obj_id]
-    if client.mac not in hub.wireless_clients:
-        if not hub.option_track_wired_clients:
+    if client.mac not in hub.entity_loader.wireless_clients:
+        if not hub.config.option_track_wired_clients:
             return False
 
     elif (
         client.essid
-        and hub.option_ssid_filter
-        and client.essid not in hub.option_ssid_filter
+        and hub.config.option_ssid_filter
+        and client.essid not in hub.config.option_ssid_filter
     ):
         return False
 
@@ -108,21 +108,21 @@ def async_client_is_connected_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if device object is disabled."""
     client = hub.api.clients[obj_id]
 
-    if hub.wireless_clients.is_wireless(client) and client.is_wired:
-        if not hub.option_ignore_wired_bug:
+    if hub.entity_loader.wireless_clients.is_wireless(client) and client.is_wired:
+        if not hub.config.option_ignore_wired_bug:
             return False  # Wired bug in action
 
     if (
         not client.is_wired
         and client.essid
-        and hub.option_ssid_filter
-        and client.essid not in hub.option_ssid_filter
+        and hub.config.option_ssid_filter
+        and client.essid not in hub.config.option_ssid_filter
     ):
         return False
 
     if (
         dt_util.utcnow() - dt_util.utc_from_timestamp(client.last_seen or 0)
-        > hub.option_detection_time
+        > hub.config.option_detection_time
     ):
         return False
 
@@ -136,9 +136,9 @@ def async_device_heartbeat_timedelta_fn(hub: UnifiHub, obj_id: str) -> timedelta
     return timedelta(seconds=device.next_interval + 60)
 
 
-@dataclass(frozen=True)
-class UnifiEntityTrackerDescriptionMixin(Generic[HandlerT, ApiItemT]):
-    """Device tracker local functions."""
+@dataclass(frozen=True, kw_only=True)
+class UnifiTrackerEntityDescription(UnifiEntityDescription[HandlerT, ApiItemT]):
+    """Class describing UniFi device tracker entity."""
 
     heartbeat_timedelta_fn: Callable[[UnifiHub, str], timedelta]
     ip_address_fn: Callable[[aiounifi.Controller, str], str | None]
@@ -146,21 +146,11 @@ class UnifiEntityTrackerDescriptionMixin(Generic[HandlerT, ApiItemT]):
     hostname_fn: Callable[[aiounifi.Controller, str], str | None]
 
 
-@dataclass(frozen=True)
-class UnifiTrackerEntityDescription(
-    UnifiEntityDescription[HandlerT, ApiItemT],
-    UnifiEntityTrackerDescriptionMixin[HandlerT, ApiItemT],
-):
-    """Class describing UniFi device tracker entity."""
-
-
 ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
     UnifiTrackerEntityDescription[Clients, Client](
         key="Client device scanner",
-        has_entity_name=True,
         allowed_fn=async_client_allowed_fn,
         api_handler_fn=lambda api: api.clients,
-        available_fn=lambda hub, obj_id: hub.available,
         device_info_fn=lambda api, obj_id: None,
         event_is_on=(WIRED_CONNECTION + WIRELESS_CONNECTION),
         event_to_subscribe=(
@@ -169,31 +159,24 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
             + WIRELESS_CONNECTION
             + WIRELESS_DISCONNECTION
         ),
-        heartbeat_timedelta_fn=lambda hub, _: hub.option_detection_time,
+        heartbeat_timedelta_fn=lambda hub, _: hub.config.option_detection_time,
         is_connected_fn=async_client_is_connected_fn,
         name_fn=lambda client: client.name or client.hostname,
         object_fn=lambda api, obj_id: api.clients[obj_id],
-        should_poll=False,
-        supported_fn=lambda hub, obj_id: True,
         unique_id_fn=lambda hub, obj_id: f"{hub.site}-{obj_id}",
         ip_address_fn=lambda api, obj_id: api.clients[obj_id].ip,
         hostname_fn=lambda api, obj_id: api.clients[obj_id].hostname,
     ),
     UnifiTrackerEntityDescription[Devices, Device](
         key="Device scanner",
-        has_entity_name=True,
-        allowed_fn=lambda hub, obj_id: hub.option_track_devices,
+        allowed_fn=lambda hub, obj_id: hub.config.option_track_devices,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,
         device_info_fn=lambda api, obj_id: None,
-        event_is_on=None,
-        event_to_subscribe=None,
         heartbeat_timedelta_fn=async_device_heartbeat_timedelta_fn,
-        is_connected_fn=lambda ctrlr, obj_id: ctrlr.api.devices[obj_id].state == 1,
+        is_connected_fn=lambda hub, obj_id: hub.api.devices[obj_id].state == 1,
         name_fn=lambda device: device.name or device.model,
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        should_poll=False,
-        supported_fn=lambda hub, obj_id: True,
         unique_id_fn=lambda hub, obj_id: obj_id,
         ip_address_fn=lambda api, obj_id: api.devices[obj_id].ip,
         hostname_fn=lambda api, obj_id: None,
@@ -232,8 +215,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker for UniFi Network integration."""
     async_update_unique_id(hass, config_entry)
-    UnifiHub.register_platform(
-        hass, config_entry, async_add_entities, UnifiScannerEntity, ENTITY_DESCRIPTIONS
+    UnifiHub.get_hub(hass, config_entry).entity_loader.register_platform(
+        async_add_entities, UnifiScannerEntity, ENTITY_DESCRIPTIONS
     )
 
 
@@ -257,7 +240,7 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
         self._ignore_events = False
         self._is_connected = description.is_connected_fn(self.hub, self._obj_id)
         if self.is_connected:
-            self.hub.async_heartbeat(
+            self.hub.update_heartbeat(
                 self.unique_id,
                 dt_util.utcnow()
                 + description.heartbeat_timedelta_fn(self.hub, self._obj_id),
@@ -318,12 +301,12 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
             # From unifi.entity.async_signal_reachable_callback
             # Controller connection state has changed and entity is unavailable
             # Cancel heartbeat
-            self.hub.async_heartbeat(self.unique_id)
+            self.hub.remove_heartbeat(self.unique_id)
             return
 
         if is_connected := description.is_connected_fn(self.hub, self._obj_id):
             self._is_connected = is_connected
-            self.hub.async_heartbeat(
+            self.hub.update_heartbeat(
                 self.unique_id,
                 dt_util.utcnow()
                 + description.heartbeat_timedelta_fn(self.hub, self._obj_id),
@@ -336,12 +319,12 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
             return
 
         if event.key in self._event_is_on:
-            self.hub.async_heartbeat(self.unique_id)
+            self.hub.remove_heartbeat(self.unique_id)
             self._is_connected = True
             self.async_write_ha_state()
             return
 
-        self.hub.async_heartbeat(
+        self.hub.update_heartbeat(
             self.unique_id,
             dt_util.utcnow()
             + self.entity_description.heartbeat_timedelta_fn(self.hub, self._obj_id),
@@ -361,7 +344,7 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
         await super().async_will_remove_from_hass()
-        self.hub.async_heartbeat(self.unique_id)
+        self.hub.remove_heartbeat(self.unique_id)
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
@@ -376,6 +359,4 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
         if self.is_connected:
             attributes_to_check = CLIENT_CONNECTED_ALL_ATTRIBUTES
 
-        attributes = {k: raw[k] for k in attributes_to_check if k in raw}
-
-        return attributes
+        return {k: raw[k] for k in attributes_to_check if k in raw}

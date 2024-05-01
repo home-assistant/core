@@ -1,4 +1,5 @@
 """Helpers for working with enums."""
+
 from collections.abc import Callable
 import contextlib
 from enum import Enum

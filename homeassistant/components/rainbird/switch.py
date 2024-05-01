@@ -1,4 +1,5 @@
 """Support for Rain Bird Irrigation system LNK Wi-Fi Module."""
+
 from __future__ import annotations
 
 import logging
@@ -103,6 +104,10 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
         except RainbirdApiException as err:
             raise HomeAssistantError("Rain Bird device failure") from err
 
+        # The device reflects the old state for a few moments. Update the
+        # state manually and trigger a refresh after a short debounced delay.
+        self.coordinator.data.active_zones.add(self._zone)
+        self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
@@ -115,6 +120,12 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
             ) from err
         except RainbirdApiException as err:
             raise HomeAssistantError("Rain Bird device failure") from err
+
+        # The device reflects the old state for a few moments. Update the
+        # state manually and trigger a refresh after a short debounced delay.
+        if self.is_on:
+            self.coordinator.data.active_zones.remove(self._zone)
+        self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
     @property

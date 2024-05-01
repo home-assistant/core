@@ -1,4 +1,5 @@
 """The tests for the xiaomi_miio button component."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -32,12 +33,15 @@ async def setup_test(hass: HomeAssistant):
 
     mock_vacuum = MagicMock()
 
-    with patch(
-        "homeassistant.components.xiaomi_miio.get_platforms",
-        return_value=[
-            Platform.BUTTON,
-        ],
-    ), patch("homeassistant.components.xiaomi_miio.RoborockVacuum") as mock_vacuum_cls:
+    with (
+        patch(
+            "homeassistant.components.xiaomi_miio.get_platforms",
+            return_value=[
+                Platform.BUTTON,
+            ],
+        ),
+        patch("homeassistant.components.xiaomi_miio.RoborockVacuum") as mock_vacuum_cls,
+    ):
         mock_vacuum_cls.return_value = mock_vacuum
         yield mock_vacuum
 

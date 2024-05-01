@@ -2,6 +2,7 @@
 
 This is not a test module. These test methods are used by the platform test modules.
 """
+
 import asyncio
 import threading
 
@@ -123,7 +124,7 @@ async def test_async_update_locked_multiple_callbacks(
 async def test_avaliable_after_update(
     hass: HomeAssistant, pywemo_registry, pywemo_device, wemo_entity, domain
 ) -> None:
-    """Test the avaliability when an On call fails and after an update.
+    """Test the availability when an On call fails and after an update.
 
     This test expects that the pywemo_device Mock has been setup to raise an
     ActionException when the SERVICE_TURN_ON method is called and that the

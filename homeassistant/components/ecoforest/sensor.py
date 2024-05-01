@@ -1,4 +1,5 @@
 """Support for Ecoforest sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -33,18 +34,11 @@ STATUS_TYPE = [s.value for s in State]
 ALARM_TYPE = [a.value for a in Alarm] + ["none"]
 
 
-@dataclass(frozen=True)
-class EcoforestRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EcoforestSensorEntityDescription(SensorEntityDescription):
+    """Describes Ecoforest sensor entity."""
 
     value_fn: Callable[[Device], StateType]
-
-
-@dataclass(frozen=True)
-class EcoforestSensorEntityDescription(
-    SensorEntityDescription, EcoforestRequiredKeysMixin
-):
-    """Describes Ecoforest sensor entity."""
 
 
 SENSOR_TYPES: tuple[EcoforestSensorEntityDescription, ...] = (

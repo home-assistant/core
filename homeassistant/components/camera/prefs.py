@@ -1,4 +1,5 @@
 """Preference management for camera component."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -29,6 +30,8 @@ class DynamicStreamSettings:
 class CameraPreferences:
     """Handle camera preferences."""
 
+    _preload_prefs: dict[str, dict[str, bool | Orientation]]
+
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize camera prefs."""
         self._hass = hass
@@ -40,6 +43,10 @@ class CameraPreferences:
         self._dynamic_stream_settings_by_entity_id: dict[
             str, DynamicStreamSettings
         ] = {}
+
+    async def async_load(self) -> None:
+        """Initialize the camera preferences."""
+        self._preload_prefs = await self._store.async_load() or {}
 
     async def async_update(
         self,
@@ -63,9 +70,8 @@ class CameraPreferences:
         if preload_stream is not UNDEFINED:
             if dynamic_stream_settings:
                 dynamic_stream_settings.preload_stream = preload_stream
-            preload_prefs = await self._store.async_load() or {}
-            preload_prefs[entity_id] = {PREF_PRELOAD_STREAM: preload_stream}
-            await self._store.async_save(preload_prefs)
+            self._preload_prefs[entity_id] = {PREF_PRELOAD_STREAM: preload_stream}
+            await self._store.async_save(self._preload_prefs)
 
         if orientation is not UNDEFINED:
             if (registry := er.async_get(self._hass)).async_get(entity_id):
@@ -91,10 +97,10 @@ class CameraPreferences:
         # Get orientation setting from entity registry
         reg_entry = er.async_get(self._hass).async_get(entity_id)
         er_prefs: Mapping = reg_entry.options.get(DOMAIN, {}) if reg_entry else {}
-        preload_prefs = await self._store.async_load() or {}
         settings = DynamicStreamSettings(
             preload_stream=cast(
-                bool, preload_prefs.get(entity_id, {}).get(PREF_PRELOAD_STREAM, False)
+                bool,
+                self._preload_prefs.get(entity_id, {}).get(PREF_PRELOAD_STREAM, False),
             ),
             orientation=er_prefs.get(PREF_ORIENTATION, Orientation.NO_TRANSFORM),
         )

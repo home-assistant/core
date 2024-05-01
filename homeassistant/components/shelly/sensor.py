@@ -1,4 +1,5 @@
 """Sensor for Shelly."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -58,17 +59,17 @@ from .utils import (
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class BlockSensorDescription(BlockEntityDescription, SensorEntityDescription):
     """Class to describe a BLOCK sensor."""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class RpcSensorDescription(RpcEntityDescription, SensorEntityDescription):
     """Class to describe a RPC sensor."""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class RestSensorDescription(RestEntityDescription, SensorEntityDescription):
     """Class to describe a REST sensor."""
 
@@ -933,7 +934,7 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "battery": RpcSensorDescription(
-        key="devicepower:0",
+        key="devicepower",
         sub_key="battery",
         name="Battery",
         native_unit_of_measurement=PERCENTAGE,
@@ -941,6 +942,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        removal_condition=lambda _config, status, key: (status[key]["battery"] is None),
     ),
     "voltmeter": RpcSensorDescription(
         key="voltmeter",

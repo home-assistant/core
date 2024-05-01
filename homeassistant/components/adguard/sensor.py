@@ -1,4 +1,5 @@
 """Support for AdGuard Home sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -6,16 +7,15 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
-from adguardhome import AdGuardHome, AdGuardHomeConnectionError
+from adguardhome import AdGuardHome
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_ADGUARD_CLIENT, DATA_ADGUARD_VERSION, DOMAIN
+from . import AdGuardConfigEntry, AdGuardData
+from .const import DOMAIN
 from .entity import AdGuardHomeEntity
 
 SCAN_INTERVAL = timedelta(seconds=300)
@@ -84,21 +84,14 @@ SENSORS: tuple[AdGuardHomeEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AdGuardConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AdGuard Home sensor based on a config entry."""
-    adguard = hass.data[DOMAIN][entry.entry_id][DATA_ADGUARD_CLIENT]
-
-    try:
-        version = await adguard.version()
-    except AdGuardHomeConnectionError as exception:
-        raise PlatformNotReady from exception
-
-    hass.data[DOMAIN][entry.entry_id][DATA_ADGUARD_VERSION] = version
+    data = entry.runtime_data
 
     async_add_entities(
-        [AdGuardHomeSensor(adguard, entry, description) for description in SENSORS],
+        [AdGuardHomeSensor(data, entry, description) for description in SENSORS],
         True,
     )
 
@@ -110,18 +103,18 @@ class AdGuardHomeSensor(AdGuardHomeEntity, SensorEntity):
 
     def __init__(
         self,
-        adguard: AdGuardHome,
-        entry: ConfigEntry,
+        data: AdGuardData,
+        entry: AdGuardConfigEntry,
         description: AdGuardHomeEntityDescription,
     ) -> None:
         """Initialize AdGuard Home sensor."""
-        super().__init__(adguard, entry)
+        super().__init__(data, entry)
         self.entity_description = description
         self._attr_unique_id = "_".join(
             [
                 DOMAIN,
-                adguard.host,
-                str(adguard.port),
+                self.adguard.host,
+                str(self.adguard.port),
                 "sensor",
                 description.key,
             ]

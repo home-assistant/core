@@ -26,18 +26,12 @@ from .coordinator import BMWDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class BMWRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class BMWNumberEntityDescription(NumberEntityDescription):
+    """Describes BMW number entity."""
 
     value_fn: Callable[[MyBMWVehicle], float | int | None]
     remote_service: Callable[[MyBMWVehicle, float | int], Coroutine[Any, Any, Any]]
-
-
-@dataclass(frozen=True)
-class BMWNumberEntityDescription(NumberEntityDescription, BMWRequiredKeysMixin):
-    """Describes BMW number entity."""
-
     is_available: Callable[[MyBMWVehicle], bool] = lambda _: False
     dynamic_options: Callable[[MyBMWVehicle], list[str]] | None = None
 
@@ -56,7 +50,6 @@ NUMBER_TYPES: list[BMWNumberEntityDescription] = [
         remote_service=lambda v, o: v.remote_services.trigger_charging_settings_update(
             target_soc=int(o)
         ),
-        icon="mdi:battery-charging-medium",
     ),
 ]
 

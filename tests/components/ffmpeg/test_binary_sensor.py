@@ -1,4 +1,5 @@
 """The tests for Home Assistant ffmpeg binary sensor."""
+
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START
@@ -64,7 +65,7 @@ async def test_noise_setup_component_start_callback(mock_ffmpeg, hass: HomeAssis
     entity = hass.states.get("binary_sensor.ffmpeg_noise")
     assert entity.state == "off"
 
-    hass.async_add_job(mock_ffmpeg.call_args[0][1], True)
+    mock_ffmpeg.call_args[0][1](True)
     await hass.async_block_till_done()
 
     entity = hass.states.get("binary_sensor.ffmpeg_noise")
@@ -120,7 +121,7 @@ async def test_motion_setup_component_start_callback(mock_ffmpeg, hass: HomeAssi
     entity = hass.states.get("binary_sensor.ffmpeg_motion")
     assert entity.state == "off"
 
-    hass.async_add_job(mock_ffmpeg.call_args[0][1], True)
+    mock_ffmpeg.call_args[0][1](True)
     await hass.async_block_till_done()
 
     entity = hass.states.get("binary_sensor.ffmpeg_motion")

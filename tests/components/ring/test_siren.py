@@ -1,8 +1,15 @@
 """The tests for the Ring button platform."""
-import requests_mock
 
+from unittest.mock import patch
+
+import pytest
+import requests_mock
+import ring_doorbell
+
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
@@ -144,3 +151,46 @@ async def test_motion_chime_can_be_played(
 
     state = hass.states.get("siren.downstairs_siren")
     assert state.state == "unknown"
+
+
+@pytest.mark.parametrize(
+    ("exception_type", "reauth_expected"),
+    [
+        (ring_doorbell.AuthenticationError, True),
+        (ring_doorbell.RingTimeout, False),
+        (ring_doorbell.RingError, False),
+    ],
+    ids=["Authentication", "Timeout", "Other"],
+)
+async def test_siren_errors_when_turned_on(
+    hass: HomeAssistant,
+    requests_mock: requests_mock.Mocker,
+    exception_type,
+    reauth_expected,
+) -> None:
+    """Tests the siren turns on correctly."""
+    await setup_platform(hass, Platform.SIREN)
+    config_entry = hass.config_entries.async_entries("ring")[0]
+
+    assert not any(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+    with patch.object(
+        ring_doorbell.RingChime, "test_sound", side_effect=exception_type
+    ) as mock_siren:
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                "siren",
+                "turn_on",
+                {"entity_id": "siren.downstairs_siren", "tone": "motion"},
+                blocking=True,
+            )
+        await hass.async_block_till_done()
+    assert mock_siren.call_count == 1
+    assert (
+        any(
+            flow
+            for flow in config_entry.async_get_active_flows(hass, {SOURCE_REAUTH})
+            if flow["handler"] == "ring"
+        )
+        == reauth_expected
+    )

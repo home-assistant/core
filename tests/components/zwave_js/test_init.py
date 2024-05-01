@@ -1,4 +1,5 @@
 """Test the Z-Wave JS init module."""
+
 import asyncio
 from copy import deepcopy
 import logging
@@ -110,11 +111,14 @@ async def test_noop_statistics(hass: HomeAssistant, client) -> None:
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
 
-    with patch(
-        "zwave_js_server.model.driver.Driver.async_enable_statistics"
-    ) as mock_cmd1, patch(
-        "zwave_js_server.model.driver.Driver.async_disable_statistics"
-    ) as mock_cmd2:
+    with (
+        patch(
+            "zwave_js_server.model.driver.Driver.async_enable_statistics"
+        ) as mock_cmd1,
+        patch(
+            "zwave_js_server.model.driver.Driver.async_disable_statistics"
+        ) as mock_cmd2,
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert not mock_cmd1.called
@@ -669,7 +673,7 @@ async def test_addon_options_changed(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.data["usb_path"] == new_device
     assert entry.data["s0_legacy_key"] == new_s0_legacy_key
     assert entry.data["s2_access_control_key"] == new_s2_access_control_key
@@ -1361,40 +1365,18 @@ async def test_replace_different_node(
     driver = client.driver
     client.driver = None
 
-    await ws_client.send_json(
-        {
-            "id": 1,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": integration.entry_id,
-            "device_id": hank_device.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(hank_device.id, integration.entry_id)
     assert not response["success"]
 
     client.driver = driver
 
     # Attempting to remove the hank device should pass, but removing the multisensor should not
-    await ws_client.send_json(
-        {
-            "id": 2,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": integration.entry_id,
-            "device_id": hank_device.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(hank_device.id, integration.entry_id)
     assert response["success"]
 
-    await ws_client.send_json(
-        {
-            "id": 3,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": integration.entry_id,
-            "device_id": multisensor_6_device.id,
-        }
+    response = await ws_client.remove_device(
+        multisensor_6_device.id, integration.entry_id
     )
-    response = await ws_client.receive_json()
     assert not response["success"]
 
 

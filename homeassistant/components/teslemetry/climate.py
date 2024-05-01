@@ -1,7 +1,10 @@
 """Climate platform for Teslemetry integration."""
+
 from __future__ import annotations
 
 from typing import Any
+
+from tesla_fleet_api.const import Scope
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -16,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN, TeslemetryClimateSide
 from .context import handle_command
 from .entity import TeslemetryVehicleEntity
+from .models import TeslemetryVehicleData
 
 
 async def async_setup_entry(
@@ -25,8 +29,8 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        TeslemetryClimateEntity(vehicle, TeslemetryClimateSide.DRIVER)
-        for vehicle in data
+        TeslemetryClimateEntity(vehicle, TeslemetryClimateSide.DRIVER, data.scopes)
+        for vehicle in data.vehicles
     )
 
 
@@ -46,6 +50,22 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
     )
     _attr_preset_modes = ["off", "keep", "dog", "camp"]
     _enable_turn_on_off_backwards_compatibility = False
+
+    def __init__(
+        self,
+        data: TeslemetryVehicleData,
+        side: TeslemetryClimateSide,
+        scopes: Scope,
+    ) -> None:
+        """Initialize the climate."""
+        self.scoped = Scope.VEHICLE_CMDS in scopes
+        if not self.scoped:
+            self._attr_supported_features = ClimateEntityFeature(0)
+
+        super().__init__(
+            data,
+            side,
+        )
 
     @property
     def hvac_mode(self) -> HVACMode | None:
@@ -81,6 +101,7 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
 
     async def async_turn_on(self) -> None:
         """Set the climate state to on."""
+        self.raise_for_scope()
         with handle_command():
             await self.wake_up_if_asleep()
             await self.api.auto_conditioning_start()
@@ -88,6 +109,7 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
 
     async def async_turn_off(self) -> None:
         """Set the climate state to off."""
+        self.raise_for_scope()
         with handle_command():
             await self.wake_up_if_asleep()
             await self.api.auto_conditioning_stop()

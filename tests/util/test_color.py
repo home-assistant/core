@@ -1,4 +1,5 @@
 """Test Home Assistant color util methods."""
+
 import math
 
 import pytest

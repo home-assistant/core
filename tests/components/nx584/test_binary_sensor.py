@@ -1,4 +1,5 @@
 """The tests for the nx584 sensor platform."""
+
 from unittest import mock
 
 from nx584 import client as nx584_client
@@ -248,8 +249,8 @@ def test_nx584_watcher_run_retries_failures(mock_sleep) -> None:
         """Fake runner."""
         if empty_me:
             empty_me.pop()
-            raise requests.exceptions.ConnectionError()
-        raise StopMe()
+            raise requests.exceptions.ConnectionError
+        raise StopMe
 
     watcher = nx584.NX584Watcher(None, {})
     with mock.patch.object(watcher, "_run") as mock_inner:

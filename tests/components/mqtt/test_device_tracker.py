@@ -1,13 +1,13 @@
 """The tests for the MQTT device_tracker platform."""
+
 from datetime import UTC, datetime
-from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import device_tracker, mqtt
 from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -34,13 +34,6 @@ DEFAULT_CONFIG = {
         }
     }
 }
-
-
-@pytest.fixture(autouse=True)
-def device_tracker_platform_only():
-    """Only setup the device_tracker platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.DEVICE_TRACKER]):
-        yield
 
 
 async def test_discover_device_tracker(
@@ -281,15 +274,9 @@ async def test_cleanup_device_tracker(
 
     # Remove MQTT from the device
     mqtt_config_entry = hass.config_entries.async_entries(MQTT_DOMAIN)[0]
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": mqtt_config_entry.entry_id,
-            "device_id": device_entry.id,
-        }
+    response = await ws_client.remove_device(
+        device_entry.id, mqtt_config_entry.entry_id
     )
-    response = await ws_client.receive_json()
     assert response["success"]
     await hass.async_block_till_done()
     await hass.async_block_till_done()

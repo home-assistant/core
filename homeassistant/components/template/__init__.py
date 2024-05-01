@@ -1,4 +1,5 @@
 """The template component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -108,7 +109,8 @@ async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
                             "entities": conf_section[platform_domain],
                         },
                         hass_config,
-                    )
+                    ),
+                    eager_start=True,
                 )
 
     if coordinator_tasks:

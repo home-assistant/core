@@ -1,4 +1,5 @@
 """Test config flow."""
+
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -124,12 +125,15 @@ async def test_hassio_discovery_startup_done(
         json={"result": "ok", "data": {"name": "Mosquitto Test"}},
     )
 
-    with patch(
-        "homeassistant.components.hassio.HassIO.update_hass_api",
-        return_value={"result": "ok"},
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_info",
-        Mock(side_effect=HassioAPIError()),
+    with (
+        patch(
+            "homeassistant.components.hassio.HassIO.update_hass_api",
+            return_value={"result": "ok"},
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_info",
+            Mock(side_effect=HassioAPIError()),
+        ),
     ):
         await hass.async_start()
         await async_setup_component(hass, "hassio", {})
