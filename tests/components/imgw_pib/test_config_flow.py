@@ -31,6 +31,7 @@ async def test_create_entry(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "River Name (Station Name)"
     assert result["data"] == {CONF_STATION_ID: "123"}
+    assert result["context"]["unique_id"] == "123"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -91,4 +92,5 @@ async def test_form_with_exceptions(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "River Name (Station Name)"
     assert result["data"] == {CONF_STATION_ID: "123"}
+    assert result["context"]["unique_id"] == "123"
     assert len(mock_setup_entry.mock_calls) == 1
