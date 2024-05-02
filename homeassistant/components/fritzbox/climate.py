@@ -12,7 +12,6 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_TEMPERATURE,
@@ -23,7 +22,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxDeviceEntity
-from .common import get_coordinator
 from .const import (
     ATTR_STATE_BATTERY_LOW,
     ATTR_STATE_HOLIDAY_MODE,
@@ -31,6 +29,7 @@ from .const import (
     ATTR_STATE_WINDOW_OPEN,
     LOGGER,
 )
+from .coordinator import FritzboxConfigEntry
 from .model import ClimateExtraAttributes
 
 OPERATION_LIST = [HVACMode.HEAT, HVACMode.OFF]
@@ -48,10 +47,12 @@ OFF_REPORT_SET_TEMPERATURE = 0.0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FritzboxConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the FRITZ!SmartHome thermostat from ConfigEntry."""
-    coordinator = get_coordinator(hass, entry.entry_id)
+    coordinator = entry.runtime_data
 
     @callback
     def _add_entities(devices: set[str] | None = None) -> None:

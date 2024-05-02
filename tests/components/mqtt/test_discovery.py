@@ -843,15 +843,9 @@ async def test_cleanup_device(
 
     # Remove MQTT from the device
     mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": mqtt_config_entry.entry_id,
-            "device_id": device_entry.id,
-        }
+    response = await ws_client.remove_device(
+        device_entry.id, mqtt_config_entry.entry_id
     )
-    response = await ws_client.receive_json()
     assert response["success"]
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -985,15 +979,9 @@ async def test_cleanup_device_multiple_config_entries(
 
     # Remove MQTT from the device
     mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": mqtt_config_entry.entry_id,
-            "device_id": device_entry.id,
-        }
+    response = await ws_client.remove_device(
+        device_entry.id, mqtt_config_entry.entry_id
     )
-    response = await ws_client.receive_json()
     assert response["success"]
 
     await hass.async_block_till_done()
@@ -1487,6 +1475,7 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
         await async_start(hass, "homeassistant", entry)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     assert ("comp/discovery/#", 0) in help_all_subscribe_calls(mqtt_client_mock)
     assert not mqtt_client_mock.unsubscribe.called
@@ -1535,6 +1524,7 @@ async def test_mqtt_discovery_unsubscribe_once(
         return_value={"comp": ["comp/discovery/#"]},
     ):
         await async_start(hass, "homeassistant", entry)
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 

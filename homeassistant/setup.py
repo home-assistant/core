@@ -29,7 +29,7 @@ from .core import (
     callback,
 )
 from .exceptions import DependencyError, HomeAssistantError
-from .helpers import translation
+from .helpers import singleton, translation
 from .helpers.issue_registry import IssueSeverity, async_create_issue
 from .helpers.typing import ConfigType
 from .util.async_ import create_eager_task
@@ -449,7 +449,7 @@ async def _async_setup_component(
         await asyncio.gather(
             *(
                 create_eager_task(
-                    entry.async_setup(hass, integration=integration),
+                    entry.async_setup_locked(hass, integration=integration),
                     name=f"config entry setup {entry.title} {entry.domain} {entry.entry_id}",
                 )
                 for entry in entries
@@ -459,7 +459,9 @@ async def _async_setup_component(
     # Cleanup
     hass.data[DATA_SETUP].pop(domain, None)
 
-    hass.bus.async_fire(EVENT_COMPONENT_LOADED, EventComponentLoaded(component=domain))
+    hass.bus.async_fire_internal(
+        EVENT_COMPONENT_LOADED, EventComponentLoaded(component=domain)
+    )
 
     return True
 
@@ -598,7 +600,7 @@ def _async_when_setup(
             _LOGGER.exception("Error handling when_setup callback for %s", component)
 
     if component in hass.config.components:
-        hass.async_create_task(
+        hass.async_create_task_internal(
             when_setup(), f"when setup {component}", eager_start=True
         )
         return
@@ -669,13 +671,12 @@ class SetupPhases(StrEnum):
     """Wait time for the packages to import."""
 
 
+@singleton.singleton(DATA_SETUP_STARTED)
 def _setup_started(
     hass: core.HomeAssistant,
 ) -> dict[tuple[str, str | None], float]:
     """Return the setup started dict."""
-    if DATA_SETUP_STARTED not in hass.data:
-        hass.data[DATA_SETUP_STARTED] = {}
-    return hass.data[DATA_SETUP_STARTED]  # type: ignore[no-any-return]
+    return {}
 
 
 @contextlib.contextmanager
@@ -715,15 +716,12 @@ def async_pause_setup(
         )
 
 
+@singleton.singleton(DATA_SETUP_TIME)
 def _setup_times(
     hass: core.HomeAssistant,
 ) -> defaultdict[str, defaultdict[str | None, defaultdict[SetupPhases, float]]]:
     """Return the setup timings default dict."""
-    if DATA_SETUP_TIME not in hass.data:
-        hass.data[DATA_SETUP_TIME] = defaultdict(
-            lambda: defaultdict(lambda: defaultdict(float))
-        )
-    return hass.data[DATA_SETUP_TIME]  # type: ignore[no-any-return]
+    return defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
 
 
 @contextlib.contextmanager
