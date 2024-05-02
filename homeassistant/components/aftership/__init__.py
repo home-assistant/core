@@ -10,8 +10,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
-
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 AfterShipConfigEntry = ConfigEntry[AfterShip]
@@ -29,7 +27,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AfterShipConfigEntry) ->
         raise ConfigEntryNotReady from err
 
     entry.runtime_data = aftership
-    hass.data[DOMAIN][entry.entry_id] = aftership
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
