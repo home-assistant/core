@@ -23,7 +23,6 @@ from .common import (
 )
 
 from tests.common import MockEntity, MockEntityPlatform
-from tests.typing import RecorderInstanceGenerator
 
 
 def _count_entity_id_in_states_meta(
@@ -38,8 +37,13 @@ def _count_entity_id_in_states_meta(
     )
 
 
+@pytest.fixture(autouse=True)
+def enable_recorder(recorder_mock: Recorder) -> recorder.Recorder:
+    """Set up recorder."""
+    return recorder_mock
+
+
 async def test_rename_entity_without_collision(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
@@ -91,7 +95,6 @@ async def test_rename_entity_without_collision(
 
 
 async def test_rename_entity_on_mocked_platform(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
@@ -102,7 +105,7 @@ async def test_rename_entity_on_mocked_platform(
     sure that we do not record the entity as removed in the database
     when we rename it.
     """
-    instance = await async_setup_recorder_instance(hass)
+    instance = recorder.get_instance(hass)
     start = dt_util.utcnow()
 
     reg_entry = entity_registry.async_get_or_create(
@@ -187,7 +190,6 @@ async def test_rename_entity_on_mocked_platform(
 
 
 async def test_rename_entity_collision(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
@@ -253,7 +255,6 @@ async def test_rename_entity_collision(
 
 
 async def test_rename_entity_collision_without_states_meta_safeguard(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
