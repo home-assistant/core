@@ -231,11 +231,11 @@ class AuthStore:
     @callback
     def async_remove_refresh_token(self, refresh_token: models.RefreshToken) -> None:
         """Remove a refresh token."""
-        for user in self._users.values():
-            if user.refresh_tokens.pop(refresh_token.id, None):
-                self._token_id_to_user_id.pop(refresh_token.id)
-                self._async_schedule_save()
-                break
+        refresh_token_id = refresh_token.id
+        if user_id := self._token_id_to_user_id.get(refresh_token_id):
+            del self._users[user_id].refresh_tokens[refresh_token_id]
+            del self._token_id_to_user_id[refresh_token_id]
+            self._async_schedule_save()
 
     @callback
     def async_get_refresh_token(self, token_id: str) -> models.RefreshToken | None:
