@@ -14,9 +14,8 @@ from tests.typing import RecorderInstanceGenerator
 @pytest.fixture
 async def setup_recorder_before_hass(
     async_setup_recorder_instance: RecorderInstanceGenerator,
-) -> RecorderInstanceGenerator | None:
+) -> None:
     """Set up recorder."""
-    return async_setup_recorder_instance
 
 
 @pytest.fixture
