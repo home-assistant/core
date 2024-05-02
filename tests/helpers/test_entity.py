@@ -2594,3 +2594,50 @@ async def test_get_hassjob_type(hass: HomeAssistant) -> None:
     assert ent_1.get_hassjob_type("update") is HassJobType.Executor
     assert ent_1.get_hassjob_type("async_update") is HassJobType.Coroutinefunction
     assert ent_1.get_hassjob_type("update_callback") is HassJobType.Callback
+
+
+async def test_async_write_ha_state_thread_safety(hass: HomeAssistant) -> None:
+    """Test async_write_ha_state thread safety."""
+    hass.config.debug = True
+
+    ent = entity.Entity()
+    ent.entity_id = "test.any"
+    ent.hass = hass
+    ent.async_write_ha_state()
+    assert hass.states.get(ent.entity_id)
+
+    ent2 = entity.Entity()
+    ent2.entity_id = "test.any2"
+    ent2.hass = hass
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls async_write_ha_state from a thread.",
+    ):
+        await hass.async_add_executor_job(ent2.async_write_ha_state)
+    assert not hass.states.get(ent2.entity_id)
+
+
+async def test_async_write_ha_state_thread_safety_custom_component(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_write_ha_state thread safe for custom components."""
+
+    ent = entity.Entity()
+    ent._is_custom_component = True
+    ent.entity_id = "test.any"
+    ent.hass = hass
+    ent.platform = MockEntityPlatform(hass, domain="test")
+    ent.async_write_ha_state()
+    assert hass.states.get(ent.entity_id)
+
+    ent2 = entity.Entity()
+    ent2._is_custom_component = True
+    ent2.entity_id = "test.any2"
+    ent2.hass = hass
+    ent2.platform = MockEntityPlatform(hass, domain="test")
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls async_write_ha_state from a thread.",
+    ):
+        await hass.async_add_executor_job(ent2.async_write_ha_state)
+    assert not hass.states.get(ent2.entity_id)

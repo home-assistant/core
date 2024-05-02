@@ -1,0 +1,79 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'coordinator_data': dict({
+      'test1': dict({
+        'name': 'Test Garage 1',
+        'subdevices': dict({
+          'GDO': dict({
+            'Open_B': 'true',
+            'Open_P': '100',
+          }),
+          'Light': dict({
+            'On_B': 'true',
+            'On_P': '100',
+          }),
+        }),
+      }),
+      'test2': dict({
+        'name': 'Test Garage 2',
+        'subdevices': dict({
+          'GDO': dict({
+            'Open_B': 'false',
+            'Open_P': '0',
+          }),
+          'Light': dict({
+            'On_B': 'false',
+            'On_P': '0',
+          }),
+        }),
+      }),
+      'test3': dict({
+        'name': 'Test Garage 3',
+        'subdevices': dict({
+          'GDO': dict({
+            'Open_B': 'false',
+            'Opening_P': '0',
+          }),
+          'Light': dict({
+            'On_B': 'false',
+            'On_P': '0',
+          }),
+        }),
+      }),
+      'test4': dict({
+        'name': 'Test Garage 4',
+        'subdevices': dict({
+          'GDO': dict({
+            'Open_B': 'true',
+            'Opening_P': '100',
+          }),
+          'Light': dict({
+            'On_B': 'true',
+            'On_P': '100',
+          }),
+        }),
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'device_id': 'test-uuid',
+        'email': '**REDACTED**',
+        'password': '**REDACTED**',
+        'site_id': 'test-site-id',
+      }),
+      'disabled_by': None,
+      'domain': 'linear_garage_door',
+      'entry_id': 'acefdd4b3a4a0911067d1cf51414201e',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Mock Title',
+      'unique_id': None,
+      'version': 1,
+    }),
+  })
+# ---
