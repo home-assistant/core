@@ -153,15 +153,12 @@ class NWSWeather(CoordinatorWeatherEntity):
         self.async_on_remove(partial(self._remove_forecast_listener, "hourly"))
         self.async_on_remove(partial(self._remove_forecast_listener, "twice_daily"))
 
-        if self.forecast_coordinators["twice_daily"] is not None:
-            self.unsub_forecast["twice_daily"] = self.forecast_coordinators[
-                "twice_daily"
-            ].async_add_listener(partial(self._handle_forecast_update, "twice_daily"))
-
-        if self.forecast_coordinators["hourly"] is not None:
-            self.unsub_forecast["hourly"] = self.forecast_coordinators[
-                "hourly"
-            ].async_add_listener(partial(self._handle_forecast_update, "hourly"))
+        for forecast_type in ("twice_daily", "hourly"):
+            if (coordinator := self.forecast_coordinators[forecast_type]) is None:
+                continue
+            self.unsub_forecast[forecast_type] = coordinator.async_add_listener(
+                partial(self._handle_forecast_update, forecast_type)
+            )
 
     @property
     def native_temperature(self) -> float | None:
@@ -290,7 +287,7 @@ class NWSWeather(CoordinatorWeatherEntity):
         Only used by the generic entity update service.
         """
         await self.coordinator.async_request_refresh()
-        if self.forecast_coordinators["twice_daily"] is not None:
-            await self.forecast_coordinators["twice_daily"].async_request_refresh()
-        if self.forecast_coordinators["hourly"] is not None:
-            await self.forecast_coordinators["hourly"].async_request_refresh()
+
+        for forecast_type in ("twice_daily", "hourly"):
+            if (coordinator := self.forecast_coordinators[forecast_type]) is not None:
+                await coordinator.async_request_refresh()
