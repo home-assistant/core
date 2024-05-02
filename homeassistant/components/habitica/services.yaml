@@ -1,11 +1,11 @@
 # Describes the format for Habitica service
 api_call:
   fields:
-    config_entry:
+    name:
       required: true
+      example: "xxxNotAValidNickxxx"
       selector:
-        config_entry:
-          integration: habitica
+        text:
     path:
       required: true
       example: '["tasks", "user", "post"]'
