@@ -1,4 +1,7 @@
-"""Provide the functionality to group entities."""
+"""Provide the functionality to group entities.
+
+Legacy group support will not be extended for new domains.
+"""
 
 from __future__ import annotations
 
@@ -70,7 +73,10 @@ class GroupIntegrationRegistry:
     def on_off_states(
         self, domain: str, on_states: set[str], default_on_state: str, off_state: str
     ) -> None:
-        """Register on and off states for the current domain."""
+        """Register on and off states for the current domain.
+
+        Legacy group support will not be extended for new domains.
+        """
         for on_state in on_states:
             if on_state not in self.on_off_mapping:
                 self.on_off_mapping[on_state] = off_state
