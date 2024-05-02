@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 from typing import Final, TypeVar
@@ -59,12 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        while entry.runtime_data.cleanup_callbacks:
-            entry.runtime_data.cleanup_callbacks.pop()()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(
@@ -82,7 +76,6 @@ class FroniusSolarNet:
     ) -> None:
         """Initialize FroniusSolarNet class."""
         self.hass = hass
-        self.cleanup_callbacks: list[Callable[[], None]] = []
         self.config_entry = entry
         self.coordinator_lock = asyncio.Lock()
         self.fronius = fronius
@@ -152,7 +145,7 @@ class FroniusSolarNet:
         )
 
         # Setup periodic re-scan
-        self.cleanup_callbacks.append(
+        self.config_entry.async_on_unload(
             async_track_time_interval(
                 self.hass,
                 self._init_devices_inverter,
