@@ -87,21 +87,14 @@ def washer_state(washer: WasherDryer) -> str | None:
             if func(washer):
                 return cycle_name
 
-    return MACHINE_STATE.get(machine_state, None)
+    return MACHINE_STATE.get(machine_state)
 
 
-@dataclass(frozen=True)
-class WhirlpoolSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class WhirlpoolSensorEntityDescription(SensorEntityDescription):
+    """Describes Whirlpool Washer sensor entity."""
 
     value_fn: Callable
-
-
-@dataclass(frozen=True)
-class WhirlpoolSensorEntityDescription(
-    SensorEntityDescription, WhirlpoolSensorEntityDescriptionMixin
-):
-    """Describes Whirlpool Washer sensor entity."""
 
 
 SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
@@ -213,7 +206,7 @@ class WasherDryerClass(SensorEntity):
         self._wd.register_attr_callback(self.async_write_ha_state)
 
     async def async_will_remove_from_hass(self) -> None:
-        """Close Whrilpool Appliance sockets before removing."""
+        """Close Whirlpool Appliance sockets before removing."""
         self._wd.unregister_attr_callback(self.async_write_ha_state)
 
     @property

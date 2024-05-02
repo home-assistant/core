@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import datetime
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
@@ -143,8 +143,6 @@ CONFIG_ENTRY_CONFIG_KEYS = [
     CONF_WILL_MESSAGE,
 ]
 
-_T = TypeVar("_T")
-
 REMOVED_OPTIONS = vol.All(
     cv.removed(CONF_BIRTH_MESSAGE),  # Removed in HA Core 2023.4
     cv.removed(CONF_BROKER),  # Removed in HA Core 2023.4
@@ -267,7 +265,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     conf: dict[str, Any]
     mqtt_data: MqttData
 
-    async def _setup_client() -> tuple[MqttData, dict[str, Any]]:
+    async def _setup_client(
+        client_available: asyncio.Future[bool],
+    ) -> tuple[MqttData, dict[str, Any]]:
         """Set up the MQTT client."""
         # Fetch configuration
         conf = dict(entry.data)
@@ -296,7 +296,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.add_update_listener(_async_config_entry_updated)
         )
 
-        await mqtt_data.client.async_connect()
+        await mqtt_data.client.async_connect(client_available)
         return (mqtt_data, conf)
 
     client_available: asyncio.Future[bool]
@@ -305,13 +305,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         client_available = hass.data[DATA_MQTT_AVAILABLE]
 
-    setup_ok: bool = False
-    try:
-        mqtt_data, conf = await _setup_client()
-        setup_ok = True
-    finally:
-        if not client_available.done():
-            client_available.set_result(setup_ok)
+    mqtt_data, conf = await _setup_client(client_available)
 
     async def async_publish_service(call: ServiceCall) -> None:
         """Handle MQTT publish service calls."""
@@ -331,8 +325,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             except vol.Invalid as err:
                 err_str = str(err)
                 raise ServiceValidationError(
-                    f"Unable to publish: topic template '{msg_topic_template}' produced an "
-                    f"invalid topic '{rendered_topic}' after rendering ({err_str})",
                     translation_domain=DOMAIN,
                     translation_key="invalid_publish_topic",
                     translation_placeholders={
@@ -405,7 +397,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
             except ConfigValidationError as ex:
                 raise ServiceValidationError(
-                    str(ex),
                     translation_domain=ex.translation_domain,
                     translation_key=ex.translation_key,
                     translation_placeholders=ex.translation_placeholders,

@@ -94,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         fetch_site, connection, latitude, longitude
     )
     if site is None:
-        raise ConfigEntryNotReady()
+        raise ConfigEntryNotReady
 
     async def async_update_3hourly() -> MetOfficeData:
         return await hass.async_add_executor_job(

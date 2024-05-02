@@ -1449,6 +1449,7 @@ async def test_entity_name(
             DEFAULT_CONFIG,
             (
                 {
+                    "state_class": "total",
                     "availability_topic": "availability-topic",
                     "json_attributes_topic": "json-attributes-topic",
                     "value_template": "{{ value_json.state }}",
@@ -1491,6 +1492,7 @@ async def test_skipped_async_ha_write_state(
             DEFAULT_CONFIG,
             (
                 {
+                    "state_class": "total",
                     "value_template": "{{ value_json.some_var * 1 }}",
                     "last_reset_value_template": "{{ value_json.some_var * 2 }}",
                 },
@@ -1508,5 +1510,64 @@ async def test_value_template_fails(
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
         "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            sensor.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "state_class": "total_increasing",
+                    "last_reset_value_template": "{{ value_json.last_reset }}",
+                },
+            ),
+        ),
+        help_custom_config(
+            sensor.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "state_class": "measurement",
+                    "last_reset_value_template": "{{ value_json.last_reset }}",
+                },
+            ),
+        ),
+        help_custom_config(
+            sensor.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "last_reset_value_template": "{{ value_json.last_reset }}",
+                },
+            ),
+        ),
+    ],
+)
+async def test_value_incorrect_state_class_config(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    hass_config: ConfigType,
+) -> None:
+    """Test a sensor config with incorrect state_class config fails from yaml or discovery."""
+    await mqtt_mock_entry()
+    assert (
+        "The option `last_reset_value_template` cannot be used together with state class"
+        in caplog.text
+    )
+    caplog.clear()
+
+    config_payload = hass_config[mqtt.DOMAIN][sensor.DOMAIN][0]
+    async_fire_mqtt_message(
+        hass, "homeassistant/sensor/bla/config", json.dumps(config_payload)
+    )
+    await hass.async_block_till_done()
+    assert (
+        "The option `last_reset_value_template` cannot be used together with state class"
         in caplog.text
     )

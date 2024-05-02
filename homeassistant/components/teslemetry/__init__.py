@@ -4,6 +4,7 @@ import asyncio
 from typing import Final
 
 from tesla_fleet_api import EnergySpecific, Teslemetry, VehicleSpecific
+from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
     InvalidToken,
     SubscriptionRequired,
@@ -13,10 +14,10 @@ from tesla_fleet_api.exceptions import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 from .coordinator import (
     TeslemetryEnergyDataCoordinator,
     TeslemetryVehicleDataCoordinator,
@@ -37,13 +38,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         access_token=access_token,
     )
     try:
+        scopes = (await teslemetry.metadata())["scopes"]
         products = (await teslemetry.products())["response"]
-    except InvalidToken:
-        LOGGER.error("Access token is invalid, unable to connect to Teslemetry")
-        return False
-    except SubscriptionRequired:
-        LOGGER.error("Subscription required, unable to connect to Telemetry")
-        return False
+    except InvalidToken as e:
+        raise ConfigEntryAuthFailed from e
+    except SubscriptionRequired as e:
+        raise ConfigEntryAuthFailed from e
     except TeslaFleetError as e:
         raise ConfigEntryNotReady from e
 
@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     vehicles: list[TeslemetryVehicleData] = []
     energysites: list[TeslemetryEnergyData] = []
     for product in products:
-        if "vin" in product:
+        if "vin" in product and Scope.VEHICLE_DEVICE_DATA in scopes:
             vin = product["vin"]
             api = VehicleSpecific(teslemetry.vehicle, vin)
             coordinator = TeslemetryVehicleDataCoordinator(hass, api)
@@ -62,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     vin=vin,
                 )
             )
-        elif "energy_site_id" in product:
+        elif "energy_site_id" in product and Scope.ENERGY_DEVICE_DATA in scopes:
             site_id = product["energy_site_id"]
             api = EnergySpecific(teslemetry.energy, site_id)
             energysites.append(
@@ -88,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Setup Platforms
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = TeslemetryData(
-        vehicles, energysites
+        vehicles, energysites, scopes
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

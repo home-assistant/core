@@ -142,7 +142,7 @@ def async_track_time_interval_backoff(
             )
 
     interval_listener_job = HassJob(interval_listener, cancel_on_shutdown=True)
-    hass.async_run_job(interval_listener, dt_util.utcnow())
+    hass.async_run_hass_job(interval_listener_job, dt_util.utcnow())
 
     def remove_listener() -> None:
         """Remove interval listener."""

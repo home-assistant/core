@@ -1,0 +1,59 @@
+# serializer version: 1
+# name: test_last_job[event.ozmo_950_last_job-entity_entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'finished',
+        'finished_with_warnings',
+        'manually_stopped',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'event.ozmo_950_last_job',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Last job',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_job',
+    'unique_id': 'E1234567890000000001_stats_report',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_last_job[event.ozmo_950_last_job-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': 'finished',
+      'event_types': list([
+        'finished',
+        'finished_with_warnings',
+        'manually_stopped',
+      ]),
+      'friendly_name': 'Ozmo 950 Last job',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.ozmo_950_last_job',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-03-20T00:00:00.000+00:00',
+  })
+# ---

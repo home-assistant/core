@@ -20,18 +20,11 @@ from .helper import Plenticore, SelectDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class PlenticoreRequiredKeysMixin:
-    """A class that describes required properties for plenticore select entities."""
+@dataclass(frozen=True, kw_only=True)
+class PlenticoreSelectEntityDescription(SelectEntityDescription):
+    """A class that describes plenticore select entities."""
 
     module_id: str
-
-
-@dataclass(frozen=True)
-class PlenticoreSelectEntityDescription(
-    SelectEntityDescription, PlenticoreRequiredKeysMixin
-):
-    """A class that describes plenticore select entities."""
 
 
 SELECT_SETTINGS_DATA = [

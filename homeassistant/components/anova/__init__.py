@@ -56,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             data={
                 **entry.data,
-                **{CONF_DEVICES: serialize_device_list(devices)},
+                CONF_DEVICES: serialize_device_list(devices),
             },
         )
     coordinators = [AnovaCoordinator(hass, device) for device in devices]

@@ -15,9 +15,8 @@ from homeassistant.const import (
     COMPRESSED_STATE_LAST_UPDATED,
     COMPRESSED_STATE_STATE,
 )
-from homeassistant.core import Event, State
+from homeassistant.core import Event, EventStateChangedData, State
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.event import EventStateChangedData
 from homeassistant.helpers.json import (
     JSON_DUMP,
     find_paths_unserializable_data,
@@ -110,7 +109,7 @@ def event_message(iden: int, event: Any) -> dict[str, Any]:
     return {"id": iden, "type": "event", "event": event}
 
 
-def cached_event_message(iden: int, event: Event) -> bytes:
+def cached_event_message(message_id_as_bytes: bytes, event: Event) -> bytes:
     """Return an event message.
 
     Serialize to json once per message.
@@ -123,7 +122,7 @@ def cached_event_message(iden: int, event: Event) -> bytes:
         (
             _partial_cached_event_message(event)[:-1],
             b',"id":',
-            str(iden).encode(),
+            message_id_as_bytes,
             b"}",
         )
     )
@@ -142,7 +141,9 @@ def _partial_cached_event_message(event: Event) -> bytes:
     )
 
 
-def cached_state_diff_message(iden: int, event: Event[EventStateChangedData]) -> bytes:
+def cached_state_diff_message(
+    message_id_as_bytes: bytes, event: Event[EventStateChangedData]
+) -> bytes:
     """Return an event message.
 
     Serialize to json once per message.
@@ -155,7 +156,7 @@ def cached_state_diff_message(iden: int, event: Event[EventStateChangedData]) ->
         (
             _partial_cached_state_diff_message(event)[:-1],
             b',"id":',
-            str(iden).encode(),
+            message_id_as_bytes,
             b"}",
         )
     )

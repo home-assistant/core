@@ -1,7 +1,7 @@
 {
   "domain": "solaredge",
   "name": "SolarEdge",
-  "codeowners": ["@frenck"],
+  "codeowners": ["@frenck", "@bdraco"],
   "config_flow": true,
   "dhcp": [
     {
@@ -12,6 +12,6 @@
   "documentation": "https://www.home-assistant.io/integrations/solaredge",
   "integration_type": "device",
   "iot_class": "cloud_polling",
-  "loggers": ["solaredge"],
-  "requirements": ["solaredge==0.0.2", "stringcase==1.2.0"]
+  "loggers": ["aiosolaredge"],
+  "requirements": ["aiosolaredge==0.2.0", "stringcase==1.2.0"]
 }

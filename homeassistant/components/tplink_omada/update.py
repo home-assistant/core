@@ -88,7 +88,7 @@ async def async_setup_entry(
 
 
 class OmadaDeviceUpdate(
-    OmadaDeviceEntity[FirmwareUpdateStatus],
+    OmadaDeviceEntity[OmadaFirmwareUpdateCoodinator],
     UpdateEntity,
 ):
     """Firmware update status for Omada SDN devices."""

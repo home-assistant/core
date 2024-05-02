@@ -18,24 +18,19 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CoordinatorDataT, NextDnsSettingsUpdateCoordinator
 from .const import ATTR_SETTINGS, DOMAIN
+from .coordinator import CoordinatorDataT, NextDnsSettingsUpdateCoordinator
 
 PARALLEL_UPDATES = 1
 
 
-@dataclass(frozen=True)
-class NextDnsSwitchRequiredKeysMixin(Generic[CoordinatorDataT]):
-    """Class for NextDNS entity required keys."""
-
-    state: Callable[[CoordinatorDataT], bool]
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class NextDnsSwitchEntityDescription(
-    SwitchEntityDescription, NextDnsSwitchRequiredKeysMixin[CoordinatorDataT]
+    SwitchEntityDescription, Generic[CoordinatorDataT]
 ):
     """NextDNS switch entity description."""
+
+    state: Callable[[CoordinatorDataT], bool]
 
 
 SWITCHES = (
@@ -538,11 +533,9 @@ async def async_setup_entry(
         ATTR_SETTINGS
     ]
 
-    switches: list[NextDnsSwitch] = []
-    for description in SWITCHES:
-        switches.append(NextDnsSwitch(coordinator, description))
-
-    async_add_entities(switches)
+    async_add_entities(
+        NextDnsSwitch(coordinator, description) for description in SWITCHES
+    )
 
 
 class NextDnsSwitch(CoordinatorEntity[NextDnsSettingsUpdateCoordinator], SwitchEntity):

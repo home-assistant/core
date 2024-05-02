@@ -17,10 +17,11 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import APCUPSdCoordinator
 
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 _DESCRIPTION = BinarySensorEntityDescription(
     key="statflag",
-    name="UPS Online Status",
     translation_key="online_status",
 )
 # The bit in STATFLAG that indicates the online status of the APC UPS.
@@ -45,6 +46,8 @@ async def async_setup_entry(
 
 class OnlineStatus(CoordinatorEntity[APCUPSdCoordinator], BinarySensorEntity):
     """Representation of a UPS online status."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,

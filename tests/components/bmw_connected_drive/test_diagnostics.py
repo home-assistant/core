@@ -1,8 +1,6 @@
 """Test BMW diagnostics."""
 
 import datetime
-import os
-import time
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -20,7 +18,7 @@ from tests.components.diagnostics import (
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11))
+@pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11, tzinfo=datetime.UTC))
 async def test_config_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -28,10 +26,6 @@ async def test_config_entry_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
-
-    # Make sure that local timezone for test is UTC
-    os.environ["TZ"] = "UTC"
-    time.tzset()
 
     mock_config_entry = await setup_mocked_integration(hass)
 
@@ -42,7 +36,7 @@ async def test_config_entry_diagnostics(
     assert diagnostics == snapshot
 
 
-@pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11))
+@pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11, tzinfo=datetime.UTC))
 async def test_device_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -51,10 +45,6 @@ async def test_device_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device diagnostics."""
-
-    # Make sure that local timezone for test is UTC
-    os.environ["TZ"] = "UTC"
-    time.tzset()
 
     mock_config_entry = await setup_mocked_integration(hass)
 
@@ -70,7 +60,7 @@ async def test_device_diagnostics(
     assert diagnostics == snapshot
 
 
-@pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11))
+@pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11, tzinfo=datetime.UTC))
 async def test_device_diagnostics_vehicle_not_found(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -79,10 +69,6 @@ async def test_device_diagnostics_vehicle_not_found(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device diagnostics when the vehicle cannot be found."""
-
-    # Make sure that local timezone for test is UTC
-    os.environ["TZ"] = "UTC"
-    time.tzset()
 
     mock_config_entry = await setup_mocked_integration(hass)
 

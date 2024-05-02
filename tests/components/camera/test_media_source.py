@@ -17,6 +17,26 @@ async def setup_media_source(hass):
     assert await async_setup_component(hass, "media_source", {})
 
 
+async def test_device_with_device(
+    hass: HomeAssistant, mock_camera_with_device, mock_camera
+) -> None:
+    """Test browsing when camera has a device and a name."""
+    item = await media_source.async_browse_media(hass, "media-source://camera")
+    assert item.not_shown == 2
+    assert len(item.children) == 1
+    assert item.children[0].title == "Test Camera Device Demo camera without stream"
+
+
+async def test_device_with_no_name(
+    hass: HomeAssistant, mock_camera_with_no_name, mock_camera
+) -> None:
+    """Test browsing when camera has device and name == None."""
+    item = await media_source.async_browse_media(hass, "media-source://camera")
+    assert item.not_shown == 2
+    assert len(item.children) == 1
+    assert item.children[0].title == "Test Camera Device Demo camera without stream"
+
+
 async def test_browsing_hls(hass: HomeAssistant, mock_camera_hls) -> None:
     """Test browsing HLS camera media source."""
     item = await media_source.async_browse_media(hass, "media-source://camera")
@@ -42,6 +62,7 @@ async def test_browsing_mjpeg(hass: HomeAssistant, mock_camera) -> None:
     assert len(item.children) == 1
     assert item.not_shown == 2
     assert item.children[0].media_content_type == "image/jpg"
+    assert item.children[0].title == "Demo camera without stream"
 
 
 async def test_browsing_web_rtc(hass: HomeAssistant, mock_camera_web_rtc) -> None:
@@ -103,9 +124,12 @@ async def test_resolving_errors(hass: HomeAssistant, mock_camera_hls) -> None:
         )
     assert str(exc_info.value) == "Could not resolve media item: camera.non_existing"
 
-    with pytest.raises(media_source.Unresolvable) as exc_info, patch(
-        "homeassistant.components.camera.Camera.frontend_stream_type",
-        new_callable=PropertyMock(return_value=StreamType.WEB_RTC),
+    with (
+        pytest.raises(media_source.Unresolvable) as exc_info,
+        patch(
+            "homeassistant.components.camera.Camera.frontend_stream_type",
+            new_callable=PropertyMock(return_value=StreamType.WEB_RTC),
+        ),
     ):
         await media_source.async_resolve_media(
             hass, "media-source://camera/camera.demo_camera", None

@@ -53,14 +53,12 @@ async def async_forward_entry_setup_and_setup_discovery(
     mqtt_data = get_mqtt_data(hass)
     platforms_loaded = mqtt_data.platforms_loaded
     new_platforms: set[Platform | str] = platforms - platforms_loaded
-    platforms_loaded.update(new_platforms)
     tasks: list[asyncio.Task] = []
     if "device_automation" in new_platforms:
         # Local import to avoid circular dependencies
         # pylint: disable-next=import-outside-toplevel
         from . import device_automation
 
-        new_platforms.remove("device_automation")
         tasks.append(
             create_eager_task(device_automation.async_setup_entry(hass, config_entry))
         )
@@ -69,19 +67,19 @@ async def async_forward_entry_setup_and_setup_discovery(
         # pylint: disable-next=import-outside-toplevel
         from . import tag
 
-        new_platforms.remove("tag")
         tasks.append(create_eager_task(tag.async_setup_entry(hass, config_entry)))
-    if new_platforms:
+    if new_entity_platforms := (new_platforms - {"tag", "device_automation"}):
         tasks.append(
             create_eager_task(
                 hass.config_entries.async_forward_entry_setups(
-                    config_entry, new_platforms
+                    config_entry, new_entity_platforms
                 )
             )
         )
     if not tasks:
         return
     await asyncio.gather(*tasks)
+    platforms_loaded.update(new_platforms)
 
 
 def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:
@@ -138,9 +136,9 @@ def valid_topic(topic: Any) -> str:
         )
     if "\0" in validated_topic:
         raise vol.Invalid("MQTT topic name/filter must not contain null character.")
-    if any(char <= "\u001F" for char in validated_topic):
+    if any(char <= "\u001f" for char in validated_topic):
         raise vol.Invalid("MQTT topic name/filter must not contain control characters.")
-    if any("\u007f" <= char <= "\u009F" for char in validated_topic):
+    if any("\u007f" <= char <= "\u009f" for char in validated_topic):
         raise vol.Invalid("MQTT topic name/filter must not contain control characters.")
     if any("\ufdd0" <= char <= "\ufdef" for char in validated_topic):
         raise vol.Invalid("MQTT topic name/filter must not contain non-characters.")
@@ -220,8 +218,7 @@ def valid_birth_will(config: ConfigType) -> ConfigType:
 
 def get_mqtt_data(hass: HomeAssistant) -> MqttData:
     """Return typed MqttData from hass.data[DATA_MQTT]."""
-    mqtt_data: MqttData
-    mqtt_data = hass.data[DATA_MQTT]
+    mqtt_data: MqttData = hass.data[DATA_MQTT]
     return mqtt_data
 
 

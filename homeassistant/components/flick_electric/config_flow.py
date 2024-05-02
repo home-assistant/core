@@ -49,9 +49,9 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
             async with asyncio.timeout(60):
                 token = await auth.async_get_access_token()
         except TimeoutError as err:
-            raise CannotConnect() from err
+            raise CannotConnect from err
         except AuthException as err:
-            raise InvalidAuth() from err
+            raise InvalidAuth from err
 
         return token is not None
 

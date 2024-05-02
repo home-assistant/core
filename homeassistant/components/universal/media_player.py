@@ -79,13 +79,12 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     TrackTemplate,
     TrackTemplateResult,
     async_track_state_change_event,
@@ -163,7 +162,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     ):
         """Initialize the Universal media device."""
         self.hass = hass
-        self._name = config.get(CONF_NAME)
+        self._attr_name = config.get(CONF_NAME)
         self._children = config.get(CONF_CHILDREN)
         self._active_child_template = config.get(CONF_ACTIVE_CHILD_TEMPLATE)
         self._active_child_template_result = None
@@ -190,7 +189,8 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         ) -> None:
             """Update ha state when dependencies update."""
             self.async_set_context(event.context)
-            self.async_schedule_update_ha_state(True)
+            self._async_update()
+            self.async_write_ha_state()
 
         @callback
         def _async_on_template_update(
@@ -214,7 +214,8 @@ class UniversalMediaPlayer(MediaPlayerEntity):
             if event:
                 self.async_set_context(event.context)
 
-            self.async_schedule_update_ha_state(True)
+            self._async_update()
+            self.async_write_ha_state()
 
         track_templates: list[TrackTemplate] = []
         if self._state_template:
@@ -306,11 +307,6 @@ class UniversalMediaPlayer(MediaPlayerEntity):
             return master_state if master_state else MediaPlayerState.OFF
 
         return None
-
-    @property
-    def name(self):
-        """Return the name of universal player."""
-        return self._name
 
     @property
     def assumed_state(self) -> bool:
@@ -658,9 +654,10 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         component: EntityComponent[MediaPlayerEntity] = self.hass.data[DOMAIN]
         if entity_id and (entity := component.get_entity(entity_id)):
             return await entity.async_browse_media(media_content_type, media_content_id)
-        raise NotImplementedError()
+        raise NotImplementedError
 
-    async def async_update(self) -> None:
+    @callback
+    def _async_update(self) -> None:
         """Update state in HA."""
         if self._active_child_template_result:
             self._child_state = self.hass.states.get(self._active_child_template_result)
@@ -677,3 +674,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
                         self._child_state = child_state
                 else:
                     self._child_state = child_state
+
+    async def async_update(self) -> None:
+        """Manual update from API."""
+        self._async_update()

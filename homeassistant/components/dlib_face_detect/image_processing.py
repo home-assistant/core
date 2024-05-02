@@ -24,13 +24,10 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Dlib Face detection platform."""
-    entities = []
-    for camera in config[CONF_SOURCE]:
-        entities.append(
-            DlibFaceDetectEntity(camera[CONF_ENTITY_ID], camera.get(CONF_NAME))
-        )
-
-    add_entities(entities)
+    add_entities(
+        DlibFaceDetectEntity(camera[CONF_ENTITY_ID], camera.get(CONF_NAME))
+        for camera in config[CONF_SOURCE]
+    )
 
 
 class DlibFaceDetectEntity(ImageProcessingFaceEntity):

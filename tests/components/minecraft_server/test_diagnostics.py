@@ -49,12 +49,15 @@ async def test_config_entry_diagnostics(
         lookup_function_name = "lookup"
 
     # Setup mock entry.
-    with patch(
-        f"mcstatus.server.{server.__name__}.{lookup_function_name}",
-        return_value=server(host=TEST_HOST, port=TEST_PORT),
-    ), patch(
-        f"mcstatus.server.{server.__name__}.async_status",
-        return_value=status_response,
+    with (
+        patch(
+            f"mcstatus.server.{server.__name__}.{lookup_function_name}",
+            return_value=server(host=TEST_HOST, port=TEST_PORT),
+        ),
+        patch(
+            f"mcstatus.server.{server.__name__}.async_status",
+            return_value=status_response,
+        ),
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
