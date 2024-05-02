@@ -42,26 +42,27 @@ PLATFORMS: Final = [Platform.SENSOR]
 
 _FroniusCoordinatorT = TypeVar("_FroniusCoordinatorT", bound=FroniusCoordinatorBase)
 
+FroniusConfigEntry = ConfigEntry["FroniusSolarNet"]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> bool:
     """Set up fronius from a config entry."""
     host = entry.data[CONF_HOST]
     fronius = Fronius(async_get_clientsession(hass), host)
     solar_net = FroniusSolarNet(hass, entry, fronius)
     await solar_net.init_devices()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = solar_net
+    entry.runtime_data = solar_net
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        solar_net = hass.data[DOMAIN].pop(entry.entry_id)
-        while solar_net.cleanup_callbacks:
-            solar_net.cleanup_callbacks.pop()()
+        while entry.runtime_data.cleanup_callbacks:
+            entry.runtime_data.cleanup_callbacks.pop()()
 
     return unload_ok
 
