@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Please enter the IP Address and Name of your Android TV.",
+        "description": "Please enter the IP Address of your Android/Google TV.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "name": "[%key:common::config_flow::data::name%]"

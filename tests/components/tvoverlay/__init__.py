@@ -2,22 +2,21 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.tvoverlay.const import DEFAULT_NAME
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 
 HOST = "0.0.0.0"
 NAME = "TvOverlay"
 SERICVE_NAME = NAME.lower()
-MOCKED_TV_OVERLAY_INFO = {"result": {"settings": {"deviceName": NAME}}}
+MOCKED_TV_OVERLAY_INFO = {
+    "result": {"settings": {"deviceName": NAME}, "status": {"id": "1234"}}
+}
 
 CONF_CONFIG_FLOW = {
     CONF_HOST: HOST,
-    CONF_NAME: NAME,
 }
 
 CONF_DEFAULT_FLOW = {
     CONF_HOST: HOST,
-    CONF_NAME: DEFAULT_NAME,
 }
 
 
