@@ -27,8 +27,6 @@ AirthingsConfigEntry = ConfigEntry[AirthingsDataCoordinatorType]
 
 async def async_setup_entry(hass: HomeAssistant, entry: AirthingsConfigEntry) -> bool:
     """Set up Airthings from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     airthings = Airthings(
         entry.data[CONF_ID],
         entry.data[CONF_SECRET],
