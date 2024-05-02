@@ -809,7 +809,7 @@ gotailwind==0.2.3
 govee-ble==0.31.2
 
 # homeassistant.components.govee_light_local
-govee-local-api==1.4.5
+govee-local-api==1.5.0
 
 # homeassistant.components.gpsd
 gps3==0.33.3
