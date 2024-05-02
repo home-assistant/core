@@ -154,24 +154,27 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
         )
         self.device_id = device_entry.id
 
-    async def _async_device_connect(self) -> None:
-        """Connect to a Shelly Block device."""
+    async def _async_device_connect_task(self) -> bool:
+        """Connect to a Shelly device task."""
         LOGGER.debug("Connecting to Shelly Device - %s", self.name)
         try:
             await self.device.initialize()
             update_device_fw_info(self.hass, self.device, self.entry)
         except DeviceConnectionError as err:
-            raise UpdateFailed(f"Device disconnected: {repr(err)}") from err
+            LOGGER.debug(
+                "Error connecting to Shelly device %s, error: %r", self.name, err
+            )
+            return False
         except InvalidAuthError:
             self.entry.async_start_reauth(self.hass)
-            return
+            return False
 
         if not self.device.firmware_supported:
             async_create_issue_unsupported_firmware(self.hass, self.entry)
-            return
+            return False
 
         if not self._pending_platforms:
-            return
+            return True
 
         LOGGER.debug("Device %s is online, resuming setup", self.entry.title)
         platforms = self._pending_platforms
@@ -192,6 +195,8 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
 
         # Resume platform setup
         await self.hass.config_entries.async_forward_entry_setups(self.entry, platforms)
+
+        return True
 
     async def _async_reload_entry(self) -> None:
         """Reload entry."""
@@ -361,7 +366,12 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
     ) -> None:
         """Handle device update."""
         if update_type is BlockUpdateType.ONLINE:
-            self.hass.async_create_task(self._async_device_connect(), eager_start=True)
+            self.entry.async_create_background_task(
+                self.hass,
+                self._async_device_connect_task(),
+                "block device online",
+                eager_start=True,
+            )
         elif update_type is BlockUpdateType.COAP_PERIODIC:
             self._push_update_failures = 0
             ir.async_delete_issue(
@@ -586,7 +596,8 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         if self.device.connected:
             return
 
-        await self._async_device_connect()
+        if not await self._async_device_connect_task():
+            raise UpdateFailed("Device reconnect error")
 
     async def _async_disconnected(self) -> None:
         """Handle device disconnected."""
@@ -654,12 +665,24 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
     ) -> None:
         """Handle device update."""
         if update_type is RpcUpdateType.ONLINE:
-            self.hass.async_create_task(self._async_device_connect(), eager_start=True)
+            self.entry.async_create_background_task(
+                self.hass,
+                self._async_device_connect_task(),
+                "rpc device online",
+                eager_start=True,
+            )
         elif update_type is RpcUpdateType.INITIALIZED:
-            self.hass.async_create_task(self._async_connected(), eager_start=True)
+            self.entry.async_create_background_task(
+                self.hass, self._async_connected(), "rpc device init", eager_start=True
+            )
             self.async_set_updated_data(None)
         elif update_type is RpcUpdateType.DISCONNECTED:
-            self.hass.async_create_task(self._async_disconnected(), eager_start=True)
+            self.entry.async_create_background_task(
+                self.hass,
+                self._async_disconnected(),
+                "rpc device disconnected",
+                eager_start=True,
+            )
         elif update_type is RpcUpdateType.STATUS:
             self.async_set_updated_data(None)
             if self.sleep_period:
@@ -673,7 +696,9 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self.device.subscribe_updates(self._async_handle_update)
         if self.device.initialized:
             # If we are already initialized, we are connected
-            self.hass.async_create_task(self._async_connected(), eager_start=True)
+            self.entry.async_create_task(
+                self.hass, self._async_connected(), eager_start=True
+            )
 
     async def shutdown(self) -> None:
         """Shutdown the coordinator."""
@@ -756,4 +781,9 @@ async def async_reconnect_soon(hass: HomeAssistant, entry: ConfigEntry) -> None:
         and (entry_data := get_entry_data(hass).get(entry.entry_id))
         and (coordinator := entry_data.rpc)
     ):
-        hass.async_create_task(coordinator.async_request_refresh(), eager_start=True)
+        entry.async_create_background_task(
+            hass,
+            coordinator.async_request_refresh(),
+            "reconnect soon",
+            eager_start=True,
+        )

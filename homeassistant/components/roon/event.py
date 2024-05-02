@@ -72,7 +72,6 @@ class RoonEventEntity(EventEntity):
             via_device=(DOMAIN, self._server.roon_id),
         )
 
-    @callback
     def _roonapi_volume_callback(
         self, control_key: str, event: str, value: int
     ) -> None:
@@ -88,7 +87,7 @@ class RoonEventEntity(EventEntity):
             event = "volume_down"
 
         self._trigger_event(event)
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Register volume hooks with the roon api."""
