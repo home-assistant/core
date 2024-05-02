@@ -2123,7 +2123,6 @@ pysensibo==1.0.36
 pyserial-asyncio-fast==0.11
 
 # homeassistant.components.serial
-# homeassistant.components.zha
 pyserial-asyncio==0.6
 
 # homeassistant.components.acer_projector
