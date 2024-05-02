@@ -36,8 +36,8 @@ from .const import (
     ATTR_DHW_OVRD,
     ATTR_GW_ID,
     ATTR_LEVEL,
-    ATTR_TRANSP_CMD,
     ATTR_TRANSP_ARG,
+    ATTR_TRANSP_CMD,
     CONF_CLIMATE,
     CONF_FLOOR_TEMP,
     CONF_PRECISION,
@@ -48,6 +48,7 @@ from .const import (
     DATA_OPENTHERM_GW,
     DOMAIN,
     SERVICE_RESET_GATEWAY,
+    SERVICE_SEND_TRANSP_CMD,
     SERVICE_SET_CH_OVRD,
     SERVICE_SET_CLOCK,
     SERVICE_SET_CONTROL_SETPOINT,
@@ -58,7 +59,6 @@ from .const import (
     SERVICE_SET_MAX_MOD,
     SERVICE_SET_OAT,
     SERVICE_SET_SB_TEMP,
-    SERVICE_SEND_TRANSP_CMD,
 )
 
 _LOGGER = logging.getLogger(__name__)
