@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import timedelta
 from enum import IntFlag
 import functools as ft
@@ -225,7 +224,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return PRECISION_WHOLE
 
     @property
-    def capability_attributes(self) -> Mapping[str, Any]:
+    def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         data: dict[str, Any] = {
             ATTR_MIN_TEMP: show_temp(

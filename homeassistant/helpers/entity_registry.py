@@ -1223,10 +1223,6 @@ class EntityRegistry(BaseRegistry):
 
         if data is not None:
             for entity in data["entities"]:
-                # We removed this in 2022.5. Remove this check in 2023.1.
-                if entity["entity_category"] == "system":
-                    entity["entity_category"] = None
-
                 try:
                     domain = split_entity_id(entity["entity_id"])[0]
                     _validate_item(

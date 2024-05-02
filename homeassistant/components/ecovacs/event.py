@@ -5,24 +5,22 @@ from deebot_client.device import Device
 from deebot_client.events import CleanJobStatus, ReportStatsEvent
 
 from homeassistant.components.event import EventEntity, EventEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .controller import EcovacsController
+from . import EcovacsConfigEntry
 from .entity import EcovacsEntity
 from .util import get_name_key
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EcovacsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add entities for passed config_entry in HA."""
-    controller: EcovacsController = hass.data[DOMAIN][config_entry.entry_id]
+    controller = config_entry.runtime_data
     async_add_entities(
         EcovacsLastJobEventEntity(device) for device in controller.devices(Capabilities)
     )
