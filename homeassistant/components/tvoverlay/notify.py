@@ -1,4 +1,5 @@
 """TvOverlay notification service for Android TV."""
+
 from __future__ import annotations
 
 import logging
@@ -87,7 +88,6 @@ class TvOverlayNotificationService(BaseNotificationService):
             cv.url(url)
         except vol.Invalid as err:
             raise ServiceValidationError(
-                f"Invalid url '{url}'",
                 translation_domain=DOMAIN,
                 translation_key="invalid_url",
                 translation_placeholders={
@@ -102,9 +102,6 @@ class TvOverlayNotificationService(BaseNotificationService):
         help_url = "https://www.home-assistant.io/docs/configuration/basic/"
 
         raise ServiceValidationError(
-            f"Cannot send TvOverlay notification with image url '{url}' which is not secure to load data from."
-            f"Only url's added to `{allow_url_list}` are accessible. "
-            f"See {help_url} for more information.",
             translation_domain=DOMAIN,
             translation_key="remote_url_not_allowed",
             translation_placeholders={
@@ -120,7 +117,6 @@ class TvOverlayNotificationService(BaseNotificationService):
         file_path = Path(filename).parent
         if not os.path.exists(file_path) or not os.path.isfile(filename):
             raise ServiceValidationError(
-                f"Invalid file '{filename}'",
                 translation_domain=DOMAIN,
                 translation_key="invalid_file",
                 translation_placeholders={
@@ -135,10 +131,6 @@ class TvOverlayNotificationService(BaseNotificationService):
         file_name = os.path.basename(filename)
         help_url = "https://www.home-assistant.io/docs/configuration/basic/"
         raise ServiceValidationError(
-            f"Cannot send TvOverlay notification with image file '{file_name}' "
-            f"from directory '{str(file_path)}' which is not secure to load data from. "
-            f"Only folders added to `{allow_file_list}` are accessible. "
-            f"See {help_url} for more information.",
             translation_domain=DOMAIN,
             translation_key="remote_file_not_allowed",
             translation_placeholders={
@@ -183,8 +175,6 @@ class TvOverlayNotificationService(BaseNotificationService):
 
         if position not in positions_values:
             raise ServiceValidationError(
-                f"Invalid position value '{position}', "
-                f"Has to be one of {str(positions_values)}.",
                 translation_domain=DOMAIN,
                 translation_key="invalid_positon_value",
                 translation_placeholders={
@@ -213,8 +203,6 @@ class TvOverlayNotificationService(BaseNotificationService):
 
         if shape not in shape_values:
             raise ServiceValidationError(
-                f"Invalid shape value '{shape}', "
-                f"Has to be one of {str(shape_values)}.",
                 translation_domain=DOMAIN,
                 translation_key="invalid_shape_value",
                 translation_placeholders={
@@ -283,7 +271,6 @@ class TvOverlayNotificationService(BaseNotificationService):
                 return mdi_icon
 
         raise ServiceValidationError(
-            "Invalid notification image. No valid URL, local_path or mdi_icon found in image attributes.",
             translation_domain=DOMAIN,
             translation_key="invalid_image",
         )
