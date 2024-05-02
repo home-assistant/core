@@ -12,6 +12,7 @@ import pytest
 
 from homeassistant import loader
 from homeassistant.components.recorder import (
+    CONF_COMMIT_INTERVAL,
     DOMAIN as RECORDER_DOMAIN,
     Recorder,
     history,
@@ -3682,6 +3683,7 @@ async def test_compile_hourly_statistics_changing_state_class(
 
 
 @pytest.mark.timeout(25)
+@pytest.mark.parametrize("recorder_config", [{CONF_COMMIT_INTERVAL: 3600 * 4}])
 @pytest.mark.freeze_time("2021-09-01 05:00")  # August 31st, 23:00 local time
 async def test_compile_statistics_hourly_daily_monthly_summary(
     freezer: FrozenDateTimeFactory,
