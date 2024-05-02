@@ -163,6 +163,7 @@ async def test_compile_hourly_statistics(
         four, states = await async_record_states(
             hass, freezer, zero, "sensor.test1", attributes
         )
+    await async_wait_recording_done(hass)
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
     )
@@ -564,6 +565,7 @@ async def test_compile_hourly_statistics_purged_state_changes(
         four, states = await async_record_states(
             hass, freezer, zero, "sensor.test1", attributes
         )
+    await async_wait_recording_done(hass)
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
     )
@@ -666,6 +668,7 @@ async def test_compile_hourly_statistics_wrong_unit(
             hass, freezer, zero, "sensor.test7", attributes_tmp
         )
         states = {**states, **_states}
+    await async_wait_recording_done(hass)
 
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
@@ -1071,6 +1074,7 @@ async def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
                 hass, freezer, two, "sensor.test1", attributes, seq[i : i + 1]
             )
             states["sensor.test1"].extend(_states["sensor.test1"])
+    await async_wait_recording_done(hass)
 
     hist = history.get_significant_states(
         hass,
@@ -1181,6 +1185,7 @@ async def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
                 hass, freezer, one, "sensor.test1", attributes, seq[i : i + 1]
             )
             states["sensor.test1"].extend(_states["sensor.test1"])
+    await async_wait_recording_done(hass)
 
     hist = history.get_significant_states(
         hass,
@@ -1277,6 +1282,7 @@ async def test_compile_hourly_sum_statistics_nan_inf_state(
                 hass, freezer, one, "sensor.test1", attributes, seq[i : i + 1]
             )
             states["sensor.test1"].extend(_states["sensor.test1"])
+    await async_wait_recording_done(hass)
 
     hist = history.get_significant_states(
         hass,
@@ -1421,6 +1427,7 @@ async def test_compile_hourly_sum_statistics_negative_state(
                 hass, freezer, one, entity_id, attributes, seq[i : i + 1]
             )
             states[entity_id].extend(_states[entity_id])
+    await async_wait_recording_done(hass)
 
     hist = history.get_significant_states(
         hass,
@@ -2163,6 +2170,7 @@ async def test_compile_hourly_statistics_unchanged(
         four, states = await async_record_states(
             hass, freezer, zero, "sensor.test1", attributes
         )
+    await async_wait_recording_done(hass)
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
     )
@@ -2199,6 +2207,7 @@ async def test_compile_hourly_statistics_partially_unavailable(
     four, states = await async_record_states_partially_unavailable(
         hass, zero, "sensor.test1", TEMPERATURE_SENSOR_ATTRIBUTES
     )
+    await async_wait_recording_done(hass)
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
     )
@@ -2277,6 +2286,7 @@ async def test_compile_hourly_statistics_unavailable(
         _, _states = await async_record_states(
             hass, freezer, zero, "sensor.test2", attributes
         )
+    await async_wait_recording_done(hass)
     states = {**states, **_states}
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
@@ -2509,6 +2519,7 @@ async def test_compile_hourly_statistics_changing_units_1(
             hass, freezer, zero + timedelta(minutes=10), "sensor.test1", attributes
         )
         states["sensor.test1"] += _states["sensor.test1"]
+    await async_wait_recording_done(hass)
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
     )
@@ -2634,6 +2645,7 @@ async def test_compile_hourly_statistics_changing_units_2(
             hass, freezer, zero + timedelta(minutes=5), "sensor.test1", attributes
         )
         states["sensor.test1"] += _states["sensor.test1"]
+    await async_wait_recording_done(hass)
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
     )
@@ -2717,6 +2729,7 @@ async def test_compile_hourly_statistics_changing_units_3(
             hass, freezer, zero + timedelta(minutes=10), "sensor.test1", attributes
         )
         states["sensor.test1"] += _states["sensor.test1"]
+    await async_wait_recording_done(hass)
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
     )
@@ -2837,6 +2850,7 @@ async def test_compile_hourly_statistics_convert_units_1(
             attributes,
             seq=[0, 1, None],
         )
+    await async_wait_recording_done(hass)
     states["sensor.test1"] += _states["sensor.test1"]
 
     do_adhoc_statistics(hass, start=zero)
@@ -2876,6 +2890,7 @@ async def test_compile_hourly_statistics_convert_units_1(
         four, _states = await async_record_states(
             hass, freezer, zero + timedelta(minutes=10), "sensor.test1", attributes
         )
+    await async_wait_recording_done(hass)
     states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
@@ -2995,6 +3010,7 @@ async def test_compile_hourly_statistics_equivalent_units_1(
         four, _states = await async_record_states(
             hass, freezer, zero + timedelta(minutes=10), "sensor.test1", attributes
         )
+    await async_wait_recording_done(hass)
     states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
@@ -3116,6 +3132,7 @@ async def test_compile_hourly_statistics_equivalent_units_2(
         four, _states = await async_record_states(
             hass, freezer, zero + timedelta(minutes=5), "sensor.test1", attributes
         )
+    await async_wait_recording_done(hass)
     states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
@@ -3206,6 +3223,7 @@ async def test_compile_hourly_statistics_changing_device_class_1(
         four, states = await async_record_states(
             hass, freezer, zero, "sensor.test1", attributes
         )
+    await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, start=zero)
     await async_wait_recording_done(hass)
@@ -3249,6 +3267,7 @@ async def test_compile_hourly_statistics_changing_device_class_1(
         four, _states = await async_record_states(
             hass, freezer, zero + timedelta(minutes=10), "sensor.test1", attributes
         )
+    await async_wait_recording_done(hass)
     states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
@@ -3307,6 +3326,7 @@ async def test_compile_hourly_statistics_changing_device_class_1(
         four, _states = await async_record_states(
             hass, freezer, zero + timedelta(minutes=20), "sensor.test1", attributes
         )
+    await async_wait_recording_done(hass)
     states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
@@ -3416,6 +3436,7 @@ async def test_compile_hourly_statistics_changing_device_class_2(
         four, states = await async_record_states(
             hass, freezer, zero, "sensor.test1", attributes
         )
+    await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, start=zero)
     await async_wait_recording_done(hass)
@@ -3459,6 +3480,7 @@ async def test_compile_hourly_statistics_changing_device_class_2(
         four, _states = await async_record_states(
             hass, freezer, zero + timedelta(minutes=10), "sensor.test1", attributes
         )
+    await async_wait_recording_done(hass)
     states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
@@ -3558,6 +3580,7 @@ async def test_compile_hourly_statistics_changing_state_class(
         four, states = await async_record_states(
             hass, freezer, period0, "sensor.test1", attributes_1
         )
+    await async_wait_recording_done(hass)
     do_adhoc_statistics(hass, start=period0)
     await async_wait_recording_done(hass)
     statistic_ids = await async_list_statistic_ids(hass)
@@ -3593,6 +3616,7 @@ async def test_compile_hourly_statistics_changing_state_class(
         four, _states = await async_record_states(
             hass, freezer, period1, "sensor.test1", attributes_2
         )
+    await async_wait_recording_done(hass)
     states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(
         hass, period0, four, hass.states.async_entity_ids()
@@ -3794,6 +3818,7 @@ async def test_compile_statistics_hourly_daily_monthly_summary(
             last_states["sensor.test4"] = seq[-1]
 
             start += timedelta(minutes=5)
+    await async_wait_recording_done(hass)
     hist = history.get_significant_states(
         hass,
         zero - timedelta.resolution,
@@ -4104,10 +4129,9 @@ async def async_record_states(
     if seq is None:
         seq = [-10, 15, 30]
 
-    async def set_state(entity_id, state, **kwargs):
+    def set_state(entity_id, state, **kwargs):
         """Set the state."""
         hass.states.async_set(entity_id, state, **kwargs)
-        await async_wait_recording_done(hass)
         return hass.states.get(entity_id)
 
     one = zero + timedelta(seconds=1 * 5)
@@ -4117,19 +4141,13 @@ async def async_record_states(
 
     states = {entity_id: []}
     freezer.move_to(one)
-    states[entity_id].append(
-        await set_state(entity_id, str(seq[0]), attributes=attributes)
-    )
+    states[entity_id].append(set_state(entity_id, str(seq[0]), attributes=attributes))
 
     freezer.move_to(two)
-    states[entity_id].append(
-        await set_state(entity_id, str(seq[1]), attributes=attributes)
-    )
+    states[entity_id].append(set_state(entity_id, str(seq[1]), attributes=attributes))
 
     freezer.move_to(three)
-    states[entity_id].append(
-        await set_state(entity_id, str(seq[2]), attributes=attributes)
-    )
+    states[entity_id].append(set_state(entity_id, str(seq[2]), attributes=attributes))
 
     return four, states
 
@@ -5197,15 +5215,14 @@ async def async_record_meter_state(
     We inject a state update for meter sensor.
     """
 
-    async def set_state(entity_id, state, **kwargs):
+    def set_state(entity_id, state, **kwargs):
         """Set the state."""
         hass.states.async_set(entity_id, state, **kwargs)
-        await async_wait_recording_done(hass)
         return hass.states.get(entity_id)
 
     states = {entity_id: []}
     freezer.move_to(zero)
-    states[entity_id].append(await set_state(entity_id, seq[0], attributes=attributes))
+    states[entity_id].append(set_state(entity_id, seq[0], attributes=attributes))
 
     return states
 
@@ -5216,10 +5233,9 @@ async def async_record_states_partially_unavailable(hass, zero, entity_id, attri
     We inject a bunch of state updates temperature sensors.
     """
 
-    async def set_state(entity_id, state, **kwargs):
+    def set_state(entity_id, state, **kwargs):
         """Set the state."""
         hass.states.async_set(entity_id, state, **kwargs)
-        await async_wait_recording_done(hass)
         return hass.states.get(entity_id)
 
     one = zero + timedelta(seconds=1 * 5)
@@ -5229,18 +5245,14 @@ async def async_record_states_partially_unavailable(hass, zero, entity_id, attri
 
     states = {entity_id: []}
     with freeze_time(one) as freezer:
-        states[entity_id].append(
-            await set_state(entity_id, "10", attributes=attributes)
-        )
+        states[entity_id].append(set_state(entity_id, "10", attributes=attributes))
 
         freezer.move_to(two)
-        states[entity_id].append(
-            await set_state(entity_id, "25", attributes=attributes)
-        )
+        states[entity_id].append(set_state(entity_id, "25", attributes=attributes))
 
         freezer.move_to(three)
         states[entity_id].append(
-            await set_state(entity_id, STATE_UNAVAILABLE, attributes=attributes)
+            set_state(entity_id, STATE_UNAVAILABLE, attributes=attributes)
         )
 
     return four, states
