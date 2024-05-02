@@ -6,7 +6,7 @@ from collections import OrderedDict
 from collections.abc import Mapping
 import json
 import logging
-from typing import Any
+from typing import Any, cast
 
 from aioesphomeapi import (
     APIClient,
