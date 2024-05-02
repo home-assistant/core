@@ -699,6 +699,10 @@ class Queue(Generic[_KT, _VT]):
             return self._data[key]
         return None
 
+    def __repr__(self) -> str:
+        """Return the string representation of the queue."""
+        return f"Queue({self._data})"
+
 
 class _HaltScript(Exception):
     """Throw if script needs to stop executing."""

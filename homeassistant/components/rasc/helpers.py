@@ -33,7 +33,11 @@ def fire(
             "type": rasc_type,
             ATTR_SERVICE: action,
             ATTR_ENTITY_ID: entity_id,
-            **{str(key): value for key, value in service_data.items()},
+            **{
+                str(key): value
+                for key, value in service_data.items()
+                if key != ATTR_ENTITY_ID
+            },
         },
     )
 

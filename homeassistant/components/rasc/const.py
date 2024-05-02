@@ -12,5 +12,8 @@ RASC_SCHEDULED = "scheduled"
 CONF_TRANSITION = "transition"
 DEFAULT_FAILURE_TIMEOUT = 30  # s
 CHANGE_TIMEOUT = 5
+MIN_ACTION_LENGTH = 1.0  # second
+MIN_RESCHEDULE_TIME = 1.0  # second
+ACK_TO_START = 0.4  # second
 
 LOGGER = logging.getLogger(__package__)

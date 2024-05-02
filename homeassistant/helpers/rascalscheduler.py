@@ -101,7 +101,7 @@ def get_routine_id(action_id: str) -> str:
     return action_id.split(".")[0]
 
 
-def generate_duration(seconds: float = 2.0) -> timedelta:
+def generate_duration(seconds: float = 1.0) -> timedelta:
     """Get a random duration."""
     return timedelta(seconds=seconds)
 

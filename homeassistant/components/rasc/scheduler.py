@@ -53,7 +53,7 @@ from homeassistant.helpers.template import device_entities
 from homeassistant.helpers.typing import ConfigType
 
 from .abstraction import RASCAbstraction
-from .const import CONF_TRANSITION, DOMAIN
+from .const import CONF_TRANSITION, DOMAIN, MIN_ACTION_LENGTH
 from .entity import (
     ActionEntity,
     BaseRoutineEntity,
@@ -110,7 +110,7 @@ def create_routine(
             else:
                 transition = None
             target_entities = get_target_entities(hass, script)
-            estimated_duration = 0.0
+            estimated_duration = MIN_ACTION_LENGTH
             for entity in target_entities:
                 entity_id = get_entity_id_from_number(hass, entity)
                 estimated_duration = max(
@@ -217,7 +217,7 @@ def _create_routine(
             else:
                 transition = None
             target_entities = get_target_entities(hass, script)
-            estimated_duration = 0.0
+            estimated_duration = MIN_ACTION_LENGTH
             for target_entity in target_entities:
                 entity_id = get_entity_id_from_number(hass, target_entity)
                 estimated_duration = max(
@@ -266,7 +266,7 @@ def _create_routine(
         else:
             transition = None
         target_entities = get_target_entities(hass, script)
-        estimated_duration = 0.0
+        estimated_duration = MIN_ACTION_LENGTH
         for target_entity in target_entities:
             entity_id = get_entity_id_from_number(hass, target_entity)
             estimated_duration = max(
@@ -731,6 +731,15 @@ class BaseScheduler:
     _lineage_table: LineageTable
     _scheduling_policy: str
 
+    def _get_action(self, action_id: str) -> ActionEntity | None:
+        """Get the active action."""
+        routine_info = self._serialization_order[get_routine_id(action_id)]
+
+        if not routine_info:
+            return None
+
+        return routine_info.routine.actions[action_id]
+
     def filter_ts(
         self, entity_id: str, now: datetime, free_slots: dict[str, Queue[str, str]]
     ) -> Queue[str, str]:
@@ -1156,7 +1165,7 @@ class BaseScheduler:
         if slot_st == action_st and slot_end == action_end:
             free_slots.pop(slot_st)
 
-        elif slot_st == action_st:
+        elif slot_st == action_st and action_end != slot_st:
             free_slots.insert_after(slot_st, action_end, slot_end)
             free_slots.pop(slot_st)
 
@@ -1597,6 +1606,11 @@ class TimeLineScheduler(BaseScheduler):
         new_action: ActionEntity,
     ) -> str | None:
         """Get available time slot by timeline."""
+        _LOGGER.debug(
+            "Free slots for entity %s: %s",
+            entity_id,
+            free_slots[entity_id],
+        )
 
         for slot_start, slot_end in free_slots[entity_id].items():
             # Check if the gap is available
@@ -2477,15 +2491,6 @@ class RascalScheduler(BaseScheduler):
         """Release the lock for the given entity."""
         self._lineage_table.locks[entity_id] = None
 
-    def _get_action(self, action_id: str) -> ActionEntity | None:
-        """Get the active action."""
-        routine_info = self._serialization_order[get_routine_id(action_id)]
-
-        if not routine_info:
-            return None
-
-        return routine_info.routine.actions[action_id]
-
     def _get_first_action_with_acquired_lock(self, entity_id: str) -> ActionInfo | None:
         """Get the first action with acquired_lock."""
         if entity_id not in self._lineage_table.lock_queues:
@@ -2731,6 +2736,9 @@ class RascalScheduler(BaseScheduler):
             if entity_id not in lock_queues:
                 raise ValueError("Entity %s has no schedule." % entity_id)
             if action.action_id not in lock_queues[entity_id]:
+                _LOGGER.debug(
+                    "entity %s's lock queue: %s", entity_id, lock_queues[entity_id]
+                )
                 raise ValueError(
                     f"Action {action.action_id} has not been scheduled on entity {entity_id}."
                 )
@@ -2753,15 +2761,21 @@ class RascalScheduler(BaseScheduler):
 
     async def handle_event(self, event: Event) -> None:  # noqa: C901
         """Handle event."""
+        _LOGGER.debug("Handling event %s on the scheduler", event)
         if self._reschedule_handler is not None:
             await self._reschedule_handler(event)
 
-        event_type = str(event.data.get(CONF_TYPE))
-        entity_id = str(event.data.get(CONF_ENTITY_ID))
-        action_id = str(event.data.get(ATTR_ACTION_ID))
+        event_type: Optional[str] = event.data.get(CONF_TYPE)
+        entity_id: Optional[str] = event.data.get(CONF_ENTITY_ID)
+        action_id: Optional[str] = event.data.get(ATTR_ACTION_ID)
 
         # Skip the event if the action is manually executed
-        if not self._serialization_order or not entity_id or not action_id:
+        if (
+            not self._serialization_order
+            or not entity_id
+            or not action_id
+            or not event_type
+        ):
             return
 
         # update the action state
@@ -2796,7 +2810,6 @@ class RascalScheduler(BaseScheduler):
             await self._async_wait_until(action_id, entity_id)
 
             self._metrics.record_action_end(event.time_fired, entity_id, action_id)
-            self._update_action_state(action_id, entity_id, RASC_COMPLETE)
 
             _LOGGER.info("Action %s on entity %s is completed", action_id, entity_id)
 
@@ -2905,7 +2918,7 @@ class RascalScheduler(BaseScheduler):
 
     def _set_action_completed(self, action_id: str) -> None:
         """Set the action of the entity completed."""
-        _LOGGER.debug("Set the action %s to completed")
+        _LOGGER.debug("Set the action %s to completed", action_id)
         routine_info = self._serialization_order[get_routine_id(action_id)]
         if not routine_info:
             raise ValueError(
