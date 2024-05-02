@@ -139,6 +139,7 @@ class AuthStore:
         user = self._users.pop(user.id)
         for refresh_token_id in user.refresh_tokens:
             del self._token_id_to_user_id[refresh_token_id]
+        user.refresh_tokens.clear()
         self._async_schedule_save()
 
     async def async_update_user(
