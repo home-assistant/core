@@ -9,6 +9,7 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import history
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
@@ -381,7 +382,7 @@ async def async_record_states(hass):
 
 
 async def test_fetch_period_api(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, recorder_mock: Recorder, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the fetch period view for history."""
     await async_setup_component(hass, "history", {})
@@ -394,6 +395,7 @@ async def test_fetch_period_api(
 
 async def test_fetch_period_api_with_use_include_order(
     hass: HomeAssistant,
+    recorder_mock: Recorder,
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -411,7 +413,7 @@ async def test_fetch_period_api_with_use_include_order(
 
 
 async def test_fetch_period_api_with_minimal_response(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, recorder_mock: Recorder, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the fetch period view for history with minimal_response."""
     now = dt_util.utcnow()
@@ -453,7 +455,7 @@ async def test_fetch_period_api_with_minimal_response(
 
 
 async def test_fetch_period_api_with_no_timestamp(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, recorder_mock: Recorder, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the fetch period view for history with no timestamp."""
     await async_setup_component(hass, "history", {})
@@ -464,6 +466,7 @@ async def test_fetch_period_api_with_no_timestamp(
 
 async def test_fetch_period_api_with_include_order(
     hass: HomeAssistant,
+    recorder_mock: Recorder,
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -490,7 +493,7 @@ async def test_fetch_period_api_with_include_order(
 
 
 async def test_entity_ids_limit_via_api(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, recorder_mock: Recorder, hass_client: ClientSessionGenerator
 ) -> None:
     """Test limiting history to entity_ids."""
     await async_setup_component(
@@ -516,7 +519,7 @@ async def test_entity_ids_limit_via_api(
 
 
 async def test_entity_ids_limit_via_api_with_skip_initial_state(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, recorder_mock: Recorder, hass_client: ClientSessionGenerator
 ) -> None:
     """Test limiting history to entity_ids with skip_initial_state."""
     await async_setup_component(
@@ -550,7 +553,7 @@ async def test_entity_ids_limit_via_api_with_skip_initial_state(
 
 
 async def test_fetch_period_api_before_history_started(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, recorder_mock: Recorder, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the fetch period view for history for the far past."""
     await async_setup_component(
@@ -571,7 +574,7 @@ async def test_fetch_period_api_before_history_started(
 
 
 async def test_fetch_period_api_far_future(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, recorder_mock: Recorder, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the fetch period view for history for the far future."""
     await async_setup_component(
@@ -592,7 +595,7 @@ async def test_fetch_period_api_far_future(
 
 
 async def test_fetch_period_api_with_invalid_datetime(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, recorder_mock: Recorder, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the fetch period view for history with an invalid date time."""
     await async_setup_component(
@@ -611,7 +614,7 @@ async def test_fetch_period_api_with_invalid_datetime(
 
 
 async def test_fetch_period_api_invalid_end_time(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, recorder_mock: Recorder, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the fetch period view for history with an invalid end time."""
     await async_setup_component(
@@ -633,7 +636,7 @@ async def test_fetch_period_api_invalid_end_time(
 
 
 async def test_entity_ids_limit_via_api_with_end_time(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, recorder_mock: Recorder, hass_client: ClientSessionGenerator
 ) -> None:
     """Test limiting history to entity_ids with end_time."""
     await async_setup_component(
@@ -679,7 +682,7 @@ async def test_entity_ids_limit_via_api_with_end_time(
 
 
 async def test_fetch_period_api_with_no_entity_ids(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, recorder_mock: Recorder, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the fetch period view for history with minimal_response."""
     await async_setup_component(hass, "history", {})
@@ -733,6 +736,7 @@ async def test_fetch_period_api_with_no_entity_ids(
 )
 async def test_history_with_invalid_entity_ids(
     hass: HomeAssistant,
+    recorder_mock: Recorder,
     hass_client: ClientSessionGenerator,
     filter_entity_id,
     status_code,

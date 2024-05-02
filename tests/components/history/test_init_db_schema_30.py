@@ -11,6 +11,7 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import recorder
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.core import HomeAssistant
@@ -405,7 +406,7 @@ async def async_record_states(hass):
 
 
 async def test_fetch_period_api(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, recorder_mock: Recorder, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the fetch period view for history."""
     await async_setup_component(hass, "history", {})
@@ -419,7 +420,7 @@ async def test_fetch_period_api(
 
 
 async def test_fetch_period_api_with_minimal_response(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, recorder_mock: Recorder, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the fetch period view for history with minimal_response."""
     now = dt_util.utcnow()
@@ -462,7 +463,7 @@ async def test_fetch_period_api_with_minimal_response(
 
 
 async def test_fetch_period_api_with_no_timestamp(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, recorder_mock: Recorder, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the fetch period view for history with no timestamp."""
     await async_setup_component(hass, "history", {})
@@ -474,7 +475,7 @@ async def test_fetch_period_api_with_no_timestamp(
 
 
 async def test_fetch_period_api_with_include_order(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, recorder_mock: Recorder, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the fetch period view for history."""
     await async_setup_component(
@@ -498,7 +499,7 @@ async def test_fetch_period_api_with_include_order(
 
 
 async def test_entity_ids_limit_via_api(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, recorder_mock: Recorder, hass_client: ClientSessionGenerator
 ) -> None:
     """Test limiting history to entity_ids."""
     await async_setup_component(
@@ -526,7 +527,7 @@ async def test_entity_ids_limit_via_api(
 
 
 async def test_entity_ids_limit_via_api_with_skip_initial_state(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, recorder_mock: Recorder, hass_client: ClientSessionGenerator
 ) -> None:
     """Test limiting history to entity_ids with skip_initial_state."""
     await async_setup_component(
@@ -562,7 +563,7 @@ async def test_entity_ids_limit_via_api_with_skip_initial_state(
 
 
 async def test_history_during_period(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test history_during_period."""
     now = dt_util.utcnow()
@@ -710,7 +711,7 @@ async def test_history_during_period(
 
 
 async def test_history_during_period_impossible_conditions(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test history_during_period returns when condition cannot be true."""
     await async_setup_component(hass, "history", {})
@@ -775,6 +776,7 @@ async def test_history_during_period_impossible_conditions(
 )
 async def test_history_during_period_significant_domain(
     hass: HomeAssistant,
+    recorder_mock: Recorder,
     hass_ws_client: WebSocketGenerator,
     time_zone,
 ) -> None:
@@ -957,7 +959,7 @@ async def test_history_during_period_significant_domain(
 
 
 async def test_history_during_period_bad_start_time(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test history_during_period bad state time."""
     await async_setup_component(
@@ -982,7 +984,7 @@ async def test_history_during_period_bad_start_time(
 
 
 async def test_history_during_period_bad_end_time(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test history_during_period bad end time."""
     now = dt_util.utcnow()

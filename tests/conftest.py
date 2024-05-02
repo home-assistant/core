@@ -553,8 +553,6 @@ async def hass(
     async with async_test_home_assistant(loop, load_registries) as hass:
         orig_exception_handler = loop.get_exception_handler()
         loop.set_exception_handler(exc_handle)
-        if setup_recorder_before_hass:
-            await setup_recorder_before_hass(hass)
 
         yield hass
 
@@ -1581,7 +1579,7 @@ async def recorder_mock(
 
 
 @pytest.fixture
-def setup_recorder_before_hass() -> RecorderInstanceGenerator | None:
+def setup_recorder_before_hass() -> None:
     """Mock the recorder.
 
     Override or parametrize this fixture with a fixture that mocks the recorder,
