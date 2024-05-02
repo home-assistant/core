@@ -32,7 +32,7 @@ habluetooth==2.8.0
 hass-nabucasa==0.78.0
 hassil==1.6.1
 home-assistant-bluetooth==1.12.0
-home-assistant-frontend==20240430.0
+home-assistant-frontend==20240501.0
 home-assistant-intents==2024.4.24
 httpx==0.27.0
 ifaddr==0.2.0
@@ -192,3 +192,8 @@ pycountry>=23.12.11
 
 # scapy<2.5.0 will not work with python3.12
 scapy>=2.5.0
+
+# tuf isn't updated to deal with breaking changes in securesystemslib==1.0.
+# Only tuf>=4 includes a constraint to <1.0.
+# https://github.com/theupdateframework/python-tuf/releases/tag/v4.0.0
+tuf>=4.0.0

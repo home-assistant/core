@@ -244,6 +244,7 @@ homeassistant.components.image.*
 homeassistant.components.image_processing.*
 homeassistant.components.image_upload.*
 homeassistant.components.imap.*
+homeassistant.components.imgw_pib.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
 homeassistant.components.input_text.*

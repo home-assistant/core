@@ -34,12 +34,12 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import Airtouch5ConfigEntry
 from .const import DOMAIN, FAN_INTELLIGENT_AUTO, FAN_TURBO
 from .entity import Airtouch5Entity
 
@@ -92,11 +92,11 @@ FAN_MODE_TO_SET_AC_FAN_SPEED = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: Airtouch5ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Airtouch 5 Climate entities."""
-    client: Airtouch5SimpleClient = hass.data[DOMAIN][config_entry.entry_id]
+    client = config_entry.runtime_data
 
     entities: list[ClimateEntity] = []
 
