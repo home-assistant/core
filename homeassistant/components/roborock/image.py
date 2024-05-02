@@ -86,7 +86,7 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
     def is_map_valid(self) -> bool:
         """Update the map if it is valid.
 
-        Update this map if it is the current active map, and the
+        Update this map if it is the currently active map, and the
         vacuum is cleaning, or if it has never been set at all.
         """
         return self.cached_map == b"" or (
