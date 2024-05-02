@@ -19,20 +19,10 @@
   "entity": {
     "binary_sensor": {
       "flood_alarm": {
-        "name": "Flood alarm",
-        "state_attributes": {
-          "alarm_level": {
-            "name": "Alarm level"
-          }
-        }
+        "name": "Flood alarm"
       },
       "flood_warning": {
-        "name": "Flood warning",
-        "state_attributes": {
-          "warning_level": {
-            "name": "Warning level"
-          }
-        }
+        "name": "Flood warning"
       }
     },
     "sensor": {
