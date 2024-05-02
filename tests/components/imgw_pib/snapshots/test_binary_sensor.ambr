@@ -35,7 +35,6 @@
 # name: test_binary_sensor[binary_sensor.river_name_station_name_flood_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'alarm_level': 630.0,
       'attribution': 'Data provided by IMGW-PIB',
       'device_class': 'safety',
       'friendly_name': 'River Name (Station Name) Flood alarm',
@@ -87,7 +86,6 @@
       'attribution': 'Data provided by IMGW-PIB',
       'device_class': 'safety',
       'friendly_name': 'River Name (Station Name) Flood warning',
-      'warning_level': 590.0,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.river_name_station_name_flood_warning',

@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
 
 from imgw_pib.model import HydrologicalData
 
@@ -29,7 +28,6 @@ class ImgwPibBinarySensorEntityDescription(BinarySensorEntityDescription):
     """IMGW-PIB sensor entity description."""
 
     value: Callable[[HydrologicalData], bool | None]
-    attrs: Callable[[HydrologicalData], dict[str, Any]]
 
 
 BINARY_SENSOR_TYPES: tuple[ImgwPibBinarySensorEntityDescription, ...] = (
@@ -38,14 +36,12 @@ BINARY_SENSOR_TYPES: tuple[ImgwPibBinarySensorEntityDescription, ...] = (
         translation_key="flood_warning",
         device_class=BinarySensorDeviceClass.SAFETY,
         value=lambda data: data.flood_warning,
-        attrs=lambda data: {"warning_level": data.flood_warning_level.value},
     ),
     ImgwPibBinarySensorEntityDescription(
         key="flood_alarm",
         translation_key="flood_alarm",
         device_class=BinarySensorDeviceClass.SAFETY,
         value=lambda data: data.flood_alarm,
-        attrs=lambda data: {"alarm_level": data.flood_alarm_level.value},
     ),
 )
 
@@ -90,8 +86,3 @@ class ImgwPibBinarySensorEntity(
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.value(self.coordinator.data)
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any]:
-        """Return entity specific state attributes."""
-        return self.entity_description.attrs(self.coordinator.data)
