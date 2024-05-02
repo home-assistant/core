@@ -225,7 +225,7 @@ class AirthingsSensor(
             manufacturer=airthings_device.manufacturer,
             hw_version=airthings_device.hw_version,
             sw_version=airthings_device.sw_version,
-            model=airthings_device.model.name,
+            model=airthings_device.model.product_name,
         )
 
     @property
