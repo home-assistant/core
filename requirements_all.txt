@@ -386,7 +386,7 @@ aiotankerkoenig==0.4.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==76
+aiounifi==77
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -2119,11 +2119,9 @@ pyschlage==2024.2.0
 # homeassistant.components.sensibo
 pysensibo==1.0.36
 
+# homeassistant.components.serial
 # homeassistant.components.zha
 pyserial-asyncio-fast==0.11
-
-# homeassistant.components.serial
-pyserial-asyncio==0.6
 
 # homeassistant.components.acer_projector
 # homeassistant.components.crownstone

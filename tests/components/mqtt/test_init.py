@@ -31,6 +31,7 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
+    CONF_PROTOCOL,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_RELOAD,
@@ -2221,21 +2222,21 @@ async def test_setup_manual_mqtt_with_invalid_config(
         (
             {
                 mqtt.CONF_BROKER: "mock-broker",
-                mqtt.CONF_PROTOCOL: "3.1",
+                CONF_PROTOCOL: "3.1",
             },
             3,
         ),
         (
             {
                 mqtt.CONF_BROKER: "mock-broker",
-                mqtt.CONF_PROTOCOL: "3.1.1",
+                CONF_PROTOCOL: "3.1.1",
             },
             4,
         ),
         (
             {
                 mqtt.CONF_BROKER: "mock-broker",
-                mqtt.CONF_PROTOCOL: "5",
+                CONF_PROTOCOL: "5",
             },
             5,
         ),
