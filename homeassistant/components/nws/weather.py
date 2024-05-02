@@ -166,45 +166,45 @@ class NWSWeather(CoordinatorWeatherEntity):
     @property
     def native_temperature(self) -> float | None:
         """Return the current temperature."""
-        if self.nws.observation:
-            return self.nws.observation.get("temperature")
+        if observation := self.nws.observation:
+            return observation.get("temperature")
         return None
 
     @property
     def native_pressure(self) -> int | None:
         """Return the current pressure."""
-        if self.nws.observation:
-            return self.nws.observation.get("seaLevelPressure")
+        if observation := self.nws.observation:
+            return observation.get("seaLevelPressure")
         return None
 
     @property
     def humidity(self) -> float | None:
         """Return the name of the sensor."""
-        if self.nws.observation:
-            return self.nws.observation.get("relativeHumidity")
+        if observation := self.nws.observation:
+            return observation.get("relativeHumidity")
         return None
 
     @property
     def native_wind_speed(self) -> float | None:
         """Return the current windspeed."""
-        if self.nws.observation:
-            return self.nws.observation.get("windSpeed")
+        if observation := self.nws.observation:
+            return observation.get("windSpeed")
         return None
 
     @property
     def wind_bearing(self) -> int | None:
         """Return the current wind bearing (degrees)."""
-        if self.nws.observation:
-            return self.nws.observation.get("windDirection")
+        if observation := self.nws.observation:
+            return observation.get("windDirection")
         return None
 
     @property
     def condition(self) -> str | None:
         """Return current condition."""
         weather = None
-        if self.nws.observation:
-            weather = self.nws.observation.get("iconWeather")
-            time = cast(str, self.nws.observation.get("iconTime"))
+        if observation := self.nws.observation:
+            weather = observation.get("iconWeather")
+            time = cast(str, observation.get("iconTime"))
 
         if weather:
             return convert_condition(time, weather)
@@ -213,8 +213,8 @@ class NWSWeather(CoordinatorWeatherEntity):
     @property
     def native_visibility(self) -> int | None:
         """Return visibility."""
-        if self.nws.observation:
-            return self.nws.observation.get("visibility")
+        if observation := self.nws.observation:
+            return observation.get("visibility")
         return None
 
     def _forecast(
