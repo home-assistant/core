@@ -74,4 +74,4 @@ class OndiloClient(Ondilo):
                 )
                 pool["ICO"] = None
 
-        return [pool for pool in pools if "ICO" in pool and pool["ICO"]]
+        return [pool for pool in pools if pool.get("ICO")]
