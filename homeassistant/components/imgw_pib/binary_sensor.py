@@ -14,11 +14,10 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ImgwPibConfigEntry
-from .const import ATTRIBUTION
 from .coordinator import ImgwPibDataUpdateCoordinator
+from .entity import ImgwPibEntity
 
 PARALLEL_UPDATES = 1
 
@@ -61,13 +60,9 @@ async def async_setup_entry(
     )
 
 
-class ImgwPibBinarySensorEntity(
-    CoordinatorEntity[ImgwPibDataUpdateCoordinator], BinarySensorEntity
-):
+class ImgwPibBinarySensorEntity(ImgwPibEntity, BinarySensorEntity):
     """Define IMGW-PIB binary sensor entity."""
 
-    _attr_attribution = ATTRIBUTION
-    _attr_has_entity_name = True
     entity_description: ImgwPibBinarySensorEntityDescription
 
     def __init__(
@@ -79,7 +74,6 @@ class ImgwPibBinarySensorEntity(
         super().__init__(coordinator)
 
         self._attr_unique_id = f"{coordinator.station_id}_{description.key}"
-        self._attr_device_info = coordinator.device_info
         self.entity_description = description
 
     @property
