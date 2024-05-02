@@ -19,25 +19,19 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CoordinatorDataT, NextDnsConnectionUpdateCoordinator
 from .const import ATTR_CONNECTION, DOMAIN
+from .coordinator import CoordinatorDataT, NextDnsConnectionUpdateCoordinator
 
 PARALLEL_UPDATES = 1
 
 
-@dataclass(frozen=True)
-class NextDnsBinarySensorRequiredKeysMixin(Generic[CoordinatorDataT]):
-    """Mixin for required keys."""
-
-    state: Callable[[CoordinatorDataT, str], bool]
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class NextDnsBinarySensorEntityDescription(
-    BinarySensorEntityDescription,
-    NextDnsBinarySensorRequiredKeysMixin[CoordinatorDataT],
+    BinarySensorEntityDescription, Generic[CoordinatorDataT]
 ):
     """NextDNS binary sensor entity description."""
+
+    state: Callable[[CoordinatorDataT, str], bool]
 
 
 SENSORS = (

@@ -26,7 +26,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CoordinatorDataT, NextDnsUpdateCoordinator
 from .const import (
     ATTR_DNSSEC,
     ATTR_ENCRYPTION,
@@ -35,24 +34,19 @@ from .const import (
     ATTR_STATUS,
     DOMAIN,
 )
+from .coordinator import CoordinatorDataT, NextDnsUpdateCoordinator
 
 PARALLEL_UPDATES = 1
 
 
-@dataclass(frozen=True)
-class NextDnsSensorRequiredKeysMixin(Generic[CoordinatorDataT]):
-    """Class for NextDNS entity required keys."""
+@dataclass(frozen=True, kw_only=True)
+class NextDnsSensorEntityDescription(
+    SensorEntityDescription, Generic[CoordinatorDataT]
+):
+    """NextDNS sensor entity description."""
 
     coordinator_type: str
     value: Callable[[CoordinatorDataT], StateType]
-
-
-@dataclass(frozen=True)
-class NextDnsSensorEntityDescription(
-    SensorEntityDescription,
-    NextDnsSensorRequiredKeysMixin[CoordinatorDataT],
-):
-    """NextDNS sensor entity description."""
 
 
 SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (

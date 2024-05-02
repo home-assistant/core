@@ -22,6 +22,7 @@ RUN \
         libavcodec-dev \
         libavdevice-dev \
         libavutil-dev \
+        libgammu-dev \
         libswscale-dev \
         libswresample-dev \
         libavfilter-dev \
