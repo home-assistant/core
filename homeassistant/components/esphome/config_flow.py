@@ -268,14 +268,15 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="mqtt_missing_ip")
 
         # mac address is lowercase and without :, normalize it
-        mac_address = format_mac(device_info["mac"])
+        unformatted_mac = cast(str, device_info["mac"])
+        mac_address = format_mac(unformatted_mac)
 
-        device_name = device_info["name"]
+        device_name = cast(str, device_info["name"])
 
         self._device_name = device_name
-        self._name = device_info.get("friendly_name", device_name)
-        self._host = device_info["ip"]
-        self._port = device_info["port"]
+        self._name = cast(str, device_info.get("friendly_name", device_name))
+        self._host = cast(str, device_info["ip"])
+        self._port = cast(int, device_info["port"])
 
         self._noise_required = "api_encryption" in device_info
 
