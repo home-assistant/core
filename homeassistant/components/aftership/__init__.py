@@ -14,11 +14,11 @@ from .const import DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
+AfterShipConfigEntry = ConfigEntry[AfterShip]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: AfterShipConfigEntry) -> bool:
     """Set up AfterShip from a config entry."""
-
-    hass.data.setdefault(DOMAIN, {})
 
     session = async_get_clientsession(hass)
     aftership = AfterShip(api_key=entry.data[CONF_API_KEY], session=session)
@@ -28,6 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except AfterShipException as err:
         raise ConfigEntryNotReady from err
 
+    entry.runtime_data = aftership
     hass.data[DOMAIN][entry.entry_id] = aftership
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -37,7 +38,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
