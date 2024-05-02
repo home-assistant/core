@@ -413,7 +413,7 @@ aioymaps==1.2.2
 airly==1.1.0
 
 # homeassistant.components.airthings_ble
-airthings-ble==0.7.1
+airthings-ble==0.8.0
 
 # homeassistant.components.airthings
 airthings-cloud==0.2.0
@@ -2373,7 +2373,7 @@ pyvlx==0.2.21
 pyvolumio==0.1.5
 
 # homeassistant.components.waze_travel_time
-pywaze==1.0.0
+pywaze==1.0.1
 
 # homeassistant.components.weatherflow
 pyweatherflowudp==1.4.5
