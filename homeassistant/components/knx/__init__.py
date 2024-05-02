@@ -193,20 +193,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             knx_module.exposures.append(
                 create_knx_exposure(hass, knx_module.xknx, expose_config)
             )
-    # always forward sensor for system entities (telegram counter, etc.)
-    # forward all platforms that support UI entity management
-    await hass.config_entries.async_forward_entry_setups(
-        entry, {Platform.SENSOR} | SUPPORTED_PLATFORMS_UI
-    )
-    # forward yaml-only managed platforms on demand
     await hass.config_entries.async_forward_entry_setups(
         entry,
-        [
-            platform
-            for platform in SUPPORTED_PLATFORMS_YAML
-            if platform in config
-            and platform not in SUPPORTED_PLATFORMS_UI | {Platform.SENSOR}
-        ],
+        {
+            Platform.SENSOR,  # always forward sensor for system entities (telegram counter, etc.)
+            *SUPPORTED_PLATFORMS_UI,  # forward all platforms that support UI entity management
+            *{  # forward yaml-only managed platforms on demand
+                platform for platform in SUPPORTED_PLATFORMS_YAML if platform in config
+            },
+        },
     )
 
     # set up notify service for backwards compatibility - remove 2024.11
@@ -236,12 +231,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry,
         {
             Platform.SENSOR,  # always unload system entities (telegram counter, etc.)
-        }
-        | SUPPORTED_PLATFORMS_UI
-        | {
-            platform
-            for platform in SUPPORTED_PLATFORMS_YAML
-            if platform in hass.data[DATA_KNX_CONFIG]
+            *SUPPORTED_PLATFORMS_UI,  # unload all platforms that support UI entity management
+            *{  # unload yaml-only managed platforms if configured
+                platform
+                for platform in SUPPORTED_PLATFORMS_YAML
+                if platform in hass.data[DATA_KNX_CONFIG]
+            },
         },
     )
     if unload_ok:
