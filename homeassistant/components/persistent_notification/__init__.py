@@ -38,7 +38,7 @@ class Notification(TypedDict):
     """Persistent notification."""
 
     created_at: datetime
-    message: str
+    message: str | None
     notification_id: str
     title: str | None
 
@@ -64,17 +64,14 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
+
 @callback
-def async_load_translantions(
-    hass: HomeAssistant, domain: str | None = None
-) -> dict[str, str]:
-    """Load notification translations specified domain."""
+def load_translations(hass: HomeAssistant, domain: str | None = None) -> dict[str, str]:
+    """Load translations for notification."""
 
     lang = hass.config.language
 
-    return translation.async_get_cached_translations(
-        hass, lang, "notification", domain
-    )
+    return translation.async_get_cached_translations(hass, lang, "notification", domain)
 
 
 @callback
@@ -124,7 +121,7 @@ def async_create(
     # If domain and translation key is specified,
     # load notification translations for domain.
     if domain and translation_key:
-        translations = async_load_translantions(hass, domain)
+        translations = load_translations(hass, domain)
 
         localize_message = f"component.{domain}.notification.{translation_key}.message"
         localize_title = f"component.{domain}.notification.{translation_key}.title"
@@ -132,13 +129,13 @@ def async_create(
         if localize_message in translations:
             if not translation_placeholders:
                 message = translations[localize_message]
-                # It is obligatory to have translated title.
+                # It is not obligatory to have translated title.
                 title = (
                     translations[localize_title]
                     if translations[localize_title]
                     else title
                 )
-            else:
+            else:  # we have placeholders, so we need to format it
                 with suppress(KeyError):
                     message = translations[localize_message].format(
                         **translation_placeholders
