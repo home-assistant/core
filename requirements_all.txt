@@ -386,7 +386,7 @@ aiotankerkoenig==0.4.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==76
+aiounifi==77
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -413,7 +413,7 @@ aioymaps==1.2.2
 airly==1.1.0
 
 # homeassistant.components.airthings_ble
-airthings-ble==0.7.1
+airthings-ble==0.8.0
 
 # homeassistant.components.airthings
 airthings-cloud==0.2.0
@@ -1779,7 +1779,7 @@ pydiscovergy==3.0.0
 pydoods==1.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2024.3.0
+pydrawise==2024.4.1
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
@@ -2119,10 +2119,10 @@ pyschlage==2024.2.0
 # homeassistant.components.sensibo
 pysensibo==1.0.36
 
+# homeassistant.components.serial
 # homeassistant.components.zha
 pyserial-asyncio-fast==0.11
 
-# homeassistant.components.serial
 # homeassistant.components.zha
 pyserial-asyncio==0.6
 
@@ -2373,7 +2373,7 @@ pyvlx==0.2.21
 pyvolumio==0.1.5
 
 # homeassistant.components.waze_travel_time
-pywaze==1.0.0
+pywaze==1.0.1
 
 # homeassistant.components.weatherflow
 pyweatherflowudp==1.4.5
