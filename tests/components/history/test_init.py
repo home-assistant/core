@@ -9,7 +9,6 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import history
-from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
@@ -43,7 +42,7 @@ async def test_setup() -> None:
     # Verification occurs in the fixture
 
 
-async def test_get_significant_states(hass_history, hass: HomeAssistant) -> None:
+async def test_get_significant_states(hass: HomeAssistant, hass_history) -> None:
     """Test that only significant states are returned.
 
     We should get back every thermostat change that
@@ -56,7 +55,7 @@ async def test_get_significant_states(hass_history, hass: HomeAssistant) -> None
 
 
 async def test_get_significant_states_minimal_response(
-    hass_history, hass: HomeAssistant
+    hass: HomeAssistant, hass_history
 ) -> None:
     """Test that only significant states are returned.
 
@@ -122,7 +121,7 @@ async def test_get_significant_states_minimal_response(
 
 
 async def test_get_significant_states_with_initial(
-    hass_history, hass: HomeAssistant
+    hass: HomeAssistant, hass_history
 ) -> None:
     """Test that only significant states are returned.
 
@@ -150,7 +149,7 @@ async def test_get_significant_states_with_initial(
 
 
 async def test_get_significant_states_without_initial(
-    hass_history, hass: HomeAssistant
+    hass: HomeAssistant, hass_history
 ) -> None:
     """Test that only significant states are returned.
 
@@ -181,7 +180,7 @@ async def test_get_significant_states_without_initial(
 
 
 async def test_get_significant_states_entity_id(
-    hass_history, hass: HomeAssistant
+    hass: HomeAssistant, hass_history
 ) -> None:
     """Test that only significant states are returned for one entity."""
     zero, four, states = await async_record_states(hass)
@@ -196,7 +195,7 @@ async def test_get_significant_states_entity_id(
 
 
 async def test_get_significant_states_multiple_entity_ids(
-    hass_history, hass: HomeAssistant
+    hass: HomeAssistant, hass_history
 ) -> None:
     """Test that only significant states are returned for one entity."""
     zero, four, states = await async_record_states(hass)
@@ -215,7 +214,7 @@ async def test_get_significant_states_multiple_entity_ids(
 
 
 async def test_get_significant_states_are_ordered(
-    hass_history, hass: HomeAssistant
+    hass: HomeAssistant, hass_history
 ) -> None:
     """Test order of results from get_significant_states.
 
@@ -231,7 +230,7 @@ async def test_get_significant_states_are_ordered(
     assert list(hist.keys()) == entity_ids
 
 
-async def test_get_significant_states_only(hass_history, hass: HomeAssistant) -> None:
+async def test_get_significant_states_only(hass: HomeAssistant, hass_history) -> None:
     """Test significant states when significant_states_only is set."""
     entity_id = "sensor.test"
 
@@ -382,7 +381,7 @@ async def async_record_states(hass):
 
 
 async def test_fetch_period_api(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the fetch period view for history."""
     await async_setup_component(hass, "history", {})
@@ -394,7 +393,6 @@ async def test_fetch_period_api(
 
 
 async def test_fetch_period_api_with_use_include_order(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
@@ -413,7 +411,7 @@ async def test_fetch_period_api_with_use_include_order(
 
 
 async def test_fetch_period_api_with_minimal_response(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the fetch period view for history with minimal_response."""
     now = dt_util.utcnow()
@@ -455,7 +453,7 @@ async def test_fetch_period_api_with_minimal_response(
 
 
 async def test_fetch_period_api_with_no_timestamp(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the fetch period view for history with no timestamp."""
     await async_setup_component(hass, "history", {})
@@ -465,7 +463,6 @@ async def test_fetch_period_api_with_no_timestamp(
 
 
 async def test_fetch_period_api_with_include_order(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
@@ -493,7 +490,7 @@ async def test_fetch_period_api_with_include_order(
 
 
 async def test_entity_ids_limit_via_api(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test limiting history to entity_ids."""
     await async_setup_component(
@@ -519,7 +516,7 @@ async def test_entity_ids_limit_via_api(
 
 
 async def test_entity_ids_limit_via_api_with_skip_initial_state(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test limiting history to entity_ids with skip_initial_state."""
     await async_setup_component(
@@ -553,7 +550,7 @@ async def test_entity_ids_limit_via_api_with_skip_initial_state(
 
 
 async def test_fetch_period_api_before_history_started(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the fetch period view for history for the far past."""
     await async_setup_component(
@@ -574,7 +571,7 @@ async def test_fetch_period_api_before_history_started(
 
 
 async def test_fetch_period_api_far_future(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the fetch period view for history for the far future."""
     await async_setup_component(
@@ -595,7 +592,7 @@ async def test_fetch_period_api_far_future(
 
 
 async def test_fetch_period_api_with_invalid_datetime(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the fetch period view for history with an invalid date time."""
     await async_setup_component(
@@ -614,7 +611,7 @@ async def test_fetch_period_api_with_invalid_datetime(
 
 
 async def test_fetch_period_api_invalid_end_time(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the fetch period view for history with an invalid end time."""
     await async_setup_component(
@@ -636,7 +633,7 @@ async def test_fetch_period_api_invalid_end_time(
 
 
 async def test_entity_ids_limit_via_api_with_end_time(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test limiting history to entity_ids with end_time."""
     await async_setup_component(
@@ -682,7 +679,7 @@ async def test_entity_ids_limit_via_api_with_end_time(
 
 
 async def test_fetch_period_api_with_no_entity_ids(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the fetch period view for history with minimal_response."""
     await async_setup_component(hass, "history", {})
@@ -735,13 +732,12 @@ async def test_fetch_period_api_with_no_entity_ids(
     ],
 )
 async def test_history_with_invalid_entity_ids(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     filter_entity_id,
     status_code,
     response_contains1,
     response_contains2,
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test sending valid and invalid entity_ids to the API."""
     await async_setup_component(

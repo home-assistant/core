@@ -3,14 +3,23 @@
 import pytest
 
 from homeassistant.components import history
-from homeassistant.components.recorder import Recorder
 from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.typing import RecorderInstanceGenerator
+
 
 @pytest.fixture
-async def hass_history(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+async def setup_recorder_before_hass(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> RecorderInstanceGenerator | None:
+    """Set up recorder."""
+    return async_setup_recorder_instance
+
+
+@pytest.fixture
+async def hass_history(hass: HomeAssistant) -> None:
     """Home Assistant fixture with history."""
     config = history.CONFIG_SCHEMA(
         {

@@ -526,6 +526,7 @@ async def hass(
     load_registries: bool,
     hass_storage: dict[str, Any],
     request: pytest.FixtureRequest,
+    setup_recorder_before_hass: RecorderInstanceGenerator | None,
 ) -> AsyncGenerator[HomeAssistant, None]:
     """Create a test instance of Home Assistant."""
 
@@ -552,6 +553,8 @@ async def hass(
     async with async_test_home_assistant(loop, load_registries) as hass:
         orig_exception_handler = loop.get_exception_handler()
         loop.set_exception_handler(exc_handle)
+        if setup_recorder_before_hass:
+            await setup_recorder_before_hass(hass)
 
         yield hass
 
@@ -1575,6 +1578,15 @@ async def recorder_mock(
 ) -> recorder.Recorder:
     """Fixture with in-memory recorder."""
     return await async_setup_recorder_instance(hass, recorder_config)
+
+
+@pytest.fixture
+def setup_recorder_before_hass() -> RecorderInstanceGenerator | None:
+    """Mock the recorder.
+
+    Override or parametrize this fixture with a fixture that mocks the recorder,
+    in the tests that need to test the recorder.
+    """
 
 
 @pytest.fixture(name="enable_bluetooth")
