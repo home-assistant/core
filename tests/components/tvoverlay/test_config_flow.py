@@ -13,10 +13,10 @@ from homeassistant.core import HomeAssistant
 from . import (
     CONF_CONFIG_FLOW,
     CONF_DEFAULT_FLOW,
-    DEFAULT_NAME,
-    HOST,
+    ID,
     NAME,
     mocked_tvoverlay_info,
+    mocked_tvoverlay_unknown,
 )
 
 from tests.common import MockConfigEntry
@@ -60,14 +60,14 @@ async def test_config_flow_errors(
             CONF_CONFIG_FLOW,
             data_entry_flow.FlowResultType.CREATE_ENTRY,
             NAME,
-            CONF_CONFIG_FLOW,
+            CONF_DEFAULT_FLOW,
             None,
         ),
         (
-            CONF_DEFAULT_FLOW,
-            data_entry_flow.FlowResultType.CREATE_ENTRY,
-            DEFAULT_NAME,
-            CONF_DEFAULT_FLOW,
+            None,
+            data_entry_flow.FlowResultType.FORM,
+            None,
+            None,
             None,
         ),
         (
@@ -92,7 +92,7 @@ async def test_tvoverlay_config_flow(
         entry = MockConfigEntry(
             domain=DOMAIN,
             data=CONF_CONFIG_FLOW,
-            unique_id=HOST,
+            unique_id=ID,
         )
         entry.add_to_hass(hass)
 
@@ -106,6 +106,13 @@ async def test_tvoverlay_config_flow(
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 user_input=user_input,
+            )
+    else:
+        user_input = CONF_CONFIG_FLOW
+        with mocked_tvoverlay_unknown(user_input.get(CONF_NAME)):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                user_input=CONF_CONFIG_FLOW,
             )
 
     result_type = result.get("type", None)
