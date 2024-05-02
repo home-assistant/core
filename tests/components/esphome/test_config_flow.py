@@ -30,6 +30,7 @@ from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from . import VALID_NOISE_PSK
 
@@ -1414,3 +1415,72 @@ async def test_user_discovers_name_no_dashboard(
         CONF_DEVICE_NAME: "test",
     }
     assert mock_client.noise_psk == VALID_NOISE_PSK
+
+
+async def mqtt_discovery_test_abort(hass: HomeAssistant, payload: str, reason: str):
+    """Test discovery aborted."""
+    service_info = MqttServiceInfo(
+        topic="esphome/discover/test",
+        payload=payload,
+        qos=0,
+        retain=False,
+        subscribed_topic="esphome/discover/#",
+        timestamp=None,
+    )
+    flow = await hass.config_entries.flow.async_init(
+        "esphome", context={"source": config_entries.SOURCE_MQTT}, data=service_info
+    )
+    assert flow["type"] is FlowResultType.ABORT
+    assert flow["reason"] == reason
+
+
+async def test_discovery_mqtt_no_mac(
+    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+) -> None:
+    """Test discovery aborted if mac is missing in MQTT payload."""
+    await mqtt_discovery_test_abort(hass, "{}", "mqtt_missing_mac")
+
+
+async def test_discovery_mqtt_no_api(
+    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+) -> None:
+    """Test discovery aborted if api/port is missing in MQTT payload."""
+    await mqtt_discovery_test_abort(hass, '{"mac":"abcdef123456"}', "mqtt_missing_api")
+
+
+async def test_discovery_mqtt_no_ip(
+    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+) -> None:
+    """Test discovery aborted if ip is missing in MQTT payload."""
+    await mqtt_discovery_test_abort(
+        hass, '{"mac":"abcdef123456","port":6053}', "mqtt_missing_ip"
+    )
+
+
+async def test_discovery_mqtt_initiation(
+    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+) -> None:
+    """Test discovery importing works."""
+    service_info = MqttServiceInfo(
+        topic="esphome/discover/test",
+        payload='{"name":"mock_name","mac":"1122334455aa","port":6053,"ip":"192.168.43.183"}',
+        qos=0,
+        retain=False,
+        subscribed_topic="esphome/discover/#",
+        timestamp=None,
+    )
+    flow = await hass.config_entries.flow.async_init(
+        "esphome", context={"source": config_entries.SOURCE_MQTT}, data=service_info
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test"
+    assert result["data"][CONF_HOST] == "192.168.43.183"
+    assert result["data"][CONF_PORT] == 6053
+
+    assert result["result"]
+    assert result["result"].unique_id == "11:22:33:44:55:aa"

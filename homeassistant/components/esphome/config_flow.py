@@ -31,6 +31,8 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
+from homeassistant.util.json import json_loads
 
 from .const import (
     CONF_ALLOW_SERVICE_CALLS,
@@ -241,6 +243,41 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._host = discovery_info.host
         self._port = discovery_info.port
         self._noise_required = bool(discovery_info.properties.get("api_encryption"))
+
+        # Check if already configured
+        await self.async_set_unique_id(mac_address)
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: self._host, CONF_PORT: self._port}
+        )
+
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_mqtt(
+        self, discovery_info: MqttServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle MQTT discovery."""
+        device_info: dict[str, Any] = json_loads(discovery_info.payload)
+        if "mac" not in device_info:
+            return self.async_abort(reason="mqtt_missing_mac")
+
+        # there will be no port if the API is not enabled
+        if "port" not in device_info:
+            return self.async_abort(reason="mqtt_missing_api")
+
+        if "ip" not in device_info:
+            return self.async_abort(reason="mqtt_missing_ip")
+
+        # mac address is lowercase and without :, normalize it
+        mac_address = format_mac(device_info["mac"])
+
+        device_name = device_info["name"]
+
+        self._device_name = device_name
+        self._name = device_info.get("friendly_name", device_name)
+        self._host = device_info["ip"]
+        self._port = device_info["port"]
+
+        self._noise_required = "api_encryption" in device_info
 
         # Check if already configured
         await self.async_set_unique_id(mac_address)
