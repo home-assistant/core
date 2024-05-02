@@ -132,9 +132,10 @@ def async_create(
                 # It is not obligatory to have translated title.
                 title = (
                     translations[localize_title]
-                    if translations[localize_title]
+                    if translations.get(localize_title)
                     else title
                 )
+
             else:  # we have placeholders, so we need to format it
                 with suppress(KeyError):
                     message = translations[localize_message].format(
@@ -142,7 +143,7 @@ def async_create(
                     )
                 title = (
                     translations[localize_title]
-                    if translations[localize_title]
+                    if translations.get(localize_title)
                     else title
                 )
 
