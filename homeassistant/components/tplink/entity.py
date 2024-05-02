@@ -47,6 +47,7 @@ DEVICETYPES_WITH_SPECIALIZED_PLATFORMS = {
     DeviceType.Bulb,
     DeviceType.LightStrip,
     DeviceType.Dimmer,
+    DeviceType.Fan,
 }
 
 
@@ -181,8 +182,10 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
             return unique_id
 
         # For legacy sensors, we construct our IDs from the entity description
-        if self.entity_description is not None:
+        if hasattr(self, "entity_description") and self.entity_description is not None:
             return f"{legacy_device_id(device)}_{self.entity_description.key}"
+
+        return legacy_device_id(device)
 
     def _category_for_feature(self, feature: Feature | None) -> EntityCategory | None:
         """Return entity category for a feature."""
