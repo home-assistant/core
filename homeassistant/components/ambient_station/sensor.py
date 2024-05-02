@@ -10,7 +10,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_NAME,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -30,8 +29,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AmbientStation
-from .const import ATTR_LAST_DATA, DOMAIN, TYPE_SOLARRADIATION, TYPE_SOLARRADIATION_LX
+from . import AmbientStation, AmbientStationConfigEntry
+from .const import ATTR_LAST_DATA, TYPE_SOLARRADIATION, TYPE_SOLARRADIATION_LX
 from .entity import AmbientWeatherEntity
 
 TYPE_24HOURRAININ = "24hourrainin"
@@ -661,10 +660,12 @@ SENSOR_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AmbientStationConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Ambient PWS sensors based on a config entry."""
-    ambient = hass.data[DOMAIN][entry.entry_id]
+    ambient = entry.runtime_data
 
     async_add_entities(
         AmbientWeatherSensor(ambient, mac_address, station[ATTR_NAME], description)

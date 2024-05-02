@@ -22,6 +22,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
 import pytest
+from syrupy import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant import auth, bootstrap, config_entries, loader
@@ -233,7 +234,7 @@ async def async_test_home_assistant(
 
     orig_async_add_job = hass.async_add_job
     orig_async_add_executor_job = hass.async_add_executor_job
-    orig_async_create_task = hass.async_create_task
+    orig_async_create_task_internal = hass.async_create_task_internal
     orig_tz = dt_util.DEFAULT_TIME_ZONE
 
     def async_add_job(target, *args, eager_start: bool = False):
@@ -262,18 +263,18 @@ async def async_test_home_assistant(
 
         return orig_async_add_executor_job(target, *args)
 
-    def async_create_task(coroutine, name=None, eager_start=False):
+    def async_create_task_internal(coroutine, name=None, eager_start=True):
         """Create task."""
         if isinstance(coroutine, Mock) and not isinstance(coroutine, AsyncMock):
             fut = asyncio.Future()
             fut.set_result(None)
             return fut
 
-        return orig_async_create_task(coroutine, name, eager_start)
+        return orig_async_create_task_internal(coroutine, name, eager_start)
 
     hass.async_add_job = async_add_job
     hass.async_add_executor_job = async_add_executor_job
-    hass.async_create_task = async_create_task
+    hass.async_create_task_internal = async_create_task_internal
 
     hass.data[loader.DATA_CUSTOM_COMPONENTS] = {}
 
@@ -448,10 +449,11 @@ def async_fire_mqtt_message(
     msg.payload = payload
     msg.qos = qos
     msg.retain = retain
+    msg.timestamp = time.monotonic()
 
     mqtt_data: MqttData = hass.data["mqtt"]
     assert mqtt_data.client
-    mqtt_data.client._mqtt_handle_message(msg)
+    mqtt_data.client._async_mqtt_on_message(Mock(), None, msg)
 
 
 fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
@@ -1733,3 +1735,22 @@ def setup_test_component_platform(
 
     mock_platform(hass, f"test.{domain}", platform, built_in=built_in)
     return platform
+
+
+async def snapshot_platform(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    config_entry_id: str,
+) -> None:
+    """Snapshot a platform."""
+    entity_entries = er.async_entries_for_config_entry(entity_registry, config_entry_id)
+    assert entity_entries
+    assert (
+        len({entity_entry.domain for entity_entry in entity_entries}) == 1
+    ), "Please limit the loaded platforms to 1 platform."
+    for entity_entry in entity_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert entity_entry.disabled_by is None, "Please enable all entities."
+        assert (state := hass.states.get(entity_entry.entity_id))
+        assert state == snapshot(name=f"{entity_entry.entity_id}-state")

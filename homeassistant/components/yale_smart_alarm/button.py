@@ -5,11 +5,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import COORDINATOR, DOMAIN
+from . import YaleConfigEntry
 from .coordinator import YaleDataUpdateCoordinator
 from .entity import YaleAlarmEntity
 
@@ -23,14 +22,12 @@ BUTTON_TYPES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: YaleConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the button from a config entry."""
 
-    coordinator: YaleDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        COORDINATOR
-    ]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         [YalePanicButton(coordinator, description) for description in BUTTON_TYPES]

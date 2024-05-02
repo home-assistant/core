@@ -66,6 +66,7 @@ SUPPORTED_COMPONENTS = {
     "lawn_mower",
     "light",
     "lock",
+    "notify",
     "number",
     "scene",
     "siren",
@@ -176,7 +177,7 @@ async def async_start(  # noqa: C901
     @callback
     def async_discovery_message_received(msg: ReceiveMessage) -> None:  # noqa: C901
         """Process the received message."""
-        mqtt_data.last_discovery = time.time()
+        mqtt_data.last_discovery = time.monotonic()
         payload = msg.payload
         topic = msg.topic
         topic_trimmed = topic.replace(f"{discovery_topic}/", "", 1)
@@ -268,7 +269,7 @@ async def async_start(  # noqa: C901
                             availability_conf[CONF_TOPIC] = f"{topic[:-1]}{base}"
 
         # If present, the node_id will be included in the discovered object id
-        discovery_id = " ".join((node_id, object_id)) if node_id else object_id
+        discovery_id = f"{node_id} {object_id}" if node_id else object_id
         discovery_hash = (component, discovery_id)
 
         if discovery_payload:
@@ -369,7 +370,7 @@ async def async_start(  # noqa: C901
         )
     )
 
-    mqtt_data.last_discovery = time.time()
+    mqtt_data.last_discovery = time.monotonic()
     mqtt_integrations = await async_get_mqtt(hass)
 
     for integration, topics in mqtt_integrations.items():
