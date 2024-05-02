@@ -1,4 +1,5 @@
 """Test TvOverlay notify."""
+
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch
@@ -124,9 +125,11 @@ async def test_notify(
         await hass.async_block_till_done()
     hass.config.allowlist_external_urls.add("http://example.com/image.png")
     hass.config.allowlist_external_dirs.add(Path("/temp").resolve())
-    with mocked_send_notification() as mock_notify, patch(
-        "os.path.exists", return_value=True
-    ), patch("os.path.isfile", return_value=True):
+    with (
+        mocked_send_notification() as mock_notify,
+        patch("os.path.exists", return_value=True),
+        patch("os.path.isfile", return_value=True),
+    ):
         await hass.services.async_call(
             NOTIFY_DOMAIN,
             SERICVE_NAME,
@@ -202,10 +205,11 @@ async def test_notify_local_path(
         )
         await hass.async_block_till_done()
 
-    with mocked_send_notification() as mock_notify, patch(
-        "os.path.isfile", return_value=isfile
-    ), patch("os.path.exists", return_value=True), patch.object(
-        hass.config, "is_allowed_path", return_value=is_allowed_path
+    with (
+        mocked_send_notification() as mock_notify,
+        patch("os.path.isfile", return_value=isfile),
+        patch("os.path.exists", return_value=True),
+        patch.object(hass.config, "is_allowed_path", return_value=is_allowed_path),
     ):
         await hass.services.async_call(
             NOTIFY_DOMAIN,
@@ -235,8 +239,9 @@ async def test_notify_persistent(
         )
         await hass.async_block_till_done()
 
-    with mocked_send_persistent_notification() as mock_notify, patch.object(
-        hass.config, "is_allowed_external_url", return_value=True
+    with (
+        mocked_send_persistent_notification() as mock_notify,
+        patch.object(hass.config, "is_allowed_external_url", return_value=True),
     ):
         await hass.services.async_call(
             NOTIFY_DOMAIN,
@@ -315,8 +320,11 @@ async def test_notify_url(
         )
         await hass.async_block_till_done()
 
-    with mocked_send_notification() as mock_notify, patch.object(
-        hass.config, "is_allowed_external_url", return_value=is_allowed_external_url
+    with (
+        mocked_send_notification() as mock_notify,
+        patch.object(
+            hass.config, "is_allowed_external_url", return_value=is_allowed_external_url
+        ),
     ):
         await hass.services.async_call(
             NOTIFY_DOMAIN,
@@ -375,9 +383,13 @@ async def test_notify_invalid_url(
         )
         await hass.async_block_till_done()
 
-    with mocked_send_notification(), patch.object(
-        hass.config, "is_allowed_external_url", return_value=is_allowed_external_url
-    ), pytest.raises(ServiceValidationError) as exc:
+    with (
+        mocked_send_notification(),
+        patch.object(
+            hass.config, "is_allowed_external_url", return_value=is_allowed_external_url
+        ),
+        pytest.raises(ServiceValidationError) as exc,
+    ):
         await hass.services.async_call(
             NOTIFY_DOMAIN,
             SERICVE_NAME,
@@ -462,11 +474,13 @@ async def test_notify_invalid_file(
         )
         await hass.async_block_till_done()
 
-    with mocked_send_notification(), patch.object(
-        hass.config, "is_allowed_path", return_value=is_allowed_path
-    ), patch("os.path.exists", return_value=is_valid_file), patch(
-        "os.path.isfile", return_value=is_valid_file
-    ), pytest.raises(ServiceValidationError) as exc:
+    with (
+        mocked_send_notification(),
+        patch.object(hass.config, "is_allowed_path", return_value=is_allowed_path),
+        patch("os.path.exists", return_value=is_valid_file),
+        patch("os.path.isfile", return_value=is_valid_file),
+        pytest.raises(ServiceValidationError) as exc,
+    ):
         await hass.services.async_call(
             NOTIFY_DOMAIN,
             SERICVE_NAME,

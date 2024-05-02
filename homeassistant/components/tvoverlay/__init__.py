@@ -1,4 +1,5 @@
 """The TvOverlay integration."""
+
 from tvoverlay import Notifications
 from tvoverlay.exceptions import ConnectError
 

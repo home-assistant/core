@@ -1,4 +1,5 @@
 """Tests for the TvOverlay integration."""
+
 from unittest.mock import patch
 
 from homeassistant.components.tvoverlay.const import DEFAULT_NAME
