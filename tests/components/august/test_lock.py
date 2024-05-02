@@ -23,7 +23,6 @@ from homeassistant.const import (
     STATE_LOCKED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    STATE_UNLATCHED,
     STATE_UNLOCKED,
 )
 from homeassistant.core import HomeAssistant
@@ -151,7 +150,7 @@ async def test_one_lock_operation(
     await hass.async_block_till_done()
 
     lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
-    assert lock_online_with_doorsense_name.state == STATE_UNLATCHED
+    assert lock_online_with_doorsense_name.state == STATE_UNLOCKED
 
     # No activity means it will be unavailable until the activity feed has data
     lock_operator_sensor = entity_registry.async_get(
