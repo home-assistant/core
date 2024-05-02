@@ -19,7 +19,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import AUTO_BYPASS, CONF_USERCODES, DOMAIN
 
-PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR, Platform.BUTTON]
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 SCAN_INTERVAL = timedelta(seconds=30)
