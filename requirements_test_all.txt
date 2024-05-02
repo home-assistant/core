@@ -359,7 +359,7 @@ aiotankerkoenig==0.4.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==76
+aiounifi==77
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
