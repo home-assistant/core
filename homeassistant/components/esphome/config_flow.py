@@ -256,7 +256,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: MqttServiceInfo
     ) -> ConfigFlowResult:
         """Handle MQTT discovery."""
-        device_info: dict[str, Any] = json_loads(discovery_info.payload)
+        device_info = json_loads(discovery_info.payload)
         if "mac" not in device_info:
             return self.async_abort(reason="mqtt_missing_mac")
 
