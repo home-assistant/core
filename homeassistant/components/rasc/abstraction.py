@@ -7,7 +7,7 @@ import datetime
 from datetime import timedelta
 import json
 import time
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast
 
 import numpy as np
 
@@ -29,6 +29,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers.dynamic_polling import get_best_distribution, get_polls
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.storage import Store
@@ -69,7 +70,7 @@ class RASCAbstraction:
         return entities
 
     def _track_service(self, context: Context, service_call: ServiceCall):
-        component = self.hass.data.get(service_call.domain)
+        component: Optional[EntityComponent] = self.hass.data.get(service_call.domain)
         if not component or not hasattr(component, "async_get_platforms"):
             return
         entity_ids = self._get_entity_ids(service_call)
@@ -108,6 +109,18 @@ class RASCAbstraction:
             return dist.mean()
 
         return self._get_action_length_estimate(state)
+
+    def _init_states(self, context: Context, service_call: ServiceCall):
+        component: Optional[EntityComponent] = self.hass.data.get(service_call.domain)
+        if not component or not hasattr(component, "async_get_platforms"):
+            return
+        entity_ids = self._get_entity_ids(service_call)
+        platforms = component.async_get_platforms(entity_ids)
+        for _, entities in platforms:
+            for entity in entities:
+                self._states[entity.entity_id] = self._get_rasc_state(
+                    context, entity, service_call
+                )
 
     def _get_rasc_state(
         self, context: Context, entity: Entity, service_call: ServiceCall
@@ -276,6 +289,9 @@ class RASCAbstraction:
         # for response wait-notify
         context = Context()
 
+        # init states for entities
+        self._init_states(context, service_call)
+
         # create async task for A, S, C
         ack_task = self.hass.async_create_task(
             self._prepare_ack(context, handler, service_call)
@@ -306,7 +322,7 @@ class StateDetector:
         """Init State Detector."""
         # for failure detection
         self._complete_state: dict[str, Any] = complete_state or {}
-        self._progress: dict[str, Any] = {}
+        self._progress: dict[str, list[tuple[float, Any]]] = {}
         self._next_q: float = 1
         self._check_failure = False
 
@@ -329,7 +345,7 @@ class StateDetector:
         dist = get_best_distribution(history)
         self._attr_upper_bound = dist.ppf(0.99)
         self._polls = get_polls(dist, worst_case_delta=worst_Q)
-        self._last_updated = None
+        self._last_updated: Optional[float] = None
         self._failure_callback = failure_callback
 
     @property
@@ -347,7 +363,7 @@ class StateDetector:
         """Set checking failure."""
         self._check_failure = value
 
-    async def add_progress(self, progress):
+    async def add_progress(self, progress: dict[str, Any]):
         """Add progress."""
         if not self.check_failure:
             return

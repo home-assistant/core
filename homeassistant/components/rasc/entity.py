@@ -7,11 +7,9 @@ from contextlib import suppress
 from datetime import timedelta
 import json
 import logging
-import re
 import time
 from typing import Any, Generic, Optional, TypeVar
 
-import shortuuid
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -25,10 +23,10 @@ from homeassistant.const import (
     CONF_SERVICE_DATA,
 )
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_registry as er,
-    service,
+from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers.rascalscheduler import (
+    generate_short_uuid,
+    get_entity_id_from_number,
 )
 from homeassistant.util import slugify
 
@@ -47,38 +45,6 @@ TIME_MILLISECOND = 1000
 
 CONF_END_VIRTUAL_NODE = "end_virtual_node"
 CONF_ENTITY_REGISTRY = "entity_registry"
-
-
-def get_device_id_from_entity_id(hass: HomeAssistant, entity_id: str) -> str:
-    """Get device ID from an entity ID.
-
-    Raises ValueError if entity or device ID is invalid.
-    """
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(entity_id)
-
-    if entity_entry is None or entity_entry.device_id is None:
-        raise ValueError(f"Entity {entity_id} is not a valid entity.")
-
-    return str(entity_entry.device_id)
-
-
-def get_entity_id_from_number(hass: HomeAssistant, entity_id: str) -> str:
-    """Get entity_id from number."""
-    pattern = re.compile("^[^.]+[.][^.]+$")
-    if not pattern.match(entity_id):
-        registry: er.EntityRegistry = hass.data[CONF_ENTITY_REGISTRY]
-        entity_entry = registry.async_get(entity_id)
-        if not entity_entry or entity_entry.device_id is None:
-            raise ValueError(f"Entity {entity_id} is not a valid entity.")
-        return str(entity_entry.as_partial_dict[CONF_ENTITY_ID])
-
-    return str(entity_id)
-
-
-def generate_short_uuid(size: int = 5) -> str:
-    """Generate short uuid."""
-    return shortuuid.ShortUUID().random(length=size)
 
 
 class BaseRoutineEntity:

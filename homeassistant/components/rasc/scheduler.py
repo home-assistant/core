@@ -21,12 +21,7 @@ from homeassistant.const import (
     CONF_SERVICE_DATA,
     CONF_TARGET,
     CONF_TYPE,
-    DOMAIN_AUTOMATION,
-    DOMAIN_PERSON,
-    DOMAIN_RASCALSCHEDULER,
     DOMAIN_SCRIPT,
-    DOMAIN_TTS,
-    DOMAIN_ZONE,
     FCFS,
     FCFS_POST,
     JIT,
@@ -34,12 +29,6 @@ from homeassistant.const import (
     LOCK_STATE_LEASED,
     LOCK_STATE_RELEASED,
     LOCK_STATE_SCHEDULED,
-    NAME_SUN_NEXT_DAWN,
-    NAME_SUN_NEXT_DUSK,
-    NAME_SUN_NEXT_MIDNIGHT,
-    NAME_SUN_NEXT_NOON,
-    NAME_SUN_NEXT_RISING,
-    NAME_SUN_NEXT_SETTING,
     RASC_ACK,
     RASC_COMPLETE,
     RASC_RESPONSE,
@@ -54,6 +43,12 @@ if TYPE_CHECKING:
     from homeassistant.components.script import BaseScriptEntity
     from homeassistant.helpers.entity_component import EntityComponent
 
+from homeassistant.helpers.rascalscheduler import (
+    datetime_to_string,
+    generate_duration,
+    get_routine_id,
+    string_to_datetime,
+)
 from homeassistant.helpers.template import device_entities
 from homeassistant.helpers.typing import ConfigType
 
@@ -76,69 +71,6 @@ CONF_END_VIRTUAL_NODE = "end_virtual_node"
 TIMEOUT = 3000  # millisecond
 
 _LOGGER = set_logger()
-
-
-def add_entity_in_lineage(hass: HomeAssistant, entity_id: str) -> None:
-    """Create a queue for entity id in the lineage table."""
-    domains = [DOMAIN_SCRIPT, DOMAIN_AUTOMATION, DOMAIN_PERSON, DOMAIN_ZONE, DOMAIN_TTS]
-    full_names = [
-        NAME_SUN_NEXT_SETTING,
-        NAME_SUN_NEXT_RISING,
-        NAME_SUN_NEXT_DAWN,
-        NAME_SUN_NEXT_DUSK,
-        NAME_SUN_NEXT_MIDNIGHT,
-        NAME_SUN_NEXT_NOON,
-    ]
-
-    domain, full_name = entity_id.split(".")
-
-    if full_name:
-        if domain not in domains and full_name not in full_names:
-            _LOGGER.info("Create queue: %s", entity_id)
-            rascal: Optional[RascalScheduler] = hass.data[DOMAIN_RASCALSCHEDULER]
-            if rascal:
-                rascal.lineage_table.add_entity(entity_id)
-                rascal.add_entity(entity_id)
-
-
-def delete_entity_in_lineage(hass: HomeAssistant, entity_id: str) -> None:
-    """Delete x entity queue."""
-
-    rascal: Optional[RascalScheduler] = hass.data[DOMAIN_RASCALSCHEDULER]
-
-    if rascal:
-        rascal.lineage_table.delete_entity(entity_id)
-        rascal.delete_entity(entity_id)
-        _LOGGER.info("Delete queue: %s", entity_id)
-
-
-def get_routine_id(action_id: str) -> str:
-    """Get routine id from action id."""
-    return action_id.split(".")[0]
-
-
-def generate_duration(seconds: float = 2.0) -> timedelta:
-    """Get a random duration."""
-    return timedelta(seconds=seconds)
-
-
-def time_range_to_timedelta(time_range: tuple[str, str]) -> timedelta:
-    """Get the duration of the time range."""
-    st = string_to_datetime(time_range[0])
-    end = string_to_datetime(time_range[1])
-    return end - st
-
-
-def string_to_datetime(dt: str) -> datetime:
-    """Convert string into datetime."""
-    return datetime.strptime(
-        datetime.now().strftime("%Y-%m-%d") + " " + dt, "%Y-%m-%d %H%M%S"
-    )
-
-
-def datetime_to_string(dt: datetime) -> str:
-    """Convert datetime to string."""
-    return dt.strftime("%H%M%S")
 
 
 def create_routine(

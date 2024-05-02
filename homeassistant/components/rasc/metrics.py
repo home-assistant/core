@@ -15,8 +15,9 @@ Example usage:
 
 import copy
 from datetime import datetime, timedelta
+from typing import Optional
 
-from .scheduler import get_routine_id
+from homeassistant.helpers.rascalscheduler import get_routine_id
 
 
 class ActionTimeRange:
@@ -42,7 +43,9 @@ class ScheduleMetrics:
     """Maintains a schedule's information and metrics."""
 
     def __init__(
-        self, scheduling_policy: str | None = None, sm: "ScheduleMetrics" | None = None
+        self,
+        scheduling_policy: Optional[str] = None,
+        sm: Optional["ScheduleMetrics"] = None,
     ) -> None:
         """Initialize the schedule's metrics.
 
@@ -53,18 +56,18 @@ class ScheduleMetrics:
         """
         if scheduling_policy:
             self._scheduling_policy = scheduling_policy
-            self._rescheduling_policy: str | None = None
+            self._rescheduling_policy: Optional[str] = None
             self._arrival_times = dict[str, datetime]()
             self._remaining_actions = dict[str, set[str]]()
             self._start_times = dict[str, datetime]()
             self._end_times = dict[str, datetime]()
             self._wait_times = dict[str, timedelta]()
             self._exec_times = dict[str, timedelta]()
-            self._first_arrival_time: datetime | None = None
-            self._schedule_start: datetime | None = None
-            self._schedule_end: datetime | None = None
+            self._first_arrival_time: Optional[datetime] = None
+            self._schedule_start: Optional[datetime] = None
+            self._schedule_end: Optional[datetime] = None
             self._action_times = dict[str, dict[str, ActionTimeRange]]()
-            self._last_action_end = dict[str, datetime | None]()
+            self._last_action_end = dict[str, Optional[datetime]]()
             self._idle_times = dict[str, timedelta]()
             self._parallelism = dict[datetime, int]()
         elif sm:

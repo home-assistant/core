@@ -49,6 +49,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.rascalscheduler import (
+    datetime_to_string,
+    generate_duration,
+    get_routine_id,
+    string_to_datetime,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .abstraction import RASCAbstraction
@@ -61,11 +67,7 @@ from .scheduler import (
     RascalScheduler,
     RoutineInfo,
     TimeLineScheduler,
-    datetime_to_string,
-    generate_duration,
-    get_routine_id,
     get_target_entities,
-    string_to_datetime,
 )
 
 
@@ -2328,8 +2330,12 @@ class RascalRescheduler:
 
     def _cancel_overtime_check(self, event: Event) -> None:
         """Cancel the timer for the rescheduler."""
-        entity_id = event.data.get(ATTR_ENTITY_ID)
-        action_id = event.data.get(ATTR_ACTION_ID)
+        entity_id: Optional[str] = event.data.get(ATTR_ENTITY_ID)
+        action_id: Optional[str] = event.data.get(ATTR_ACTION_ID)
+        if not entity_id:
+            raise ValueError("Entity ID is missing.")
+        if not action_id:
+            raise ValueError("Action ID is missing.")
         if entity_id in self._timer_handles:
             saved_action_id, saved_cancel = self._timer_handles[entity_id]
             if saved_action_id == action_id and saved_cancel:

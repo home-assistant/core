@@ -11,12 +11,6 @@ from typing import TYPE_CHECKING, Any, Protocol
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.rasc.scheduler import (
-    add_entity_in_lineage,
-    delete_entity_in_lineage,
-)
-
-# from homeassistant.components.light import ATTR_TRANSITION
 from homeassistant.const import (
     ATTR_RESTORED,
     DEVICE_DEFAULT_NAME,
@@ -47,6 +41,7 @@ from . import (
 from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
 from .event import async_call_later, async_track_time_interval
 from .issue_registry import IssueSeverity, async_create_issue
+from .rascalscheduler import add_entity_in_lineage, delete_entity_in_lineage
 from .typing import UNDEFINED, ConfigType, DiscoveryInfoType
 
 if TYPE_CHECKING:
