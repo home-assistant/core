@@ -375,6 +375,16 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                     vol.Required("done"): translation_value_validator,
                 },
             },
+            vol.Optional("notification"): cv.schema_with_slug_keys(
+                cv.schema_with_slug_keys(
+                    {
+                        vol.Required("message"): translation_value_validator,
+                        vol.Optional("title"): translation_value_validator,
+                    },
+                    slug_validator=translation_key_validator,
+                ),
+                slug_validator=cv.slug,
+            ),
         }
     )
 
