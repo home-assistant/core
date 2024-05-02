@@ -81,12 +81,8 @@ DISCOVERY_SCHEMAS = [
             device_types.ColorTemperatureLight,
             device_types.DimmableLight,
             device_types.ExtendedColorLight,
-            device_types.OnOffLight,
-            device_types.DoorLock,
             device_types.ColorDimmerSwitch,
-            device_types.DimmerSwitch,
-            device_types.Thermostat,
-            device_types.RoomAirConditioner,
+            device_types.OnOffLight,
         ),
     ),
 ]
