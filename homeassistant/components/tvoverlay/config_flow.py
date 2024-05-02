@@ -10,7 +10,7 @@ from tvoverlay.exceptions import ConnectError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_NAME
 
 from .const import DOMAIN
 
@@ -26,7 +26,6 @@ class TvOverlayFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input is not None:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             result = await self._async_try_connect(user_input[CONF_HOST])
             error = result["error"]
             info = result["info"]
@@ -36,27 +35,22 @@ class TvOverlayFlowHandler(ConfigFlow, domain=DOMAIN):
                 result = info.get("result", {})
                 settings = result.get("settings")
                 status = result.get("status")
-
-                if not settings or not status:
-                    raise ValueError(
-                        "Invalid response from device: missing 'settings' or 'status'"
+                device_id = status and status.get("id")
+                device_name = settings and settings.get("deviceName")
+                if device_id is None or device_name is None:
+                    errors["base"] = "unknown"
+                else:
+                    unique_id = str(device_id).replace("-", "")
+                    self._async_abort_entries_match(
+                        {CONF_HOST: user_input[CONF_HOST], CONF_NAME: device_name}
                     )
-
-                device_name = settings.get("deviceName")
-                device_id = status.get("id")
-
-                if not device_name or not device_id:
-                    raise ValueError(
-                        "Invalid response from device: missing 'deviceName' or 'id'"
+                    await self.async_set_unique_id(unique_id)
+                    self._abort_if_unique_id_configured()
+                    user_input[CONF_NAME] = device_name
+                    return self.async_create_entry(
+                        title=device_name,
+                        data=user_input,
                     )
-
-                unique_id = str(device_id).replace("-", "")
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=device_name,
-                    data=user_input,
-                )
 
         return self.async_show_form(
             step_id="user",
