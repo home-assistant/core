@@ -191,31 +191,38 @@ class ImageServeView(HomeAssistantView):
         filename: str,
     ) -> web.FileResponse:
         """Serve image."""
-        try:
-            width, height = _validate_size_from_filename(filename)
-        except (ValueError, IndexError) as err:
-            raise web.HTTPBadRequest from err
+        if filename == "original":
+            image_info = self.image_collection.data.get(image_id)
+            if image_info is None:
+                raise web.HTTPNotFound
 
-        image_info = self.image_collection.data.get(image_id)
+            target_file = self.image_folder / image_id / filename
+        else:
+            try:
+                width, height = _validate_size_from_filename(filename)
+            except (ValueError, IndexError) as err:
+                raise web.HTTPBadRequest from err
 
-        if image_info is None:
-            raise web.HTTPNotFound
+            image_info = self.image_collection.data.get(image_id)
 
-        hass = request.app[KEY_HASS]
-        target_file = self.image_folder / image_id / f"{width}x{height}"
+            if image_info is None:
+                raise web.HTTPNotFound
 
-        if not target_file.is_file():
-            async with self.transform_lock:
-                # Another check in case another request already
-                # finished it while waiting
-                if not target_file.is_file():
-                    await hass.async_add_executor_job(
-                        _generate_thumbnail,
-                        self.image_folder / image_id / "original",
-                        image_info["content_type"],
-                        target_file,
-                        (width, height),
-                    )
+            hass = request.app[KEY_HASS]
+            target_file = self.image_folder / image_id / f"{width}x{height}"
+
+            if not target_file.is_file():
+                async with self.transform_lock:
+                    # Another check in case another request already
+                    # finished it while waiting
+                    if not target_file.is_file():
+                        await hass.async_add_executor_job(
+                            _generate_thumbnail,
+                            self.image_folder / image_id / "original",
+                            image_info["content_type"],
+                            target_file,
+                            (width, height),
+                        )
 
         return web.FileResponse(
             target_file,
