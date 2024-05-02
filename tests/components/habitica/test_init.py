@@ -6,7 +6,6 @@ import pytest
 
 from homeassistant.components.habitica.const import (
     ATTR_ARGS,
-    ATTR_CONFIG_ENTRY,
     ATTR_DATA,
     ATTR_PATH,
     DEFAULT_URL,
@@ -126,7 +125,7 @@ async def test_service_call(
     assert len(capture_api_call_success) == 0
 
     TEST_SERVICE_DATA = {
-        ATTR_CONFIG_ENTRY: habitica_entry.entry_id,
+        ATTR_NAME: "test_user",
         ATTR_PATH: ["tasks", "user", "post"],
         ATTR_ARGS: TEST_API_CALL_ARGS,
     }
@@ -138,11 +137,7 @@ async def test_service_call(
     captured_data = capture_api_call_success[0].data
     captured_data[ATTR_ARGS] = captured_data[ATTR_DATA]
     del captured_data[ATTR_DATA]
-    assert captured_data == {
-        "name": habitica_entry.title,
-        ATTR_PATH: ["tasks", "user", "post"],
-        ATTR_ARGS: TEST_API_CALL_ARGS,
-    }
+    assert captured_data == TEST_SERVICE_DATA
 
     assert await hass.config_entries.async_unload(habitica_entry.entry_id)
 
