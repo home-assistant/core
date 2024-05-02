@@ -70,10 +70,11 @@ def async_register(hass: HomeAssistant, handler: IntentHandler) -> None:
     intents[handler.intent_type] = handler
 
     if handler.intent_type not in LLM_SKIP_AUTO_ADD_TOOL:
-        llm_tool = llm.IntentTool(
-            handler.intent_type,
-            handler._slot_schema,  # pylint: disable=protected-access
-        )
+        try:
+            slot_schema = handler._slot_schema  # pylint: disable=protected-access
+        except ValueError:
+            slot_schema = None
+        llm_tool = llm.IntentTool(handler.intent_type, slot_schema)
         try:
             llm.async_register_tool(hass, llm_tool)
         except HomeAssistantError:
@@ -434,7 +435,9 @@ class IntentHandler:
     @cached_property
     def _slot_schema(self) -> vol.Schema:
         """Create validation schema for slots."""
-        assert self.slot_schema is not None
+        if self.slot_schema is None:
+            raise ValueError("Slot schema is not defined")
+
         return vol.Schema(
             {
                 key: SLOT_SCHEMA.extend({"value": validator})
