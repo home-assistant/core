@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import logging
 
-from aiotankerkoenig import GasType, PriceInfo, Station
+from aiotankerkoenig import GasType, Station
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CURRENCY_EURO
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -21,19 +20,20 @@ from .const import (
     ATTR_STATION_NAME,
     ATTR_STREET,
     ATTRIBUTION,
-    DOMAIN,
 )
-from .coordinator import TankerkoenigDataUpdateCoordinator
+from .coordinator import TankerkoenigConfigEntry, TankerkoenigDataUpdateCoordinator
 from .entity import TankerkoenigCoordinatorEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TankerkoenigConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the tankerkoenig sensors."""
-    coordinator: TankerkoenigDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     entities = []
     for station in coordinator.stations.values():
@@ -109,5 +109,5 @@ class FuelPriceSensor(TankerkoenigCoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> float:
         """Return the current price for the fuel type."""
-        info: PriceInfo = self.coordinator.data[self._station_id]
+        info = self.coordinator.data[self._station_id]
         return getattr(info, self._fuel_type)

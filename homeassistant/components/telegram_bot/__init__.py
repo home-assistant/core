@@ -122,6 +122,7 @@ EVENT_TELEGRAM_SENT = "telegram_sent"
 PARSER_HTML = "html"
 PARSER_MD = "markdown"
 PARSER_MD2 = "markdownv2"
+PARSER_PLAIN_TEXT = "plain_text"
 
 DEFAULT_TRUSTED_NETWORKS = [ip_network("149.154.160.0/20"), ip_network("91.108.4.0/22")]
 
@@ -524,6 +525,7 @@ class TelegramNotificationService:
             PARSER_HTML: ParseMode.HTML,
             PARSER_MD: ParseMode.MARKDOWN,
             PARSER_MD2: ParseMode.MARKDOWN_V2,
+            PARSER_PLAIN_TEXT: None,
         }
         self._parse_mode = self._parsers.get(parser)
         self.bot = bot

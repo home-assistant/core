@@ -7,7 +7,6 @@ import asyncio
 from collections import deque
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
-import datetime as dt
 from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, TypedDict
@@ -67,7 +66,7 @@ class ReceiveMessage:
     qos: int
     retain: bool
     subscribed_topic: str
-    timestamp: dt.datetime
+    timestamp: float
 
 
 AsyncMessageCallbackType = Callable[[ReceiveMessage], Coroutine[Any, Any, None]]

@@ -18,6 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_TODO_LIST_NAME, DOMAIN
@@ -67,9 +68,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up the local_todo todo platform."""
 
-    store = hass.data[DOMAIN][config_entry.entry_id]
+    store: LocalTodoListStore = hass.data[DOMAIN][config_entry.entry_id]
     ics = await store.async_load()
-    calendar = IcsCalendarStream.calendar_from_ics(ics)
+
+    with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PACKAGES):
+        # calendar_from_ics will dynamically load packages
+        # the first time it is called, so we need to do it
+        # in a separate thread to avoid blocking the event loop
+        calendar: Calendar = await hass.async_add_import_executor_job(
+            IcsCalendarStream.calendar_from_ics, ics
+        )
     migrated = _migrate_calendar(calendar)
     calendar.prodid = PRODID
 

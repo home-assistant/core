@@ -228,6 +228,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         key="PoE port power sensor",
         device_class=SensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
         entity_registry_enabled_default=False,
         api_handler_fn=lambda api: api.ports,
@@ -460,7 +461,7 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
         if description.is_connected_fn is not None:
             # Send heartbeat if client is connected
             if description.is_connected_fn(self.hub, self._obj_id):
-                self.hub.async_heartbeat(
+                self.hub.update_heartbeat(
                     self._attr_unique_id,
                     dt_util.utcnow() + self.hub.config.option_detection_time,
                 )
@@ -485,4 +486,4 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
 
         if self.entity_description.is_connected_fn is not None:
             # Remove heartbeat registration
-            self.hub.async_heartbeat(self._attr_unique_id)
+            self.hub.remove_heartbeat(self._attr_unique_id)
