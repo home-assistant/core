@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from pydrawise.schema import Zone
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
