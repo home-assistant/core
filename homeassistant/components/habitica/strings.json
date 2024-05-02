@@ -57,6 +57,46 @@
           "rogue": "Rogue"
         }
       }
+    },
+    "todo": {
+      "todos": {
+        "name": "To-Do's"
+      },
+      "dailys": {
+        "name": "Dailies"
+      }
+    }
+  },
+  "exceptions": {
+    "delete_todos_failed": {
+      "message": "Failed to delete {count} Habitica to-do(s)"
+    },
+    "move_todos_item_failed": {
+      "message": "Failed to move your Habitica to-do to position {pos}"
+    },
+    "move_dailys_item_failed": {
+      "message": "Failed to move your Habitica daily to position {pos}"
+    },
+    "update_todos_item_failed": {
+      "message": "Failed to update your Habitica to-do `{name}`"
+    },
+    "update_dailys_item_failed": {
+      "message": "Failed to update your Habitica daily `{name}`"
+    },
+    "score_todos_item_failed": {
+      "message": "Failed to update the score for your Habitica to-do `{name}`"
+    },
+    "score_dailys_item_failed": {
+      "message": "Failed to update the score for your Habitica daily `{name}`"
+    },
+    "create_todos_item_failed": {
+      "message": "Failed to create new to-do `{name}` for Habitica"
+    }
+  },
+  "issues": {
+    "deprecated_task_entity": {
+      "title": "The Habitica `{task_name}` sensor is deprecated",
+      "description": "The Habitica entity `{entity}` is deprecated and will be removed in `2024.12`.\nPlease update your automations and scripts to replace the sensor entity with the newly added todo entity.\nWhen you are done migrating you can disable `{entity}`."
     }
   },
   "exceptions": {

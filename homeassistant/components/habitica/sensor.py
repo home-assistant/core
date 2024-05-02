@@ -18,6 +18,11 @@ from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -278,3 +283,26 @@ class HabitipyTaskSensor(
     def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._task_type.unit
+
+    async def async_added_to_hass(self) -> None:
+        """Raise issue when entity is registered and was not disabled."""
+        if self.enabled and self._task_name in ("todos", "dailys"):
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"deprecated_task_entity_{self._task_name}",
+                breaks_in_ha_version="2024.12.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_task_entity",
+                translation_placeholders={
+                    "task_name": self._task_name,
+                    "entity": f"sensor.habitica_{self._name}_{self._task_name}",
+                },
+            )
+        else:
+            async_delete_issue(
+                self.hass,
+                DOMAIN,
+                f"deprecated_task_entity_{self._task_name}",
+            )
