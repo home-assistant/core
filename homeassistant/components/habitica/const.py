@@ -11,7 +11,7 @@ DOMAIN = "habitica"
 SERVICE_API_CALL = "api_call"
 ATTR_PATH = CONF_PATH
 ATTR_ARGS = "args"
-ATTR_CONFIG_ENTRY = "config_entry"
+
 # event constants
 EVENT_API_CALL_SUCCESS = f"{DOMAIN}_{SERVICE_API_CALL}_success"
 ATTR_DATA = "data"

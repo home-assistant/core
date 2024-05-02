@@ -99,6 +99,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_API_USER: login_response["id"],
                         CONF_API_KEY: login_response["apiToken"],
+                        CONF_USERNAME: login_response["username"],
                         CONF_URL: DEFAULT_URL,
                         CONF_VERIFY_SSL: True,
                     },
@@ -148,8 +149,10 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(user_input[CONF_API_USER])
                 self._abort_if_unique_id_configured()
-                title = api_response["auth"]["local"]["username"]
-                return self.async_create_entry(title=title, data=user_input)
+                user_input[CONF_USERNAME] = api_response["auth"]["local"]["username"]
+                return self.async_create_entry(
+                    title=user_input[CONF_USERNAME], data=user_input
+                )
 
         return self.async_show_form(
             step_id="advanced",
