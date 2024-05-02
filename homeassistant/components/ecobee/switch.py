@@ -69,13 +69,10 @@ class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
 
         ventilator_off_date_time = self.thermostat["settings"]["ventilatorOffDateTime"]
 
-        self._attr_is_on = (
-            ventilator_off_date_time is not None
-            and ventilator_off_date_time != ""
-            and dt_util.parse_datetime(
-                ventilator_off_date_time, raise_on_error=True
-            ).replace(tzinfo=self._operating_timezone)
-            >= dt_util.now(self._operating_timezone)
+        self._attr_is_on = ventilator_off_date_time and dt_util.parse_datetime(
+            ventilator_off_date_time, raise_on_error=True
+        ).replace(tzinfo=self._operating_timezone) >= dt_util.now(
+            self._operating_timezone
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
