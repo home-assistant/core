@@ -16,6 +16,23 @@ from homeassistant.helpers.integration_platform import (
 
 from .const import DOMAIN, REG_KEY
 
+EXPLICT_SUPPORTED_ON_OFF_DOMAINS = {
+    "alert",
+    "automation",
+    "binary_sensor",
+    "calenda",
+    "fan",
+    "group",
+    "humidifier",
+    "input_boolean",
+    "light",
+    "remote",
+    "schedule",
+    "script",
+    "siren",
+    "switch",
+}
+
 
 async def async_setup(hass: HomeAssistant) -> None:
     """Set up the Group integration registry of integration platforms."""
@@ -61,13 +78,8 @@ class GroupIntegrationRegistry:
         self.on_off_mapping: dict[str, str] = {STATE_ON: STATE_OFF}
         self.off_on_mapping: dict[str, str] = {STATE_OFF: STATE_ON}
         self.on_states_by_domain: dict[str, set[str]] = {}
-        self.exclude_domains: set[str] = set()
         self.state_group_mapping: dict[str, SingleStateType] = {}
-
-    @callback
-    def exclude_domain(self, domain: str) -> None:
-        """Exclude the current domain."""
-        self.exclude_domains.add(domain)
+        self.supported_domains: set[str] = set(EXPLICT_SUPPORTED_ON_OFF_DOMAINS)
 
     @callback
     def on_off_states(
@@ -77,6 +89,7 @@ class GroupIntegrationRegistry:
 
         Legacy group support will not be extended for new domains.
         """
+        self.supported_domains.add(domain)
         for on_state in on_states:
             if on_state not in self.on_off_mapping:
                 self.on_off_mapping[on_state] = off_state

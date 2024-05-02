@@ -855,10 +855,12 @@ async def test_reloading_groups(hass: HomeAssistant) -> None:
         "group.test_group",
     ]
     assert hass.bus.async_listeners()["state_changed"] == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["hello.world"]) == 1
     assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["light.bowl"]) == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.one"]) == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.two"]) == 1
+    # domains `hello` and `test` are not supported
+    # so their entities are not tracked
+    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["hello.world"]) == 0
+    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.one"]) == 0
+    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.two"]) == 0
 
     with patch(
         "homeassistant.config.load_yaml_config_file",
@@ -875,8 +877,10 @@ async def test_reloading_groups(hass: HomeAssistant) -> None:
     ]
     assert hass.bus.async_listeners()["state_changed"] == 1
     assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["light.bowl"]) == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.one"]) == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.two"]) == 1
+    # domain `test` is not supported
+    # so their entities are not tracked
+    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.one"]) == 0
+    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.two"]) == 0
 
 
 async def test_modify_group(hass: HomeAssistant) -> None:
@@ -1361,6 +1365,7 @@ async def test_group_alarm(hass: HomeAssistant) -> None:
     hass.states.async_set("alarm_control_panel.three", "armed_away")
     hass.set_state(CoreState.stopped)
 
+    assert await async_setup_component(hass, "alarm_control_panel", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -1372,7 +1377,6 @@ async def test_group_alarm(hass: HomeAssistant) -> None:
             }
         },
     )
-    assert await async_setup_component(hass, "alarm_control_panel", {})
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -1409,6 +1413,7 @@ async def test_group_vacuum_off(hass: HomeAssistant) -> None:
     hass.states.async_set("vacuum.three", "off")
     hass.set_state(CoreState.stopped)
 
+    assert await async_setup_component(hass, "vacuum", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -1418,7 +1423,6 @@ async def test_group_vacuum_off(hass: HomeAssistant) -> None:
             }
         },
     )
-    assert await async_setup_component(hass, "vacuum", {})
     await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1996,6 +2000,41 @@ async def test_unhide_members_on_remove(
     # Check the group members are unhidden
     assert entity_registry.async_get(f"{group_type}.one").hidden_by == hidden_by
     assert entity_registry.async_get(f"{group_type}.three").hidden_by == hidden_by
+
+
+async def test_not_supported_group(hass: HomeAssistant) -> None:
+    """Test not supported entities result in an unknown group state."""
+
+    entity_ids = [
+        "text.not_supported1",
+        "text.not_supported2",
+    ]
+
+    assert await async_setup_component(hass, "text", {})
+    assert await async_setup_component(
+        hass,
+        "group",
+        {
+            "group": {
+                "unsupported_domain_entities": {"entities": entity_ids},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    for entity_id in entity_ids:
+        hass.states.async_set(entity_id, "on")
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("group.unsupported_domain_entities").state == STATE_UNKNOWN
+
+    for entity_id in entity_ids:
+        hass.states.async_set(entity_id, "off")
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("group.unsupported_domain_entities").state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize("grouped_groups", [False, True])

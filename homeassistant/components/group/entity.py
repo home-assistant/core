@@ -292,7 +292,7 @@ class Group(Entity):
             return
 
         registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
-        excluded_domains = registry.exclude_domains
+        supported_domains = registry.supported_domains
 
         tracking: list[str] = []
         trackable: list[str] = []
@@ -301,7 +301,7 @@ class Group(Entity):
             ent_id_lower = ent_id.lower()
             domain = split_entity_id(ent_id_lower)[0]
             tracking.append(ent_id_lower)
-            if domain not in excluded_domains:
+            if domain in supported_domains:
                 trackable.append(ent_id_lower)
             if domain in registry.state_group_mapping:
                 single_state_type_set.add(registry.state_group_mapping[domain])
