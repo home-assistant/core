@@ -32,7 +32,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
-from homeassistant.util.json import json_loads
+from homeassistant.util.json import json_loads_object
 
 from .const import (
     CONF_ALLOW_SERVICE_CALLS,
@@ -256,7 +256,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: MqttServiceInfo
     ) -> ConfigFlowResult:
         """Handle MQTT discovery."""
-        device_info = json_loads(discovery_info.payload)
+        device_info = json_loads_object(discovery_info.payload)
         if "mac" not in device_info:
             return self.async_abort(reason="mqtt_missing_mac")
 
