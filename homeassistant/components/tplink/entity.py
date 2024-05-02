@@ -52,6 +52,7 @@ DEVICETYPES_WITH_SPECIALIZED_PLATFORMS = {
     DeviceType.Bulb,
     DeviceType.LightStrip,
     DeviceType.Dimmer,
+    DeviceType.Fan,
 }
 
 LEGACY_KEY_MAPPING = {
@@ -163,11 +164,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
 
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
-        # The light platform has historically had it's own implementation and
-        # feature-based entities use feature ids to create unique ids.
-        # When a new non-feature based platform is added,
-        # it needs to implement this.
-        raise NotImplementedError
+        return legacy_device_id(self._device)
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to hass."""

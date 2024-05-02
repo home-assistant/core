@@ -16,7 +16,7 @@ from kasa import (
     KasaException,
     Module,
 )
-from kasa.interfaces import Light, LightEffect, LightState
+from kasa.interfaces import Fan, Light, LightEffect, LightState
 from kasa.protocol import BaseProtocol
 
 from homeassistant.components.tplink import (
@@ -223,6 +223,13 @@ def _mocked_light_effect_module() -> LightEffect:
     return effect
 
 
+def _mocked_fan_module() -> Fan:
+    fan = MagicMock(auto_spec=Fan, name="Mocked fan")
+    fan.fan_speed_level = 0
+    fan.set_fan_speed_level = AsyncMock()
+    return fan
+
+
 def _mocked_strip_children(features=None) -> list[Device]:
     plug0 = _mocked_device(
         alias="Plug0",
@@ -313,6 +320,7 @@ def _mocked_energy_features(
 MODULE_TO_MOCK_GEN = {
     Module.Light: _mocked_light_module,
     Module.LightEffect: _mocked_light_effect_module,
+    Module.Fan: _mocked_fan_module,
 }
 
 FEATURE_TO_MOCK_GEN = {
