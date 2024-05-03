@@ -71,6 +71,7 @@ ATTR_ESI_TYPE = "type"
 ESI_TYPE_UNKNOWN = "UNKNOWN"
 ESI_CONNECTED_SENSOR_TYPE_IEC = "ES_IEC"
 ESI_CONNECTED_SENSOR_TYPE_GAS = "ES_GAS"
+ESI_CONNECTED_SENSOR_TYPE_LED = "ES_LED"
 
 ESI_TYPE_CURRENT_POWER_CONSUMPTION = "CurrentPowerConsumption"
 ESI_TYPE_ENERGY_COUNTER_USAGE_HIGH_TARIFF = "ENERGY_COUNTER_USAGE_HIGH_TARIFF"
@@ -459,7 +460,7 @@ SENSORS_ESI = {
             key=ESI_TYPE_ENERGY_COUNTER_USAGE_HIGH_TARIFF,
             native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             device_class=SensorDeviceClass.ENERGY,
-            state_class=SensorStateClass.MEASUREMENT,
+            state_class=SensorStateClass.TOTAL_INCREASING,
             value_fn=lambda device: device.functional_channel.energyCounterOne,
             exists_fn=lambda channel: channel.energyCounterOneType != ESI_TYPE_UNKNOWN,
             type_fn=lambda device: device.functional_channel.energyCounterOneType,
@@ -468,7 +469,7 @@ SENSORS_ESI = {
             key=ESI_TYPE_ENERGY_COUNTER_USAGE_LOW_TARIFF,
             native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             device_class=SensorDeviceClass.ENERGY,
-            state_class=SensorStateClass.MEASUREMENT,
+            state_class=SensorStateClass.TOTAL_INCREASING,
             value_fn=lambda device: device.functional_channel.energyCounterTwo,
             exists_fn=lambda channel: channel.energyCounterTwoType != ESI_TYPE_UNKNOWN,
             type_fn=lambda device: device.functional_channel.energyCounterTwoType,
@@ -477,11 +478,31 @@ SENSORS_ESI = {
             key=ESI_TYPE_ENERGY_COUNTER_INPUT_SINGLE_TARIFF,
             native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             device_class=SensorDeviceClass.ENERGY,
-            state_class=SensorStateClass.MEASUREMENT,
+            state_class=SensorStateClass.TOTAL_INCREASING,
             value_fn=lambda device: device.functional_channel.energyCounterThree,
             exists_fn=lambda channel: channel.energyCounterThreeType
             != ESI_TYPE_UNKNOWN,
             type_fn=lambda device: device.functional_channel.energyCounterThreeType,
+        ),
+    ],
+    ESI_CONNECTED_SENSOR_TYPE_LED: [
+        HmipEsiSensorEntityDescription(
+            key=ESI_TYPE_CURRENT_POWER_CONSUMPTION,
+            native_unit_of_measurement=UnitOfPower.WATT,
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda device: device.functional_channel.currentPowerConsumption,
+            exists_fn=lambda channel: channel.currentPowerConsumption is not None,
+            type_fn=lambda device: "CurrentPowerConsumption",
+        ),
+        HmipEsiSensorEntityDescription(
+            key=ESI_TYPE_ENERGY_COUNTER_INPUT_SINGLE_TARIFF,
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            value_fn=lambda device: device.functional_channel.energyCounterOne,
+            exists_fn=lambda channel: channel.energyCounterOne is not None,
+            type_fn=lambda device: ESI_TYPE_ENERGY_COUNTER_INPUT_SINGLE_TARIFF,
         ),
     ],
     ESI_CONNECTED_SENSOR_TYPE_GAS: [
