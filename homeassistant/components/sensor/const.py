@@ -27,6 +27,7 @@ from homeassistant.const import (
     UnitOfIrradiance,
     UnitOfLength,
     UnitOfMass,
+    UnitOfMassFlowRate,
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -54,6 +55,7 @@ from homeassistant.util.unit_conversion import (
     EnergyConverter,
     InformationConverter,
     MassConverter,
+    MassFlowRateConverter,
     PowerConverter,
     PressureConverter,
     SpeedConverter,
@@ -399,6 +401,14 @@ class SensorDeviceClass(StrEnum):
     USCS/imperial units are currently assumed to be US volumes)
     """
 
+    MASS_FLOW_RATE = "mass_flow_rate"
+    """Generic mass flow rate
+
+    Unit of measurement: UnitOfMassFlowRate
+    - SI / metric: `g/h`, `kg/h`
+    - USCS / imperial: `oz/h`, `lb/h`
+    """
+
     VOLUME_FLOW_RATE = "volume_flow_rate"
     """Generic flow rate
 
@@ -505,6 +515,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.VOLUME: VolumeConverter,
     SensorDeviceClass.VOLUME_STORAGE: VolumeConverter,
     SensorDeviceClass.VOLUME_FLOW_RATE: VolumeFlowRateConverter,
+    SensorDeviceClass.MASS_FLOW_RATE: MassFlowRateConverter,
     SensorDeviceClass.WATER: VolumeConverter,
     SensorDeviceClass.WEIGHT: MassConverter,
     SensorDeviceClass.WIND_SPEED: SpeedConverter,
@@ -572,6 +583,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.VOLTAGE: set(UnitOfElectricPotential),
     SensorDeviceClass.VOLUME: set(UnitOfVolume),
     SensorDeviceClass.VOLUME_FLOW_RATE: set(UnitOfVolumeFlowRate),
+    SensorDeviceClass.MASS_FLOW_RATE: set(UnitOfMassFlowRate),
     SensorDeviceClass.VOLUME_STORAGE: set(UnitOfVolume),
     SensorDeviceClass.WATER: {
         UnitOfVolume.CENTUM_CUBIC_FEET,
@@ -638,6 +650,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
         SensorStateClass.TOTAL_INCREASING,
     },
     SensorDeviceClass.VOLUME_STORAGE: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.MASS_FLOW_RATE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.VOLUME_FLOW_RATE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.WATER: {
         SensorStateClass.TOTAL,

@@ -1055,6 +1055,16 @@ _DEPRECATED_VOLUME_FLUID_OUNCE: Final = DeprecatedConstantEnum(
 """Deprecated: please use UnitOfVolume.FLUID_OUNCES"""
 
 
+# Mass Flow Rate units
+class UnitOfMassFlowRate(StrEnum):
+    """Volume flow rate units."""
+
+    GRAMS_PER_HOUR = "g/h"
+    KILOGRAMS_PER_HOUR = "kg/h"
+    OUNCES_PER_HOUR = "oz/h"
+    POUNDS_PER_HOUR = "lb/h"
+
+
 # Volume Flow Rate units
 class UnitOfVolumeFlowRate(StrEnum):
     """Volume flow rate units."""
@@ -1222,6 +1232,8 @@ _DEPRECATED_PRECIPITATION_INCHES_PER_HOUR: Final = DeprecatedConstantEnum(
 # Concentration units
 CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"
 CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = "mg/m³"
+CONCENTRATION_KILOGRAMS_PER_CUBIC_METER: Final = "kg/m³"
+CONCENTRATION_MILLIGRAMS_PER_LITER: Final = "mg/l"
 CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = "μg/ft³"
 CONCENTRATION_PARTS_PER_CUBIC_METER: Final = "p/m³"
 CONCENTRATION_PARTS_PER_MILLION: Final = "ppm"
