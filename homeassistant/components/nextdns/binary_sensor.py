@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic
 
 from nextdns import ConnectionStatus
 
@@ -19,29 +18,27 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import NextDnsConfigEntry
-from .coordinator import CoordinatorDataT, NextDnsUpdateCoordinator
+from .coordinator import NextDnsUpdateCoordinator
 
 PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class NextDnsBinarySensorEntityDescription(
-    BinarySensorEntityDescription, Generic[CoordinatorDataT]
-):
+class NextDnsBinarySensorEntityDescription(BinarySensorEntityDescription):
     """NextDNS binary sensor entity description."""
 
-    state: Callable[[CoordinatorDataT, str], bool]
+    state: Callable[[ConnectionStatus, str], bool]
 
 
 SENSORS = (
-    NextDnsBinarySensorEntityDescription[ConnectionStatus](
+    NextDnsBinarySensorEntityDescription(
         key="this_device_nextdns_connection_status",
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="device_connection_status",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         state=lambda data, _: data.connected,
     ),
-    NextDnsBinarySensorEntityDescription[ConnectionStatus](
+    NextDnsBinarySensorEntityDescription(
         key="this_device_profile_connection_status",
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="device_profile_connection_status",
