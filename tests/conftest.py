@@ -526,7 +526,7 @@ async def hass(
     load_registries: bool,
     hass_storage: dict[str, Any],
     request: pytest.FixtureRequest,
-    setup_recorder_before_hass: None,
+    mock_recorder_before_hass: None,
 ) -> AsyncGenerator[HomeAssistant, None]:
     """Create a test instance of Home Assistant."""
 
@@ -1579,7 +1579,7 @@ async def recorder_mock(
 
 
 @pytest.fixture
-def setup_recorder_before_hass() -> None:
+def mock_recorder_before_hass() -> None:
     """Mock the recorder.
 
     Override or parametrize this fixture with a fixture that mocks the recorder,
