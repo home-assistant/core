@@ -20,7 +20,7 @@ EXPLICT_SUPPORTED_ON_OFF_DOMAINS = {
     "alert",
     "automation",
     "binary_sensor",
-    "calenda",
+    "calendar",
     "fan",
     "group",
     "humidifier",
