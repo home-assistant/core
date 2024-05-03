@@ -465,6 +465,7 @@ async def test_unavailable_after_no_data(
         device=MagicMock(),
         advertisement=MagicMock(),
         connectable=True,
+        tx_power=0,
     )
 
     inject_bluetooth_service_info_bleak(hass, service_info_at_time)

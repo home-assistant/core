@@ -197,7 +197,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     entry: ConfigEntry | None
     _hassio_discovery: dict[str, Any] | None = None
-    _reauth_config_entry: ConfigEntry | None = None
 
     @staticmethod
     @callback

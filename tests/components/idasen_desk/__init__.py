@@ -20,6 +20,7 @@ IDASEN_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(),
     time=0,
     connectable=True,
+    tx_power=-127,
 )
 
 NOT_IDASEN_DISCOVERY_INFO = BluetoothServiceInfoBleak(
@@ -34,6 +35,7 @@ NOT_IDASEN_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(),
     time=0,
     connectable=True,
+    tx_power=-127,
 )
 
 
