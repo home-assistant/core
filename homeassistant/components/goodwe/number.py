@@ -131,6 +131,11 @@ class InverterNumberEntity(NumberEntity):
         self._attr_native_value = float(current_value)
         self._inverter: Inverter = inverter
 
+    async def async_update(self) -> None:
+        """Get the current value from inverter."""
+        value = await self.entity_description.getter(self._inverter)
+        self._attr_native_value = float(value)
+
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self.entity_description.setter(self._inverter, int(value))
