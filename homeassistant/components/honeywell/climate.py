@@ -113,7 +113,9 @@ async def async_setup_entry(
     remove_stale_devices(hass, entry, data.devices)
 
 
-def _async_migrate_unique_id(hass: HomeAssistant, devices) -> None:
+def _async_migrate_unique_id(
+    hass: HomeAssistant, devices: dict[str, SomeComfortDevice]
+) -> None:
     """Migrate entities to string."""
     entity_registry = er.async_get(hass)
     for device in devices.values():
