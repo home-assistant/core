@@ -6,6 +6,7 @@ from unittest.mock import ANY
 import pytest
 
 from homeassistant.components import mqtt
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -143,8 +144,8 @@ async def test_entry_diagnostics(
         {
             mqtt.CONF_BROKER: "mock-broker",
             mqtt.CONF_BIRTH_MESSAGE: {},
-            mqtt.CONF_PASSWORD: "hunter2",
-            mqtt.CONF_USERNAME: "my_user",
+            CONF_PASSWORD: "hunter2",
+            CONF_USERNAME: "my_user",
         }
     ],
 )

@@ -818,7 +818,7 @@ async def test_device_registry_calls(hass: HomeAssistant) -> None:
         config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert len(dev_reg.devices) == 6
 
     supervisor_mock_data = {
