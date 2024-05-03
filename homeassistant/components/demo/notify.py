@@ -41,7 +41,7 @@ class DemoNotifyEntity(NotifyEntity):
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to a user."""
-        event_notitifcation = {"message": message}
+        event_notification = {"message": message}
         if title is not None:
-            event_notitifcation["title"] = title
+            event_notification["title"] = title
         self.hass.bus.async_fire(EVENT_NOTIFY, event_notitifcation)
