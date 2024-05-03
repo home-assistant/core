@@ -278,7 +278,12 @@ class ActionEntity:
 
     def __repr__(self) -> str:
         """Return the string representation of the action entity."""
-        return f"ActionEntity({self.action_id}, {self.duration}, {self.is_end_node})"
+        return (
+            f"ActionEntity({self.action_id}, {self.duration}"
+            f"{', end node' if self.is_end_node else ''}"
+            f", parents: {[parent.action_id for parent in self.parents]}"
+            f", children: {[child.action_id for child in self.children]})"
+        )
 
     @property
     def action_id(self) -> str:
