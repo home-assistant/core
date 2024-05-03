@@ -2,10 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from pydrawise import Sensor, Zone
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -86,7 +82,7 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
     def _get_status(self) -> bool:
         return self.coordinator.last_update_success
 
-    def _get_rain_sensor(self) -> Any:
+    def _get_rain_sensor(self) -> bool | None:
         assert self.sensor is not None
         return self.sensor.status.active
 
