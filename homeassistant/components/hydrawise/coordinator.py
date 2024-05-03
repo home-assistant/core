@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 
-from pydrawise import HydrawiseBase
+from pydrawise import Hydrawise
 from pydrawise.schema import Controller, ControllerWaterUseSummary, Sensor, User, Zone
 
 from homeassistant.core import HomeAssistant
@@ -29,10 +29,10 @@ class HydrawiseData:
 class HydrawiseDataUpdateCoordinator(DataUpdateCoordinator[HydrawiseData]):
     """The Hydrawise Data Update Coordinator."""
 
-    api: HydrawiseBase
+    api: Hydrawise
 
     def __init__(
-        self, hass: HomeAssistant, api: HydrawiseBase, scan_interval: timedelta
+        self, hass: HomeAssistant, api: Hydrawise, scan_interval: timedelta
     ) -> None:
         """Initialize HydrawiseDataUpdateCoordinator."""
         super().__init__(hass, LOGGER, name=DOMAIN, update_interval=scan_interval)
