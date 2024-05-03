@@ -122,7 +122,7 @@ def _async_migrate_unique_id(hass: HomeAssistant, devices) -> None:
         )
         if entity_id is not None:
             entity_registry.async_update_entity(
-                entity_id, new_unique_id=f"{device.deviceid}"
+                entity_id, new_unique_id=str(device.deviceid)
             )
 
 
