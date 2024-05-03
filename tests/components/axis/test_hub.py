@@ -52,7 +52,6 @@ async def test_device_setup(
 ) -> None:
     """Successful setup."""
     hub = setup_config_entry.runtime_data
-    # hub = AxisHub.get_hub(hass, setup_config_entry)
 
     assert hub.api.vapix.firmware_version == "9.10.1"
     assert hub.api.vapix.product_number == "M1065-LW"
@@ -79,7 +78,6 @@ async def test_device_setup(
 async def test_device_info(hass: HomeAssistant, setup_config_entry) -> None:
     """Verify other path of device information works."""
     hub = setup_config_entry.runtime_data
-    # hub = AxisHub.get_hub(hass, setup_config_entry)
 
     assert hub.api.vapix.firmware_version == "9.80.1"
     assert hub.api.vapix.product_number == "M1065-LW"
