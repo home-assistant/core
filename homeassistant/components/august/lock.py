@@ -19,8 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.dt as dt_util
 
-from . import AugustData
-from .const import DOMAIN
+from . import AugustConfigEntry, AugustData
 from .entity import AugustEntityMixin
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,11 +29,11 @@ LOCK_JAMMED_ERR = 531
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AugustConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up August locks."""
-    data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     async_add_entities(AugustLock(data, lock) for lock in data.locks)
 
 

@@ -939,6 +939,7 @@ omit =
     homeassistant/components/omnilogic/switch.py
     homeassistant/components/ondilo_ico/__init__.py
     homeassistant/components/ondilo_ico/api.py
+    homeassistant/components/ondilo_ico/coordinator.py
     homeassistant/components/ondilo_ico/sensor.py
     homeassistant/components/onkyo/media_player.py
     homeassistant/components/onvif/__init__.py

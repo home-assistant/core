@@ -22,8 +22,13 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
+AirthingsBLEDataUpdateCoordinator = DataUpdateCoordinator[AirthingsDevice]
+AirthingsBLEConfigEntry = ConfigEntry[AirthingsBLEDataUpdateCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: AirthingsBLEConfigEntry
+) -> bool:
     """Set up Airthings BLE device from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     address = entry.unique_id
@@ -51,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         return data
 
-    coordinator = DataUpdateCoordinator(
+    coordinator: AirthingsBLEDataUpdateCoordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name=DOMAIN,
@@ -61,16 +66,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: AirthingsBLEConfigEntry
+) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
