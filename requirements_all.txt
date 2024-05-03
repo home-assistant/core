@@ -983,7 +983,7 @@ gotailwind==0.2.2
 govee-ble==0.31.2
 
 # homeassistant.components.govee_light_local
-govee-local-api==1.4.4
+govee-local-api==1.4.5
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
