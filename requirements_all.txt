@@ -2004,7 +2004,7 @@ pynobo==1.8.1
 pynuki==1.6.3
 
 # homeassistant.components.nws
-pynws==1.6.0
+pynws[retry]==1.7.0
 
 # homeassistant.components.nx584
 pynx584==0.5
