@@ -7,7 +7,17 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from aiohttp.client_exceptions import ClientConnectorError
-from nextdns import ApiError, NextDns
+from nextdns import (
+    AnalyticsDnssec,
+    AnalyticsEncryption,
+    AnalyticsIpVersions,
+    AnalyticsProtocols,
+    AnalyticsStatus,
+    ApiError,
+    ConnectionStatus,
+    NextDns,
+    Settings,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
@@ -46,13 +56,13 @@ NextDnsConfigEntry = ConfigEntry["NextDnsData"]
 class NextDnsData:
     """Data for the NextDNS integration."""
 
-    connection: NextDnsUpdateCoordinator
-    dnssec: NextDnsUpdateCoordinator
-    encryption: NextDnsUpdateCoordinator
-    ip_versions: NextDnsUpdateCoordinator
-    protocols: NextDnsUpdateCoordinator
-    settings: NextDnsUpdateCoordinator
-    status: NextDnsUpdateCoordinator
+    connection: NextDnsUpdateCoordinator[ConnectionStatus]
+    dnssec: NextDnsUpdateCoordinator[AnalyticsDnssec]
+    encryption: NextDnsUpdateCoordinator[AnalyticsEncryption]
+    ip_versions: NextDnsUpdateCoordinator[AnalyticsIpVersions]
+    protocols: NextDnsUpdateCoordinator[AnalyticsProtocols]
+    settings: NextDnsUpdateCoordinator[Settings]
+    status: NextDnsUpdateCoordinator[AnalyticsStatus]
 
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]

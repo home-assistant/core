@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from nextdns import AnalyticsStatus
+
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -9,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import NextDnsConfigEntry
-from .coordinator import CoordinatorDataT, NextDnsUpdateCoordinator
+from .coordinator import NextDnsUpdateCoordinator
 
 PARALLEL_UPDATES = 1
 
@@ -32,7 +34,7 @@ async def async_setup_entry(
 
 
 class NextDnsButton(
-    CoordinatorEntity[NextDnsUpdateCoordinator[CoordinatorDataT]], ButtonEntity
+    CoordinatorEntity[NextDnsUpdateCoordinator[AnalyticsStatus]], ButtonEntity
 ):
     """Define an NextDNS button."""
 
@@ -40,7 +42,7 @@ class NextDnsButton(
 
     def __init__(
         self,
-        coordinator: NextDnsUpdateCoordinator[CoordinatorDataT],
+        coordinator: NextDnsUpdateCoordinator[AnalyticsStatus],
         description: ButtonEntityDescription,
     ) -> None:
         """Initialize."""

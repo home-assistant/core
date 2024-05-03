@@ -538,7 +538,7 @@ async def async_setup_entry(
 
 
 class NextDnsSwitch(
-    CoordinatorEntity[NextDnsUpdateCoordinator[CoordinatorDataT]], SwitchEntity
+    CoordinatorEntity[NextDnsUpdateCoordinator[Settings]], SwitchEntity
 ):
     """Define an NextDNS switch."""
 
@@ -547,7 +547,7 @@ class NextDnsSwitch(
 
     def __init__(
         self,
-        coordinator: NextDnsUpdateCoordinator[CoordinatorDataT],
+        coordinator: NextDnsUpdateCoordinator[Settings],
         description: NextDnsSwitchEntityDescription,
     ) -> None:
         """Initialize."""

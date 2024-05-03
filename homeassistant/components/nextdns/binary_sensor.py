@@ -65,7 +65,7 @@ async def async_setup_entry(
 
 
 class NextDnsBinarySensor(
-    CoordinatorEntity[NextDnsUpdateCoordinator[CoordinatorDataT]], BinarySensorEntity
+    CoordinatorEntity[NextDnsUpdateCoordinator[ConnectionStatus]], BinarySensorEntity
 ):
     """Define an NextDNS binary sensor."""
 
@@ -74,7 +74,7 @@ class NextDnsBinarySensor(
 
     def __init__(
         self,
-        coordinator: NextDnsUpdateCoordinator[CoordinatorDataT],
+        coordinator: NextDnsUpdateCoordinator[ConnectionStatus],
         description: NextDnsBinarySensorEntityDescription,
     ) -> None:
         """Initialize."""
