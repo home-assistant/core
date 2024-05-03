@@ -97,7 +97,7 @@ def _create_notification_instance(xknx: XKNX, config: ConfigType) -> XknxNotific
     )
 
 
-class KNXNotify(NotifyEntity, KnxEntity):
+class KNXNotify(KnxEntity, NotifyEntity):
     """Representation of a KNX notification entity."""
 
     _device: XknxNotification
