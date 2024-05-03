@@ -104,12 +104,16 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
+            "method": "right",
             "round": 2.0,
+            "source": "sensor.input",
+            "unit_prefix": "k",
+            "unit_time": "min",
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "method": "left",
+        "method": "right",
         "name": "My integration",
         "round": 2.0,
         "source": "sensor.input",
@@ -118,7 +122,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     }
     assert config_entry.data == {}
     assert config_entry.options == {
-        "method": "left",
+        "method": "right",
         "name": "My integration",
         "round": 2.0,
         "source": "sensor.input",
