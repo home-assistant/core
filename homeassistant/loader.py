@@ -90,7 +90,12 @@ class BlockedIntegration:
 
 BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
     # Added in 2024.3.0 because of https://github.com/home-assistant/core/issues/112464
-    "start_time": BlockedIntegration(AwesomeVersion("1.1.7"), "breaks Home Assistant")
+    "start_time": BlockedIntegration(AwesomeVersion("1.1.7"), "breaks Home Assistant"),
+    # Added in 2024.5.1 because of
+    # https://community.home-assistant.io/t/psa-2024-5-upgrade-failure-and-dreame-vacuum-custom-integration/724612
+    "dreame_vacuum": BlockedIntegration(
+        AwesomeVersion("1.0.4"), "crashes Home Assistant"
+    ),
 }
 
 DATA_COMPONENTS = "components"
