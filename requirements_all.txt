@@ -2215,7 +2215,7 @@ python-clementine-remote==1.0.1
 python-digitalocean==1.13.2
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.17
+python-ecobee-api==0.2.18
 
 # homeassistant.components.etherscan
 python-etherscan-api==0.0.3
