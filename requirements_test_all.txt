@@ -466,7 +466,7 @@ base36==0.1.1
 beautifulsoup4==4.12.3
 
 # homeassistant.components.zha
-bellows==0.38.3
+bellows==0.38.4
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected[china]==0.15.2
@@ -658,7 +658,7 @@ energyzero==2.1.0
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env-canada==0.6.0
+env-canada==0.6.2
 
 # homeassistant.components.season
 ephem==4.1.5
@@ -849,7 +849,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.bluetooth
-habluetooth==2.8.0
+habluetooth==2.8.1
 
 # homeassistant.components.cloud
 hass-nabucasa==0.78.0
@@ -924,7 +924,7 @@ idasen-ha==2.5.1
 ifaddr==0.2.0
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.0.0
+imgw_pib==1.0.1
 
 # homeassistant.components.influxdb
 influxdb-client==1.24.0
@@ -1658,12 +1658,9 @@ pyschlage==2024.2.0
 # homeassistant.components.sensibo
 pysensibo==1.0.36
 
-# homeassistant.components.zha
-pyserial-asyncio-fast==0.11
-
 # homeassistant.components.serial
 # homeassistant.components.zha
-pyserial-asyncio==0.6
+pyserial-asyncio-fast==0.11
 
 # homeassistant.components.acer_projector
 # homeassistant.components.crownstone
@@ -1730,7 +1727,7 @@ python-awair==0.2.4
 python-bsblan==0.5.18
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.17
+python-ecobee-api==0.2.18
 
 # homeassistant.components.fully_kiosk
 python-fullykiosk==0.0.12

@@ -58,7 +58,6 @@ from .models import (
 _LOGGER = logging.getLogger(__name__)
 
 CONF_EXPIRE_AFTER = "expire_after"
-CONF_LAST_RESET_TOPIC = "last_reset_topic"
 CONF_LAST_RESET_VALUE_TEMPLATE = "last_reset_value_template"
 CONF_SUGGESTED_DISPLAY_PRECISION = "suggested_display_precision"
 
@@ -101,17 +100,11 @@ def validate_sensor_state_class_config(config: ConfigType) -> ConfigType:
 
 
 PLATFORM_SCHEMA_MODERN = vol.All(
-    # Deprecated in HA Core 2021.11.0 https://github.com/home-assistant/core/pull/54840
-    # Removed in HA Core 2023.6.0
-    cv.removed(CONF_LAST_RESET_TOPIC),
     _PLATFORM_SCHEMA_BASE,
     validate_sensor_state_class_config,
 )
 
 DISCOVERY_SCHEMA = vol.All(
-    # Deprecated in HA Core 2021.11.0 https://github.com/home-assistant/core/pull/54840
-    # Removed in HA Core 2023.6.0
-    cv.removed(CONF_LAST_RESET_TOPIC),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
     validate_sensor_state_class_config,
 )
