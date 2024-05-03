@@ -7,7 +7,7 @@ import json
 import logging
 
 from serial import SerialException
-import serial_asyncio
+import serial_asyncio_fast as serial_asyncio
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
