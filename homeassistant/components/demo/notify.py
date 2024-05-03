@@ -44,4 +44,4 @@ class DemoNotifyEntity(NotifyEntity):
         event_notification = {"message": message}
         if title is not None:
             event_notification["title"] = title
-        self.hass.bus.async_fire(EVENT_NOTIFY, event_notitifcation)
+        self.hass.bus.async_fire(EVENT_NOTIFY, event_notification)
