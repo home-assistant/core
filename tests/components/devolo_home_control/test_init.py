@@ -6,7 +6,7 @@ from devolo_home_control_api.exceptions.gateway import GatewayOfflineError
 import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.devolo_home_control import DOMAIN
+from homeassistant.components.devolo_home_control.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
