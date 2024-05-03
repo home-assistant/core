@@ -68,15 +68,17 @@ async def test_home_assistant_stop(hass: HomeAssistant) -> None:
     """Test home assistant stop."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMock()
+    test_gateway2 = HomeControlMock()
     with patch(
         "homeassistant.components.devolo_home_control.HomeControl",
-        side_effect=[test_gateway, HomeControlMock()],
+        side_effect=[test_gateway, test_gateway2],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
         assert test_gateway.websocket_disconnect.called
+        assert test_gateway2.websocket_disconnect.called
 
 
 async def test_remove_device(
