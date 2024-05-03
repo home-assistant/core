@@ -48,8 +48,8 @@ def dataset_fixture():
 
 @pytest.fixture(name="service_fixture")
 async def setup_screenlogic_services_fixture(
-    request,
     hass: HomeAssistant,
+    request,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
 ):
@@ -114,14 +114,6 @@ async def setup_screenlogic_services_fixture(
                 ATTR_COLOR_MODE: COLOR_MODE.ALL_ON.name.lower(),
             },
             {
-                ATTR_DEVICE_ID: "",
-            },
-        ),
-        (
-            {
-                ATTR_COLOR_MODE: COLOR_MODE.ALL_ON.name.lower(),
-            },
-            {
                 ATTR_ENTITY_ID: f"{Platform.SENSOR}.{slugify(f'{MOCK_ADAPTER_NAME} Air Temperature')}",
             },
         ),
@@ -133,20 +125,16 @@ async def test_service_set_color_mode(
     data: dict[str, Any],
     target: dict[str, Any],
 ) -> None:
-    """Test cleanup of unused entities."""
+    """Test set_color_mode service."""
 
     mocked_async_set_color_lights: AsyncMock = service_fixture["gateway"][
         "async_set_color_lights"
     ]
-    sl_device: dr.DeviceEntry = service_fixture["device"]
 
     assert hass.services.has_service(DOMAIN, SERVICE_SET_COLOR_MODE)
 
-    nonscreenlogicentry = MockConfigEntry(entry_id="test")
-    nonscreenlogicentry.add_to_hass(hass)
-
-    if target is not None and ATTR_DEVICE_ID in target:
-        target[ATTR_DEVICE_ID] = sl_device.id
+    non_screenlogic_entry = MockConfigEntry(entry_id="test")
+    non_screenlogic_entry.add_to_hass(hass)
 
     await hass.services.async_call(
         DOMAIN,
@@ -154,6 +142,30 @@ async def test_service_set_color_mode(
         service_data=data,
         blocking=True,
         target=target,
+    )
+
+    mocked_async_set_color_lights.assert_awaited_once()
+
+
+async def test_service_set_color_mode_with_device(
+    hass: HomeAssistant,
+    service_fixture: dict[str, Any],
+) -> None:
+    """Test set_color_mode service with a device target."""
+    mocked_async_set_color_lights: AsyncMock = service_fixture["gateway"][
+        "async_set_color_lights"
+    ]
+
+    assert hass.services.has_service(DOMAIN, SERVICE_SET_COLOR_MODE)
+
+    sl_device: dr.DeviceEntry = service_fixture["device"]
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_COLOR_MODE,
+        service_data={ATTR_COLOR_MODE: COLOR_MODE.ALL_ON.name.lower()},
+        blocking=True,
+        target={ATTR_DEVICE_ID: sl_device.id},
     )
 
     mocked_async_set_color_lights.assert_awaited_once()
@@ -219,14 +231,14 @@ async def test_service_set_color_mode_error(
     target: dict[str, Any],
     error_msg: str,
 ) -> None:
-    """Test cleanup of unused entities."""
+    """Test set_color_mode service error cases."""
 
     mocked_async_set_color_lights: AsyncMock = service_fixture["gateway"][
         "async_set_color_lights"
     ]
 
-    nonscreenlogicentry = MockConfigEntry(entry_id=NON_SL_CONFIG_ENTRY_ID)
-    nonscreenlogicentry.add_to_hass(hass)
+    non_screenlogic_entry = MockConfigEntry(entry_id=NON_SL_CONFIG_ENTRY_ID)
+    non_screenlogic_entry.add_to_hass(hass)
 
     assert hass.services.has_service(DOMAIN, SERVICE_SET_COLOR_MODE)
 
@@ -264,7 +276,7 @@ async def test_service_start_super_chlorination(
     data: dict[str, Any],
     target: dict[str, Any],
 ) -> None:
-    """Test cleanup of unused entities."""
+    """Test start_super_chlorination service."""
 
     mocked_async_set_scg_config: AsyncMock = service_fixture["gateway"][
         "async_set_scg_config"
@@ -292,8 +304,8 @@ async def test_service_start_super_chlorination(
                 ATTR_RUNTIME: 24,
             },
             None,
-            f"Failed to call service '{SERVICE_START_SUPER_CHLORINATION}'. Config entry "
-            "'invalidconfigentry' not found",
+            f"Failed to call service '{SERVICE_START_SUPER_CHLORINATION}'. "
+            "Config entry 'invalidconfigentry' not found",
         ),
         (
             {
@@ -313,7 +325,7 @@ async def test_service_start_super_chlorination_error(
     target: dict[str, Any],
     error_msg: str,
 ) -> None:
-    """Test cleanup of unused entities."""
+    """Test start_super_chlorination service error cases."""
 
     mocked_async_set_scg_config: AsyncMock = service_fixture["gateway"][
         "async_set_scg_config"
@@ -354,7 +366,7 @@ async def test_service_stop_super_chlorination(
     data: dict[str, Any],
     target: dict[str, Any],
 ) -> None:
-    """Test cleanup of unused entities."""
+    """Test stop_super_chlorination service."""
 
     mocked_async_set_scg_config: AsyncMock = service_fixture["gateway"][
         "async_set_scg_config"
@@ -381,8 +393,8 @@ async def test_service_stop_super_chlorination(
                 ATTR_CONFIG_ENTRY: "invalidconfigentry",
             },
             None,
-            f"Failed to call service '{SERVICE_STOP_SUPER_CHLORINATION}'. Config entry "
-            "'invalidconfigentry' not found",
+            f"Failed to call service '{SERVICE_STOP_SUPER_CHLORINATION}'. "
+            "Config entry 'invalidconfigentry' not found",
         ),
         (
             {
@@ -401,7 +413,7 @@ async def test_service_stop_super_chlorination_error(
     target: dict[str, Any],
     error_msg: str,
 ) -> None:
-    """Test cleanup of unused entities."""
+    """Test stop_super_chlorination service error cases."""
 
     mocked_async_set_scg_config: AsyncMock = service_fixture["gateway"][
         "async_set_scg_config"
@@ -463,11 +475,12 @@ async def test_service_config_entry_not_loaded(
 
         await mock_config_entry.async_unload(hass)
         await hass.async_block_till_done()
-        assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+        assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
         with pytest.raises(
             ServiceValidationError,
-            match=f"Failed to call service '{SERVICE_SET_COLOR_MODE}'. Config entry '{MOCK_CONFIG_ENTRY_ID}' not loaded",
+            match=f"Failed to call service '{SERVICE_SET_COLOR_MODE}'. "
+            f"Config entry '{MOCK_CONFIG_ENTRY_ID}' not loaded",
         ):
             await hass.services.async_call(
                 DOMAIN,
