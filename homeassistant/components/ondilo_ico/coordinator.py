@@ -31,9 +31,10 @@ class OndiloIcoCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Fetch data from API endpoint."""
         try:
-            return await self.hass.async_add_executor_job(self.api.get_all_pools_data)
+            return await self.hass.async_add_executor_job(self._update_data)
 
         except OndiloError as err:
+            _LOGGER.exception("Error getting pools")
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
     def _update_data(self) -> list[dict[str, Any]]:
