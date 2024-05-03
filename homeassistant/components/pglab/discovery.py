@@ -108,6 +108,8 @@ class Discovery:
         self._mqtt_client = None
 
     async def __build_device(self, mqtt: Client, msg: ReceiveMessage) -> Device:
+        """Build a PG LAB device."""
+
         # check if the discovery message is in valid jason format
         try:
             payload = json.loads(msg.payload)
