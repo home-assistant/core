@@ -163,7 +163,7 @@ class BaseRoutineEntity:
 
         return time.time() - self._last_trigger_time < self._timeout
 
-    def output(self, routine_id: str, actions: dict[str, Any]) -> None:
+    def output(self, routine_id: str, actions: dict[str, ActionEntity]) -> None:
         """Print the routine information."""
         action_list = []
         for _, entity in actions.items():
@@ -251,7 +251,7 @@ class ActionEntity:
         hass: HomeAssistant,
         action: dict[str, Any],
         action_id: str,
-        duration: timedelta,
+        duration: dict[str, timedelta],
         is_end_node: bool = False,
         delay: timedelta | None = None,
         variables: dict[str, Any] | None = None,
@@ -275,6 +275,10 @@ class ActionEntity:
         self._set_logger(logger)
         self._stop = asyncio.Event()
         self._attr_is_end_node = is_end_node
+
+    def __repr__(self) -> str:
+        """Return the string representation of the action entity."""
+        return f"ActionEntity({self.action_id}, {self.duration}, {self.is_end_node})"
 
     @property
     def action_id(self) -> str:

@@ -53,7 +53,7 @@ from homeassistant.helpers.template import device_entities
 from homeassistant.helpers.typing import ConfigType
 
 from .abstraction import RASCAbstraction
-from .const import CONF_TRANSITION, DOMAIN, MIN_ACTION_LENGTH
+from .const import ACTION_LENGTH_PADDING, CONF_TRANSITION, DOMAIN
 from .entity import (
     ActionEntity,
     BaseRoutineEntity,
@@ -110,21 +110,24 @@ def create_routine(
             else:
                 transition = None
             target_entities = get_target_entities(hass, script)
-            estimated_duration = MIN_ACTION_LENGTH
+            estimated_duration = dict[str, timedelta]()
             for entity in target_entities:
                 entity_id = get_entity_id_from_number(hass, entity)
-                estimated_duration = max(
-                    estimated_duration,
+                estimated_entity_duration = (
                     rasc.get_action_length_estimate(
                         entity_id, action=action, transition=transition
-                    ),
+                    )
+                    + ACTION_LENGTH_PADDING
+                )
+                estimated_duration[entity_id] = generate_duration(
+                    estimated_entity_duration
                 )
 
             entities[action_id] = ActionEntity(
                 hass=hass,
                 action=script,
                 action_id=action_id,
-                duration=generate_duration(estimated_duration),
+                duration=estimated_duration,
                 logger=_LOGGER,
             )
 
@@ -148,7 +151,7 @@ def create_routine(
         hass=hass,
         action={},
         action_id="",
-        duration=timedelta(seconds=0),
+        duration={},
         is_end_node=True,
         logger=_LOGGER,
     )
@@ -217,21 +220,24 @@ def _create_routine(
             else:
                 transition = None
             target_entities = get_target_entities(hass, script)
-            estimated_duration = MIN_ACTION_LENGTH
+            estimated_duration = dict[str, timedelta]()
             for target_entity in target_entities:
                 entity_id = get_entity_id_from_number(hass, target_entity)
-                estimated_duration = max(
-                    estimated_duration,
+                estimated_entity_duration = (
                     rasc.get_action_length_estimate(
                         entity_id, action=action, transition=transition
-                    ),
+                    )
+                    + ACTION_LENGTH_PADDING
+                )
+                estimated_duration[entity_id] = generate_duration(
+                    estimated_entity_duration
                 )
 
             entities[action_id] = ActionEntity(
                 hass=hass,
                 action=script,
                 action_id=action_id,
-                duration=generate_duration(estimated_duration),
+                duration=estimated_duration,
                 logger=_LOGGER,
             )
 
@@ -266,21 +272,22 @@ def _create_routine(
         else:
             transition = None
         target_entities = get_target_entities(hass, script)
-        estimated_duration = MIN_ACTION_LENGTH
+        estimated_duration = dict[str, timedelta]()
         for target_entity in target_entities:
             entity_id = get_entity_id_from_number(hass, target_entity)
-            estimated_duration = max(
-                estimated_duration,
+            estimated_entity_duration = (
                 rasc.get_action_length_estimate(
                     entity_id, action=action, transition=transition
-                ),
+                )
+                + ACTION_LENGTH_PADDING
             )
+            estimated_duration[entity_id] = generate_duration(estimated_entity_duration)
 
         entities[action_id] = ActionEntity(
             hass=hass,
             action=script,
             action_id=action_id,
-            duration=generate_duration(estimated_duration),
+            duration=estimated_duration,
             logger=_LOGGER,
         )
 
@@ -328,10 +335,11 @@ def get_target_entities(hass: HomeAssistant, script: dict[str, Any]) -> list[str
 
 
 def output_lock_queues(
-    lock_queues: dict[str, Queue[str, ActionInfo]], filepath: str
+    lock_queues: dict[str, Queue[str, ActionInfo]], filepath: Optional[str] = None
 ) -> None:
     """Output the lock queues."""
-    fp = os.path.join(filepath, "locks_queues.json")
+    if filepath:
+        fp = os.path.join(filepath, "locks_queues.json")
     lock_queues_list = []
     for entity_id, actions in lock_queues.items():
         action_list = []
@@ -351,10 +359,11 @@ def output_lock_queues(
         lock_queues_list.append(entity_json)
 
     out = {"Type": "Lock Queues", "Lock Queues": lock_queues_list}
-    with open(fp, "w", encoding="utf-8") as f:
-        json.dump(out, f, indent=2)
-
-    # print(json.dumps(out, indent=2))  # noqa: T201
+    if filepath:
+        with open(fp, "w", encoding="utf-8") as f:
+            json.dump(out, f, indent=2)
+    else:
+        _LOGGER.debug(json.dumps(out, indent=2))
 
 
 def output_locks(locks: dict[str, str | None], filepath: str) -> None:
@@ -422,9 +431,12 @@ def output_serialization_order(
     # print(json.dumps(out, indent=2))  # noqa: T201()
 
 
-def output_free_slots(timelines: dict[str, Queue[str, str]], filepath: str) -> None:
+def output_free_slots(
+    timelines: dict[str, Queue[str, str]], filepath: Optional[str] = None
+) -> None:
     """Output free slots."""
-    fp = os.path.join(filepath, "free_slots.json")
+    if filepath:
+        fp = os.path.join(filepath, "free_slots.json")
 
     tl = []
     for entity_id, timeline in timelines.items():
@@ -439,13 +451,14 @@ def output_free_slots(timelines: dict[str, Queue[str, str]], filepath: str) -> N
         tl.append(entity_json)
 
     out = {"Type": "Free Slots", "Free Slots": tl}
-    with open(fp, "w", encoding="utf-8") as f:
-        json.dump(out, f, indent=2)
+    if filepath:
+        with open(fp, "w", encoding="utf-8") as f:
+            json.dump(out, f, indent=2)
+    else:
+        _LOGGER.debug(json.dumps(out, indent=2))
 
-    # print(json.dumps(out, indent=2))  # noqa: T201()
 
-
-def output_routine(routine_id: str, actions: dict[str, Any]) -> None:
+def output_routine(routine_id: str, actions: dict[str, ActionEntity]) -> None:
     """Output routine."""
     dirname = f"trail-{TRAIL.num:04d}"
     TRAIL.increment()
@@ -596,6 +609,11 @@ class ActionInfo:
         """Get time range."""
         return (self._start_time, self._end_time)
 
+    @property
+    def duration(self) -> timedelta:
+        """Get duration."""
+        return string_to_datetime(self._end_time) - string_to_datetime(self._start_time)
+
     def move_to(self, new_start_time: str, new_end_time: str) -> None:
         """Move to new time range."""
         self._start_time = new_start_time
@@ -731,7 +749,7 @@ class BaseScheduler:
     _lineage_table: LineageTable
     _scheduling_policy: str
 
-    def _get_action(self, action_id: str) -> ActionEntity | None:
+    def get_action(self, action_id: str) -> ActionEntity | None:
         """Get the active action."""
         routine_info = self._serialization_order[get_routine_id(action_id)]
 
@@ -960,7 +978,7 @@ class BaseScheduler:
         if (
             string_to_datetime(slot_end)
             - string_to_datetime(max(slot_start, datetime_to_string(now)))
-        ).total_seconds() < new_action.duration.total_seconds():
+        ).total_seconds() < new_action.duration[entity_id].total_seconds():
             _LOGGER.error(
                 "Failed to prelease the lock. The slot is too small to place the action"
             )
@@ -1287,7 +1305,7 @@ class BaseScheduler:
             dt_start_time = string_to_datetime(start_time)
 
             dt_action_st = max(dt_start_time, now)
-            dt_action_end = dt_action_st + action.duration
+            dt_action_end = dt_action_st + action.duration[entity_id]
             action_st = datetime_to_string(dt_action_st)
             action_end = datetime_to_string(dt_action_end)
 
@@ -1624,13 +1642,13 @@ class TimeLineScheduler(BaseScheduler):
                     string_to_datetime(slot_end)
                     - string_to_datetime(max(slot_start, datetime_to_string(now)))
                 ).total_seconds()
-                < new_action.duration.total_seconds()
+                < new_action.duration[entity_id].total_seconds()
             ):
                 continue
 
             action_st = max(slot_start, datetime_to_string(now))
             action_end = datetime_to_string(
-                string_to_datetime(action_st) + new_action.duration
+                string_to_datetime(action_st) + new_action.duration[entity_id]
             )
             cur_preset = preset.union(
                 self.get_preset(
@@ -1823,7 +1841,7 @@ class TimeLineScheduler(BaseScheduler):
             dt_start_time = string_to_datetime(start_time)
 
             dt_action_st = max(dt_start_time, now)
-            dt_action_end = dt_action_st + action.duration
+            dt_action_end = dt_action_st + action.duration[entity_id]
             action_st = datetime_to_string(dt_action_st)
             action_end = datetime_to_string(dt_action_end)
 
@@ -2782,7 +2800,7 @@ class RascalScheduler(BaseScheduler):
         self._update_action_state(action_id, entity_id, event_type)
 
         # Get the running action in the serialization
-        action = self._get_action(action_id)
+        action = self.get_action(action_id)
         if not action:
             return
 
