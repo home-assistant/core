@@ -398,7 +398,7 @@ class AugustData(AugustSubscriberMixin):
             device_id,
             hyper_bridge,
         )
-    
+
     async def async_unlatch(self, device_id: str) -> list[ActivityTypes]:
         """Open/unlatch the device."""
         return await self._async_call_api_op_requires_bridge(
