@@ -1,4 +1,4 @@
-"""Config flow for Tasmota."""
+"""Config flow for PG LAB Electronics integration."""
 
 from __future__ import annotations
 
