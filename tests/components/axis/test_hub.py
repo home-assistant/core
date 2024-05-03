@@ -9,7 +9,6 @@ import pytest
 
 from homeassistant.components import axis, zeroconf
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
-from homeassistant.components.axis.hub import AxisHub
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_ZEROCONF
 from homeassistant.const import (
@@ -52,7 +51,7 @@ async def test_device_setup(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Successful setup."""
-    hub = AxisHub.get_hub(hass, setup_config_entry)
+    hub = setup_config_entry.runtime_data
 
     assert hub.api.vapix.firmware_version == "9.10.1"
     assert hub.api.vapix.product_number == "M1065-LW"
@@ -78,7 +77,7 @@ async def test_device_setup(
 @pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_BASIC_DEVICE_INFO])
 async def test_device_info(hass: HomeAssistant, setup_config_entry) -> None:
     """Verify other path of device information works."""
-    hub = AxisHub.get_hub(hass, setup_config_entry)
+    hub = setup_config_entry.runtime_data
 
     assert hub.api.vapix.firmware_version == "9.80.1"
     assert hub.api.vapix.product_number == "M1065-LW"
@@ -124,30 +123,26 @@ async def test_update_address(
     hass: HomeAssistant, setup_config_entry, mock_vapix_requests
 ) -> None:
     """Test update address works."""
-    hub = AxisHub.get_hub(hass, setup_config_entry)
+    hub = setup_config_entry.runtime_data
     assert hub.api.config.host == "1.2.3.4"
 
-    with patch(
-        "homeassistant.components.axis.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        mock_vapix_requests("2.3.4.5")
-        await hass.config_entries.flow.async_init(
-            AXIS_DOMAIN,
-            data=zeroconf.ZeroconfServiceInfo(
-                ip_address=ip_address("2.3.4.5"),
-                ip_addresses=[ip_address("2.3.4.5")],
-                hostname="mock_hostname",
-                name="name",
-                port=80,
-                properties={"macaddress": MAC},
-                type="mock_type",
-            ),
-            context={"source": SOURCE_ZEROCONF},
-        )
-        await hass.async_block_till_done()
+    mock_vapix_requests("2.3.4.5")
+    await hass.config_entries.flow.async_init(
+        AXIS_DOMAIN,
+        data=zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("2.3.4.5"),
+            ip_addresses=[ip_address("2.3.4.5")],
+            hostname="mock_hostname",
+            name="name",
+            port=80,
+            properties={"macaddress": MAC},
+            type="mock_type",
+        ),
+        context={"source": SOURCE_ZEROCONF},
+    )
+    await hass.async_block_till_done()
 
     assert hub.api.config.host == "2.3.4.5"
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_device_unavailable(
