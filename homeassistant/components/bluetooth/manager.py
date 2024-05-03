@@ -97,10 +97,9 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         matched_domains = self._integration_matcher.match_domains(service_info)
         if self._debug:
             _LOGGER.debug(
-                "%s: %s %s match: %s",
+                "%s: %s match: %s",
                 self._async_describe_source(service_info),
-                service_info.address,
-                service_info.advertisement,
+                service_info,
                 matched_domains,
             )
 
