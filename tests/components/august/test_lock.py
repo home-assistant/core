@@ -18,8 +18,8 @@ from homeassistant.components.lock import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_LOCK,
-    SERVICE_UNLOCK,
     SERVICE_OPEN,
+    SERVICE_UNLOCK,
     STATE_LOCKED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
