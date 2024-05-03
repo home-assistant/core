@@ -398,6 +398,8 @@ class MatterLight(MatterEntity, LightEntity):
     def _check_transition_blocklist(self) -> None:
         """Check if this device is reported to have non working transitions."""
         device_info = self._endpoint.device_info
+        if isinstance(device_info, clusters.BridgedDeviceBasicInformation):
+            return
         if (
             device_info.vendorID,
             device_info.productID,
