@@ -104,7 +104,7 @@ def mock_setup_entry() -> Generator[MockConfigEntry, None, None]:
 
 # Fixtures for mocking the Azure Data Explorer SDK calls.
 @pytest.fixture(autouse=True)
-def mock_managed_streaming() -> Generator[Any, Any, Any]:
+def mock_managed_streaming(hass) -> Generator[Any, Any, Any]:
     """mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data."""
     with patch(
         "azure.kusto.ingest.ManagedStreamingIngestClient.ingest_from_stream",
@@ -114,7 +114,7 @@ def mock_managed_streaming() -> Generator[Any, Any, Any]:
 
 
 @pytest.fixture(autouse=True)
-def mock_queued_ingest() -> Generator[Any, Any, Any]:
+def mock_queued_ingest(hass) -> Generator[Any, Any, Any]:
     """mock_azure_data_explorer_QueuedIngestClient_ingest_data."""
     with patch(
         "azure.kusto.ingest.QueuedIngestClient.ingest_from_stream",

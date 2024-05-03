@@ -29,15 +29,15 @@ _LOGGER = logging.getLogger(__name__)
 @pytest.mark.freeze_time("2024-01-01 00:00:00")
 async def test_put_event_on_queue_with_managed_client(
     hass,
-    entry_managed,
     mock_managed_streaming,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test listening to events from Hass. and writing to ADX with managed client."""
 
     hass.states.async_set("sensor.test_sensor", STATE_ON)
+    await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, datetime(2024, 1, 1, 0, 0, 0))
+    async_fire_time_changed(hass, datetime(2024, 1, 1, 0, 1, 0))
 
     await hass.async_block_till_done()
 
