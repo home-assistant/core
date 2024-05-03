@@ -83,7 +83,7 @@ class MqttNotify(MqttEntity, NotifyEntity):
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
-    async def async_send_message(self, message: str) -> None:
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
         payload = self._command_template(message)
         await self.async_publish(
