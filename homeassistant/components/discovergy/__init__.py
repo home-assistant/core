@@ -12,7 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import DOMAIN
 from .coordinator import DiscovergyUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -22,8 +21,6 @@ DiscovergyConfigEntry = ConfigEntry[list[DiscovergyUpdateCoordinator]]
 
 async def async_setup_entry(hass: HomeAssistant, entry: DiscovergyConfigEntry) -> bool:
     """Set up Discovergy from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     client = Discovergy(
         email=entry.data[CONF_EMAIL],
         password=entry.data[CONF_PASSWORD],
