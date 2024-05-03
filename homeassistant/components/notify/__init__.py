@@ -58,11 +58,6 @@ PLATFORM_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-NOTIFY_SEND_MESSAGE_SERVICE_SCHEMA = {
-    vol.Required(ATTR_MESSAGE): cv.string,
-    vol.Optional(ATTR_TITLE): cv.string,
-}
-
 
 class NotifyEntityFeature(IntFlag):
     """Supported features of a notify entity."""
@@ -85,7 +80,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component = hass.data[DOMAIN] = EntityComponent[NotifyEntity](_LOGGER, DOMAIN, hass)
     component.async_register_entity_service(
         SERVICE_SEND_MESSAGE,
-        NOTIFY_SEND_MESSAGE_SERVICE_SCHEMA,
+        {
+            vol.Required(ATTR_MESSAGE): cv.string,
+            vol.Optional(ATTR_TITLE): cv.string,
+        },
         "_async_send_message",
     )
 
