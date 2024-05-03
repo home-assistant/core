@@ -806,7 +806,7 @@ gotailwind==0.2.2
 govee-ble==0.31.2
 
 # homeassistant.components.govee_light_local
-govee-local-api==1.4.4
+govee-local-api==1.4.5
 
 # homeassistant.components.gpsd
 gps3==0.33.3
@@ -849,7 +849,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.bluetooth
-habluetooth==2.8.1
+habluetooth==3.0.1
 
 # homeassistant.components.cloud
 hass-nabucasa==0.78.0
@@ -924,7 +924,7 @@ idasen-ha==2.5.1
 ifaddr==0.2.0
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.0.0
+imgw_pib==1.0.1
 
 # homeassistant.components.influxdb
 influxdb-client==1.24.0
@@ -1567,7 +1567,7 @@ pynobo==1.8.1
 pynuki==1.6.3
 
 # homeassistant.components.nws
-pynws==1.6.0
+pynws[retry]==1.7.0
 
 # homeassistant.components.nx584
 pynx584==0.5
