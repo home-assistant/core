@@ -986,15 +986,9 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
 
     # Remove MQTT from the device
     mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": mqtt_config_entry.entry_id,
-            "device_id": device_entry.id,
-        }
+    response = await ws_client.remove_device(
+        device_entry.id, mqtt_config_entry.entry_id
     )
-    response = await ws_client.receive_json()
     assert response["success"]
     await hass.async_block_till_done()
 
@@ -1349,15 +1343,9 @@ async def test_cleanup_trigger(
 
     # Remove MQTT from the device
     mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": mqtt_config_entry.entry_id,
-            "device_id": device_entry.id,
-        }
+    response = await ws_client.remove_device(
+        device_entry.id, mqtt_config_entry.entry_id
     )
-    response = await ws_client.receive_json()
     assert response["success"]
     await hass.async_block_till_done()
     await hass.async_block_till_done()

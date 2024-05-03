@@ -31,6 +31,7 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
+    CONF_PROTOCOL,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_RELOAD,
@@ -1873,6 +1874,7 @@ async def test_reload_entry_with_restored_subscriptions(
     # Setup the MQTT entry
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
     entry.add_to_hass(hass)
+    hass.config.components.add(mqtt.DOMAIN)
     mqtt_client_mock.connect.return_value = 0
     with patch("homeassistant.config.load_yaml_config_file", return_value={}):
         await entry.async_setup(hass)
@@ -2073,16 +2075,34 @@ async def test_handle_mqtt_on_callback(
 ) -> None:
     """Test receiving an ACK callback before waiting for it."""
     await mqtt_mock_entry()
-    # Simulate an ACK for mid == 1, this will call mqtt_mock._mqtt_handle_mid(mid)
-    mqtt_client_mock.on_publish(mqtt_client_mock, None, 1)
-    await hass.async_block_till_done()
-    # Make sure the ACK has been received
-    await hass.async_block_till_done()
-    # Now call publish without call back, this will call _wait_for_mid(msg_info.mid)
-    await mqtt.async_publish(hass, "no_callback/test-topic", "test-payload")
-    # Since the mid event was already set, we should not see any timeout warning in the log
+    with patch.object(mqtt_client_mock, "get_mid", return_value=100):
+        # Simulate an ACK for mid == 100, this will call mqtt_mock._async_get_mid_future(mid)
+        mqtt_client_mock.on_publish(mqtt_client_mock, None, 100)
+        await hass.async_block_till_done()
+        # Make sure the ACK has been received
+        await hass.async_block_till_done()
+        # Now call publish without call back, this will call _async_async_wait_for_mid(msg_info.mid)
+        await mqtt.async_publish(hass, "no_callback/test-topic", "test-payload")
+        # Since the mid event was already set, we should not see any timeout warning in the log
+        await hass.async_block_till_done()
+        assert "No ACK from MQTT server" not in caplog.text
+
+
+async def test_handle_mqtt_on_callback_after_timeout(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    mqtt_client_mock: MqttMockPahoClient,
+) -> None:
+    """Test receiving an ACK after a timeout."""
+    mqtt_mock = await mqtt_mock_entry()
+    # Simulate the mid future getting a timeout
+    mqtt_mock()._async_get_mid_future(100).set_exception(asyncio.TimeoutError)
+    # Simulate an ACK for mid == 100, being received after the timeout
+    mqtt_client_mock.on_publish(mqtt_client_mock, None, 100)
     await hass.async_block_till_done()
     assert "No ACK from MQTT server" not in caplog.text
+    assert "InvalidStateError" not in caplog.text
 
 
 async def test_publish_error(
@@ -2202,21 +2222,21 @@ async def test_setup_manual_mqtt_with_invalid_config(
         (
             {
                 mqtt.CONF_BROKER: "mock-broker",
-                mqtt.CONF_PROTOCOL: "3.1",
+                CONF_PROTOCOL: "3.1",
             },
             3,
         ),
         (
             {
                 mqtt.CONF_BROKER: "mock-broker",
-                mqtt.CONF_PROTOCOL: "3.1.1",
+                CONF_PROTOCOL: "3.1.1",
             },
             4,
         ),
         (
             {
                 mqtt.CONF_BROKER: "mock-broker",
-                mqtt.CONF_PROTOCOL: "5",
+                CONF_PROTOCOL: "5",
             },
             5,
         ),
@@ -2539,6 +2559,75 @@ async def test_delayed_birth_message(
     [
         {
             mqtt.CONF_BROKER: "mock-broker",
+            mqtt.CONF_BIRTH_MESSAGE: {
+                mqtt.ATTR_TOPIC: "homeassistant/status",
+                mqtt.ATTR_PAYLOAD: "online",
+                mqtt.ATTR_QOS: 0,
+                mqtt.ATTR_RETAIN: False,
+            },
+        }
+    ],
+)
+async def test_subscription_done_when_birth_message_is_sent(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_config_entry_data,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test sending birth message until initial subscription has been completed."""
+    mqtt_mock = await mqtt_mock_entry()
+
+    hass.set_state(CoreState.starting)
+    birth = asyncio.Event()
+
+    await hass.async_block_till_done()
+
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data=mqtt_config_entry_data)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    mqtt_component_mock = MagicMock(
+        return_value=hass.data["mqtt"].client,
+        wraps=hass.data["mqtt"].client,
+    )
+    mqtt_component_mock._mqttc = mqtt_client_mock
+
+    hass.data["mqtt"].client = mqtt_component_mock
+    mqtt_mock = hass.data["mqtt"].client
+    mqtt_mock.reset_mock()
+
+    @callback
+    def wait_birth(msg: ReceiveMessage) -> None:
+        """Handle birth message."""
+        birth.set()
+
+    mqtt_client_mock.reset_mock()
+    with patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0):
+        await mqtt.async_subscribe(hass, "homeassistant/status", wait_birth)
+        mqtt_client_mock.on_connect(None, None, 0, 0)
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        # We wait until we receive a birth message
+        await asyncio.wait_for(birth.wait(), 1)
+        # Assert we already have subscribed at the client
+        # for new config payloads at the time we the birth message is received
+        assert ("homeassistant/+/+/config", 0) in help_all_subscribe_calls(
+            mqtt_client_mock
+        )
+        assert ("homeassistant/+/+/+/config", 0) in help_all_subscribe_calls(
+            mqtt_client_mock
+        )
+        mqtt_client_mock.publish.assert_called_with(
+            "homeassistant/status", "online", 0, False
+        )
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_entry_data",
+    [
+        {
+            mqtt.CONF_BROKER: "mock-broker",
             mqtt.CONF_WILL_MESSAGE: {
                 mqtt.ATTR_TOPIC: "death",
                 mqtt.ATTR_PAYLOAD: "death",
@@ -2850,15 +2939,7 @@ async def test_mqtt_ws_remove_discovered_device(
 
     client = await hass_ws_client(hass)
     mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": mqtt_config_entry.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await client.receive_json()
+    response = await client.remove_device(device_entry.id, mqtt_config_entry.entry_id)
     assert response["success"]
 
     # Verify device entry is cleared

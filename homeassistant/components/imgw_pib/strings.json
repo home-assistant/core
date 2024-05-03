@@ -1,0 +1,37 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "station_id": "Hydrological station"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "Failed to connect"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "flood_alarm": {
+        "name": "Flood alarm"
+      },
+      "flood_warning": {
+        "name": "Flood warning"
+      }
+    },
+    "sensor": {
+      "water_level": {
+        "name": "Water level"
+      },
+      "water_temperature": {
+        "name": "Water temperature"
+      }
+    }
+  }
+}

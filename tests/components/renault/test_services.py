@@ -18,7 +18,6 @@ from homeassistant.components.renault.services import (
     SERVICE_AC_CANCEL,
     SERVICE_AC_START,
     SERVICE_CHARGE_SET_SCHEDULES,
-    SERVICES,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -58,25 +57,6 @@ def get_device_id(hass: HomeAssistant) -> str:
     identifiers = {(DOMAIN, "VF1AAAAA555777999")}
     device = device_registry.async_get_device(identifiers=identifiers)
     return device.id
-
-
-async def test_service_registration(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> None:
-    """Test entry setup and unload."""
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Check that all services are registered.
-    for service in SERVICES:
-        assert hass.services.has_service(DOMAIN, service)
-
-    # Unload the entry
-    await hass.config_entries.async_unload(config_entry.entry_id)
-
-    # Check that all services are un-registered.
-    for service in SERVICES:
-        assert not hass.services.has_service(DOMAIN, service)
 
 
 async def test_service_set_ac_cancel(

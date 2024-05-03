@@ -843,15 +843,9 @@ async def test_cleanup_device(
 
     # Remove MQTT from the device
     mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": mqtt_config_entry.entry_id,
-            "device_id": device_entry.id,
-        }
+    response = await ws_client.remove_device(
+        device_entry.id, mqtt_config_entry.entry_id
     )
-    response = await ws_client.receive_json()
     assert response["success"]
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -985,15 +979,9 @@ async def test_cleanup_device_multiple_config_entries(
 
     # Remove MQTT from the device
     mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": mqtt_config_entry.entry_id,
-            "device_id": device_entry.id,
-        }
+    response = await ws_client.remove_device(
+        device_entry.id, mqtt_config_entry.entry_id
     )
-    response = await ws_client.receive_json()
     assert response["success"]
 
     await hass.async_block_till_done()
@@ -1350,22 +1338,6 @@ async def test_discovery_expansion_without_encoding_and_value_template_2(
 
 ABBREVIATIONS_WHITE_LIST = [
     # MQTT client/server/trigger settings
-    "CONF_BIRTH_MESSAGE",
-    "CONF_BROKER",
-    "CONF_CERTIFICATE",
-    "CONF_CLIENT_CERT",
-    "CONF_CLIENT_ID",
-    "CONF_CLIENT_KEY",
-    "CONF_DISCOVERY",
-    "CONF_DISCOVERY_ID",
-    "CONF_DISCOVERY_PREFIX",
-    "CONF_EMBEDDED",
-    "CONF_KEEPALIVE",
-    "CONF_TLS_INSECURE",
-    "CONF_TRANSPORT",
-    "CONF_WILL_MESSAGE",
-    "CONF_WS_PATH",
-    "CONF_WS_HEADERS",
     # Integration info
     "CONF_SUPPORT_URL",
     # Undocumented device configuration
@@ -1385,6 +1357,14 @@ ABBREVIATIONS_WHITE_LIST = [
     "CONF_WHITE_VALUE",
 ]
 
+EXCLUDED_MODULES = {
+    "const.py",
+    "config.py",
+    "config_flow.py",
+    "device_trigger.py",
+    "trigger.py",
+}
+
 
 async def test_missing_discover_abbreviations(
     hass: HomeAssistant,
@@ -1395,7 +1375,7 @@ async def test_missing_discover_abbreviations(
     missing = []
     regex = re.compile(r"(CONF_[a-zA-Z\d_]*) *= *[\'\"]([a-zA-Z\d_]*)[\'\"]")
     for fil in Path(mqtt.__file__).parent.rglob("*.py"):
-        if fil.name == "trigger.py":
+        if fil.name in EXCLUDED_MODULES:
             continue
         with open(fil, encoding="utf-8") as file:
             matches = re.findall(regex, file.read())
