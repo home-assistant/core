@@ -198,7 +198,7 @@ async def test_shutdown_closes_connections(
 
     hass.set_state(CoreState.not_running)
 
-    instance = get_instance(hass)
+    instance = recorder.get_instance(hass)
     await instance.async_db_ready
     await hass.async_block_till_done()
     pool = instance.engine.pool

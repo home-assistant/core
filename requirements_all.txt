@@ -386,7 +386,7 @@ aiotankerkoenig==0.4.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==76
+aiounifi==77
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -541,7 +541,7 @@ beautifulsoup4==4.12.3
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.38.3
+bellows==0.38.4
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected[china]==0.15.2
@@ -804,7 +804,7 @@ enocean==0.50
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env-canada==0.6.0
+env-canada==0.6.2
 
 # homeassistant.components.season
 ephem==4.1.5
@@ -983,7 +983,7 @@ gotailwind==0.2.2
 govee-ble==0.31.2
 
 # homeassistant.components.govee_light_local
-govee-local-api==1.4.4
+govee-local-api==1.4.5
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -1035,7 +1035,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.bluetooth
-habluetooth==2.8.0
+habluetooth==3.0.1
 
 # homeassistant.components.cloud
 hass-nabucasa==0.78.0
@@ -1137,7 +1137,7 @@ iglo==1.2.7
 ihcsdk==2.8.5
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.0.0
+imgw_pib==1.0.1
 
 # homeassistant.components.incomfort
 incomfort-client==0.5.0
@@ -1371,7 +1371,7 @@ netdata==1.1.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==3.0.0
+nettigo-air-monitor==3.0.1
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
@@ -2004,7 +2004,7 @@ pynobo==1.8.1
 pynuki==1.6.3
 
 # homeassistant.components.nws
-pynws==1.6.0
+pynws[retry]==1.7.0
 
 # homeassistant.components.nx584
 pynx584==0.5
@@ -2119,12 +2119,9 @@ pyschlage==2024.2.0
 # homeassistant.components.sensibo
 pysensibo==1.0.36
 
-# homeassistant.components.zha
-pyserial-asyncio-fast==0.11
-
 # homeassistant.components.serial
 # homeassistant.components.zha
-pyserial-asyncio==0.6
+pyserial-asyncio-fast==0.11
 
 # homeassistant.components.acer_projector
 # homeassistant.components.crownstone
@@ -2215,7 +2212,7 @@ python-clementine-remote==1.0.1
 python-digitalocean==1.13.2
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.17
+python-ecobee-api==0.2.18
 
 # homeassistant.components.etherscan
 python-etherscan-api==0.0.3
