@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 import aiounifi
 
@@ -22,12 +23,18 @@ from .entity_helper import UnifiEntityHelper
 from .entity_loader import UnifiEntityLoader
 from .websocket import UnifiWebsocket
 
+if TYPE_CHECKING:
+    from .. import UnifiConfigEntry
+
 
 class UnifiHub:
     """Manages a single UniFi Network instance."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: aiounifi.Controller
+        self,
+        hass: HomeAssistant,
+        config_entry: UnifiConfigEntry,
+        api: aiounifi.Controller,
     ) -> None:
         """Initialize the system."""
         self.hass = hass
@@ -39,13 +46,6 @@ class UnifiHub:
 
         self.site = config_entry.data[CONF_SITE_ID]
         self.is_admin = False
-
-    @callback
-    @staticmethod
-    def get_hub(hass: HomeAssistant, config_entry: ConfigEntry) -> UnifiHub:
-        """Get UniFi hub from config entry."""
-        hub: UnifiHub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-        return hub
 
     @property
     def available(self) -> bool:
