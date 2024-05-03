@@ -1,4 +1,5 @@
 """PG LAB Electronics integration."""
+
 from __future__ import annotations
 
 from pypglab.mqtt import Client, Sub_State, Subcribe_CallBack
@@ -26,9 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up PG LAB Electronics integration from a config entry."""
 
     # define the call back for pglab  module to publish a mqtt message
-    async def mqtt_publish(
-        topic: str, payload: str, qos: int | None = 0, retain: bool | None = False
-    ) -> None:
+    async def mqtt_publish(topic: str, payload: str, qos: int, retain: bool) -> None:
         await mqtt.async_publish(hass, topic, payload, qos, retain)
 
     # define the call back for pglab module to subscribe to a mqtt message
