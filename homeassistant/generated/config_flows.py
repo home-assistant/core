@@ -251,6 +251,7 @@ FLOWS = {
         "idasen_desk",
         "ifttt",
         "imap",
+        "imgw_pib",
         "improv_ble",
         "inkbird",
         "insteon",

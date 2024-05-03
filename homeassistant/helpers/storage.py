@@ -468,7 +468,7 @@ class Store(Generic[_T]):
             # wrote. Reschedule the timer to the next write time.
             self._async_reschedule_delayed_write(self._next_write_time)
             return
-        self.hass.async_create_task(
+        self.hass.async_create_task_internal(
             self._async_callback_delayed_write(), eager_start=True
         )
 

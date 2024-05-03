@@ -612,6 +612,11 @@ ZEROCONF = {
             "domain": "matter",
         },
     ],
+    "_matterc._udp.local.": [
+        {
+            "domain": "matter",
+        },
+    ],
     "_mediaremotetv._tcp.local.": [
         {
             "domain": "apple_tv",

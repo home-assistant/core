@@ -449,7 +449,7 @@ async def _async_setup_component(
         await asyncio.gather(
             *(
                 create_eager_task(
-                    entry.async_setup(hass, integration=integration),
+                    entry.async_setup_locked(hass, integration=integration),
                     name=f"config entry setup {entry.title} {entry.domain} {entry.entry_id}",
                 )
                 for entry in entries
@@ -600,7 +600,7 @@ def _async_when_setup(
             _LOGGER.exception("Error handling when_setup callback for %s", component)
 
     if component in hass.config.components:
-        hass.async_create_task(
+        hass.async_create_task_internal(
             when_setup(), f"when setup {component}", eager_start=True
         )
         return

@@ -2565,11 +2565,6 @@
       "integration_type": "virtual",
       "supported_by": "netatmo"
     },
-    "homeassistant_sky_connect": {
-      "name": "Home Assistant SkyConnect",
-      "integration_type": "device",
-      "config_flow": true
-    },
     "homematic": {
       "name": "Homematic",
       "integrations": {
@@ -2786,6 +2781,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_push"
+    },
+    "imgw_pib": {
+      "name": "IMGW-PIB",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "improv_ble": {
       "name": "Improv via BLE",
