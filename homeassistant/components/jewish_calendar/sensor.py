@@ -120,6 +120,11 @@ TIME_SENSORS = (
         icon="mdi:weather-night",
     ),
     SensorEntityDescription(
+        key="three_stars",
+        name="T'set Hakochavim - Always three stars",
+        icon="mdi:weather-night",
+    ),
+    SensorEntityDescription(
         key="upcoming_shabbat_candle_lighting",
         name="Upcoming Shabbat Candle Lighting",
         icon="mdi:candle",
