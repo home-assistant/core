@@ -29,7 +29,7 @@ from .const import (
 )
 
 
-def GetDeviceIdFromDiscoveryTopic(topic: str) -> str | None:
+def get_device_id_from_discovery_topic(topic: str) -> str | None:
     """From the discovery topic get the PG LAB Electronics device id."""
 
     # the discovery topi has the following format "pglab/discovery/[Device ID]/config"
@@ -45,7 +45,7 @@ def GetDeviceIdFromDiscoveryTopic(topic: str) -> str | None:
     return split_topic[2]
 
 
-def CleanDiscoveredDevice(hass: HomeAssistant, device_id: str) -> None:
+def clean_discovered_device(hass: HomeAssistant, device_id: str) -> None:
     """Destroy the device and any enties connected with the device."""
 
     if device_id not in hass.data[DEVICE_ALREADY_DISCOVERED]:
@@ -149,11 +149,11 @@ class Discovery:
             if not pglab_device:
                 # for some reason it's not possible to create the device with the discovery message
                 # be sure that any previous device with the same topic are now destroy
-                device_id = GetDeviceIdFromDiscoveryTopic(msg.topic)
+                device_id = get_device_id_from_discovery_topic(msg.topic)
 
                 # if we have a valid topic device_id clean every thing relative to the device
                 if device_id:
-                    CleanDiscoveredDevice(hass, device_id)
+                    clean_discovered_device(hass, device_id)
 
                 return
 
@@ -188,7 +188,7 @@ class Discovery:
                 )
 
                 # something is changed ... all previous entities must be destroy and re-create
-                CleanDiscoveredDevice(hass, pglab_device.id)
+                clean_discovered_device(hass, pglab_device.id)
 
             # add a new device
             discovery_info = DiscoverDeviceInfo(pglab_device)
