@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from functools import partial
 from types import MappingProxyType
 from typing import Any
@@ -14,7 +15,7 @@ from devolo_home_control_api.mydevolo import Mydevolo
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceEntry
 
@@ -26,8 +27,20 @@ from .const import (
     PLATFORMS,
 )
 
+DevoloHomeControlConfigEntry = ConfigEntry["DevoloHomeControlData"]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+@dataclass
+class DevoloHomeControlData:
+    """The devolo Home Control data."""
+
+    gateways: list[HomeControl]
+    listener: CALLBACK_TYPE
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: DevoloHomeControlConfigEntry
+) -> bool:
     """Set up the devolo account from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -47,11 +60,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         uuid = await hass.async_add_executor_job(mydevolo.uuid)
         hass.config_entries.async_update_entry(entry, unique_id=uuid)
 
+    def shutdown(event: Event) -> None:
+        for gateway in entry.runtime_data.gateways:
+            gateway.websocket_disconnect(
+                f"websocket disconnect requested by {EVENT_HOMEASSISTANT_STOP}"
+            )
+
+    # Listen when EVENT_HOMEASSISTANT_STOP is fired
+    listener = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
+
     try:
         zeroconf_instance = await zeroconf.async_get_instance(hass)
-        hass.data[DOMAIN][entry.entry_id] = {"gateways": [], "listener": None}
+        entry.runtime_data = DevoloHomeControlData([], listener)
         for gateway_id in gateway_ids:
-            hass.data[DOMAIN][entry.entry_id]["gateways"].append(
+            entry.runtime_data.gateways.append(
                 await hass.async_add_executor_job(
                     partial(
                         HomeControl,
@@ -66,31 +88,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    def shutdown(event: Event) -> None:
-        for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
-            gateway.websocket_disconnect(
-                f"websocket disconnect requested by {EVENT_HOMEASSISTANT_STOP}"
-            )
-
-    # Listen when EVENT_HOMEASSISTANT_STOP is fired
-    hass.data[DOMAIN][entry.entry_id]["listener"] = hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, shutdown
-    )
-
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: DevoloHomeControlConfigEntry
+) -> bool:
     """Unload a config entry."""
     unload = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     await asyncio.gather(
         *(
             hass.async_add_executor_job(gateway.websocket_disconnect)
-            for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]
+            for gateway in entry.runtime_data.gateways
         )
     )
-    hass.data[DOMAIN][entry.entry_id]["listener"]()
-    hass.data[DOMAIN].pop(entry.entry_id)
+    entry.runtime_data.listener()
     return unload
 
 
