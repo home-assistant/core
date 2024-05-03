@@ -23,15 +23,14 @@ from homeassistant.components.vacuum import (
     StateVacuumEntityDescription,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
 
+from . import EcovacsConfigEntry
 from .const import DOMAIN
-from .controller import EcovacsController
 from .entity import EcovacsEntity
 from .util import get_name_key
 
@@ -43,11 +42,11 @@ ATTR_COMPONENT_PREFIX = "component_"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EcovacsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Ecovacs vacuums."""
-    controller: EcovacsController = hass.data[DOMAIN][config_entry.entry_id]
+    controller = config_entry.runtime_data
     vacuums: list[EcovacsVacuum | EcovacsLegacyVacuum] = [
         EcovacsVacuum(device) for device in controller.devices(VacuumCapabilities)
     ]

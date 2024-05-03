@@ -39,6 +39,7 @@ BLIND_SERVICE_INFO = BluetoothServiceInfoBleak(
     ),
     connectable=True,
     time=0,
+    tx_power=-127,
 )
 
 

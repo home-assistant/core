@@ -38,4 +38,5 @@ def fake_service_info():
             tx_power=-127,
             platform_data=(),
         ),
+        tx_power=-127,
     )
