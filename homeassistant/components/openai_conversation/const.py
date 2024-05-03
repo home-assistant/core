@@ -3,7 +3,7 @@
 import logging
 
 DOMAIN = "openai_conversation"
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__package__)
 CONF_PROMPT = "prompt"
 DEFAULT_PROMPT = """This smart home is controlled by Home Assistant.
 

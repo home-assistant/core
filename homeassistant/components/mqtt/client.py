@@ -82,7 +82,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-DISCOVERY_COOLDOWN = 2
+DISCOVERY_COOLDOWN = 5
 INITIAL_SUBSCRIBE_COOLDOWN = 1.0
 SUBSCRIBE_COOLDOWN = 0.1
 UNSUBSCRIBE_COOLDOWN = 0.1
@@ -348,6 +348,12 @@ class EnsureJobAfterCooldown:
         self._task = create_eager_task(self._async_job())
         self._task.add_done_callback(self._async_task_done)
 
+    async def async_fire(self) -> None:
+        """Execute the job immediately."""
+        if self._task:
+            await self._task
+        self._async_execute()
+
     @callback
     def _async_cancel_timer(self) -> None:
         """Cancel any pending task."""
@@ -611,7 +617,7 @@ class MQTT:
             qos,
         )
         _raise_on_error(msg_info.rc)
-        await self._wait_for_mid(msg_info.mid)
+        await self._async_wait_for_mid(msg_info.mid)
 
     async def async_connect(self, client_available: asyncio.Future[bool]) -> None:
         """Connect to the host. Does not process messages yet."""
@@ -840,10 +846,10 @@ class MQTT:
 
         for topic, qos in subscriptions.items():
             _LOGGER.debug("Subscribing to %s, mid: %s, qos: %s", topic, mid, qos)
-        self._last_subscribe = time.time()
+        self._last_subscribe = time.monotonic()
 
         if result == 0:
-            await self._wait_for_mid(mid)
+            await self._async_wait_for_mid(mid)
         else:
             _raise_on_error(result)
 
@@ -860,7 +866,7 @@ class MQTT:
         for topic in topics:
             _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
 
-        await self._wait_for_mid(mid)
+        await self._async_wait_for_mid(mid)
 
     async def _async_resubscribe_and_publish_birth_message(
         self, birth_message: PublishMessage
@@ -870,6 +876,8 @@ class MQTT:
         await self._ha_started.wait()  # Wait for Home Assistant to start
         await self._discovery_cooldown()  # Wait for MQTT discovery to cool down
         # Update subscribe cooldown period to a shorter time
+        # and make sure we flush the debouncer
+        await self._subscribe_debouncer.async_fire()
         self._subscribe_debouncer.set_timeout(SUBSCRIBE_COOLDOWN)
         await self.async_publish(
             topic=birth_message.topic,
@@ -1047,8 +1055,8 @@ class MQTT:
         # see https://github.com/eclipse/paho.mqtt.python/issues/687
         # properties and reason codes are not used in Home Assistant
         future = self._async_get_mid_future(mid)
-        if future.done():
-            _LOGGER.warning("Received duplicate mid: %s", mid)
+        if future.done() and future.exception():
+            # Timed out
             return
         future.set_result(None)
 
@@ -1096,9 +1104,9 @@ class MQTT:
         if not future.done():
             future.set_exception(asyncio.TimeoutError)
 
-    async def _wait_for_mid(self, mid: int) -> None:
+    async def _async_wait_for_mid(self, mid: int) -> None:
         """Wait for ACK from broker."""
-        # Create the mid event if not created, either _mqtt_handle_mid or _wait_for_mid
+        # Create the mid event if not created, either _mqtt_handle_mid or _async_wait_for_mid
         # may be executed first.
         future = self._async_get_mid_future(mid)
         loop = self.hass.loop
@@ -1115,7 +1123,7 @@ class MQTT:
 
     async def _discovery_cooldown(self) -> None:
         """Wait until all discovery and subscriptions are processed."""
-        now = time.time()
+        now = time.monotonic()
         # Reset discovery and subscribe cooldowns
         self._mqtt_data.last_discovery = now
         self._last_subscribe = now
@@ -1127,7 +1135,7 @@ class MQTT:
         )
         while now < wait_until:
             await asyncio.sleep(wait_until - now)
-            now = time.time()
+            now = time.monotonic()
             last_discovery = self._mqtt_data.last_discovery
             last_subscribe = (
                 now if self._pending_subscriptions else self._last_subscribe
