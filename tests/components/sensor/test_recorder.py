@@ -51,7 +51,7 @@ from tests.components.recorder.common import (
     statistics_during_period,
 )
 from tests.components.sensor.common import MockSensor
-from tests.typing import WebSocketGenerator
+from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
 
 BATTERY_SENSOR_ATTRIBUTES = {
     "device_class": "battery",
@@ -90,6 +90,18 @@ KW_SENSOR_ATTRIBUTES = {
     "state_class": "measurement",
     "unit_of_measurement": "kW",
 }
+
+
+@pytest.fixture
+async def mock_recorder_before_hass(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> None:
+    """Set up recorder patches."""
+
+
+@pytest.fixture(autouse=True)
+def setup_recorder(recorder_mock: Recorder) -> Recorder:
+    """Set up recorder."""
 
 
 async def async_list_statistic_ids(
@@ -138,7 +150,6 @@ async def async_list_statistic_ids(
     ],
 )
 async def test_compile_hourly_statistics(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
@@ -220,7 +231,6 @@ async def test_compile_hourly_statistics(
     ],
 )
 async def test_compile_hourly_statistics_with_some_same_last_updated(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
@@ -335,7 +345,6 @@ async def test_compile_hourly_statistics_with_some_same_last_updated(
     ],
 )
 async def test_compile_hourly_statistics_with_all_same_last_updated(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
@@ -445,7 +454,6 @@ async def test_compile_hourly_statistics_with_all_same_last_updated(
     ],
 )
 async def test_compile_hourly_statistics_only_state_is_and_end_of_period(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
@@ -543,7 +551,6 @@ async def test_compile_hourly_statistics_only_state_is_and_end_of_period(
     ],
 )
 async def test_compile_hourly_statistics_purged_state_changes(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
@@ -619,7 +626,6 @@ async def test_compile_hourly_statistics_purged_state_changes(
 
 @pytest.mark.parametrize("attributes", [TEMPERATURE_SENSOR_ATTRIBUTES])
 async def test_compile_hourly_statistics_wrong_unit(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     attributes,
@@ -836,7 +842,6 @@ async def test_compile_hourly_statistics_wrong_unit(
     ],
 )
 async def test_compile_hourly_sum_statistics_amount(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
@@ -1023,7 +1028,6 @@ async def test_compile_hourly_sum_statistics_amount(
     ],
 )
 async def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     state_class,
@@ -1147,7 +1151,6 @@ async def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
     ],
 )
 async def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     state_class,
@@ -1248,7 +1251,6 @@ async def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
     ],
 )
 async def test_compile_hourly_sum_statistics_nan_inf_state(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     state_class,
@@ -1381,7 +1383,6 @@ async def test_compile_hourly_sum_statistics_nan_inf_state(
 )
 @pytest.mark.parametrize("state_class", ["total_increasing"])
 async def test_compile_hourly_sum_statistics_negative_state(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     entity_id,
@@ -1498,7 +1499,6 @@ async def test_compile_hourly_sum_statistics_negative_state(
     ],
 )
 async def test_compile_hourly_sum_statistics_total_no_reset(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
@@ -1612,7 +1612,6 @@ async def test_compile_hourly_sum_statistics_total_no_reset(
     ],
 )
 async def test_compile_hourly_sum_statistics_total_increasing(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
@@ -1726,7 +1725,6 @@ async def test_compile_hourly_sum_statistics_total_increasing(
     ],
 )
 async def test_compile_hourly_sum_statistics_total_increasing_small_dip(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
@@ -1836,7 +1834,7 @@ async def test_compile_hourly_sum_statistics_total_increasing_small_dip(
 
 
 async def test_compile_hourly_energy_statistics_unsupported(
-    recorder_mock: Recorder, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test compiling hourly statistics."""
     period0 = dt_util.utcnow()
@@ -1940,7 +1938,7 @@ async def test_compile_hourly_energy_statistics_unsupported(
 
 
 async def test_compile_hourly_energy_statistics_multiple(
-    recorder_mock: Recorder, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test compiling multiple hourly statistics."""
     period0 = dt_util.utcnow()
@@ -2150,7 +2148,6 @@ async def test_compile_hourly_energy_statistics_multiple(
     ],
 )
 async def test_compile_hourly_statistics_unchanged(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
@@ -2198,7 +2195,7 @@ async def test_compile_hourly_statistics_unchanged(
 
 
 async def test_compile_hourly_statistics_partially_unavailable(
-    recorder_mock: Recorder, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test compiling hourly statistics, with the sensor being partially unavailable."""
     zero = dt_util.utcnow()
@@ -2259,7 +2256,6 @@ async def test_compile_hourly_statistics_partially_unavailable(
     ],
 )
 async def test_compile_hourly_statistics_unavailable(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
@@ -2315,7 +2311,7 @@ async def test_compile_hourly_statistics_unavailable(
 
 
 async def test_compile_hourly_statistics_fails(
-    recorder_mock: Recorder, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test compiling hourly statistics throws."""
     zero = dt_util.utcnow()
@@ -2382,7 +2378,6 @@ async def test_compile_hourly_statistics_fails(
     ],
 )
 async def test_list_statistic_ids(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     state_class,
@@ -2441,7 +2436,6 @@ async def test_list_statistic_ids(
     [{**ENERGY_SENSOR_ATTRIBUTES, "last_reset": 0}, TEMPERATURE_SENSOR_ATTRIBUTES],
 )
 async def test_list_statistic_ids_unsupported(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     _attributes,
@@ -2483,7 +2477,6 @@ async def test_list_statistic_ids_unsupported(
     ],
 )
 async def test_compile_hourly_statistics_changing_units_1(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
@@ -2611,7 +2604,6 @@ async def test_compile_hourly_statistics_changing_units_1(
     ],
 )
 async def test_compile_hourly_statistics_changing_units_2(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
@@ -2691,7 +2683,6 @@ async def test_compile_hourly_statistics_changing_units_2(
     ],
 )
 async def test_compile_hourly_statistics_changing_units_3(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
@@ -2815,7 +2806,6 @@ async def test_compile_hourly_statistics_changing_units_3(
     ],
 )
 async def test_compile_hourly_statistics_convert_units_1(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     state_unit_1,
@@ -2976,7 +2966,6 @@ async def test_compile_hourly_statistics_convert_units_1(
     ],
 )
 async def test_compile_hourly_statistics_equivalent_units_1(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
@@ -3104,7 +3093,6 @@ async def test_compile_hourly_statistics_equivalent_units_1(
     ],
 )
 async def test_compile_hourly_statistics_equivalent_units_2(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
@@ -3194,7 +3182,6 @@ async def test_compile_hourly_statistics_equivalent_units_2(
     ],
 )
 async def test_compile_hourly_statistics_changing_device_class_1(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
@@ -3405,7 +3392,6 @@ async def test_compile_hourly_statistics_changing_device_class_1(
     ],
 )
 async def test_compile_hourly_statistics_changing_device_class_2(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
@@ -3548,7 +3534,6 @@ async def test_compile_hourly_statistics_changing_device_class_2(
     ],
 )
 async def test_compile_hourly_statistics_changing_state_class(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
@@ -3686,9 +3671,8 @@ async def test_compile_hourly_statistics_changing_state_class(
 @pytest.mark.parametrize("recorder_config", [{CONF_COMMIT_INTERVAL: 3600 * 4}])
 @pytest.mark.freeze_time("2021-09-01 05:00")  # August 31st, 23:00 local time
 async def test_compile_statistics_hourly_daily_monthly_summary(
-    freezer: FrozenDateTimeFactory,
-    recorder_mock: Recorder,
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test compiling hourly statistics + monthly and daily summary."""
@@ -4184,7 +4168,6 @@ async def async_record_states(
     ],
 )
 async def test_validate_unit_change_convertible(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     units,
@@ -4306,7 +4289,6 @@ async def test_validate_unit_change_convertible(
     ],
 )
 async def test_validate_statistics_unit_ignore_device_class(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     units,
@@ -4394,7 +4376,6 @@ async def test_validate_statistics_unit_ignore_device_class(
     ],
 )
 async def test_validate_statistics_unit_change_no_device_class(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     units,
@@ -4516,7 +4497,6 @@ async def test_validate_statistics_unit_change_no_device_class(
     ],
 )
 async def test_validate_statistics_unsupported_state_class(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     units,
@@ -4585,7 +4565,6 @@ async def test_validate_statistics_unsupported_state_class(
     ],
 )
 async def test_validate_statistics_sensor_no_longer_recorded(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     units,
@@ -4653,7 +4632,6 @@ async def test_validate_statistics_sensor_no_longer_recorded(
     ],
 )
 async def test_validate_statistics_sensor_not_recorded(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     units,
@@ -4718,7 +4696,6 @@ async def test_validate_statistics_sensor_not_recorded(
     ],
 )
 async def test_validate_statistics_sensor_removed(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     units,
@@ -4782,7 +4759,6 @@ async def test_validate_statistics_sensor_removed(
     ],
 )
 async def test_validate_statistics_unit_change_no_conversion(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     attributes,
@@ -4913,7 +4889,6 @@ async def test_validate_statistics_unit_change_no_conversion(
     ],
 )
 async def test_validate_statistics_unit_change_equivalent_units(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     attributes,
@@ -4997,7 +4972,6 @@ async def test_validate_statistics_unit_change_equivalent_units(
     ],
 )
 async def test_validate_statistics_unit_change_equivalent_units_2(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     attributes,
@@ -5090,7 +5064,7 @@ async def test_validate_statistics_unit_change_equivalent_units_2(
 
 
 async def test_validate_statistics_other_domain(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test sensor does not raise issues for statistics for other domains."""
     msg_id = 1
@@ -5261,7 +5235,7 @@ async def async_record_states_partially_unavailable(hass, zero, entity_id, attri
 
 
 async def test_exclude_attributes(
-    recorder_mock: Recorder, hass: HomeAssistant, enable_custom_integrations: None
+    hass: HomeAssistant, enable_custom_integrations: None
 ) -> None:
     """Test sensor attributes to be excluded."""
     entity0 = MockSensor(
