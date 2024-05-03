@@ -1,4 +1,5 @@
 """Entity for PG LAB Electronics."""
+
 from __future__ import annotations
 
 from pypglab.device import Device
@@ -43,7 +44,9 @@ class BaseEntity(HA_Entity):
 
     async def async_added_to_hass(self) -> None:
         """Update the device discovery info."""
-        discovery_info = self.hass.data[DEVICE_ALREADY_DISCOVERED][self._device_id]
+        discovery_info = self.hass.data[DOMAIN][DEVICE_ALREADY_DISCOVERED][
+            self._device_id
+        ]
         discovery_info.add_entity(self)
 
     async def async_will_remove_from_hass(self) -> None:

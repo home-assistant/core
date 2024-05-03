@@ -48,10 +48,10 @@ def get_device_id_from_discovery_topic(topic: str) -> str | None:
 def clean_discovered_device(hass: HomeAssistant, device_id: str) -> None:
     """Destroy the device and any enties connected with the device."""
 
-    if device_id not in hass.data[DEVICE_ALREADY_DISCOVERED]:
+    if device_id not in hass.data[DOMAIN][DEVICE_ALREADY_DISCOVERED]:
         return
 
-    discovery_info = hass.data[DEVICE_ALREADY_DISCOVERED][device_id]
+    discovery_info = hass.data[DOMAIN][DEVICE_ALREADY_DISCOVERED][device_id]
 
     # destroy all entities connected with the device
     entity_registry = er.async_get(hass)
@@ -67,7 +67,7 @@ def clean_discovered_device(hass: HomeAssistant, device_id: str) -> None:
         device_registry.async_remove_device(device_entry.id)
 
     # clean the discovery info
-    del hass.data[DEVICE_ALREADY_DISCOVERED][device_id]
+    del hass.data[DOMAIN][DEVICE_ALREADY_DISCOVERED][device_id]
 
 
 class DiscoverDeviceInfo:
@@ -174,10 +174,12 @@ class Discovery:
             )
 
             # do some checking if previous entities must be updated
-            if pglab_device.id in hass.data[DEVICE_ALREADY_DISCOVERED]:
+            if pglab_device.id in hass.data[DOMAIN][DEVICE_ALREADY_DISCOVERED]:
                 # the device is already been discover
                 # get the old discovery info data
-                discovery_info = hass.data[DEVICE_ALREADY_DISCOVERED][pglab_device.id]
+                discovery_info = hass.data[DOMAIN][DEVICE_ALREADY_DISCOVERED][
+                    pglab_device.id
+                ]
 
                 if discovery_info.hash == pglab_device.hash:
                     # best case!!! there is nothing to do ... the device
@@ -194,7 +196,9 @@ class Discovery:
 
             # add a new device
             discovery_info = DiscoverDeviceInfo(pglab_device)
-            hass.data[DEVICE_ALREADY_DISCOVERED][pglab_device.id] = discovery_info
+            hass.data[DOMAIN][DEVICE_ALREADY_DISCOVERED][pglab_device.id] = (
+                discovery_info
+            )
 
             # create all new relay entities
             for r in pglab_device.relays:

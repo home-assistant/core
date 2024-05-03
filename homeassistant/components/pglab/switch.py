@@ -1,4 +1,5 @@
 """Switch for PG LAB Electronics."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -13,7 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CREATE_NEW_ENTITY, DISCONNECT_COMPONENT
+from .const import CREATE_NEW_ENTITY, DISCONNECT_COMPONENT, DOMAIN
 from .entity import BaseEntity
 
 
@@ -30,7 +31,7 @@ async def async_setup_entry(
         pglab_switch = PgLab_Switch(pglab_device, pglab_relay)
         async_add_entities([pglab_switch])
 
-    hass.data[DISCONNECT_COMPONENT[Platform.SWITCH]] = async_dispatcher_connect(
+    hass.data[DOMAIN][DISCONNECT_COMPONENT[Platform.SWITCH]] = async_dispatcher_connect(
         hass, CREATE_NEW_ENTITY[Platform.SWITCH], async_discover
     )
 

@@ -14,12 +14,7 @@ from homeassistant.components.mqtt.subscription import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, async_get_hass
 
-from .const import (
-    DEVICE_ALREADY_DISCOVERED,
-    DISCONNECT_COMPONENT,
-    DISCOVERY_INSTANCE,
-    PLATFORMS,
-)
+from .const import DEVICE_ALREADY_DISCOVERED, DISCOVERY_INSTANCE, DOMAIN, PLATFORMS
 from .discovery import create_discovery
 
 
@@ -68,12 +63,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         mqtt_publish_callback, mqtt_subscribe_callback, mqtt_unsubscribe_callback
     )
 
-    hass.data[DEVICE_ALREADY_DISCOVERED] = {}
+    hass.data[DOMAIN] = {DEVICE_ALREADY_DISCOVERED: {}}
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     pglab_discovery = await create_discovery(hass, entry, pglab_mqtt)
-    hass.data[DISCOVERY_INSTANCE] = pglab_discovery
+    hass.data[DOMAIN][DISCOVERY_INSTANCE] = pglab_discovery
 
     return True
 
@@ -87,13 +82,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     # stop pglab device discovery
-    pglab_discovery = hass.data[DISCOVERY_INSTANCE]
+    pglab_discovery = hass.data[DOMAIN][DISCOVERY_INSTANCE]
     if pglab_discovery:
         await pglab_discovery.stop(hass)
-    hass.data.pop(DISCOVERY_INSTANCE)
 
-    # cleanup subscriptions
-    for platform in PLATFORMS:
-        hass.data.pop(DISCONNECT_COMPONENT[platform])()
+    hass.data.pop(DOMAIN)
 
     return True
