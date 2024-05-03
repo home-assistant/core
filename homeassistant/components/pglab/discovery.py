@@ -220,7 +220,7 @@ class Discovery:
 
 
 # create an instance of the discovery PG LAB devices
-async def CreateDiscovery(
+async def create_discovery(
     hass: HomeAssistant, entry: ConfigEntry, mqtt: Client
 ) -> Discovery:
     """Create and initialize a discovery instance."""

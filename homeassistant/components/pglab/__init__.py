@@ -20,7 +20,7 @@ from .const import (
     DISCOVERY_INSTANCE,
     PLATFORMS,
 )
-from .discovery import CreateDiscovery
+from .discovery import create_discovery
 
 
 async def mqtt_publish_callback(
@@ -73,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    pglab_discovery = await CreateDiscovery(hass, entry, pglab_mqtt)
+    pglab_discovery = await create_discovery(hass, entry, pglab_mqtt)
     hass.data[DISCOVERY_INSTANCE] = pglab_discovery
 
     return True
