@@ -466,7 +466,7 @@ base36==0.1.1
 beautifulsoup4==4.12.3
 
 # homeassistant.components.zha
-bellows==0.38.3
+bellows==0.38.4
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected[china]==0.15.2
@@ -658,7 +658,7 @@ energyzero==2.1.0
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env-canada==0.6.0
+env-canada==0.6.2
 
 # homeassistant.components.season
 ephem==4.1.5
@@ -1730,7 +1730,7 @@ python-awair==0.2.4
 python-bsblan==0.5.18
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.17
+python-ecobee-api==0.2.18
 
 # homeassistant.components.fully_kiosk
 python-fullykiosk==0.0.12

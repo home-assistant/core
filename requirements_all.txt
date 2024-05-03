@@ -541,7 +541,7 @@ beautifulsoup4==4.12.3
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.38.3
+bellows==0.38.4
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected[china]==0.15.2
@@ -804,7 +804,7 @@ enocean==0.50
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env-canada==0.6.0
+env-canada==0.6.2
 
 # homeassistant.components.season
 ephem==4.1.5
@@ -2215,7 +2215,7 @@ python-clementine-remote==1.0.1
 python-digitalocean==1.13.2
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.17
+python-ecobee-api==0.2.18
 
 # homeassistant.components.etherscan
 python-etherscan-api==0.0.3
