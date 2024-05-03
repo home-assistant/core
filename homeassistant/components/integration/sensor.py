@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_METHOD,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    EVENT_STATE_REPORTED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfTime,
@@ -31,6 +32,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     Event,
     EventStateChangedData,
+    EventStateReportedData,
     HomeAssistant,
     State,
     callback,
@@ -328,6 +330,7 @@ class IntegrationSensor(RestoreSensor):
         self._source_entity: str = source_entity
         self._last_valid_state: Decimal | None = None
         self._attr_device_info = device_info
+        self._old_state: State | None = None
 
     def _calculate_unit(self, source_unit: str) -> str:
         """Multiply source_unit with time unit of the integral.
@@ -422,10 +425,30 @@ class IntegrationSensor(RestoreSensor):
             )
         )
 
+        @callback
+        def entity_filter(event_data: EventStateReportedData) -> bool:
+            """Mock filter."""
+            return event_data["entity_id"] == self._sensor_source_id
+
+        self.async_on_remove(
+            self.hass.bus.async_listen(
+                EVENT_STATE_REPORTED,
+                self._handle_state_reported,
+                event_filter=entity_filter,
+                run_immediately=True,
+            )
+        )
+
     @callback
     def _handle_state_change(self, event: Event[EventStateChangedData]) -> None:
-        old_state = event.data["old_state"]
+        # State change always occur before state reported
+        self._old_state = event.data["old_state"]
+
+    @callback
+    def _handle_state_reported(self, event: Event[EventStateReportedData]) -> None:
+        old_state = self._old_state
         new_state = event.data["new_state"]
+        self._old_state = new_state
 
         if old_state is None or new_state is None:
             return
@@ -443,7 +466,7 @@ class IntegrationSensor(RestoreSensor):
             return
 
         elapsed_seconds = Decimal(
-            (new_state.last_updated - old_state.last_updated).total_seconds()
+            (new_state.last_reported - old_state.last_reported).total_seconds()
         )
 
         area = self._method.calculate_area_with_two_states(elapsed_seconds, *states)

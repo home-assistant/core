@@ -171,6 +171,12 @@ class EventStateChangedData(TypedDict):
     new_state: State | None
 
 
+class EventStateReportedData(TypedDict):
+    entity_id: str
+    old_last_reported: datetime.datetime
+    new_state: State | None
+
+
 # SOURCE_* are deprecated as of Home Assistant 2022.2, use ConfigSource instead
 _DEPRECATED_SOURCE_DISCOVERED = DeprecatedConstantEnum(
     ConfigSource.DISCOVERED, "2025.1"
@@ -2252,11 +2258,11 @@ class StateMachine:
             old_state.last_reported = now  # type: ignore[union-attr]
             self._bus.async_fire_internal(
                 EVENT_STATE_REPORTED,
-                {
-                    "entity_id": entity_id,
-                    "old_last_reported": old_last_reported,
-                    "new_state": old_state,
-                },
+                EventStateReportedData(
+                    entity_id=entity_id,
+                    old_last_reported=old_last_reported,
+                    new_state=old_state,
+                ),
                 context=context,
                 time_fired=timestamp,
             )
