@@ -11,15 +11,14 @@ from aiohttp.client_exceptions import ClientConnectorError
 from nextdns import ApiError, Settings
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_SETTINGS, DOMAIN
-from .coordinator import CoordinatorDataT, NextDnsSettingsUpdateCoordinator
+from . import NextDnsConfigEntry
+from .coordinator import CoordinatorDataT, NextDnsUpdateCoordinator
 
 PARALLEL_UPDATES = 1
 
@@ -526,19 +525,21 @@ SWITCHES = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: NextDnsConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add NextDNS entities from a config_entry."""
-    coordinator: NextDnsSettingsUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        ATTR_SETTINGS
-    ]
+    coordinator = entry.runtime_data.settings
 
     async_add_entities(
         NextDnsSwitch(coordinator, description) for description in SWITCHES
     )
 
 
-class NextDnsSwitch(CoordinatorEntity[NextDnsSettingsUpdateCoordinator], SwitchEntity):
+class NextDnsSwitch(
+    CoordinatorEntity[NextDnsUpdateCoordinator[CoordinatorDataT]], SwitchEntity
+):
     """Define an NextDNS switch."""
 
     _attr_has_entity_name = True
@@ -546,7 +547,7 @@ class NextDnsSwitch(CoordinatorEntity[NextDnsSettingsUpdateCoordinator], SwitchE
 
     def __init__(
         self,
-        coordinator: NextDnsSettingsUpdateCoordinator,
+        coordinator: NextDnsUpdateCoordinator[CoordinatorDataT],
         description: NextDnsSwitchEntityDescription,
     ) -> None:
         """Initialize."""
