@@ -35,3 +35,31 @@ class OndiloIcoCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
 
         except OndiloError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+    def _update_data(self) -> list[dict[str, Any]]:
+        """Fetch data from API endpoint."""
+        res = []
+        pools = self.api.get_pools()
+        _LOGGER.debug("Pools: %s", pools)
+        for pool in pools:
+            try:
+                ico = self.api.get_ICO_details(pool["id"])
+                if not ico:
+                    _LOGGER.debug(
+                        "The pool id %s does not have any ICO attached", pool["id"]
+                    )
+                    continue
+                sensors = self.api.get_last_pool_measures(pool["id"])
+            except OndiloError:
+                _LOGGER.exception("Error communicating with API for %s", pool["id"])
+                continue
+            res.append(
+                {
+                    **pool,
+                    "ICO": ico,
+                    "sensors": sensors,
+                }
+            )
+        if not res:
+            raise UpdateFailed("No data available")
+        return res
