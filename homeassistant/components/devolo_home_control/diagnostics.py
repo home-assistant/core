@@ -33,7 +33,7 @@ async def async_get_config_entry_diagnostics(
                 for device_id, properties in gateway.devices.items()
             ],
         }
-        for gateway in entry.runtime_data.gateways
+        for gateway in entry.runtime_data
     ]
 
     return {

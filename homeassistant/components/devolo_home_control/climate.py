@@ -34,7 +34,7 @@ async def async_setup_entry(
             device_instance=device,
             element_uid=multi_level_switch,
         )
-        for gateway in entry.runtime_data.gateways
+        for gateway in entry.runtime_data
         for device in gateway.multi_level_switch_devices
         for multi_level_switch in device.multi_level_switch_property
         if device.device_model_uid

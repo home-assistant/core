@@ -34,7 +34,7 @@ async def async_setup_entry(
     """Get all binary sensor and multi level sensor devices and setup them via config entry."""
     entities: list[BinarySensorEntity] = []
 
-    for gateway in entry.runtime_data.gateways:
+    for gateway in entry.runtime_data:
         entities.extend(
             DevoloBinaryDeviceEntity(
                 homecontrol=gateway,

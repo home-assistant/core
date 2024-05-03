@@ -28,7 +28,7 @@ async def async_setup_entry(
             device_instance=device,
             element_uid=binary_switch,
         )
-        for gateway in entry.runtime_data.gateways
+        for gateway in entry.runtime_data
         for device in gateway.binary_switch_devices
         for binary_switch in device.binary_switch_property
         # Exclude the binary switch which also has multi_level_switches here,

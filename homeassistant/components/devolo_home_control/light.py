@@ -28,7 +28,7 @@ async def async_setup_entry(
             device_instance=device,
             element_uid=multi_level_switch.element_uid,
         )
-        for gateway in entry.runtime_data.gateways
+        for gateway in entry.runtime_data
         for device in gateway.multi_level_switch_devices
         for multi_level_switch in device.multi_level_switch_property.values()
         if multi_level_switch.switch_type == "dimmer"
