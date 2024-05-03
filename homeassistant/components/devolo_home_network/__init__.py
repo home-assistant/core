@@ -64,7 +64,6 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: DevoloHomeNetworkConfigEntry
 ) -> bool:
     """Set up devolo Home Network from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     zeroconf_instance = await zeroconf.async_get_async_instance(hass)
     async_client = get_async_client(hass)
     device_registry = dr.async_get(hass)
