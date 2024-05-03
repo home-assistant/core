@@ -68,7 +68,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         mqtt_publish_callback, mqtt_subscribe_callback, mqtt_unsubscribe_callback
     )
 
-    # preparing the discovery module
     hass.data[DEVICE_ALREADY_DISCOVERED] = {}
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
