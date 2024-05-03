@@ -361,7 +361,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
             if (cur_step := flow.cur_step) and cur_step[
                 "type"
             ] == FlowResultType.SHOW_PROGRESS:
-                # Allow the progress task to finish befere we call the flow handler
+                # Allow the progress task to finish before we call the flow handler
                 await asyncio.sleep(0)
 
         while not result or result["type"] == FlowResultType.SHOW_PROGRESS_DONE:
