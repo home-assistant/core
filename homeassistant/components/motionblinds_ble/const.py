@@ -1,4 +1,4 @@
-"""Constants for the Motionblinds BLE integration."""
+"""Constants for the Motionblinds Bluetooth integration."""
 
 ATTR_CONNECT = "connect"
 ATTR_DISCONNECT = "disconnect"

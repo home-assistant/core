@@ -27,14 +27,14 @@ async def test_user_flow(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result1["type"] == FlowResultType.FORM
+    assert result1["type"] is FlowResultType.FORM
     assert not result1["errors"]
 
     # check with valid data
     result2 = await hass.config_entries.flow.async_configure(
         result1["flow_id"], user_input=demo_config_data
     )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_already_exists(
@@ -54,7 +54,7 @@ async def test_user_flow_already_exists(
 
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -75,7 +75,7 @@ async def test_user_flow_no_new_device(
 
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_device"
 
 
@@ -93,7 +93,7 @@ async def test_user_flow_no_device_found(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result1["type"] == FlowResultType.ABORT
+    assert result1["type"] is FlowResultType.ABORT
     assert result1["reason"] == "no_device"
 
 
@@ -111,14 +111,14 @@ async def test_user_flow_device_not_found(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result1["type"] == FlowResultType.FORM
+    assert result1["type"] is FlowResultType.FORM
     assert not result1["errors"]
 
     # check with valid data
     result2 = await hass.config_entries.flow.async_configure(
         result1["flow_id"], user_input=demo_config_data
     )
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "device_not_found"
 
 
@@ -136,5 +136,5 @@ async def test_user_flow_no_usb_access(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result1["type"] == FlowResultType.ABORT
+    assert result1["type"] is FlowResultType.ABORT
     assert result1["reason"] == "usb_error"

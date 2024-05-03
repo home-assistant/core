@@ -116,11 +116,10 @@ def deserialize_entity_description(
 
 def serialize_entity_description(description: EntityDescription) -> dict[str, Any]:
     """Serialize an entity description."""
-    as_dict = dataclasses.asdict(description)
     return {
-        field.name: as_dict[field.name]
+        field.name: value
         for field in cached_fields(type(description))
-        if field.default != as_dict.get(field.name)
+        if (value := getattr(description, field.name)) != field.default
     }
 
 
@@ -274,7 +273,6 @@ async def async_setup(hass: HomeAssistant) -> None:
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP,
         _async_save_processor_data_at_stop,
-        run_immediately=True,
     )
 
 

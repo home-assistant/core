@@ -351,9 +351,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     entry.async_on_unload(
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, homekit.async_stop, run_immediately=True
-        )
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, homekit.async_stop)
     )
 
     entry_data = HomeKitEntryData(
@@ -953,9 +951,8 @@ class HomeKit:
         """Purge bridges that exist from failed pairing or manual resets."""
         devices_to_purge = [
             entry.id
-            for entry in dev_reg.devices.values()
-            if self._entry_id in entry.config_entries
-            and (
+            for entry in dev_reg.devices.get_devices_for_config_entry_id(self._entry_id)
+            if (
                 identifier not in entry.identifiers  # type: ignore[comparison-overlap]
                 or connection not in entry.connections
             )

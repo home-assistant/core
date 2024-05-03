@@ -39,6 +39,7 @@ from .const import (
     CONF_CUSTOMIZE,
     CONF_CUSTOMIZE_DOMAIN,
     CONF_CUSTOMIZE_GLOB,
+    CONF_DEBUG,
     CONF_ELEVATION,
     CONF_EXTERNAL_URL,
     CONF_ID,
@@ -329,8 +330,7 @@ def _validate_currency(data: Any) -> Any:
         return cv.currency(data)
     except vol.InInvalid:
         with suppress(vol.InInvalid):
-            currency = cv.historic_currency(data)
-            return currency
+            return cv.historic_currency(data)
         raise
 
 
@@ -392,6 +392,7 @@ CORE_CONFIG_SCHEMA = vol.All(
             vol.Optional(CONF_CURRENCY): _validate_currency,
             vol.Optional(CONF_COUNTRY): cv.country,
             vol.Optional(CONF_LANGUAGE): cv.language,
+            vol.Optional(CONF_DEBUG): cv.boolean,
         }
     ),
     _filter_bad_internal_external_urls,
@@ -899,6 +900,9 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
     ):
         if key in config:
             setattr(hac, attr, config[key])
+
+    if config.get(CONF_DEBUG):
+        hac.debug = True
 
     _raise_issue_if_legacy_templates(hass, config.get(CONF_LEGACY_TEMPLATES))
     _raise_issue_if_historic_currency(hass, hass.config.currency)

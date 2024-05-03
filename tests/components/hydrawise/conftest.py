@@ -15,7 +15,7 @@ from pydrawise.schema import (
 import pytest
 
 from homeassistant.components.hydrawise.const import DOMAIN
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -32,7 +32,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_pydrawise(
+def mock_legacy_pydrawise(
     user: User,
     controller: Controller,
     zones: list[Zone],
@@ -48,9 +48,31 @@ def mock_pydrawise(
 
 
 @pytest.fixture
+def mock_pydrawise(
+    mock_auth: AsyncMock,
+    user: User,
+    controller: Controller,
+    zones: list[Zone],
+) -> Generator[AsyncMock, None, None]:
+    """Mock Hydrawise."""
+    with patch("pydrawise.client.Hydrawise", autospec=True) as mock_pydrawise:
+        user.controllers = [controller]
+        controller.zones = zones
+        mock_pydrawise.return_value.get_user.return_value = user
+        yield mock_pydrawise.return_value
+
+
+@pytest.fixture
+def mock_auth() -> Generator[AsyncMock, None, None]:
+    """Mock pydrawise Auth."""
+    with patch("pydrawise.auth.Auth", autospec=True) as mock_auth:
+        yield mock_auth.return_value
+
+
+@pytest.fixture
 def user() -> User:
     """Hydrawise User fixture."""
-    return User(customer_id=12345)
+    return User(customer_id=12345, email="asdf@asdf.com")
 
 
 @pytest.fixture
@@ -102,7 +124,7 @@ def zones() -> list[Zone]:
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_entry_legacy() -> MockConfigEntry:
     """Mock ConfigEntry."""
     return MockConfigEntry(
         title="Hydrawise",
@@ -111,6 +133,23 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_API_KEY: "abc123",
         },
         unique_id="hydrawise-customerid",
+        version=1,
+    )
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Mock ConfigEntry."""
+    return MockConfigEntry(
+        title="Hydrawise",
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "asfd@asdf.com",
+            CONF_PASSWORD: "__password__",
+        },
+        unique_id="hydrawise-customerid",
+        version=1,
+        minor_version=2,
     )
 
 

@@ -52,7 +52,7 @@ async def test_full_map_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     with (
         patch(
@@ -71,7 +71,7 @@ async def test_full_map_flow(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == method
 
     with (
@@ -97,7 +97,7 @@ async def test_full_map_flow(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "de Jongweg, Utrecht"
     assert result["data"] == {
         CONF_API_KEY: "asd",
@@ -137,7 +137,7 @@ async def test_flow_errors(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
     with (
@@ -157,7 +157,7 @@ async def test_flow_errors(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "map"
 
     with (
@@ -179,7 +179,7 @@ async def test_flow_errors(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -231,7 +231,7 @@ async def test_error_in_second_step(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     with (
         patch(
@@ -250,7 +250,7 @@ async def test_error_in_second_step(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == method
 
     with (
@@ -266,7 +266,7 @@ async def test_error_in_second_step(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
     with (
@@ -292,7 +292,7 @@ async def test_error_in_second_step(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "de Jongweg, Utrecht"
     assert result["data"] == {
         CONF_API_KEY: "asd",

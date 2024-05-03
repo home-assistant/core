@@ -984,6 +984,139 @@ async def test_service_reset_no_tariffs(
 
 
 @pytest.mark.parametrize(
+    ("yaml_config", "config_entry_configs"),
+    [
+        (
+            {
+                "utility_meter": {
+                    "energy_bill": {
+                        "source": "sensor.energy",
+                    },
+                    "water_bill": {
+                        "source": "sensor.water",
+                    },
+                },
+            },
+            None,
+        ),
+        (
+            None,
+            [
+                {
+                    "cycle": "none",
+                    "delta_values": False,
+                    "name": "Energy bill",
+                    "net_consumption": False,
+                    "offset": 0,
+                    "periodically_resetting": True,
+                    "source": "sensor.energy",
+                    "tariffs": [],
+                },
+                {
+                    "cycle": "none",
+                    "delta_values": False,
+                    "name": "Water bill",
+                    "net_consumption": False,
+                    "offset": 0,
+                    "periodically_resetting": True,
+                    "source": "sensor.water",
+                    "tariffs": [],
+                },
+            ],
+        ),
+    ],
+)
+async def test_service_reset_no_tariffs_correct_with_multi(
+    hass: HomeAssistant, yaml_config, config_entry_configs
+) -> None:
+    """Test complex utility sensor service reset for multiple sensors with no tarrifs.
+
+    See GitHub issue #114864: Service "utility_meter.reset" affects all meters.
+    """
+
+    # Home assistant is not runnit yet
+    hass.state = CoreState.not_running
+    last_reset = "2023-10-01T00:00:00+00:00"
+
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(
+                    "sensor.energy_bill",
+                    "3",
+                    attributes={
+                        ATTR_LAST_RESET: last_reset,
+                    },
+                ),
+                {},
+            ),
+            (
+                State(
+                    "sensor.water_bill",
+                    "6",
+                    attributes={
+                        ATTR_LAST_RESET: last_reset,
+                    },
+                ),
+                {},
+            ),
+        ],
+    )
+
+    if yaml_config:
+        assert await async_setup_component(hass, DOMAIN, yaml_config)
+        await hass.async_block_till_done()
+    else:
+        for entry in config_entry_configs:
+            config_entry = MockConfigEntry(
+                data={},
+                domain=DOMAIN,
+                options=entry,
+                title=entry["name"],
+            )
+            config_entry.add_to_hass(hass)
+            assert await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state
+    assert state.state == "3"
+    assert state.attributes.get("last_reset") == last_reset
+    assert state.attributes.get("last_period") == "0"
+
+    state = hass.states.get("sensor.water_bill")
+    assert state
+    assert state.state == "6"
+    assert state.attributes.get("last_reset") == last_reset
+    assert state.attributes.get("last_period") == "0"
+
+    now = dt_util.utcnow()
+    with freeze_time(now):
+        await hass.services.async_call(
+            domain=DOMAIN,
+            service=SERVICE_RESET,
+            service_data={},
+            target={"entity_id": "sensor.energy_bill"},
+            blocking=True,
+        )
+
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state
+    assert state.state == "0"
+    assert state.attributes.get("last_reset") == now.isoformat()
+    assert state.attributes.get("last_period") == "3"
+
+    state = hass.states.get("sensor.water_bill")
+    assert state
+    assert state.state == "6"
+    assert state.attributes.get("last_reset") == last_reset
+    assert state.attributes.get("last_period") == "0"
+
+
+@pytest.mark.parametrize(
     ("yaml_config", "config_entry_config"),
     [
         (
@@ -1206,7 +1339,7 @@ async def test_delta_values(
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_bill")
-    assert state.attributes.get("status") == PAUSED
+    assert state.attributes.get("status") == COLLECTING
 
     now += timedelta(seconds=30)
     with freeze_time(now):
@@ -1249,7 +1382,7 @@ async def test_delta_values(
     state = hass.states.get("sensor.energy_bill")
     assert state is not None
 
-    assert state.state == "9"
+    assert state.state == "10"
 
 
 @pytest.mark.parametrize(
@@ -1316,7 +1449,7 @@ async def test_non_periodically_resetting(
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_bill")
-    assert state.attributes.get("status") == PAUSED
+    assert state.attributes.get("status") == COLLECTING
 
     now += timedelta(seconds=30)
     with freeze_time(now):

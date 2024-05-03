@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Coroutine, Mapping
+from collections.abc import Callable, Container, Coroutine, Mapping
 import copy
 from dataclasses import dataclass
 import types
@@ -102,7 +102,7 @@ class SchemaFlowMenuStep(SchemaFlowStep):
     """Define a config or options flow menu step."""
 
     # Menu options
-    options: list[str] | dict[str, str]
+    options: Container[str]
 
 
 class SchemaCommonFlowHandler:
@@ -357,8 +357,7 @@ class SchemaConfigFlowHandler(ConfigFlow, ABC):
         ) -> ConfigFlowResult:
             """Handle a config flow step."""
             # pylint: disable-next=protected-access
-            result = await self._common_handler.async_step(step_id, user_input)
-            return result
+            return await self._common_handler.async_step(step_id, user_input)
 
         return _async_step
 
@@ -452,8 +451,7 @@ class SchemaOptionsFlowHandler(OptionsFlowWithConfigEntry):
         ) -> ConfigFlowResult:
             """Handle an options flow step."""
             # pylint: disable-next=protected-access
-            result = await self._common_handler.async_step(step_id, user_input)
-            return result
+            return await self._common_handler.async_step(step_id, user_input)
 
         return _async_step
 

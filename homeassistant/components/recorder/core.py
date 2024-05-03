@@ -30,7 +30,13 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     MATCH_ALL,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.helpers.event import (
     async_track_time_change,
     async_track_time_interval,
@@ -40,6 +46,7 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 import homeassistant.util.dt as dt_util
 from homeassistant.util.enum import try_parse_enum
+from homeassistant.util.event_type import EventType
 
 from . import migration, statistics
 from .const import (
@@ -173,7 +180,7 @@ class Recorder(threading.Thread):
         db_max_retries: int,
         db_retry_wait: int,
         entity_filter: Callable[[str], bool],
-        exclude_event_types: set[str],
+        exclude_event_types: set[EventType[Any] | str],
     ) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name="Recorder")
@@ -332,7 +339,6 @@ class Recorder(threading.Thread):
         self._event_listener = self.hass.bus.async_listen(
             MATCH_ALL,
             _event_listener,
-            run_immediately=True,
         )
         self._queue_watcher = async_track_time_interval(
             self.hass,
@@ -477,12 +483,8 @@ class Recorder(threading.Thread):
     def async_register(self) -> None:
         """Post connection initialize."""
         bus = self.hass.bus
-        bus.async_listen_once(
-            EVENT_HOMEASSISTANT_CLOSE, self._async_close, run_immediately=True
-        )
-        bus.async_listen_once(
-            EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_shutdown, run_immediately=True
-        )
+        bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, self._async_close)
+        bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_shutdown)
         async_at_started(self.hass, self._async_hass_started)
 
     @callback
@@ -866,12 +868,12 @@ class Recorder(threading.Thread):
             self._guarded_process_one_task_or_event_or_recover(queue_.get())
 
     def _pre_process_startup_events(
-        self, startup_task_or_events: list[RecorderTask | Event]
+        self, startup_task_or_events: list[RecorderTask | Event[Any]]
     ) -> None:
         """Pre process startup events."""
         # Prime all the state_attributes and event_data caches
         # before we start processing events
-        state_change_events: list[Event] = []
+        state_change_events: list[Event[EventStateChangedData]] = []
         non_state_change_events: list[Event] = []
 
         for task_or_event in startup_task_or_events:
@@ -1023,7 +1025,7 @@ class Recorder(threading.Thread):
             self.backlog,
         )
 
-    def _process_one_event(self, event: Event) -> None:
+    def _process_one_event(self, event: Event[Any]) -> None:
         if not self.enabled:
             return
         if event.event_type == EVENT_STATE_CHANGED:
@@ -1080,7 +1082,9 @@ class Recorder(threading.Thread):
 
         self._add_to_session(session, dbevent)
 
-    def _process_state_changed_event_into_session(self, event: Event) -> None:
+    def _process_state_changed_event_into_session(
+        self, event: Event[EventStateChangedData]
+    ) -> None:
         """Process a state_changed event into the session."""
         state_attributes_manager = self.state_attributes_manager
         states_meta_manager = self.states_meta_manager

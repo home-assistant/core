@@ -196,7 +196,7 @@ SCHEMA_BACKUP_PARTIAL = SCHEMA_BACKUP_FULL.extend(
     {
         vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.slug]),
+        vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [VALID_ADDON_SLUG]),
     }
 )
 
@@ -211,7 +211,7 @@ SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
     {
         vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.slug]),
+        vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [VALID_ADDON_SLUG]),
     }
 )
 
@@ -368,7 +368,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         require_admin=True,
     )
 
-    await hassio.update_hass_api(config.get("http", {}), refresh_token)
+    update_hass_api_task = hass.async_create_task(
+        hassio.update_hass_api(config.get("http", {}), refresh_token), eager_start=True
+    )
 
     last_timezone = None
 
@@ -384,7 +386,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         last_timezone = new_timezone
         await hassio.update_hass_timezone(new_timezone)
 
-    hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, push_config, run_immediately=True)
+    hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, push_config)
 
     push_config_task = hass.async_create_task(push_config(None), eager_start=True)
     # Start listening for problems with supervisor and making issues
@@ -481,6 +483,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     # _async_setup_hardware_integration is called
     # so the hardware integration can be set up
     # and does not fallback to calling later
+    await update_hass_api_task
     await panels_task
     await update_info_task
     await push_config_task

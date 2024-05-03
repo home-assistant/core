@@ -74,7 +74,7 @@ def async_setup_block_attribute_entities(
 
     for block in coordinator.device.blocks:
         for sensor_id in block.sensor_ids:
-            description = sensors.get((block.type, sensor_id))
+            description = sensors.get((cast(str, block.type), sensor_id))
             if description is None:
                 continue
 

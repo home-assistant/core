@@ -162,6 +162,7 @@ from homeassistant.util import dt as dt_util
 from . import indieauth, login_flow, mfa_setup_flow
 
 DOMAIN = "auth"
+STRICT_CONNECTION_URL = "/auth/strict_connection/temp_token"
 
 StoreResultType = Callable[[str, Credentials], str]
 RetrieveResultType = Callable[[str, str], Credentials | None]
@@ -187,6 +188,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(RevokeTokenView())
     hass.http.register_view(LinkUserView(retrieve_result))
     hass.http.register_view(OAuth2AuthorizeCallbackView())
+    hass.http.register_view(StrictConnectionTempTokenView())
 
     websocket_api.async_register_command(hass, websocket_current_user)
     websocket_api.async_register_command(hass, websocket_create_long_lived_access_token)
@@ -195,8 +197,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_delete_all_refresh_tokens)
     websocket_api.async_register_command(hass, websocket_sign_path)
 
-    await login_flow.async_setup(hass, store_result)
-    await mfa_setup_flow.async_setup(hass)
+    login_flow.async_setup(hass, store_result)
+    mfa_setup_flow.async_setup(hass)
 
     return True
 
@@ -260,10 +262,10 @@ class TokenView(HomeAssistantView):
             return await RevokeTokenView.post(self, request)  # type: ignore[arg-type]
 
         if grant_type == "authorization_code":
-            return await self._async_handle_auth_code(hass, data, request.remote)
+            return await self._async_handle_auth_code(hass, data, request)
 
         if grant_type == "refresh_token":
-            return await self._async_handle_refresh_token(hass, data, request.remote)
+            return await self._async_handle_refresh_token(hass, data, request)
 
         return self.json(
             {"error": "unsupported_grant_type"}, status_code=HTTPStatus.BAD_REQUEST
@@ -273,7 +275,7 @@ class TokenView(HomeAssistantView):
         self,
         hass: HomeAssistant,
         data: MultiDictProxy[str],
-        remote_addr: str | None,
+        request: web.Request,
     ) -> web.Response:
         """Handle authorization code request."""
         client_id = data.get("client_id")
@@ -313,7 +315,7 @@ class TokenView(HomeAssistantView):
         )
         try:
             access_token = hass.auth.async_create_access_token(
-                refresh_token, remote_addr
+                refresh_token, request.remote
             )
         except InvalidAuthError as exc:
             return self.json(
@@ -321,6 +323,7 @@ class TokenView(HomeAssistantView):
                 status_code=HTTPStatus.FORBIDDEN,
             )
 
+        await hass.auth.session.async_create_session(request, refresh_token)
         return self.json(
             {
                 "access_token": access_token,
@@ -341,9 +344,9 @@ class TokenView(HomeAssistantView):
         self,
         hass: HomeAssistant,
         data: MultiDictProxy[str],
-        remote_addr: str | None,
+        request: web.Request,
     ) -> web.Response:
-        """Handle authorization code request."""
+        """Handle refresh token request."""
         client_id = data.get("client_id")
         if client_id is not None and not indieauth.verify_client_id(client_id):
             return self.json(
@@ -381,7 +384,7 @@ class TokenView(HomeAssistantView):
 
         try:
             access_token = hass.auth.async_create_access_token(
-                refresh_token, remote_addr
+                refresh_token, request.remote
             )
         except InvalidAuthError as exc:
             return self.json(
@@ -389,6 +392,7 @@ class TokenView(HomeAssistantView):
                 status_code=HTTPStatus.FORBIDDEN,
             )
 
+        await hass.auth.session.async_create_session(request, refresh_token)
         return self.json(
             {
                 "access_token": access_token,
@@ -435,6 +439,20 @@ class LinkUserView(HomeAssistantView):
         if linked_user != user:
             await hass.auth.async_link_user(user, credentials)
         return self.json_message("User linked")
+
+
+class StrictConnectionTempTokenView(HomeAssistantView):
+    """View to get temporary strict connection token."""
+
+    url = STRICT_CONNECTION_URL
+    name = "api:auth:strict_connection:temp_token"
+    requires_auth = False
+
+    async def get(self, request: web.Request) -> web.Response:
+        """Get a temporary token and redirect to main page."""
+        hass = request.app[KEY_HASS]
+        await hass.auth.session.async_create_temp_unauthorized_session(request)
+        raise web.HTTPSeeOther(location="/")
 
 
 @callback

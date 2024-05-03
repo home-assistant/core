@@ -8,7 +8,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 from bleak import BleakError
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
-from habluetooth import scanner
+from habluetooth import scanner, set_manager
 from habluetooth.wrappers import HaBleakScannerWrapper
 import pytest
 
@@ -288,14 +288,14 @@ async def test_setup_and_retry_adapter_not_yet_available(
 
     assert "Failed to start Bluetooth" in caplog.text
     assert len(bluetooth.async_discovered_service_info(hass)) == 0
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
     with patch(
         "habluetooth.scanner.OriginalBleakScanner.start",
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
         await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     with patch(
         "habluetooth.scanner.OriginalBleakScanner.stop",
@@ -327,7 +327,7 @@ async def test_no_race_during_manual_reload_in_retry_state(
 
     assert "Failed to start Bluetooth" in caplog.text
     assert len(bluetooth.async_discovered_service_info(hass)) == 0
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
     with patch(
         "habluetooth.scanner.OriginalBleakScanner.start",
@@ -335,7 +335,7 @@ async def test_no_race_during_manual_reload_in_retry_state(
         await hass.config_entries.async_reload(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     with patch(
         "habluetooth.scanner.OriginalBleakScanner.stop",
@@ -1154,6 +1154,7 @@ async def test_async_discovered_device_api(
 ) -> None:
     """Test the async_discovered_device API."""
     mock_bt = []
+    set_manager(None)
     with (
         patch(
             "homeassistant.components.bluetooth.async_get_bluetooth",
@@ -1169,8 +1170,10 @@ async def test_async_discovered_device_api(
             },
         ),
     ):
-        assert not bluetooth.async_discovered_service_info(hass)
-        assert not bluetooth.async_address_present(hass, "44:44:22:22:11:22")
+        with pytest.raises(RuntimeError, match="BluetoothManager has not been set"):
+            assert not bluetooth.async_discovered_service_info(hass)
+        with pytest.raises(RuntimeError, match="BluetoothManager has not been set"):
+            assert not bluetooth.async_address_present(hass, "44:44:22:22:11:22")
         await async_setup_with_default_adapter(hass)
 
         with patch.object(hass.config_entries.flow, "async_init"):
@@ -2744,6 +2747,7 @@ async def test_async_ble_device_from_address(
     hass: HomeAssistant, mock_bleak_scanner_start: MagicMock, macos_adapter: None
 ) -> None:
     """Test the async_ble_device_from_address api."""
+    set_manager(None)
     mock_bt = []
     with (
         patch(
@@ -2760,11 +2764,15 @@ async def test_async_ble_device_from_address(
             },
         ),
     ):
-        assert not bluetooth.async_discovered_service_info(hass)
-        assert not bluetooth.async_address_present(hass, "44:44:22:22:11:22")
-        assert (
-            bluetooth.async_ble_device_from_address(hass, "44:44:33:11:23:45") is None
-        )
+        with pytest.raises(RuntimeError, match="BluetoothManager has not been set"):
+            assert not bluetooth.async_discovered_service_info(hass)
+        with pytest.raises(RuntimeError, match="BluetoothManager has not been set"):
+            assert not bluetooth.async_address_present(hass, "44:44:22:22:11:22")
+        with pytest.raises(RuntimeError, match="BluetoothManager has not been set"):
+            assert (
+                bluetooth.async_ble_device_from_address(hass, "44:44:33:11:23:45")
+                is None
+            )
 
         await async_setup_with_default_adapter(hass)
 
@@ -2805,6 +2813,19 @@ async def test_can_unsetup_bluetooth_single_adapter_macos(
 
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
+
+
+async def test_default_address_config_entries_removed_linux(
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    one_adapter: None,
+) -> None:
+    """Test default address entries are removed on linux."""
+    entry = MockConfigEntry(domain=bluetooth.DOMAIN, data={}, unique_id=DEFAULT_ADDRESS)
+    entry.add_to_hass(hass)
+    await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
+    assert not hass.config_entries.async_entries(bluetooth.DOMAIN)
 
 
 async def test_can_unsetup_bluetooth_single_adapter_linux(
@@ -2866,7 +2887,7 @@ async def test_three_adapters_one_missing(
     entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_auto_detect_bluetooth_adapters_linux(
@@ -2887,6 +2908,16 @@ async def test_auto_detect_bluetooth_adapters_linux_multiple(
     await hass.async_block_till_done()
     assert not hass.config_entries.async_entries(bluetooth.DOMAIN)
     assert len(hass.config_entries.flow.async_progress(bluetooth.DOMAIN)) == 2
+
+
+async def test_auto_detect_bluetooth_adapters_skips_crashed(
+    hass: HomeAssistant, crashed_adapter: None
+) -> None:
+    """Test we skip crashed adapters on linux."""
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
+    assert not hass.config_entries.async_entries(bluetooth.DOMAIN)
+    assert len(hass.config_entries.flow.async_progress(bluetooth.DOMAIN)) == 0
 
 
 async def test_auto_detect_bluetooth_adapters_linux_none_found(
@@ -3015,12 +3046,14 @@ async def test_discover_new_usb_adapters(
                     "hw_version": "usb:v1D6Bp0246d053F",
                     "passive_scan": False,
                     "sw_version": "homeassistant",
+                    "manufacturer": "ACME",
                 },
                 "hci1": {
                     "address": "00:00:00:00:00:02",
                     "hw_version": "usb:v1D6Bp0246d053F",
                     "passive_scan": False,
                     "sw_version": "homeassistant",
+                    "manufacturer": "ACME",
                 },
             },
         ),
@@ -3088,12 +3121,14 @@ async def test_discover_new_usb_adapters_with_firmware_fallback_delay(
                     "hw_version": "usb:v1D6Bp0246d053F",
                     "passive_scan": False,
                     "sw_version": "homeassistant",
+                    "manufacturer": "ACME",
                 },
                 "hci1": {
                     "address": "00:00:00:00:00:02",
                     "hw_version": "usb:v1D6Bp0246d053F",
                     "passive_scan": False,
                     "sw_version": "homeassistant",
+                    "manufacturer": "ACME",
                 },
             },
         ),
@@ -3146,3 +3181,16 @@ async def test_haos_9_or_later(
     registry = async_get_issue_registry(hass)
     issue = registry.async_get_issue(DOMAIN, "haos_outdated")
     assert issue is None
+
+
+async def test_title_updated_if_mac_address(
+    hass: HomeAssistant, mock_bleak_scanner_start: MagicMock, one_adapter: None
+) -> None:
+    """Test the title is updated if it is the mac address."""
+    entry = MockConfigEntry(
+        domain="bluetooth", title="00:00:00:00:00:01", unique_id="00:00:00:00:00:01"
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.title == "ACME Bluetooth Adapter 5.0 (00:00:00:00:00:01)"

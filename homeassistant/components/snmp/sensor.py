@@ -270,7 +270,7 @@ class SnmpData:
             "SNMP OID %s received type=%s and data %s",
             self._baseoid,
             type(value),
-            bytes(value),
+            value,
         )
         if isinstance(value, NoSuchObject):
             _LOGGER.error(

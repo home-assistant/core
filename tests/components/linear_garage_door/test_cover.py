@@ -32,7 +32,7 @@ async def test_data(hass: HomeAssistant) -> None:
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
+    assert entries[0].state is ConfigEntryState.LOADED
     assert hass.states.get("cover.test_garage_1").state == STATE_OPEN
     assert hass.states.get("cover.test_garage_2").state == STATE_CLOSED
     assert hass.states.get("cover.test_garage_3").state == STATE_OPENING
@@ -45,7 +45,7 @@ async def test_open_cover(hass: HomeAssistant) -> None:
     await async_init_integration(hass)
 
     with patch(
-        "homeassistant.components.linear_garage_door.cover.Linear.operate_device"
+        "homeassistant.components.linear_garage_door.coordinator.Linear.operate_device"
     ) as operate_device:
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -58,15 +58,15 @@ async def test_open_cover(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.linear_garage_door.cover.Linear.login",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.login",
             return_value=True,
         ),
         patch(
-            "homeassistant.components.linear_garage_door.cover.Linear.operate_device",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.operate_device",
             return_value=None,
         ) as operate_device,
         patch(
-            "homeassistant.components.linear_garage_door.cover.Linear.close",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.close",
             return_value=True,
         ),
     ):
@@ -80,11 +80,11 @@ async def test_open_cover(hass: HomeAssistant) -> None:
     assert operate_device.call_count == 1
     with (
         patch(
-            "homeassistant.components.linear_garage_door.cover.Linear.login",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.login",
             return_value=True,
         ),
         patch(
-            "homeassistant.components.linear_garage_door.cover.Linear.get_devices",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.get_devices",
             return_value=[
                 {
                     "id": "test1",
@@ -99,7 +99,7 @@ async def test_open_cover(hass: HomeAssistant) -> None:
             ],
         ),
         patch(
-            "homeassistant.components.linear_garage_door.cover.Linear.get_device_state",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.get_device_state",
             side_effect=lambda id: {
                 "test1": {
                     "GDO": {"Open_B": "true", "Open_P": "100"},
@@ -120,7 +120,7 @@ async def test_open_cover(hass: HomeAssistant) -> None:
             }[id],
         ),
         patch(
-            "homeassistant.components.linear_garage_door.cover.Linear.close",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.close",
             return_value=True,
         ),
     ):
@@ -136,7 +136,7 @@ async def test_close_cover(hass: HomeAssistant) -> None:
     await async_init_integration(hass)
 
     with patch(
-        "homeassistant.components.linear_garage_door.cover.Linear.operate_device"
+        "homeassistant.components.linear_garage_door.coordinator.Linear.operate_device"
     ) as operate_device:
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -149,15 +149,15 @@ async def test_close_cover(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.linear_garage_door.cover.Linear.login",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.login",
             return_value=True,
         ),
         patch(
-            "homeassistant.components.linear_garage_door.cover.Linear.operate_device",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.operate_device",
             return_value=None,
         ) as operate_device,
         patch(
-            "homeassistant.components.linear_garage_door.cover.Linear.close",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.close",
             return_value=True,
         ),
     ):
@@ -171,11 +171,11 @@ async def test_close_cover(hass: HomeAssistant) -> None:
     assert operate_device.call_count == 1
     with (
         patch(
-            "homeassistant.components.linear_garage_door.cover.Linear.login",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.login",
             return_value=True,
         ),
         patch(
-            "homeassistant.components.linear_garage_door.cover.Linear.get_devices",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.get_devices",
             return_value=[
                 {
                     "id": "test1",
@@ -190,7 +190,7 @@ async def test_close_cover(hass: HomeAssistant) -> None:
             ],
         ),
         patch(
-            "homeassistant.components.linear_garage_door.cover.Linear.get_device_state",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.get_device_state",
             side_effect=lambda id: {
                 "test1": {
                     "GDO": {"Open_B": "true", "Opening_P": "100"},
@@ -211,7 +211,7 @@ async def test_close_cover(hass: HomeAssistant) -> None:
             }[id],
         ),
         patch(
-            "homeassistant.components.linear_garage_door.cover.Linear.close",
+            "homeassistant.components.linear_garage_door.coordinator.Linear.close",
             return_value=True,
         ),
     ):

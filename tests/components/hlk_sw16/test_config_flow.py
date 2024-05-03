@@ -6,6 +6,7 @@ from unittest.mock import patch
 from homeassistant import config_entries
 from homeassistant.components.hlk_sw16.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 
 class MockSW16Client:
@@ -54,7 +55,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     conf = {
@@ -83,7 +84,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "127.0.0.1:8080"
     assert result2["data"] == {
         "host": "127.0.0.1",
@@ -101,7 +102,7 @@ async def test_form(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    assert result3["type"] == "form"
+    assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {}
 
     result4 = await hass.config_entries.flow.async_configure(
@@ -109,7 +110,7 @@ async def test_form(hass: HomeAssistant) -> None:
         conf,
     )
 
-    assert result4["type"] == "abort"
+    assert result4["type"] is FlowResultType.ABORT
     assert result4["reason"] == "already_configured"
 
 
@@ -119,7 +120,7 @@ async def test_import(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     conf = {
@@ -148,7 +149,7 @@ async def test_import(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "127.0.0.1:8080"
     assert result2["data"] == {
         "host": "127.0.0.1",
@@ -180,7 +181,7 @@ async def test_form_invalid_data(hass: HomeAssistant) -> None:
             conf,
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -205,5 +206,5 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             conf,
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}

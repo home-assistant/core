@@ -171,9 +171,7 @@ async def async_attach_trigger(
 
     event_filter = filter_event if event_data_items or event_data_schema else None
     removes = [
-        hass.bus.async_listen(
-            event_type, handle_event, event_filter=event_filter, run_immediately=True
-        )
+        hass.bus.async_listen(event_type, handle_event, event_filter=event_filter)
         for event_type in event_types
     ]
 

@@ -5,7 +5,7 @@ from collections.abc import Iterable
 from datetime import timedelta
 import logging
 from typing import Any
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import pytest
 
@@ -76,6 +76,40 @@ async def test_polling_only_updates_entities_it_should_poll(
 
     assert not no_poll_ent.async_update.called
     assert poll_ent.async_update.called
+
+
+async def test_polling_check_works_if_entity_add_fails(
+    hass: HomeAssistant,
+) -> None:
+    """Test the polling check works if an entity add fails."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+    await component.async_setup({})
+
+    class MockEntityNeedsSelfHassInShouldPoll(MockEntity):
+        """Mock entity that needs self.hass in should_poll."""
+
+        @property
+        def should_poll(self) -> bool:
+            """Return True if entity has to be polled."""
+            return self.hass.data is not None
+
+    working_poll_ent = MockEntityNeedsSelfHassInShouldPoll(should_poll=True)
+    working_poll_ent.async_update = AsyncMock()
+    broken_poll_ent = MockEntityNeedsSelfHassInShouldPoll(should_poll=True)
+    broken_poll_ent.async_update = AsyncMock(side_effect=Exception("Broken"))
+
+    await component.async_add_entities(
+        [broken_poll_ent, working_poll_ent], update_before_add=True
+    )
+
+    working_poll_ent.async_update.reset_mock()
+    broken_poll_ent.async_update.reset_mock()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not broken_poll_ent.async_update.called
+    assert working_poll_ent.async_update.called
 
 
 async def test_polling_disabled_by_config_entry(hass: HomeAssistant) -> None:
@@ -1076,6 +1110,19 @@ async def test_entity_registry_updates_invalid_entity_id(hass: HomeAssistant) ->
     assert hass.states.get("test_domain.world") is not None
     assert hass.states.get("invalid_entity_id") is None
     assert hass.states.get("diff_domain.world") is None
+
+
+async def test_add_entity_with_invalid_id(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test trying to add an entity with an invalid entity_id."""
+    platform = MockEntityPlatform(hass)
+    entity = MockEntity(entity_id="i.n.v.a.l.i.d")
+    await platform.async_add_entities([entity])
+    assert (
+        "Error adding entity i.n.v.a.l.i.d for domain "
+        "test_domain with platform test_platform" in caplog.text
+    )
 
 
 async def test_device_info_called(

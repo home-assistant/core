@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_unordered import unordered
 import voluptuous as vol
 
 # To prevent circular import when running just this file
@@ -16,6 +17,7 @@ import homeassistant.components  # noqa: F401
 from homeassistant.components.group import DOMAIN as DOMAIN_GROUP, Group
 from homeassistant.components.logger import DOMAIN as DOMAIN_LOGGER
 from homeassistant.components.shell_command import DOMAIN as DOMAIN_SHELL_COMMAND
+from homeassistant.components.system_health import DOMAIN as DOMAIN_SYSTEM_HEALTH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
@@ -785,7 +787,7 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
     """Test async_get_all_descriptions."""
     group_config = {DOMAIN_GROUP: {}}
     assert await async_setup_component(hass, DOMAIN_GROUP, group_config)
-    assert await async_setup_component(hass, "system_health", {})
+    assert await async_setup_component(hass, DOMAIN_SYSTEM_HEALTH, {})
 
     with patch(
         "homeassistant.helpers.service._load_services_files",
@@ -795,17 +797,20 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
 
     # Test we only load services.yaml for integrations with services.yaml
     # And system_health has no services
-    assert proxy_load_services_files.mock_calls[0][1][1] == [
-        await async_get_integration(hass, "group")
-    ]
+    assert proxy_load_services_files.mock_calls[0][1][1] == unordered(
+        [
+            await async_get_integration(hass, DOMAIN_GROUP),
+            await async_get_integration(hass, "http"),  # system_health requires http
+        ]
+    )
 
-    assert len(descriptions) == 1
-
-    assert "description" in descriptions["group"]["reload"]
-    assert "fields" in descriptions["group"]["reload"]
+    assert len(descriptions) == 2
+    assert DOMAIN_GROUP in descriptions
+    assert "description" in descriptions[DOMAIN_GROUP]["reload"]
+    assert "fields" in descriptions[DOMAIN_GROUP]["reload"]
 
     # Does not have services
-    assert "system_health" not in descriptions
+    assert DOMAIN_SYSTEM_HEALTH not in descriptions
 
     logger_config = {DOMAIN_LOGGER: {}}
 
@@ -833,8 +838,8 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
         await async_setup_component(hass, DOMAIN_LOGGER, logger_config)
         descriptions = await service.async_get_all_descriptions(hass)
 
-    assert len(descriptions) == 2
-
+    assert len(descriptions) == 3
+    assert DOMAIN_LOGGER in descriptions
     assert descriptions[DOMAIN_LOGGER]["set_default_level"]["name"] == "Translated name"
     assert (
         descriptions[DOMAIN_LOGGER]["set_default_level"]["description"]
@@ -1847,3 +1852,139 @@ async def test_async_extract_config_entry_ids(hass: HomeAssistant) -> None:
     )
 
     assert await service.async_extract_config_entry_ids(hass, call) == {"abc"}
+
+
+async def test_reload_service_helper(hass: HomeAssistant) -> None:
+    """Test the reload service helper."""
+
+    active_reload_calls = 0
+    reloaded = []
+
+    async def reload_service_handler(service_call: ServiceCall) -> None:
+        """Remove all automations and load new ones from config."""
+        nonlocal active_reload_calls
+        # Assert the reload helper prevents parallel reloads
+        assert not active_reload_calls
+        active_reload_calls += 1
+        if not (target := service_call.data.get("target")):
+            reloaded.append("all")
+        else:
+            reloaded.append(target)
+        await asyncio.sleep(0.01)
+        active_reload_calls -= 1
+
+    def reload_targets(service_call: ServiceCall) -> set[str | None]:
+        if target_id := service_call.data.get("target"):
+            return {target_id}
+        return {"target1", "target2", "target3", "target4"}
+
+    # Test redundant reload of single targets
+    reloader = service.ReloadServiceHelper(reload_service_handler, reload_targets)
+    tasks = [
+        # This reload task will start executing first, (target1)
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        # These reload tasks will be deduplicated to (target2, target3, target4, target1)
+        # while the first task is reloaded, note that target1 can't be deduplicated
+        # because it's already being reloaded.
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+    ]
+    await asyncio.gather(*tasks)
+    assert reloaded == unordered(
+        ["target1", "target2", "target3", "target4", "target1"]
+    )
+
+    # Test redundant reload of multiple targets + single target
+    reloaded.clear()
+    tasks = [
+        # This reload task will start executing first, (target1)
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        # These reload tasks will be deduplicated to (target2, target3, target4, all)
+        # while the first task is reloaded.
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+        reloader.execute_service(ServiceCall("test", "test")),
+    ]
+    await asyncio.gather(*tasks)
+    assert reloaded == unordered(["target1", "target2", "target3", "target4", "all"])
+
+    # Test redundant reload of multiple targets + single target
+    reloaded.clear()
+    tasks = [
+        # This reload task will start executing first, (all)
+        reloader.execute_service(ServiceCall("test", "test")),
+        # These reload tasks will be deduplicated to (target1, target2, target3, target4)
+        # while the first task is reloaded.
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+    ]
+    await asyncio.gather(*tasks)
+    assert reloaded == unordered(["all", "target1", "target2", "target3", "target4"])
+
+    # Test redundant reload of single targets
+    reloaded.clear()
+    tasks = [
+        # This reload task will start executing first, (target1)
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        # These reload tasks will be deduplicated to (target2, target3, target4, target1)
+        # while the first task is reloaded, note that target1 can't be deduplicated
+        # because it's already being reloaded.
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+    ]
+    await asyncio.gather(*tasks)
+    assert reloaded == unordered(
+        ["target1", "target2", "target3", "target4", "target1"]
+    )
+
+    # Test redundant reload of multiple targets + single target
+    reloaded.clear()
+    tasks = [
+        # This reload task will start executing first, (target1)
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        # These reload tasks will be deduplicated to (target2, target3, target4, all)
+        # while the first task is reloaded.
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+        reloader.execute_service(ServiceCall("test", "test")),
+        reloader.execute_service(ServiceCall("test", "test")),
+    ]
+    await asyncio.gather(*tasks)
+    assert reloaded == unordered(["target1", "target2", "target3", "target4", "all"])
+
+    # Test redundant reload of multiple targets + single target
+    reloaded.clear()
+    tasks = [
+        # This reload task will start executing first, (all)
+        reloader.execute_service(ServiceCall("test", "test")),
+        # These reload tasks will be deduplicated to (target1, target2, target3, target4)
+        # while the first task is reloaded.
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target1"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target2"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target3"})),
+        reloader.execute_service(ServiceCall("test", "test", {"target": "target4"})),
+    ]
+    await asyncio.gather(*tasks)
+    assert reloaded == unordered(["all", "target1", "target2", "target3", "target4"])

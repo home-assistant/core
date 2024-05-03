@@ -78,7 +78,7 @@ def async_setup_block_entry(
     for block in coordinator.device.blocks:
         if block.type == "light":
             blocks.append(block)
-        elif block.type == "relay":
+        elif block.type == "relay" and block.channel is not None:
             if not is_block_channel_type_light(
                 coordinator.device.settings, int(block.channel)
             ):

@@ -107,6 +107,7 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
         options=[
+            "inaccurate_position",
             "not_reporting",
             "operational",
             "system_shutdown_user",

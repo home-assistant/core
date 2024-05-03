@@ -30,7 +30,13 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import (
     device_registry as dr,
     entity_platform,
@@ -40,7 +46,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     async_track_point_in_time,
     async_track_state_change_event,
 )
@@ -578,7 +583,13 @@ class UtilityMeterSensor(RestoreSensor):
 
     async def async_reset_meter(self, entity_id):
         """Reset meter."""
-        if self._tariff is not None and self._tariff_entity != entity_id:
+        if self._tariff_entity is not None and self._tariff_entity != entity_id:
+            return
+        if (
+            self._tariff_entity is None
+            and entity_id is not None
+            and self.entity_id != entity_id
+        ):
             return
         _LOGGER.debug("Reset utility meter <%s>", self.entity_id)
         self._last_reset = dt_util.utcnow()

@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from soco import SoCo
+from soco.alarms import Alarms
 from soco.events_base import Event as SonosEvent
 
 from homeassistant.components import ssdp, zeroconf
@@ -122,6 +123,8 @@ def async_setup_sonos(hass, config_entry, fire_zgs_event):
 
     async def _wrapper():
         config_entry.add_to_hass(hass)
+        sonos_alarms = Alarms()
+        sonos_alarms.last_alarm_list_version = "RINCON_test:0"
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
         await fire_zgs_event()
@@ -200,6 +203,7 @@ class SoCoMockFactory:
         my_speaker_info["zone_name"] = name
         my_speaker_info["uid"] = mock_soco.uid
         mock_soco.get_speaker_info = Mock(return_value=my_speaker_info)
+        mock_soco.add_to_queue = Mock(return_value=10)
 
         mock_soco.avTransport = SonosMockService("AVTransport", ip_address)
         mock_soco.renderingControl = SonosMockService("RenderingControl", ip_address)
@@ -300,11 +304,116 @@ def config_fixture():
     return {DOMAIN: {MP_DOMAIN: {CONF_HOSTS: ["192.168.42.2"]}}}
 
 
+class MockMusicServiceItem:
+    """Mocks a Soco MusicServiceItem."""
+
+    def __init__(self, title: str, item_id: str, parent_id: str, item_class: str):
+        """Initialize the mock item."""
+        self.title = title
+        self.item_id = item_id
+        self.item_class = item_class
+        self.parent_id = parent_id
+
+
+def mock_browse_by_idstring(
+    search_type: str, idstring: str, start=0, max_items=100, full_album_art_uri=False
+) -> list[MockMusicServiceItem]:
+    """Mock the call to browse_by_id_string."""
+    if search_type == "album_artists" and idstring == "A:ALBUMARTIST/Beatles":
+        return [
+            MockMusicServiceItem(
+                "All",
+                idstring + "/",
+                idstring,
+                "object.container.playlistContainer.sameArtist",
+            ),
+            MockMusicServiceItem(
+                "A Hard Day's Night",
+                "A:ALBUMARTIST/Beatles/A%20Hard%20Day's%20Night",
+                idstring,
+                "object.container.album.musicAlbum",
+            ),
+            MockMusicServiceItem(
+                "Abbey Road",
+                "A:ALBUMARTIST/Beatles/Abbey%20Road",
+                idstring,
+                "object.container.album.musicAlbum",
+            ),
+        ]
+    # browse_by_id_string works with URL encoded or decoded strings
+    if search_type == "genres" and idstring in (
+        "A:GENRE/Classic%20Rock",
+        "A:GENRE/Classic Rock",
+    ):
+        return [
+            MockMusicServiceItem(
+                "All",
+                "A:GENRE/Classic%20Rock/",
+                "A:GENRE/Classic%20Rock",
+                "object.container.albumlist",
+            ),
+            MockMusicServiceItem(
+                "Bruce Springsteen",
+                "A:GENRE/Classic%20Rock/Bruce%20Springsteen",
+                "A:GENRE/Classic%20Rock",
+                "object.container.person.musicArtist",
+            ),
+            MockMusicServiceItem(
+                "Cream",
+                "A:GENRE/Classic%20Rock/Cream",
+                "A:GENRE/Classic%20Rock",
+                "object.container.person.musicArtist",
+            ),
+        ]
+    if search_type == "composers" and idstring in (
+        "A:COMPOSER/Carlos%20Santana",
+        "A:COMPOSER/Carlos Santana",
+    ):
+        return [
+            MockMusicServiceItem(
+                "All",
+                "A:COMPOSER/Carlos%20Santana/",
+                "A:COMPOSER/Carlos%20Santana",
+                "object.container.playlistContainer.sameArtist",
+            ),
+            MockMusicServiceItem(
+                "Between Good And Evil",
+                "A:COMPOSER/Carlos%20Santana/Between%20Good%20And%20Evil",
+                "A:COMPOSER/Carlos%20Santana",
+                "object.container.album.musicAlbum",
+            ),
+            MockMusicServiceItem(
+                "Sacred Fire",
+                "A:COMPOSER/Carlos%20Santana/Sacred%20Fire",
+                "A:COMPOSER/Carlos%20Santana",
+                "object.container.album.musicAlbum",
+            ),
+        ]
+    return []
+
+
+def mock_get_music_library_information(
+    search_type: str, search_term: str, full_album_art_uri: bool = True
+) -> list[MockMusicServiceItem]:
+    """Mock the call to get music library information."""
+    if search_type == "albums" and search_term == "Abbey Road":
+        return [
+            MockMusicServiceItem(
+                "Abbey Road",
+                "A:ALBUM/Abbey%20Road",
+                "A:ALBUM",
+                "object.container.album.musicAlbum",
+            )
+        ]
+
+
 @pytest.fixture(name="music_library")
 def music_library_fixture():
     """Create music_library fixture."""
     music_library = MagicMock()
     music_library.get_sonos_favorites.return_value.update_id = 1
+    music_library.browse_by_idstring = mock_browse_by_idstring
+    music_library.get_music_library_information = mock_get_music_library_information
     return music_library
 
 
@@ -478,7 +587,7 @@ def mock_get_source_ip(mock_get_source_ip):
     return mock_get_source_ip
 
 
-@pytest.fixture(name="zgs_discovery", scope="session")
+@pytest.fixture(name="zgs_discovery", scope="package")
 def zgs_discovery_fixture():
     """Load ZoneGroupState discovery payload and return it."""
     return load_fixture("sonos/zgs_discovery.xml")
@@ -494,6 +603,6 @@ def zgs_event_fixture(hass: HomeAssistant, soco: SoCo, zgs_discovery: str):
         subscription: SonosMockSubscribe = soco.zoneGroupTopology.subscribe.return_value
         sub_callback = await subscription.wait_for_callback_to_be_set()
         sub_callback(event)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     return _wrapper
