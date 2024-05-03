@@ -314,7 +314,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             return True
         return False
 
-    async def _asnyc_setup(self) -> None:
+    async def _async_setup(self) -> None:
         """Prepare the coordinator for the first refresh.
 
         Can be overwritten by integrations to setup their coordinators,
