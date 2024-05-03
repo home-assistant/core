@@ -252,66 +252,92 @@ def gen_issues_schema(config: Config, integration: Integration) -> dict[str, Any
 
 def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
     """Generate a strings schema."""
-    return vol.Schema(
-        {
-            vol.Optional("title"): translation_value_validator,
-            vol.Optional("config"): gen_data_entry_schema(
-                config=config,
-                integration=integration,
-                flow_title=REMOVED,
-                require_step_title=False,
-                mandatory_description=(
-                    "user" if integration.integration_type == "helper" else None
-                ),
+    return vol.Schema({
+        vol.Optional("title"): translation_value_validator,
+        vol.Optional("config"): gen_data_entry_schema(
+            config=config,
+            integration=integration,
+            flow_title=REMOVED,
+            require_step_title=False,
+            mandatory_description=(
+                "user" if integration.integration_type == "helper" else None
             ),
-            vol.Optional("options"): gen_data_entry_schema(
-                config=config,
-                integration=integration,
-                flow_title=UNDEFINED,
-                require_step_title=False,
-            ),
-            vol.Optional("selector"): cv.schema_with_slug_keys(
-                {
-                    "options": cv.schema_with_slug_keys(
-                        translation_value_validator,
-                        slug_validator=translation_key_validator,
-                    )
-                },
-                slug_validator=vol.Any("_", cv.slug),
-            ),
-            vol.Optional("device_automation"): {
-                vol.Optional("action_type"): {str: translation_value_validator},
-                vol.Optional("condition_type"): {str: translation_value_validator},
-                vol.Optional("trigger_type"): {str: translation_value_validator},
-                vol.Optional("trigger_subtype"): {str: translation_value_validator},
+        ),
+        vol.Optional("options"): gen_data_entry_schema(
+            config=config,
+            integration=integration,
+            flow_title=UNDEFINED,
+            require_step_title=False,
+        ),
+        vol.Optional("selector"): cv.schema_with_slug_keys(
+            {
+                "options": cv.schema_with_slug_keys(
+                    translation_value_validator,
+                    slug_validator=translation_key_validator,
+                )
             },
-            vol.Optional("system_health"): {
-                vol.Optional("info"): cv.schema_with_slug_keys(
+            slug_validator=vol.Any("_", cv.slug),
+        ),
+        vol.Optional("device_automation"): {
+            vol.Optional("action_type"): {str: translation_value_validator},
+            vol.Optional("condition_type"): {str: translation_value_validator},
+            vol.Optional("trigger_type"): {str: translation_value_validator},
+            vol.Optional("trigger_subtype"): {str: translation_value_validator},
+        },
+        vol.Optional("system_health"): {
+            vol.Optional("info"): cv.schema_with_slug_keys(
+                translation_value_validator,
+                slug_validator=translation_key_validator,
+            ),
+        },
+        vol.Optional("config_panel"): cv.schema_with_slug_keys(
+            cv.schema_with_slug_keys(
+                translation_value_validator,
+                slug_validator=translation_key_validator,
+            ),
+            slug_validator=vol.Any("_", cv.slug),
+        ),
+        vol.Optional("application_credentials"): {
+            vol.Optional("description"): translation_value_validator,
+        },
+        vol.Optional("issues"): gen_issues_schema(config, integration),
+        vol.Optional("entity_component"): cv.schema_with_slug_keys(
+            {
+                vol.Optional("name"): str,
+                vol.Optional("state"): cv.schema_with_slug_keys(
                     translation_value_validator,
                     slug_validator=translation_key_validator,
                 ),
-            },
-            vol.Optional("config_panel"): cv.schema_with_slug_keys(
-                cv.schema_with_slug_keys(
-                    translation_value_validator,
+                vol.Optional("state_attributes"): cv.schema_with_slug_keys(
+                    {
+                        vol.Optional("name"): str,
+                        vol.Optional("state"): cv.schema_with_slug_keys(
+                            translation_value_validator,
+                            slug_validator=translation_key_validator,
+                        ),
+                    },
                     slug_validator=translation_key_validator,
                 ),
-                slug_validator=vol.Any("_", cv.slug),
-            ),
-            vol.Optional("application_credentials"): {
-                vol.Optional("description"): translation_value_validator,
             },
-            vol.Optional("issues"): gen_issues_schema(config, integration),
-            vol.Optional("entity_component"): cv.schema_with_slug_keys(
+            slug_validator=vol.Any("_", cv.slug),
+        ),
+        vol.Optional("device"): cv.schema_with_slug_keys(
+            {
+                vol.Optional("name"): translation_value_validator,
+            },
+            slug_validator=translation_key_validator,
+        ),
+        vol.Optional("entity"): cv.schema_with_slug_keys(
+            cv.schema_with_slug_keys(
                 {
-                    vol.Optional("name"): str,
+                    vol.Optional("name"): translation_value_validator,
                     vol.Optional("state"): cv.schema_with_slug_keys(
                         translation_value_validator,
                         slug_validator=translation_key_validator,
                     ),
                     vol.Optional("state_attributes"): cv.schema_with_slug_keys(
                         {
-                            vol.Optional("name"): str,
+                            vol.Optional("name"): translation_value_validator,
                             vol.Optional("state"): cv.schema_with_slug_keys(
                                 translation_value_validator,
                                 slug_validator=translation_key_validator,
@@ -320,104 +346,80 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                         slug_validator=translation_key_validator,
                     ),
                 },
-                slug_validator=vol.Any("_", cv.slug),
-            ),
-            vol.Optional("device"): cv.schema_with_slug_keys(
-                {
-                    vol.Optional("name"): translation_value_validator,
-                },
                 slug_validator=translation_key_validator,
             ),
-            vol.Optional("entity"): cv.schema_with_slug_keys(
-                cv.schema_with_slug_keys(
+            slug_validator=cv.slug,
+        ),
+        vol.Optional("exceptions"): cv.schema_with_slug_keys(
+            {vol.Optional("message"): translation_value_validator},
+            slug_validator=cv.slug,
+        ),
+        vol.Optional("services"): cv.schema_with_slug_keys(
+            {
+                vol.Required("name"): translation_value_validator,
+                vol.Required("description"): translation_value_validator,
+                vol.Optional("fields"): cv.schema_with_slug_keys(
                     {
-                        vol.Optional("name"): translation_value_validator,
-                        vol.Optional("state"): cv.schema_with_slug_keys(
-                            translation_value_validator,
-                            slug_validator=translation_key_validator,
-                        ),
-                        vol.Optional("state_attributes"): cv.schema_with_slug_keys(
-                            {
-                                vol.Optional("name"): translation_value_validator,
-                                vol.Optional("state"): cv.schema_with_slug_keys(
-                                    translation_value_validator,
-                                    slug_validator=translation_key_validator,
-                                ),
-                            },
-                            slug_validator=translation_key_validator,
-                        ),
+                        vol.Required("name"): str,
+                        vol.Required("description"): translation_value_validator,
+                        vol.Optional("example"): translation_value_validator,
                     },
                     slug_validator=translation_key_validator,
                 ),
-                slug_validator=cv.slug,
-            ),
-            vol.Optional("exceptions"): cv.schema_with_slug_keys(
-                {vol.Optional("message"): translation_value_validator},
-                slug_validator=cv.slug,
-            ),
-            vol.Optional("services"): cv.schema_with_slug_keys(
+            },
+            slug_validator=translation_key_validator,
+        ),
+        vol.Optional("conversation"): {
+            vol.Required("agent"): {
+                vol.Required("done"): translation_value_validator,
+            },
+        },
+        vol.Optional("notification"): cv.schema_with_slug_keys(
+            cv.schema_with_slug_keys(
                 {
-                    vol.Required("name"): translation_value_validator,
-                    vol.Required("description"): translation_value_validator,
-                    vol.Optional("fields"): cv.schema_with_slug_keys(
-                        {
-                            vol.Required("name"): str,
-                            vol.Required("description"): translation_value_validator,
-                            vol.Optional("example"): translation_value_validator,
-                        },
-                        slug_validator=translation_key_validator,
-                    ),
+                    vol.Required("message"): translation_value_validator,
+                    vol.Optional("title"): translation_value_validator,
                 },
                 slug_validator=translation_key_validator,
             ),
-            vol.Optional("conversation"): {
-                vol.Required("agent"): {
-                    vol.Required("done"): translation_value_validator,
-                },
-            },
-        }
-    )
+            slug_validator=cv.slug,
+        ),
+    })
 
 
 def gen_auth_schema(config: Config, integration: Integration) -> vol.Schema:
     """Generate auth schema."""
-    return vol.Schema(
-        {
-            vol.Optional("mfa_setup"): {
-                str: gen_data_entry_schema(
-                    config=config,
-                    integration=integration,
-                    flow_title=REQUIRED,
-                    require_step_title=True,
-                )
-            },
-            vol.Optional("issues"): gen_issues_schema(config, integration),
-        }
-    )
+    return vol.Schema({
+        vol.Optional("mfa_setup"): {
+            str: gen_data_entry_schema(
+                config=config,
+                integration=integration,
+                flow_title=REQUIRED,
+                require_step_title=True,
+            )
+        },
+        vol.Optional("issues"): gen_issues_schema(config, integration),
+    })
 
 
 def gen_ha_hardware_schema(config: Config, integration: Integration):
     """Generate auth schema."""
-    return vol.Schema(
-        {
-            str: {
-                vol.Optional("options"): gen_data_entry_schema(
-                    config=config,
-                    integration=integration,
-                    flow_title=UNDEFINED,
-                    require_step_title=False,
-                )
-            }
+    return vol.Schema({
+        str: {
+            vol.Optional("options"): gen_data_entry_schema(
+                config=config,
+                integration=integration,
+                flow_title=UNDEFINED,
+                require_step_title=False,
+            )
         }
-    )
+    })
 
 
-ONBOARDING_SCHEMA = vol.Schema(
-    {
-        vol.Required("area"): {str: translation_value_validator},
-        vol.Required("dashboard"): {str: {"title": translation_value_validator}},
-    }
-)
+ONBOARDING_SCHEMA = vol.Schema({
+    vol.Required("area"): {str: translation_value_validator},
+    vol.Required("dashboard"): {str: {"title": translation_value_validator}},
+})
 
 
 def validate_translation_file(  # noqa: C901
@@ -498,12 +500,12 @@ def validate_translation_file(  # noqa: C901
         if parts or key not in search:
             integration.add_error(
                 "translations",
-                f"{reference['source']} contains invalid reference {reference['ref']}: Could not find {key}",
+                f"{reference["source"]} contains invalid reference {reference["ref"]}: Could not find {key}",
             )
         elif match := re.match(RE_REFERENCE, search[key]):
             integration.add_error(
                 "translations",
-                f"Lokalise supports only one level of references: \"{reference['source']}\" should point to directly to \"{match.groups()[0]}\"",
+                f"Lokalise supports only one level of references: \"{reference["source"]}\" should point to directly to \"{match.groups()[0]}\"",
             )
 
 
