@@ -8,7 +8,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 from bleak import BleakError
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
-from habluetooth import scanner
+from habluetooth import scanner, set_manager
 from habluetooth.wrappers import HaBleakScannerWrapper
 import pytest
 
@@ -1154,6 +1154,7 @@ async def test_async_discovered_device_api(
 ) -> None:
     """Test the async_discovered_device API."""
     mock_bt = []
+    set_manager(None)
     with (
         patch(
             "homeassistant.components.bluetooth.async_get_bluetooth",
@@ -1169,8 +1170,10 @@ async def test_async_discovered_device_api(
             },
         ),
     ):
-        assert not bluetooth.async_discovered_service_info(hass)
-        assert not bluetooth.async_address_present(hass, "44:44:22:22:11:22")
+        with pytest.raises(RuntimeError, match="BluetoothManager has not been set"):
+            assert not bluetooth.async_discovered_service_info(hass)
+        with pytest.raises(RuntimeError, match="BluetoothManager has not been set"):
+            assert not bluetooth.async_address_present(hass, "44:44:22:22:11:22")
         await async_setup_with_default_adapter(hass)
 
         with patch.object(hass.config_entries.flow, "async_init"):
@@ -2744,6 +2747,7 @@ async def test_async_ble_device_from_address(
     hass: HomeAssistant, mock_bleak_scanner_start: MagicMock, macos_adapter: None
 ) -> None:
     """Test the async_ble_device_from_address api."""
+    set_manager(None)
     mock_bt = []
     with (
         patch(
@@ -2760,11 +2764,15 @@ async def test_async_ble_device_from_address(
             },
         ),
     ):
-        assert not bluetooth.async_discovered_service_info(hass)
-        assert not bluetooth.async_address_present(hass, "44:44:22:22:11:22")
-        assert (
-            bluetooth.async_ble_device_from_address(hass, "44:44:33:11:23:45") is None
-        )
+        with pytest.raises(RuntimeError, match="BluetoothManager has not been set"):
+            assert not bluetooth.async_discovered_service_info(hass)
+        with pytest.raises(RuntimeError, match="BluetoothManager has not been set"):
+            assert not bluetooth.async_address_present(hass, "44:44:22:22:11:22")
+        with pytest.raises(RuntimeError, match="BluetoothManager has not been set"):
+            assert (
+                bluetooth.async_ble_device_from_address(hass, "44:44:33:11:23:45")
+                is None
+            )
 
         await async_setup_with_default_adapter(hass)
 

@@ -28,7 +28,7 @@ dbus-fast==2.21.1
 fnv-hash-fast==0.5.0
 ha-av==10.1.1
 ha-ffmpeg==3.2.0
-habluetooth==2.8.0
+habluetooth==2.8.1
 hass-nabucasa==0.78.0
 hassil==1.6.1
 home-assistant-bluetooth==1.12.0
@@ -192,3 +192,8 @@ pycountry>=23.12.11
 
 # scapy<2.5.0 will not work with python3.12
 scapy>=2.5.0
+
+# tuf isn't updated to deal with breaking changes in securesystemslib==1.0.
+# Only tuf>=4 includes a constraint to <1.0.
+# https://github.com/theupdateframework/python-tuf/releases/tag/v4.0.0
+tuf>=4.0.0

@@ -17,6 +17,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "flood_alarm": {
+        "name": "Flood alarm"
+      },
+      "flood_warning": {
+        "name": "Flood warning"
+      }
+    },
     "sensor": {
       "water_level": {
         "name": "Water level"
