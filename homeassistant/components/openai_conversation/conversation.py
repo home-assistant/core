@@ -44,6 +44,8 @@ class OpenAIConversationEntity(
 ):
     """OpenAI conversation agent."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the agent."""
         self.hass = hass
