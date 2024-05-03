@@ -4819,3 +4819,21 @@ async def test_track_state_change_deprecated(
         "of `async_track_state_change_event` which is deprecated and "
         "will be removed in Home Assistant 2025.5. Please report this issue."
     ) in caplog.text
+
+
+async def test_track_point_in_time_repr(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test track point in time."""
+
+    @ha.callback
+    def _raise_exception(_):
+        raise RuntimeError("something happened and its poorly described")
+
+    async_track_point_in_utc_time(hass, _raise_exception, dt_util.utcnow())
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Exception in callback _TrackPointUTCTime" in caplog.text
+    assert "._raise_exception" in caplog.text
+    await hass.async_block_till_done(wait_background_tasks=True)

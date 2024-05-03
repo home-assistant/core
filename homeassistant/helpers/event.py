@@ -1436,12 +1436,18 @@ class _TrackPointUTCTime:
         """Initialize track job."""
         loop = self.hass.loop
         self._cancel_callback = loop.call_at(
-            loop.time() + self.expected_fire_timestamp - time.time(), self._run_action
+            loop.time() + self.expected_fire_timestamp - time.time(), self
         )
 
     @callback
-    def _run_action(self) -> None:
-        """Call the action."""
+    def __call__(self) -> None:
+        """Call the action.
+
+        We implement this as __call__ so when debug logging logs the object
+        it shows the name of the job. This is especially helpful when asyncio
+        debug logging is enabled as we can see the name of the job that is
+        being called that is blocking the event loop.
+        """
         # Depending on the available clock support (including timer hardware
         # and the OS kernel) it can happen that we fire a little bit too early
         # as measured by utcnow(). That is bad when callbacks have assumptions
@@ -1450,7 +1456,7 @@ class _TrackPointUTCTime:
         if (delta := (self.expected_fire_timestamp - time_tracker_timestamp())) > 0:
             _LOGGER.debug("Called %f seconds too early, rearming", delta)
             loop = self.hass.loop
-            self._cancel_callback = loop.call_at(loop.time() + delta, self._run_action)
+            self._cancel_callback = loop.call_at(loop.time() + delta, self)
             return
 
         self.hass.async_run_hass_job(self.job, self.utc_point_in_time)
