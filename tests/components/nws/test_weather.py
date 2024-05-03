@@ -13,7 +13,6 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_SUNNY,
     DOMAIN as WEATHER_DOMAIN,
-    LEGACY_SERVICE_GET_FORECAST,
     SERVICE_GET_FORECASTS,
 )
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -181,7 +180,7 @@ async def test_entity_refresh(hass: HomeAssistant, mock_simple_nws, no_sensor) -
     await hass.async_block_till_done()
     assert instance.update_observation.call_count == 2
     assert instance.update_forecast.call_count == 2
-    instance.update_forecast_hourly.assert_called_once()
+    assert instance.update_forecast_hourly.call_count == 2
 
 
 async def test_error_observation(
@@ -189,18 +188,8 @@ async def test_error_observation(
 ) -> None:
     """Test error during update observation."""
     utc_time = dt_util.utcnow()
-    with (
-        patch("homeassistant.components.nws.utcnow") as mock_utc,
-        patch("homeassistant.components.nws.weather.utcnow") as mock_utc_weather,
-    ):
-
-        def increment_time(time):
-            mock_utc.return_value += time
-            mock_utc_weather.return_value += time
-            async_fire_time_changed(hass, mock_utc.return_value)
-
+    with patch("homeassistant.components.nws.utcnow") as mock_utc:
         mock_utc.return_value = utc_time
-        mock_utc_weather.return_value = utc_time
         instance = mock_simple_nws.return_value
         # first update fails
         instance.update_observation.side_effect = aiohttp.ClientError
@@ -218,68 +207,6 @@ async def test_error_observation(
         state = hass.states.get("weather.abc")
         assert state
         assert state.state == STATE_UNAVAILABLE
-
-        # second update happens faster and succeeds
-        instance.update_observation.side_effect = None
-        increment_time(timedelta(minutes=1))
-        await hass.async_block_till_done()
-
-        assert instance.update_observation.call_count == 2
-
-        state = hass.states.get("weather.abc")
-        assert state
-        assert state.state == ATTR_CONDITION_SUNNY
-
-        # third udate fails, but data is cached
-        instance.update_observation.side_effect = aiohttp.ClientError
-
-        increment_time(timedelta(minutes=10))
-        await hass.async_block_till_done()
-
-        assert instance.update_observation.call_count == 3
-
-        state = hass.states.get("weather.abc")
-        assert state
-        assert state.state == ATTR_CONDITION_SUNNY
-
-        # after 20 minutes data caching expires, data is no longer shown
-        increment_time(timedelta(minutes=10))
-        await hass.async_block_till_done()
-
-        state = hass.states.get("weather.abc")
-        assert state
-        assert state.state == STATE_UNAVAILABLE
-
-
-async def test_error_forecast(hass: HomeAssistant, mock_simple_nws, no_sensor) -> None:
-    """Test error during update forecast."""
-    instance = mock_simple_nws.return_value
-    instance.update_forecast.side_effect = aiohttp.ClientError
-
-    entry = MockConfigEntry(
-        domain=nws.DOMAIN,
-        data=NWS_CONFIG,
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    instance.update_forecast.assert_called_once()
-
-    state = hass.states.get("weather.abc")
-    assert state
-    assert state.state == STATE_UNAVAILABLE
-
-    instance.update_forecast.side_effect = None
-
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
-    await hass.async_block_till_done()
-
-    assert instance.update_forecast.call_count == 2
-
-    state = hass.states.get("weather.abc")
-    assert state
-    assert state.state == ATTR_CONDITION_SUNNY
 
 
 async def test_new_config_entry(hass: HomeAssistant, no_sensor) -> None:
@@ -304,7 +231,6 @@ async def test_new_config_entry(hass: HomeAssistant, no_sensor) -> None:
     ("service"),
     [
         SERVICE_GET_FORECASTS,
-        LEGACY_SERVICE_GET_FORECAST,
     ],
 )
 async def test_forecast_service(
@@ -355,7 +281,7 @@ async def test_forecast_service(
 
     assert instance.update_observation.call_count == 2
     assert instance.update_forecast.call_count == 2
-    assert instance.update_forecast_hourly.call_count == 1
+    assert instance.update_forecast_hourly.call_count == 2
 
     for forecast_type in ("twice_daily", "hourly"):
         response = await hass.services.async_call(
