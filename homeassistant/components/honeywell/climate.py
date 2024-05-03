@@ -178,7 +178,7 @@ class HoneywellUSThermostat(ClimateEntity):
         self._away = False
         self._retry = 0
 
-        self._attr_unique_id = f"{device.deviceid}"
+        self._attr_unique_id = str(device.deviceid)
         # self._attr_unique_id = device.deviceid
 
         self._attr_device_info = DeviceInfo(
