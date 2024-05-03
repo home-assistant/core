@@ -31,7 +31,14 @@ class NAMDataUpdateCoordinator(DataUpdateCoordinator[NAMSensors]):
         unique_id: str | None,
     ) -> None:
         """Initialize."""
-        self._unique_id = unique_id
+        self.unique_id = unique_id
+        self.device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, cast(str, unique_id))},
+            name="Nettigo Air Monitor",
+            sw_version=nam.software_version,
+            manufacturer=MANUFACTURER,
+            configuration_url=f"http://{nam.host}/",
+        )
         self.nam = nam
 
         super().__init__(
@@ -49,19 +56,3 @@ class NAMDataUpdateCoordinator(DataUpdateCoordinator[NAMSensors]):
             raise UpdateFailed(error) from error
 
         return data
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique_id."""
-        return self._unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, cast(str, self._unique_id))},
-            name="Nettigo Air Monitor",
-            sw_version=self.nam.software_version,
-            manufacturer=MANUFACTURER,
-            configuration_url=f"http://{self.nam.host}/",
-        )
