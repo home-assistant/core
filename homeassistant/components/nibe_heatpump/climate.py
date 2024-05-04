@@ -112,12 +112,12 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
 
         self._coil_current = _get(climate.current)
         self._coil_setpoint_heat = _get(climate.setpoint_heat)
+        self._coil_setpoint_cool: None | Coil
         try:
             self._coil_setpoint_cool = _get(climate.setpoint_cool)
-            self._support_cooling = True
         except CoilNotFoundException:
+            self._coil_setpoint_cool = None
             self._attr_hvac_modes = [HVACMode.AUTO, HVACMode.HEAT]
-            self._support_cooling = False
         self._coil_prio = _get(unit.prio)
         self._coil_mixing_valve_state = _get(climate.mixing_valve_state)
         if climate.active_accessory is None:
@@ -152,7 +152,7 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
         self._attr_hvac_mode = mode
 
         setpoint_heat = _get_float(self._coil_setpoint_heat)
-        if self._support_cooling:
+        if self._coil_setpoint_cool:
             setpoint_cool = _get_float(self._coil_setpoint_cool)
         else:
             setpoint_cool = None
@@ -214,7 +214,7 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
                     self._coil_setpoint_heat, temperature
                 )
             elif hvac_mode == HVACMode.COOL:
-                if self._support_cooling:
+                if self._coil_setpoint_cool:
                     await coordinator.async_write_coil(
                         self._coil_setpoint_cool, temperature
                     )
@@ -231,7 +231,7 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
             await coordinator.async_write_coil(self._coil_setpoint_heat, temperature)
 
         if (
-            self._support_cooling
+            self._coil_setpoint_cool
             and (temperature := kwargs.get(ATTR_TARGET_TEMP_HIGH)) is not None
         ):
             await coordinator.async_write_coil(self._coil_setpoint_cool, temperature)
