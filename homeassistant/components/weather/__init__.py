@@ -202,6 +202,7 @@ class Forecast(TypedDict, total=False):
     native_dew_point: float | None
     uv_index: float | None
     is_daytime: bool | None  # Mandatory to use with forecast_twice_daily
+    extra: dict[str, Any]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
