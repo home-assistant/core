@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from brother import Brother, SnmpError
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -46,16 +46,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> 
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
+    loaded_entries = [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.state == ConfigEntryState.LOADED
+    ]
     # We only want to remove the SNMP engine when unloading the last config entry
-    if (
-        unload_ok
-        and len(
-            hass.config_entries.async_entries(
-                DOMAIN, include_ignore=False, include_disabled=False
-            )
-        )
-        == 1
-    ):
+    if unload_ok and len(loaded_entries) == 1:
         hass.data[DOMAIN].pop(SNMP)
 
     return unload_ok
