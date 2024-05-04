@@ -235,6 +235,7 @@ homeassistant.components.homeworks.*
 homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
 homeassistant.components.humidifier.*
+homeassistant.components.husqvarna_automower.*
 homeassistant.components.hydrawise.*
 homeassistant.components.hyperion.*
 homeassistant.components.ibeacon.*
@@ -243,6 +244,7 @@ homeassistant.components.image.*
 homeassistant.components.image_processing.*
 homeassistant.components.image_upload.*
 homeassistant.components.imap.*
+homeassistant.components.imgw_pib.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
 homeassistant.components.input_text.*

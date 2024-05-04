@@ -442,6 +442,7 @@ class OnkyoDevice(MediaPlayerEntity):
                 "output_color_schema": _tuple_get(values, 6),
                 "output_color_depth": _tuple_get(values, 7),
                 "picture_mode": _tuple_get(values, 8),
+                "dynamic_range": _tuple_get(values, 9),
             }
             self._attr_extra_state_attributes[ATTR_VIDEO_INFORMATION] = info
         else:

@@ -33,7 +33,7 @@ from evohomeasync2.schema.const import (
     SZ_TIMING_MODE,
     SZ_UNTIL,
 )
-import voluptuous as vol  # type: ignore[import-untyped]
+import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -462,7 +462,7 @@ class EvoBroker:
             self.client.access_token_expires  # type: ignore[arg-type]
         )
 
-        app_storage = {
+        app_storage: dict[str, Any] = {
             CONF_USERNAME: self.client.username,
             REFRESH_TOKEN: self.client.refresh_token,
             ACCESS_TOKEN: self.client.access_token,
@@ -470,11 +470,11 @@ class EvoBroker:
         }
 
         if self.client_v1:
-            app_storage[USER_DATA] = {  # type: ignore[assignment]
+            app_storage[USER_DATA] = {
                 SZ_SESSION_ID: self.client_v1.broker.session_id,
             }  # this is the schema for STORAGE_VER == 1
         else:
-            app_storage[USER_DATA] = {}  # type: ignore[assignment]
+            app_storage[USER_DATA] = {}
 
         await self._store.async_save(app_storage)
 
