@@ -83,9 +83,9 @@ async def async_setup_platform(
     db_url: str = resolve_db_url(hass, conf.get(CONF_DB_URL))
 
     if not isinstance(query_str, Template):
-        query_str = Template(query_str)
-
-    query_str.hass = hass
+        query_str = Template(query_str, hass=hass)
+    else:
+        query_str.hass = hass
 
     if value_template is not None:
         value_template.hass = hass
@@ -116,12 +116,11 @@ async def async_setup_entry(
 
     db_url: str = resolve_db_url(hass, entry.options.get(CONF_DB_URL))
     name: str = entry.options[CONF_NAME]
-    query_str: Template = Template(entry.options[CONF_QUERY])
+    query_str: Template = Template(entry.options[CONF_QUERY], hass=hass)
     template: str | None = entry.options.get(CONF_VALUE_TEMPLATE)
     column_name: str = entry.options[CONF_COLUMN_NAME]
 
     query_str.ensure_valid()
-    query_str.hass = hass
 
     value_template: Template | None = None
     if template is not None:
@@ -263,12 +262,12 @@ async def async_setup_sensor(
     if not ("LIMIT" in upper_query or "SELECT TOP" in upper_query):
         if "mssql" in db_url:
             query_str = Template(
-                re.sub(r"(?i)^\s*SELECT", "SELECT TOP 1", query_str.template)
+                re.sub(r"(?i)^\s*SELECT", "SELECT TOP 1", query_str.template), hass=hass
             )
         else:
-            query_str = Template(query_str.template.replace(";", "") + " LIMIT 1;")
-
-        query_str.hass = hass
+            query_str = Template(
+                query_str.template.replace(";", "") + " LIMIT 1;", hass=hass
+            )
 
     async_add_entities(
         [
@@ -343,7 +342,7 @@ class SQLSensor(ManualTriggerSensorEntity):
         self._use_database_executor = use_database_executor
         self._lambda_stmt = _generate_lambda_stmt(query.async_render())
 
-        _LOGGER.info("Executing statement: %s", self._lambda_stmt)
+        _LOGGER.debug("Executing statement: %s", self._lambda_stmt)
         if not yaml and (unique_id := trigger_entity_config.get(CONF_UNIQUE_ID)):
             self._attr_name = None
             self._attr_has_entity_name = True
