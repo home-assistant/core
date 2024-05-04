@@ -230,6 +230,7 @@ def test_async_validate_slots() -> None:
 def test_async_validate_slots_no_schema() -> None:
     """Test async_validate_slots of IntentHandler with no schema."""
     handler1 = MockIntentHandler(None)
+    assert handler1.effective_slot_schema == vol.Schema({})
     assert handler1.async_validate_slots({"name": {"value": "kitchen"}}) == {
         "name": {"value": "kitchen"}
     }
