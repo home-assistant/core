@@ -7,16 +7,15 @@ from typing import Any, cast
 from homeassistant import data_entry_flow
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from . import SystemMonitorConfigEntry
 
 
 class ProcessFixFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
-    def __init__(self, entry: SystemMonitorConfigEntry, processes: list[str]) -> None:
+    def __init__(self, entry: ConfigEntry, processes: list[str]) -> None:
         """Create flow."""
         super().__init__()
         self.entry = entry
