@@ -285,9 +285,9 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         raise ex
 
     async def _handle_async_setup(self) -> bool:
-        """Error handling for _asnyc_setup."""
+        """Error handling for _async_setup."""
         try:
-            await self._asnyc_setup()
+            await self._async_setup()
         except (
             TimeoutError,
             requests.exceptions.Timeout,
@@ -303,13 +303,11 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
         except NotImplementedError as err:
             self.last_exception = err
-            raise err
+            raise
 
         except Exception as err:  # pylint: disable=broad-except
             self.last_exception = err
-            self.logger.exception(
-                "Unexpected error fetching %s data: %s", self.name, err
-            )
+            self.logger.exception("Unexpected error fetching %s data", self.name)
         else:
             return True
         return False
