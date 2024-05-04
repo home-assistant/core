@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import Any
 
 from aiohttp import ClientResponseError
 from habitipy.aio import HabitipyAsync
@@ -22,8 +23,8 @@ _LOGGER = logging.getLogger(__name__)
 class HabiticaData:
     """Coordinator data class."""
 
-    user: dict
-    tasks: list
+    user: dict[str, Any]
+    tasks: list[dict]
 
 
 class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
