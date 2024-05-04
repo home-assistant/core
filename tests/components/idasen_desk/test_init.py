@@ -73,6 +73,30 @@ async def test_reconnect_on_bluetooth_callback(
         assert mock_desk_api.connect.call_count == 2
 
 
+async def test_ensure_connection_state(
+    hass: HomeAssistant, mock_desk_api: MagicMock
+) -> None:
+    """Test that the connection state is ensured."""
+    await init_integration(hass)
+
+    mock_desk_api.connect.reset_mock()
+    mock_desk_api.is_connected = False
+    mock_desk_api.trigger_update_callback(None)
+    await hass.async_block_till_done()
+    mock_desk_api.connect.assert_called_once()
+
+    await hass.services.async_call(
+        "button", "press", {"entity_id": "button.test_disconnect"}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    mock_desk_api.disconnect.reset_mock()
+    mock_desk_api.is_connected = True
+    mock_desk_api.trigger_update_callback(None)
+    await hass.async_block_till_done()
+    mock_desk_api.disconnect.assert_called_once()
+
+
 async def test_unload_entry(hass: HomeAssistant, mock_desk_api: MagicMock) -> None:
     """Test successful unload of entry."""
     entry = await init_integration(hass)

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from attr import dataclass
@@ -47,6 +48,7 @@ class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):  # pylint: disab
         self._address = address
         self._expected_connected = False
         self._connection_lost = False
+        self._disconnect_lock = asyncio.Lock()
 
         self.desk = Desk(self.async_set_updated_data)
 
@@ -57,7 +59,7 @@ class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):  # pylint: disab
             self.hass, self._address, connectable=True
         )
         if ble_device is None:
-            _LOGGER.warning("No BLEDevice for %s", self._address)
+            _LOGGER.debug("No BLEDevice for %s", self._address)
             return False
         self._expected_connected = True
         await self.desk.connect(ble_device)
@@ -74,15 +76,19 @@ class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):  # pylint: disab
         """Check if the expected connection state matches the current state and correct it if needed."""
         if self._expected_connected:
             if not self.desk.is_connected:
-                _LOGGER.warning("Desk disconnected. Reconnecting")
+                _LOGGER.debug("Desk disconnected. Reconnecting")
                 self._connection_lost = True
                 await self.async_connect()
             elif self._connection_lost:
                 _LOGGER.info("Reconnected to desk")
                 self._connection_lost = False
         elif self.desk.is_connected:
-            _LOGGER.warning("Desk is connected but should not be. Disconnecting")
-            await self.desk.disconnect()
+            if self._disconnect_lock.locked():
+                _LOGGER.debug("Already disconnecting")
+                return
+            async with self._disconnect_lock:
+                _LOGGER.debug("Desk is connected but should not be. Disconnecting")
+                await self.desk.disconnect()
 
     @callback
     def async_set_updated_data(self, data: int | None) -> None:
