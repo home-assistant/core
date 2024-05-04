@@ -1287,5 +1287,5 @@ async def test_unique_id(
         suggested_object_id=device.name,
     )
     await init_integration(hass, config_entry)
-    entity = entity_registry.async_get(f"climate.{device.name}")
-    assert entity.unique_id == str(device.deviceid)
+    entity_entry = entity_registry.async_get(f"climate.{device.name}")
+    assert entity_entry.unique_id == str(device.deviceid)
