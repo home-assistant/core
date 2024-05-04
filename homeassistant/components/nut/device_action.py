@@ -74,6 +74,5 @@ def _get_runtime_data_from_device_id(
     entry = hass.config_entries.async_get_entry(
         next(entry_id for entry_id in device.config_entries)
     )
-    if entry and isinstance(entry.runtime_data, NutRuntimeData):
-        return entry.runtime_data
-    return None
+    assert entry and isinstance(entry.runtime_data, NutRuntimeData)
+    return entry.runtime_data
