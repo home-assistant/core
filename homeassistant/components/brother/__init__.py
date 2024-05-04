@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> b
 
     entry.runtime_data = coordinator
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN] = {SNMP: snmp_engine}
+    hass.data.setdefault(DOMAIN, {SNMP: snmp_engine})
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
