@@ -2,7 +2,6 @@
 
 import asyncio
 import logging
-from typing import cast
 
 from aiohttp.client_exceptions import ClientConnectorError
 from nettigo_air_monitor import (
@@ -28,12 +27,12 @@ class NAMDataUpdateCoordinator(DataUpdateCoordinator[NAMSensors]):
         self,
         hass: HomeAssistant,
         nam: NettigoAirMonitor,
-        unique_id: str | None,
+        unique_id: str,
     ) -> None:
         """Initialize."""
         self.unique_id = unique_id
         self.device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, cast(str, unique_id))},
+            connections={(CONNECTION_NETWORK_MAC, unique_id)},
             name="Nettigo Air Monitor",
             sw_version=nam.software_version,
             manufacturer=MANUFACTURER,
