@@ -46,7 +46,7 @@ class NutRuntimeData:
     coordinator: DataUpdateCoordinator
     data: PyNUTData
     unique_id: str
-    user_available_commands: set
+    user_available_commands: set[str]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
