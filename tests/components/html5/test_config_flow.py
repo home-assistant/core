@@ -38,7 +38,7 @@ async def test_step_user_success(hass: HomeAssistant) -> None:
 
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["data"] == {
             ATTR_VAPID_PRV_KEY: MOCK_CONF[ATTR_VAPID_PRV_KEY],
             ATTR_VAPID_PUB_KEY: MOCK_CONF_PUB_KEY,
