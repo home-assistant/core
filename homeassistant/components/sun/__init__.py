@@ -42,7 +42,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: SunConfigEntry) -> bool:
     """Set up from a config entry."""
-    entry.runtime_data = Sun(hass)
+    entry.runtime_data = sun = Sun(hass)
+    entry.async_on_unload(sun.remove_listeners)
     await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
     return True
 
@@ -53,6 +54,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: SunConfigEntry) -> bool
         entry, [Platform.SENSOR]
     ):
         sun = entry.runtime_data
-        sun.remove_listeners()
         hass.states.async_remove(sun.entity_id)
     return unload_ok
