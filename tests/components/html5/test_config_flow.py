@@ -11,7 +11,12 @@ from homeassistant.components.html5.const import (
     ATTR_VAPID_PUB_KEY,
     DOMAIN,
 )
+from homeassistant.components.html5.issues import (
+    FAILED_IMPORT_TRANSLATION_KEY,
+    SUCCESSFUL_IMPORT_TRANSLATION_KEY,
+)
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.issue_registry as ir
 
 MOCK_CONF = {
     ATTR_VAPID_EMAIL: "test@example.com",
@@ -109,7 +114,10 @@ async def test_step_user_form_invalid_key(
         assert mock_setup_entry.call_count == 0
 
 
-async def test_step_import_good(hass: HomeAssistant) -> None:
+async def test_step_import_good(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
     """Test valid import input."""
 
     with (
@@ -117,9 +125,6 @@ async def test_step_import_good(hass: HomeAssistant) -> None:
             "homeassistant.components.html5.async_setup_entry",
             return_value=True,
         ) as mock_setup_entry,
-        patch(
-            "homeassistant.components.html5.config_flow.async_create_html5_issue"
-        ) as mock_async_create_html5_issue,
     ):
         conf = MOCK_CONF.copy()
         conf[ATTR_VAPID_PUB_KEY] = MOCK_CONF_PUB_KEY
@@ -139,8 +144,10 @@ async def test_step_import_good(hass: HomeAssistant) -> None:
         }
 
         assert mock_setup_entry.call_count == 1
-        assert mock_async_create_html5_issue.call_count == 1
-        assert mock_async_create_html5_issue.call_args_list[0].args[1] is True
+        assert len(issue_registry.issues) == 1
+        issue = issue_registry.async_get_issue(DOMAIN, f"deprecated_yaml_{DOMAIN}")
+        assert issue
+        assert issue.translation_key == SUCCESSFUL_IMPORT_TRANSLATION_KEY
 
 
 @pytest.mark.parametrize(
@@ -150,7 +157,9 @@ async def test_step_import_good(hass: HomeAssistant) -> None:
         (ATTR_VAPID_PRV_KEY, "invalid"),
     ],
 )
-async def test_step_import_bad(hass: HomeAssistant, key: str, value: str) -> None:
+async def test_step_import_bad(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, key: str, value: str
+) -> None:
     """Test invalid import input."""
 
     with (
@@ -158,9 +167,6 @@ async def test_step_import_bad(hass: HomeAssistant, key: str, value: str) -> Non
             "homeassistant.components.html5.async_setup_entry",
             return_value=True,
         ) as mock_setup_entry,
-        patch(
-            "homeassistant.components.html5.config_flow.async_create_html5_issue"
-        ) as mock_async_create_html5_issue,
     ):
         bad_conf = MOCK_CONF.copy()
         bad_conf[key] = value
@@ -173,5 +179,8 @@ async def test_step_import_bad(hass: HomeAssistant, key: str, value: str) -> Non
 
         assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert mock_setup_entry.call_count == 0
-        assert mock_async_create_html5_issue.call_count == 1
-        assert mock_async_create_html5_issue.call_args_list[0].args[1] is False
+
+        assert len(issue_registry.issues) == 1
+        issue = issue_registry.async_get_issue(DOMAIN, f"deprecated_yaml_{DOMAIN}")
+        assert issue
+        assert issue.translation_key == FAILED_IMPORT_TRANSLATION_KEY
