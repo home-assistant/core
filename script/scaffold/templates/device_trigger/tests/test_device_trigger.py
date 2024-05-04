@@ -1,4 +1,5 @@
 """The tests for NEW_NAME device triggers."""
+
 import pytest
 from pytest_unordered import unordered
 

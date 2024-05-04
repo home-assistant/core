@@ -1,4 +1,5 @@
 """Switch platform for Advantage Air integration."""
+
 from typing import Any
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
@@ -33,9 +34,11 @@ async def async_setup_entry(
             if ADVANTAGE_AIR_AUTOFAN_ENABLED in ac_device["info"]:
                 entities.append(AdvantageAirMyFan(instance, ac_key))
     if things := instance.coordinator.data.get("myThings"):
-        for thing in things["things"].values():
-            if thing["channelDipState"] == 8:  # 8 = Other relay
-                entities.append(AdvantageAirRelay(instance, thing))
+        entities.extend(
+            AdvantageAirRelay(instance, thing)
+            for thing in things["things"].values()
+            if thing["channelDipState"] == 8  # 8 = Other relay
+        )
     async_add_entities(entities)
 
 

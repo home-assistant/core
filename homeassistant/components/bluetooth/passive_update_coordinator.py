@@ -1,7 +1,10 @@
 """Passive update coordinator for the Bluetooth integration."""
+
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
+
+from typing_extensions import TypeVar
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import (
@@ -20,6 +23,7 @@ if TYPE_CHECKING:
 _PassiveBluetoothDataUpdateCoordinatorT = TypeVar(
     "_PassiveBluetoothDataUpdateCoordinatorT",
     bound="PassiveBluetoothDataUpdateCoordinator",
+    default="PassiveBluetoothDataUpdateCoordinator",
 )
 
 

@@ -20,6 +20,16 @@ notify:
       selector:
         object:
 
+send_message:
+  target:
+    entity:
+      domain: notify
+  fields:
+    message:
+      required: true
+      selector:
+        text:
+
 persistent_notification:
   fields:
     message:

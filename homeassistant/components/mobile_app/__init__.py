@@ -1,4 +1,5 @@
 """Integrates Native Apps to Home Assistant."""
+
 from contextlib import suppress
 from typing import Any
 
@@ -18,7 +19,16 @@ from homeassistant.helpers import (
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
-from . import websocket_api
+# Pre-import the platforms so they get loaded when the integration
+# is imported as they are almost always going to be loaded and its
+# cheaper to import them all at once.
+from . import (  # noqa: F401
+    binary_sensor as binary_sensor_pre_import,
+    device_tracker as device_tracker_pre_import,
+    notify as notify_pre_import,
+    sensor as sensor_pre_import,
+    websocket_api,
+)
 from .const import (
     ATTR_DEVICE_NAME,
     ATTR_MANUFACTURER,
@@ -72,7 +82,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
     hass.async_create_task(
-        discovery.async_load_platform(hass, Platform.NOTIFY, DOMAIN, {}, config)
+        discovery.async_load_platform(hass, Platform.NOTIFY, DOMAIN, {}, config),
+        eager_start=True,
     )
 
     websocket_api.async_setup_commands(hass)
@@ -150,5 +161,5 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await store.async_save(savable_state(hass))
 
     if CONF_CLOUDHOOK_URL in entry.data:
-        with suppress(cloud.CloudNotAvailable):
+        with suppress(cloud.CloudNotAvailable, ValueError):
             await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])

@@ -1,4 +1,5 @@
 """The Flexit Nordic (BACnet) integration."""
+
 import asyncio.exceptions
 from typing import Any
 
@@ -15,6 +16,7 @@ from homeassistant.components.climate import (
     PRESET_HOME,
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -37,12 +39,12 @@ from .entity import FlexitEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Flexit Nordic unit."""
     coordinator: FlexitCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_devices([FlexitClimateEntity(coordinator)])
+    async_add_entities([FlexitClimateEntity(coordinator)])
 
 
 class FlexitClimateEntity(FlexitEntity, ClimateEntity):
@@ -82,6 +84,13 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
     async def async_update(self) -> None:
         """Refresh unit state."""
         await self.device.update()
+
+    @property
+    def hvac_action(self) -> HVACAction | None:
+        """Return current HVAC action."""
+        if self.device.electric_heater:
+            return HVACAction.HEATING
+        return HVACAction.FAN
 
     @property
     def current_temperature(self) -> float:

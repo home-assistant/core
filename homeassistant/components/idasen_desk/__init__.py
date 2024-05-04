@@ -1,4 +1,5 @@
 """The IKEA Idasen Desk integration."""
+
 from __future__ import annotations
 
 import logging
@@ -74,7 +75,7 @@ class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):  # pylint: disab
             if not self.desk.is_connected:
                 _LOGGER.debug("Desk disconnected. Reconnecting")
                 self._connection_lost = True
-                self.hass.async_create_task(self.async_connect())
+                self.hass.async_create_task(self.async_connect(), eager_start=False)
             elif self._connection_lost:
                 _LOGGER.info("Reconnected to desk")
                 self._connection_lost = False

@@ -1,4 +1,5 @@
 """Config flow for MQTT."""
+
 from __future__ import annotations
 
 from collections import OrderedDict
@@ -14,7 +15,12 @@ import voluptuous as vol
 
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.components.hassio import HassioServiceInfo
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_DISCOVERY,
@@ -26,7 +32,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.selector import (
@@ -171,7 +176,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -180,7 +185,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_broker(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm the setup."""
         errors: dict[str, str] = {}
         fields: OrderedDict[Any, Any] = OrderedDict()
@@ -211,7 +216,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="broker", data_schema=vol.Schema(fields), errors=errors
         )
 
-    async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
+    async def async_step_hassio(
+        self, discovery_info: HassioServiceInfo
+    ) -> ConfigFlowResult:
         """Receive a Hass.io discovery."""
         await self._async_handle_discovery_without_unique_id()
 
@@ -221,7 +228,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_hassio_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm a Hass.io discovery."""
         errors: dict[str, str] = {}
         if TYPE_CHECKING:
@@ -265,13 +272,13 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         self.broker_config: dict[str, str | int] = {}
         self.options = config_entry.options
 
-    async def async_step_init(self, user_input: None = None) -> FlowResult:
+    async def async_step_init(self, user_input: None = None) -> ConfigFlowResult:
         """Manage the MQTT options."""
         return await self.async_step_broker()
 
     async def async_step_broker(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the MQTT broker configuration."""
         errors: dict[str, str] = {}
         fields: OrderedDict[Any, Any] = OrderedDict()
@@ -304,7 +311,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
 
     async def async_step_options(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the MQTT options."""
         errors = {}
         current_config = self.config_entry.data
@@ -391,9 +398,9 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         # build form
         fields: OrderedDict[vol.Marker, Any] = OrderedDict()
         fields[vol.Optional(CONF_DISCOVERY, default=discovery)] = BOOLEAN_SELECTOR
-        fields[
-            vol.Optional(CONF_DISCOVERY_PREFIX, default=discovery_prefix)
-        ] = PUBLISH_TOPIC_SELECTOR
+        fields[vol.Optional(CONF_DISCOVERY_PREFIX, default=discovery_prefix)] = (
+            PUBLISH_TOPIC_SELECTOR
+        )
 
         # Birth message is disabled if CONF_BIRTH_MESSAGE = {}
         fields[
@@ -414,9 +421,9 @@ class MQTTOptionsFlowHandler(OptionsFlow):
             )
         ] = TEXT_SELECTOR
         fields[vol.Optional("birth_qos", default=birth[ATTR_QOS])] = QOS_SELECTOR
-        fields[
-            vol.Optional("birth_retain", default=birth[ATTR_RETAIN])
-        ] = BOOLEAN_SELECTOR
+        fields[vol.Optional("birth_retain", default=birth[ATTR_RETAIN])] = (
+            BOOLEAN_SELECTOR
+        )
 
         # Will message is disabled if CONF_WILL_MESSAGE = {}
         fields[
@@ -437,9 +444,9 @@ class MQTTOptionsFlowHandler(OptionsFlow):
             )
         ] = TEXT_SELECTOR
         fields[vol.Optional("will_qos", default=will[ATTR_QOS])] = QOS_SELECTOR
-        fields[
-            vol.Optional("will_retain", default=will[ATTR_RETAIN])
-        ] = BOOLEAN_SELECTOR
+        fields[vol.Optional("will_retain", default=will[ATTR_RETAIN])] = (
+            BOOLEAN_SELECTOR
+        )
 
         return self.async_show_form(
             step_id="options",
@@ -565,7 +572,7 @@ async def async_get_broker_settings(
             )
             schema = vol.Schema({cv.string: cv.template})
             schema(validated_user_input[CONF_WS_HEADERS])
-        except JSON_DECODE_EXCEPTIONS + (vol.MultipleInvalid,):
+        except (*JSON_DECODE_EXCEPTIONS, vol.MultipleInvalid):
             errors["base"] = "bad_ws_headers"
             return False
         return True

@@ -1,4 +1,5 @@
 """Config flow for the SolarEdge platform."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -7,16 +8,15 @@ from requests.exceptions import ConnectTimeout, HTTPError
 import solaredge
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.util import slugify
 
 from .const import CONF_SITE_ID, DEFAULT_NAME, DOMAIN
 
 
-class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
@@ -56,7 +56,7 @@ class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Step when user initializes a integration."""
         self._errors = {}
         if user_input is not None:

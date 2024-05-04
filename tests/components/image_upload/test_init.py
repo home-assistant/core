@@ -1,4 +1,5 @@
 """Test that we can upload images."""
+
 import pathlib
 import tempfile
 from unittest.mock import patch
@@ -26,8 +27,9 @@ async def test_upload_image(
     now = dt_util.utcnow()
     freezer.move_to(now)
 
-    with tempfile.TemporaryDirectory() as tempdir, patch.object(
-        hass.config, "path", return_value=tempdir
+    with (
+        tempfile.TemporaryDirectory() as tempdir,
+        patch.object(hass.config, "path", return_value=tempdir),
     ):
         assert await async_setup_component(hass, "image_upload", {})
         ws_client: ClientWebSocketResponse = await hass_ws_client()

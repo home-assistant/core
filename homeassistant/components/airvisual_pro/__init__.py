@@ -1,4 +1,5 @@
 """The AirVisual Pro integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -53,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await node.async_connect()
     except NodeProError as err:
-        raise ConfigEntryNotReady() from err
+        raise ConfigEntryNotReady from err
 
     reload_task: asyncio.Task | None = None
 

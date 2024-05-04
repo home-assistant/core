@@ -1,4 +1,5 @@
 """The tests for the Everything but the Kitchen Sink integration."""
+
 import datetime
 from http import HTTPStatus
 from unittest.mock import ANY
@@ -205,7 +206,7 @@ async def test_issues_created(
                 "learn_more_url": None,
                 "severity": "error",
                 "translation_key": "config_entry_reauth",
-                "translation_placeholders": None,
+                "translation_placeholders": {"name": "Kitchen Sink"},
                 "ignored": False,
             },
         ]
@@ -244,9 +245,7 @@ async def test_issues_created(
         "description_placeholders": None,
         "flow_id": flow_id,
         "handler": DOMAIN,
-        "minor_version": 1,
         "type": "create_entry",
-        "version": 1,
     }
 
     await ws_client.send_json({"id": 4, "type": "repairs/list_issues"})
@@ -322,7 +321,7 @@ async def test_issues_created(
                 "learn_more_url": None,
                 "severity": "error",
                 "translation_key": "config_entry_reauth",
-                "translation_placeholders": None,
+                "translation_placeholders": {"name": "Kitchen Sink"},
                 "ignored": False,
             },
         ]

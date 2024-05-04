@@ -1,15 +1,18 @@
 """Support for Aqualink Thermostats."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any
 
 from iaqualink.device import AqualinkThermostat
+from iaqualink.systems.iaqua.device import AqualinkState
 
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -32,10 +35,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up discovered switches."""
-    devs = []
-    for dev in hass.data[AQUALINK_DOMAIN][CLIMATE_DOMAIN]:
-        devs.append(HassAqualinkThermostat(dev))
-    async_add_entities(devs, True)
+    async_add_entities(
+        (
+            HassAqualinkThermostat(dev)
+            for dev in hass.data[AQUALINK_DOMAIN][CLIMATE_DOMAIN]
+        ),
+        True,
+    )
 
 
 class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
@@ -77,6 +83,16 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
             await await_or_reraise(self.dev.turn_off())
         else:
             _LOGGER.warning("Unknown operation mode: %s", hvac_mode)
+
+    @property
+    def hvac_action(self) -> HVACAction:
+        """Return the current HVAC action."""
+        state = AqualinkState(self.dev._heater.state)
+        if state == AqualinkState.ON:
+            return HVACAction.HEATING
+        if state == AqualinkState.ENABLED:
+            return HVACAction.IDLE
+        return HVACAction.OFF
 
     @property
     def target_temperature(self) -> float:

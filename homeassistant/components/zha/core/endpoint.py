@@ -1,4 +1,5 @@
 """Representation of a Zigbee endpoint for zha."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,8 +7,6 @@ from collections.abc import Awaitable, Callable
 import functools
 import logging
 from typing import TYPE_CHECKING, Any, Final, TypeVar
-
-from zigpy.typing import EndpointType as ZigpyEndpointType
 
 from homeassistant.const import Platform
 from homeassistant.core import callback
@@ -19,6 +18,8 @@ from .cluster_handlers import ClusterHandler
 from .helpers import get_zha_data
 
 if TYPE_CHECKING:
+    from zigpy import Endpoint as ZigpyEndpoint
+
     from .cluster_handlers import ClientClusterHandler
     from .device import ZHADevice
 
@@ -34,11 +35,11 @@ CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)
 class Endpoint:
     """Endpoint for a zha device."""
 
-    def __init__(self, zigpy_endpoint: ZigpyEndpointType, device: ZHADevice) -> None:
+    def __init__(self, zigpy_endpoint: ZigpyEndpoint, device: ZHADevice) -> None:
         """Initialize instance."""
         assert zigpy_endpoint is not None
         assert device is not None
-        self._zigpy_endpoint: ZigpyEndpointType = zigpy_endpoint
+        self._zigpy_endpoint: ZigpyEndpoint = zigpy_endpoint
         self._device: ZHADevice = device
         self._all_cluster_handlers: dict[str, ClusterHandler] = {}
         self._claimed_cluster_handlers: dict[str, ClusterHandler] = {}
@@ -66,7 +67,7 @@ class Endpoint:
         return self._client_cluster_handlers
 
     @property
-    def zigpy_endpoint(self) -> ZigpyEndpointType:
+    def zigpy_endpoint(self) -> ZigpyEndpoint:
         """Return endpoint of zigpy device."""
         return self._zigpy_endpoint
 
@@ -104,7 +105,7 @@ class Endpoint:
         )
 
     @classmethod
-    def new(cls, zigpy_endpoint: ZigpyEndpointType, device: ZHADevice) -> Endpoint:
+    def new(cls, zigpy_endpoint: ZigpyEndpoint, device: ZHADevice) -> Endpoint:
         """Create new endpoint and populate cluster handlers."""
         endpoint = cls(zigpy_endpoint, device)
         endpoint.add_all_cluster_handlers()
@@ -197,7 +198,7 @@ class Endpoint:
             gather = functools.partial(gather_with_limited_concurrency, max_concurrency)
 
         results = await gather(*tasks, return_exceptions=True)
-        for cluster_handler, outcome in zip(cluster_handlers, results):
+        for cluster_handler, outcome in zip(cluster_handlers, results, strict=False):
             if isinstance(outcome, Exception):
                 cluster_handler.debug(
                     "'%s' stage failed: %s", func_name, str(outcome), exc_info=outcome
@@ -211,6 +212,7 @@ class Endpoint:
         entity_class: CALLABLE_T,
         unique_id: str,
         cluster_handlers: list[ClusterHandler],
+        **kwargs: Any,
     ) -> None:
         """Create a new entity."""
         from .device import DeviceStatus  # pylint: disable=import-outside-toplevel
@@ -220,7 +222,7 @@ class Endpoint:
 
         zha_data = get_zha_data(self.device.hass)
         zha_data.platforms[platform].append(
-            (entity_class, (unique_id, self.device, cluster_handlers))
+            (entity_class, (unique_id, self.device, cluster_handlers), kwargs or {})
         )
 
     @callback

@@ -1,4 +1,5 @@
 """Common code for GogoGate2 component."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Mapping

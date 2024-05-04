@@ -1,4 +1,5 @@
 """Support for August buttons."""
+
 from yalexs.lock import Lock
 
 from homeassistant.components.button import ButtonEntity

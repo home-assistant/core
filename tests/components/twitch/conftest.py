@@ -1,4 +1,5 @@
 """Configure tests for the Twitch integration."""
+
 from collections.abc import Awaitable, Callable, Generator
 import time
 from unittest.mock import AsyncMock, patch
@@ -100,11 +101,14 @@ def twitch_mock() -> TwitchMock:
 @pytest.fixture(name="twitch")
 def mock_twitch(twitch_mock: TwitchMock):
     """Mock Twitch."""
-    with patch(
-        "homeassistant.components.twitch.Twitch",
-        return_value=twitch_mock,
-    ), patch(
-        "homeassistant.components.twitch.config_flow.Twitch",
-        return_value=twitch_mock,
+    with (
+        patch(
+            "homeassistant.components.twitch.Twitch",
+            return_value=twitch_mock,
+        ),
+        patch(
+            "homeassistant.components.twitch.config_flow.Twitch",
+            return_value=twitch_mock,
+        ),
     ):
         yield twitch_mock

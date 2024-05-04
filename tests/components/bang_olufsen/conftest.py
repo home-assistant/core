@@ -1,5 +1,6 @@
 """Test fixtures for bang_olufsen."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from mozart_api.models import BeolinkPeer
@@ -18,25 +19,6 @@ from .const import (
 from tests.common import MockConfigEntry
 
 
-class MockMozartClient:
-    """Class for mocking MozartClient objects and methods."""
-
-    async def __aenter__(self):
-        """Mock async context entry."""
-
-    async def __aexit__(self, exc_type, exc, tb):
-        """Mock async context exit."""
-
-    # API call results
-    get_beolink_self_result = BeolinkPeer(
-        friendly_name=TEST_FRIENDLY_NAME, jid=TEST_JID_1
-    )
-
-    # API endpoints
-    get_beolink_self = AsyncMock()
-    get_beolink_self.return_value = get_beolink_self_result
-
-
 @pytest.fixture
 def mock_config_entry():
     """Mock config entry."""
@@ -49,16 +31,24 @@ def mock_config_entry():
 
 
 @pytest.fixture
-def mock_client():
+def mock_mozart_client() -> Generator[AsyncMock, None, None]:
     """Mock MozartClient."""
 
-    client = MockMozartClient()
-
-    with patch("mozart_api.mozart_client.MozartClient", return_value=client):
+    with (
+        patch(
+            "homeassistant.components.bang_olufsen.MozartClient", autospec=True
+        ) as mock_client,
+        patch(
+            "homeassistant.components.bang_olufsen.config_flow.MozartClient",
+            new=mock_client,
+        ),
+    ):
+        client = mock_client.return_value
+        client.get_beolink_self = AsyncMock()
+        client.get_beolink_self.return_value = BeolinkPeer(
+            friendly_name=TEST_FRIENDLY_NAME, jid=TEST_JID_1
+        )
         yield client
-
-    # Reset mocked API call counts and side effects
-    client.get_beolink_self.reset_mock(side_effect=True)
 
 
 @pytest.fixture

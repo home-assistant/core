@@ -1,4 +1,5 @@
 """Tests for Shelly binary sensor platform."""
+
 from unittest.mock import Mock
 
 from aioshelly.const import MODEL_MOTION
@@ -143,7 +144,7 @@ async def test_block_sleeping_binary_sensor(
     assert hass.states.get(entity_id) is None
 
     # Make device online
-    mock_block_device.mock_update()
+    mock_block_device.mock_online()
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -179,7 +180,7 @@ async def test_block_restored_sleeping_binary_sensor(
 
     # Make device online
     monkeypatch.setattr(mock_block_device, "initialized", True)
-    mock_block_device.mock_update()
+    mock_block_device.mock_online()
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -205,7 +206,7 @@ async def test_block_restored_sleeping_binary_sensor_no_last_state(
 
     # Make device online
     monkeypatch.setattr(mock_block_device, "initialized", True)
-    mock_block_device.mock_update()
+    mock_block_device.mock_online()
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -262,6 +263,7 @@ async def test_rpc_sleeping_binary_sensor(
 ) -> None:
     """Test RPC online sleeping binary sensor."""
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_cloud"
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     config_entry = await init_integration(hass, 2, sleep_period=1000)
 
     # Sensor should be created when device is online
@@ -272,7 +274,7 @@ async def test_rpc_sleeping_binary_sensor(
     )
 
     # Make device online
-    mock_rpc_device.mock_update()
+    mock_rpc_device.mock_online()
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -343,6 +345,10 @@ async def test_rpc_restored_sleeping_binary_sensor_no_last_state(
 
     # Make device online
     monkeypatch.setattr(mock_rpc_device, "initialized", True)
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done()
+
+    # Mock update
     mock_rpc_device.mock_update()
     await hass.async_block_till_done()
 

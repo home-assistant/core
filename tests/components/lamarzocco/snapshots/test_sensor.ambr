@@ -18,6 +18,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -46,6 +48,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.gs01234_current_coffee_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '93',
   })
@@ -69,6 +72,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -97,6 +102,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.gs01234_current_steam_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '113',
   })
@@ -120,6 +126,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -145,6 +153,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.gs01234_shot_timer',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -168,6 +177,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -192,6 +203,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.gs01234_total_coffees_made',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '13',
   })
@@ -215,6 +227,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -239,6 +253,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.gs01234_total_flushes_made',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '69',
   })

@@ -1,4 +1,5 @@
 """The init tests for the nexia platform."""
+
 import aiohttp
 
 from homeassistant.components.nexia.const import DOMAIN
@@ -16,7 +17,7 @@ from tests.typing import WebSocketGenerator
 async def test_setup_retry_client_os_error(hass: HomeAssistant) -> None:
     """Verify we retry setup on aiohttp.ClientOSError."""
     config_entry = await async_init_integration(hass, exception=aiohttp.ClientOSError)
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def remove_device(ws_client, device_id, config_entry_id):

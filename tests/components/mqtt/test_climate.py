@@ -1,4 +1,5 @@
 """The tests for the mqtt climate component."""
+
 import copy
 import json
 from typing import Any
@@ -29,8 +30,9 @@ from homeassistant.components.climate import (
 from homeassistant.components.mqtt.climate import (
     DEFAULT_INITIAL_TEMPERATURE,
     MQTT_CLIMATE_ATTRIBUTES_BLOCKED,
+    VALUE_TEMPLATE_KEYS,
 )
-from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -97,13 +99,6 @@ DEFAULT_CONFIG = {
 }
 
 
-@pytest.fixture(autouse=True)
-def climate_platform_only():
-    """Only setup the climate platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.CLIMATE]):
-        yield
-
-
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_setup_params(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
@@ -151,74 +146,6 @@ async def test_preset_none_in_preset_modes(
     """Test the preset mode payload reset configuration."""
     assert await mqtt_mock_entry()
     assert "preset_modes must not include preset mode 'none'" in caplog.text
-
-
-@pytest.mark.parametrize(
-    ("hass_config", "parameter"),
-    [
-        (
-            help_custom_config(
-                climate.DOMAIN,
-                DEFAULT_CONFIG,
-                ({"away_mode_command_topic": "away-mode-command-topic"},),
-            ),
-            "away_mode_command_topic",
-        ),
-        (
-            help_custom_config(
-                climate.DOMAIN,
-                DEFAULT_CONFIG,
-                ({"away_mode_state_topic": "away-mode-state-topic"},),
-            ),
-            "away_mode_state_topic",
-        ),
-        (
-            help_custom_config(
-                climate.DOMAIN,
-                DEFAULT_CONFIG,
-                ({"away_mode_state_template": "{{ value_json }}"},),
-            ),
-            "away_mode_state_template",
-        ),
-        (
-            help_custom_config(
-                climate.DOMAIN,
-                DEFAULT_CONFIG,
-                ({"hold_mode_command_topic": "hold-mode-command-topic"},),
-            ),
-            "hold_mode_command_topic",
-        ),
-        (
-            help_custom_config(
-                climate.DOMAIN,
-                DEFAULT_CONFIG,
-                ({"hold_mode_command_template": "hold-mode-command-template"},),
-            ),
-            "hold_mode_command_template",
-        ),
-        (
-            help_custom_config(
-                climate.DOMAIN,
-                DEFAULT_CONFIG,
-                ({"hold_mode_state_topic": "hold-mode-state-topic"},),
-            ),
-            "hold_mode_state_topic",
-        ),
-        (
-            help_custom_config(
-                climate.DOMAIN,
-                DEFAULT_CONFIG,
-                ({"hold_mode_state_template": "{{ value_json }}"},),
-            ),
-            "hold_mode_state_template",
-        ),
-    ],
-)
-async def test_preset_modes_deprecation_guard(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, parameter: str
-) -> None:
-    """Test the configuration for invalid legacy parameters."""
-    assert f"[{parameter}] is an invalid option for [mqtt]. Check: mqtt->mqtt->climate->0->{parameter}"
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -503,10 +430,10 @@ async def test_turn_on_and_off_without_power_command(
     assert state.state == "cool"
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_turn_off(hass, ENTITY_CLIMATE)
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert climate_off is None or state.state == climate_off
     if climate_off:
+        await common.async_turn_off(hass, ENTITY_CLIMATE)
+        state = hass.states.get(ENTITY_CLIMATE)
+        assert climate_off is None or state.state == climate_off
         assert state.state == "off"
         mqtt_mock.async_publish.assert_has_calls([call("mode-topic", "off", 0, False)])
     else:
@@ -2514,3 +2441,36 @@ async def test_skipped_async_ha_write_state(
     """Test a write state command is only called when there is change."""
     await mqtt_mock_entry()
     await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            climate.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    value_template.replace("_value", "_state").replace(
+                        "_template", "_topic"
+                    ): "test-topic",
+                    value_template: "{{ value_json.some_var * 1 }}",
+                },
+            ),
+        )
+        for value_template in VALUE_TEMPLATE_KEYS
+    ],
+    ids=VALUE_TEMPLATE_KEYS,
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
+    )

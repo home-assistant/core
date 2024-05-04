@@ -1,14 +1,15 @@
 """Test dispatcher helpers."""
+
 from functools import partial
 
 import pytest
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
-    SignalType,
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.util.signal_type import SignalType, SignalTypeFormat
 
 
 async def test_simple_function(hass: HomeAssistant) -> None:
@@ -55,6 +56,27 @@ async def test_signal_type(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert calls == [("Hello", 2), ("World", 3), ("x", 4)]
+
+
+async def test_signal_type_format(hass: HomeAssistant) -> None:
+    """Test dispatcher with SignalType and format."""
+    signal: SignalTypeFormat[str, int] = SignalTypeFormat("test-{}")
+    calls: list[tuple[str, int]] = []
+
+    def test_funct(data1: str, data2: int) -> None:
+        calls.append((data1, data2))
+
+    async_dispatcher_connect(hass, signal.format("unique-id"), test_funct)
+    async_dispatcher_send(hass, signal.format("unique-id"), "Hello", 2)
+    await hass.async_block_till_done()
+
+    assert calls == [("Hello", 2)]
+
+    # Test compatibility with string keys
+    async_dispatcher_send(hass, "test-{}".format("unique-id"), "x", 4)
+    await hass.async_block_till_done()
+
+    assert calls == [("Hello", 2), ("x", 4)]
 
 
 async def test_simple_function_unsub(hass: HomeAssistant) -> None:

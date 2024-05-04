@@ -1,4 +1,5 @@
 """Switch platform for Sensibo integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -24,9 +25,9 @@ from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
-class DeviceBaseEntityDescriptionMixin:
-    """Mixin for required Sensibo Device description keys."""
+@dataclass(frozen=True, kw_only=True)
+class SensiboDeviceSwitchEntityDescription(SwitchEntityDescription):
+    """Describes Sensibo Switch entity."""
 
     value_fn: Callable[[SensiboDevice], bool | None]
     extra_fn: Callable[[SensiboDevice], dict[str, str | bool | None]] | None
@@ -35,19 +36,11 @@ class DeviceBaseEntityDescriptionMixin:
     data_key: str
 
 
-@dataclass(frozen=True)
-class SensiboDeviceSwitchEntityDescription(
-    SwitchEntityDescription, DeviceBaseEntityDescriptionMixin
-):
-    """Describes Sensibo Switch entity."""
-
-
 DEVICE_SWITCH_TYPES: tuple[SensiboDeviceSwitchEntityDescription, ...] = (
     SensiboDeviceSwitchEntityDescription(
         key="timer_on_switch",
         translation_key="timer_on_switch",
         device_class=SwitchDeviceClass.SWITCH,
-        icon="mdi:timer",
         value_fn=lambda data: data.timer_on,
         extra_fn=lambda data: {"id": data.timer_id, "turn_on": data.timer_state_on},
         command_on="async_turn_on_timer",
@@ -58,7 +51,6 @@ DEVICE_SWITCH_TYPES: tuple[SensiboDeviceSwitchEntityDescription, ...] = (
         key="climate_react_switch",
         translation_key="climate_react_switch",
         device_class=SwitchDeviceClass.SWITCH,
-        icon="mdi:wizard-hat",
         value_fn=lambda data: data.smart_on,
         extra_fn=lambda data: {"type": data.smart_type},
         command_on="async_turn_on_off_smart",
@@ -183,8 +175,6 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
         """Make service call to api for setting Climate React."""
         if self.device_data.smart_type is None:
             raise HomeAssistantError(
-                "Use Sensibo Enable Climate React Service once to enable switch or the"
-                " Sensibo app",
                 translation_domain=DOMAIN,
                 translation_key="climate_react_not_available",
             )

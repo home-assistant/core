@@ -1,4 +1,5 @@
 """Tests for the Epion config flow."""
+
 from unittest.mock import MagicMock, patch
 
 from epion import EpionAuthenticationError, EpionConnectionError
@@ -32,7 +33,7 @@ async def test_user_flow(hass: HomeAssistant, mock_epion: MagicMock) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Epion integration"
     assert result["data"] == {
         CONF_API_KEY: API_KEY,
@@ -62,7 +63,7 @@ async def test_form_exceptions(
         {CONF_API_KEY: API_KEY},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
     mock_epion.return_value.get_current.side_effect = None
@@ -77,7 +78,7 @@ async def test_form_exceptions(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Epion integration"
     assert result["data"] == {
         CONF_API_KEY: API_KEY,
@@ -100,16 +101,11 @@ async def test_duplicate_entry(hass: HomeAssistant, mock_epion: MagicMock) -> No
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.epion.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_API_KEY: API_KEY},
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: API_KEY},
+    )
+    await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert mock_setup_entry.call_count == 0

@@ -1,5 +1,6 @@
 """Tests for Ecovacs sensors."""
 
+from deebot_client.capabilities import Capabilities
 from deebot_client.command import Command
 from deebot_client.commands.json import ResetLifeSpan, SetRelocationState
 from deebot_client.events import LifeSpan
@@ -60,7 +61,7 @@ async def test_buttons(
 ) -> None:
     """Test that sensor entity snapshots match."""
     assert hass.states.async_entity_ids() == [e[0] for e in entities]
-    device = controller.devices[0]
+    device = next(controller.devices(Capabilities))
     for entity_id, command in entities:
         assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
         assert state.state == STATE_UNKNOWN
@@ -83,7 +84,7 @@ async def test_buttons(
 
         assert entity_entry.device_id
         assert (device_entry := device_registry.async_get(entity_entry.device_id))
-        assert device_entry.identifiers == {(DOMAIN, device.device_info.did)}
+        assert device_entry.identifiers == {(DOMAIN, device.device_info["did"])}
 
 
 @pytest.mark.parametrize(

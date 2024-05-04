@@ -1,4 +1,5 @@
 """Config flow for Cloudflare integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -9,10 +10,9 @@ import pycfdns
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -85,14 +85,16 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
         self.zones: list[pycfdns.ZoneModel] | None = None
         self.records: list[pycfdns.RecordModel] | None = None
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle initiation of re-authentication with Cloudflare."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle re-authentication with Cloudflare."""
         errors: dict[str, str] = {}
 
@@ -122,7 +124,7 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -145,7 +147,7 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zone(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the picking the zone."""
         errors: dict[str, str] = {}
 
@@ -167,7 +169,7 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_records(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the picking the zone records."""
 
         if user_input is not None:

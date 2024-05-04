@@ -1,4 +1,5 @@
 """Support for BlueMaestro sensors."""
+
 from __future__ import annotations
 
 from bluemaestro_ble import (
@@ -74,6 +75,7 @@ SENSOR_DESCRIPTIONS = {
     ): SensorEntityDescription(
         key=f"{BlueMaestroSensorDeviceClass.DEW_POINT}_{Units.TEMP_CELSIUS}",
         device_class=SensorDeviceClass.TEMPERATURE,
+        translation_key="dew_point",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -109,10 +111,7 @@ def sensor_update_to_bluetooth_data_update(
             device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
             for device_key, sensor_values in sensor_update.entity_values.items()
         },
-        entity_names={
-            device_key_to_bluetooth_entity_key(device_key): sensor_values.name
-            for device_key, sensor_values in sensor_update.entity_values.items()
-        },
+        entity_names={},
     )
 
 

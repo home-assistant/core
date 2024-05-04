@@ -1,4 +1,5 @@
 """Common methods used across tests for Ecobee."""
+
 from unittest.mock import patch
 
 from homeassistant.components.ecobee.const import CONF_REFRESH_TOKEN, DOMAIN

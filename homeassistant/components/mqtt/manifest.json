@@ -1,7 +1,7 @@
 {
   "domain": "mqtt",
   "name": "MQTT",
-  "codeowners": ["@emontnemery", "@jbouwh"],
+  "codeowners": ["@emontnemery", "@jbouwh", "@bdraco"],
   "config_flow": true,
   "dependencies": ["file_upload", "http"],
   "documentation": "https://www.home-assistant.io/integrations/mqtt",

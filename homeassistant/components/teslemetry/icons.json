@@ -1,0 +1,80 @@
+{
+  "entity": {
+    "climate": {
+      "driver_temp": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "off": "mdi:power",
+              "keep": "mdi:fan",
+              "dog": "mdi:dog",
+              "camp": "mdi:tent"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "battery_power": {
+        "default": "mdi:home-battery"
+      },
+      "charge_state_charging_state": {
+        "default": "mdi:ev-station",
+        "state": {
+          "disconnected": "mdi:connection",
+          "no_power": "mdi:power-plug-off-outline",
+          "starting": "mdi:play-circle",
+          "stopped": "mdi:stop-circle"
+        }
+      },
+      "drive_state_active_route_destination": {
+        "default": "mdi:routes"
+      },
+      "drive_state_active_route_minutes_to_arrival": {
+        "default": "mdi:routes-clock"
+      },
+      "drive_state_shift_state": {
+        "default": "mdi:car-shift-pattern",
+        "state": {
+          "d": "mdi:alpha-d",
+          "n": "mdi:alpha-n",
+          "p": "mdi:alpha-p",
+          "r": "mdi:alpha-r"
+        }
+      },
+      "energy_left": {
+        "default": "mdi:battery"
+      },
+      "generator_power": {
+        "default": "mdi:generator-stationary"
+      },
+      "grid_power": {
+        "default": "mdi:transmission-tower"
+      },
+      "grid_services_power": {
+        "default": "mdi:transmission-tower"
+      },
+      "load_power": {
+        "default": "mdi:power-plug"
+      },
+      "solar_power": {
+        "default": "mdi:solar-power"
+      },
+      "total_pack_energy": {
+        "default": "mdi:battery-high"
+      },
+      "vin": {
+        "default": "mdi:car-electric"
+      },
+      "wall_connector_fault_state": {
+        "default": "mdi:ev-station"
+      },
+      "wall_connector_power": {
+        "default": "mdi:ev-station"
+      },
+      "wall_connector_state": {
+        "default": "mdi:ev-station"
+      }
+    }
+  }
+}

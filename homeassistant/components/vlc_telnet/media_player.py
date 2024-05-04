@@ -1,4 +1,5 @@
 """Provide functionality to interact with the vlc telnet interface."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine

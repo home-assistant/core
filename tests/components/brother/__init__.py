@@ -1,4 +1,5 @@
 """Tests for Brother Printer integration."""
+
 import json
 from unittest.mock import patch
 
@@ -23,9 +24,12 @@ async def init_integration(
     entry.add_to_hass(hass)
 
     if not skip_setup:
-        with patch("brother.Brother.initialize"), patch(
-            "brother.Brother._get_data",
-            return_value=json.loads(load_fixture("printer_data.json", "brother")),
+        with (
+            patch("brother.Brother.initialize"),
+            patch(
+                "brother.Brother._get_data",
+                return_value=json.loads(load_fixture("printer_data.json", "brother")),
+            ),
         ):
             await hass.config_entries.async_setup(entry.entry_id)
             await hass.async_block_till_done()

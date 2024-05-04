@@ -1,4 +1,5 @@
 """Support for Minut Point."""
+
 import asyncio
 import logging
 

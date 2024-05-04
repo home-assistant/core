@@ -1,0 +1,7 @@
+{
+  "services": {
+    "reload": "mdi:reload",
+    "reset_accessory": "mdi:cog-refresh",
+    "unpair": "mdi:link-variant-off"
+  }
+}

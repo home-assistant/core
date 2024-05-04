@@ -1,4 +1,5 @@
 """Diagnostics for the Subaru integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -24,7 +25,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id][ENTRY_COORDINATOR]
 
-    diagnostics_data = {
+    return {
         "config_entry": async_redact_data(config_entry.data, CONFIG_FIELDS_TO_REDACT),
         "options": async_redact_data(config_entry.options, []),
         "data": [
@@ -32,8 +33,6 @@ async def async_get_config_entry_diagnostics(
             for info in coordinator.data.values()
         ],
     }
-
-    return diagnostics_data
 
 
 async def async_get_device_diagnostics(

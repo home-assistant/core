@@ -1,4 +1,5 @@
 """Constants for agent_dvr component."""
+
 DOMAIN = "agent_dvr"
 SERVERS = "servers"
 DEVICES = "devices"

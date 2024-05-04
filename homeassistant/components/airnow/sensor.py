@@ -1,4 +1,5 @@
 """Support for the AirNow sensor service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -51,17 +52,12 @@ ATTR_LEVEL = "level"
 ATTR_STATION = "reporting_station"
 
 
-@dataclass(frozen=True)
-class AirNowEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class AirNowEntityDescription(SensorEntityDescription):
+    """Describes Airnow sensor entity."""
 
     value_fn: Callable[[Any], StateType]
     extra_state_attributes_fn: Callable[[Any], dict[str, str]] | None
-
-
-@dataclass(frozen=True)
-class AirNowEntityDescription(SensorEntityDescription, AirNowEntityDescriptionMixin):
-    """Describes Airnow sensor entity."""
 
 
 def station_extra_attrs(data: dict[str, Any]) -> dict[str, Any]:

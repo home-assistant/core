@@ -1,4 +1,5 @@
 """Constants for Synology DSM."""
+
 from __future__ import annotations
 
 from synology_dsm.api.surveillance_station.const import SNAPSHOT_PROFILE_BALANCED

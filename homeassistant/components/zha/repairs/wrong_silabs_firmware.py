@@ -1,4 +1,5 @@
 """ZHA repairs for common environmental and device problems."""
+
 from __future__ import annotations
 
 import enum
@@ -100,7 +101,7 @@ async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> boo
     if app_type == ApplicationType.EZSP:
         # If connecting fails but we somehow probe EZSP (e.g. stuck in bootloader),
         # reconnect, it should work
-        raise AlreadyRunningEZSP()
+        raise AlreadyRunningEZSP
 
     hardware_type = _detect_radio_hardware(hass, device)
     ir.async_create_issue(

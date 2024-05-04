@@ -18,6 +18,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'VeSync',
       'model': 'LV-PUR131S',
       'name': 'Air Purifier 131s',
@@ -52,6 +54,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'VeSync',
       'model': 'Core200S',
       'name': 'Air Purifier 200s',
@@ -86,6 +90,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'VeSync',
       'model': 'LAP-C401S-WJP',
       'name': 'Air Purifier 400s',
@@ -120,6 +126,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'VeSync',
       'model': 'LAP-C601S-WUS',
       'name': 'Air Purifier 600s',
@@ -154,6 +162,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'VeSync',
       'model': 'ESL100',
       'name': 'Dimmable Light',
@@ -187,6 +197,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -214,6 +226,7 @@
     'context': <ANY>,
     'entity_id': 'light.dimmable_light',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -237,6 +250,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'VeSync',
       'model': 'ESWD16',
       'name': 'Dimmer Switch',
@@ -270,6 +285,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -299,6 +316,7 @@
     'context': <ANY>,
     'entity_id': 'light.dimmer_switch',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -338,6 +356,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'VeSync',
       'model': 'wifi-switch-1.3',
       'name': 'Outlet',
@@ -372,6 +392,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'VeSync',
       'model': 'ESL100CW',
       'name': 'Temperature Light',
@@ -409,6 +431,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -447,6 +471,7 @@
     'context': <ANY>,
     'entity_id': 'light.temperature_light',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -470,6 +495,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'VeSync',
       'model': 'ESWL01',
       'name': 'Wall Switch',

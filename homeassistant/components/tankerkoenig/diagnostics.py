@@ -1,4 +1,5 @@
 """Diagnostics support for Tankerkoenig."""
+
 from __future__ import annotations
 
 from dataclasses import asdict
@@ -26,11 +27,10 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator: TankerkoenigDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    diag_data = {
+    return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "data": {
             station_id: asdict(price_info)
             for station_id, price_info in coordinator.data.items()
         },
     }
-    return diag_data

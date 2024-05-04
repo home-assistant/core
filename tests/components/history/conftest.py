@@ -1,4 +1,5 @@
 """Fixtures for history tests."""
+
 import pytest
 
 from homeassistant.components import history

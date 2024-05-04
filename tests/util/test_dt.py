@@ -1,4 +1,5 @@
 """Test Home Assistant date util methods."""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
@@ -85,12 +86,6 @@ def test_as_local_with_naive_object() -> None:
     assert abs(
         now - dt_util.as_local(datetime.now(UTC).replace(tzinfo=None))
     ) < timedelta(seconds=1)
-
-
-def test_as_local_with_local_object() -> None:
-    """Test local with local object."""
-    now = dt_util.now()
-    assert now == now
 
 
 def test_as_local_with_utc_object() -> None:

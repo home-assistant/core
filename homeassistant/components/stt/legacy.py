@@ -1,4 +1,5 @@
 """Handle legacy speech-to-text platforms."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -10,7 +11,11 @@ from homeassistant.config import config_per_platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.setup import async_prepare_setup_platform
+from homeassistant.setup import (
+    SetupPhases,
+    async_prepare_setup_platform,
+    async_start_setup,
+)
 
 from .const import (
     DATA_PROVIDERS,
@@ -67,12 +72,20 @@ def async_setup_legacy(
             return
 
         try:
-            provider = await platform.async_get_engine(hass, p_config, discovery_info)
+            with async_start_setup(
+                hass,
+                integration=p_type,
+                group=str(id(p_config)),
+                phase=SetupPhases.PLATFORM_SETUP,
+            ):
+                provider = await platform.async_get_engine(
+                    hass, p_config, discovery_info
+                )
 
-            provider.name = p_type
-            provider.hass = hass
+                provider.name = p_type
+                provider.hass = hass
 
-            providers[provider.name] = provider
+                providers[provider.name] = provider
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Error setting up platform: %s", p_type)
             return

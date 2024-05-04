@@ -1,4 +1,5 @@
 """Support for Huawei LTE routers."""
+
 from __future__ import annotations
 
 from collections import defaultdict

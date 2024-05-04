@@ -1,4 +1,5 @@
 """Config flow for the D-Link Power Plug integration."""
+
 from __future__ import annotations
 
 import logging
@@ -7,24 +8,25 @@ from typing import Any
 from pyW215.pyW215 import SmartPlug
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import dhcp
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_USE_LEGACY_PROTOCOL, DEFAULT_NAME, DEFAULT_USERNAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class DLinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class DLinkFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for D-Link Power Plug."""
 
     def __init__(self) -> None:
         """Initialize a D-Link Power Plug flow."""
         self.ip_address: str | None = None
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle dhcp discovery."""
         await self.async_set_unique_id(discovery_info.macaddress)
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
@@ -41,7 +43,7 @@ class DLinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm_discovery(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Allow the user to confirm adding the device."""
         errors = {}
         if user_input is not None:
@@ -74,7 +76,7 @@ class DLinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input is not None:
@@ -119,8 +121,8 @@ class DLinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_USERNAME],
                 user_input[CONF_USE_LEGACY_PROTOCOL],
             )
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception: %s", ex)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
             return "unknown"
         if not smartplug.authenticated and smartplug.use_legacy_protocol:
             return "cannot_connect"

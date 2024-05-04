@@ -1,4 +1,5 @@
 """Switch platform for Tessie integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -45,31 +46,26 @@ DESCRIPTIONS: tuple[TessieSwitchEntityDescription, ...] = (
         key="charge_state_charge_enable_request",
         on_func=lambda: start_charging,
         off_func=lambda: stop_charging,
-        icon="mdi:ev-station",
     ),
     TessieSwitchEntityDescription(
         key="climate_state_defrost_mode",
         on_func=lambda: start_defrost,
         off_func=lambda: stop_defrost,
-        icon="mdi:snowflake",
     ),
     TessieSwitchEntityDescription(
         key="vehicle_state_sentry_mode",
         on_func=lambda: enable_sentry_mode,
         off_func=lambda: disable_sentry_mode,
-        icon="mdi:shield-car",
     ),
     TessieSwitchEntityDescription(
         key="vehicle_state_valet_mode",
         on_func=lambda: enable_valet_mode,
         off_func=lambda: disable_valet_mode,
-        icon="mdi:car-key",
     ),
     TessieSwitchEntityDescription(
         key="climate_state_steering_wheel_heater",
         on_func=lambda: start_steering_wheel_heater,
         off_func=lambda: stop_steering_wheel_heater,
-        icon="mdi:steering",
     ),
 )
 

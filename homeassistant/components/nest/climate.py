@@ -1,4 +1,5 @@
 """Support for Google Nest SDM climate devices."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -85,11 +86,12 @@ async def async_setup_entry(
     device_manager: DeviceManager = hass.data[DOMAIN][entry.entry_id][
         DATA_DEVICE_MANAGER
     ]
-    entities = []
-    for device in device_manager.devices.values():
-        if ThermostatHvacTrait.NAME in device.traits:
-            entities.append(ThermostatEntity(device))
-    async_add_entities(entities)
+
+    async_add_entities(
+        ThermostatEntity(device)
+        for device in device_manager.devices.values()
+        if ThermostatHvacTrait.NAME in device.traits
+    )
 
 
 class ThermostatEntity(ClimateEntity):
@@ -216,13 +218,13 @@ class ThermostatEntity(ClimateEntity):
     @property
     def preset_modes(self) -> list[str]:
         """Return the available presets."""
-        modes = []
-        if ThermostatEcoTrait.NAME in self._device.traits:
-            trait = self._device.traits[ThermostatEcoTrait.NAME]
-            for mode in trait.available_modes:
-                if mode in PRESET_MODE_MAP:
-                    modes.append(PRESET_MODE_MAP[mode])
-        return modes
+        if ThermostatEcoTrait.NAME not in self._device.traits:
+            return []
+        return [
+            PRESET_MODE_MAP[mode]
+            for mode in self._device.traits[ThermostatEcoTrait.NAME].available_modes
+            if mode in PRESET_MODE_MAP
+        ]
 
     @property
     def fan_mode(self) -> str:

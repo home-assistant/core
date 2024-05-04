@@ -1,11 +1,12 @@
 """Support for Abode Security System lights."""
+
 from __future__ import annotations
 
 from math import ceil
 from typing import Any
 
-from jaraco.abode.devices.light import Light as AbodeLT
-from jaraco.abode.helpers import constants as CONST
+from jaraco.abode.devices.light import Light
+from jaraco.abode.helpers.constants import TYPE_LIGHT
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -34,14 +35,14 @@ async def async_setup_entry(
 
     async_add_entities(
         AbodeLight(data, device)
-        for device in data.abode.get_devices(generic_type=CONST.TYPE_LIGHT)
+        for device in data.abode.get_devices(generic_type=TYPE_LIGHT)
     )
 
 
 class AbodeLight(AbodeDevice, LightEntity):
     """Representation of an Abode light."""
 
-    _device: AbodeLT
+    _device: Light
     _attr_name = None
 
     def turn_on(self, **kwargs: Any) -> None:

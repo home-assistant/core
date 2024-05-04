@@ -1,4 +1,5 @@
 """Constants for the ecobee integration."""
+
 import logging
 
 from homeassistant.components.weather import (

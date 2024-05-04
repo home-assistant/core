@@ -1,4 +1,5 @@
 """The tests for the folder_watcher component."""
+
 import os
 from types import SimpleNamespace
 from unittest.mock import Mock, patch

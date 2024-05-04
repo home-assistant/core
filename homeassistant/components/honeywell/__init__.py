@@ -1,4 +1,5 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
+
 from dataclasses import dataclass
 
 import aiosomecomfort
@@ -20,7 +21,7 @@ from .const import (
 )
 
 UPDATE_LOOP_SLEEP_TIME = 5
-PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
 
 MIGRATE_OPTIONS_KEYS = {CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE}
 

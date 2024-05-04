@@ -1,4 +1,5 @@
 """Support for AVM FRITZ!SmartHome templates."""
+
 from pyfritzhome.devicetypes import FritzhomeTemplate
 
 from homeassistant.components.button import ButtonEntity

@@ -1,4 +1,5 @@
 """Define tests for device-related endpoints."""
+
 from datetime import timedelta
 from unittest.mock import patch
 

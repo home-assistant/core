@@ -1,4 +1,5 @@
 """Diagnostics support for NextDNS."""
+
 from __future__ import annotations
 
 from dataclasses import asdict
@@ -36,7 +37,7 @@ async def async_get_config_entry_diagnostics(
     settings_coordinator = coordinators[ATTR_SETTINGS]
     status_coordinator = coordinators[ATTR_STATUS]
 
-    diagnostics_data = {
+    return {
         "config_entry": async_redact_data(config_entry.as_dict(), TO_REDACT),
         "dnssec_coordinator_data": asdict(dnssec_coordinator.data),
         "encryption_coordinator_data": asdict(encryption_coordinator.data),
@@ -45,5 +46,3 @@ async def async_get_config_entry_diagnostics(
         "settings_coordinator_data": asdict(settings_coordinator.data),
         "status_coordinator_data": asdict(status_coordinator.data),
     }
-
-    return diagnostics_data

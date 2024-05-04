@@ -1,4 +1,5 @@
 """Config flow for Netgear LTE integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -8,18 +9,18 @@ from eternalegypt import Error, Modem
 from eternalegypt.eternalegypt import Information
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import DEFAULT_HOST, DOMAIN, LOGGER, MANUFACTURER
 
 
-class NetgearLTEFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class NetgearLTEFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Netgear LTE."""
 
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
+    async def async_step_import(self, config: dict[str, Any]) -> ConfigFlowResult:
         """Import a configuration from config.yaml."""
         host = config[CONF_HOST]
         password = config[CONF_PASSWORD]
@@ -37,7 +38,7 @@ class NetgearLTEFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -94,7 +95,7 @@ class NetgearLTEFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return info
 
 
-class InputValidationError(exceptions.HomeAssistantError):
+class InputValidationError(HomeAssistantError):
     """Error to indicate we cannot proceed due to invalid input."""
 
     def __init__(self, base: str) -> None:

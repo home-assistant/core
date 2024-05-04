@@ -1,4 +1,5 @@
 """Test pool."""
+
 import threading
 
 import pytest

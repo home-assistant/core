@@ -1,4 +1,5 @@
 """Support for LIFX lights."""
+
 from __future__ import annotations
 
 import asyncio

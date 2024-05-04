@@ -1,4 +1,5 @@
 """Fixtures for Discovergy integration tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
@@ -26,12 +27,15 @@ def _meter_last_reading(meter_id: str) -> Reading:
 @pytest.fixture(name="discovergy")
 def mock_discovergy() -> Generator[AsyncMock, None, None]:
     """Mock the pydiscovergy client."""
-    with patch(
-        "homeassistant.components.discovergy.Discovergy",
-        autospec=True,
-    ) as mock_discovergy, patch(
-        "homeassistant.components.discovergy.config_flow.Discovergy",
-        new=mock_discovergy,
+    with (
+        patch(
+            "homeassistant.components.discovergy.Discovergy",
+            autospec=True,
+        ) as mock_discovergy,
+        patch(
+            "homeassistant.components.discovergy.config_flow.Discovergy",
+            new=mock_discovergy,
+        ),
     ):
         mock = mock_discovergy.return_value
         mock.meters.return_value = GET_METERS

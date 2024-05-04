@@ -1,4 +1,5 @@
 """Classes for voice assistant pipelines."""
+
 from __future__ import annotations
 
 import array
@@ -12,7 +13,7 @@ from pathlib import Path
 from queue import Empty, Queue
 from threading import Thread
 import time
-from typing import TYPE_CHECKING, Any, Final, cast
+from typing import TYPE_CHECKING, Any, Final, Literal, cast
 import wave
 
 import voluptuous as vol
@@ -55,10 +56,12 @@ from .const import (
     CONF_DEBUG_RECORDING_DIR,
     DATA_CONFIG,
     DATA_LAST_WAKE_UP,
-    DEFAULT_WAKE_WORD_COOLDOWN,
+    DATA_MIGRATIONS,
     DOMAIN,
+    WAKE_WORD_COOLDOWN,
 )
 from .error import (
+    DuplicateWakeUpDetectedError,
     IntentRecognitionError,
     PipelineError,
     PipelineNotFound,
@@ -453,9 +456,6 @@ class WakeWordSettings:
     audio_seconds_to_buffer: float = 0
     """Seconds of audio to buffer before detection and forward to STT."""
 
-    cooldown_seconds: float = DEFAULT_WAKE_WORD_COOLDOWN
-    """Seconds after a wake word detection where other detections are ignored."""
-
 
 @dataclass(frozen=True)
 class AudioSettings:
@@ -584,7 +584,7 @@ class PipelineRun:
                 self.audio_settings.noise_suppression_level,
             )
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Compare pipeline runs by id."""
         if isinstance(other, PipelineRun):
             return self.id == other.id
@@ -742,16 +742,22 @@ class PipelineRun:
             wake_word_output: dict[str, Any] = {}
         else:
             # Avoid duplicate detections by checking cooldown
-            wake_up_key = f"{self.wake_word_entity_id}.{result.wake_word_id}"
-            last_wake_up = self.hass.data[DATA_LAST_WAKE_UP].get(wake_up_key)
+            last_wake_up = self.hass.data[DATA_LAST_WAKE_UP].get(
+                result.wake_word_phrase
+            )
             if last_wake_up is not None:
                 sec_since_last_wake_up = time.monotonic() - last_wake_up
-                if sec_since_last_wake_up < wake_word_settings.cooldown_seconds:
-                    _LOGGER.debug("Duplicate wake word detection occurred")
-                    raise WakeWordDetectionAborted
+                if sec_since_last_wake_up < WAKE_WORD_COOLDOWN:
+                    _LOGGER.debug(
+                        "Duplicate wake word detection occurred for %s",
+                        result.wake_word_phrase,
+                    )
+                    raise DuplicateWakeUpDetectedError(result.wake_word_phrase)
 
             # Record last wake up time to block duplicate detections
-            self.hass.data[DATA_LAST_WAKE_UP][wake_up_key] = time.monotonic()
+            self.hass.data[DATA_LAST_WAKE_UP][result.wake_word_phrase] = (
+                time.monotonic()
+            )
 
             if result.queued_audio:
                 # Add audio that was pending at detection.
@@ -760,12 +766,12 @@ class PipelineRun:
                 # spoken, we need to make sure pending audio is forwarded to
                 # speech-to-text so the user does not have to pause before
                 # speaking the voice command.
-                for chunk_ts in result.queued_audio:
-                    audio_chunks_for_stt.append(
-                        ProcessedAudioChunk(
-                            audio=chunk_ts[0], timestamp_ms=chunk_ts[1], is_speech=False
-                        )
+                audio_chunks_for_stt.extend(
+                    ProcessedAudioChunk(
+                        audio=chunk_ts[0], timestamp_ms=chunk_ts[1], is_speech=False
                     )
+                    for chunk_ts in result.queued_audio
+                )
 
             wake_word_output = asdict(result)
 
@@ -1308,6 +1314,9 @@ class PipelineInput:
     stt_stream: AsyncIterable[bytes] | None = None
     """Input audio for stt. Required when start_stage = stt."""
 
+    wake_word_phrase: str | None = None
+    """Optional key used to de-duplicate wake-ups for local wake word detection."""
+
     intent_input: str | None = None
     """Input for conversation agent. Required when start_stage = intent."""
 
@@ -1351,6 +1360,25 @@ class PipelineInput:
             if current_stage == PipelineStage.STT:
                 assert self.stt_metadata is not None
                 assert stt_processed_stream is not None
+
+                if self.wake_word_phrase is not None:
+                    # Avoid duplicate wake-ups by checking cooldown
+                    last_wake_up = self.run.hass.data[DATA_LAST_WAKE_UP].get(
+                        self.wake_word_phrase
+                    )
+                    if last_wake_up is not None:
+                        sec_since_last_wake_up = time.monotonic() - last_wake_up
+                        if sec_since_last_wake_up < WAKE_WORD_COOLDOWN:
+                            _LOGGER.debug(
+                                "Speech-to-text cancelled to avoid duplicate wake-up for %s",
+                                self.wake_word_phrase,
+                            )
+                            raise DuplicateWakeUpDetectedError(self.wake_word_phrase)
+
+                    # Record last wake up time to block duplicate detections
+                    self.run.hass.data[DATA_LAST_WAKE_UP][self.wake_word_phrase] = (
+                        time.monotonic()
+                    )
 
                 stt_input_stream = stt_processed_stream
 
@@ -1787,3 +1815,47 @@ async def async_setup_pipeline_store(hass: HomeAssistant) -> PipelineData:
         PIPELINE_FIELDS,
     ).async_setup(hass)
     return PipelineData(pipeline_store)
+
+
+@callback
+def async_migrate_engine(
+    hass: HomeAssistant,
+    engine_type: Literal["conversation", "stt", "tts", "wake_word"],
+    old_value: str,
+    new_value: str,
+) -> None:
+    """Register a migration of an engine used in pipelines."""
+    hass.data.setdefault(DATA_MIGRATIONS, {})[engine_type] = (old_value, new_value)
+
+    # Run migrations when config is already loaded
+    if DATA_CONFIG in hass.data:
+        hass.async_create_background_task(
+            async_run_migrations(hass), "assist_pipeline_migration", eager_start=True
+        )
+
+
+async def async_run_migrations(hass: HomeAssistant) -> None:
+    """Run pipeline migrations."""
+    if not (migrations := hass.data.get(DATA_MIGRATIONS)):
+        return
+
+    engine_attr = {
+        "conversation": "conversation_engine",
+        "stt": "stt_engine",
+        "tts": "tts_engine",
+        "wake_word": "wake_word_entity",
+    }
+
+    updates = []
+
+    for pipeline in async_get_pipelines(hass):
+        attr_updates = {}
+        for engine_type, (old_value, new_value) in migrations.items():
+            if getattr(pipeline, engine_attr[engine_type]) == old_value:
+                attr_updates[engine_attr[engine_type]] = new_value
+
+        if attr_updates:
+            updates.append((pipeline, attr_updates))
+
+    for pipeline, attr_updates in updates:
+        await async_update_pipeline(hass, pipeline, **attr_updates)

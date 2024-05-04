@@ -1,4 +1,5 @@
 """Provide add-on management."""
+
 from __future__ import annotations
 
 from homeassistant.components.hassio import AddonManager

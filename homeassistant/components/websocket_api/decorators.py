@@ -1,9 +1,10 @@
 """Decorators for the Websocket API."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from functools import wraps
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -45,6 +46,7 @@ def async_response(
         hass.async_create_background_task(
             _handle_async_response(func, hass, connection, msg),
             task_name,
+            eager_start=True,
         )
 
     return schedule_handler
@@ -61,7 +63,7 @@ def require_admin(func: const.WebSocketCommandHandler) -> const.WebSocketCommand
         user = connection.user
 
         if user is None or not user.is_admin:
-            raise Unauthorized()
+            raise Unauthorized
 
         func(hass, connection, msg)
 
@@ -135,7 +137,7 @@ def websocket_command(
     The schema must be either a dictionary where the keys are voluptuous markers, or
     a voluptuous.All schema where the first item is a voluptuous Mapping schema.
     """
-    if isinstance(schema, dict):
+    if is_dict := isinstance(schema, dict):
         command = schema["type"]
     else:
         command = schema.validators[0].schema["type"]
@@ -143,9 +145,13 @@ def websocket_command(
     def decorate(func: const.WebSocketCommandHandler) -> const.WebSocketCommandHandler:
         """Decorate ws command function."""
         # pylint: disable=protected-access
-        if isinstance(schema, dict):
+        if is_dict and len(schema) == 1:  # type only empty schema
+            func._ws_schema = False  # type: ignore[attr-defined]
+        elif is_dict:
             func._ws_schema = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend(schema)  # type: ignore[attr-defined]
         else:
+            if TYPE_CHECKING:
+                assert not isinstance(schema, dict)
             extended_schema = vol.All(
                 schema.validators[0].extend(
                     messages.BASE_COMMAND_MESSAGE_SCHEMA.schema

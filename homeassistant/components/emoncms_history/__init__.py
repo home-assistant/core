@@ -1,4 +1,5 @@
 """Support for sending data to Emoncms."""
+
 from datetime import timedelta
 from http import HTTPStatus
 import logging

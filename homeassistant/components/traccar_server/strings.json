@@ -41,5 +41,18 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "address": {
+        "name": "Address"
+      },
+      "altitude": {
+        "name": "Altitude"
+      },
+      "geofence": {
+        "name": "Geofence"
+      }
+    }
   }
 }

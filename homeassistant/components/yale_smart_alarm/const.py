@@ -1,4 +1,5 @@
 """Yale integration constants."""
+
 import logging
 
 from yalesmartalarmclient.client import (

@@ -1,4 +1,5 @@
 """Tests for the WLED integration."""
+
 import asyncio
 from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch

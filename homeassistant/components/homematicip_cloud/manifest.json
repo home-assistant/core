@@ -1,11 +1,11 @@
 {
   "domain": "homematicip_cloud",
   "name": "HomematicIP Cloud",
-  "codeowners": [],
+  "codeowners": ["@hahn-th"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/homematicip_cloud",
   "iot_class": "cloud_push",
   "loggers": ["homematicip"],
   "quality_scale": "silver",
-  "requirements": ["homematicip==1.0.16"]
+  "requirements": ["homematicip==1.1.0"]
 }

@@ -80,6 +80,18 @@
       },
       "comfort_temperature": {
         "name": "Comfort temperature"
+      },
+      "normal_heating_temperature": {
+        "name": "[%key:component::vicare::entity::number::normal_temperature::name%]"
+      },
+      "reduced_heating_temperature": {
+        "name": "[%key:component::vicare::entity::number::reduced_temperature::name%]"
+      },
+      "comfort_heating_temperature": {
+        "name": "[%key:component::vicare::entity::number::comfort_temperature::name%]"
+      },
+      "dhw_secondary_temperature": {
+        "name": "DHW secondary temperature"
       }
     },
     "sensor": {
@@ -265,6 +277,54 @@
       },
       "volumetric_flow": {
         "name": "Volumetric flow"
+      },
+      "ess_power_current": {
+        "name": "Battery power"
+      },
+      "ess_state": {
+        "name": "Battery state",
+        "state": {
+          "charge": "Charging",
+          "discharge": "Discharging",
+          "standby": "Standby"
+        }
+      },
+      "ess_discharge_today": {
+        "name": "Battery discharge today"
+      },
+      "ess_discharge_this_week": {
+        "name": "Battery discharge this week"
+      },
+      "ess_discharge_this_month": {
+        "name": "Battery discharge this month"
+      },
+      "ess_discharge_this_year": {
+        "name": "Battery discharge this year"
+      },
+      "ess_discharge_total": {
+        "name": "Battery discharge total"
+      },
+      "pcc_current_power_exchange": {
+        "name": "Grid power exchange"
+      },
+      "pcc_energy_consumption": {
+        "name": "Energy import from grid"
+      },
+      "pcc_energy_feed_in": {
+        "name": "Energy export to grid"
+      },
+      "photovoltaic_power_production_current": {
+        "name": "Solar power"
+      },
+      "photovoltaic_energy_production_today": {
+        "name": "Solar energy production today"
+      },
+      "photovoltaic_status": {
+        "name": "Solar state",
+        "state": {
+          "ready": "Standby",
+          "production": "Producing"
+        }
       },
       "supply_temperature": {
         "name": "Supply temperature"

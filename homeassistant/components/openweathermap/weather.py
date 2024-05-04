@@ -1,4 +1,5 @@
 """Support for the OpenWeatherMap (OWM) service."""
+
 from __future__ import annotations
 
 from typing import cast
@@ -184,7 +185,7 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordina
         return self.coordinator.data[ATTR_API_WIND_BEARING]
 
     @property
-    def forecast(self) -> list[Forecast] | None:
+    def _forecast(self) -> list[Forecast] | None:
         """Return the forecast array."""
         api_forecasts = self.coordinator.data[ATTR_API_FORECAST]
         forecasts = [
@@ -200,9 +201,9 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordina
     @callback
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
-        return self.forecast
+        return self._forecast
 
     @callback
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
-        return self.forecast
+        return self._forecast

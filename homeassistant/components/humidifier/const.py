@@ -1,4 +1,5 @@
 """Provides the constants needed for component."""
+
 from enum import IntFlag, StrEnum
 from functools import partial
 

@@ -1,4 +1,5 @@
 """Tests for the Google Assistant notify."""
+
 from unittest.mock import call, patch
 
 import pytest

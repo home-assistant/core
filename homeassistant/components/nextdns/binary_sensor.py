@@ -1,4 +1,5 @@
 """Support for the NextDNS service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -18,8 +19,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CoordinatorDataT, NextDnsConnectionUpdateCoordinator
 from .const import ATTR_CONNECTION, DOMAIN
+from .coordinator import CoordinatorDataT, NextDnsConnectionUpdateCoordinator
 
 PARALLEL_UPDATES = 1
 
@@ -67,11 +68,9 @@ async def async_setup_entry(
         ATTR_CONNECTION
     ]
 
-    sensors: list[NextDnsBinarySensor] = []
-    for description in SENSORS:
-        sensors.append(NextDnsBinarySensor(coordinator, description))
-
-    async_add_entities(sensors)
+    async_add_entities(
+        NextDnsBinarySensor(coordinator, description) for description in SENSORS
+    )
 
 
 class NextDnsBinarySensor(

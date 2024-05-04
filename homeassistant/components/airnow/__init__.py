@@ -1,4 +1,5 @@
 """The AirNow integration."""
+
 import datetime
 import logging
 

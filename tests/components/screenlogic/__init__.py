@@ -1,4 +1,5 @@
 """Tests for the Screenlogic integration."""
+
 from collections.abc import Callable
 import logging
 
@@ -60,7 +61,7 @@ async def stub_async_connect(
     gtype=None,
     gsubtype=None,
     name=MOCK_ADAPTER_NAME,
-    connection_closed_callback: Callable = None,
+    connection_closed_callback: Callable | None = None,
 ) -> bool:
     """Initialize minimum attributes needed for tests."""
     self._ip = ip

@@ -1,16 +1,18 @@
 """Describe group states."""
 
+from typing import TYPE_CHECKING
 
-from homeassistant.components.group import GroupIntegrationRegistry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 
-from . import STATE_CLEANING, STATE_ERROR, STATE_RETURNING
+if TYPE_CHECKING:
+    from homeassistant.components.group import GroupIntegrationRegistry
+from .const import STATE_CLEANING, STATE_ERROR, STATE_RETURNING
 
 
 @callback
 def async_describe_on_off_states(
-    hass: HomeAssistant, registry: GroupIntegrationRegistry
+    hass: HomeAssistant, registry: "GroupIntegrationRegistry"
 ) -> None:
     """Describe group on off states."""
     registry.on_off_states(

@@ -1,4 +1,5 @@
 """Test the Netatmo diagnostics."""
+
 from unittest.mock import AsyncMock, patch
 
 from syrupy import SnapshotAssertion
@@ -21,12 +22,16 @@ async def test_entry_diagnostics(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test config entry diagnostics."""
-    with patch(
-        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
-    ) as mock_auth, patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-    ), patch(
-        "homeassistant.components.netatmo.webhook_generate_url",
+    with (
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
+        ) as mock_auth,
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        ),
+        patch(
+            "homeassistant.components.netatmo.webhook_generate_url",
+        ),
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post_request
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()

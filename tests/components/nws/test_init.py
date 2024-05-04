@@ -1,4 +1,5 @@
 """Tests for init module."""
+
 from homeassistant.components.nws.const import DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE

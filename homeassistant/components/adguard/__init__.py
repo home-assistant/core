@@ -1,5 +1,8 @@
 """Support for AdGuard Home."""
+
 from __future__ import annotations
+
+from dataclasses import dataclass
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError
 import voluptuous as vol
@@ -23,7 +26,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CONF_FORCE,
-    DATA_ADGUARD_CLIENT,
     DOMAIN,
     SERVICE_ADD_URL,
     SERVICE_DISABLE_URL,
@@ -43,6 +45,14 @@ SERVICE_REFRESH_SCHEMA = vol.Schema(
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
 
+@dataclass
+class AdGuardData:
+    """Adguard data type."""
+
+    client: AdGuardHome
+    version: str
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up AdGuard Home from a config entry."""
     session = async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL])
@@ -56,12 +66,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=session,
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {DATA_ADGUARD_CLIENT: adguard}
-
     try:
-        await adguard.version()
+        version = await adguard.version()
     except AdGuardHomeConnectionError as exception:
         raise ConfigEntryNotReady from exception
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = AdGuardData(adguard, version)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

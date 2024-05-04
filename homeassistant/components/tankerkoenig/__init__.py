@@ -1,4 +1,5 @@
 """Ask tankerkoenig.de for petrol price information."""
+
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
@@ -20,7 +21,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = TankerkoenigDataUpdateCoordinator(
         hass,
-        entry,
         name=entry.unique_id or DOMAIN,
         update_interval=DEFAULT_SCAN_INTERVAL,
     )

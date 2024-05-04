@@ -432,3 +432,20 @@ async def test_get_state_intent(
                 "domain": {"value": "light"},
             },
         )
+
+
+async def test_set_position_intent_unsupported_domain(hass: HomeAssistant) -> None:
+    """Test that HassSetPosition intent fails with unsupported domain."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    # Can't set position of lights
+    hass.states.async_set("light.test_light", "off")
+
+    with pytest.raises(intent.IntentHandleError):
+        await intent.async_handle(
+            hass,
+            "test",
+            "HassSetPosition",
+            {"name": {"value": "test light"}, "position": {"value": 100}},
+        )

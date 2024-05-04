@@ -1,4 +1,5 @@
 """Climate device for CCM15 coordinator."""
+
 import datetime
 import logging
 

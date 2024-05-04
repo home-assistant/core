@@ -6,9 +6,8 @@ from typing import Any
 from switchbot_api import CannotConnect, InvalidAuth, SwitchBotAPI
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN, ENTRY_TITLE
 
@@ -22,14 +21,14 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class SwitchBotCloudConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SwitchBotCloudConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SwitchBot via API."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:

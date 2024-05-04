@@ -3,13 +3,13 @@
   "name": "Shelly",
   "codeowners": ["@balloob", "@bieniu", "@thecode", "@chemelli74", "@bdraco"],
   "config_flow": true,
-  "dependencies": ["bluetooth", "http"],
+  "dependencies": ["bluetooth", "http", "network"],
   "documentation": "https://www.home-assistant.io/integrations/shelly",
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["aioshelly"],
   "quality_scale": "platinum",
-  "requirements": ["aioshelly==8.0.1"],
+  "requirements": ["aioshelly==9.0.0"],
   "zeroconf": [
     {
       "type": "_http._tcp.local.",

@@ -1,4 +1,5 @@
 """Test test fixture configuration."""
+
 from http import HTTPStatus
 import socket
 

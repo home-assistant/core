@@ -1,4 +1,5 @@
 """Support for Ambient Weather Station Service."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -92,7 +93,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         ambient = hass.data[DOMAIN].pop(entry.entry_id)
-        hass.async_create_task(ambient.ws_disconnect())
+        hass.async_create_task(ambient.ws_disconnect(), eager_start=True)
 
     return unload_ok
 
@@ -178,7 +179,8 @@ class AmbientStation:
                 self._hass.async_create_task(
                     self._hass.config_entries.async_forward_entry_setups(
                         self._entry, PLATFORMS
-                    )
+                    ),
+                    eager_start=True,
                 )
                 self._entry_setup_complete = True
             self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY

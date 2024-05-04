@@ -1,4 +1,5 @@
 """Config flow for iotawatt integration."""
+
 from __future__ import annotations
 
 import logging
@@ -6,8 +7,10 @@ import logging
 from iotawattpy.iotawatt import Iotawatt
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import httpx_client
 
 from .const import CONNECTION_ERRORS, DOMAIN
@@ -15,9 +18,7 @@ from .const import CONNECTION_ERRORS, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(
-    hass: core.HomeAssistant, data: dict[str, str]
-) -> dict[str, str]:
+async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str, str]:
     """Validate the user input allows us to connect."""
     iotawatt = Iotawatt(
         "",
@@ -40,7 +41,7 @@ async def validate_input(
     return {}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class IOTaWattConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for iotawatt."""
 
     VERSION = 1
@@ -99,9 +100,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=data[CONF_HOST], data=data)
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""

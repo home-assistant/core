@@ -1,4 +1,5 @@
 """Diagnostics support for 1-Wire."""
+
 from __future__ import annotations
 
 from dataclasses import asdict

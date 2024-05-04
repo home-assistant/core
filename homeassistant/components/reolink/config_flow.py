@@ -1,4 +1,5 @@
 """Config flow for the Reolink camera component."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,8 +9,13 @@ from typing import Any
 from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import dhcp
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -18,7 +24,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
@@ -33,7 +39,7 @@ DEFAULT_PROTOCOL = "rtsp"
 DEFAULT_OPTIONS = {CONF_PROTOCOL: DEFAULT_PROTOCOL}
 
 
-class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
+class ReolinkOptionsFlowHandler(OptionsFlow):
     """Handle Reolink options."""
 
     def __init__(self, config_entry):
@@ -42,7 +48,7 @@ class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the Reolink options."""
         if user_input is not None:
             return self.async_create_entry(data=user_input)
@@ -60,7 +66,7 @@ class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Reolink device."""
 
     VERSION = 1
@@ -75,12 +81,14 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> ReolinkOptionsFlowHandler:
         """Options callback for Reolink."""
         return ReolinkOptionsFlowHandler(config_entry)
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an authentication error or no admin privileges."""
         self._host = entry_data[CONF_HOST]
         self._username = entry_data[CONF_USERNAME]
@@ -94,13 +102,15 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         if user_input is not None:
             return await self.async_step_user()
         return self.async_show_form(step_id="reauth_confirm")
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle discovery via dhcp."""
         mac_address = format_mac(discovery_info.macaddress)
         existing_entry = await self.async_set_unique_id(mac_address)
@@ -157,7 +167,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         placeholders = {
@@ -183,9 +193,9 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors[CONF_HOST] = "api_error"
             except ReolinkWebhookException as err:
                 placeholders["error"] = str(err)
-                placeholders[
-                    "more_info"
-                ] = "https://www.home-assistant.io/more-info/no-url-available/#configuring-the-instance-url"
+                placeholders["more_info"] = (
+                    "https://www.home-assistant.io/more-info/no-url-available/#configuring-the-instance-url"
+                )
                 errors["base"] = "webhook_exception"
             except (ReolinkError, ReolinkException) as err:
                 placeholders["error"] = str(err)

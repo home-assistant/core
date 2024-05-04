@@ -1,4 +1,5 @@
 """Configuration for Ring tests."""
+
 from collections.abc import Generator
 import re
 from unittest.mock import AsyncMock, Mock, patch
@@ -26,18 +27,13 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_ring_auth():
     """Mock ring_doorbell.Auth."""
-    with patch("ring_doorbell.Auth", autospec=True) as mock_ring_auth:
+    with patch(
+        "homeassistant.components.ring.config_flow.Auth", autospec=True
+    ) as mock_ring_auth:
         mock_ring_auth.return_value.fetch_token.return_value = {
             "access_token": "mock-token"
         }
         yield mock_ring_auth.return_value
-
-
-@pytest.fixture
-def mock_ring():
-    """Mock ring_doorbell.Ring."""
-    with patch("ring_doorbell.Ring", autospec=True) as mock_ring:
-        yield mock_ring.return_value
 
 
 @pytest.fixture
@@ -59,7 +55,6 @@ async def mock_added_config_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_ring_auth: Mock,
-    mock_ring: Mock,
 ) -> MockConfigEntry:
     """Mock ConfigEntry that's been added to HA."""
     mock_config_entry.add_to_hass(hass)
@@ -101,7 +96,7 @@ def requests_mock_fixture():
             re.compile(
                 r"https:\/\/api\.ring\.com\/clients_api\/doorbots\/\d+\/history"
             ),
-            text=load_fixture("doorbots.json", "ring"),
+            text=load_fixture("doorbot_history.json", "ring"),
         )
         # Mocks the response for getting the health of a device
         mock.get(
@@ -119,5 +114,32 @@ def requests_mock_fixture():
             ),
             status_code=200,
             json={"url": "http://127.0.0.1/foo"},
+        )
+        mock.get(
+            "https://api.ring.com/groups/v1/locations/mock-location-id/groups",
+            text=load_fixture("groups.json", "ring"),
+        )
+        # Mocks the response for getting the history of the intercom
+        mock.get(
+            "https://api.ring.com/clients_api/doorbots/185036587/history",
+            text=load_fixture("intercom_history.json", "ring"),
+        )
+        # Mocks the response for setting properties in settings (i.e. motion_detection)
+        mock.patch(
+            re.compile(
+                r"https:\/\/api\.ring\.com\/devices\/v1\/devices\/\d+\/settings"
+            ),
+            text="ok",
+        )
+        # Mocks the open door command for intercom devices
+        mock.put(
+            "https://api.ring.com/commands/v1/devices/185036587/device_rpc",
+            status_code=200,
+            text="{}",
+        )
+        # Mocks the response for getting the history of the intercom
+        mock.get(
+            "https://api.ring.com/clients_api/doorbots/185036587/history",
+            text=load_fixture("intercom_history.json", "ring"),
         )
         yield mock

@@ -60,7 +60,7 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator[dict[tuple, dict[str, Any
 
             if "systemId" in item:
                 system_id = item["systemId"]
-                current_id = current_id + (item_kind, system_id)
+                current_id = (*current_id, item_kind, system_id)
                 data[current_id] = item
 
             for kind in ALL_ITEM_KINDS:
@@ -69,9 +69,7 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator[dict[tuple, dict[str, Any
 
             return data
 
-        parsed_data = get_item_data(data, "Backyard", (), parsed_data)
-
-        return parsed_data
+        return get_item_data(data, "Backyard", (), parsed_data)
 
 
 class OmniLogicEntity(CoordinatorEntity[OmniLogicUpdateCoordinator]):

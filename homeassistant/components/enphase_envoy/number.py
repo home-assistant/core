@@ -1,8 +1,10 @@
 """Number platform for Enphase Envoy solar energy monitor."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from operator import attrgetter
 from typing import Any
 
 from pyenphase import Envoy, EnvoyDryContactSettings
@@ -25,33 +27,19 @@ from .coordinator import EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity
 
 
-@dataclass(frozen=True)
-class EnvoyRelayRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnvoyRelayNumberEntityDescription(NumberEntityDescription):
+    """Describes an Envoy Dry Contact Relay number entity."""
 
     value_fn: Callable[[EnvoyDryContactSettings], float]
 
 
-@dataclass(frozen=True)
-class EnvoyRelayNumberEntityDescription(
-    NumberEntityDescription, EnvoyRelayRequiredKeysMixin
-):
-    """Describes an Envoy Dry Contact Relay number entity."""
-
-
-@dataclass(frozen=True)
-class EnvoyStorageSettingsRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnvoyStorageSettingsNumberEntityDescription(NumberEntityDescription):
+    """Describes an Envoy storage mode number entity."""
 
     value_fn: Callable[[EnvoyStorageSettings], float]
     update_fn: Callable[[Envoy, float], Awaitable[dict[str, Any]]]
-
-
-@dataclass(frozen=True)
-class EnvoyStorageSettingsNumberEntityDescription(
-    NumberEntityDescription, EnvoyStorageSettingsRequiredKeysMixin
-):
-    """Describes an Envoy storage mode number entity."""
 
 
 RELAY_ENTITIES = (
@@ -60,14 +48,14 @@ RELAY_ENTITIES = (
         translation_key="cutoff_battery_level",
         device_class=NumberDeviceClass.BATTERY,
         entity_category=EntityCategory.CONFIG,
-        value_fn=lambda relay: relay.soc_low,
+        value_fn=attrgetter("soc_low"),
     ),
     EnvoyRelayNumberEntityDescription(
         key="soc_high",
         translation_key="restore_battery_level",
         device_class=NumberDeviceClass.BATTERY,
         entity_category=EntityCategory.CONFIG,
-        value_fn=lambda relay: relay.soc_high,
+        value_fn=attrgetter("soc_high"),
     ),
 )
 
@@ -76,7 +64,7 @@ STORAGE_RESERVE_SOC_ENTITY = EnvoyStorageSettingsNumberEntityDescription(
     translation_key="reserve_soc",
     native_unit_of_measurement=PERCENTAGE,
     device_class=NumberDeviceClass.BATTERY,
-    value_fn=lambda storage_settings: storage_settings.reserved_soc,
+    value_fn=attrgetter("reserved_soc"),
     update_fn=lambda envoy, value: envoy.set_reserve_soc(int(value)),
 )
 

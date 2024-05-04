@@ -1,4 +1,5 @@
 """template conftest."""
+
 import pytest
 
 from homeassistant.setup import async_setup_component

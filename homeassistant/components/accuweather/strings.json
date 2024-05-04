@@ -11,15 +11,12 @@
       }
     },
     "create_entry": {
-      "default": "Some sensors are not enabled by default. You can enable them in the entity registry after the integration configuration.\nWeather forecast is not enabled by default. You can enable it in the integration options."
+      "default": "Some sensors are not enabled by default. You can enable them in the entity registry after the integration configuration."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "requests_exceeded": "The allowed number of requests to Accuweather API has been exceeded. You have to wait or change API Key."
-    },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
   "entity": {
@@ -790,16 +787,6 @@
       },
       "wind_speed_night_4d": {
         "name": "Wind speed night 4"
-      }
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "description": "Due to the limitations of the free version of the AccuWeather API key, when you enable weather forecast, data updates will be performed every 80 minutes instead of every 40 minutes.",
-        "data": {
-          "forecast": "Weather forecast"
-        }
       }
     }
   },

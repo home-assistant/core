@@ -1,4 +1,5 @@
 """Support for Denon AVR receivers using their HTTP interface."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
@@ -231,12 +232,10 @@ def async_log_errors(
                 func.__name__,
                 err,
             )
-        except DenonAvrError as err:
+        except DenonAvrError:
             available = False
             _LOGGER.exception(
-                "Error %s occurred in method %s for Denon AVR receiver",
-                err,
-                func.__name__,
+                "Error occurred in method %s for Denon AVR receiver", func.__name__
             )
         finally:
             if available and not self.available:
@@ -451,9 +450,6 @@ class DenonDevice(MediaPlayerEntity):
     @async_log_errors
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        # Ensure that the AVR is turned on, which is necessary for input
-        # switch to work.
-        await self.async_turn_on()
         await self._receiver.async_set_input_func(source)
 
     @async_log_errors

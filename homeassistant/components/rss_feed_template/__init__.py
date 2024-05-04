@@ -1,4 +1,5 @@
 """Support to export sensor values via RSS feed."""
+
 from __future__ import annotations
 
 from html import escape

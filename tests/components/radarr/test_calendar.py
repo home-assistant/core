@@ -1,4 +1,5 @@
 """The tests for Radarr calendar platform."""
+
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory

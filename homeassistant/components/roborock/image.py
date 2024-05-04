@@ -1,4 +1,5 @@
 """Support for Roborock image."""
+
 import asyncio
 import io
 from itertools import chain
@@ -104,7 +105,6 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         parsed_map = self.parser.parse(map_bytes)
         if parsed_map.image is None:
             raise HomeAssistantError(
-                "Something went wrong creating the map",
                 translation_domain=DOMAIN,
                 translation_key="map_failure",
             )
@@ -130,23 +130,27 @@ async def create_coordinator_maps(
     maps_info = sorted(
         coord.maps.items(), key=lambda data: data[0] == cur_map, reverse=True
     )
-    for map_flag, map_name in maps_info:
+    for map_flag, map_info in maps_info:
         # Load the map - so we can access it with get_map_v1
         if map_flag != cur_map:
             # Only change the map and sleep if we have multiple maps.
             await coord.api.send_command(RoborockCommand.LOAD_MULTI_MAP, [map_flag])
+            coord.current_map = map_flag
             # We cannot get the map until the roborock servers fully process the
             # map change.
             await asyncio.sleep(MAP_SLEEP)
         # Get the map data
-        api_data: bytes = await coord.cloud_api.get_map_v1()
+        map_update = await asyncio.gather(
+            *[coord.cloud_api.get_map_v1(), coord.get_rooms()]
+        )
+        api_data: bytes = map_update[0]
         entities.append(
             RoborockMap(
-                f"{slugify(coord.roborock_device_info.device.duid)}_map_{map_name}",
+                f"{slugify(coord.roborock_device_info.device.duid)}_map_{map_info.name}",
                 coord,
                 map_flag,
                 api_data,
-                map_name,
+                map_info.name,
             )
         )
     if len(coord.maps) != 1:
@@ -154,4 +158,5 @@ async def create_coordinator_maps(
         # does not change the end user's app.
         # Only needs to happen when we changed maps above.
         await coord.cloud_api.send_command(RoborockCommand.LOAD_MULTI_MAP, [cur_map])
+        coord.current_map = cur_map
     return entities

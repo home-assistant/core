@@ -1,4 +1,5 @@
 """Test the NEW_NAME config flow."""
+
 from unittest.mock import AsyncMock
 
 import pytest
@@ -13,7 +14,7 @@ from tests.common import MockConfigEntry
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-@pytest.mark.parametrize("platform", ("sensor",))
+@pytest.mark.parametrize("platform", ["sensor"])
 async def test_config_flow(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, platform
 ) -> None:
@@ -61,7 +62,7 @@ def get_suggested(schema, key):
     raise Exception
 
 
-@pytest.mark.parametrize("platform", ("sensor",))
+@pytest.mark.parametrize("platform", ["sensor"])
 async def test_options(hass: HomeAssistant, platform) -> None:
     """Test reconfiguring."""
     input_sensor_1_entity_id = "sensor.input1"

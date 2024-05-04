@@ -1,4 +1,5 @@
 """Config flow for Discovergy integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -10,10 +11,8 @@ from pydiscovergy.authentication import BasicAuth
 import pydiscovergy.error as discovergyError
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -48,7 +47,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Discovergy."""
 
     VERSION = 1
@@ -57,7 +56,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -67,14 +66,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._validate_and_save(user_input)
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         self._existing_entry = await self.async_set_unique_id(self.context["unique_id"])
         return await self._validate_and_save(entry_data, step_id="reauth")
 
     async def _validate_and_save(
         self, user_input: Mapping[str, Any] | None = None, step_id: str = "user"
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Validate user input and create config entry."""
         errors = {}
 

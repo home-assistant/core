@@ -1,4 +1,5 @@
 """The tests the History component websocket_api."""
+
 import asyncio
 from datetime import timedelta
 from unittest.mock import patch
@@ -1331,7 +1332,7 @@ async def test_history_stream_live_with_future_end_time(
     ) == listeners_without_writes(init_listeners)
 
 
-@pytest.mark.parametrize("include_start_time_state", (True, False))
+@pytest.mark.parametrize("include_start_time_state", [True, False])
 async def test_history_stream_before_history_starts(
     recorder_mock: Recorder,
     hass: HomeAssistant,
@@ -1834,7 +1835,6 @@ async def test_history_stream_historical_only_with_start_time_state_past(
     await async_setup_component(hass, "sensor", {})
 
     hass.states.async_set("sensor.one", "first", attributes={"any": "attr"})
-    hass.states.get("sensor.one").last_updated
     await async_recorder_block_till_done(hass)
 
     await asyncio.sleep(0.00002)

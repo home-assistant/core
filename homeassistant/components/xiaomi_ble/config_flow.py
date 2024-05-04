@@ -1,4 +1,5 @@
 """Config flow for Xiaomi Bluetooth integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -16,9 +17,8 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
     async_process_advertisements,
 )
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -76,7 +76,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
@@ -109,7 +109,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_get_encryption_key_legacy(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Enter a legacy bindkey for a v2/v3 MiBeacon device."""
         assert self._discovery_info
         assert self._discovered_device
@@ -143,7 +143,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_get_encryption_key_4_5(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Enter a bindkey for a v4/v5 MiBeacon device."""
         assert self._discovery_info
         assert self._discovered_device
@@ -177,7 +177,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm discovery."""
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             return self._async_get_or_create_entry()
@@ -190,7 +190,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm_slow(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Ack that device is slow."""
         if user_input is not None:
             return self._async_get_or_create_entry()
@@ -203,7 +203,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user step to pick discovered device."""
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
@@ -260,7 +260,9 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_ADDRESS): vol.In(titles)}),
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by a reauth event."""
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         assert entry is not None
@@ -279,7 +281,9 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         # Otherwise there wasn't actually encryption so abort
         return self.async_abort(reason="reauth_successful")
 
-    def _async_get_or_create_entry(self, bindkey: str | None = None) -> FlowResult:
+    def _async_get_or_create_entry(
+        self, bindkey: str | None = None
+    ) -> ConfigFlowResult:
         data: dict[str, Any] = {}
 
         if bindkey:

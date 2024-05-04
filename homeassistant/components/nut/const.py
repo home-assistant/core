@@ -1,4 +1,5 @@
 """The nut component."""
+
 from __future__ import annotations
 
 from homeassistant.const import Platform

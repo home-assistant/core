@@ -23,7 +23,7 @@
         "electricity_produced": 0.0
       },
       "switches": {
-        "lock": false,
+        "lock": true,
         "relay": true
       },
       "vendor": "Plugwise",

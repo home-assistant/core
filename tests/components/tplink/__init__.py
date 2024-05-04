@@ -36,6 +36,7 @@ IP_ADDRESS2 = "127.0.0.2"
 ALIAS = "My Bulb"
 MODEL = "HS100"
 MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
+DHCP_FORMATTED_MAC_ADDRESS = MAC_ADDRESS.replace(":", "")
 MAC_ADDRESS2 = "11:22:33:44:55:66"
 DEFAULT_ENTRY_TITLE = f"{ALIAS} {MODEL}"
 CREDENTIALS_HASH_LEGACY = ""
@@ -310,9 +311,11 @@ async def initialize_config_entry_for_device(
     )
     config_entry.add_to_hass(hass)
 
-    with _patch_discovery(device=dev), _patch_single_discovery(
-        device=dev
-    ), _patch_connect(device=dev):
+    with (
+        _patch_discovery(device=dev),
+        _patch_single_discovery(device=dev),
+        _patch_connect(device=dev),
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 

@@ -1,4 +1,5 @@
 """Fixtures for the Sensibo integration."""
+
 from __future__ import annotations
 
 import json
@@ -33,15 +34,19 @@ async def load_int(hass: HomeAssistant, get_data: SensiboData) -> MockConfigEntr
 
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices",
-        return_value={"result": [{"id": "xyzxyz"}, {"id": "abcabc"}]},
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_me",
-        return_value={"result": {"username": "username"}},
+    with (
+        patch(
+            "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+            return_value=get_data,
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices",
+            return_value={"result": [{"id": "xyzxyz"}, {"id": "abcabc"}]},
+        ),
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_get_me",
+            return_value={"result": {"username": "username"}},
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

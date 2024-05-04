@@ -1,4 +1,5 @@
 """Test schemas."""
+
 import logging
 
 import pytest
@@ -11,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @pytest.mark.parametrize(
     "blueprint",
-    (
+    [
         # Test allow extra
         {
             "trigger": "Test allow extra",
@@ -51,7 +52,7 @@ _LOGGER = logging.getLogger(__name__)
                 },
             }
         },
-    ),
+    ],
 )
 def test_blueprint_schema(blueprint) -> None:
     """Test different schemas."""
@@ -64,7 +65,7 @@ def test_blueprint_schema(blueprint) -> None:
 
 @pytest.mark.parametrize(
     "blueprint",
-    (
+    [
         # no domain
         {"blueprint": {}},
         # non existing key in blueprint
@@ -93,7 +94,7 @@ def test_blueprint_schema(blueprint) -> None:
                 },
             }
         },
-    ),
+    ],
 )
 def test_blueprint_schema_invalid(blueprint) -> None:
     """Test different schemas."""
@@ -103,11 +104,11 @@ def test_blueprint_schema_invalid(blueprint) -> None:
 
 @pytest.mark.parametrize(
     "bp_instance",
-    (
+    [
         {"path": "hello.yaml"},
         {"path": "hello.yaml", "input": {}},
         {"path": "hello.yaml", "input": {"hello": None}},
-    ),
+    ],
 )
 def test_blueprint_instance_fields(bp_instance) -> None:
     """Test blueprint instance fields."""

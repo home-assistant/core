@@ -1,4 +1,5 @@
 """Fixtures for Plex tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
@@ -598,8 +599,7 @@ def setup_plex_server(
             websocket_connected(mock_websocket)
             await hass.async_block_till_done()
 
-        plex_server = hass.data[DOMAIN][SERVERS][entry.unique_id]
-        return plex_server
+        return hass.data[DOMAIN][SERVERS][entry.unique_id]
 
     return _wrapper
 

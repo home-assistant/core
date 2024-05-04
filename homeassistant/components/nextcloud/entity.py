@@ -1,4 +1,5 @@
 """Base entity for the Nextcloud integration."""
+
 from urllib.parse import urlparse
 
 from homeassistant.config_entries import ConfigEntry

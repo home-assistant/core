@@ -1,4 +1,5 @@
 """Shark IQ Integration."""
+
 import asyncio
 from contextlib import suppress
 

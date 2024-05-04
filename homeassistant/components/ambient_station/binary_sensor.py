@@ -1,4 +1,5 @@
 """Support for Ambient Weather Station binary sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -1,4 +1,5 @@
 """Adds config flow for Trafikverket Weather integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -12,21 +13,20 @@ from pytrafikverket.exceptions import (
 from pytrafikverket.trafikverket_weather import TrafikverketWeather
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_STATION, DOMAIN
 
 
-class TVWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Trafikverket Weatherstation integration."""
 
     VERSION = 1
 
-    entry: config_entries.ConfigEntry | None = None
+    entry: ConfigEntry | None = None
 
     async def validate_input(self, sensor_api: str, station: str) -> None:
         """Validate input from user input."""
@@ -36,7 +36,7 @@ class TVWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
 
@@ -75,7 +75,9 @@ class TVWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle re-authentication with Trafikverket."""
 
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
@@ -83,7 +85,7 @@ class TVWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm re-authentication with Trafikverket."""
         errors: dict[str, str] = {}
 

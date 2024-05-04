@@ -1,4 +1,5 @@
 """Test reproduce state for Timer."""
+
 import pytest
 
 from homeassistant.components.timer import (

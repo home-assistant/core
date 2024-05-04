@@ -1,4 +1,5 @@
 """Test the V2C config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -15,7 +16,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -30,7 +31,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "EVSE 1.1.1.1"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -64,7 +65,7 @@ async def test_form_cannot_connect(
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error}
 
     with patch(
@@ -79,7 +80,7 @@ async def test_form_cannot_connect(
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "EVSE 1.1.1.1"
     assert result3["data"] == {
         "host": "1.1.1.1",

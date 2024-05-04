@@ -1,4 +1,5 @@
 """Test the FreeDNS component."""
+
 import pytest
 
 from homeassistant.components import freedns

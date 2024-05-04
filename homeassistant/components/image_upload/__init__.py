@@ -1,4 +1,5 @@
 """The Image Upload integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -13,8 +14,8 @@ from aiohttp.web_request import FileField
 from PIL import Image, ImageOps, UnidentifiedImageError
 import voluptuous as vol
 
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.http.static import CACHE_HEADERS
-from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, config_validation as cv
@@ -162,7 +163,7 @@ class ImageUploadView(HomeAssistantView):
         request._client_max_size = MAX_SIZE  # pylint: disable=protected-access
 
         data = await request.post()
-        item = await request.app["hass"].data[DOMAIN].async_create_item(data)
+        item = await request.app[KEY_HASS].data[DOMAIN].async_create_item(data)
         return self.json(item)
 
 
@@ -198,9 +199,9 @@ class ImageServeView(HomeAssistantView):
         image_info = self.image_collection.data.get(image_id)
 
         if image_info is None:
-            raise web.HTTPNotFound()
+            raise web.HTTPNotFound
 
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         target_file = self.image_folder / image_id / f"{width}x{height}"
 
         if not target_file.is_file():

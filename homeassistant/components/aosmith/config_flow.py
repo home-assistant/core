@@ -1,4 +1,5 @@
 """Config flow for A. O. Smith integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,9 +9,8 @@ from typing import Any
 from py_aosmith import AOSmithAPIClient, AOSmithInvalidCredentialsException
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
@@ -18,7 +18,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AOSmithConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for A. O. Smith."""
 
     VERSION = 1
@@ -44,7 +44,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -73,14 +73,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth if the user credentials have changed."""
         self._reauth_email = entry_data[CONF_EMAIL]
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle user's reauth credentials."""
         errors: dict[str, str] = {}
         if user_input is not None and self._reauth_email is not None:

@@ -1,4 +1,5 @@
 """Data update coordinator for shark iq vacuums."""
+
 from __future__ import annotations
 
 import asyncio
@@ -60,10 +61,10 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator[bool]):  # pylint: disable=
     async def _async_update_data(self) -> bool:
         """Update data device by device."""
         try:
-            if self.ayla_api.token_expiring_soon:
-                await self.ayla_api.async_refresh_auth()
-            elif datetime.now() > self.ayla_api.auth_expiration - timedelta(
-                seconds=600
+            if (
+                self.ayla_api.token_expiring_soon
+                or datetime.now()
+                > self.ayla_api.auth_expiration - timedelta(seconds=600)
             ):
                 await self.ayla_api.async_refresh_auth()
 

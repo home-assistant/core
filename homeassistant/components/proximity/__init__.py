@@ -1,4 +1,5 @@
 """Support for tracking the proximity of a device."""
+
 from __future__ import annotations
 
 import logging
@@ -19,7 +20,7 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import (
     async_track_entity_registry_updated_event,
-    async_track_state_change,
+    async_track_state_change_event,
 )
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
@@ -141,7 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = ProximityDataUpdateCoordinator(hass, entry.title, dict(entry.data))
 
     entry.async_on_unload(
-        async_track_state_change(
+        async_track_state_change_event(
             hass,
             entry.data[CONF_TRACKED_ENTITIES],
             coordinator.async_check_proximity_state_change,

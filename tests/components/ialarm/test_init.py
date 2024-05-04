@@ -1,4 +1,5 @@
 """Test the Antifurto365 iAlarm init."""
+
 from unittest.mock import Mock, patch
 from uuid import uuid4
 

@@ -1,4 +1,5 @@
 """Tests for the coordinator of the WLED integration."""
+
 import asyncio
 from collections.abc import Callable
 from copy import deepcopy

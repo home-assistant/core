@@ -1,4 +1,5 @@
 """Fixtures for Tedee integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -42,11 +43,14 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_tedee(request) -> Generator[MagicMock, None, None]:
     """Return a mocked Tedee client."""
-    with patch(
-        "homeassistant.components.tedee.coordinator.TedeeClient", autospec=True
-    ) as tedee_mock, patch(
-        "homeassistant.components.tedee.config_flow.TedeeClient",
-        new=tedee_mock,
+    with (
+        patch(
+            "homeassistant.components.tedee.coordinator.TedeeClient", autospec=True
+        ) as tedee_mock,
+        patch(
+            "homeassistant.components.tedee.config_flow.TedeeClient",
+            new=tedee_mock,
+        ),
     ):
         tedee = tedee_mock.return_value
 

@@ -1,15 +1,14 @@
 """Weather component that handles meteorological data for your location."""
+
 from __future__ import annotations
 
 import abc
-import asyncio
 from collections.abc import Callable, Iterable
 from contextlib import suppress
 from datetime import timedelta
-from functools import partial
+from functools import cached_property, partial
 import logging
 from typing import (
-    TYPE_CHECKING,
     Any,
     Final,
     Generic,
@@ -47,7 +46,6 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import ABCCachedProperties, Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity_platform import EntityPlatform
 import homeassistant.helpers.issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
@@ -55,12 +53,12 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     TimestampDataUpdateCoordinator,
 )
-from homeassistant.loader import async_get_issue_tracker, async_suggest_report_issue
 from homeassistant.util.dt import utcnow
 from homeassistant.util.json import JsonValueType
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from .const import (  # noqa: F401
+from . import group as group_pre_import  # noqa: F401
+from .const import (
     ATTR_WEATHER_APPARENT_TEMPERATURE,
     ATTR_WEATHER_CLOUD_COVERAGE,
     ATTR_WEATHER_DEW_POINT,
@@ -85,12 +83,6 @@ from .const import (  # noqa: F401
 )
 from .websocket_api import async_setup as async_setup_ws_api
 
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CONDITION_CLASS = "condition_class"
@@ -109,7 +101,6 @@ ATTR_CONDITION_SNOWY_RAINY = "snowy-rainy"
 ATTR_CONDITION_SUNNY = "sunny"
 ATTR_CONDITION_WINDY = "windy"
 ATTR_CONDITION_WINDY_VARIANT = "windy-variant"
-ATTR_FORECAST = "forecast"
 ATTR_FORECAST_IS_DAYTIME: Final = "is_daytime"
 ATTR_FORECAST_CONDITION: Final = "condition"
 ATTR_FORECAST_HUMIDITY: Final = "humidity"
@@ -304,13 +295,8 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
 class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """ABC for weather data."""
 
-    _entity_component_unrecorded_attributes = frozenset({ATTR_FORECAST})
-
     entity_description: WeatherEntityDescription
     _attr_condition: str | None = None
-    # _attr_forecast is deprecated, implement async_forecast_daily,
-    # async_forecast_hourly or async_forecast_twice daily instead
-    _attr_forecast: list[Forecast] | None = None
     _attr_humidity: float | None = None
     _attr_ozone: float | None = None
     _attr_cloud_coverage: int | None = None
@@ -336,8 +322,6 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
         Literal["daily", "hourly", "twice_daily"],
         list[Callable[[list[JsonValueType] | None], None]],
     ]
-    __weather_reported_legacy_forecast = False
-    __weather_legacy_forecast = False
 
     _weather_option_temperature_unit: str | None = None
     _weather_option_pressure_unit: str | None = None
@@ -348,77 +332,6 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
     def __post_init__(self, *args: Any, **kwargs: Any) -> None:
         """Finish initializing."""
         self._forecast_listeners = {"daily": [], "hourly": [], "twice_daily": []}
-
-    def __init_subclass__(cls, **kwargs: Any) -> None:
-        """Post initialisation processing."""
-        super().__init_subclass__(**kwargs)
-        if (
-            "forecast" in cls.__dict__
-            and cls.async_forecast_daily is WeatherEntity.async_forecast_daily
-            and cls.async_forecast_hourly is WeatherEntity.async_forecast_hourly
-            and cls.async_forecast_twice_daily
-            is WeatherEntity.async_forecast_twice_daily
-        ):
-            cls.__weather_legacy_forecast = True
-
-    @callback
-    def add_to_platform_start(
-        self,
-        hass: HomeAssistant,
-        platform: EntityPlatform,
-        parallel_updates: asyncio.Semaphore | None,
-    ) -> None:
-        """Start adding an entity to a platform."""
-        super().add_to_platform_start(hass, platform, parallel_updates)
-        if self.__weather_legacy_forecast:
-            self._report_legacy_forecast(hass)
-
-    def _report_legacy_forecast(self, hass: HomeAssistant) -> None:
-        """Log warning and create an issue if the entity imlpements legacy forecast."""
-        if "custom_components" not in type(self).__module__:
-            # Do not report core integrations as they are already fixed or PR is open.
-            return
-
-        report_issue = async_suggest_report_issue(
-            hass,
-            integration_domain=self.platform.platform_name,
-            module=type(self).__module__,
-        )
-        _LOGGER.warning(
-            (
-                "%s::%s implements the `forecast` property or sets "
-                "`self._attr_forecast` in a subclass of WeatherEntity, this is "
-                "deprecated and will be unsupported from Home Assistant 2024.3."
-                " Please %s"
-            ),
-            self.platform.platform_name,
-            self.__class__.__name__,
-            report_issue,
-        )
-
-        translation_placeholders = {"platform": self.platform.platform_name}
-        translation_key = "deprecated_weather_forecast_no_url"
-        issue_tracker = async_get_issue_tracker(
-            hass,
-            integration_domain=self.platform.platform_name,
-            module=type(self).__module__,
-        )
-        if issue_tracker:
-            translation_placeholders["issue_tracker"] = issue_tracker
-            translation_key = "deprecated_weather_forecast_url"
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"deprecated_weather_forecast_{self.platform.platform_name}",
-            breaks_in_ha_version="2024.3.0",
-            is_fixable=False,
-            is_persistent=False,
-            issue_domain=self.platform.platform_name,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=translation_key,
-            translation_placeholders=translation_placeholders,
-        )
-        self.__weather_reported_legacy_forecast = True
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the weather entity is added to hass."""
@@ -603,23 +516,6 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
 
         return self._default_visibility_unit
 
-    @property
-    def forecast(self) -> list[Forecast] | None:
-        """Return the forecast in native units.
-
-        Should not be overridden by integrations. Kept for backwards compatibility.
-        """
-        if (
-            self._attr_forecast is not None
-            and type(self).async_forecast_daily is WeatherEntity.async_forecast_daily
-            and type(self).async_forecast_hourly is WeatherEntity.async_forecast_hourly
-            and type(self).async_forecast_twice_daily
-            is WeatherEntity.async_forecast_twice_daily
-            and not self.__weather_reported_legacy_forecast
-        ):
-            self._report_legacy_forecast(self.hass)
-        return self._attr_forecast
-
     async def async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         raise NotImplementedError
@@ -673,7 +569,7 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
 
     @final
     @property
-    def state_attributes(self) -> dict[str, Any]:  # noqa: C901
+    def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes, converted.
 
         Attributes are configured from native units to user-configured units.
@@ -801,9 +697,6 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
 
         data[ATTR_WEATHER_VISIBILITY_UNIT] = self._visibility_unit
         data[ATTR_WEATHER_PRECIPITATION_UNIT] = self._precipitation_unit
-
-        if self.forecast:
-            data[ATTR_FORECAST] = self._convert_forecast(self.forecast)
 
         return data
 

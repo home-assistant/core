@@ -1,4 +1,5 @@
 """Climate platform for Teslemetry integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -26,7 +27,7 @@ async def async_setup_entry(
 
     async_add_entities(
         TeslemetryClimateEntity(vehicle, TeslemetryClimateSide.DRIVER)
-        for vehicle in data
+        for vehicle in data.vehicles
     )
 
 

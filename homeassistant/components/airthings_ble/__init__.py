@@ -1,4 +1,5 @@
 """The Airthings BLE integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -27,7 +28,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     address = entry.unique_id
 
-    elevation = hass.config.elevation
     is_metric = hass.config.units is METRIC_SYSTEM
     assert address is not None
 
@@ -40,14 +40,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Could not find Airthings device with address {address}"
         )
 
-    airthings = AirthingsBluetoothDeviceData(_LOGGER, elevation, is_metric)
+    airthings = AirthingsBluetoothDeviceData(_LOGGER, is_metric)
 
     async def _async_update_method() -> AirthingsDevice:
         """Get data from Airthings BLE."""
-        ble_device = bluetooth.async_ble_device_from_address(hass, address)
-
         try:
-            data = await airthings.update_device(ble_device)  # type: ignore[arg-type]
+            data = await airthings.update_device(ble_device)
         except Exception as err:
             raise UpdateFailed(f"Unable to fetch data: {err}") from err
 

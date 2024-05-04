@@ -1,4 +1,5 @@
 """Tests for the myStrom integration."""
+
 from typing import Any
 
 

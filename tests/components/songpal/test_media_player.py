@@ -1,4 +1,5 @@
 """Test songpal media_player."""
+
 from datetime import timedelta
 import logging
 from unittest.mock import AsyncMock, MagicMock, call, patch
@@ -11,6 +12,7 @@ from songpal import (
     SongpalException,
     VolumeChange,
 )
+from songpal.notification import SettingChange
 
 from homeassistant.components import media_player, songpal
 from homeassistant.components.media_player import MediaPlayerEntityFeature
@@ -46,6 +48,7 @@ SUPPORT_SONGPAL = (
     | MediaPlayerEntityFeature.VOLUME_STEP
     | MediaPlayerEntityFeature.VOLUME_MUTE
     | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.SELECT_SOUND_MODE
     | MediaPlayerEntityFeature.TURN_ON
     | MediaPlayerEntityFeature.TURN_OFF
 )
@@ -137,6 +140,8 @@ async def test_state(hass: HomeAssistant) -> None:
     assert attributes["is_volume_muted"] is False
     assert attributes["source_list"] == ["title1", "title2"]
     assert attributes["source"] == "title2"
+    assert attributes["sound_mode_list"] == ["Sound Mode 1", "Sound Mode 2"]
+    assert attributes["sound_mode"] == "Sound Mode 2"
     assert attributes["supported_features"] == SUPPORT_SONGPAL
 
     device_registry = dr.async_get(hass)
@@ -170,6 +175,8 @@ async def test_state_wireless(hass: HomeAssistant) -> None:
     assert attributes["is_volume_muted"] is False
     assert attributes["source_list"] == ["title1", "title2"]
     assert attributes["source"] == "title2"
+    assert attributes["sound_mode_list"] == ["Sound Mode 1", "Sound Mode 2"]
+    assert attributes["sound_mode"] == "Sound Mode 2"
     assert attributes["supported_features"] == SUPPORT_SONGPAL
 
     device_registry = dr.async_get(hass)
@@ -205,6 +212,8 @@ async def test_state_both(hass: HomeAssistant) -> None:
     assert attributes["is_volume_muted"] is False
     assert attributes["source_list"] == ["title1", "title2"]
     assert attributes["source"] == "title2"
+    assert attributes["sound_mode_list"] == ["Sound Mode 1", "Sound Mode 2"]
+    assert attributes["sound_mode"] == "Sound Mode 2"
     assert attributes["supported_features"] == SUPPORT_SONGPAL
 
     device_registry = dr.async_get(hass)
@@ -302,6 +311,9 @@ async def test_services(hass: HomeAssistant) -> None:
     mocked_device2.set_sound_settings.assert_called_once_with("name", "value")
     mocked_device3.set_sound_settings.assert_called_once_with("name", "value")
 
+    await _call(hass, media_player.SERVICE_SELECT_SOUND_MODE, sound_mode="Sound Mode 1")
+    mocked_device.set_sound_settings.assert_called_with("soundField", "sound_mode1")
+
 
 async def test_websocket_events(hass: HomeAssistant) -> None:
     """Test websocket events."""
@@ -314,7 +326,7 @@ async def test_websocket_events(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     mocked_device.listen_notifications.assert_called_once()
-    assert mocked_device.on_notification.call_count == 4
+    assert mocked_device.on_notification.call_count == 5
 
     notification_callbacks = mocked_device.notification_callbacks
 
@@ -334,6 +346,15 @@ async def test_websocket_events(hass: HomeAssistant) -> None:
     content_change.is_input = True
     await notification_callbacks[ContentChange](content_change)
     assert _get_attributes(hass)["source"] == "title1"
+
+    sound_mode_change = MagicMock()
+    sound_mode_change.target = "soundField"
+    sound_mode_change.currentValue = "sound_mode1"
+    await notification_callbacks[SettingChange](sound_mode_change)
+    assert _get_attributes(hass)["sound_mode"] == "Sound Mode 1"
+    sound_mode_change.currentValue = "sound_mode2"
+    await notification_callbacks[SettingChange](sound_mode_change)
+    assert _get_attributes(hass)["sound_mode"] == "Sound Mode 2"
 
     power_change = MagicMock()
     power_change.status = False

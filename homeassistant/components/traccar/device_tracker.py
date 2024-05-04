@@ -1,4 +1,5 @@
 """Support for Traccar device tracking."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -143,17 +144,16 @@ async def async_setup_entry(
             [TraccarEntity(device, latitude, longitude, battery, accuracy, attrs)]
         )
 
-    hass.data[DOMAIN]["unsub_device_tracker"][
-        entry.entry_id
-    ] = async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
+    hass.data[DOMAIN]["unsub_device_tracker"][entry.entry_id] = (
+        async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
+    )
 
     # Restore previously loaded devices
     dev_reg = dr.async_get(hass)
     dev_ids = {
         identifier[1]
-        for device in dev_reg.devices.values()
+        for device in dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
         for identifier in device.identifiers
-        if identifier[0] == DOMAIN
     }
     if not dev_ids:
         return

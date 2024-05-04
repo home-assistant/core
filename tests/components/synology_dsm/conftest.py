@@ -1,4 +1,5 @@
 """Configure Synology DSM tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 

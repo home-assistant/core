@@ -1,4 +1,5 @@
 """Support for AVM FRITZ!Box update platform."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

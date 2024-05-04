@@ -1,4 +1,5 @@
 """PEGELONLINE sensor entities."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -21,18 +22,11 @@ from .coordinator import PegelOnlineDataUpdateCoordinator
 from .entity import PegelOnlineEntity
 
 
-@dataclass(frozen=True)
-class PegelOnlineRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class PegelOnlineSensorEntityDescription(SensorEntityDescription):
+    """PEGELONLINE sensor entity description."""
 
     measurement_key: str
-
-
-@dataclass(frozen=True)
-class PegelOnlineSensorEntityDescription(
-    SensorEntityDescription, PegelOnlineRequiredKeysMixin
-):
-    """PEGELONLINE sensor entity description."""
 
 
 SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (

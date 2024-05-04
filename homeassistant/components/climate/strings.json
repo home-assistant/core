@@ -219,6 +219,10 @@
     "turn_off": {
       "name": "[%key:common::action::turn_off%]",
       "description": "Turns climate device off."
+    },
+    "toggle": {
+      "name": "[%key:common::action::toggle%]",
+      "description": "Toggles climate device, from on to off, or off to on."
     }
   },
   "selector": {
@@ -232,6 +236,16 @@
         "heat_cool": "Heat/cool",
         "heat": "Heat"
       }
+    }
+  },
+  "issues": {
+    "deprecated_climate_aux_url_custom": {
+      "title": "The {platform} custom integration is using deprecated climate auxiliary heater",
+      "description": "The custom integration `{platform}` implements the `is_aux_heat` property or uses the auxiliary heater methods in a subclass of ClimateEntity.\n\nPlease create a bug report at {issue_tracker}.\n\nOnce an updated version of `{platform}` is available, install it and restart Home Assistant to fix this issue."
+    },
+    "deprecated_climate_aux_no_url": {
+      "title": "[%key:component::climate::issues::deprecated_climate_aux_url_custom::title%]",
+      "description": "The custom integration `{platform}` implements the `is_aux_heat` property or uses the auxiliary heater methods in a subclass of ClimateEntity.\n\nPlease report it to the author of the {platform} integration.\n\nOnce an updated version of `{platform}` is available, install it and restart Home Assistant to fix this issue."
     }
   },
   "exceptions": {

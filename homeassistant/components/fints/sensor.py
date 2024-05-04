@@ -1,8 +1,10 @@
 """Read the balance of your bank accounts via FinTS."""
+
 from __future__ import annotations
 
 from collections import namedtuple
 from datetime import timedelta
+from functools import cached_property
 import logging
 from typing import Any
 
@@ -10,7 +12,6 @@ from fints.client import FinTS3PinTanClient
 from fints.models import SEPAAccount
 import voluptuous as vol
 
-from homeassistant.backports.functools import cached_property
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_PIN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant

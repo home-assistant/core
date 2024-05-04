@@ -1,4 +1,5 @@
 """Support for AVM FRITZ!SmartHome devices."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -50,12 +51,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     has_templates = await hass.async_add_executor_job(fritz.has_templates)
     LOGGER.debug("enable smarthome templates: %s", has_templates)
 
-    coordinator = FritzboxDataUpdateCoordinator(hass, entry, has_templates)
-
-    await coordinator.async_config_entry_first_refresh()
-
-    hass.data[DOMAIN][entry.entry_id][CONF_COORDINATOR] = coordinator
-
     def _update_unique_id(entry: RegistryEntry) -> dict[str, str] | None:
         """Update unique ID of entity entry."""
         if (
@@ -77,6 +72,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return None
 
     await async_migrate_entries(hass, entry.entry_id, _update_unique_id)
+
+    coordinator = FritzboxDataUpdateCoordinator(hass, entry.entry_id, has_templates)
+    await coordinator.async_setup()
+    hass.data[DOMAIN][entry.entry_id][CONF_COORDINATOR] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

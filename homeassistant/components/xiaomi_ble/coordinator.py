@@ -1,4 +1,5 @@
 """The Xiaomi BLE integration."""
+
 from collections.abc import Callable, Coroutine
 from logging import Logger
 from typing import Any

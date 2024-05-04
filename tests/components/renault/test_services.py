@@ -1,4 +1,5 @@
 """Tests for Renault sensors."""
+
 from collections.abc import Generator
 from datetime import datetime
 from unittest.mock import patch
@@ -89,10 +90,13 @@ async def test_service_set_ac_cancel(
         ATTR_VEHICLE: get_device_id(hass),
     }
 
-    with patch(
-        "renault_api.renault_vehicle.RenaultVehicle.set_ac_stop",
-        side_effect=RenaultException("Didn't work"),
-    ) as mock_action, pytest.raises(HomeAssistantError, match="Didn't work"):
+    with (
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.set_ac_stop",
+            side_effect=RenaultException("Didn't work"),
+        ) as mock_action,
+        pytest.raises(HomeAssistantError, match="Didn't work"),
+    ):
         await hass.services.async_call(
             DOMAIN, SERVICE_AC_CANCEL, service_data=data, blocking=True
         )
@@ -171,19 +175,22 @@ async def test_service_set_charge_schedule(
         ATTR_SCHEDULES: schedules,
     }
 
-    with patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_charging_settings",
-        return_value=schemas.KamereonVehicleDataResponseSchema.loads(
-            load_fixture("renault/charging_settings.json")
-        ).get_attributes(schemas.KamereonVehicleChargingSettingsDataSchema),
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.set_charge_schedules",
-        return_value=(
-            schemas.KamereonVehicleHvacStartActionDataSchema.loads(
-                load_fixture("renault/action.set_charge_schedules.json")
-            )
+    with (
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_charging_settings",
+            return_value=schemas.KamereonVehicleDataResponseSchema.loads(
+                load_fixture("renault/charging_settings.json")
+            ).get_attributes(schemas.KamereonVehicleChargingSettingsDataSchema),
         ),
-    ) as mock_action:
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.set_charge_schedules",
+            return_value=(
+                schemas.KamereonVehicleHvacStartActionDataSchema.loads(
+                    load_fixture("renault/action.set_charge_schedules.json")
+                )
+            ),
+        ) as mock_action,
+    ):
         await hass.services.async_call(
             DOMAIN, SERVICE_CHARGE_SET_SCHEDULES, service_data=data, blocking=True
         )
@@ -217,19 +224,22 @@ async def test_service_set_charge_schedule_multi(
         ATTR_SCHEDULES: schedules,
     }
 
-    with patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_charging_settings",
-        return_value=schemas.KamereonVehicleDataResponseSchema.loads(
-            load_fixture("renault/charging_settings.json")
-        ).get_attributes(schemas.KamereonVehicleChargingSettingsDataSchema),
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.set_charge_schedules",
-        return_value=(
-            schemas.KamereonVehicleHvacStartActionDataSchema.loads(
-                load_fixture("renault/action.set_charge_schedules.json")
-            )
+    with (
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_charging_settings",
+            return_value=schemas.KamereonVehicleDataResponseSchema.loads(
+                load_fixture("renault/charging_settings.json")
+            ).get_attributes(schemas.KamereonVehicleChargingSettingsDataSchema),
         ),
-    ) as mock_action:
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.set_charge_schedules",
+            return_value=(
+                schemas.KamereonVehicleHvacStartActionDataSchema.loads(
+                    load_fixture("renault/action.set_charge_schedules.json")
+                )
+            ),
+        ) as mock_action,
+    ):
         await hass.services.async_call(
             DOMAIN, SERVICE_CHARGE_SET_SCHEDULES, service_data=data, blocking=True
         )

@@ -1,4 +1,5 @@
 """Configure pytest for Netgear LTE tests."""
+
 from __future__ import annotations
 
 from aiohttp.client_exceptions import ClientError

@@ -73,5 +73,8 @@
         "default": "mdi:air-conditioner"
       }
     }
+  },
+  "services": {
+    "randomize_device_tracker_data": "mdi:dice-multiple"
   }
 }

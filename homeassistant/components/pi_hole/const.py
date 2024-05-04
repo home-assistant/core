@@ -1,4 +1,5 @@
 """Constants for the pi_hole integration."""
+
 from datetime import timedelta
 
 DOMAIN = "pi_hole"

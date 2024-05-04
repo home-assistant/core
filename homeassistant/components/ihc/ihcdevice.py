@@ -1,4 +1,5 @@
 """Implementation of a base class for all IHC devices."""
+
 import logging
 
 from ihcsdk.ihccontroller import IHCController

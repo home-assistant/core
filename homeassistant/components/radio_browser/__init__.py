@@ -1,4 +1,5 @@
 """The Radio Browser integration."""
+
 from __future__ import annotations
 
 from aiodns.error import DNSError

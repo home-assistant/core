@@ -1,4 +1,5 @@
 """Support for the NextDNS service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -17,8 +18,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CoordinatorDataT, NextDnsSettingsUpdateCoordinator
 from .const import ATTR_SETTINGS, DOMAIN
+from .coordinator import CoordinatorDataT, NextDnsSettingsUpdateCoordinator
 
 PARALLEL_UPDATES = 1
 
@@ -537,11 +538,9 @@ async def async_setup_entry(
         ATTR_SETTINGS
     ]
 
-    switches: list[NextDnsSwitch] = []
-    for description in SWITCHES:
-        switches.append(NextDnsSwitch(coordinator, description))
-
-    async_add_entities(switches)
+    async_add_entities(
+        NextDnsSwitch(coordinator, description) for description in SWITCHES
+    )
 
 
 class NextDnsSwitch(CoordinatorEntity[NextDnsSettingsUpdateCoordinator], SwitchEntity):

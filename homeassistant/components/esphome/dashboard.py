@@ -1,4 +1,5 @@
 """Files to interact with a the ESPHome dashboard."""
+
 from __future__ import annotations
 
 import asyncio

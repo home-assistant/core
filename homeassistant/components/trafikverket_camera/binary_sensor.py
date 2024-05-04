@@ -1,4 +1,5 @@
 """Binary sensor platform for Trafikverket Camera integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -19,24 +20,16 @@ from .entity import TrafikverketCameraNonCameraEntity
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
-class DeviceBaseEntityDescriptionMixin:
-    """Mixin for required Trafikverket Camera base description keys."""
+@dataclass(frozen=True, kw_only=True)
+class TVCameraSensorEntityDescription(BinarySensorEntityDescription):
+    """Describes Trafikverket Camera binary sensor entity."""
 
     value_fn: Callable[[CameraData], bool | None]
-
-
-@dataclass(frozen=True)
-class TVCameraSensorEntityDescription(
-    BinarySensorEntityDescription, DeviceBaseEntityDescriptionMixin
-):
-    """Describes Trafikverket Camera binary sensor entity."""
 
 
 BINARY_SENSOR_TYPE = TVCameraSensorEntityDescription(
     key="active",
     translation_key="active",
-    icon="mdi:camera-outline",
     value_fn=lambda data: data.data.active,
 )
 

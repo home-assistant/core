@@ -1,12 +1,13 @@
 """Test Scrape component setup process."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.scrape.const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -116,16 +117,16 @@ async def test_setup_config_no_sensors(
 async def test_setup_entry(hass: HomeAssistant, loaded_entry: MockConfigEntry) -> None:
     """Test setup entry."""
 
-    assert loaded_entry.state == config_entries.ConfigEntryState.LOADED
+    assert loaded_entry.state is ConfigEntryState.LOADED
 
 
 async def test_unload_entry(hass: HomeAssistant, loaded_entry: MockConfigEntry) -> None:
     """Test unload an entry."""
 
-    assert loaded_entry.state == config_entries.ConfigEntryState.LOADED
+    assert loaded_entry.state is ConfigEntryState.LOADED
     assert await hass.config_entries.async_unload(loaded_entry.entry_id)
     await hass.async_block_till_done()
-    assert loaded_entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert loaded_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def remove_device(ws_client, device_id, config_entry_id):

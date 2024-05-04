@@ -1,4 +1,5 @@
 """Config flow for SRP Energy."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,10 +7,9 @@ from typing import Any
 from srpenergy.client import SrpEnergyClient
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import CONF_IS_TOU, DOMAIN, LOGGER
@@ -35,13 +35,13 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     return is_valid
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SRPEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle an SRP Energy config flow."""
 
     VERSION = 1
 
     @callback
-    def _show_form(self, errors: dict[str, Any]) -> FlowResult:
+    def _show_form(self, errors: dict[str, Any]) -> ConfigFlowResult:
         """Show the form to the user."""
         LOGGER.debug("Show Form")
         return self.async_show_form(
@@ -62,7 +62,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         LOGGER.debug("Config entry")
         errors: dict[str, str] = {}

@@ -1,4 +1,5 @@
 """Test the python_script component."""
+
 import logging
 from unittest.mock import mock_open, patch
 
@@ -19,28 +20,36 @@ async def test_setup(hass: HomeAssistant) -> None:
         "/some/config/dir/python_scripts/hello.py",
         "/some/config/dir/python_scripts/world_beer.py",
     ]
-    with patch(
-        "homeassistant.components.python_script.os.path.isdir", return_value=True
-    ), patch("homeassistant.components.python_script.glob.iglob", return_value=scripts):
+    with (
+        patch(
+            "homeassistant.components.python_script.os.path.isdir", return_value=True
+        ),
+        patch(
+            "homeassistant.components.python_script.glob.iglob", return_value=scripts
+        ),
+    ):
         res = await async_setup_component(hass, "python_script", {})
 
     assert res
     assert hass.services.has_service("python_script", "hello")
     assert hass.services.has_service("python_script", "world_beer")
 
-    with patch(
-        "homeassistant.components.python_script.open",
-        mock_open(read_data="fake source"),
-        create=True,
-    ), patch("homeassistant.components.python_script.execute") as mock_ex:
+    with (
+        patch(
+            "homeassistant.components.python_script.open",
+            mock_open(read_data="fake source"),
+            create=True,
+        ),
+        patch("homeassistant.components.python_script.execute") as mock_ex,
+    ):
         await hass.services.async_call(
             "python_script", "hello", {"some": "data"}, blocking=True
         )
 
     assert len(mock_ex.mock_calls) == 1
-    hass, script, source, data = mock_ex.mock_calls[0][1]
+    test_hass, script, source, data = mock_ex.mock_calls[0][1]
 
-    assert hass is hass
+    assert test_hass is hass
     assert script == "hello.py"
     assert source == "fake source"
     assert data == {"some": "data"}
@@ -69,7 +78,7 @@ hass.states.set('test.entity', data.get('name', 'not set'))
     """
 
     hass.async_add_executor_job(execute, hass, "test.py", source, {"name": "paulus"})
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.is_state("test.entity", "paulus")
 
@@ -87,7 +96,7 @@ print("This triggers warning.")
     """
 
     hass.async_add_executor_job(execute, hass, "test.py", source, {})
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Don't use print() inside scripts." in caplog.text
 
@@ -102,7 +111,7 @@ logger.info('Logging from inside script')
     """
 
     hass.async_add_executor_job(execute, hass, "test.py", source, {})
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Logging from inside script" in caplog.text
 
@@ -117,7 +126,7 @@ this is not valid Python
     """
 
     hass.async_add_executor_job(execute, hass, "test.py", source, {})
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Error loading script test.py" in caplog.text
 
@@ -131,10 +140,10 @@ async def test_execute_runtime_error(
 raise Exception('boom')
     """
 
-    hass.async_add_executor_job(execute, hass, "test.py", source, {})
-    await hass.async_block_till_done()
+    await hass.async_add_executor_job(execute, hass, "test.py", source, {})
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "Error executing script: boom" in caplog.text
+    assert "Error executing script" in caplog.text
 
 
 async def test_execute_runtime_error_with_response(hass: HomeAssistant) -> None:
@@ -144,7 +153,7 @@ raise Exception('boom')
     """
 
     task = hass.async_add_executor_job(execute, hass, "test.py", source, {}, True)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert type(task.exception()) == HomeAssistantError
     assert "Error executing script (Exception): boom" in str(task.exception())
@@ -159,7 +168,7 @@ async def test_accessing_async_methods(
 hass.async_stop()
     """
 
-    hass.async_add_executor_job(execute, hass, "test.py", source, {})
+    await hass.async_add_executor_job(execute, hass, "test.py", source, {})
     await hass.async_block_till_done()
 
     assert "Not allowed to access async methods" in caplog.text
@@ -172,7 +181,7 @@ hass.async_stop()
     """
 
     task = hass.async_add_executor_job(execute, hass, "test.py", source, {}, True)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert type(task.exception()) == ServiceValidationError
     assert "Not allowed to access async methods" in str(task.exception())
@@ -189,7 +198,7 @@ mylist = [1, 2, 3, 4]
 logger.info('Logging from inside script: %s %s' % (mydict["a"], mylist[2]))
     """
 
-    hass.async_add_executor_job(execute, hass, "test.py", source, {})
+    await hass.async_add_executor_job(execute, hass, "test.py", source, {})
     await hass.async_block_till_done()
 
     assert "Logging from inside script: 1 3" in caplog.text
@@ -208,7 +217,7 @@ async def test_accessing_forbidden_methods(
         "time.tzset()": "TimeWrapper.tzset",
     }.items():
         caplog.records.clear()
-        hass.async_add_executor_job(execute, hass, "test.py", source, {})
+        await hass.async_add_executor_job(execute, hass, "test.py", source, {})
         await hass.async_block_till_done()
         assert f"Not allowed to access {name}" in caplog.text
 
@@ -222,7 +231,7 @@ async def test_accessing_forbidden_methods_with_response(hass: HomeAssistant) ->
         "time.tzset()": "TimeWrapper.tzset",
     }.items():
         task = hass.async_add_executor_job(execute, hass, "test.py", source, {}, True)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert type(task.exception()) == ServiceValidationError
         assert f"Not allowed to access {name}" in str(task.exception())
@@ -235,7 +244,7 @@ for i in [1, 2]:
     hass.states.set('hello.{}'.format(i), 'world')
     """
 
-    hass.async_add_executor_job(execute, hass, "test.py", source, {})
+    await hass.async_add_executor_job(execute, hass, "test.py", source, {})
     await hass.async_block_till_done()
 
     assert hass.states.is_state("hello.1", "world")
@@ -249,7 +258,7 @@ for index, value in enumerate(["earth", "mars"]):
     hass.states.set('hello.{}'.format(index), value)
     """
 
-    hass.async_add_job(execute, hass, "test.py", source, {})
+    await hass.async_add_executor_job(execute, hass, "test.py", source, {})
     await hass.async_block_till_done()
 
     assert hass.states.is_state("hello.0", "earth")
@@ -270,7 +279,7 @@ hass.states.set('hello.ab_list', '{}'.format(ab_list))
 """
 
     hass.async_add_executor_job(execute, hass, "test.py", source, {})
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.is_state("hello.a", "1")
     assert hass.states.is_state("hello.b", "2")
@@ -293,7 +302,7 @@ hass.states.set('hello.b', a[1])
 hass.states.set('hello.c', a[2])
 """
     hass.async_add_executor_job(execute, hass, "test.py", source, {})
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.is_state("hello.a", "1")
     assert hass.states.is_state("hello.b", "2")
@@ -316,7 +325,7 @@ hass.states.set('module.datetime',
 """
 
     hass.async_add_executor_job(execute, hass, "test.py", source, {})
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.is_state("module.time", "1986")
     assert hass.states.is_state("module.time_strptime", "12:34")
@@ -342,7 +351,7 @@ def b():
 b()
 """
     hass.async_add_executor_job(execute, hass, "test.py", source, {})
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.is_state("hello.a", "one")
     assert hass.states.is_state("hello.b", "two")
@@ -356,9 +365,14 @@ async def test_reload(hass: HomeAssistant) -> None:
         "/some/config/dir/python_scripts/hello.py",
         "/some/config/dir/python_scripts/world_beer.py",
     ]
-    with patch(
-        "homeassistant.components.python_script.os.path.isdir", return_value=True
-    ), patch("homeassistant.components.python_script.glob.iglob", return_value=scripts):
+    with (
+        patch(
+            "homeassistant.components.python_script.os.path.isdir", return_value=True
+        ),
+        patch(
+            "homeassistant.components.python_script.glob.iglob", return_value=scripts
+        ),
+    ):
         res = await async_setup_component(hass, "python_script", {})
 
     assert res
@@ -370,9 +384,14 @@ async def test_reload(hass: HomeAssistant) -> None:
         "/some/config/dir/python_scripts/hello2.py",
         "/some/config/dir/python_scripts/world_beer.py",
     ]
-    with patch(
-        "homeassistant.components.python_script.os.path.isdir", return_value=True
-    ), patch("homeassistant.components.python_script.glob.iglob", return_value=scripts):
+    with (
+        patch(
+            "homeassistant.components.python_script.os.path.isdir", return_value=True
+        ),
+        patch(
+            "homeassistant.components.python_script.glob.iglob", return_value=scripts
+        ),
+    ):
         await hass.services.async_call("python_script", "reload", {}, blocking=True)
 
     assert not hass.services.has_service("python_script", "hello")
@@ -402,14 +421,19 @@ async def test_service_descriptions(hass: HomeAssistant) -> None:
         f"{hass.config.config_dir}/{FOLDER}/services.yaml": service_descriptions1
     }
 
-    with patch(
-        "homeassistant.components.python_script.os.path.isdir", return_value=True
-    ), patch(
-        "homeassistant.components.python_script.glob.iglob", return_value=scripts1
-    ), patch(
-        "homeassistant.components.python_script.os.path.exists", return_value=True
-    ), patch_yaml_files(
-        services_yaml1,
+    with (
+        patch(
+            "homeassistant.components.python_script.os.path.isdir", return_value=True
+        ),
+        patch(
+            "homeassistant.components.python_script.glob.iglob", return_value=scripts1
+        ),
+        patch(
+            "homeassistant.components.python_script.os.path.exists", return_value=True
+        ),
+        patch_yaml_files(
+            services_yaml1,
+        ),
     ):
         await async_setup_component(hass, DOMAIN, {})
 
@@ -451,14 +475,19 @@ async def test_service_descriptions(hass: HomeAssistant) -> None:
         f"{hass.config.config_dir}/{FOLDER}/services.yaml": service_descriptions2
     }
 
-    with patch(
-        "homeassistant.components.python_script.os.path.isdir", return_value=True
-    ), patch(
-        "homeassistant.components.python_script.glob.iglob", return_value=scripts2
-    ), patch(
-        "homeassistant.components.python_script.os.path.exists", return_value=True
-    ), patch_yaml_files(
-        services_yaml2,
+    with (
+        patch(
+            "homeassistant.components.python_script.os.path.isdir", return_value=True
+        ),
+        patch(
+            "homeassistant.components.python_script.glob.iglob", return_value=scripts2
+        ),
+        patch(
+            "homeassistant.components.python_script.os.path.exists", return_value=True
+        ),
+        patch_yaml_files(
+            services_yaml2,
+        ),
     ):
         await hass.services.async_call(DOMAIN, "reload", {}, blocking=True)
         descriptions = await async_get_all_descriptions(hass)
@@ -488,7 +517,7 @@ time.sleep(5)
 
     with patch("homeassistant.components.python_script.time.sleep"):
         hass.async_add_executor_job(execute, hass, "test.py", source, {})
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert caplog.text.count("time.sleep") == 1
 
@@ -502,9 +531,14 @@ async def test_execute_with_output(
     scripts = [
         "/some/config/dir/python_scripts/hello.py",
     ]
-    with patch(
-        "homeassistant.components.python_script.os.path.isdir", return_value=True
-    ), patch("homeassistant.components.python_script.glob.iglob", return_value=scripts):
+    with (
+        patch(
+            "homeassistant.components.python_script.os.path.isdir", return_value=True
+        ),
+        patch(
+            "homeassistant.components.python_script.glob.iglob", return_value=scripts
+        ),
+    ):
         await async_setup_component(hass, "python_script", {})
 
     source = """
@@ -541,9 +575,14 @@ async def test_execute_no_output(
     scripts = [
         "/some/config/dir/python_scripts/hello.py",
     ]
-    with patch(
-        "homeassistant.components.python_script.os.path.isdir", return_value=True
-    ), patch("homeassistant.components.python_script.glob.iglob", return_value=scripts):
+    with (
+        patch(
+            "homeassistant.components.python_script.os.path.isdir", return_value=True
+        ),
+        patch(
+            "homeassistant.components.python_script.glob.iglob", return_value=scripts
+        ),
+    ):
         await async_setup_component(hass, "python_script", {})
 
     source = """
@@ -575,20 +614,28 @@ async def test_execute_wrong_output_type(hass: HomeAssistant) -> None:
     scripts = [
         "/some/config/dir/python_scripts/hello.py",
     ]
-    with patch(
-        "homeassistant.components.python_script.os.path.isdir", return_value=True
-    ), patch("homeassistant.components.python_script.glob.iglob", return_value=scripts):
+    with (
+        patch(
+            "homeassistant.components.python_script.os.path.isdir", return_value=True
+        ),
+        patch(
+            "homeassistant.components.python_script.glob.iglob", return_value=scripts
+        ),
+    ):
         await async_setup_component(hass, "python_script", {})
 
     source = """
 output = f"hello {data.get('name', 'World')}"
     """
 
-    with patch(
-        "homeassistant.components.python_script.open",
-        mock_open(read_data=source),
-        create=True,
-    ), pytest.raises(ServiceValidationError):
+    with (
+        patch(
+            "homeassistant.components.python_script.open",
+            mock_open(read_data=source),
+            create=True,
+        ),
+        pytest.raises(ServiceValidationError),
+    ):
         await hass.services.async_call(
             "python_script",
             "hello",
@@ -596,3 +643,48 @@ output = f"hello {data.get('name', 'World')}"
             blocking=True,
             return_response=True,
         )
+
+
+async def test_augmented_assignment_operations(hass: HomeAssistant) -> None:
+    """Test that augmented assignment operations work."""
+    source = """
+a = 10
+a += 20
+a *= 5
+a -= 8
+b = "foo"
+b += "bar"
+b *= 2
+c = []
+c += [1, 2, 3]
+c *= 2
+hass.states.set('hello.a', a)
+hass.states.set('hello.b', b)
+hass.states.set('hello.c', c)
+    """
+
+    hass.async_add_executor_job(execute, hass, "aug_assign.py", source, {})
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("hello.a").state == str(((10 + 20) * 5) - 8)
+    assert hass.states.get("hello.b").state == ("foo" + "bar") * 2
+    assert hass.states.get("hello.c").state == str([1, 2, 3] * 2)
+
+
+@pytest.mark.parametrize(
+    ("case", "error"),
+    [
+        pytest.param(
+            "d = datetime.date(2024, 1, 1); d += 5",
+            "The '+=' operation is not allowed",
+            id="datetime.date",
+        ),
+    ],
+)
+async def test_prohibited_augmented_assignment_operations(
+    hass: HomeAssistant, case: str, error: str, caplog
+) -> None:
+    """Test that prohibited augmented assignment operations raise an error."""
+    hass.async_add_executor_job(execute, hass, "aug_assign_prohibited.py", case, {})
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert error in caplog.text

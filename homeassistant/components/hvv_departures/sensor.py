@@ -1,4 +1,5 @@
 """Sensor platform for hvv."""
+
 from datetime import timedelta
 import logging
 from typing import Any
@@ -21,7 +22,6 @@ from .const import ATTRIBUTION, CONF_REAL_TIME, CONF_STATION, DOMAIN, MANUFACTUR
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 MAX_LIST = 20
 MAX_TIME_OFFSET = 360
-ICON = "mdi:bus"
 
 ATTR_DEPARTURE = "departure"
 ATTR_LINE = "line"
@@ -58,7 +58,6 @@ class HVVDepartureSensor(SensorEntity):
 
     _attr_attribution = ATTRIBUTION
     _attr_device_class = SensorDeviceClass.TIMESTAMP
-    _attr_icon = ICON
     _attr_translation_key = "departures"
     _attr_has_entity_name = True
     _attr_available = False

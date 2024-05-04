@@ -1,4 +1,5 @@
 """Methods and classes related to executing Z-Wave commands."""
+
 from __future__ import annotations
 
 import asyncio
@@ -84,7 +85,7 @@ def get_valid_responses_from_results(
     zwave_objects: Sequence[T], results: Sequence[Any]
 ) -> Generator[tuple[T, Any], None, None]:
     """Return valid responses from a list of results."""
-    for zwave_object, result in zip(zwave_objects, results):
+    for zwave_object, result in zip(zwave_objects, results, strict=False):
         if not isinstance(result, Exception):
             yield zwave_object, result
 
@@ -95,7 +96,9 @@ def raise_exceptions_from_results(
     """Raise list of exceptions from a list of results."""
     errors: Sequence[tuple[T, Any]]
     if errors := [
-        tup for tup in zip(zwave_objects, results) if isinstance(tup[1], Exception)
+        tup
+        for tup in zip(zwave_objects, results, strict=True)
+        if isinstance(tup[1], Exception)
     ]:
         lines = [
             *(

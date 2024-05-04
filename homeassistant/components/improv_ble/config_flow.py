@@ -1,4 +1,5 @@
 """Config flow for Improv via BLE integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -19,11 +20,11 @@ from improv_ble_client import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import bluetooth
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import AbortFlow
 
 from .const import DOMAIN
 
@@ -47,7 +48,7 @@ class Credentials:
     ssid: str
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Improv via BLE."""
 
     VERSION = 1
@@ -55,9 +56,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     _authorize_task: asyncio.Task | None = None
     _can_identify: bool | None = None
     _credentials: Credentials | None = None
-    _provision_result: FlowResult | None = None
+    _provision_result: ConfigFlowResult | None = None
     _provision_task: asyncio.Task | None = None
-    _reauth_entry: config_entries.ConfigEntry | None = None
+    _reauth_entry: ConfigEntry | None = None
     _remove_bluetooth_callback: Callable[[], None] | None = None
     _unsub: Callable[[], None] | None = None
 
@@ -71,7 +72,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user step to pick discovered device."""
         errors: dict[str, str] = {}
 
@@ -158,7 +159,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth(
         self, discovery_info: bluetooth.BluetoothServiceInfoBleak
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the Bluetooth discovery step."""
         self._discovery_info = discovery_info
 
@@ -181,7 +182,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle bluetooth confirm step."""
         # mypy is not aware that we can't get here without having these set already
         assert self._discovery_info is not None
@@ -198,7 +199,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_start_improv(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Start improv flow.
 
         If the device supports identification, show a menu, if it does not,
@@ -220,7 +221,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_main_menu()
         return await self.async_step_provision()
 
-    async def async_step_main_menu(self, _: None = None) -> FlowResult:
+    async def async_step_main_menu(self, _: None = None) -> ConfigFlowResult:
         """Show the main menu."""
         return self.async_show_menu(
             step_id="main_menu",
@@ -232,7 +233,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_identify(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle identify step."""
         # mypy is not aware that we can't get here without having these set already
         assert self._device is not None
@@ -247,7 +248,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_provision(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle provision step."""
         # mypy is not aware that we can't get here without having these set already
         assert self._device is not None
@@ -272,7 +273,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_do_provision(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Execute provisioning."""
 
         async def _do_provision() -> None:
@@ -325,7 +326,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return
 
         if not self._provision_task:
-            self._provision_task = self.hass.async_create_task(_do_provision())
+            self._provision_task = self.hass.async_create_task(
+                _do_provision(), eager_start=False
+            )
 
         if not self._provision_task.done():
             return self.async_show_progress(
@@ -339,7 +342,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_provision_done(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Show the result of the provision step."""
         # mypy is not aware that we can't get here without having these set already
         assert self._provision_result is not None
@@ -350,7 +353,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_authorize(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle authorize step."""
         # mypy is not aware that we can't get here without having these set already
         assert self._device is not None
@@ -371,7 +374,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except AbortFlow as err:
                 return self.async_abort(reason=err.reason)
 
-            self._authorize_task = self.hass.async_create_task(authorized_event.wait())
+            self._authorize_task = self.hass.async_create_task(
+                authorized_event.wait(), eager_start=False
+            )
 
         if not self._authorize_task.done():
             return self.async_show_progress(

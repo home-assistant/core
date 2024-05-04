@@ -1,4 +1,5 @@
 """Support for NWS weather service."""
+
 from __future__ import annotations
 
 from types import MappingProxyType
@@ -84,17 +85,15 @@ async def async_setup_entry(
     entity_registry = er.async_get(hass)
     nws_data: NWSData = hass.data[DOMAIN][entry.entry_id]
 
-    entities = [NWSWeather(entry.data, nws_data, DAYNIGHT)]
-
-    # Add hourly entity to legacy config entries
-    if entity_registry.async_get_entity_id(
+    # Remove hourly entity from legacy config entries
+    if entity_id := entity_registry.async_get_entity_id(
         WEATHER_DOMAIN,
         DOMAIN,
         _calculate_unique_id(entry.data, HOURLY),
     ):
-        entities.append(NWSWeather(entry.data, nws_data, HOURLY))
+        entity_registry.async_remove(entity_id)
 
-    async_add_entities(entities, False)
+    async_add_entities([NWSWeather(entry.data, nws_data)], False)
 
 
 if TYPE_CHECKING:
@@ -129,7 +128,6 @@ class NWSWeather(CoordinatorWeatherEntity):
         self,
         entry_data: MappingProxyType[str, Any],
         nws_data: NWSData,
-        mode: str,
     ) -> None:
         """Initialise the platform with a data instance and station name."""
         super().__init__(
@@ -142,23 +140,17 @@ class NWSWeather(CoordinatorWeatherEntity):
         self.nws = nws_data.api
         latitude = entry_data[CONF_LATITUDE]
         longitude = entry_data[CONF_LONGITUDE]
-        if mode == DAYNIGHT:
-            self.coordinator_forecast_legacy = nws_data.coordinator_forecast
-        else:
-            self.coordinator_forecast_legacy = nws_data.coordinator_forecast_hourly
+        self.coordinator_forecast_legacy = nws_data.coordinator_forecast
         self.station = self.nws.station
-
-        self.mode = mode
-        self._attr_entity_registry_enabled_default = mode == DAYNIGHT
 
         self.observation: dict[str, Any] | None = None
         self._forecast_hourly: list[dict[str, Any]] | None = None
         self._forecast_legacy: list[dict[str, Any]] | None = None
         self._forecast_twice_daily: list[dict[str, Any]] | None = None
 
-        self._attr_unique_id = _calculate_unique_id(entry_data, mode)
+        self._attr_unique_id = _calculate_unique_id(entry_data, DAYNIGHT)
         self._attr_device_info = device_info(latitude, longitude)
-        self._attr_name = f"{self.station} {self.mode.title()}"
+        self._attr_name = self.station
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener and load data."""
@@ -193,10 +185,7 @@ class NWSWeather(CoordinatorWeatherEntity):
     @callback
     def _handle_legacy_forecast_coordinator_update(self) -> None:
         """Handle updated data from the legacy forecast coordinator."""
-        if self.mode == DAYNIGHT:
-            self._forecast_legacy = self.nws.forecast
-        else:
-            self._forecast_legacy = self.nws.forecast_hourly
+        self._forecast_legacy = self.nws.forecast
         self.async_write_ha_state()
 
     @property
@@ -309,11 +298,6 @@ class NWSWeather(CoordinatorWeatherEntity):
                 data[ATTR_FORECAST_NATIVE_WIND_SPEED] = None
             forecast.append(data)
         return forecast
-
-    @property
-    def forecast(self) -> list[Forecast] | None:
-        """Return forecast."""
-        return self._forecast(self._forecast_legacy, self.mode)
 
     @callback
     def _async_forecast_hourly(self) -> list[Forecast] | None:

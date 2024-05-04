@@ -1,4 +1,5 @@
 """The Local To-do integration."""
+
 from __future__ import annotations
 
 from pathlib import Path

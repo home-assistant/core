@@ -58,6 +58,7 @@ class GetTemperatureIntent(intent.IntentHandler):
                 raise intent.NoStatesMatchedError(
                     name=entity_text or entity_name,
                     area=area_name or area_id,
+                    floor=None,
                     domains={DOMAIN},
                     device_classes=None,
                 )
@@ -75,6 +76,7 @@ class GetTemperatureIntent(intent.IntentHandler):
                 raise intent.NoStatesMatchedError(
                     name=entity_name,
                     area=None,
+                    floor=None,
                     domains={DOMAIN},
                     device_classes=None,
                 )

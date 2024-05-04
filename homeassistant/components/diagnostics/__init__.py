@@ -1,4 +1,5 @@
 """The Diagnostics integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine, Mapping
@@ -40,13 +41,17 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 class DiagnosticsPlatformData:
     """Diagnostic platform data."""
 
-    config_entry_diagnostics: Callable[
-        [HomeAssistant, ConfigEntry], Coroutine[Any, Any, Mapping[str, Any]]
-    ] | None
-    device_diagnostics: Callable[
-        [HomeAssistant, ConfigEntry, DeviceEntry],
-        Coroutine[Any, Any, Mapping[str, Any]],
-    ] | None
+    config_entry_diagnostics: (
+        Callable[[HomeAssistant, ConfigEntry], Coroutine[Any, Any, Mapping[str, Any]]]
+        | None
+    )
+    device_diagnostics: (
+        Callable[
+            [HomeAssistant, ConfigEntry, DeviceEntry],
+            Coroutine[Any, Any, Mapping[str, Any]],
+        ]
+        | None
+    )
 
 
 @dataclass(slots=True)
@@ -85,7 +90,8 @@ class DiagnosticsProtocol(Protocol):
         """Return diagnostics for a device."""
 
 
-async def _register_diagnostics_platform(
+@callback
+def _register_diagnostics_platform(
     hass: HomeAssistant, integration_domain: str, platform: DiagnosticsProtocol
 ) -> None:
     """Register a diagnostics platform."""
@@ -168,6 +174,7 @@ async def _async_get_json_file_response(
     all_custom_components = await async_get_custom_components(hass)
     for cc_domain, cc_obj in all_custom_components.items():
         custom_components[cc_domain] = {
+            "documentation": cc_obj.documentation,
             "version": cc_obj.version,
             "requirements": cc_obj.requirements,
         }
@@ -231,7 +238,7 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
 
         device_diagnostics = sub_type is not None
 
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[http.KEY_HASS]
 
         if (config_entry := hass.config_entries.async_get_entry(d_id)) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)

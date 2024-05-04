@@ -1,8 +1,9 @@
 """Statistics helper for sensor."""
+
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Callable, Iterable, MutableMapping
+from collections.abc import Callable, Iterable
 import datetime
 import itertools
 import logging
@@ -401,7 +402,7 @@ def compile_statistics(  # noqa: C901
     entities_full_history = [
         i.entity_id for i in sensor_states if "sum" in wanted_statistics[i.entity_id]
     ]
-    history_list: MutableMapping[str, list[State]] = {}
+    history_list: dict[str, list[State]] = {}
     if entities_full_history:
         history_list = history.get_full_significant_states_with_session(
             hass,
@@ -510,9 +511,13 @@ def compile_statistics(  # noqa: C901
         # Make calculations
         stat: StatisticData = {"start": start}
         if "max" in wanted_statistics[entity_id]:
-            stat["max"] = max(*itertools.islice(zip(*valid_float_states), 1))
+            stat["max"] = max(
+                *itertools.islice(zip(*valid_float_states, strict=False), 1)
+            )
         if "min" in wanted_statistics[entity_id]:
-            stat["min"] = min(*itertools.islice(zip(*valid_float_states), 1))
+            stat["min"] = min(
+                *itertools.islice(zip(*valid_float_states, strict=False), 1)
+            )
 
         if "mean" in wanted_statistics[entity_id]:
             stat["mean"] = _time_weighted_average(valid_float_states, start, end)

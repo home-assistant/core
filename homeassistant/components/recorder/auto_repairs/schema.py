@@ -1,11 +1,12 @@
 """Schema repairs."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 import logging
 from typing import TYPE_CHECKING
 
-from sqlalchemy import MetaData
+from sqlalchemy import MetaData, Table
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm.attributes import InstrumentedAttribute
@@ -54,8 +55,8 @@ def validate_table_schema_supports_utf8(
         schema_errors = _validate_table_schema_supports_utf8(
             instance, table_object, columns
         )
-    except Exception as exc:  # pylint: disable=broad-except
-        _LOGGER.exception("Error when validating DB schema: %s", exc)
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Error when validating DB schema")
 
     _log_schema_errors(table_object, schema_errors)
     return schema_errors
@@ -75,8 +76,8 @@ def validate_table_schema_has_correct_collation(
         schema_errors = _validate_table_schema_has_correct_collation(
             instance, table_object
         )
-    except Exception as exc:  # pylint: disable=broad-except
-        _LOGGER.exception("Error when validating DB schema: %s", exc)
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Error when validating DB schema")
 
     _log_schema_errors(table_object, schema_errors)
     return schema_errors
@@ -93,9 +94,9 @@ def _validate_table_schema_has_correct_collation(
     with session_scope(session=instance.get_session(), read_only=True) as session:
         table = table_object.__tablename__
         metadata_obj = MetaData()
+        reflected_table = Table(table, metadata_obj, autoload_with=instance.engine)
         connection = session.connection()
-        metadata_obj.reflect(bind=connection)
-        dialect_kwargs = metadata_obj.tables[table].dialect_kwargs
+        dialect_kwargs = reflected_table.dialect_kwargs
         # Check if the table has a collation set, if its not set than its
         # using the server default collation for the database
 
@@ -158,8 +159,8 @@ def validate_db_schema_precision(
         return schema_errors
     try:
         schema_errors = _validate_db_schema_precision(instance, table_object)
-    except Exception as exc:  # pylint: disable=broad-except
-        _LOGGER.exception("Error when validating DB schema: %s", exc)
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Error when validating DB schema")
 
     _log_schema_errors(table_object, schema_errors)
     return schema_errors

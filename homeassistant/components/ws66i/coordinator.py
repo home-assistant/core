@@ -1,4 +1,5 @@
 """Coordinator for WS66i."""
+
 from __future__ import annotations
 
 import logging
