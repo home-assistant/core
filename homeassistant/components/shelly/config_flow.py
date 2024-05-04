@@ -43,7 +43,7 @@ from .const import (
     MODEL_WALL_DISPLAY,
     BLEScannerMode,
 )
-from .coordinator import async_reconnect_soon
+from .coordinator import ShellyConfigEntry, async_reconnect_soon
 from .utils import (
     get_block_device_sleep_period,
     get_coap_context,
@@ -397,13 +397,13 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
+    def async_get_options_flow(config_entry: ShellyConfigEntry) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
     @classmethod
     @callback
-    def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
+    def async_supports_options_flow(cls, config_entry: ShellyConfigEntry) -> bool:
         """Return options flow support for this handler."""
         return (
             get_device_entry_gen(config_entry) in RPC_GENERATIONS
@@ -415,7 +415,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(OptionsFlow):
     """Handle the option flow for shelly."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: ShellyConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
