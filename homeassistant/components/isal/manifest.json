@@ -1,7 +1,7 @@
 {
   "domain": "isal",
   "name": "Intelligent Storage Acceleration",
-  "documentation": "https://www.home-assistant.io/integrations/http",
+  "documentation": "https://www.home-assistant.io/integrations/isal",
   "codeowners": ["@bdraco"],
   "integration_type": "system",
   "quality_scale": "internal",
