@@ -20,3 +20,8 @@ DEVICE_ALREADY_DISCOVERED = "pglab_discovered_device"
 
 # The mqtt message to be subscribe to get new PG LAB device
 DISCOVERY_TOPIC = "pglab/discovery"
+
+# Used to de-register the component create callback
+DISCONNECT_COMPONENT = {
+    Platform.SWITCH: "pglab_disconnect_component_switch",
+}

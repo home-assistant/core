@@ -15,7 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, async_get_hass
 
-from .const import DEVICE_ALREADY_DISCOVERED, DOMAIN
+from .const import DEVICE_ALREADY_DISCOVERED, DISCONNECT_COMPONENT, DOMAIN
 from .discovery import create_discovery
 
 # The discovery instance
@@ -42,13 +42,13 @@ async def mqtt_subscribe_callback(
 ) -> Sub_State:
     """Define the call back for pglab module to subscribe to a mqtt topic."""
 
-    async def discovery_message_received(msg: ReceiveMessage) -> None:
+    async def mqtt_message_received_callback(msg: ReceiveMessage) -> None:
         callback_func(msg.topic, msg.payload)
 
     topics = {
         "pglab_subscribe_topic": {
             "topic": topic,
-            "msg_callback": discovery_message_received,
+            "msg_callback": mqtt_message_received_callback,
         }
     }
 
@@ -95,6 +95,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if pglab_discovery:
         await pglab_discovery.stop(hass)
 
+    # cleanup subscriptions
+    for platform in PLATFORMS:
+        # disconnect a specific platform for creation
+        disconnect_platform = hass.data[DOMAIN][DISCONNECT_COMPONENT[platform]]
+        disconnect_platform()
+
+    # remove all pglab data from HA
     hass.data.pop(DOMAIN)
 
     return True
