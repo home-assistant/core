@@ -25,13 +25,11 @@ async def test_load_unload_entry(
     entry = await init_integration(hass, mock_identifier_entry)
 
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.entry_id in hass.data[DOMAIN]
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
-    assert entry.entry_id not in hass.data[DOMAIN]
 
 
 async def test_load_invalid_registry_entry(
@@ -97,4 +95,3 @@ async def test_load_valid_device_tracker(
     await hass.async_block_till_done()
 
     assert mock_tracker_entry.state is ConfigEntryState.LOADED
-    assert mock_tracker_entry.entry_id in hass.data[DOMAIN]
