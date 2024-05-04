@@ -92,7 +92,7 @@ SENSOR_DESCRIPTIONS: dict[str, SHCSensorEntityDescription] = {
     HUMIDITY_RATING_SENSOR: SHCSensorEntityDescription(
         key=HUMIDITY_RATING_SENSOR,
         translation_key=HUMIDITY_RATING_SENSOR,
-        value_fn=lambda device: device.humidty_rating.name,
+        value_fn=lambda device: device.humidity_rating.name,
     ),
     PURITY_RATING_SENSOR: SHCSensorEntityDescription(
         key=PURITY_RATING_SENSOR,
