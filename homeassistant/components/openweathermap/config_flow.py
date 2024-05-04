@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_LANGUAGE,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    CONF_MODE,
     CONF_NAME,
 )
 from homeassistant.core import callback
@@ -25,8 +26,10 @@ from .const import (
     CONFIG_FLOW_VERSION,
     DEFAULT_LANGUAGE,
     DEFAULT_NAME,
+    DEFAULT_OWM_MODE,
     DOMAIN,
     LANGUAGES,
+    OWM_MODES,
 )
 
 
@@ -51,13 +54,14 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             latitude = user_input[CONF_LATITUDE]
             longitude = user_input[CONF_LONGITUDE]
+            mode = user_input[CONF_MODE]
 
             await self.async_set_unique_id(f"{latitude}-{longitude}")
             self._abort_if_unique_id_configured()
 
             api_key_valid = None
             try:
-                owm_client = OWMClient(user_input[CONF_API_KEY])
+                owm_client = OWMClient(user_input[CONF_API_KEY], mode)
                 api_key_valid = await owm_client.validate_key()
             except RequestError as error:
                 errors["base"] = "cannot_connect"
@@ -81,6 +85,7 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Optional(
                     CONF_LONGITUDE, default=self.hass.config.longitude
                 ): cv.longitude,
+                vol.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): vol.In(OWM_MODES),
                 vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(
                     LANGUAGES
                 ),
@@ -115,6 +120,13 @@ class OpenWeatherMapOptionsFlow(OptionsFlow):
     def _get_options_schema(self):
         return vol.Schema(
             {
+                vol.Optional(
+                    CONF_MODE,
+                    default=self.config_entry.options.get(
+                        CONF_MODE,
+                        self.config_entry.data.get(CONF_MODE, DEFAULT_OWM_MODE),
+                    ),
+                ): vol.In(OWM_MODES),
                 vol.Optional(
                     CONF_LANGUAGE,
                     default=self.config_entry.options.get(
