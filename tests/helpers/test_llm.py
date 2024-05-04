@@ -103,7 +103,7 @@ async def test_call_tool(hass: HomeAssistant) -> None:
 
 async def test_call_tool_no_existing(hass: HomeAssistant) -> None:
     """Test calling an llm tool where no config exists."""
-    with pytest.raises(KeyError):
+    with pytest.raises(HomeAssistantError):
         await llm.async_call_tool(
             hass,
             llm.ToolInput(

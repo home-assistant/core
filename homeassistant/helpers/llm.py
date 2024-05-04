@@ -299,8 +299,7 @@ def async_remove_tool(hass: HomeAssistant, tool: Tool | Callable | str) -> None:
 @callback
 def async_get_tools(hass: HomeAssistant) -> Iterable[Tool]:
     """Return a list of registered LLM tools."""
-    if (tools := hass.data.get(DATA_KEY)) is None:
-        tools = {}
+    tools: dict[str, Tool] = hass.data.get(DATA_KEY, {})
 
     return tools.values()
 
@@ -308,10 +307,10 @@ def async_get_tools(hass: HomeAssistant) -> Iterable[Tool]:
 @callback
 async def async_call_tool(hass: HomeAssistant, tool_input: ToolInput) -> Any:
     """Call a LLM tool, validate args and return the response."""
-    if (tools := hass.data.get(DATA_KEY)) is None:
-        tools = {}
-
-    tool = tools[tool_input.tool_name]
+    try:
+        tool = hass.data[DATA_KEY][tool_input.tool_name]
+    except KeyError as err:
+        raise HomeAssistantError(f'Tool "{tool_input.tool_name}" not found') from err
 
     if tool_input.context is None:
         tool_input.context = Context()
