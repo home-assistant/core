@@ -1,4 +1,4 @@
-"""Test the Bluetooth Adapters setup."""
+"""Test the Intelligent Storage Acceleration setup."""
 
 from homeassistant.components.isal import DOMAIN
 from homeassistant.core import HomeAssistant

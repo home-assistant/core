@@ -1,1 +1,1 @@
-"""Tests for the Bluetooth Adapters integration."""
+"""Tests for the Intelligent Storage Acceleration integration."""
