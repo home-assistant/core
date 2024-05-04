@@ -38,7 +38,7 @@ _P = ParamSpec("_P")
 def async_relogin_on_expired(
     func: Callable[Concatenate[_T, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
-    """Define a wrapper to relogin when expired."""
+    """Define a wrapper to re-login when expired."""
 
     async def _async_wrap(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
         for attempts in range(2):
