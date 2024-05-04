@@ -23,7 +23,7 @@ class GetWeatherIntent(intent.IntentHandler):
     """Handle GetWeather intents."""
 
     intent_type = INTENT_GET_WEATHER
-    slot_schema = {vol.Optional("name"): cv.string}
+    slot_schema = vol.Schema({vol.Optional("name"): cv.string})
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
