@@ -35,15 +35,15 @@ _T = TypeVar("_T", bound="SynologyDSMUpdateCoordinator")
 _P = ParamSpec("_P")
 
 
-def async_relogin_on_expired(
-    func: Callable[Concatenate[_T, _P], Awaitable[None]],
-) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
+def async_re_login_on_expired(
+    func: Callable[Concatenate[_T, _P], Awaitable[_DataT]],
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, _DataT]]:
     """Define a wrapper to re-login when expired."""
 
-    async def _async_wrap(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
+    async def _async_wrap(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> _DataT:
         for attempts in range(2):
             try:
-                await func(self, *args, **kwargs)
+                return await func(self, *args, **kwargs)
             except SynologyDSMNotLoggedInException:
                 # If login is expired, try to login again
                 try:
@@ -54,6 +54,8 @@ def async_relogin_on_expired(
                     continue
             except SYNOLOGY_CONNECTION_EXCEPTIONS as err:
                 raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+        raise UpdateFailed("Unknown error when communicating with API")
 
     return _async_wrap
 
@@ -100,7 +102,7 @@ class SynologyDSMSwitchUpdateCoordinator(
         assert info is not None
         self.version = info["data"]["CMSMinVersion"]
 
-    @async_relogin_on_expired  # type: ignore[arg-type, override]
+    @async_re_login_on_expired
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Fetch all data from api."""
         surveillance_station = self.api.surveillance_station
@@ -131,7 +133,7 @@ class SynologyDSMCentralUpdateCoordinator(SynologyDSMUpdateCoordinator[None]):
             ),
         )
 
-    @async_relogin_on_expired
+    @async_re_login_on_expired
     async def _async_update_data(self) -> None:
         """Fetch all data from api."""
         await self.api.async_update()
@@ -151,7 +153,7 @@ class SynologyDSMCameraUpdateCoordinator(
         """Initialize DataUpdateCoordinator for cameras."""
         super().__init__(hass, entry, api, timedelta(seconds=30))
 
-    @async_relogin_on_expired  # type: ignore[arg-type, override]
+    @async_re_login_on_expired
     async def _async_update_data(self) -> dict[str, dict[int, SynoCamera]]:
         """Fetch all camera data from api."""
         surveillance_station = self.api.surveillance_station
