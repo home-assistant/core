@@ -941,6 +941,9 @@ insteon-frontend-home-assistant==0.5.0
 # homeassistant.components.intellifire
 intellifire4py==2.2.2
 
+# homeassistant.components.isal
+isal==1.6.1
+
 # homeassistant.components.gogogate2
 ismartgate==5.0.1
 
