@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -17,24 +18,33 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 
 from .const import (
     CONFIG_FLOW_VERSION,
-    DOMAIN,
-    ENTRY_NAME,
-    ENTRY_WEATHER_COORDINATOR,
     FORECAST_MODE_FREE_DAILY,
     FORECAST_MODE_ONECALL_DAILY,
     PLATFORMS,
-    UPDATE_LISTENER,
 )
 from .weather_update_coordinator import WeatherUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+OpenweathermapConfigEntry = ConfigEntry["OpenweathermapRuntimeData"]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+@dataclass
+class OpenweathermapRuntimeData:
+    """Runtime data definition."""
+
+    name: str
+    coordinator: WeatherUpdateCoordinator
+    update_listener: CALLBACK_TYPE
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: OpenweathermapConfigEntry
+) -> bool:
     """Set up OpenWeatherMap as config entry."""
     name = entry.data[CONF_NAME]
     api_key = entry.data[CONF_API_KEY]
@@ -52,16 +62,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await weather_coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        ENTRY_NAME: name,
-        ENTRY_WEATHER_COORDINATOR: weather_coordinator,
-    }
+    update_listener = entry.add_update_listener(async_update_options)
+
+    entry.runtime_data = OpenweathermapRuntimeData(
+        name, weather_coordinator, update_listener
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    update_listener = entry.add_update_listener(async_update_options)
-    hass.data[DOMAIN][entry.entry_id][UPDATE_LISTENER] = update_listener
 
     return True
 
@@ -93,13 +100,13 @@ async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: OpenweathermapConfigEntry
+) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        update_listener = hass.data[DOMAIN][entry.entry_id][UPDATE_LISTENER]
-        update_listener()
-        hass.data[DOMAIN].pop(entry.entry_id)
+        entry.runtime_data.update_listener()
 
     return unload_ok
 
