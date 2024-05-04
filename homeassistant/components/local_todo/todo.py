@@ -14,14 +14,14 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_TODO_LIST_NAME, DOMAIN
+from . import LocalTodoConfigEntry
+from .const import CONF_TODO_LIST_NAME
 from .store import LocalTodoListStore
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,12 +63,12 @@ def _migrate_calendar(calendar: Calendar) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LocalTodoConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the local_todo todo platform."""
 
-    store: LocalTodoListStore = hass.data[DOMAIN][config_entry.entry_id]
+    store = config_entry.runtime_data
     ics = await store.async_load()
 
     with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PACKAGES):
