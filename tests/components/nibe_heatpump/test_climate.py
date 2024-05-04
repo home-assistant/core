@@ -197,6 +197,19 @@ async def test_set_temperature(
         assert mock_connection.write_coil.mock_calls == [
             call(CoilData(coil_setpoint_cool, 22))
         ]
+    else:
+        with pytest.raises(ValueError):
+            await hass.services.async_call(
+                PLATFORM_DOMAIN,
+                SERVICE_SET_TEMPERATURE,
+                {
+                    ATTR_ENTITY_ID: entity_id,
+                    ATTR_TEMPERATURE: 22,
+                    ATTR_HVAC_MODE: HVACMode.COOL,
+                },
+                blocking=True,
+            )
+
     mock_connection.write_coil.reset_mock()
 
     with pytest.raises(ValueError):
