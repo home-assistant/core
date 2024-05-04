@@ -65,16 +65,6 @@ SENSOR_DESCRIPTIONS: dict[str, SHCSensorEntityDescription] = {
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda device: device.humidity,
     ),
-    VALVE_TAPPET_SENSOR: SHCSensorEntityDescription(
-        key=VALVE_TAPPET_SENSOR,
-        translation_key=VALVE_TAPPET_SENSOR,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda device: device.position,
-        attributes_fn=lambda device: {
-            "valve_tappet_state": device.valvestate.name,
-        },
-    ),
     PURITY_SENSOR: SHCSensorEntityDescription(
         key=PURITY_SENSOR,
         translation_key=PURITY_SENSOR,
@@ -83,7 +73,7 @@ SENSOR_DESCRIPTIONS: dict[str, SHCSensorEntityDescription] = {
     ),
     AIR_QUALITY_SENSOR: SHCSensorEntityDescription(
         key=AIR_QUALITY_SENSOR,
-        translation_key=AIR_QUALITY_SENSOR,
+        translation_key="air_quality",
         value_fn=lambda device: device.combined_rating.name,
         attributes_fn=lambda device: {
             "rating_description": device.description,
@@ -93,6 +83,11 @@ SENSOR_DESCRIPTIONS: dict[str, SHCSensorEntityDescription] = {
         key=TEMPERATURE_RATING_SENSOR,
         translation_key=TEMPERATURE_RATING_SENSOR,
         value_fn=lambda device: device.temperature_rating.name,
+    ),
+    COMMUNICATION_QUALITY_SENSOR: SHCSensorEntityDescription(
+        key=COMMUNICATION_QUALITY_SENSOR,
+        translation_key=COMMUNICATION_QUALITY_SENSOR,
+        value_fn=lambda device: device.communicationquality.name,
     ),
     HUMIDITY_RATING_SENSOR: SHCSensorEntityDescription(
         key=HUMIDITY_RATING_SENSOR,
@@ -117,10 +112,15 @@ SENSOR_DESCRIPTIONS: dict[str, SHCSensorEntityDescription] = {
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value_fn=lambda device: device.energyconsumption / 1000.0,
     ),
-    COMMUNICATION_QUALITY_SENSOR: SHCSensorEntityDescription(
-        key=COMMUNICATION_QUALITY_SENSOR,
-        translation_key=COMMUNICATION_QUALITY_SENSOR,
-        value_fn=lambda device: device.communicationquality.name,
+    VALVE_TAPPET_SENSOR: SHCSensorEntityDescription(
+        key=VALVE_TAPPET_SENSOR,
+        translation_key=VALVE_TAPPET_SENSOR,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda device: device.position,
+        attributes_fn=lambda device: {
+            "valve_tappet_state": device.valvestate.name,
+        },
     ),
 }
 
