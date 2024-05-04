@@ -375,6 +375,16 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                     vol.Required("done"): translation_value_validator,
                 },
             },
+            vol.Optional("notification"): cv.schema_with_slug_keys(
+                cv.schema_with_slug_keys(
+                    {
+                        vol.Required("message"): translation_value_validator,
+                        vol.Optional("title"): translation_value_validator,
+                    },
+                    slug_validator=translation_key_validator,
+                ),
+                slug_validator=cv.slug,
+            ),
         }
     )
 
@@ -498,12 +508,12 @@ def validate_translation_file(  # noqa: C901
         if parts or key not in search:
             integration.add_error(
                 "translations",
-                f"{reference['source']} contains invalid reference {reference['ref']}: Could not find {key}",
+                f"{reference["source"]} contains invalid reference {reference["ref"]}: Could not find {key}",
             )
         elif match := re.match(RE_REFERENCE, search[key]):
             integration.add_error(
                 "translations",
-                f"Lokalise supports only one level of references: \"{reference['source']}\" should point to directly to \"{match.groups()[0]}\"",
+                f"Lokalise supports only one level of references: \"{reference["source"]}\" should point to directly to \"{match.groups()[0]}\"",
             )
 
 

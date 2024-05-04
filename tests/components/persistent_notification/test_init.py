@@ -1,5 +1,7 @@
 """The tests for the persistent notification component."""
 
+from unittest.mock import patch
+
 import homeassistant.components.persistent_notification as pn
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.core import HomeAssistant
@@ -21,6 +23,77 @@ async def test_create(hass: HomeAssistant) -> None:
     assert notification["message"] == "Hello World 2"
     assert notification["title"] == "2 beers"
     assert notification["created_at"] is not None
+
+
+async def test_create_translated(hass: HomeAssistant) -> None:
+    """Test translated notifications."""
+    await async_setup_component(hass, pn.DOMAIN, {})
+    notifications = pn._async_get_or_create_notifications(hass)
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations"
+    ) as mock_transl:
+        # test message without title
+        mock_transl.return_value = {
+            "component.test_domain.notification.translated_beer.message": "Beers"
+        }
+
+        pn.async_create(
+            hass,
+            "Original message",
+            "Original title",
+            domain="test_domain",
+            translation_key="translated_beer",
+        )
+        assert len(notifications) == 1
+
+        notification = notifications[list(notifications)[0]]
+        assert notification["message"] == "Beers"
+        assert notification["title"] == "Original title"
+        assert notification["created_at"] is not None
+
+        # test message with message and title
+        mock_transl.return_value = {
+            "component.test_domain.notification.translated_beer.message": "Beers",
+            "component.test_domain.notification.translated_beer.title": "Lets celebrate",
+        }
+
+        pn.async_create(
+            hass,
+            "Original message",
+            "Original title",
+            domain="test_domain",
+            translation_key="translated_beer",
+        )
+
+        assert len(notifications) == 2
+
+        notification = notifications[list(notifications)[1]]
+        assert notification["message"] == "Beers"
+        assert notification["title"] == "Lets celebrate"
+        assert notification["created_at"] is not None
+
+        # test message with translation_placeholders
+        mock_transl.return_value = {
+            "component.test_domain.notification.translated_beer.message": "Beers: {how_many}",
+            "component.test_domain.notification.translated_beer.title": "Lets celebrate",
+        }
+
+        pn.async_create(
+            hass,
+            "Original message",
+            "Original title",
+            domain="test_domain",
+            translation_key="translated_beer",
+            translation_placeholders={"how_many": "2"},
+        )
+
+        assert len(notifications) == 3
+
+        notification = notifications[list(notifications)[2]]
+        assert notification["message"] == "Beers: 2"
+        assert notification["title"] == "Lets celebrate"
+        assert notification["created_at"] is not None
 
 
 async def test_create_notification_id(hass: HomeAssistant) -> None:
