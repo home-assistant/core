@@ -36,13 +36,15 @@ class SetIntentHandler(intent.IntentHandler):
     """Handle set color intents."""
 
     intent_type = INTENT_SET
-    slot_schema = {
-        vol.Any("name", "area"): cv.string,
-        vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional("color"): color_util.color_name_to_rgb,
-        vol.Optional("brightness"): vol.All(vol.Coerce(int), vol.Range(0, 100)),
-    }
+    slot_schema = vol.Schema(
+        {
+            vol.Any("name", "area"): cv.string,
+            vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional("color"): color_util.color_name_to_rgb,
+            vol.Optional("brightness"): vol.All(vol.Coerce(int), vol.Range(0, 100)),
+        }
+    )
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the hass intent."""
