@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from functools import partial
+from typing import cast
 
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.clients import Clients
@@ -201,32 +202,43 @@ def async_device_state_value_fn(hub: UnifiHub, device: Device) -> str:
 
 
 @callback
-def async_client_support_wan_monitor(hub: UnifiHub, obj_id: str) -> bool:
+def async_client_wan_monitor_supported_fn(
+    monitor_target: str, hub: UnifiHub, obj_id: str
+) -> bool:
     """Determine if a client supports WAN monitoring."""
     device = hub.api.devices[obj_id]
-    if device is None:
+
+    uptime_stats = getattr(device.raw, "uptime_stats", {})
+    wan = uptime_stats.get("WAN")
+    if wan is None:
         return False
 
-    uptime_stats = device.raw.get("uptime_stats")
-    if uptime_stats is None:
+    monitors = wan.get("monitors")
+    if monitors is None:
         return False
 
-    wan = uptime_stats is not None and uptime_stats.get("WAN")
-
-    return wan is not None and wan.get("monitors") is not None
+    return any(monitor_target in item["target"] for item in monitors)
 
 
 @callback
 def async_client_wan_monitor_latency(
     monitor_target: str, hub: UnifiHub, device: Device
-) -> int | None:
-    """Determine if a client supports WAN monitoring."""
-    uptime_stats = device.raw.get("uptime_stats")
+) -> float | None:
+    """Retrieve the monitor target from WAN monitors."""
+    uptime_stats = getattr(device.raw, "uptime_stats", {})
     wan = uptime_stats.get("WAN")
-    monitors = wan.get("monitors")
-    item = next((item for item in monitors if monitor_target in item["target"]), None)
+    if wan is None:
+        return None
 
-    return item["latency_average"]
+    monitors = wan.get("monitors")
+    if monitors is None:
+        return None
+
+    item = next((item for item in monitors if monitor_target in item["target"]), None)
+    if item is None:
+        return None
+
+    return cast(float, item["latency_average"])
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -503,7 +515,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         name_fn=lambda device: "Microsoft latency",
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=async_client_support_wan_monitor,
+        supported_fn=partial(async_client_wan_monitor_supported_fn, "microsoft"),
         unique_id_fn=lambda hub, obj_id: f"microsoft_latency-{obj_id}",
         value_fn=partial(async_client_wan_monitor_latency, "microsoft"),
     ),
@@ -519,7 +531,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         name_fn=lambda device: "Google latency",
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=async_client_support_wan_monitor,
+        supported_fn=partial(async_client_wan_monitor_supported_fn, "google"),
         unique_id_fn=lambda hub, obj_id: f"google_latency-{obj_id}",
         value_fn=partial(async_client_wan_monitor_latency, "google"),
     ),
@@ -535,7 +547,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         name_fn=lambda device: "Cloudflare latency",
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=async_client_support_wan_monitor,
+        supported_fn=partial(async_client_wan_monitor_supported_fn, "1.1.1.1"),
         unique_id_fn=lambda hub, obj_id: f"cloudflare_latency-{obj_id}",
         value_fn=partial(async_client_wan_monitor_latency, "1.1.1.1"),
     ),
