@@ -73,7 +73,7 @@ class VenstarSensorEntityDescription(SensorEntityDescription):
     """Base description of a Sensor entity."""
 
     value_fn: Callable[[VenstarDataUpdateCoordinator, str], Any]
-    name_fn: Callable[[str], str]
+    name_fn: Callable[[str], str] | None
     uom_fn: Callable[[Any], str | None]
 
 
@@ -142,7 +142,8 @@ class VenstarSensor(VenstarEntity, SensorEntity):
         super().__init__(coordinator, config)
         self.entity_description = entity_description
         self.sensor_name = sensor_name
-        self._attr_name = entity_description.name_fn(sensor_name)
+        if entity_description.name_fn:
+            self._attr_name = entity_description.name_fn(sensor_name)
         self._config = config
 
     @property
@@ -232,7 +233,7 @@ INFO_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         value_fn=lambda coordinator, sensor_name: SCHEDULE_PARTS[
             coordinator.client.get_info(sensor_name)
         ],
-        name_fn=lambda _: "Schedule Part",
+        name_fn=None,
     ),
     VenstarSensorEntityDescription(
         key="activestage",
@@ -243,6 +244,6 @@ INFO_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         value_fn=lambda coordinator, sensor_name: STAGES[
             coordinator.client.get_info(sensor_name)
         ],
-        name_fn=lambda _: "Active stage",
+        name_fn=None,
     ),
 )
