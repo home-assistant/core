@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import HomeAssistant
 
 from .const import (
     CONFIG_FLOW_VERSION,
@@ -39,7 +39,6 @@ class OpenweathermapRuntimeData:
 
     name: str
     coordinator: WeatherUpdateCoordinator
-    update_listener: CALLBACK_TYPE
 
 
 async def async_setup_entry(
@@ -62,11 +61,9 @@ async def async_setup_entry(
 
     await weather_coordinator.async_config_entry_first_refresh()
 
-    update_listener = entry.add_update_listener(async_update_options)
+    entry.async_on_unload(entry.add_update_listener(async_update_options))
 
-    entry.runtime_data = OpenweathermapRuntimeData(
-        name, weather_coordinator, update_listener
-    )
+    entry.runtime_data = OpenweathermapRuntimeData(name, weather_coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -104,11 +101,7 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: OpenweathermapConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        entry.runtime_data.update_listener()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 def _get_config_value(config_entry: ConfigEntry, key: str) -> Any:
