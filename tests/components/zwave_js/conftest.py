@@ -496,6 +496,12 @@ def fibaro_fgr223_shutter_state_fixture():
     return json.loads(load_fixture("zwave_js/cover_fibaro_fgr223_state.json"))
 
 
+@pytest.fixture(name="shelly_europe_ltd_qnsh_001p10_state", scope="package")
+def shelly_europe_ltd_qnsh_001p10_state_fixture():
+    """Load the Shelly QNSH 001P10 node state fixture data."""
+    return json.loads(load_fixture("zwave_js/shelly_europe_ltd_qnsh_001p10_state.json"))
+
+
 @pytest.fixture(name="merten_507801_state", scope="package")
 def merten_507801_state_fixture():
     """Load the Merten 507801 Shutter node state fixture data."""
@@ -1091,6 +1097,16 @@ def fibaro_fgr222_shutter_cover_fixture(client, fibaro_fgr222_shutter_state):
 def fibaro_fgr223_shutter_cover_fixture(client, fibaro_fgr223_shutter_state):
     """Mock a Fibaro FGR223 Shutter node."""
     node = Node(client, copy.deepcopy(fibaro_fgr223_shutter_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="shelly_qnsh_001P10_shutter")
+def shelly_qnsh_001P10_cover_shutter_fixture(
+    client, shelly_europe_ltd_qnsh_001p10_state
+):
+    """Mock a Shelly QNSH 001P10 Shutter node."""
+    node = Node(client, copy.deepcopy(shelly_europe_ltd_qnsh_001p10_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 

@@ -20,7 +20,7 @@ UPDATE_INTERVAL: Final = datetime.timedelta(minutes=30)
 TIMEOUT = 10
 
 
-class FitbitDeviceCoordinator(DataUpdateCoordinator):
+class FitbitDeviceCoordinator(DataUpdateCoordinator[dict[str, FitbitDevice]]):
     """Coordinator for fetching fitbit devices from the API."""
 
     def __init__(self, hass: HomeAssistant, api: FitbitApi) -> None:

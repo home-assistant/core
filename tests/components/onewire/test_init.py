@@ -26,7 +26,6 @@ async def test_connect_failure(hass: HomeAssistant, config_entry: ConfigEntry) -
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert not hass.data.get(DOMAIN)
 
 
 async def test_listing_failure(
@@ -40,7 +39,6 @@ async def test_listing_failure(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert not hass.data.get(DOMAIN)
 
 
 @pytest.mark.usefixtures("owproxy")
@@ -56,7 +54,6 @@ async def test_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> N
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-    assert not hass.data.get(DOMAIN)
 
 
 async def test_update_options(
