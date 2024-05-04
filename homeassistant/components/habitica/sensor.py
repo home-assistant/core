@@ -21,6 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import HabiticaConfigEntry
 from .const import DOMAIN, MANUFACTURER, NAME
 from .coordinator import HabiticaDataUpdateCoordinator
 
@@ -159,13 +160,13 @@ TASKS_MAP = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HabiticaConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the habitica sensors."""
 
     name = config_entry.data[CONF_NAME]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     entities: list[SensorEntity] = [
         HabitipySensor(coordinator, description, config_entry)

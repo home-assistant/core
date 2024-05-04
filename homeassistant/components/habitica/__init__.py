@@ -37,6 +37,8 @@ from .coordinator import HabiticaDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+HabiticaConfigEntry = ConfigEntry[HabiticaDataUpdateCoordinator]
+
 SENSORS_TYPES = ["name", "hp", "maxHealth", "mp", "maxMP", "exp", "toNextLevel", "lvl"]
 
 INSTANCE_SCHEMA = vol.All(
@@ -108,7 +110,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HabiticaConfigEntry) -> bool:
     """Set up habitica from a config entry."""
 
     class HAHabitipyAsync(HabitipyAsync):
@@ -124,7 +126,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         api = None
         for entry in entries:
             if entry.data[CONF_NAME] == name:
-                coordinator = hass.data[DOMAIN][entry.entry_id]
+                coordinator = entry.runtime_data
                 api = coordinator.api
                 break
         if api is None:
@@ -182,8 +184,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = HabiticaDataUpdateCoordinator(hass, api)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     if not hass.services.has_service(DOMAIN, SERVICE_API_CALL):
@@ -196,10 +197,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
     if len(hass.config_entries.async_entries(DOMAIN)) == 1:
         hass.services.async_remove(DOMAIN, SERVICE_API_CALL)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
