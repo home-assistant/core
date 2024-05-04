@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
+from homeassistant.helpers.service_info.mqtt import MqttServiceInfo, ReceivePayloadType
 
 from .const import CONF_DISCOVERY_PREFIX, DISCOVERY_TOPIC, DOMAIN
 
@@ -14,6 +14,11 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
+
+    def __init__(self) -> None:
+        """Initialize flow."""
+        self._prefix = DISCOVERY_TOPIC
+        self._payload: ReceivePayloadType = ""
 
     async def async_step_mqtt(
         self, discovery_info: MqttServiceInfo
@@ -34,6 +39,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         # "pglab/discovery/#" is hardcoded in manifest.json
         assert discovery_info.subscribed_topic == "pglab/discovery/#"
+        self._prefix = "pglab/discovery"
+        self._payload = discovery_info.payload
 
         return await self.async_step_confirm()
 
@@ -52,7 +59,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Confirm the setup."""
 
         data = {
-            CONF_DISCOVERY_PREFIX: DISCOVERY_TOPIC,
+            CONF_DISCOVERY_PREFIX: self._prefix,
         }
 
         if user_input is not None:
