@@ -7,6 +7,7 @@ import logging
 
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 from synology_dsm.api.surveillance_station.camera import SynoCamera
+from synology_dsm.exceptions import SynologyDSMNotLoggedInException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC, CONF_VERIFY_SSL
@@ -69,7 +70,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await api.async_setup()
     except SYNOLOGY_AUTH_FAILED_EXCEPTIONS as err:
         raise_config_entry_auth_error(err)
-    except SYNOLOGY_CONNECTION_EXCEPTIONS as err:
+    except (*SYNOLOGY_CONNECTION_EXCEPTIONS, SynologyDSMNotLoggedInException) as err:
+        # SynologyDSMNotLoggedInException may be raised even if the user is
+        # logged in because the session may have expired, and we need to retry
+        # the login later.
         if err.args[0] and isinstance(err.args[0], dict):
             details = err.args[0].get(EXCEPTION_DETAILS, EXCEPTION_UNKNOWN)
         else:
