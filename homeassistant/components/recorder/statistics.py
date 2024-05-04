@@ -485,9 +485,9 @@ def compile_statistics(instance: Recorder, start: datetime, fire_events: bool) -
 
     The actual calculation is delegated to the platforms.
     """
-    # Define modified_statistic_ids outside of the "with" statement as context managers
-    # with exception suppressing prevent defining the value of the local variable, yet
-    # the flow continues
+    # Define modified_statistic_ids outside of the "with" statement as
+    # filter_unique_constraint_integrity_error may raise an exception
+    # which would prevent the variable from being defined.
     modified_statistic_ids: set[str] | None = None
 
     # Return if we already have 5-minute statistics for the requested period
