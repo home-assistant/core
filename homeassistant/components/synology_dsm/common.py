@@ -28,7 +28,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
-    CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
@@ -38,6 +37,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CONF_DEVICE_TOKEN,
+    DEFAULT_TIMEOUT,
     EXCEPTION_DETAILS,
     EXCEPTION_UNKNOWN,
     SYNOLOGY_CONNECTION_EXCEPTIONS,
@@ -92,7 +92,7 @@ class SynoApi:
             self._entry.data[CONF_USERNAME],
             self._entry.data[CONF_PASSWORD],
             self._entry.data[CONF_SSL],
-            timeout=self._entry.options.get(CONF_TIMEOUT) or 10,
+            timeout=DEFAULT_TIMEOUT,
             device_token=self._entry.data.get(CONF_DEVICE_TOKEN),
         )
         await self.dsm.login()
