@@ -33,13 +33,10 @@ from .const import (
     ATTR_MINUTES_REST,
     ATTR_SLEEP_LABEL,
     ATTR_TRACKER_STATE,
-    CLIENT,
     CLIENT_ID,
-    DOMAIN,
     RECONNECT_INTERVAL,
     SERVER_UNAVAILABLE,
     SWITCH_KEY_MAP,
-    TRACKABLES,
     TRACKER_HARDWARE_STATUS_UPDATED,
     TRACKER_POSITION_UPDATED,
     TRACKER_SWITCH_STATUS_UPDATED,
@@ -68,11 +65,20 @@ class Trackables:
     pos_report: dict
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+@dataclass
+class TractiveData:
+    """Class for Tractive data."""
+
+    client: TractiveClient
+    trackables: list[Trackables]
+
+
+TractiveConfigEntry = ConfigEntry[TractiveData]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> bool:
     """Set up tractive from a config entry."""
     data = entry.data
-
-    hass.data.setdefault(DOMAIN, {}).setdefault(entry.entry_id, {})
 
     client = aiotractive.Tractive(
         data[CONF_EMAIL],
@@ -101,10 +107,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # When the pet defined in Tractive has no tracker linked we get None as `trackable`.
     # So we have to remove None values from trackables list.
-    trackables = [item for item in trackables if item]
+    filtered_trackables = [item for item in trackables if item]
 
-    hass.data[DOMAIN][entry.entry_id][CLIENT] = tractive
-    hass.data[DOMAIN][entry.entry_id][TRACKABLES] = trackables
+    entry.runtime_data = TractiveData(tractive, filtered_trackables)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -145,13 +150,11 @@ async def _generate_trackables(
     return Trackables(tracker, trackable, tracker_details, hw_info, pos_report)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        tractive = hass.data[DOMAIN][entry.entry_id].pop(CLIENT)
-        await tractive.unsubscribe()
-        hass.data[DOMAIN].pop(entry.entry_id)
+        await entry.runtime_data.client.unsubscribe()
     return unload_ok
 
 
