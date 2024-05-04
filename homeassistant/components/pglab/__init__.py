@@ -12,10 +12,19 @@ from homeassistant.components.mqtt.subscription import (
     async_unsubscribe_topics,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, async_get_hass
 
-from .const import DEVICE_ALREADY_DISCOVERED, DISCOVERY_INSTANCE, DOMAIN, PLATFORMS
+from .const import DEVICE_ALREADY_DISCOVERED, DOMAIN
 from .discovery import create_discovery
+
+# The discovery instance
+DISCOVERY_INSTANCE = "pglab_discovery_instance"
+
+# Supported platforms
+PLATFORMS = [
+    Platform.SWITCH,
+]
 
 
 async def mqtt_publish_callback(

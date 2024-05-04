@@ -14,8 +14,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CREATE_NEW_ENTITY, DISCONNECT_COMPONENT, DOMAIN
+from .const import CREATE_NEW_ENTITY, DOMAIN
 from .entity import BaseEntity
+
+# Used to de-register the component create callback
+DISCONNECT_COMPONENT = {
+    Platform.SWITCH: "pglab_disconnect_component_switch",
+}
 
 
 async def async_setup_entry(

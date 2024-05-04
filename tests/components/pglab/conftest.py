@@ -2,14 +2,12 @@
 
 import pytest
 
-from homeassistant.components.pglab.const import (
-    CONF_DISCOVERY_PREFIX,
-    DISCOVERY_TOPIC,
-    DOMAIN,
-)
+from homeassistant.components.pglab.const import DISCOVERY_TOPIC, DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, mock_device_registry, mock_registry
+
+CONF_DISCOVERY_PREFIX = "discovery_prefix"
 
 
 @pytest.fixture

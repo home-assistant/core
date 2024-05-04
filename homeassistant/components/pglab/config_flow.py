@@ -7,7 +7,9 @@ from typing import Any
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
-from .const import CONF_DISCOVERY_PREFIX, DISCOVERY_TOPIC, DOMAIN
+from .const import DISCOVERY_TOPIC, DOMAIN
+
+CONF_DISCOVERY_PREFIX = "discovery_prefix"
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
