@@ -7,9 +7,13 @@ import pytest
 from pytest_unordered import unordered
 
 from homeassistant.components import automation, device_automation
-from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.device_automation import (
+    DeviceAutomationType,
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.components.nut import DOMAIN
 from homeassistant.components.nut.const import INTEGRATION_SUPPORTED_COMMANDS
+from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -229,3 +233,25 @@ async def test_rund_command_exception(
     await hass.async_block_till_done()
 
     assert error_message in caplog.text
+
+
+async def test_action_exception_invalid_device(hass: HomeAssistant) -> None:
+    """Test raises exception if invalid device."""
+    list_commands_return_value = {"beeper.enable": None}
+    await async_init_integration(
+        hass,
+        list_vars={"ups.status": "OL"},
+        list_commands_return_value=list_commands_return_value,
+    )
+
+    platform = await device_automation.async_get_device_automation_platform(
+        hass, DOMAIN, DeviceAutomationType.ACTION
+    )
+
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await platform.async_call_action_from_config(
+            hass,
+            {CONF_TYPE: "beeper.enable", CONF_DEVICE_ID: "invalid_device_id"},
+            {},
+            None,
+        )
