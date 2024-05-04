@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import voluptuous as vol
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 import homeassistant.helpers.config_validation as cv
@@ -21,7 +23,7 @@ class ListAddItemIntent(intent.IntentHandler):
     """Handle ListAddItem intents."""
 
     intent_type = INTENT_LIST_ADD_ITEM
-    slot_schema = {"item": cv.string, "name": cv.string}
+    slot_schema = vol.Schema({"item": cv.string, "name": cv.string})
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
