@@ -177,10 +177,12 @@ jobs:
       - name: Adjustments for official images
         run: |
           # Switch out aiohttp-zlib-ng for aiohttp-isal since we know
-          # it work son all our supported platforms but has trouble
+          # it will work all our supported images but has trouble
           # with systems have a 32bit userland and a 64bit kernel
+          # for core installs.
           # https://github.com/home-assistant/core/issues/116681
-          sed -i "s|aiohttp-zlib-ng|aiohttp-isal|g" requirements_all.txt
+          sed -i "s|aiohttp-zlib-ng.*|aiohttp-isal==0.3.1|g" requirements.txt
+          sed -i "s|aiohttp-zlib-ng.*|aiohttp-isal==0.3.1|g" requirements_all.txt
 
       - name: Download translations
         uses: actions/download-artifact@v4.1.7

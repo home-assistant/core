@@ -51,6 +51,10 @@ INCLUDED_REQUIREMENTS_WHEELS = {
     "pyuserinput",
 }
 
+# Requirements that should be replaced with another package
+REPLACE_REQUIREMENTS = {
+    "aiohttp-zlib-ng": "aiohttp-isal==0.3.1",
+}
 
 # Requirements to exclude or include when running github actions.
 # Requirements listed in "exclude" will be commented-out in
@@ -322,6 +326,8 @@ def process_action_requirement(req: str, action: str) -> str:
         return req
     if normalized_package_name in EXCLUDED_REQUIREMENTS_ALL:
         return f"# {req}"
+    if normalized_package_name in REPLACE_REQUIREMENTS:
+        return REPLACE_REQUIREMENTS[normalized_package_name]
     return req
 
 
