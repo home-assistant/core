@@ -15,8 +15,9 @@ from homeassistant.components.twitch.const import DOMAIN, OAUTH2_TOKEN, OAUTH_SC
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from . import TwitchIterObject, get_generator
+
 from tests.common import MockConfigEntry, load_json_object_fixture
-from tests.components.twitch import TwitchIterObject, get_generator
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 CLIENT_ID = "1234"
