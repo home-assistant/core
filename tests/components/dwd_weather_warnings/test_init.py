@@ -6,6 +6,9 @@ from homeassistant.components.dwd_weather_warnings.const import (
     CONF_REGION_DEVICE_TRACKER,
     DOMAIN,
 )
+from homeassistant.components.dwd_weather_warnings.coordinator import (
+    DwdWeatherWarningsCoordinator,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, STATE_HOME
 from homeassistant.core import HomeAssistant
@@ -25,6 +28,7 @@ async def test_load_unload_entry(
     entry = await init_integration(hass, mock_identifier_entry)
 
     assert entry.state is ConfigEntryState.LOADED
+    assert isinstance(entry.runtime_data, DwdWeatherWarningsCoordinator)
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -95,3 +99,4 @@ async def test_load_valid_device_tracker(
     await hass.async_block_till_done()
 
     assert mock_tracker_entry.state is ConfigEntryState.LOADED
+    assert isinstance(mock_tracker_entry.runtime_data, DwdWeatherWarningsCoordinator)
