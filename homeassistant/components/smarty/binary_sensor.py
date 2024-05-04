@@ -1,9 +1,10 @@
 """Support for Salda Smarty XP/XV Ventilation Unit Binary Sensors."""
+
 from __future__ import annotations
 
 import logging
 
-from pysmarty import Smarty  # pylint: disable=import-error
+from pysmarty import Smarty
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,

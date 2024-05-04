@@ -1,21 +1,20 @@
 """Config flow for Landis+Gyr Heat Meter integration."""
+
 from __future__ import annotations
 
 import asyncio
 import logging
 from typing import Any
 
-import async_timeout
 import serial
 from serial.tools import list_ports
 import ultraheat_api
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import usb
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, ULTRAHEAT_TIMEOUT
@@ -31,14 +30,14 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class LandisgyrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ultraheat Heat Meter."""
 
     VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Step when setting up serial configuration."""
         errors = {}
 
@@ -64,7 +63,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_setup_serial_manual_path(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Set path manually."""
         errors = {}
 
@@ -105,11 +104,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         reader = ultraheat_api.UltraheatReader(port)
         heat_meter = ultraheat_api.HeatMeterService(reader)
         try:
-            async with async_timeout.timeout(ULTRAHEAT_TIMEOUT):
+            async with asyncio.timeout(ULTRAHEAT_TIMEOUT):
                 # validate and retrieve the model and device number for a unique id
                 data = await self.hass.async_add_executor_job(heat_meter.read)
 
-        except (asyncio.TimeoutError, serial.serialutil.SerialException) as err:
+        except (TimeoutError, serial.SerialException) as err:
             _LOGGER.warning("Failed read data from: %s. %s", port, err)
             raise CannotConnect(f"Error communicating with device: {err}") from err
 

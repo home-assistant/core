@@ -1,4 +1,5 @@
 """Code to handle a Xiaomi Gateway."""
+
 import logging
 
 from construct.core import ChecksumError
@@ -7,7 +8,8 @@ from micloud.micloudexception import MiCloudAccessDenied
 from miio import DeviceException, gateway
 from miio.gateway.gateway import GATEWAY_MODEL_EU
 
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (

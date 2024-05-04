@@ -1,4 +1,5 @@
 """The tests for the MQTT siren platform."""
+
 import copy
 from typing import Any
 from unittest.mock import patch
@@ -16,7 +17,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 
@@ -44,6 +44,7 @@ from .test_common import (
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_skipped_async_ha_write_state,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
@@ -56,13 +57,6 @@ from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {siren.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
-
-
-@pytest.fixture(autouse=True)
-def siren_platform_only():
-    """Only setup the siren platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SIREN]):
-        yield
 
 
 async def async_turn_on(
@@ -257,7 +251,7 @@ async def test_controlling_state_and_attributes_with_json_message_without_templa
     async_fire_mqtt_message(
         hass,
         "state-topic",
-        '{"state":"beer off", "duration": 5, "volume_level": 0.6}',
+        '{"state":"beer off", "tone": "bell", "duration": 5, "volume_level": 0.6}',
     )
 
     state = hass.states.get("siren.test")
@@ -270,14 +264,15 @@ async def test_controlling_state_and_attributes_with_json_message_without_templa
     async_fire_mqtt_message(
         hass,
         "state-topic",
-        '{"state":"beer on", "duration": 6, "volume_level": 2 }',
+        '{"state":"beer on", "duration": 6, "volume_level": 2,"tone": "ping"}',
     )
     state = hass.states.get("siren.test")
     assert (
-        "Unable to update siren state attributes from payload '{'duration': 6, 'volume_level': 2}': value must be at most 1 for dictionary value @ data['volume_level']"
+        "Unable to update siren state attributes from payload '{'duration': 6, 'volume_level': 2, 'tone': 'ping'}': value must be at most 1 for dictionary value @ data['volume_level']"
         in caplog.text
     )
-    assert state.state == STATE_OFF
+    # Only the on/of state was updated, not the attributes
+    assert state.state == STATE_ON
     assert state.attributes.get(siren.ATTR_TONE) == "bell"
     assert state.attributes.get(siren.ATTR_DURATION) == 5
     assert state.attributes.get(siren.ATTR_VOLUME_LEVEL) == 0.6
@@ -287,7 +282,7 @@ async def test_controlling_state_and_attributes_with_json_message_without_templa
         "state-topic",
         "{}",
     )
-    assert state.state == STATE_OFF
+    assert state.state == STATE_ON
     assert state.attributes.get(siren.ATTR_TONE) == "bell"
     assert state.attributes.get(siren.ATTR_DURATION) == 5
     assert state.attributes.get(siren.ATTR_VOLUME_LEVEL) == 0.6
@@ -837,7 +832,7 @@ async def test_command_templates(
     mqtt_mock.async_publish.assert_any_call(
         "test-topic", "CMD: ON, DURATION: 22, TONE: ping, VOLUME: 0.88", 0, False
     )
-    mqtt_mock.async_publish.call_count == 1
+    assert mqtt_mock.async_publish.call_count == 1
     mqtt_mock.reset_mock()
     await async_turn_off(
         hass,
@@ -846,7 +841,7 @@ async def test_command_templates(
     mqtt_mock.async_publish.assert_any_call(
         "test-topic", "CMD: OFF, DURATION: , TONE: , VOLUME:", 0, False
     )
-    mqtt_mock.async_publish.call_count == 1
+    assert mqtt_mock.async_publish.call_count == 1
     mqtt_mock.reset_mock()
 
     await async_turn_on(
@@ -867,7 +862,7 @@ async def test_command_templates(
         entity_id="siren.milk",
     )
     mqtt_mock.async_publish.assert_any_call("test-topic", "CMD_OFF: OFF", 0, False)
-    mqtt_mock.async_publish.call_count == 1
+    assert mqtt_mock.async_publish.call_count == 2
     mqtt_mock.reset_mock()
 
 
@@ -1067,7 +1062,11 @@ async def test_encoding_subscribable_topics(
     )
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
@@ -1086,4 +1085,83 @@ async def test_unload_entry(
     config = DEFAULT_CONFIG
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry, domain, config
+    )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            siren.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "state_topic": "test-topic",
+                    "available_tones": ["siren", "bell"],
+                    "availability_topic": "availability-topic",
+                    "json_attributes_topic": "json-attributes-topic",
+                },
+            ),
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("topic", "payload1", "payload2"),
+    [
+        ("availability-topic", "online", "offline"),
+        ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
+        ("test-topic", "ON", "OFF"),
+        ("test-topic", '{"state": "ON"}', '{"state": "OFF"}'),
+        ("test-topic", '{"state":"ON","tone":"siren"}', '{"state":"ON","tone":"bell"}'),
+        (
+            "test-topic",
+            '{"state":"ON","tone":"siren"}',
+            '{"state":"OFF","tone":"siren"}',
+        ),
+        # Attriute volume_level 2 is invalid, but the state is valid and should update
+        (
+            "test-topic",
+            '{"state":"ON","volume_level":0.5}',
+            '{"state":"OFF","volume_level":2}',
+        ),
+    ],
+)
+async def test_skipped_async_ha_write_state(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    topic: str,
+    payload1: str,
+    payload2: str,
+) -> None:
+    """Test a write state command is only called when there is change."""
+    await mqtt_mock_entry()
+    await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            siren.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "state_topic": "test-topic",
+                    "state_value_template": "{{ value_json.some_var * 1 }}",
+                },
+            ),
+        )
+    ],
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
     )

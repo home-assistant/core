@@ -1,4 +1,5 @@
 """Alexa configuration for Home Assistant Cloud."""
+
 from __future__ import annotations
 
 import asyncio
@@ -10,8 +11,8 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 import aiohttp
-import async_timeout
 from hass_nabucasa import Cloud, cloud_api
+from yarl import URL
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.alexa import (
@@ -149,7 +150,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         self._token_valid: datetime | None = None
         self._cur_entity_prefs = async_get_assistant_settings(hass, CLOUD_ALEXA)
         self._alexa_sync_unsub: Callable[[], None] | None = None
-        self._endpoint: Any = None
+        self._endpoint: str | URL | None = None
 
     @property
     def enabled(self) -> bool:
@@ -175,7 +176,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         )
 
     @property
-    def endpoint(self) -> Any | None:
+    def endpoint(self) -> str | URL | None:
         """Endpoint for report state."""
         if self._endpoint is None:
             raise ValueError("No endpoint available. Fetch access token first")
@@ -246,21 +247,27 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
                 await self._prefs.async_update(
                     alexa_settings_version=ALEXA_SETTINGS_VERSION
                 )
-            async_listen_entity_updates(
-                self.hass, CLOUD_ALEXA, self._async_exposed_entities_updated
+            self._on_deinitialize.append(
+                async_listen_entity_updates(
+                    self.hass, CLOUD_ALEXA, self._async_exposed_entities_updated
+                )
             )
 
         async def on_hass_start(hass: HomeAssistant) -> None:
             if self.enabled and ALEXA_DOMAIN not in self.hass.config.components:
                 await async_setup_component(self.hass, ALEXA_DOMAIN, {})
 
-        start.async_at_start(self.hass, on_hass_start)
-        start.async_at_started(self.hass, on_hass_started)
+        self._on_deinitialize.append(start.async_at_start(self.hass, on_hass_start))
+        self._on_deinitialize.append(start.async_at_started(self.hass, on_hass_started))
 
-        self._prefs.async_listen_updates(self._async_prefs_updated)
-        self.hass.bus.async_listen(
-            er.EVENT_ENTITY_REGISTRY_UPDATED,
-            self._handle_entity_registry_updated,
+        self._on_deinitialize.append(
+            self._prefs.async_listen_updates(self._async_prefs_updated)
+        )
+        self._on_deinitialize.append(
+            self.hass.bus.async_listen(
+                er.EVENT_ENTITY_REGISTRY_UPDATED,
+                self._handle_entity_registry_updated,
+            )
         )
 
     def _should_expose_legacy(self, entity_id: str) -> bool:
@@ -309,7 +316,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         """Invalidate access token."""
         self._token_valid = None
 
-    async def async_get_access_token(self) -> Any:
+    async def async_get_access_token(self) -> str | None:
         """Get an access token."""
         if self._token_valid is not None and self._token_valid > utcnow():
             return self._token
@@ -500,20 +507,19 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
             )
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
-
-            return True
-
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning("Timeout trying to sync entities to Alexa")
             return False
-
         except aiohttp.ClientError as err:
             _LOGGER.warning("Error trying to sync entities to Alexa: %s", err)
             return False
+        return True
 
-    async def _handle_entity_registry_updated(self, event: Event) -> None:
+    async def _handle_entity_registry_updated(
+        self, event: Event[er.EventEntityRegistryUpdatedData]
+    ) -> None:
         """Handle when entity registry updated."""
         if not self.enabled or not self._cloud.is_logged_in:
             return
@@ -523,15 +529,14 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         if not self.should_expose(entity_id):
             return
 
-        action = event.data["action"]
-        to_update = []
-        to_remove = []
+        to_update: list[str] = []
+        to_remove: list[str] = []
 
-        if action == "create":
+        if event.data["action"] == "create":
             to_update.append(entity_id)
-        elif action == "remove":
+        elif event.data["action"] == "remove":
             to_remove.append(entity_id)
-        elif action == "update" and bool(
+        elif event.data["action"] == "update" and bool(
             set(event.data["changes"]) & er.ENTITY_DESCRIBING_ATTRIBUTES
         ):
             to_update.append(entity_id)

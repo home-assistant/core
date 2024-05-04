@@ -1,4 +1,5 @@
 """Helpers for Roku."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
@@ -32,7 +33,7 @@ def roku_exception_handler(
     """Decorate Roku calls to handle Roku exceptions."""
 
     def decorator(
-        func: _FuncType[_RokuEntityT, _P]
+        func: _FuncType[_RokuEntityT, _P],
     ) -> _ReturnFuncType[_RokuEntityT, _P]:
         @wraps(func)
         async def wrapper(

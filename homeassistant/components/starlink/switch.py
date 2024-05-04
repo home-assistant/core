@@ -31,20 +31,13 @@ async def async_setup_entry(
     )
 
 
-@dataclass
-class StarlinkSwitchEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class StarlinkSwitchEntityDescription(SwitchEntityDescription):
+    """Describes a Starlink switch entity."""
 
     value_fn: Callable[[StarlinkData], bool | None]
     turn_on_fn: Callable[[StarlinkUpdateCoordinator], Awaitable[None]]
     turn_off_fn: Callable[[StarlinkUpdateCoordinator], Awaitable[None]]
-
-
-@dataclass
-class StarlinkSwitchEntityDescription(
-    SwitchEntityDescription, StarlinkSwitchEntityDescriptionMixin
-):
-    """Describes a Starlink switch entity."""
 
 
 class StarlinkSwitchEntity(StarlinkEntity, SwitchEntity):
@@ -69,10 +62,22 @@ class StarlinkSwitchEntity(StarlinkEntity, SwitchEntity):
 SWITCHES = [
     StarlinkSwitchEntityDescription(
         key="stowed",
-        name="Stowed",
+        translation_key="stowed",
         device_class=SwitchDeviceClass.SWITCH,
         value_fn=lambda data: data.status["state"] == "STOWED",
         turn_on_fn=lambda coordinator: coordinator.async_stow_starlink(True),
         turn_off_fn=lambda coordinator: coordinator.async_stow_starlink(False),
-    )
+    ),
+    StarlinkSwitchEntityDescription(
+        key="sleep_schedule",
+        translation_key="sleep_schedule",
+        device_class=SwitchDeviceClass.SWITCH,
+        value_fn=lambda data: data.sleep[2],
+        turn_on_fn=lambda coordinator: coordinator.async_set_sleep_schedule_enabled(
+            True
+        ),
+        turn_off_fn=lambda coordinator: coordinator.async_set_sleep_schedule_enabled(
+            False
+        ),
+    ),
 ]

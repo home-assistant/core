@@ -1,4 +1,5 @@
 """The tests for the Owntracks device tracker."""
+
 import json
 from unittest.mock import patch
 
@@ -9,7 +10,7 @@ from homeassistant.const import STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, async_fire_mqtt_message, mock_coro
+from tests.common import MockConfigEntry, async_fire_mqtt_message
 from tests.typing import ClientSessionGenerator
 
 USER = "greg"
@@ -279,7 +280,7 @@ BAD_MESSAGE = {"_type": "unsupported", "tst": 1}
 BAD_JSON_PREFIX = "--$this is bad json#--"
 BAD_JSON_SUFFIX = "** and it ends here ^^"
 
-# pylint: disable=invalid-name, len-as-condition
+# pylint: disable=len-as-condition
 
 
 @pytest.fixture
@@ -310,8 +311,6 @@ def context(hass, setup_comp):
     """Set up the mocked context."""
     orig_context = owntracks.OwnTracksContext
     context = None
-
-    # pylint: disable=no-value-for-parameter
 
     def store_context(*args):
         """Store the context."""
@@ -965,7 +964,7 @@ async def test_mobile_exit_move_beacon(hass: HomeAssistant, context) -> None:
 async def test_mobile_multiple_async_enter_exit(hass: HomeAssistant, context) -> None:
     """Test the multiple entering."""
     # Test race condition
-    for _ in range(0, 20):
+    for _ in range(20):
         async_fire_mqtt_message(
             hass, EVENT_TOPIC, json.dumps(MOBILE_BEACON_ENTER_EVENT_MESSAGE)
         )
@@ -1305,7 +1304,7 @@ async def test_not_implemented_message(hass: HomeAssistant, context) -> None:
     """Handle not implemented message type."""
     patch_handler = patch(
         "homeassistant.components.owntracks.messages.async_handle_not_impl_msg",
-        return_value=mock_coro(False),
+        return_value=False,
     )
     patch_handler.start()
     assert not await send_message(hass, LWT_TOPIC, LWT_MESSAGE)
@@ -1316,7 +1315,7 @@ async def test_unsupported_message(hass: HomeAssistant, context) -> None:
     """Handle not implemented message type."""
     patch_handler = patch(
         "homeassistant.components.owntracks.messages.async_handle_unsupported_msg",
-        return_value=mock_coro(False),
+        return_value=False,
     )
     patch_handler.start()
     assert not await send_message(hass, BAD_TOPIC, BAD_MESSAGE)
@@ -1384,7 +1383,7 @@ def mock_cipher():
 
         (mkey, plaintext) = pickle.loads(base64.b64decode(ciphertext))
         if key != mkey:
-            raise ValueError()
+            raise ValueError
         return plaintext
 
     return len(TEST_SECRET_KEY), mock_decrypt
@@ -1395,7 +1394,7 @@ def config_context(hass, setup_comp):
     """Set up the mocked context."""
     patch_load = patch(
         "homeassistant.components.device_tracker.async_load_config",
-        return_value=mock_coro([]),
+        return_value=[],
     )
     patch_load.start()
 
@@ -1503,7 +1502,7 @@ async def test_encrypted_payload_no_topic_key(hass: HomeAssistant, setup_comp) -
 async def test_encrypted_payload_libsodium(hass: HomeAssistant, setup_comp) -> None:
     """Test sending encrypted message payload."""
     try:
-        import nacl  # noqa: F401 pylint: disable=unused-import
+        import nacl  # noqa: F401
     except (ImportError, OSError):
         pytest.skip("PyNaCl/libsodium is not installed")
         return

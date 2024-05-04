@@ -1,4 +1,5 @@
 """The tests for lastfm."""
+
 from unittest.mock import patch
 
 from pylast import PyLastError, Track
@@ -75,7 +76,7 @@ class MockUser:
 
     def get_image(self) -> str:
         """Get mock image."""
-        return ""
+        return "image"
 
     def get_recent_tracks(self, limit: int) -> list[MockLastTrack]:
         """Get mock recent tracks."""

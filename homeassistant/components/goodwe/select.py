@@ -1,4 +1,5 @@
 """GoodWe PV inverter selection settings entities."""
+
 import logging
 
 from goodwe import Inverter, InverterError, OperationMode
@@ -7,7 +8,7 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
@@ -31,8 +32,6 @@ _OPTION_TO_MODE: dict[str, OperationMode] = {
 
 OPERATION_MODE = SelectEntityDescription(
     key="operation_mode",
-    name="Inverter operation mode",
-    icon="mdi:solar-power",
     entity_category=EntityCategory.CONFIG,
     translation_key="operation_mode",
 )
@@ -72,6 +71,7 @@ class InverterOperationModeEntity(SelectEntity):
     """Entity representing the inverter operation mode."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self,

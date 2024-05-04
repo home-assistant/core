@@ -1,7 +1,7 @@
 {
   "domain": "dunehd",
   "name": "Dune HD",
-  "codeowners": ["@bieniu"],
+  "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/dunehd",
   "iot_class": "local_polling",

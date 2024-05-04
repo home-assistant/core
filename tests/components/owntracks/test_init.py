@@ -1,4 +1,5 @@
 """Test the owntracks_http platform."""
+
 import pytest
 
 from homeassistant.components import owntracks

@@ -1,4 +1,5 @@
 """Support for NuHeat thermostats."""
+
 from datetime import timedelta
 from http import HTTPStatus
 import logging

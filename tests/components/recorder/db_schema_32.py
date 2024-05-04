@@ -3,13 +3,14 @@
 This file contains the model definitions for schema version 30.
 It is used to test the schema migration logic.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import Any, TypedDict, cast, overload
+from typing import Any, Self, TypedDict, cast, overload
 
 import ciso8601
 from fnv_hash_fast import fnv1a_32
@@ -34,7 +35,6 @@ from sqlalchemy import (
 from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
 from sqlalchemy.orm import aliased, declarative_base, relationship
 from sqlalchemy.orm.session import Session
-from typing_extensions import Self
 
 from homeassistant.components.recorder.const import SupportedDialect
 from homeassistant.const import (
@@ -56,7 +56,6 @@ from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 ALL_DOMAIN_EXCLUDE_ATTRS = {ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEATURES}
 
 # SQLAlchemy Schema
-# pylint: disable=invalid-name
 Base = declarative_base()
 
 SCHEMA_VERSION = 32
@@ -373,6 +372,9 @@ class States(Base):  # type: ignore[misc,valid-type]
     )
     last_changed = Column(DATETIME_TYPE)
     last_changed_ts = Column(TIMESTAMP_TYPE)
+    last_reported_ts = Column(
+        TIMESTAMP_TYPE
+    )  # *** Not originally in v32, only added for recorder to startup ok
     last_updated = Column(DATETIME_TYPE, default=dt_util.utcnow, index=True)
     last_updated_ts = Column(TIMESTAMP_TYPE, default=time.time, index=True)
     old_state_id = Column(Integer, ForeignKey("states.state_id"), index=True)
@@ -740,13 +742,11 @@ OLD_STATE = aliased(States, name="old_state")
 
 
 @overload
-def process_timestamp(ts: None) -> None:
-    ...
+def process_timestamp(ts: None) -> None: ...
 
 
 @overload
-def process_timestamp(ts: datetime) -> datetime:
-    ...
+def process_timestamp(ts: datetime) -> datetime: ...
 
 
 def process_timestamp(ts: datetime | None) -> datetime | None:

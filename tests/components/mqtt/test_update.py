@@ -1,4 +1,5 @@
 """The tests for mqtt update component."""
+
 import json
 from unittest.mock import patch
 
@@ -6,16 +7,11 @@ import pytest
 
 from homeassistant.components import mqtt, update
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .test_common import (
+    help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
@@ -33,6 +29,7 @@ from .test_common import (
     help_test_reloadable,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
+    help_test_skipped_async_ha_write_state,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
@@ -47,19 +44,12 @@ DEFAULT_CONFIG = {
         update.DOMAIN: {
             "name": "test",
             "state_topic": "test-topic",
-            "latest_version_topic": "test-topic",
+            "latest_version_topic": "latest-version-topic",
             "command_topic": "test-topic",
             "payload_install": "install",
         }
     }
 }
-
-
-@pytest.fixture(autouse=True)
-def update_platform_only():
-    """Only setup the update platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.UPDATE]):
-        yield
 
 
 @pytest.mark.parametrize(
@@ -696,7 +686,11 @@ async def test_entity_id_update_discovery_update(
     )
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
@@ -726,3 +720,90 @@ async def test_reloadable(
     domain = update.DOMAIN
     config = DEFAULT_CONFIG
     await help_test_reloadable(hass, mqtt_client_mock, domain, config)
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            update.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "availability_topic": "availability-topic",
+                    "json_attributes_topic": "json-attributes-topic",
+                },
+            ),
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("topic", "payload1", "payload2"),
+    [
+        ("latest-version-topic", "1.1", "1.2"),
+        ("test-topic", "1.1", "1.2"),
+        ("test-topic", '{"installed_version": "1.1"}', '{"installed_version": "1.2"}'),
+        ("test-topic", '{"latest_version": "1.1"}', '{"latest_version": "1.2"}'),
+        ("test-topic", '{"title": "Update"}', '{"title": "Patch"}'),
+        ("test-topic", '{"release_summary": "bla1"}', '{"release_summary": "bla2"}'),
+        (
+            "test-topic",
+            '{"release_url": "https://example.com/update?r=1"}',
+            '{"release_url": "https://example.com/update?r=2"}',
+        ),
+        (
+            "test-topic",
+            '{"entity_picture": "https://example.com/icon1.png"}',
+            '{"entity_picture": "https://example.com/icon2.png"}',
+        ),
+        ("availability-topic", "online", "offline"),
+        ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
+    ],
+)
+async def test_skipped_async_ha_write_state(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    topic: str,
+    payload1: str,
+    payload2: str,
+) -> None:
+    """Test a write state command is only called when there is change."""
+    await mqtt_mock_entry()
+    await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
+
+
+VALUE_TEMMPLATES = {
+    "value_template": "state_topic",
+    "latest_version_template": "latest_version_topic",
+}
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            update.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    state_topic: "test-topic",
+                    value_template: "{{ value_json.some_var * 1 }}",
+                },
+            ),
+        )
+        for value_template, state_topic in VALUE_TEMMPLATES.items()
+    ],
+    ids=VALUE_TEMMPLATES,
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
+    )

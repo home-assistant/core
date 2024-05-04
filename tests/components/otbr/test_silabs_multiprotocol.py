@@ -1,4 +1,5 @@
 """Test OTBR Silicon Labs Multiprotocol support."""
+
 from unittest.mock import patch
 
 import pytest
@@ -31,16 +32,21 @@ DATASET_CH16_PENDING = (
 )
 
 
-async def test_async_change_channel(hass: HomeAssistant, otbr_config_entry) -> None:
+async def test_async_change_channel(
+    hass: HomeAssistant, otbr_config_entry_multipan
+) -> None:
     """Test test_async_change_channel."""
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 1
     assert list(store.datasets.values())[0].tlv == DATASET_CH16.hex()
 
-    with patch("python_otbr_api.OTBR.set_channel") as mock_set_channel, patch(
-        "python_otbr_api.OTBR.get_pending_dataset_tlvs",
-        return_value=bytes.fromhex(DATASET_CH16_PENDING),
+    with (
+        patch("python_otbr_api.OTBR.set_channel") as mock_set_channel,
+        patch(
+            "python_otbr_api.OTBR.get_pending_dataset_tlvs",
+            return_value=bytes.fromhex(DATASET_CH16_PENDING),
+        ),
     ):
         await otbr_silabs_multiprotocol.async_change_channel(hass, 15, delay=5 * 300)
     mock_set_channel.assert_awaited_once_with(15, delay=5 * 300 * 1000)
@@ -55,7 +61,7 @@ async def test_async_change_channel(hass: HomeAssistant, otbr_config_entry) -> N
 
 
 async def test_async_change_channel_no_pending(
-    hass: HomeAssistant, otbr_config_entry
+    hass: HomeAssistant, otbr_config_entry_multipan
 ) -> None:
     """Test test_async_change_channel when the pending dataset already expired."""
 
@@ -63,12 +69,16 @@ async def test_async_change_channel_no_pending(
     assert len(store.datasets) == 1
     assert list(store.datasets.values())[0].tlv == DATASET_CH16.hex()
 
-    with patch("python_otbr_api.OTBR.set_channel") as mock_set_channel, patch(
-        "python_otbr_api.OTBR.get_active_dataset_tlvs",
-        return_value=bytes.fromhex(DATASET_CH16_PENDING),
-    ), patch(
-        "python_otbr_api.OTBR.get_pending_dataset_tlvs",
-        return_value=None,
+    with (
+        patch("python_otbr_api.OTBR.set_channel") as mock_set_channel,
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset_tlvs",
+            return_value=bytes.fromhex(DATASET_CH16_PENDING),
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_pending_dataset_tlvs",
+            return_value=None,
+        ),
     ):
         await otbr_silabs_multiprotocol.async_change_channel(hass, 15, delay=5 * 300)
     mock_set_channel.assert_awaited_once_with(15, delay=5 * 300 * 1000)
@@ -83,7 +93,7 @@ async def test_async_change_channel_no_pending(
 
 
 async def test_async_change_channel_no_update(
-    hass: HomeAssistant, otbr_config_entry
+    hass: HomeAssistant, otbr_config_entry_multipan
 ) -> None:
     """Test test_async_change_channel when we didn't get a dataset from the OTBR."""
 
@@ -91,12 +101,16 @@ async def test_async_change_channel_no_update(
     assert len(store.datasets) == 1
     assert list(store.datasets.values())[0].tlv == DATASET_CH16.hex()
 
-    with patch("python_otbr_api.OTBR.set_channel") as mock_set_channel, patch(
-        "python_otbr_api.OTBR.get_active_dataset_tlvs",
-        return_value=None,
-    ), patch(
-        "python_otbr_api.OTBR.get_pending_dataset_tlvs",
-        return_value=None,
+    with (
+        patch("python_otbr_api.OTBR.set_channel") as mock_set_channel,
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset_tlvs",
+            return_value=None,
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_pending_dataset_tlvs",
+            return_value=None,
+        ),
     ):
         await otbr_silabs_multiprotocol.async_change_channel(hass, 15, delay=5 * 300)
     mock_set_channel.assert_awaited_once_with(15, delay=5 * 300 * 1000)
@@ -112,7 +126,9 @@ async def test_async_change_channel_no_otbr(hass: HomeAssistant) -> None:
     mock_set_channel.assert_not_awaited()
 
 
-async def test_async_get_channel(hass: HomeAssistant, otbr_config_entry) -> None:
+async def test_async_get_channel(
+    hass: HomeAssistant, otbr_config_entry_multipan
+) -> None:
     """Test test_async_get_channel."""
 
     with patch(
@@ -124,7 +140,7 @@ async def test_async_get_channel(hass: HomeAssistant, otbr_config_entry) -> None
 
 
 async def test_async_get_channel_no_dataset(
-    hass: HomeAssistant, otbr_config_entry
+    hass: HomeAssistant, otbr_config_entry_multipan
 ) -> None:
     """Test test_async_get_channel."""
 
@@ -136,7 +152,9 @@ async def test_async_get_channel_no_dataset(
     mock_get_active_dataset.assert_awaited_once_with()
 
 
-async def test_async_get_channel_error(hass: HomeAssistant, otbr_config_entry) -> None:
+async def test_async_get_channel_error(
+    hass: HomeAssistant, otbr_config_entry_multipan
+) -> None:
     """Test test_async_get_channel."""
 
     with patch(
@@ -160,7 +178,7 @@ async def test_async_get_channel_no_otbr(hass: HomeAssistant) -> None:
     [(OTBR_MULTIPAN_URL, True), (OTBR_NON_MULTIPAN_URL, False)],
 )
 async def test_async_using_multipan(
-    hass: HomeAssistant, otbr_config_entry, url: str, expected: bool
+    hass: HomeAssistant, otbr_config_entry_multipan, url: str, expected: bool
 ) -> None:
     """Test async_change_channel when otbr is not configured."""
     data: otbr.OTBRData = hass.data[otbr.DOMAIN]

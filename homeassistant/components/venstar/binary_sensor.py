@@ -1,4 +1,5 @@
 """Alarm sensors for the Venstar Thermostat."""
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -37,7 +38,7 @@ class VenstarBinarySensor(VenstarEntity, BinarySensorEntity):
         super().__init__(coordinator, config)
         self.alert = alert
         self._attr_unique_id = f"{config.entry_id}_{alert.replace(' ', '_')}"
-        self._attr_name = f"{self._client.name} {alert}"
+        self._attr_name = alert
 
     @property
     def is_on(self):

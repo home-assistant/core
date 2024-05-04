@@ -1,4 +1,6 @@
 """The tests for the androidtv platform."""
+
+from datetime import timedelta
 import logging
 from typing import Any
 from unittest.mock import Mock, patch
@@ -24,11 +26,10 @@ from homeassistant.components.androidtv.const import (
     DEVICE_FIRETV,
     DOMAIN,
 )
+from homeassistant.components.androidtv.entity import PREFIX_ANDROIDTV, PREFIX_FIRETV
 from homeassistant.components.androidtv.media_player import (
     ATTR_DEVICE_PATH,
     ATTR_LOCAL_PATH,
-    PREFIX_ANDROIDTV,
-    PREFIX_FIRETV,
     SERVICE_ADB_COMMAND,
     SERVICE_DOWNLOAD,
     SERVICE_LEARN_SENDEVENT,
@@ -46,8 +47,6 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_STOP,
     SERVICE_SELECT_SOURCE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
@@ -62,6 +61,8 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_PLAYING,
     STATE_STANDBY,
@@ -70,10 +71,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import slugify
+from homeassistant.util.dt import utcnow
 
 from . import patchers
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
 HOST = "127.0.0.1"
@@ -197,7 +199,7 @@ def keygen_fixture() -> None:
         yield
 
 
-def _setup(config):
+def _setup(config) -> tuple[str, str, MockConfigEntry]:
     """Perform common setup tasks for the tests."""
     patch_key = config[ADB_PATCH_KEY]
     entity_id = f"{MP_DOMAIN}.{slugify(config[TEST_ENTITY_NAME])}"
@@ -233,9 +235,10 @@ async def test_reconnect(
     patch_key, entity_id, config_entry = _setup(config)
     config_entry.add_to_hass(hass)
 
-    with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
-        SHELL_RESPONSE_OFF
-    )[patch_key]:
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -247,9 +250,10 @@ async def test_reconnect(
     caplog.clear()
     caplog.set_level(logging.WARNING)
 
-    with patchers.patch_connect(False)[patch_key], patchers.patch_shell(error=True)[
-        patch_key
-    ]:
+    with (
+        patchers.patch_connect(False)[patch_key],
+        patchers.patch_shell(error=True)[patch_key],
+    ):
         for _ in range(5):
             await async_update_entity(hass, entity_id)
             state = hass.states.get(entity_id)
@@ -261,9 +265,11 @@ async def test_reconnect(
     assert caplog.record_tuples[1][1] == logging.WARNING
 
     caplog.set_level(logging.DEBUG)
-    with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
-        SHELL_RESPONSE_STANDBY
-    )[patch_key]:
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key],
+        patchers.PATCH_SCREENCAP,
+    ):
         await async_update_entity(hass, entity_id)
 
         state = hass.states.get(entity_id)
@@ -291,9 +297,10 @@ async def test_adb_shell_returns_none(
     patch_key, entity_id, config_entry = _setup(config)
     config_entry.add_to_hass(hass)
 
-    with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
-        SHELL_RESPONSE_OFF
-    )[patch_key]:
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -302,9 +309,10 @@ async def test_adb_shell_returns_none(
         assert state is not None
         assert state.state != STATE_UNAVAILABLE
 
-    with patchers.patch_shell(None)[patch_key], patchers.patch_shell(error=True)[
-        patch_key
-    ]:
+    with (
+        patchers.patch_shell(None)[patch_key],
+        patchers.patch_shell(error=True)[patch_key],
+    ):
         await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
@@ -316,9 +324,11 @@ async def test_setup_with_adbkey(hass: HomeAssistant) -> None:
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_PYTHON_ADB_KEY)
     config_entry.add_to_hass(hass)
 
-    with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
-        SHELL_RESPONSE_OFF
-    )[patch_key], patchers.PATCH_ISFILE:
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+        patchers.PATCH_ISFILE,
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -346,9 +356,10 @@ async def test_sources(hass: HomeAssistant, config: dict[str, Any]) -> None:
     config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(config_entry, options={CONF_APPS: conf_apps})
 
-    with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
-        SHELL_RESPONSE_OFF
-    )[patch_key]:
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -416,9 +427,10 @@ async def test_exclude_sources(
         config_entry, options={CONF_EXCLUDE_UNNAMED_APPS: True, CONF_APPS: conf_apps}
     )
 
-    with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
-        SHELL_RESPONSE_OFF
-    )[patch_key]:
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -453,16 +465,17 @@ async def test_exclude_sources(
 
 
 async def _test_select_source(
-    hass, config, conf_apps, source, expected_arg, method_patch
-):
+    hass: HomeAssistant, config, conf_apps, source, expected_arg, method_patch
+) -> None:
     """Test that the methods for launching and stopping apps are called correctly when selecting a source."""
     patch_key, entity_id, config_entry = _setup(config)
     config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(config_entry, options={CONF_APPS: conf_apps})
 
-    with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
-        SHELL_RESPONSE_OFF
-    )[patch_key]:
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -567,15 +580,18 @@ async def test_setup_fail(
     patch_key, entity_id, config_entry = _setup(config)
     config_entry.add_to_hass(hass)
 
-    with patchers.patch_connect(connect)[patch_key], patchers.patch_shell(
-        SHELL_RESPONSE_OFF, error=True, exc=AdbShellTimeoutException
-    )[patch_key]:
+    with (
+        patchers.patch_connect(connect)[patch_key],
+        patchers.patch_shell(
+            SHELL_RESPONSE_OFF, error=True, exc=AdbShellTimeoutException
+        )[patch_key],
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is False
         await hass.async_block_till_done()
 
         await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
-        assert config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY
         assert state is None
 
 
@@ -586,9 +602,10 @@ async def test_adb_command(hass: HomeAssistant) -> None:
     command = "test command"
     response = "test response"
 
-    with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
-        SHELL_RESPONSE_OFF
-    )[patch_key]:
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -615,9 +632,10 @@ async def test_adb_command_unicode_decode_error(hass: HomeAssistant) -> None:
     command = "test command"
     response = b"test response"
 
-    with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
-        SHELL_RESPONSE_OFF
-    )[patch_key]:
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -644,9 +662,10 @@ async def test_adb_command_key(hass: HomeAssistant) -> None:
     command = "HOME"
     response = None
 
-    with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
-        SHELL_RESPONSE_OFF
-    )[patch_key]:
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -673,9 +692,10 @@ async def test_adb_command_get_properties(hass: HomeAssistant) -> None:
     command = "GET_PROPERTIES"
     response = {"test key": "test value"}
 
-    with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
-        SHELL_RESPONSE_OFF
-    )[patch_key]:
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -702,9 +722,10 @@ async def test_learn_sendevent(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
     response = "sendevent 1 2 3 4"
 
-    with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
-        SHELL_RESPONSE_OFF
-    )[patch_key]:
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -730,9 +751,10 @@ async def test_update_lock_not_acquired(hass: HomeAssistant) -> None:
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
     config_entry.add_to_hass(hass)
 
-    with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
-        SHELL_RESPONSE_OFF
-    )[patch_key]:
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -742,16 +764,22 @@ async def test_update_lock_not_acquired(hass: HomeAssistant) -> None:
         assert state is not None
         assert state.state == STATE_OFF
 
-    with patch(
-        "androidtv.androidtv.androidtv_async.AndroidTVAsync.update",
-        side_effect=LockNotAcquiredException,
-    ), patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
+    with (
+        patch(
+            "androidtv.androidtv.androidtv_async.AndroidTVAsync.update",
+            side_effect=LockNotAcquiredException,
+        ),
+        patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key],
+    ):
         await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_OFF
 
-    with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
+    with (
+        patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key],
+        patchers.PATCH_SCREENCAP,
+    ):
         await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
@@ -765,9 +793,10 @@ async def test_download(hass: HomeAssistant) -> None:
     device_path = "device/path"
     local_path = "local/path"
 
-    with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
-        SHELL_RESPONSE_OFF
-    )[patch_key]:
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -786,10 +815,9 @@ async def test_download(hass: HomeAssistant) -> None:
             patch_pull.assert_not_called()
 
         # Successful download
-        with patch(
-            "androidtv.basetv.basetv_async.BaseTVAsync.adb_pull"
-        ) as patch_pull, patch.object(
-            hass.config, "is_allowed_path", return_value=True
+        with (
+            patch("androidtv.basetv.basetv_async.BaseTVAsync.adb_pull") as patch_pull,
+            patch.object(hass.config, "is_allowed_path", return_value=True),
         ):
             await hass.services.async_call(
                 DOMAIN,
@@ -811,9 +839,10 @@ async def test_upload(hass: HomeAssistant) -> None:
     device_path = "device/path"
     local_path = "local/path"
 
-    with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
-        SHELL_RESPONSE_OFF
-    )[patch_key]:
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -832,10 +861,9 @@ async def test_upload(hass: HomeAssistant) -> None:
             patch_push.assert_not_called()
 
         # Successful upload
-        with patch(
-            "androidtv.basetv.basetv_async.BaseTVAsync.adb_push"
-        ) as patch_push, patch.object(
-            hass.config, "is_allowed_path", return_value=True
+        with (
+            patch("androidtv.basetv.basetv_async.BaseTVAsync.adb_push") as patch_push,
+            patch.object(hass.config, "is_allowed_path", return_value=True),
         ):
             await hass.services.async_call(
                 DOMAIN,
@@ -855,9 +883,10 @@ async def test_androidtv_volume_set(hass: HomeAssistant) -> None:
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
     config_entry.add_to_hass(hass)
 
-    with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
-        SHELL_RESPONSE_OFF
-    )[patch_key]:
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -884,14 +913,19 @@ async def test_get_image_http(
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
     config_entry.add_to_hass(hass)
 
-    with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
-        SHELL_RESPONSE_OFF
-    )[patch_key]:
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    with patchers.patch_shell("11")[patch_key]:
+    with (
+        patchers.patch_shell("11")[patch_key],
+        patchers.PATCH_SCREENCAP as patch_screen_cap,
+    ):
         await async_update_entity(hass, entity_id)
+        patch_screen_cap.assert_called()
 
     media_player_name = "media_player." + slugify(
         CONFIG_ANDROID_DEFAULT[TEST_ENTITY_NAME]
@@ -901,21 +935,57 @@ async def test_get_image_http(
 
     client = await hass_client_no_auth()
 
-    with patch(
-        "androidtv.basetv.basetv_async.BaseTVAsync.adb_screencap", return_value=b"image"
-    ):
-        resp = await client.get(state.attributes["entity_picture"])
-        content = await resp.read()
-
+    resp = await client.get(state.attributes["entity_picture"])
+    content = await resp.read()
     assert content == b"image"
 
-    with patch(
-        "androidtv.basetv.basetv_async.BaseTVAsync.adb_screencap",
-        side_effect=ConnectionResetError,
+    next_update = utcnow() + timedelta(seconds=30)
+    with (
+        patchers.patch_shell("11")[patch_key],
+        patchers.PATCH_SCREENCAP as patch_screen_cap,
+        patch("homeassistant.util.utcnow", return_value=next_update),
     ):
-        resp = await client.get(state.attributes["entity_picture"])
+        async_fire_time_changed(hass, next_update, True)
+        await hass.async_block_till_done()
+        patch_screen_cap.assert_not_called()
+
+    next_update = utcnow() + timedelta(seconds=60)
+    with (
+        patchers.patch_shell("11")[patch_key],
+        patchers.PATCH_SCREENCAP as patch_screen_cap,
+        patch("homeassistant.util.utcnow", return_value=next_update),
+    ):
+        async_fire_time_changed(hass, next_update, True)
+        await hass.async_block_till_done()
+        patch_screen_cap.assert_called()
+
+
+async def test_get_image_http_fail(hass: HomeAssistant) -> None:
+    """Test taking a screen capture fail."""
+
+    patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
+    config_entry.add_to_hass(hass)
+
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    with (
+        patchers.patch_shell("11")[patch_key],
+        patch(
+            "androidtv.basetv.basetv_async.BaseTVAsync.adb_screencap",
+            side_effect=ConnectionResetError,
+        ),
+    ):
+        await async_update_entity(hass, entity_id)
 
     # The device is unavailable, but getting the media image did not cause an exception
+    media_player_name = "media_player." + slugify(
+        CONFIG_ANDROID_DEFAULT[TEST_ENTITY_NAME]
+    )
     state = hass.states.get(media_player_name)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
@@ -929,9 +999,10 @@ async def test_get_image_disabled(hass: HomeAssistant) -> None:
         config_entry, options={CONF_SCREENCAP: False}
     )
 
-    with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
-        SHELL_RESPONSE_OFF
-    )[patch_key]:
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -947,13 +1018,13 @@ async def test_get_image_disabled(hass: HomeAssistant) -> None:
 
 
 async def _test_service(
-    hass,
+    hass: HomeAssistant,
     entity_id,
     ha_service_name,
     androidtv_method,
     additional_service_data=None,
     return_value=None,
-):
+) -> None:
     """Test generic Android media player entity service."""
     service_data = {ATTR_ENTITY_ID: entity_id}
     if additional_service_data:
@@ -986,7 +1057,10 @@ async def test_services_androidtv(hass: HomeAssistant) -> None:
             assert await hass.config_entries.async_setup(config_entry.entry_id)
             await hass.async_block_till_done()
 
-        with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
+        with (
+            patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key],
+            patchers.PATCH_SCREENCAP,
+        ):
             await _test_service(
                 hass, entity_id, SERVICE_MEDIA_NEXT_TRACK, "media_next_track"
             )
@@ -1034,7 +1108,10 @@ async def test_services_firetv(hass: HomeAssistant) -> None:
             assert await hass.config_entries.async_setup(config_entry.entry_id)
             await hass.async_block_till_done()
 
-        with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
+        with (
+            patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key],
+            patchers.PATCH_SCREENCAP,
+        ):
             await _test_service(hass, entity_id, SERVICE_MEDIA_STOP, "back")
             await _test_service(hass, entity_id, SERVICE_TURN_OFF, "adb_shell")
             await _test_service(hass, entity_id, SERVICE_TURN_ON, "adb_shell")
@@ -1050,7 +1127,10 @@ async def test_volume_mute(hass: HomeAssistant) -> None:
             assert await hass.config_entries.async_setup(config_entry.entry_id)
             await hass.async_block_till_done()
 
-        with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
+        with (
+            patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key],
+            patchers.PATCH_SCREENCAP,
+        ):
             service_data = {ATTR_ENTITY_ID: entity_id, ATTR_MEDIA_VOLUME_MUTED: True}
             with patch(
                 "androidtv.androidtv.androidtv_async.AndroidTVAsync.mute_volume",
@@ -1088,9 +1168,10 @@ async def test_connection_closed_on_ha_stop(hass: HomeAssistant) -> None:
     patch_key, _, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
     config_entry.add_to_hass(hass)
 
-    with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
-        SHELL_RESPONSE_OFF
-    )[patch_key]:
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -1108,9 +1189,10 @@ async def test_exception(hass: HomeAssistant) -> None:
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
     config_entry.add_to_hass(hass)
 
-    with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
-        SHELL_RESPONSE_OFF
-    )[patch_key]:
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -1138,9 +1220,10 @@ async def test_options_reload(hass: HomeAssistant) -> None:
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
     config_entry.add_to_hass(hass)
 
-    with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
-        SHELL_RESPONSE_OFF
-    )[patch_key]:
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 

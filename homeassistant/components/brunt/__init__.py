@@ -1,10 +1,11 @@
 """The brunt component."""
+
 from __future__ import annotations
 
+from asyncio import timeout
 import logging
 
 from aiohttp.client_exceptions import ClientResponseError, ServerDisconnectedError
-import async_timeout
 from brunt import BruntClientAsync, Thing
 
 from homeassistant.config_entries import ConfigEntry
@@ -43,14 +44,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         Error 401 is the API response for things that are not part of the account, could happen when a device is deleted from the account.
         """
         try:
-            async with async_timeout.timeout(10):
+            async with timeout(10):
                 things = await bapi.async_get_things(force=True)
                 return {thing.serial: thing for thing in things}
         except ServerDisconnectedError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
         except ClientResponseError as err:
             if err.status == 403:
-                raise ConfigEntryAuthFailed() from err
+                raise ConfigEntryAuthFailed from err
             if err.status == 401:
                 _LOGGER.warning("Device not found, will reload Brunt integration")
                 await hass.config_entries.async_reload(entry.entry_id)

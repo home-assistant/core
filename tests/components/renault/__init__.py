@@ -1,4 +1,5 @@
 """Tests for the Renault integration."""
+
 from __future__ import annotations
 
 from types import MappingProxyType
@@ -37,7 +38,9 @@ def check_device_registry(
 ) -> None:
     """Ensure that the expected_device is correctly registered."""
     assert len(device_registry.devices) == 1
-    registry_entry = device_registry.async_get_device(expected_device[ATTR_IDENTIFIERS])
+    registry_entry = device_registry.async_get_device(
+        identifiers=expected_device[ATTR_IDENTIFIERS]
+    )
     assert registry_entry is not None
     assert registry_entry.identifiers == expected_device[ATTR_IDENTIFIERS]
     assert registry_entry.manufacturer == expected_device[ATTR_MANUFACTURER]
@@ -79,8 +82,6 @@ def check_entities_no_data(
         assert state.state == expected_state
         for attr in FIXED_ATTRIBUTES:
             assert state.attributes.get(attr) == expected_entity.get(attr)
-        # Check dynamic attributes:
-        assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
 
 
 def check_entities_unavailable(
@@ -98,5 +99,3 @@ def check_entities_unavailable(
         assert state.state == STATE_UNAVAILABLE
         for attr in FIXED_ATTRIBUTES:
             assert state.attributes.get(attr) == expected_entity.get(attr)
-        # Check dynamic attributes:
-        assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)

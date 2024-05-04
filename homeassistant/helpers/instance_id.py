@@ -1,4 +1,5 @@
 """Helper to create a unique instance ID."""
+
 from __future__ import annotations
 
 import logging

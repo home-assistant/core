@@ -1,5 +1,7 @@
 """Hass.io const variables."""
-from homeassistant.backports.enum import StrEnum
+
+from datetime import timedelta
+from enum import StrEnum
 
 DOMAIN = "hassio"
 
@@ -9,14 +11,17 @@ ATTR_ADMIN = "admin"
 ATTR_COMPRESSED = "compressed"
 ATTR_CONFIG = "config"
 ATTR_DATA = "data"
+ATTR_SESSION_DATA_USER_ID = "user_id"
 ATTR_DISCOVERY = "discovery"
 ATTR_ENABLE = "enable"
 ATTR_ENDPOINT = "endpoint"
 ATTR_FOLDERS = "folders"
 ATTR_HEALTHY = "healthy"
 ATTR_HOMEASSISTANT = "homeassistant"
+ATTR_HOMEASSISTANT_EXCLUDE_DATABASE = "homeassistant_exclude_database"
 ATTR_INPUT = "input"
 ATTR_ISSUES = "issues"
+ATTR_MESSAGE = "message"
 ATTR_METHOD = "method"
 ATTR_PANELS = "panels"
 ATTR_PASSWORD = "password"
@@ -56,6 +61,22 @@ EVENT_ISSUE_REMOVED = "issue_removed"
 
 UPDATE_KEY_SUPERVISOR = "supervisor"
 
+ADDONS_COORDINATOR = "hassio_addons_coordinator"
+
+
+DATA_CORE_INFO = "hassio_core_info"
+DATA_CORE_STATS = "hassio_core_stats"
+DATA_HOST_INFO = "hassio_host_info"
+DATA_STORE = "hassio_store"
+DATA_INFO = "hassio_info"
+DATA_OS_INFO = "hassio_os_info"
+DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
+DATA_SUPERVISOR_STATS = "hassio_supervisor_stats"
+DATA_ADDONS_CHANGELOGS = "hassio_addons_changelogs"
+DATA_ADDONS_INFO = "hassio_addons_info"
+DATA_ADDONS_STATS = "hassio_addons_stats"
+HASSIO_UPDATE_INTERVAL = timedelta(minutes=5)
+
 ATTR_AUTO_UPDATE = "auto_update"
 ATTR_VERSION = "version"
 ATTR_VERSION_LATEST = "version_latest"
@@ -80,6 +101,26 @@ PLACEHOLDER_KEY_REFERENCE = "reference"
 PLACEHOLDER_KEY_COMPONENTS = "components"
 
 ISSUE_KEY_SYSTEM_DOCKER_CONFIG = "issue_system_docker_config"
+
+CORE_CONTAINER = "homeassistant"
+SUPERVISOR_CONTAINER = "hassio_supervisor"
+
+CONTAINER_STATS = "stats"
+CONTAINER_CHANGELOG = "changelog"
+CONTAINER_INFO = "info"
+
+# This is a mapping of which endpoint the key in the addon data
+# is obtained from so we know which endpoint to update when the
+# coordinator polls for updates.
+KEY_TO_UPDATE_TYPES: dict[str, set[str]] = {
+    ATTR_VERSION_LATEST: {CONTAINER_INFO, CONTAINER_CHANGELOG},
+    ATTR_MEMORY_PERCENT: {CONTAINER_STATS},
+    ATTR_CPU_PERCENT: {CONTAINER_STATS},
+    ATTR_VERSION: {CONTAINER_INFO},
+    ATTR_STATE: {CONTAINER_INFO},
+}
+
+REQUEST_REFRESH_DELAY = 10
 
 
 class SupervisorEntityModel(StrEnum):

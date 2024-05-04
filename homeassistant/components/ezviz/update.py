@@ -1,4 +1,5 @@
 """Support for EZVIZ sensors."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -24,7 +25,6 @@ PARALLEL_UPDATES = 1
 
 UPDATE_ENTITY_TYPES = UpdateEntityDescription(
     key="version",
-    name="Firmware update",
     device_class=UpdateDeviceClass.FIRMWARE,
 )
 
@@ -49,7 +49,6 @@ async def async_setup_entry(
 class EzvizUpdateEntity(EzvizEntity, UpdateEntity):
     """Representation of a EZVIZ Update entity."""
 
-    _attr_has_entity_name = True
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL
         | UpdateEntityFeature.PROGRESS

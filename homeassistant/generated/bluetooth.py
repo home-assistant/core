@@ -9,6 +9,22 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "airthings_ble",
         "manufacturer_id": 820,
+        "service_uuid": "b42e1f6e-ade7-11e4-89d3-123b93f75cba",
+    },
+    {
+        "domain": "airthings_ble",
+        "manufacturer_id": 820,
+        "service_uuid": "b42e4a8e-ade7-11e4-89d3-123b93f75cba",
+    },
+    {
+        "domain": "airthings_ble",
+        "manufacturer_id": 820,
+        "service_uuid": "b42e1c08-ade7-11e4-89d3-123b93f75cba",
+    },
+    {
+        "domain": "airthings_ble",
+        "manufacturer_id": 820,
+        "service_uuid": "b42e3882-ade7-11e4-89d3-123b93f75cba",
     },
     {
         "connectable": False,
@@ -51,6 +67,21 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "service_uuid": "e7a60001-6639-429f-94fd-86de8ea26897",
     },
     {
+        "connectable": True,
+        "domain": "eq3btsmart",
+        "local_name": "CC-RT-BLE",
+    },
+    {
+        "connectable": True,
+        "domain": "eq3btsmart",
+        "local_name": "CC-RT-M-BLE",
+    },
+    {
+        "connectable": True,
+        "domain": "eq3btsmart",
+        "local_name": "CC-RT-BLE-EQ",
+    },
+    {
         "domain": "eufylife_ble",
         "local_name": "eufy T9140",
     },
@@ -84,6 +115,12 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "manufacturer_id": 20296,
     },
     {
+        "connectable": True,
+        "domain": "gardena_bluetooth",
+        "manufacturer_id": 1062,
+        "service_uuid": "98bd0001-0b0e-421a-84e5-ddbf75dc6de4",
+    },
+    {
         "connectable": False,
         "domain": "govee_ble",
         "local_name": "Govee*",
@@ -97,6 +134,12 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False,
         "domain": "govee_ble",
         "local_name": "B5178*",
+    },
+    {
+        "connectable": False,
+        "domain": "govee_ble",
+        "manufacturer_id": 1,
+        "service_uuid": "0000ec88-0000-1000-8000-00805f9b34fb",
     },
     {
         "connectable": False,
@@ -192,6 +235,15 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "manufacturer_id": 76,
     },
     {
+        "domain": "idasen_desk",
+        "service_uuid": "99fa0001-338a-1024-8a49-009c0215f78a",
+    },
+    {
+        "domain": "improv_ble",
+        "service_data_uuid": "00004677-0000-1000-8000-00805f9b34fb",
+        "service_uuid": "00467768-6228-2272-4663-277478268000",
+    },
+    {
         "connectable": False,
         "domain": "inkbird",
         "local_name": "sps",
@@ -228,6 +280,22 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "keymitt_ble",
         "local_name": "mib*",
+    },
+    {
+        "domain": "lamarzocco",
+        "local_name": "MICRA_*",
+    },
+    {
+        "domain": "lamarzocco",
+        "local_name": "MINI_*",
+    },
+    {
+        "domain": "lamarzocco",
+        "local_name": "GS3_*",
+    },
+    {
+        "domain": "lamarzocco",
+        "local_name": "GS3AV_*",
     },
     {
         "domain": "ld2410_ble",
@@ -279,6 +347,10 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "local_name": "AP-*",
     },
     {
+        "domain": "medcom_ble",
+        "service_uuid": "39b31fec-b63a-4ef7-b163-a7317872007f",
+    },
+    {
         "domain": "melnor",
         "manufacturer_data_start": [
             89,
@@ -303,10 +375,78 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False,
         "domain": "mopeka",
         "manufacturer_data_start": [
+            4,
+        ],
+        "manufacturer_id": 89,
+        "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "mopeka",
+        "manufacturer_data_start": [
+            5,
+        ],
+        "manufacturer_id": 89,
+        "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "mopeka",
+        "manufacturer_data_start": [
+            6,
+        ],
+        "manufacturer_id": 89,
+        "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "mopeka",
+        "manufacturer_data_start": [
             8,
         ],
         "manufacturer_id": 89,
         "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "mopeka",
+        "manufacturer_data_start": [
+            9,
+        ],
+        "manufacturer_id": 89,
+        "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "mopeka",
+        "manufacturer_data_start": [
+            10,
+        ],
+        "manufacturer_id": 89,
+        "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "mopeka",
+        "manufacturer_data_start": [
+            11,
+        ],
+        "manufacturer_id": 89,
+        "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "mopeka",
+        "manufacturer_data_start": [
+            12,
+        ],
+        "manufacturer_id": 89,
+        "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": True,
+        "domain": "motionblinds_ble",
+        "local_name": "MOTION_*",
     },
     {
         "domain": "oralb",
@@ -388,6 +528,12 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False,
         "domain": "sensorpush",
         "local_name": "SensorPush*",
+    },
+    {
+        "connectable": False,
+        "domain": "sensorpush",
+        "local_name": "s",
+        "service_uuid": "ef090000-11d6-42ba-93b8-9dd7ec090aa9",
     },
     {
         "domain": "snooz",
@@ -488,6 +634,16 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "local_name": "TP39*",
     },
     {
+        "connectable": False,
+        "domain": "thermopro",
+        "local_name": "TP96*",
+    },
+    {
+        "connectable": False,
+        "domain": "thermopro",
+        "local_name": "TP97*",
+    },
+    {
         "domain": "tilt_ble",
         "manufacturer_data_start": [
             2,
@@ -497,6 +653,16 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
             187,
         ],
         "manufacturer_id": 76,
+    },
+    {
+        "connectable": False,
+        "domain": "xiaomi_ble",
+        "service_data_uuid": "0000181b-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "xiaomi_ble",
+        "service_data_uuid": "0000181d-0000-1000-8000-00805f9b34fb",
     },
     {
         "connectable": False,

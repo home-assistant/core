@@ -1,4 +1,5 @@
 """Support for sending data to an Influx database."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -22,9 +23,17 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PATH,
+    CONF_PORT,
+    CONF_SSL,
     CONF_TIMEOUT,
+    CONF_TOKEN,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
@@ -56,23 +65,15 @@ from .const import (
     CONF_COMPONENT_CONFIG_GLOB,
     CONF_DB_NAME,
     CONF_DEFAULT_MEASUREMENT,
-    CONF_HOST,
     CONF_IGNORE_ATTRIBUTES,
     CONF_MEASUREMENT_ATTR,
     CONF_ORG,
     CONF_OVERRIDE_MEASUREMENT,
-    CONF_PASSWORD,
-    CONF_PATH,
-    CONF_PORT,
     CONF_PRECISION,
     CONF_RETRY_COUNT,
-    CONF_SSL,
     CONF_SSL_CA_CERT,
     CONF_TAGS,
     CONF_TAGS_ATTRIBUTES,
-    CONF_TOKEN,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
     CONNECTION_ERROR,
     DEFAULT_API_VERSION,
     DEFAULT_HOST_V2,
@@ -145,12 +146,11 @@ def validate_version_specific_config(conf: dict) -> dict:
                 f" {CONF_API_VERSION} is {DEFAULT_API_VERSION}"
             )
 
-    else:
-        if CONF_TOKEN in conf:
-            raise vol.Invalid(
-                f"{CONF_TOKEN} and {CONF_BUCKET} are only allowed when"
-                f" {CONF_API_VERSION} is {API_VERSION_2}"
-            )
+    elif CONF_TOKEN in conf:
+        raise vol.Invalid(
+            f"{CONF_TOKEN} and {CONF_BUCKET} are only allowed when"
+            f" {CONF_API_VERSION} is {API_VERSION_2}"
+        )
 
     return conf
 
@@ -513,7 +513,9 @@ class InfluxThread(threading.Thread):
     def __init__(self, hass, influx, event_to_json, max_tries):
         """Initialize the listener."""
         threading.Thread.__init__(self, name=DOMAIN)
-        self.queue = queue.Queue()
+        self.queue: queue.SimpleQueue[threading.Event | tuple[float, Event] | None] = (
+            queue.SimpleQueue()
+        )
         self.influx = influx
         self.event_to_json = event_to_json
         self.max_tries = max_tries
@@ -549,16 +551,17 @@ class InfluxThread(threading.Thread):
 
                 if item is None:
                     self.shutdown = True
-                else:
+                elif type(item) is tuple:
                     timestamp, event = item
                     age = time.monotonic() - timestamp
 
                     if age < queue_seconds:
-                        event_json = self.event_to_json(event)
-                        if event_json:
+                        if event_json := self.event_to_json(event):
                             json.append(event_json)
                     else:
                         dropped += 1
+                elif isinstance(item, threading.Event):
+                    item.set()
 
         if dropped:
             _LOGGER.warning(CATCHING_UP_MESSAGE, dropped)
@@ -591,12 +594,15 @@ class InfluxThread(threading.Thread):
     def run(self):
         """Process incoming events."""
         while not self.shutdown:
-            count, json = self.get_events_json()
+            _, json = self.get_events_json()
             if json:
                 self.write_to_influxdb(json)
-            for _ in range(count):
-                self.queue.task_done()
 
     def block_till_done(self):
-        """Block till all events processed."""
-        self.queue.join()
+        """Block till all events processed.
+
+        Currently only used for testing.
+        """
+        event = threading.Event()
+        self.queue.put(event)
+        event.wait()

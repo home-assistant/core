@@ -1,0 +1,266 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "face": {
+        "default": "mdi:motion-sensor-off",
+        "state": {
+          "on": "mdi:face-recognition"
+        }
+      },
+      "vehicle": {
+        "default": "mdi:car-off",
+        "state": {
+          "on": "mdi:car"
+        }
+      },
+      "pet": {
+        "default": "mdi:dog-side-off",
+        "state": {
+          "on": "mdi:dog-side"
+        }
+      },
+      "animal": {
+        "default": "mdi:paw-off",
+        "state": {
+          "on": "mdi:paw"
+        }
+      },
+      "package": {
+        "default": "mdi:gift-off-outline",
+        "state": {
+          "on": "mdi:gift-outline"
+        }
+      },
+      "visitor": {
+        "default": "mdi:doorbell",
+        "state": {
+          "on": "mdi:bell-ring-outline"
+        }
+      },
+      "person": {
+        "default": "mdi:motion-sensor-off",
+        "state": {
+          "on": "mdi:motion-sensor"
+        }
+      }
+    },
+    "button": {
+      "ptz_stop": {
+        "default": "mdi:pan"
+      },
+      "ptz_left": {
+        "default": "mdi:pan"
+      },
+      "ptz_right": {
+        "default": "mdi:pan"
+      },
+      "ptz_up": {
+        "default": "mdi:pan"
+      },
+      "ptz_down": {
+        "default": "mdi:pan"
+      },
+      "ptz_zoom_in": {
+        "default": "mdi:magnify"
+      },
+      "ptz_zoom_out": {
+        "default": "mdi:magnify"
+      },
+      "ptz_calibrate": {
+        "default": "mdi:pan"
+      },
+      "guard_go_to": {
+        "default": "mdi:crosshairs-gps"
+      },
+      "guard_set": {
+        "default": "mdi:crosshairs-gps"
+      }
+    },
+    "light": {
+      "floodlight": {
+        "default": "mdi:spotlight-beam"
+      },
+      "status_led": {
+        "default": "mdi:lightning-bolt-circle"
+      }
+    },
+    "number": {
+      "zoom": {
+        "default": "mdi:magnify"
+      },
+      "focus": {
+        "default": "mdi:focus-field"
+      },
+      "floodlight_brightness": {
+        "default": "mdi:spotlight-beam"
+      },
+      "volume": {
+        "default": "mdi:volume-high"
+      },
+      "guard_return_time": {
+        "default": "mdi:crosshairs-gps"
+      },
+      "motion_sensitivity": {
+        "default": "mdi:motion-sensor"
+      },
+      "ai_face_sensitivity": {
+        "default": "mdi:face-recognition"
+      },
+      "ai_person_sensitivity": {
+        "default": "mdi:account"
+      },
+      "ai_vehicle_sensitivity": {
+        "default": "mdi:car"
+      },
+      "ai_package_sensitivity": {
+        "default": "mdi:gift-outline"
+      },
+      "ai_pet_sensitivity": {
+        "default": "mdi:dog-side"
+      },
+      "ai_animal_sensitivity": {
+        "default": "mdi:paw"
+      },
+      "ai_face_delay": {
+        "default": "mdi:face-recognition"
+      },
+      "ai_person_delay": {
+        "default": "mdi:account"
+      },
+      "ai_vehicle_delay": {
+        "default": "mdi:car"
+      },
+      "ai_package_delay": {
+        "default": "mdi:gift-outline"
+      },
+      "ai_pet_delay": {
+        "default": "mdi:dog-side"
+      },
+      "ai_animal_delay": {
+        "default": "mdi:paw"
+      },
+      "auto_quick_reply_time": {
+        "default": "mdi:message-reply-text-outline"
+      },
+      "auto_track_limit_left": {
+        "default": "mdi:angle-acute"
+      },
+      "auto_track_limit_right": {
+        "default": "mdi:angle-acute"
+      },
+      "auto_track_disappear_time": {
+        "default": "mdi:target-account"
+      },
+      "auto_track_stop_time": {
+        "default": "mdi:target-account"
+      },
+      "day_night_switch_threshold": {
+        "default": "mdi:theme-light-dark"
+      },
+      "image_brightness": {
+        "default": "mdi:image-edit"
+      },
+      "image_contrast": {
+        "default": "mdi:image-edit"
+      },
+      "image_saturation": {
+        "default": "mdi:image-edit"
+      },
+      "image_sharpness": {
+        "default": "mdi:image-edit"
+      },
+      "image_hue": {
+        "default": "mdi:image-edit"
+      }
+    },
+    "select": {
+      "floodlight_mode": {
+        "default": "mdi:spotlight-beam"
+      },
+      "day_night_mode": {
+        "default": "mdi:theme-light-dark"
+      },
+      "ptz_preset": {
+        "default": "mdi:pan"
+      },
+      "play_quick_reply_message": {
+        "default": "mdi:message-reply-text-outline"
+      },
+      "auto_quick_reply_message": {
+        "default": "mdi:message-reply-text-outline"
+      },
+      "auto_track_method": {
+        "default": "mdi:target-account"
+      },
+      "status_led": {
+        "default": "mdi:lightning-bolt-circle"
+      }
+    },
+    "sensor": {
+      "ptz_pan_position": {
+        "default": "mdi:pan"
+      },
+      "wifi_signal": {
+        "default": "mdi:wifi"
+      },
+      "hdd_storage": {
+        "default": "mdi:harddisk"
+      },
+      "sd_storage": {
+        "default": "mdi:micro-sd"
+      }
+    },
+    "siren": {
+      "siren": {
+        "default": "mdi:alarm-light"
+      }
+    },
+    "switch": {
+      "ir_lights": {
+        "default": "mdi:led-off"
+      },
+      "record_audio": {
+        "default": "mdi:microphone"
+      },
+      "siren_on_event": {
+        "default": "mdi:alarm-light"
+      },
+      "auto_tracking": {
+        "default": "mdi:target-account"
+      },
+      "auto_focus": {
+        "default": "mdi:focus-field"
+      },
+      "guard_return": {
+        "default": "mdi:crosshairs-gps"
+      },
+      "ptz_patrol": {
+        "default": "mdi:map-marker-path"
+      },
+      "email": {
+        "default": "mdi:email"
+      },
+      "ftp_upload": {
+        "default": "mdi:swap-horizontal"
+      },
+      "push_notifications": {
+        "default": "mdi:message-badge"
+      },
+      "record": {
+        "default": "mdi:record-rec"
+      },
+      "buzzer": {
+        "default": "mdi:room-service"
+      },
+      "doorbell_button_sound": {
+        "default": "mdi:volume-high"
+      },
+      "hdr": {
+        "default": "mdi:hdr"
+      }
+    }
+  },
+  "services": {
+    "ptz_move": "mdi:pan"
+  }
+}

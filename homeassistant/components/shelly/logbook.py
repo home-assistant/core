@@ -1,12 +1,12 @@
 """Describe Shelly logbook events."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 
 from homeassistant.components.logbook import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.typing import EventType
+from homeassistant.core import Event, HomeAssistant, callback
 
 from .const import (
     ATTR_CHANNEL,
@@ -27,12 +27,12 @@ from .utils import get_rpc_entity_name
 @callback
 def async_describe_events(
     hass: HomeAssistant,
-    async_describe_event: Callable[[str, str, Callable[[EventType], dict]], None],
+    async_describe_event: Callable[[str, str, Callable[[Event], dict]], None],
 ) -> None:
     """Describe logbook events."""
 
     @callback
-    def async_describe_shelly_click_event(event: EventType) -> dict[str, str]:
+    def async_describe_shelly_click_event(event: Event) -> dict[str, str]:
         """Describe shelly.click logbook event (block device)."""
         device_id = event.data[ATTR_DEVICE_ID]
         click_type = event.data[ATTR_CLICK_TYPE]

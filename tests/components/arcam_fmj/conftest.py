@@ -1,4 +1,5 @@
 """Tests for the arcam_fmj component."""
+
 from unittest.mock import Mock, patch
 
 from arcam.fmj.client import Client
@@ -8,6 +9,7 @@ import pytest
 from homeassistant.components.arcam_fmj.const import DEFAULT_NAME
 from homeassistant.components.arcam_fmj.media_player import ArcamFmj
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockEntityPlatform
 
@@ -94,9 +96,16 @@ async def player_setup_fixture(hass, state_1, state_2, client):
         if zone == 2:
             return state_2
 
-    with patch("homeassistant.components.arcam_fmj.Client", return_value=client), patch(
-        "homeassistant.components.arcam_fmj.media_player.State", side_effect=state_mock
-    ), patch("homeassistant.components.arcam_fmj._run_client", return_value=None):
+    await async_setup_component(hass, "homeassistant", {})
+
+    with (
+        patch("homeassistant.components.arcam_fmj.Client", return_value=client),
+        patch(
+            "homeassistant.components.arcam_fmj.media_player.State",
+            side_effect=state_mock,
+        ),
+        patch("homeassistant.components.arcam_fmj._run_client", return_value=None),
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         yield MOCK_ENTITY_ID

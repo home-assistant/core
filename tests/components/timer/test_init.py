@@ -1,4 +1,5 @@
 """The tests for the timer component."""
+
 from datetime import timedelta
 import logging
 from unittest.mock import patch
@@ -44,7 +45,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     SERVICE_RELOAD,
 )
-from homeassistant.core import Context, CoreState, HomeAssistant, State
+from homeassistant.core import Context, CoreState, Event, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.restore_state import StoredState, async_get
@@ -147,7 +148,7 @@ async def test_config_options(hass: HomeAssistant) -> None:
 
 async def test_methods_and_events(hass: HomeAssistant) -> None:
     """Test methods and events."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}})
 
@@ -155,11 +156,12 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
     assert state
     assert state.state == STATUS_IDLE
 
-    results = []
+    results: list[tuple[Event, str]] = []
 
-    def fake_event_listener(event):
+    @callback
+    def fake_event_listener(event: Event):
         """Fake event listener for trigger."""
-        results.append(event)
+        results.append((event, hass.states.get("timer.test1").state))
 
     hass.bus.async_listen(EVENT_TIMER_STARTED, fake_event_listener)
     hass.bus.async_listen(EVENT_TIMER_RESTARTED, fake_event_listener)
@@ -261,7 +263,10 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
 
         if step["event"] is not None:
             expected_events += 1
-            assert results[-1].event_type == step["event"]
+            last_result = results[-1]
+            event, state = last_result
+            assert event.event_type == step["event"]
+            assert state == step["state"]
             assert len(results) == expected_events
 
 
@@ -319,7 +324,7 @@ async def test_start_service(hass: HomeAssistant) -> None:
 
     with pytest.raises(
         HomeAssistantError,
-        match="Not possible to change timer timer.test1 beyond configured duration",
+        match="Not possible to change timer timer.test1 beyond duration",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -370,7 +375,7 @@ async def test_start_service(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_IDLE
-    assert state.attributes[ATTR_DURATION] == "0:00:15"
+    assert state.attributes[ATTR_DURATION] == "0:00:10"
     assert ATTR_REMAINING not in state.attributes
 
     with pytest.raises(
@@ -387,13 +392,13 @@ async def test_start_service(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_IDLE
-    assert state.attributes[ATTR_DURATION] == "0:00:15"
+    assert state.attributes[ATTR_DURATION] == "0:00:10"
     assert ATTR_REMAINING not in state.attributes
 
 
 async def test_wait_till_timer_expires(hass: HomeAssistant) -> None:
     """Test for a timer to end."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 20}}})
 
@@ -403,6 +408,7 @@ async def test_wait_till_timer_expires(hass: HomeAssistant) -> None:
 
     results = []
 
+    @callback
     def fake_event_listener(event):
         """Fake event listener for trigger."""
         results.append(event)
@@ -460,7 +466,7 @@ async def test_wait_till_timer_expires(hass: HomeAssistant) -> None:
 
 async def test_no_initial_state_and_no_restore_state(hass: HomeAssistant) -> None:
     """Ensure that entity is create without initial and restore feature."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}})
 
@@ -569,7 +575,7 @@ async def test_config_reload(
 
 async def test_timer_restarted_event(hass: HomeAssistant) -> None:
     """Ensure restarted event is called after starting a paused or running timer."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}})
 
@@ -579,6 +585,7 @@ async def test_timer_restarted_event(hass: HomeAssistant) -> None:
 
     results = []
 
+    @callback
     def fake_event_listener(event):
         """Fake event listener for trigger."""
         results.append(event)
@@ -636,7 +643,7 @@ async def test_timer_restarted_event(hass: HomeAssistant) -> None:
 
 async def test_state_changed_when_timer_restarted(hass: HomeAssistant) -> None:
     """Ensure timer's state changes when it restarted."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}})
 
@@ -646,6 +653,7 @@ async def test_state_changed_when_timer_restarted(hass: HomeAssistant) -> None:
 
     results = []
 
+    @callback
     def fake_event_listener(event):
         """Fake event listener for trigger."""
         results.append(event)
@@ -844,43 +852,6 @@ async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -
     assert count_start == len(hass.states.async_entity_ids())
 
 
-async def test_restore_idle(hass: HomeAssistant) -> None:
-    """Test entity restore logic when timer is idle."""
-    utc_now = utcnow()
-    stored_state = StoredState(
-        State(
-            "timer.test",
-            STATUS_IDLE,
-            {ATTR_DURATION: "0:00:30"},
-        ),
-        None,
-        utc_now,
-    )
-
-    data = async_get(hass)
-    await data.store.async_save([stored_state.as_dict()])
-    await data.async_load()
-
-    entity = Timer.from_storage(
-        {
-            CONF_ID: "test",
-            CONF_NAME: "test",
-            CONF_DURATION: "0:01:00",
-            CONF_RESTORE: True,
-        }
-    )
-    entity.hass = hass
-    entity.entity_id = "timer.test"
-
-    await entity.async_added_to_hass()
-    await hass.async_block_till_done()
-    assert entity.state == STATUS_IDLE
-    assert entity.extra_state_attributes[ATTR_DURATION] == "0:00:30"
-    assert ATTR_REMAINING not in entity.extra_state_attributes
-    assert ATTR_FINISHES_AT not in entity.extra_state_attributes
-    assert entity.extra_state_attributes[ATTR_RESTORE]
-
-
 @pytest.mark.freeze_time("2023-06-05 17:47:50")
 async def test_restore_paused(hass: HomeAssistant) -> None:
     """Test entity restore logic when timer is paused."""
@@ -1007,7 +978,7 @@ async def test_restore_active_finished_outside_grace(hass: HomeAssistant) -> Non
         await hass.async_block_till_done()
 
     assert entity.state == STATUS_IDLE
-    assert entity.extra_state_attributes[ATTR_DURATION] == "0:00:30"
+    assert entity.extra_state_attributes[ATTR_DURATION] == "0:01:00"
     assert ATTR_REMAINING not in entity.extra_state_attributes
     assert ATTR_FINISHES_AT not in entity.extra_state_attributes
     assert entity.extra_state_attributes[ATTR_RESTORE]

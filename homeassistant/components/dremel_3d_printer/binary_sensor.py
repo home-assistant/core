@@ -1,4 +1,5 @@
 """Support for monitoring Dremel 3D Printer binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -19,30 +20,21 @@ from .const import DOMAIN
 from .entity import Dremel3DPrinterEntity
 
 
-@dataclass
-class Dremel3DPrinterBinarySensorEntityMixin:
-    """Mixin for Dremel 3D Printer binary sensor."""
+@dataclass(frozen=True, kw_only=True)
+class Dremel3DPrinterBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes a Dremel 3D Printer binary sensor."""
 
     value_fn: Callable[[Dremel3DPrinter], bool]
-
-
-@dataclass
-class Dremel3DPrinterBinarySensorEntityDescription(
-    BinarySensorEntityDescription, Dremel3DPrinterBinarySensorEntityMixin
-):
-    """Describes a Dremel 3D Printer binary sensor."""
 
 
 BINARY_SENSOR_TYPES: tuple[Dremel3DPrinterBinarySensorEntityDescription, ...] = (
     Dremel3DPrinterBinarySensorEntityDescription(
         key="door",
-        name="Door",
         device_class=BinarySensorDeviceClass.DOOR,
         value_fn=lambda api: api.is_door_open(),
     ),
     Dremel3DPrinterBinarySensorEntityDescription(
         key="running",
-        name="Running",
         device_class=BinarySensorDeviceClass.RUNNING,
         value_fn=lambda api: api.is_running(),
     ),

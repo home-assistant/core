@@ -8,6 +8,9 @@
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your FRITZ!Box router."
         }
       },
       "confirm": {
@@ -23,6 +26,15 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "reconfigure_confirm": {
+        "description": "Update your configuration information for {name}.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your FRITZ!Box router."
+        }
       }
     },
     "abort": {
@@ -31,7 +43,8 @@
       "ignore_ip6_link_local": "IPv6 link local address is not supported.",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "not_supported": "Connected to AVM FRITZ!Box but it's unable to control Smart Home devices.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
@@ -44,33 +57,12 @@
       "lock": { "name": "Button lock on device" }
     },
     "sensor": {
-      "battery": {
-        "name": "[%key:component::sensor::entity_component::battery::name%]"
-      },
       "comfort_temperature": { "name": "Comfort temperature" },
       "eco_temperature": { "name": "Eco temperature" },
-      "electric_current": {
-        "name": "[%key:component::sensor::entity_component::current::name%]"
-      },
-      "humidity": {
-        "name": "[%key:component::sensor::entity_component::humidity::name%]"
-      },
       "nextchange_preset": { "name": "Next scheduled preset" },
       "nextchange_temperature": { "name": "Next scheduled temperature" },
       "nextchange_time": { "name": "Next scheduled change time" },
-      "power_consumption": {
-        "name": "[%key:component::sensor::entity_component::power::name%]"
-      },
-      "scheduled_preset": { "name": "Current scheduled preset" },
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
-      "total_energy": {
-        "name": "[%key:component::sensor::entity_component::energy::name%]"
-      },
-      "voltage": {
-        "name": "[%key:component::sensor::entity_component::voltage::name%]"
-      }
+      "scheduled_preset": { "name": "Current scheduled preset" }
     }
   }
 }

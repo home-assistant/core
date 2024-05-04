@@ -1,4 +1,5 @@
 """Websocket API for Lovelace."""
+
 from __future__ import annotations
 
 from functools import wraps
@@ -59,6 +60,10 @@ async def websocket_lovelace_resources(
 ) -> None:
     """Send Lovelace UI resources over WebSocket configuration."""
     resources = hass.data[DOMAIN]["resources"]
+
+    if hass.config.safe_mode:
+        connection.send_result(msg["id"], [])
+        return
 
     if not resources.loaded:
         await resources.async_load()

@@ -1,4 +1,5 @@
 """Meteo-France component constants."""
+
 from __future__ import annotations
 
 from homeassistant.components.weather import (
@@ -33,7 +34,6 @@ MANUFACTURER = "Météo-France"
 CONF_CITY = "city"
 FORECAST_MODE_HOURLY = "hourly"
 FORECAST_MODE_DAILY = "daily"
-FORECAST_MODE = [FORECAST_MODE_HOURLY, FORECAST_MODE_DAILY]
 
 ATTR_NEXT_RAIN_1_HOUR_FORECAST = "1_hour_forecast"
 ATTR_NEXT_RAIN_DT_REF = "forecast_time_ref"
@@ -88,4 +88,9 @@ CONDITION_CLASSES: dict[str, list[str]] = {
     ATTR_CONDITION_WINDY: [],
     ATTR_CONDITION_WINDY_VARIANT: [],
     ATTR_CONDITION_EXCEPTIONAL: [],
+}
+CONDITION_MAP = {
+    cond_code: cond_ha
+    for cond_ha, cond_codes in CONDITION_CLASSES.items()
+    for cond_code in cond_codes
 }

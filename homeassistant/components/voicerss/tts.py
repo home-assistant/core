@@ -1,10 +1,10 @@
 """Support for the voicerss speech service."""
+
 import asyncio
 from http import HTTPStatus
 import logging
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
@@ -196,7 +196,7 @@ class VoiceRSSProvider(Provider):
         form_data["hl"] = language
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 request = await websession.post(VOICERSS_API_URL, data=form_data)
 
                 if request.status != HTTPStatus.OK:
@@ -210,7 +210,7 @@ class VoiceRSSProvider(Provider):
                     _LOGGER.error("Error receive %s from VoiceRSS", str(data, "utf-8"))
                     return (None, None)
 
-        except (asyncio.TimeoutError, aiohttp.ClientError):
+        except (TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Timeout for VoiceRSS API")
             return (None, None)
 

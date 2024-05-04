@@ -29,7 +29,7 @@
         "name": "State"
       },
       "mode": {
-        "name": "Mode"
+        "name": "[%key:common::config_flow::data::mode%]"
       },
       "target_temperature": {
         "name": "Target temperature"

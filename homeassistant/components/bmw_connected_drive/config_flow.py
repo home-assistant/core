@@ -1,4 +1,5 @@
 """Config flow for BMW ConnectedDrive integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -10,10 +11,15 @@ from bimmer_connected.models import MyBMWAPIError, MyBMWAuthError
 from httpx import RequestError
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithConfigEntry,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_SOURCE, CONF_USERNAME
-from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 
 from . import DOMAIN
 from .const import CONF_ALLOWED_REGIONS, CONF_GCID, CONF_READ_ONLY, CONF_REFRESH_TOKEN
@@ -27,9 +33,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(
-    hass: core.HomeAssistant, data: dict[str, Any]
-) -> dict[str, str]:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -56,16 +60,16 @@ async def validate_input(
     return retval
 
 
-class BMWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for MyBMW."""
 
     VERSION = 1
 
-    _reauth_entry: config_entries.ConfigEntry | None = None
+    _reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
@@ -112,7 +116,9 @@ class BMWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -122,24 +128,24 @@ class BMWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> BMWOptionsFlow:
         """Return a MyBMW option flow."""
         return BMWOptionsFlow(config_entry)
 
 
-class BMWOptionsFlow(config_entries.OptionsFlowWithConfigEntry):
+class BMWOptionsFlow(OptionsFlowWithConfigEntry):
     """Handle a option flow for MyBMW."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         return await self.async_step_account_options()
 
     async def async_step_account_options(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
             # Manually update & reload the config entry after options change.
@@ -166,9 +172,9 @@ class BMWOptionsFlow(config_entries.OptionsFlowWithConfigEntry):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""

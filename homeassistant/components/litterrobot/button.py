@@ -1,4 +1,5 @@
 """Support for Litter-Robot button."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -46,29 +47,27 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-@dataclass
+@dataclass(frozen=True)
 class RequiredKeysMixin(Generic[_RobotT]):
     """A class that describes robot button entity required keys."""
 
     press_fn: Callable[[_RobotT], Coroutine[Any, Any, bool]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RobotButtonEntityDescription(ButtonEntityDescription, RequiredKeysMixin[_RobotT]):
     """A class that describes robot button entities."""
 
 
 LITTER_ROBOT_BUTTON = RobotButtonEntityDescription[LitterRobot3](
     key="reset_waste_drawer",
-    name="Reset waste drawer",
-    icon="mdi:delete-variant",
+    translation_key="reset_waste_drawer",
     entity_category=EntityCategory.CONFIG,
     press_fn=lambda robot: robot.reset_waste_drawer(),
 )
 FEEDER_ROBOT_BUTTON = RobotButtonEntityDescription[FeederRobot](
     key="give_snack",
-    name="Give snack",
-    icon="mdi:candy-outline",
+    translation_key="give_snack",
     press_fn=lambda robot: robot.give_snack(),
 )
 

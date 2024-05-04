@@ -1,9 +1,10 @@
 """ZHA logbook describe events tests."""
+
 from unittest.mock import patch
 
 import pytest
 import zigpy.profiles.zha
-import zigpy.zcl.clusters.general as general
+from zigpy.zcl.clusters import general
 
 from homeassistant.components.zha.core.const import ZHA_EVENT
 from homeassistant.const import CONF_DEVICE_ID, CONF_UNIQUE_ID, Platform
@@ -78,10 +79,13 @@ async def test_zha_logbook_event_device_with_triggers(
     ieee_address = str(zha_device.ieee)
 
     ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
+    reg_device = ha_device_registry.async_get_device(
+        identifiers={("zha", ieee_address)}
+    )
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     events = mock_humanify(
         hass,
@@ -154,10 +158,13 @@ async def test_zha_logbook_event_device_no_triggers(
     zigpy_device, zha_device = mock_devices
     ieee_address = str(zha_device.ieee)
     ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
+    reg_device = ha_device_registry.async_get_device(
+        identifiers={("zha", ieee_address)}
+    )
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     events = mock_humanify(
         hass,
@@ -242,6 +249,7 @@ async def test_zha_logbook_event_device_no_device(
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     events = mock_humanify(
         hass,

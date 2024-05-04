@@ -1,4 +1,6 @@
 """Test Axis config flow."""
+
+from ipaddress import ip_address
 from unittest.mock import patch
 
 import pytest
@@ -6,7 +8,6 @@ import pytest
 from homeassistant.components import dhcp, ssdp, zeroconf
 from homeassistant.components.axis import config_flow
 from homeassistant.components.axis.const import (
-    CONF_EVENTS,
     CONF_STREAM_PROFILE,
     CONF_VIDEO_SOURCE,
     DEFAULT_STREAM_PROFILE,
@@ -17,6 +18,7 @@ from homeassistant.config_entries import (
     SOURCE_DHCP,
     SOURCE_IGNORE,
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     SOURCE_SSDP,
     SOURCE_USER,
     SOURCE_ZEROCONF,
@@ -27,14 +29,18 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_PROTOCOL,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 
 from .const import DEFAULT_HOST, MAC, MODEL, NAME
 
 from tests.common import MockConfigEntry
+
+DHCP_FORMATTED_MAC = dr.format_mac(MAC).replace(":", "")
 
 
 @pytest.fixture(name="mock_config_entry")
@@ -55,12 +61,13 @@ async def test_flow_manual_configuration(
         AXIS_DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
+            CONF_PROTOCOL: "http",
             CONF_HOST: "1.2.3.4",
             CONF_USERNAME: "user",
             CONF_PASSWORD: "pass",
@@ -68,9 +75,10 @@ async def test_flow_manual_configuration(
         },
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"M1065-LW - {MAC}"
     assert result["data"] == {
+        CONF_PROTOCOL: "http",
         CONF_HOST: "1.2.3.4",
         CONF_USERNAME: "user",
         CONF_PASSWORD: "pass",
@@ -90,13 +98,14 @@ async def test_manual_configuration_update_configuration(
         AXIS_DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     mock_vapix_requests("2.3.4.5")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
+            CONF_PROTOCOL: "http",
             CONF_HOST: "2.3.4.5",
             CONF_USERNAME: "user",
             CONF_PASSWORD: "pass",
@@ -105,7 +114,7 @@ async def test_manual_configuration_update_configuration(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_config_entry.data[CONF_HOST] == "2.3.4.5"
 
@@ -116,16 +125,17 @@ async def test_flow_fails_faulty_credentials(hass: HomeAssistant) -> None:
         AXIS_DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.axis.config_flow.get_axis_device",
+        "homeassistant.components.axis.config_flow.get_axis_api",
         side_effect=config_flow.AuthenticationRequired,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
+                CONF_PROTOCOL: "http",
                 CONF_HOST: "1.2.3.4",
                 CONF_USERNAME: "user",
                 CONF_PASSWORD: "pass",
@@ -142,16 +152,17 @@ async def test_flow_fails_cannot_connect(hass: HomeAssistant) -> None:
         AXIS_DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.axis.config_flow.get_axis_device",
+        "homeassistant.components.axis.config_flow.get_axis_api",
         side_effect=config_flow.CannotConnect,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
+                CONF_PROTOCOL: "http",
                 CONF_HOST: "1.2.3.4",
                 CONF_USERNAME: "user",
                 CONF_PASSWORD: "pass",
@@ -181,12 +192,13 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(
         AXIS_DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
+            CONF_PROTOCOL: "http",
             CONF_HOST: "1.2.3.4",
             CONF_USERNAME: "user",
             CONF_PASSWORD: "pass",
@@ -194,9 +206,10 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(
         },
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"M1065-LW - {MAC}"
     assert result["data"] == {
+        CONF_PROTOCOL: "http",
         CONF_HOST: "1.2.3.4",
         CONF_USERNAME: "user",
         CONF_PASSWORD: "pass",
@@ -222,7 +235,48 @@ async def test_reauth_flow_update_configuration(
         data=mock_config_entry.data,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    mock_vapix_requests("2.3.4.5")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PROTOCOL: "https",
+            CONF_HOST: "2.3.4.5",
+            CONF_USERNAME: "user2",
+            CONF_PASSWORD: "pass2",
+            CONF_PORT: 443,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_PROTOCOL] == "https"
+    assert mock_config_entry.data[CONF_HOST] == "2.3.4.5"
+    assert mock_config_entry.data[CONF_PORT] == 443
+    assert mock_config_entry.data[CONF_USERNAME] == "user2"
+    assert mock_config_entry.data[CONF_PASSWORD] == "pass2"
+
+
+async def test_reconfiguration_flow_update_configuration(
+    hass: HomeAssistant, mock_config_entry, mock_vapix_requests
+) -> None:
+    """Test that config flow reconfiguration updates configured device."""
+    assert mock_config_entry.data[CONF_HOST] == "1.2.3.4"
+    assert mock_config_entry.data[CONF_USERNAME] == "root"
+    assert mock_config_entry.data[CONF_PASSWORD] == "pass"
+
+    result = await hass.config_entries.flow.async_init(
+        AXIS_DOMAIN,
+        context={
+            "source": SOURCE_RECONFIGURE,
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     mock_vapix_requests("2.3.4.5")
@@ -230,18 +284,18 @@ async def test_reauth_flow_update_configuration(
         result["flow_id"],
         user_input={
             CONF_HOST: "2.3.4.5",
-            CONF_USERNAME: "user2",
-            CONF_PASSWORD: "pass2",
-            CONF_PORT: 80,
+            CONF_USERNAME: "user",
         },
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_PROTOCOL] == "http"
     assert mock_config_entry.data[CONF_HOST] == "2.3.4.5"
-    assert mock_config_entry.data[CONF_USERNAME] == "user2"
-    assert mock_config_entry.data[CONF_PASSWORD] == "pass2"
+    assert mock_config_entry.data[CONF_PORT] == 80
+    assert mock_config_entry.data[CONF_USERNAME] == "user"
+    assert mock_config_entry.data[CONF_PASSWORD] == "pass"
 
 
 @pytest.mark.parametrize(
@@ -252,7 +306,7 @@ async def test_reauth_flow_update_configuration(
             dhcp.DhcpServiceInfo(
                 hostname=f"axis-{MAC}",
                 ip=DEFAULT_HOST,
-                macaddress=MAC,
+                macaddress=DHCP_FORMATTED_MAC,
             ),
         ),
         (
@@ -294,8 +348,8 @@ async def test_reauth_flow_update_configuration(
         (
             SOURCE_ZEROCONF,
             zeroconf.ZeroconfServiceInfo(
-                host=DEFAULT_HOST,
-                addresses=[DEFAULT_HOST],
+                ip_address=ip_address(DEFAULT_HOST),
+                ip_addresses=[ip_address(DEFAULT_HOST)],
                 port=80,
                 hostname=f"axis-{MAC.lower()}.local.",
                 type="_axis-video._tcp.local.",
@@ -320,7 +374,7 @@ async def test_discovery_flow(
         AXIS_DOMAIN, data=discovery_info, context={"source": source}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     flows = hass.config_entries.flow.async_progress()
@@ -330,6 +384,7 @@ async def test_discovery_flow(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
+            CONF_PROTOCOL: "http",
             CONF_HOST: "1.2.3.4",
             CONF_USERNAME: "user",
             CONF_PASSWORD: "pass",
@@ -337,9 +392,10 @@ async def test_discovery_flow(
         },
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"M1065-LW - {MAC}"
     assert result["data"] == {
+        CONF_PROTOCOL: "http",
         CONF_HOST: "1.2.3.4",
         CONF_USERNAME: "user",
         CONF_PASSWORD: "pass",
@@ -359,7 +415,7 @@ async def test_discovery_flow(
             dhcp.DhcpServiceInfo(
                 hostname=f"axis-{MAC}",
                 ip=DEFAULT_HOST,
-                macaddress=MAC,
+                macaddress=DHCP_FORMATTED_MAC,
             ),
         ),
         (
@@ -377,8 +433,8 @@ async def test_discovery_flow(
         (
             SOURCE_ZEROCONF,
             zeroconf.ZeroconfServiceInfo(
-                host=DEFAULT_HOST,
-                addresses=[DEFAULT_HOST],
+                ip_address=ip_address(DEFAULT_HOST),
+                ip_addresses=[ip_address(DEFAULT_HOST)],
                 hostname="mock_hostname",
                 name=f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
                 port=80,
@@ -398,7 +454,7 @@ async def test_discovered_device_already_configured(
         AXIS_DOMAIN, data=discovery_info, context={"source": source}
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_config_entry.data[CONF_HOST] == DEFAULT_HOST
 
@@ -411,7 +467,7 @@ async def test_discovered_device_already_configured(
             dhcp.DhcpServiceInfo(
                 hostname=f"axis-{MAC}",
                 ip="2.3.4.5",
-                macaddress=MAC,
+                macaddress=DHCP_FORMATTED_MAC,
             ),
             80,
         ),
@@ -426,20 +482,20 @@ async def test_discovered_device_already_configured(
                     "presentationURL": "http://2.3.4.5:8080/",
                 },
             ),
-            8080,
+            80,
         ),
         (
             SOURCE_ZEROCONF,
             zeroconf.ZeroconfServiceInfo(
-                host="2.3.4.5",
-                addresses=["2.3.4.5"],
+                ip_address=ip_address("2.3.4.5"),
+                ip_addresses=[ip_address("2.3.4.5")],
                 hostname="mock_hostname",
                 name=f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
                 port=8080,
                 properties={"macaddress": MAC},
                 type="mock_type",
             ),
-            8080,
+            80,
         ),
     ],
 )
@@ -467,7 +523,7 @@ async def test_discovery_flow_updated_configuration(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_config_entry.data == {
         CONF_HOST: "2.3.4.5",
@@ -487,7 +543,7 @@ async def test_discovery_flow_updated_configuration(
             dhcp.DhcpServiceInfo(
                 hostname="",
                 ip="",
-                macaddress="01234567890",
+                macaddress=dr.format_mac("01234567890").replace(":", ""),
             ),
         ),
         (
@@ -505,8 +561,8 @@ async def test_discovery_flow_updated_configuration(
         (
             SOURCE_ZEROCONF,
             zeroconf.ZeroconfServiceInfo(
-                host="",
-                addresses=[""],
+                ip_address=None,
+                ip_addresses=[],
                 hostname="mock_hostname",
                 name="",
                 port=0,
@@ -524,7 +580,7 @@ async def test_discovery_flow_ignore_non_axis_device(
         AXIS_DOMAIN, data=discovery_info, context={"source": source}
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_axis_device"
 
 
@@ -536,7 +592,7 @@ async def test_discovery_flow_ignore_non_axis_device(
             dhcp.DhcpServiceInfo(
                 hostname=f"axis-{MAC}",
                 ip="169.254.3.4",
-                macaddress=MAC,
+                macaddress=DHCP_FORMATTED_MAC,
             ),
         ),
         (
@@ -554,8 +610,8 @@ async def test_discovery_flow_ignore_non_axis_device(
         (
             SOURCE_ZEROCONF,
             zeroconf.ZeroconfServiceInfo(
-                host="169.254.3.4",
-                addresses=["169.254.3.4"],
+                ip_address=ip_address("169.254.3.4"),
+                ip_addresses=[ip_address("169.254.3.4")],
                 hostname="mock_hostname",
                 name=f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
                 port=80,
@@ -573,7 +629,7 @@ async def test_discovery_flow_ignore_link_local_address(
         AXIS_DOMAIN, data=discovery_info, context={"source": source}
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "link_local_address"
 
 
@@ -584,7 +640,7 @@ async def test_option_flow(hass: HomeAssistant, setup_config_entry) -> None:
 
     result = await hass.config_entries.options.async_init(setup_config_entry.entry_id)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_stream"
     assert set(result["data_schema"].schema[CONF_STREAM_PROFILE].container) == {
         DEFAULT_STREAM_PROFILE,
@@ -601,9 +657,8 @@ async def test_option_flow(hass: HomeAssistant, setup_config_entry) -> None:
         user_input={CONF_STREAM_PROFILE: "profile_1", CONF_VIDEO_SOURCE: 1},
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        CONF_EVENTS: True,
         CONF_STREAM_PROFILE: "profile_1",
         CONF_VIDEO_SOURCE: 1,
     }

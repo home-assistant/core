@@ -1,4 +1,5 @@
 """nVent RAYCHEM SENZ climate platform."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -14,7 +15,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -43,6 +44,9 @@ class SENZClimate(CoordinatorEntity, ClimateEntity):
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_max_temp = 35
     _attr_min_temp = 5
+    _attr_has_entity_name = True
+    _attr_name = None
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -52,7 +56,6 @@ class SENZClimate(CoordinatorEntity, ClimateEntity):
         """Init SENZ climate."""
         super().__init__(coordinator)
         self._thermostat = thermostat
-        self._attr_name = thermostat.name
         self._attr_unique_id = thermostat.serial_number
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, thermostat.serial_number)},

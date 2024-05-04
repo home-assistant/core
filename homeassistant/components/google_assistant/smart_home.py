@@ -1,8 +1,10 @@
 """Support for Google Assistant Smart Home API."""
+
 import asyncio
 from collections.abc import Callable, Coroutine
 from itertools import product
 import logging
+import pprint
 from typing import Any
 
 from homeassistant.const import ATTR_ENTITY_ID, __version__
@@ -18,6 +20,7 @@ from .const import (
     EVENT_QUERY_RECEIVED,
     EVENT_SYNC_RECEIVED,
 )
+from .data_redaction import async_redact_msg
 from .error import SmartHomeError
 from .helpers import GoogleEntity, RequestData, async_get_entities
 
@@ -33,16 +36,36 @@ HANDLERS: Registry[
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_handle_message(hass, config, user_id, message, source):
+async def async_handle_message(
+    hass, config, agent_user_id, local_user_id, message, source
+):
     """Handle incoming API messages."""
+    if _LOGGER.isEnabledFor(logging.DEBUG):
+        _LOGGER.debug(
+            "Processing message:\n%s",
+            pprint.pformat(async_redact_msg(message, agent_user_id)),
+        )
+
     data = RequestData(
-        config, user_id, source, message["requestId"], message.get("devices")
+        config, local_user_id, source, message["requestId"], message.get("devices")
     )
 
     response = await _process(hass, data, message)
+    if _LOGGER.isEnabledFor(logging.DEBUG):
+        if response:
+            _LOGGER.debug(
+                "Response:\n%s",
+                pprint.pformat(async_redact_msg(response["payload"], agent_user_id)),
+            )
+        else:
+            _LOGGER.debug("Empty response")
 
     if response and "errorCode" in response["payload"]:
-        _LOGGER.error("Error handling message %s: %s", message, response["payload"])
+        _LOGGER.error(
+            "Error handling message\n:%s\nResponse:\n%s",
+            pprint.pformat(async_redact_msg(message, agent_user_id)),
+            pprint.pformat(async_redact_msg(response["payload"], agent_user_id)),
+        )
 
     return response
 
@@ -112,15 +135,11 @@ async def async_devices_sync(
         context=data.context,
     )
 
-    agent_user_id = data.config.get_agent_user_id(data.context)
+    agent_user_id = data.config.get_agent_user_id_from_context(data.context)
     await data.config.async_connect_agent_user(agent_user_id)
 
     devices = await async_devices_sync_response(hass, data.config, agent_user_id)
-    response = create_sync_response(agent_user_id, devices)
-
-    _LOGGER.debug("Syncing entities response: %s", response)
-
-    return response
+    return create_sync_response(agent_user_id, devices)
 
 
 @HANDLERS.register("action.devices.QUERY")
@@ -243,10 +262,10 @@ async def handle_devices_execute(
             ),
             EXECUTE_LIMIT,
         )
-        for entity_id, result in zip(executions, execute_results):
+        for entity_id, result in zip(executions, execute_results, strict=False):
             if result is not None:
                 results[entity_id] = result
-    except asyncio.TimeoutError:
+    except TimeoutError:
         pass
 
     final_results = list(results.values())
@@ -278,7 +297,6 @@ async def async_devices_disconnect(
     """
     assert data.context.user_id is not None
     await data.config.async_disconnect_agent_user(data.context.user_id)
-    return None
 
 
 @HANDLERS.register("action.devices.IDENTIFY")
@@ -291,7 +309,7 @@ async def async_devices_identify(
     """
     return {
         "device": {
-            "id": data.config.get_agent_user_id(data.context),
+            "id": data.config.get_agent_user_id_from_context(data.context),
             "isLocalOnly": True,
             "isProxy": True,
             "deviceInfo": {

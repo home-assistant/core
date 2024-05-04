@@ -1,4 +1,5 @@
 """The tests for mqtt select component."""
+
 from collections.abc import Generator
 import copy
 import json
@@ -15,16 +16,12 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
-    ATTR_ENTITY_ID,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.typing import ConfigType
 
 from .test_common import (
+    help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
@@ -48,6 +45,7 @@ from .test_common import (
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_skipped_async_ha_write_state,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
@@ -66,13 +64,6 @@ DEFAULT_CONFIG = {
         }
     }
 }
-
-
-@pytest.fixture(autouse=True)
-def select_platform_only():
-    """Only setup the select platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SELECT]):
-        yield
 
 
 def _test_run_select_setup_params(
@@ -705,7 +696,7 @@ async def test_publishing_with_custom_encoding(
 ) -> None:
     """Test publishing MQTT payload with different encoding."""
     domain = select.DOMAIN
-    config = DEFAULT_CONFIG
+    config = copy.deepcopy(DEFAULT_CONFIG)
     config[mqtt.DOMAIN][domain]["options"] = ["milk", "beer"]
 
     await help_test_publishing_with_custom_encoding(
@@ -762,7 +753,11 @@ async def test_encoding_subscribable_topics(
     )
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
@@ -806,3 +801,68 @@ async def test_persistent_state_after_reconfig(
     state = hass.states.get("select.milk")
     assert state.state == "beer"
     assert state.attributes["options"] == ["beer"]
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            select.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "availability_topic": "availability-topic",
+                    "json_attributes_topic": "json-attributes-topic",
+                    "state_topic": "test-topic",
+                },
+            ),
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("topic", "payload1", "payload2"),
+    [
+        ("test-topic", "milk", "beer"),
+        ("availability-topic", "online", "offline"),
+        ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
+    ],
+)
+async def test_skipped_async_ha_write_state(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    topic: str,
+    payload1: str,
+    payload2: str,
+) -> None:
+    """Test a write state command is only called when there is change."""
+    await mqtt_mock_entry()
+    await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            select.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "state_topic": "test-topic",
+                    "value_template": "{{ value_json.some_var * 1 }}",
+                },
+            ),
+        )
+    ],
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
+    )

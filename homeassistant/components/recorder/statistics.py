@@ -1,9 +1,9 @@
 """Statistics helper."""
+
 from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Sequence
-import contextlib
 import dataclasses
 from datetime import datetime, timedelta
 from functools import lru_cache, partial
@@ -11,12 +11,11 @@ from itertools import chain, groupby
 import logging
 from operator import itemgetter
 import re
-from statistics import mean
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
 from sqlalchemy import Select, and_, bindparam, func, lambda_stmt, select, text
 from sqlalchemy.engine.row import Row
-from sqlalchemy.exc import SQLAlchemyError, StatementError
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 import voluptuous as vol
@@ -24,12 +23,14 @@ import voluptuous as vol
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
     DataRateConverter,
     DistanceConverter,
+    DurationConverter,
     ElectricCurrentConverter,
     ElectricPotentialConverter,
     EnergyConverter,
@@ -41,6 +42,7 @@ from homeassistant.util.unit_conversion import (
     TemperatureConverter,
     UnitlessRatioConverter,
     VolumeConverter,
+    VolumeFlowRateConverter,
 )
 
 from .const import (
@@ -70,6 +72,7 @@ from .models import (
 from .util import (
     execute,
     execute_stmt_lambda_element,
+    filter_unique_constraint_integrity_error,
     get_instance,
     retryable_database_job,
     session_scope,
@@ -103,11 +106,7 @@ QUERY_STATISTICS_SHORT_TERM = (
 QUERY_STATISTICS_SUMMARY_MEAN = (
     StatisticsShortTerm.metadata_id,
     func.avg(StatisticsShortTerm.mean),
-    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-    # pylint: disable-next=not-callable
     func.min(StatisticsShortTerm.min),
-    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-    # pylint: disable-next=not-callable
     func.max(StatisticsShortTerm.max),
 )
 
@@ -118,7 +117,7 @@ QUERY_STATISTICS_SUMMARY_SUM = (
     StatisticsShortTerm.state,
     StatisticsShortTerm.sum,
     func.row_number()
-    .over(  # type: ignore[no-untyped-call]
+    .over(
         partition_by=StatisticsShortTerm.metadata_id,
         order_by=StatisticsShortTerm.start_ts.desc(),
     )
@@ -129,6 +128,7 @@ QUERY_STATISTICS_SUMMARY_SUM = (
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     **{unit: DataRateConverter for unit in DataRateConverter.VALID_UNITS},
     **{unit: DistanceConverter for unit in DistanceConverter.VALID_UNITS},
+    **{unit: DurationConverter for unit in DurationConverter.VALID_UNITS},
     **{unit: ElectricCurrentConverter for unit in ElectricCurrentConverter.VALID_UNITS},
     **{
         unit: ElectricPotentialConverter
@@ -143,10 +143,51 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     **{unit: TemperatureConverter for unit in TemperatureConverter.VALID_UNITS},
     **{unit: UnitlessRatioConverter for unit in UnitlessRatioConverter.VALID_UNITS},
     **{unit: VolumeConverter for unit in VolumeConverter.VALID_UNITS},
+    **{unit: VolumeFlowRateConverter for unit in VolumeFlowRateConverter.VALID_UNITS},
 }
+
+DATA_SHORT_TERM_STATISTICS_RUN_CACHE = "recorder_short_term_statistics_run_cache"
+
+
+def mean(values: list[float]) -> float | None:
+    """Return the mean of the values.
+
+    This is a very simple version that only works
+    with a non-empty list of floats. The built-in
+    statistics.mean is more robust but is is almost
+    an order of magnitude slower.
+    """
+    return sum(values) / len(values)
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass(slots=True)
+class ShortTermStatisticsRunCache:
+    """Cache for short term statistics runs."""
+
+    # This is a mapping of metadata_id:id of the last short term
+    # statistics run for each metadata_id
+    _latest_id_by_metadata_id: dict[int, int] = dataclasses.field(default_factory=dict)
+
+    def get_latest_ids(self, metadata_ids: set[int]) -> dict[int, int]:
+        """Return the latest short term statistics ids for the metadata_ids."""
+        return {
+            metadata_id: id_
+            for metadata_id, id_ in self._latest_id_by_metadata_id.items()
+            if metadata_id in metadata_ids
+        }
+
+    def set_latest_id_for_metadata_id(self, metadata_id: int, id_: int) -> None:
+        """Cache the latest id for the metadata_id."""
+        self._latest_id_by_metadata_id[metadata_id] = id_
+
+    def set_latest_ids_for_metadata_ids(
+        self, metadata_id_to_id: dict[int, int]
+    ) -> None:
+        """Cache the latest id for the each metadata_id."""
+        self._latest_id_by_metadata_id.update(metadata_id_to_id)
 
 
 class BaseStatisticsRow(TypedDict, total=False):
@@ -308,8 +349,7 @@ def get_start_time() -> datetime:
     now = dt_util.utcnow()
     current_period_minutes = now.minute - now.minute % 5
     current_period = now.replace(minute=current_period_minutes, second=0, microsecond=0)
-    last_period = current_period - timedelta(minutes=5)
-    return last_period
+    return current_period - timedelta(minutes=5)
 
 
 def _compile_hourly_statistics_summary_mean_stmt(
@@ -414,11 +454,11 @@ def compile_missing_statistics(instance: Recorder) -> bool:
 
     with session_scope(
         session=instance.get_session(),
-        exception_filter=_filter_unique_constraint_integrity_error(instance),
+        exception_filter=filter_unique_constraint_integrity_error(
+            instance, "statistic"
+        ),
     ) as session:
         # Find the newest statistics run, if any
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-        # pylint: disable-next=not-callable
         if last_run := session.query(func.max(StatisticsRuns.start)).scalar():
             start = max(start, process_timestamp(last_run) + timedelta(minutes=5))
 
@@ -448,7 +488,9 @@ def compile_statistics(instance: Recorder, start: datetime, fire_events: bool) -
     # Return if we already have 5-minute statistics for the requested period
     with session_scope(
         session=instance.get_session(),
-        exception_filter=_filter_unique_constraint_integrity_error(instance),
+        exception_filter=filter_unique_constraint_integrity_error(
+            instance, "statistic"
+        ),
     ) as session:
         modified_statistic_ids = _compile_statistics(
             instance, session, start, fire_events
@@ -502,7 +544,7 @@ def _compile_statistics(
         ):
             continue
         compiled: PlatformCompiledStatistics = platform_compile_statistics(
-            instance.hass, start, end
+            instance.hass, session, start, end
         )
         _LOGGER.debug(
             "Statistics for %s during %s-%s: %s",
@@ -514,6 +556,8 @@ def _compile_statistics(
         platform_stats.extend(compiled.platform_stats)
         current_metadata.update(compiled.current_metadata)
 
+    new_short_term_stats: list[StatisticsBase] = []
+    updated_metadata_ids: set[int] = set()
     # Insert collected statistics in the database
     for stats in platform_stats:
         modified_statistic_id, metadata_id = statistics_meta_manager.update_or_add(
@@ -521,12 +565,14 @@ def _compile_statistics(
         )
         if modified_statistic_id is not None:
             modified_statistic_ids.add(modified_statistic_id)
-        _insert_statistics(
+        updated_metadata_ids.add(metadata_id)
+        if new_stat := _insert_statistics(
             session,
             StatisticsShortTerm,
             metadata_id,
             stats["stat"],
-        )
+        ):
+            new_short_term_stats.append(new_stat)
 
     if start.minute == 55:
         # A full hour is ready, summarize it
@@ -538,6 +584,23 @@ def _compile_statistics(
         instance.hass.bus.fire(EVENT_RECORDER_5MIN_STATISTICS_GENERATED)
         if start.minute == 55:
             instance.hass.bus.fire(EVENT_RECORDER_HOURLY_STATISTICS_GENERATED)
+
+    if updated_metadata_ids:
+        # These are always the newest statistics, so we can update
+        # the run cache without having to check the start_ts.
+        session.flush()  # populate the ids of the new StatisticsShortTerm rows
+        run_cache = get_short_term_statistics_run_cache(instance.hass)
+        # metadata_id is typed to allow None, but we know it's not None here
+        # so we can safely cast it to int.
+        run_cache.set_latest_ids_for_metadata_ids(
+            cast(
+                dict[int, int],
+                {
+                    new_stat.metadata_id: new_stat.id
+                    for new_stat in new_short_term_stats
+                },
+            )
+        )
 
     return modified_statistic_ids
 
@@ -572,16 +635,19 @@ def _insert_statistics(
     table: type[StatisticsBase],
     metadata_id: int,
     statistic: StatisticData,
-) -> None:
+) -> StatisticsBase | None:
     """Insert statistics in the database."""
     try:
-        session.add(table.from_stats(metadata_id, statistic))
+        stat = table.from_stats(metadata_id, statistic)
+        session.add(stat)
     except SQLAlchemyError:
         _LOGGER.exception(
             "Unexpected exception when inserting statistics %s:%s ",
             metadata_id,
             statistic,
         )
+        return None
+    return stat
 
 
 def _update_statistics(
@@ -618,7 +684,7 @@ def get_metadata_with_session(
     session: Session,
     *,
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
     """Fetch meta data.
@@ -639,7 +705,7 @@ def get_metadata(
     hass: HomeAssistant,
     *,
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
     """Return metadata for statistic_ids."""
@@ -675,7 +741,9 @@ def update_statistics_metadata(
     if new_statistic_id is not UNDEFINED and new_statistic_id is not None:
         with session_scope(
             session=instance.get_session(),
-            exception_filter=_filter_unique_constraint_integrity_error(instance),
+            exception_filter=filter_unique_constraint_integrity_error(
+                instance, "statistic"
+            ),
         ) as session:
             statistics_meta_manager.update_statistic_id(
                 session, DOMAIN, statistic_id, new_statistic_id
@@ -685,7 +753,7 @@ def update_statistics_metadata(
 async def async_list_statistic_ids(
     hass: HomeAssistant,
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
 ) -> list[dict]:
     """Return all statistic_ids (or filtered one) and unit of measurement.
 
@@ -734,7 +802,7 @@ def _statistic_by_id_from_metadata(
 
 
 def _flatten_list_statistic_ids_metadata_result(
-    result: dict[str, dict[str, Any]]
+    result: dict[str, dict[str, Any]],
 ) -> list[dict]:
     """Return a flat dict of metadata."""
     return [
@@ -755,7 +823,7 @@ def _flatten_list_statistic_ids_metadata_result(
 def list_statistic_ids(
     hass: HomeAssistant,
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
 ) -> list[dict]:
     """Return all statistic_ids (or filtered one) and unit of measurement.
 
@@ -1040,10 +1108,7 @@ def _generate_statistics_during_period_stmt(
         end_time_ts = end_time.timestamp()
         stmt += lambda q: q.filter(table.start_ts < end_time_ts)
     if metadata_ids:
-        stmt += lambda q: q.filter(
-            # https://github.com/python/mypy/issues/2608
-            table.metadata_id.in_(metadata_ids)  # type:ignore[arg-type]
-        )
+        stmt += lambda q: q.filter(table.metadata_id.in_(metadata_ids))
     stmt += lambda q: q.order_by(table.metadata_id, table.start_ts)
     return stmt
 
@@ -1078,17 +1143,11 @@ def _get_max_mean_min_statistic_in_sub_period(
     # Calculate max, mean, min
     columns = select()
     if "max" in types:
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-        # pylint: disable-next=not-callable
         columns = columns.add_columns(func.max(table.max))
     if "mean" in types:
         columns = columns.add_columns(func.avg(table.mean))
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-        # pylint: disable-next=not-callable
         columns = columns.add_columns(func.count(table.mean))
     if "min" in types:
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-        # pylint: disable-next=not-callable
         columns = columns.add_columns(func.min(table.min))
     stmt = _generate_max_mean_min_statistic_in_sub_period_stmt(
         columns, start_time, end_time, table, metadata_id
@@ -1821,66 +1880,93 @@ def get_last_short_term_statistics(
     )
 
 
-def _latest_short_term_statistics_stmt(
-    metadata_ids: list[int],
-) -> StatementLambdaElement:
-    """Create the statement for finding the latest short term stat rows."""
-    return lambda_stmt(
-        lambda: select(*QUERY_STATISTICS_SHORT_TERM).join(
-            (
-                most_recent_statistic_row := (
-                    select(
-                        StatisticsShortTerm.metadata_id,
-                        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-                        # pylint: disable-next=not-callable
-                        func.max(StatisticsShortTerm.start_ts).label("start_max"),
-                    )
-                    .where(StatisticsShortTerm.metadata_id.in_(metadata_ids))
-                    .group_by(StatisticsShortTerm.metadata_id)
-                ).subquery()
-            ),
-            (StatisticsShortTerm.metadata_id == most_recent_statistic_row.c.metadata_id)
-            & (StatisticsShortTerm.start_ts == most_recent_statistic_row.c.start_max),
+def get_latest_short_term_statistics_by_ids(
+    session: Session, ids: Iterable[int]
+) -> list[Row]:
+    """Return the latest short term statistics for a list of ids."""
+    stmt = _latest_short_term_statistics_by_ids_stmt(ids)
+    return list(
+        cast(
+            Sequence[Row],
+            execute_stmt_lambda_element(session, stmt),
         )
     )
 
 
-def get_latest_short_term_statistics(
+def _latest_short_term_statistics_by_ids_stmt(
+    ids: Iterable[int],
+) -> StatementLambdaElement:
+    """Create the statement for finding the latest short term stat rows by id."""
+    return lambda_stmt(
+        lambda: select(*QUERY_STATISTICS_SHORT_TERM).filter(
+            StatisticsShortTerm.id.in_(ids)
+        )
+    )
+
+
+def get_latest_short_term_statistics_with_session(
     hass: HomeAssistant,
+    session: Session,
     statistic_ids: set[str],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
     metadata: dict[str, tuple[int, StatisticMetaData]] | None = None,
 ) -> dict[str, list[StatisticsRow]]:
-    """Return the latest short term statistics for a list of statistic_ids."""
-    with session_scope(hass=hass, read_only=True) as session:
-        # Fetch metadata for the given statistic_ids
-        if not metadata:
-            metadata = get_instance(hass).statistics_meta_manager.get_many(
-                session, statistic_ids=statistic_ids
+    """Return the latest short term statistics for a list of statistic_ids with a session."""
+    # Fetch metadata for the given statistic_ids
+    if not metadata:
+        metadata = get_instance(hass).statistics_meta_manager.get_many(
+            session, statistic_ids=statistic_ids
+        )
+    if not metadata:
+        return {}
+    metadata_ids = set(
+        _extract_metadata_and_discard_impossible_columns(metadata, types)
+    )
+    run_cache = get_short_term_statistics_run_cache(hass)
+    # Try to find the latest short term statistics ids for the metadata_ids
+    # from the run cache first if we have it. If the run cache references
+    # a non-existent id because of a purge, we will detect it missing in the
+    # next step and run a query to re-populate the cache.
+    stats: list[Row] = []
+    if metadata_id_to_id := run_cache.get_latest_ids(metadata_ids):
+        stats = get_latest_short_term_statistics_by_ids(
+            session, metadata_id_to_id.values()
+        )
+    # If we are missing some metadata_ids in the run cache, we need run a query
+    # to populate the cache for each metadata_id, and then run another query
+    # to get the latest short term statistics for the missing metadata_ids.
+    if (missing_metadata_ids := metadata_ids - set(metadata_id_to_id)) and (
+        found_latest_ids := {
+            latest_id
+            for metadata_id in missing_metadata_ids
+            if (
+                latest_id := cache_latest_short_term_statistic_id_for_metadata_id(
+                    run_cache,
+                    session,
+                    metadata_id,
+                )
             )
-        if not metadata:
-            return {}
-        metadata_ids = _extract_metadata_and_discard_impossible_columns(metadata, types)
-        stmt = _latest_short_term_statistics_stmt(metadata_ids)
-        stats = cast(
-            Sequence[Row], execute_stmt_lambda_element(session, stmt, orm_rows=False)
-        )
-        if not stats:
-            return {}
+            is not None
+        }
+    ):
+        stats.extend(get_latest_short_term_statistics_by_ids(session, found_latest_ids))
 
-        # Return statistics combined with metadata
-        return _sorted_statistics_to_dict(
-            hass,
-            session,
-            stats,
-            statistic_ids,
-            metadata,
-            False,
-            StatisticsShortTerm,
-            None,
-            None,
-            types,
-        )
+    if not stats:
+        return {}
+
+    # Return statistics combined with metadata
+    return _sorted_statistics_to_dict(
+        hass,
+        session,
+        stats,
+        statistic_ids,
+        metadata,
+        False,
+        StatisticsShortTerm,
+        None,
+        None,
+        types,
+    )
 
 
 def _generate_statistics_at_time_stmt(
@@ -1895,8 +1981,6 @@ def _generate_statistics_at_time_stmt(
         (
             most_recent_statistic_ids := (
                 select(
-                    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-                    # pylint: disable-next=not-callable
                     func.max(table.start_ts).label("max_start_ts"),
                     table.metadata_id.label("max_metadata_id"),
                 )
@@ -1954,7 +2038,7 @@ def _fast_build_sum_list(
     ]
 
 
-def _sorted_statistics_to_dict(  # noqa: C901
+def _sorted_statistics_to_dict(
     hass: HomeAssistant,
     session: Session,
     stats: Sequence[Row[Any]],
@@ -1978,7 +2062,7 @@ def _sorted_statistics_to_dict(  # noqa: C901
     seen_statistic_ids: set[str] = set()
     key_func = itemgetter(metadata_id_idx)
     for meta_id, group in groupby(stats, key_func):
-        stats_list = stats_by_meta_id[meta_id] = list(group)
+        stats_by_meta_id[meta_id] = list(group)
         seen_statistic_ids.add(metadata[meta_id]["statistic_id"])
 
     # Set all statistic IDs to empty lists in result set to maintain the order
@@ -2168,54 +2252,6 @@ def async_add_external_statistics(
     _async_import_statistics(hass, metadata, statistics)
 
 
-def _filter_unique_constraint_integrity_error(
-    instance: Recorder,
-) -> Callable[[Exception], bool]:
-    def _filter_unique_constraint_integrity_error(err: Exception) -> bool:
-        """Handle unique constraint integrity errors."""
-        if not isinstance(err, StatementError):
-            return False
-
-        assert instance.engine is not None
-        dialect_name = instance.engine.dialect.name
-
-        ignore = False
-        if (
-            dialect_name == SupportedDialect.SQLITE
-            and "UNIQUE constraint failed" in str(err)
-        ):
-            ignore = True
-        if (
-            dialect_name == SupportedDialect.POSTGRESQL
-            and err.orig
-            and hasattr(err.orig, "pgcode")
-            and err.orig.pgcode == "23505"
-        ):
-            ignore = True
-        if (
-            dialect_name == SupportedDialect.MYSQL
-            and err.orig
-            and hasattr(err.orig, "args")
-        ):
-            with contextlib.suppress(TypeError):
-                if err.orig.args[0] == 1062:
-                    ignore = True
-
-        if ignore:
-            _LOGGER.warning(
-                (
-                    "Blocked attempt to insert duplicated statistic rows, please report"
-                    " at %s"
-                ),
-                "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+recorder%22",
-                exc_info=err,
-            )
-
-        return ignore
-
-    return _filter_unique_constraint_integrity_error
-
-
 def _import_statistics_with_session(
     instance: Recorder,
     session: Session,
@@ -2237,7 +2273,75 @@ def _import_statistics_with_session(
         else:
             _insert_statistics(session, table, metadata_id, stat)
 
+    if table != StatisticsShortTerm:
+        return True
+
+    # We just inserted new short term statistics, so we need to update the
+    # ShortTermStatisticsRunCache with the latest id for the metadata_id
+    run_cache = get_short_term_statistics_run_cache(instance.hass)
+    cache_latest_short_term_statistic_id_for_metadata_id(
+        run_cache, session, metadata_id
+    )
+
     return True
+
+
+@singleton(DATA_SHORT_TERM_STATISTICS_RUN_CACHE)
+def get_short_term_statistics_run_cache(
+    hass: HomeAssistant,
+) -> ShortTermStatisticsRunCache:
+    """Get the short term statistics run cache."""
+    return ShortTermStatisticsRunCache()
+
+
+def cache_latest_short_term_statistic_id_for_metadata_id(
+    run_cache: ShortTermStatisticsRunCache,
+    session: Session,
+    metadata_id: int,
+) -> int | None:
+    """Cache the latest short term statistic for a given metadata_id.
+
+    Returns the id of the latest short term statistic for the metadata_id
+    that was added to the cache, or None if no latest short term statistic
+    was found for the metadata_id.
+    """
+    if latest := cast(
+        Sequence[Row],
+        execute_stmt_lambda_element(
+            session, _find_latest_short_term_statistic_for_metadata_id_stmt(metadata_id)
+        ),
+    ):
+        id_: int = latest[0].id
+        run_cache.set_latest_id_for_metadata_id(metadata_id, id_)
+        return id_
+    return None
+
+
+def _find_latest_short_term_statistic_for_metadata_id_stmt(
+    metadata_id: int,
+) -> StatementLambdaElement:
+    """Create a statement to find the latest short term statistics for a metadata_id."""
+    #
+    # This code only looks up one row, and should not be refactored to
+    # lookup multiple using func.max
+    # or similar, as that will cause the query to be significantly slower
+    # for DBMs such as PostgreSQL that will have to do a full scan
+    #
+    # For PostgreSQL a combined query plan looks like:
+    # (actual time=2.218..893.909 rows=170531 loops=1)
+    #
+    # For PostgreSQL a separate query plan looks like:
+    # (actual time=0.301..0.301 rows=1 loops=1)
+    #
+    #
+    return lambda_stmt(
+        lambda: select(
+            StatisticsShortTerm.id,
+        )
+        .where(StatisticsShortTerm.metadata_id == metadata_id)
+        .order_by(StatisticsShortTerm.start_ts.desc())
+        .limit(1)
+    )
 
 
 @retryable_database_job("statistics")
@@ -2251,7 +2355,9 @@ def import_statistics(
 
     with session_scope(
         session=instance.get_session(),
-        exception_filter=_filter_unique_constraint_integrity_error(instance),
+        exception_filter=filter_unique_constraint_integrity_error(
+            instance, "statistic"
+        ),
     ) as session:
         return _import_statistics_with_session(
             instance, session, metadata, statistics, table

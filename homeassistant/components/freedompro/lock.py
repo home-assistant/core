@@ -1,4 +1,5 @@
 """Support for Freedompro lock."""
+
 import json
 from typing import Any
 
@@ -9,12 +10,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FreedomproDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import FreedomproDataUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -31,7 +32,7 @@ async def async_setup_entry(
 
 
 class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], LockEntity):
-    """Representation of an Freedompro lock."""
+    """Representation of a Freedompro lock."""
 
     _attr_has_entity_name = True
     _attr_name = None

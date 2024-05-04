@@ -1,4 +1,5 @@
 """The tests for the integration sensor platform."""
+
 import pytest
 
 from homeassistant.components.compensation.const import CONF_PRECISION, DOMAIN
@@ -223,3 +224,50 @@ async def test_new_state_is_none(hass: HomeAssistant) -> None:
     )
 
     assert last_changed == hass.states.get(expected_entity_id).last_changed
+
+
+@pytest.mark.parametrize(
+    ("lower", "upper"),
+    [
+        (True, False),
+        (False, True),
+        (True, True),
+    ],
+)
+async def test_limits(hass: HomeAssistant, lower: bool, upper: bool) -> None:
+    """Test compensation sensor state."""
+    source = "sensor.test"
+    config = {
+        "compensation": {
+            "test": {
+                "source": source,
+                "data_points": [
+                    [1.0, 0.0],
+                    [3.0, 2.0],
+                    [2.0, 1.0],
+                ],
+                "precision": 2,
+                "lower_limit": lower,
+                "upper_limit": upper,
+                "unit_of_measurement": "a",
+            }
+        }
+    }
+    await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    entity_id = "sensor.compensation_sensor_test"
+
+    hass.states.async_set(source, 0, {})
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    value = 0.0 if lower else -1.0
+    assert float(state.state) == value
+
+    hass.states.async_set(source, 5, {})
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    value = 2.0 if upper else 4.0
+    assert float(state.state) == value

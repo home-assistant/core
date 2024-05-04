@@ -1,0 +1,6 @@
+{
+  "domain": "cribl",
+  "name": "Cribl",
+  "integration_type": "virtual",
+  "supported_by": "splunk"
+}

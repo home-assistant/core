@@ -1,4 +1,5 @@
 """The tests for the Template number platform."""
+
 from homeassistant import setup
 from homeassistant.components.input_number import (
     ATTR_VALUE as INPUT_NUMBER_ATTR_VALUE,

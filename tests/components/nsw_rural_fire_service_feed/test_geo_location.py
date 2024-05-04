@@ -1,8 +1,10 @@
 """The tests for the NSW Rural Fire Service Feeds platform."""
+
 import datetime
 from unittest.mock import ANY, MagicMock, call, patch
 
 from aio_geojson_nsw_rfs_incidents import NswRuralFireServiceIncidentsFeed
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
@@ -90,7 +92,7 @@ def _generate_mock_feed_entry(
     return feed_entry
 
 
-async def test_setup(hass: HomeAssistant) -> None:
+async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     """Test the general setup of the platform."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -101,9 +103,7 @@ async def test_setup(hass: HomeAssistant) -> None:
         category="Category 1",
         location="Location 1",
         attribution="Attribution 1",
-        publication_date=datetime.datetime(
-            2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc
-        ),
+        publication_date=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
         council_area="Council Area 1",
         status="Status 1",
         entry_type="Type 1",
@@ -116,11 +116,10 @@ async def test_setup(hass: HomeAssistant) -> None:
     mock_entry_3 = _generate_mock_feed_entry("3456", "Title 3", 25.5, (-31.2, 150.2))
     mock_entry_4 = _generate_mock_feed_entry("4567", "Title 4", 12.5, (-31.3, 150.3))
 
-    # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "aio_geojson_client.feed.GeoJsonFeed.update"
-    ) as mock_feed_update:
+    freezer.move_to(utcnow)
+
+    with patch("aio_geojson_client.feed.GeoJsonFeed.update") as mock_feed_update:
         mock_feed_update.return_value = (
             "OK",
             [mock_entry_1, mock_entry_2, mock_entry_3],
@@ -148,7 +147,7 @@ async def test_setup(hass: HomeAssistant) -> None:
                 ATTR_LOCATION: "Location 1",
                 ATTR_ATTRIBUTION: "Attribution 1",
                 ATTR_PUBLICATION_DATE: datetime.datetime(
-                    2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc
+                    2018, 9, 22, 8, 0, tzinfo=datetime.UTC
                 ),
                 ATTR_FIRE: True,
                 ATTR_COUNCIL_AREA: "Council Area 1",
@@ -232,12 +231,13 @@ async def test_setup_with_custom_location(hass: HomeAssistant) -> None:
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 20.5, (-31.1, 150.1))
 
-    with patch(
-        "aio_geojson_nsw_rfs_incidents.feed_manager.NswRuralFireServiceIncidentsFeed",
-        wraps=NswRuralFireServiceIncidentsFeed,
-    ) as mock_feed_manager, patch(
-        "aio_geojson_client.feed.GeoJsonFeed.update"
-    ) as mock_feed_update:
+    with (
+        patch(
+            "aio_geojson_nsw_rfs_incidents.feed_manager.NswRuralFireServiceIncidentsFeed",
+            wraps=NswRuralFireServiceIncidentsFeed,
+        ) as mock_feed_manager,
+        patch("aio_geojson_client.feed.GeoJsonFeed.update") as mock_feed_update,
+    ):
         mock_feed_update.return_value = "OK", [mock_entry_1]
 
         with assert_setup_component(1, geo_location.DOMAIN):

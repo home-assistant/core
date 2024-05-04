@@ -1,4 +1,5 @@
 """Constants for the Logger integration."""
+
 import logging
 
 DOMAIN = "logger"
@@ -20,7 +21,7 @@ LOGSEVERITY = {
     LOGSEVERITY_FATAL: logging.FATAL,
     LOGSEVERITY_ERROR: logging.ERROR,
     LOGSEVERITY_WARNING: logging.WARNING,
-    LOGSEVERITY_WARN: logging.WARN,
+    LOGSEVERITY_WARN: logging.WARNING,
     LOGSEVERITY_INFO: logging.INFO,
     LOGSEVERITY_DEBUG: logging.DEBUG,
     LOGSEVERITY_NOTSET: logging.NOTSET,
@@ -34,8 +35,6 @@ LOGGER_LOGS = "logs"
 LOGGER_FILTERS = "filters"
 
 ATTR_LEVEL = "level"
-
-EVENT_LOGGING_CHANGED = "logging_changed"
 
 STORAGE_KEY = "core.logger"
 STORAGE_LOG_KEY = "logs"

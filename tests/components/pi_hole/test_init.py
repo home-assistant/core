@@ -1,4 +1,5 @@
 """Test pi_hole component."""
+
 import logging
 from unittest.mock import AsyncMock
 

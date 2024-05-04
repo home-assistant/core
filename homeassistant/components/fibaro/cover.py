@@ -1,7 +1,8 @@
 """Support for Fibaro cover - curtains, rollershutters etc."""
+
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from pyfibaro.fibaro_device import DeviceModel
 
@@ -17,7 +18,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FIBARO_DEVICES, FibaroDevice
+from . import FibaroController, FibaroDevice
 from .const import DOMAIN
 
 
@@ -27,13 +28,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fibaro covers."""
+    controller: FibaroController = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            FibaroCover(device)
-            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][
-                Platform.COVER
-            ]
-        ],
+        [FibaroCover(device) for device in controller.fibaro_devices[Platform.COVER]],
         True,
     )
 
@@ -83,11 +80,11 @@ class FibaroCover(FibaroDevice, CoverEntity):
 
     def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        self.set_level(kwargs.get(ATTR_POSITION))
+        self.set_level(cast(int, kwargs.get(ATTR_POSITION)))
 
     def set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        self.set_level2(kwargs.get(ATTR_TILT_POSITION))
+        self.set_level2(cast(int, kwargs.get(ATTR_TILT_POSITION)))
 
     @property
     def is_closed(self) -> bool | None:

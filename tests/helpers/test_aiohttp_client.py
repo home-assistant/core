@@ -1,5 +1,5 @@
 """Test the aiohttp client helper."""
-import asyncio
+
 from unittest.mock import Mock, patch
 
 import aiohttp
@@ -21,7 +21,12 @@ from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE, HomeAssistant
 import homeassistant.helpers.aiohttp_client as client
 from homeassistant.util.color import RGBColor
 
-from tests.common import MockConfigEntry
+from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    extract_stack_to_frame,
+    mock_integration,
+)
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -52,26 +57,53 @@ def camera_client_fixture(hass, hass_client):
 async def test_get_clientsession_with_ssl(hass: HomeAssistant) -> None:
     """Test init clientsession with ssl."""
     client.async_get_clientsession(hass)
+    verify_ssl = True
+    family = 0
 
-    assert isinstance(hass.data[client.DATA_CLIENTSESSION], aiohttp.ClientSession)
-    assert isinstance(hass.data[client.DATA_CONNECTOR], aiohttp.TCPConnector)
+    client_session = hass.data[client.DATA_CLIENTSESSION][(verify_ssl, family)]
+    assert isinstance(client_session, aiohttp.ClientSession)
+    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, family)]
+    assert isinstance(connector, aiohttp.TCPConnector)
 
 
 async def test_get_clientsession_without_ssl(hass: HomeAssistant) -> None:
     """Test init clientsession without ssl."""
     client.async_get_clientsession(hass, verify_ssl=False)
+    verify_ssl = False
+    family = 0
 
-    assert isinstance(
-        hass.data[client.DATA_CLIENTSESSION_NOTVERIFY], aiohttp.ClientSession
-    )
-    assert isinstance(hass.data[client.DATA_CONNECTOR_NOTVERIFY], aiohttp.TCPConnector)
+    client_session = hass.data[client.DATA_CLIENTSESSION][(verify_ssl, family)]
+    assert isinstance(client_session, aiohttp.ClientSession)
+    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, family)]
+    assert isinstance(connector, aiohttp.TCPConnector)
+
+
+@pytest.mark.parametrize(
+    ("verify_ssl", "expected_family"),
+    [(True, 0), (False, 0), (True, 4), (False, 4), (True, 6), (False, 6)],
+)
+async def test_get_clientsession(
+    hass: HomeAssistant, verify_ssl: bool, expected_family: int
+) -> None:
+    """Test init clientsession combinations."""
+    client.async_get_clientsession(hass, verify_ssl=verify_ssl, family=expected_family)
+    client_session = hass.data[client.DATA_CLIENTSESSION][(verify_ssl, expected_family)]
+    assert isinstance(client_session, aiohttp.ClientSession)
+    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, expected_family)]
+    assert isinstance(connector, aiohttp.TCPConnector)
 
 
 async def test_create_clientsession_with_ssl_and_cookies(hass: HomeAssistant) -> None:
     """Test create clientsession with ssl."""
     session = client.async_create_clientsession(hass, cookies={"bla": True})
     assert isinstance(session, aiohttp.ClientSession)
-    assert isinstance(hass.data[client.DATA_CONNECTOR], aiohttp.TCPConnector)
+
+    verify_ssl = True
+    family = 0
+
+    assert client.DATA_CLIENTSESSION not in hass.data
+    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, family)]
+    assert isinstance(connector, aiohttp.TCPConnector)
 
 
 async def test_create_clientsession_without_ssl_and_cookies(
@@ -80,46 +112,53 @@ async def test_create_clientsession_without_ssl_and_cookies(
     """Test create clientsession without ssl."""
     session = client.async_create_clientsession(hass, False, cookies={"bla": True})
     assert isinstance(session, aiohttp.ClientSession)
-    assert isinstance(hass.data[client.DATA_CONNECTOR_NOTVERIFY], aiohttp.TCPConnector)
+
+    verify_ssl = False
+    family = 0
+
+    assert client.DATA_CLIENTSESSION not in hass.data
+    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, family)]
+    assert isinstance(connector, aiohttp.TCPConnector)
 
 
-async def test_get_clientsession_cleanup(hass: HomeAssistant) -> None:
-    """Test init clientsession with ssl."""
-    client.async_get_clientsession(hass)
+@pytest.mark.parametrize(
+    ("verify_ssl", "expected_family"),
+    [(True, 0), (False, 0), (True, 4), (False, 4), (True, 6), (False, 6)],
+)
+async def test_get_clientsession_cleanup(
+    hass: HomeAssistant, verify_ssl: bool, expected_family: int
+) -> None:
+    """Test init clientsession cleanup."""
+    client.async_get_clientsession(hass, verify_ssl=verify_ssl, family=expected_family)
 
-    assert isinstance(hass.data[client.DATA_CLIENTSESSION], aiohttp.ClientSession)
-    assert isinstance(hass.data[client.DATA_CONNECTOR], aiohttp.TCPConnector)
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
-    await hass.async_block_till_done()
-
-    assert hass.data[client.DATA_CLIENTSESSION].closed
-    assert hass.data[client.DATA_CONNECTOR].closed
-
-
-async def test_get_clientsession_cleanup_without_ssl(hass: HomeAssistant) -> None:
-    """Test init clientsession with ssl."""
-    client.async_get_clientsession(hass, verify_ssl=False)
-
-    assert isinstance(
-        hass.data[client.DATA_CLIENTSESSION_NOTVERIFY], aiohttp.ClientSession
-    )
-    assert isinstance(hass.data[client.DATA_CONNECTOR_NOTVERIFY], aiohttp.TCPConnector)
+    client_session = hass.data[client.DATA_CLIENTSESSION][(verify_ssl, expected_family)]
+    assert isinstance(client_session, aiohttp.ClientSession)
+    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, expected_family)]
+    assert isinstance(connector, aiohttp.TCPConnector)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
     await hass.async_block_till_done()
 
-    assert hass.data[client.DATA_CLIENTSESSION_NOTVERIFY].closed
-    assert hass.data[client.DATA_CONNECTOR_NOTVERIFY].closed
+    assert client_session.closed
+    assert connector.closed
 
 
 async def test_get_clientsession_patched_close(hass: HomeAssistant) -> None:
     """Test closing clientsession does not work."""
+
+    verify_ssl = True
+    family = 0
+
     with patch("aiohttp.ClientSession.close") as mock_close:
         session = client.async_get_clientsession(hass)
 
-        assert isinstance(hass.data[client.DATA_CLIENTSESSION], aiohttp.ClientSession)
-        assert isinstance(hass.data[client.DATA_CONNECTOR], aiohttp.TCPConnector)
+        assert isinstance(
+            hass.data[client.DATA_CLIENTSESSION][(verify_ssl, family)],
+            aiohttp.ClientSession,
+        )
+        assert isinstance(
+            hass.data[client.DATA_CONNECTOR][(verify_ssl, family)], aiohttp.TCPConnector
+        )
 
         with pytest.raises(RuntimeError):
             await session.close()
@@ -132,32 +171,41 @@ async def test_warning_close_session_integration(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test log warning message when closing the session from integration context."""
-    with patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
+    with (
+        patch(
+            "homeassistant.helpers.frame.linecache.getline",
+            return_value="await session.close()",
+        ),
+        patch(
+            "homeassistant.helpers.frame.get_current_frame",
+            return_value=extract_stack_to_frame(
+                [
+                    Mock(
+                        filename="/home/paulus/homeassistant/core.py",
+                        lineno="23",
+                        line="do_something()",
+                    ),
+                    Mock(
+                        filename="/home/paulus/homeassistant/components/hue/light.py",
+                        lineno="23",
+                        line="await session.close()",
+                    ),
+                    Mock(
+                        filename="/home/paulus/aiohue/lights.py",
+                        lineno="2",
+                        line="something()",
+                    ),
+                ]
             ),
-            Mock(
-                filename="/home/paulus/homeassistant/components/hue/light.py",
-                lineno="23",
-                line="await session.close()",
-            ),
-            Mock(
-                filename="/home/paulus/aiohue/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
+        ),
     ):
         session = client.async_get_clientsession(hass)
         await session.close()
     assert (
-        "Detected integration that closes the Home Assistant aiohttp session. "
-        "Please report issue for hue using this method at "
-        "homeassistant/components/hue/light.py, line 23: await session.close()"
+        "Detected that integration 'hue' closes the Home Assistant aiohttp session at "
+        "homeassistant/components/hue/light.py, line 23: await session.close(), "
+        "please create a bug report at https://github.com/home-assistant/core/issues?"
+        "q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+hue%22"
     ) in caplog.text
 
 
@@ -166,33 +214,42 @@ async def test_warning_close_session_custom(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test log warning message when closing the session from custom context."""
-    with patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
+    mock_integration(hass, MockModule("hue"), built_in=False)
+    with (
+        patch(
+            "homeassistant.helpers.frame.linecache.getline",
+            return_value="await session.close()",
+        ),
+        patch(
+            "homeassistant.helpers.frame.get_current_frame",
+            return_value=extract_stack_to_frame(
+                [
+                    Mock(
+                        filename="/home/paulus/homeassistant/core.py",
+                        lineno="23",
+                        line="do_something()",
+                    ),
+                    Mock(
+                        filename="/home/paulus/config/custom_components/hue/light.py",
+                        lineno="23",
+                        line="await session.close()",
+                    ),
+                    Mock(
+                        filename="/home/paulus/aiohue/lights.py",
+                        lineno="2",
+                        line="something()",
+                    ),
+                ]
             ),
-            Mock(
-                filename="/home/paulus/config/custom_components/hue/light.py",
-                lineno="23",
-                line="await session.close()",
-            ),
-            Mock(
-                filename="/home/paulus/aiohue/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
+        ),
     ):
         session = client.async_get_clientsession(hass)
         await session.close()
     assert (
-        "Detected integration that closes the Home Assistant aiohttp session. Please"
-        " report issue to the custom integration author for hue using this method at"
-        " custom_components/hue/light.py, line 23: await session.close()" in caplog.text
-    )
+        "Detected that custom integration 'hue' closes the Home Assistant aiohttp "
+        "session at custom_components/hue/light.py, line 23: await session.close(), "
+        "please report it to the author of the 'hue' custom integration"
+    ) in caplog.text
 
 
 async def test_async_aiohttp_proxy_stream(
@@ -213,7 +270,7 @@ async def test_async_aiohttp_proxy_stream_timeout(
     aioclient_mock: AiohttpClientMocker, camera_client
 ) -> None:
     """Test that it fetches the given url."""
-    aioclient_mock.get("http://example.com/mjpeg_stream", exc=asyncio.TimeoutError())
+    aioclient_mock.get("http://example.com/mjpeg_stream", exc=TimeoutError())
 
     resp = await camera_client.get("/api/camera_proxy_stream/camera.mjpeg_camera")
     assert resp.status == 504
@@ -237,8 +294,8 @@ async def test_sending_named_tuple(
     session = client.async_create_clientsession(hass)
     resp = await session.post("http://127.0.0.1/rgb", json={"rgb": RGBColor(4, 3, 2)})
     assert resp.status == 200
-    await resp.json() == {"rgb": RGBColor(4, 3, 2)}
-    aioclient_mock.mock_calls[0][2]["rgb"] == RGBColor(4, 3, 2)
+    assert await resp.json() == {"rgb": [4, 3, 2]}
+    assert aioclient_mock.mock_calls[0][2]["rgb"] == RGBColor(4, 3, 2)
 
 
 async def test_client_session_immutable_headers(hass: HomeAssistant) -> None:

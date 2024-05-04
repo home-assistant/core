@@ -1,11 +1,12 @@
 """Support managing StatesMeta."""
+
 from __future__ import annotations
 
 import logging
 import threading
 from typing import TYPE_CHECKING, Literal, cast
 
-from lru import LRU  # pylint: disable=no-name-in-module
+from lru import LRU
 from sqlalchemy import lambda_stmt, select
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import true
@@ -35,16 +36,13 @@ QUERY_STATISTIC_META = (
 
 def _generate_get_metadata_stmt(
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
     statistic_source: str | None = None,
 ) -> StatementLambdaElement:
     """Generate a statement to fetch metadata."""
     stmt = lambda_stmt(lambda: select(*QUERY_STATISTIC_META))
     if statistic_ids:
-        stmt += lambda q: q.where(
-            # https://github.com/python/mypy/issues/2608
-            StatisticsMeta.statistic_id.in_(statistic_ids)  # type:ignore[arg-type]
-        )
+        stmt += lambda q: q.where(StatisticsMeta.statistic_id.in_(statistic_ids))
     if statistic_source is not None:
         stmt += lambda q: q.where(StatisticsMeta.source == statistic_source)
     if statistic_type == "mean":
@@ -77,7 +75,7 @@ class StatisticsMetaManager:
     def __init__(self, recorder: Recorder) -> None:
         """Initialize the statistics meta manager."""
         self.recorder = recorder
-        self._stat_id_to_id_meta: dict[str, tuple[int, StatisticMetaData]] = LRU(
+        self._stat_id_to_id_meta: LRU[str, tuple[int, StatisticMetaData]] = LRU(
             CACHE_SIZE
         )
 
@@ -90,7 +88,7 @@ class StatisticsMetaManager:
         self,
         session: Session,
         statistic_ids: set[str] | None = None,
-        statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+        statistic_type: Literal["mean", "sum"] | None = None,
         statistic_source: str | None = None,
     ) -> dict[str, tuple[int, StatisticMetaData]]:
         """Fetch meta data and process it into results and/or cache."""
@@ -204,7 +202,7 @@ class StatisticsMetaManager:
         self,
         session: Session,
         statistic_ids: set[str] | None = None,
-        statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+        statistic_type: Literal["mean", "sum"] | None = None,
         statistic_source: str | None = None,
     ) -> dict[str, tuple[int, StatisticMetaData]]:
         """Fetch meta data.
@@ -310,11 +308,18 @@ class StatisticsMetaManager:
         recorder thread.
         """
         self._assert_in_recorder_thread()
+        if self.get(session, new_statistic_id):
+            _LOGGER.error(
+                "Cannot rename statistic_id `%s` to `%s` because the new statistic_id is already in use",
+                old_statistic_id,
+                new_statistic_id,
+            )
+            return
         session.query(StatisticsMeta).filter(
             (StatisticsMeta.statistic_id == old_statistic_id)
             & (StatisticsMeta.source == source)
         ).update({StatisticsMeta.statistic_id: new_statistic_id})
-        self._clear_cache([old_statistic_id, new_statistic_id])
+        self._clear_cache([old_statistic_id])
 
     def delete(self, session: Session, statistic_ids: list[str]) -> None:
         """Clear statistics for a list of statistic_ids.

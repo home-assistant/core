@@ -1,11 +1,13 @@
 """The GIOS component."""
+
 from __future__ import annotations
 
+import asyncio
+from dataclasses import dataclass
 import logging
 
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
-from async_timeout import timeout
 from gios import Gios
 from gios.exceptions import GiosError
 from gios.model import GiosSensors
@@ -24,8 +26,17 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
 
+GiosConfigEntry = ConfigEntry["GiosData"]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+@dataclass
+class GiosData:
+    """Data for GIOS integration."""
+
+    coordinator: GiosDataUpdateCoordinator
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: GiosConfigEntry) -> bool:
     """Set up GIOS as config entry."""
     station_id: int = entry.data[CONF_STATION_ID]
     _LOGGER.debug("Using station_id: %d", station_id)
@@ -37,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # We used to use int in device_entry identifiers, convert this to str.
     device_registry = dr.async_get(hass)
     old_ids = (DOMAIN, station_id)
-    device_entry = device_registry.async_get_device({old_ids})  # type: ignore[arg-type]
+    device_entry = device_registry.async_get_device(identifiers={old_ids})  # type: ignore[arg-type]
     if device_entry and entry.entry_id in device_entry.config_entries:
         new_ids = (DOMAIN, str(station_id))
         device_registry.async_update_device(device_entry.id, new_identifiers={new_ids})
@@ -47,8 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = GiosDataUpdateCoordinator(hass, websession, station_id)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = GiosData(coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -64,17 +74,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GiosConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-class GiosDataUpdateCoordinator(DataUpdateCoordinator[GiosSensors]):
+class GiosDataUpdateCoordinator(DataUpdateCoordinator[GiosSensors]):  # pylint: disable=hass-enforce-coordinator-module
     """Define an object to hold GIOS data."""
 
     def __init__(
@@ -88,7 +93,7 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator[GiosSensors]):
     async def _async_update_data(self) -> GiosSensors:
         """Update data via library."""
         try:
-            async with timeout(API_TIMEOUT):
+            async with asyncio.timeout(API_TIMEOUT):
                 return await self.gios.async_update()
         except (GiosError, ClientConnectorError) as error:
             raise UpdateFailed(error) from error

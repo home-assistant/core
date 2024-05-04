@@ -1,4 +1,5 @@
 """Minio helper methods."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -8,10 +9,10 @@ from queue import Queue
 import re
 import threading
 import time
+from typing import Self
 from urllib.parse import unquote
 
 from minio import Minio
-from typing_extensions import Self
 from urllib3.exceptions import HTTPError
 
 _LOGGER = logging.getLogger(__name__)

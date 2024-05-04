@@ -1,6 +1,5 @@
 """LD2410 BLE integration binary sensor platform."""
 
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -9,7 +8,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -21,14 +20,10 @@ ENTITY_DESCRIPTIONS = (
     BinarySensorEntityDescription(
         key="is_moving",
         device_class=BinarySensorDeviceClass.MOTION,
-        has_entity_name=True,
-        name="Motion",
     ),
     BinarySensorEntityDescription(
         key="is_static",
         device_class=BinarySensorDeviceClass.OCCUPANCY,
-        has_entity_name=True,
-        name="Occupancy",
     ),
 )
 
@@ -50,6 +45,8 @@ class LD2410BLEBinarySensor(
     CoordinatorEntity[LD2410BLECoordinator], BinarySensorEntity
 ):
     """Moving/static sensor for LD2410BLE."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,

@@ -1,4 +1,5 @@
 """The tests for the Demo Media player platform."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -13,9 +14,10 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import DATA_CLIENTSESSION
+from homeassistant.helpers.aiohttp_client import DATA_CLIENTSESSION, _make_key
 from homeassistant.setup import async_setup_component
 
 from tests.typing import ClientSessionGenerator
@@ -26,6 +28,11 @@ TEST_ENTITY_ID = "media_player.walkman"
 @pytest.fixture(autouse=True)
 def autouse_disable_platforms(disable_platforms):
     """Auto use the disable_platforms fixture."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.MEDIA_PLAYER],
+    ):
+        yield
 
 
 @pytest.fixture(name="mock_media_seek")
@@ -470,14 +477,14 @@ async def test_media_image_proxy(
     class MockWebsession:
         """Test websession."""
 
-        async def get(self, url):
+        async def get(self, url, **kwargs):
             """Test websession get."""
             return MockResponse()
 
         def detach(self):
             """Test websession detach."""
 
-    hass.data[DATA_CLIENTSESSION] = MockWebsession()
+    hass.data[DATA_CLIENTSESSION] = {_make_key(): MockWebsession()}
 
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_PLAYING

@@ -1,4 +1,5 @@
 """Test BTHome BLE events."""
+
 import pytest
 
 from homeassistant.components import automation
@@ -58,7 +59,7 @@ async def test_event_long_press(hass: HomeAssistant) -> None:
     # Emit long press event
     inject_bluetooth_service_info_bleak(
         hass,
-        make_bthome_v2_adv(mac, b"\x40\x3A\x04"),
+        make_bthome_v2_adv(mac, b"\x40\x3a\x04"),
     )
 
     # wait for the event
@@ -81,7 +82,7 @@ async def test_event_rotate_dimmer(hass: HomeAssistant) -> None:
     # Emit rotate dimmer 3 steps left event
     inject_bluetooth_service_info_bleak(
         hass,
-        make_bthome_v2_adv(mac, b"\x40\x3C\x01\x03"),
+        make_bthome_v2_adv(mac, b"\x40\x3c\x01\x03"),
     )
 
     # wait for the event
@@ -104,7 +105,7 @@ async def test_get_triggers_button(hass: HomeAssistant) -> None:
     # Emit long press event so it creates the device in the registry
     inject_bluetooth_service_info_bleak(
         hass,
-        make_bthome_v2_adv(mac, b"\x40\x3A\x04"),
+        make_bthome_v2_adv(mac, b"\x40\x3a\x04"),
     )
 
     # wait for the event
@@ -112,7 +113,7 @@ async def test_get_triggers_button(hass: HomeAssistant) -> None:
     assert len(events) == 1
 
     dev_reg = async_get_dev_reg(hass)
-    device = dev_reg.async_get_device({get_device_id(mac)})
+    device = dev_reg.async_get_device(identifiers={get_device_id(mac)})
     assert device
     expected_trigger = {
         CONF_PLATFORM: "device",
@@ -140,7 +141,7 @@ async def test_get_triggers_dimmer(hass: HomeAssistant) -> None:
     # Emit rotate left with 3 steps event so it creates the device in the registry
     inject_bluetooth_service_info_bleak(
         hass,
-        make_bthome_v2_adv(mac, b"\x40\x3C\x01\x03"),
+        make_bthome_v2_adv(mac, b"\x40\x3c\x01\x03"),
     )
 
     # wait for the event
@@ -148,7 +149,7 @@ async def test_get_triggers_dimmer(hass: HomeAssistant) -> None:
     assert len(events) == 1
 
     dev_reg = async_get_dev_reg(hass)
-    device = dev_reg.async_get_device({get_device_id(mac)})
+    device = dev_reg.async_get_device(identifiers={get_device_id(mac)})
     assert device
     expected_trigger = {
         CONF_PLATFORM: "device",
@@ -236,14 +237,14 @@ async def test_if_fires_on_motion_detected(hass: HomeAssistant, calls) -> None:
     # Emit a button event so it creates the device in the registry
     inject_bluetooth_service_info_bleak(
         hass,
-        make_bthome_v2_adv(mac, b"\x40\x3A\x03"),
+        make_bthome_v2_adv(mac, b"\x40\x3a\x03"),
     )
 
     #     # wait for the event
     await hass.async_block_till_done()
 
     dev_reg = async_get_dev_reg(hass)
-    device = dev_reg.async_get_device({get_device_id(mac)})
+    device = dev_reg.async_get_device(identifiers={get_device_id(mac)})
     device_id = device.id
 
     assert await async_setup_component(
@@ -271,7 +272,7 @@ async def test_if_fires_on_motion_detected(hass: HomeAssistant, calls) -> None:
     # Emit long press event
     inject_bluetooth_service_info_bleak(
         hass,
-        make_bthome_v2_adv(mac, b"\x40\x3A\x04"),
+        make_bthome_v2_adv(mac, b"\x40\x3a\x04"),
     )
     await hass.async_block_till_done()
 

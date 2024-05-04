@@ -1,4 +1,5 @@
 """Sensor for the zamg integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.weather import WeatherEntity
@@ -10,8 +11,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -33,6 +33,10 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
     """Representation of a weather condition."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_pressure_unit = UnitOfPressure.HPA
+    _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
+    _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
 
     def __init__(
         self, coordinator: ZamgDataUpdateCoordinator, name: str, station_id: str
@@ -40,25 +44,15 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
         """Initialise the platform with a data instance and station name."""
         super().__init__(coordinator)
         self._attr_unique_id = station_id
-        self._attr_name = f"ZAMG {name}"
+        self._attr_name = name
         self.station_id = f"{station_id}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, station_id)},
             manufacturer=ATTRIBUTION,
             configuration_url=MANUFACTURER_URL,
-            name=coordinator.name,
+            name=name,
         )
-        # set units of ZAMG API
-        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
-        self._attr_native_pressure_unit = UnitOfPressure.HPA
-        self._attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
-        self._attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
-
-    @property
-    def condition(self) -> str | None:
-        """Return the current condition."""
-        return None
 
     @property
     def native_temperature(self) -> float | None:
@@ -72,9 +66,9 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
                 value := self.coordinator.data[self.station_id]["TL"]["data"]
             ) is not None:
                 return float(value)
-            return None
         except (KeyError, ValueError, TypeError):
             return None
+        return None
 
     @property
     def native_pressure(self) -> float | None:
@@ -104,9 +98,9 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
                 value := self.coordinator.data[self.station_id]["FFX"]["data"]
             ) is not None:
                 return float(value)
-            return None
         except (KeyError, ValueError, TypeError):
             return None
+        return None
 
     @property
     def wind_bearing(self) -> float | None:
@@ -120,6 +114,6 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
                 value := self.coordinator.data[self.station_id]["DDX"]["data"]
             ) is not None:
                 return float(value)
-            return None
         except (KeyError, ValueError, TypeError):
             return None
+        return None

@@ -1,9 +1,11 @@
 """Test the Google Assistant SDK config flow."""
+
 from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components.google_assistant_sdk.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import CLIENT_ID, ComponentSetup
@@ -67,7 +69,7 @@ async def test_full_flow(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
 
-    assert result.get("type") == "create_entry"
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == TITLE
     assert "result" in result
     assert result.get("result").unique_id is None
@@ -143,7 +145,7 @@ async def test_reauth(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
 
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "reauth_successful"
 
     assert config_entry.unique_id is None
@@ -205,7 +207,7 @@ async def test_single_instance_allowed(
     )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "single_instance_allowed"
 
 
@@ -220,68 +222,42 @@ async def test_options_flow(
 
     # Trigger options flow, first time
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     data_schema = result["data_schema"].schema
-    assert set(data_schema) == {"enable_conversation_agent", "language_code"}
+    assert set(data_schema) == {"language_code"}
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"enable_conversation_agent": False, "language_code": "es-ES"},
+        user_input={"language_code": "es-ES"},
     )
-    assert result["type"] == "create_entry"
-    assert config_entry.options == {
-        "enable_conversation_agent": False,
-        "language_code": "es-ES",
-    }
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {"language_code": "es-ES"}
 
     # Retrigger options flow, not change language
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     data_schema = result["data_schema"].schema
-    assert set(data_schema) == {"enable_conversation_agent", "language_code"}
+    assert set(data_schema) == {"language_code"}
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"enable_conversation_agent": False, "language_code": "es-ES"},
+        user_input={"language_code": "es-ES"},
     )
-    assert result["type"] == "create_entry"
-    assert config_entry.options == {
-        "enable_conversation_agent": False,
-        "language_code": "es-ES",
-    }
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {"language_code": "es-ES"}
 
     # Retrigger options flow, change language
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     data_schema = result["data_schema"].schema
-    assert set(data_schema) == {"enable_conversation_agent", "language_code"}
+    assert set(data_schema) == {"language_code"}
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"enable_conversation_agent": False, "language_code": "en-US"},
+        user_input={"language_code": "en-US"},
     )
-    assert result["type"] == "create_entry"
-    assert config_entry.options == {
-        "enable_conversation_agent": False,
-        "language_code": "en-US",
-    }
-
-    # Retrigger options flow, enable conversation agent
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == "form"
-    assert result["step_id"] == "init"
-    data_schema = result["data_schema"].schema
-    assert set(data_schema) == {"enable_conversation_agent", "language_code"}
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={"enable_conversation_agent": True, "language_code": "en-US"},
-    )
-    assert result["type"] == "create_entry"
-    assert config_entry.options == {
-        "enable_conversation_agent": True,
-        "language_code": "en-US",
-    }
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {"language_code": "en-US"}

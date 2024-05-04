@@ -1,4 +1,5 @@
 """The tests for the MQTT button platform."""
+
 import copy
 from typing import Any
 from unittest.mock import patch
@@ -6,12 +7,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import button, mqtt
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .test_common import (
@@ -30,6 +26,7 @@ from .test_common import (
     help_test_entity_device_info_with_connection,
     help_test_entity_device_info_with_identifier,
     help_test_entity_id_update_discovery_update,
+    help_test_entity_name,
     help_test_publishing_with_custom_encoding,
     help_test_reloadable,
     help_test_setting_attribute_via_mqtt_json_message,
@@ -46,13 +43,6 @@ from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {button.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
-
-
-@pytest.fixture(autouse=True)
-def button_platform_only():
-    """Only setup the button platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BUTTON]):
-        yield
 
 
 @pytest.mark.freeze_time("2021-11-08 13:31:44+00:00")
@@ -442,7 +432,7 @@ async def test_entity_debug_info_message(
             mqtt.DOMAIN: {
                 button.DOMAIN: {
                     "name": "test",
-                    "state_topic": "test-topic",
+                    "command_topic": "test-topic",
                     "device_class": "foobarnotreal",
                 }
             }
@@ -450,11 +440,13 @@ async def test_entity_debug_info_message(
     ],
 )
 async def test_invalid_device_class(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device_class option with invalid value."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
+    assert await mqtt_mock_entry()
+    assert "expected ButtonDeviceClass" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -545,7 +537,11 @@ async def test_reloadable(
     await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
@@ -564,4 +560,27 @@ async def test_unload_entry(
     config = DEFAULT_CONFIG
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry, domain, config
+    )
+
+
+@pytest.mark.parametrize(
+    ("expected_friendly_name", "device_class"),
+    [
+        ("test", None),
+        ("Update", "update"),
+        ("Identify", "identify"),
+        ("Restart", "restart"),
+    ],
+)
+async def test_entity_name(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    expected_friendly_name: str | None,
+    device_class: str | None,
+) -> None:
+    """Test the entity name setup."""
+    domain = button.DOMAIN
+    config = DEFAULT_CONFIG
+    await help_test_entity_name(
+        hass, mqtt_mock_entry, domain, config, expected_friendly_name, device_class
     )

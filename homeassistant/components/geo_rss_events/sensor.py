@@ -4,6 +4,7 @@ Retrieves current events (typically incidents or alerts) in GeoRSS format, and
 shows information on events filtered by distance to the HA instance's location
 and grouped by category.
 """
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -161,9 +162,9 @@ class GeoRssServiceSensor(SensorEntity):
             # And now compute the attributes from the filtered events.
             matrix = {}
             for entry in feed_entries:
-                matrix[
-                    entry.title
-                ] = f"{entry.distance_to_home:.0f}{UnitOfLength.KILOMETERS}"
+                matrix[entry.title] = (
+                    f"{entry.distance_to_home:.0f}{UnitOfLength.KILOMETERS}"
+                )
             self._state_attributes = matrix
         elif status == UPDATE_OK_NO_DATA:
             _LOGGER.debug("Update successful, but no data received from %s", self._feed)

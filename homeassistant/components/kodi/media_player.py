@@ -1,4 +1,5 @@
 """Support for interfacing with the XBMC/Kodi JSON-RPC API."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
@@ -44,7 +45,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_platform,
 )
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import is_internal_request
@@ -231,7 +232,7 @@ async def async_setup_entry(
 
 
 def cmd(
-    func: Callable[Concatenate[_KodiEntityT, _P], Awaitable[Any]]
+    func: Callable[Concatenate[_KodiEntityT, _P], Awaitable[Any]],
 ) -> Callable[Concatenate[_KodiEntityT, _P], Coroutine[Any, Any, None]]:
     """Catch command exceptions."""
 
@@ -282,7 +283,7 @@ class KodiEntity(MediaPlayerEntity):
         """Initialize the Kodi entity."""
         self._connection = connection
         self._kodi = kodi
-        self._unique_id = uid
+        self._attr_unique_id = uid
         self._device_id = None
         self._players = None
         self._properties = {}
@@ -370,11 +371,6 @@ class KodiEntity(MediaPlayerEntity):
             await self._connection.close()
 
     @property
-    def unique_id(self):
-        """Return the unique id of the device."""
-        return self._unique_id
-
-    @property
     def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if self._kodi_is_off:
@@ -409,7 +405,7 @@ class KodiEntity(MediaPlayerEntity):
 
         # If Home Assistant is already in a running state, start the watchdog
         # immediately, else trigger it after Home Assistant has finished starting.
-        if self.hass.state == CoreState.running:
+        if self.hass.state is CoreState.running:
             await start_watchdog()
         else:
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, start_watchdog)
@@ -422,7 +418,7 @@ class KodiEntity(MediaPlayerEntity):
         version = (await self._kodi.get_application_properties(["version"]))["version"]
         sw_version = f"{version['major']}.{version['minor']}"
         dev_reg = dr.async_get(self.hass)
-        device = dev_reg.async_get_device({(DOMAIN, self.unique_id)})
+        device = dev_reg.async_get_device(identifiers={(DOMAIN, self.unique_id)})
         dev_reg.async_update_device(device.id, sw_version=sw_version)
         self._device_id = device.id
 

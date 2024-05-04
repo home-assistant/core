@@ -1,16 +1,19 @@
 """Test config entries API."""
+
 from collections import OrderedDict
 from http import HTTPStatus
 from unittest.mock import ANY, AsyncMock, patch
 
+from aiohttp.test_utils import TestClient
 import pytest
 import voluptuous as vol
 
-from homeassistant import config_entries as core_ce, data_entry_flow
+from homeassistant import config_entries as core_ce, data_entry_flow, loader
 from homeassistant.components.config import config_entries
 from homeassistant.config_entries import HANDLERS, ConfigFlow
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.generated import config_flows
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
@@ -19,8 +22,8 @@ from tests.common import (
     MockConfigEntry,
     MockModule,
     MockUser,
-    mock_entity_platform,
     mock_integration,
+    mock_platform,
 )
 from tests.typing import WebSocketGenerator
 
@@ -39,10 +42,10 @@ def mock_test_component(hass):
 
 
 @pytest.fixture
-async def client(hass, hass_client):
+async def client(hass, hass_client) -> TestClient:
     """Fixture that can interact with the config manager API."""
     await async_setup_component(hass, "http", {})
-    await config_entries.async_setup(hass)
+    config_entries.async_setup(hass)
     return await hass_client()
 
 
@@ -121,6 +124,7 @@ async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
             "title": "Test 1",
             "source": "bla",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
+            "supports_reconfigure": False,
             "supports_options": True,
             "supports_remove_device": False,
             "supports_unload": True,
@@ -128,12 +132,15 @@ async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
             "pref_disable_polling": False,
             "disabled_by": None,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
         },
         {
             "domain": "comp2",
             "title": "Test 2",
             "source": "bla2",
             "state": core_ce.ConfigEntryState.SETUP_ERROR.value,
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -141,12 +148,15 @@ async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
             "pref_disable_polling": False,
             "disabled_by": None,
             "reason": "Unsupported API",
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
         },
         {
             "domain": "comp3",
             "title": "Test 3",
             "source": "bla3",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -154,12 +164,15 @@ async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
             "pref_disable_polling": False,
             "disabled_by": core_ce.ConfigEntryDisabler.USER,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
         },
         {
             "domain": "comp4",
             "title": "Test 4",
             "source": "bla4",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -167,12 +180,15 @@ async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
             "pref_disable_polling": False,
             "disabled_by": None,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
         },
         {
             "domain": "comp5",
             "title": "Test 5",
             "source": "bla5",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -180,6 +196,8 @@ async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
             "pref_disable_polling": False,
             "disabled_by": None,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
         },
     ]
 
@@ -233,6 +251,7 @@ async def test_reload_entry(hass: HomeAssistant, client) -> None:
         domain="kitchen_sink", state=core_ce.ConfigEntryState.LOADED
     )
     entry.add_to_hass(hass)
+    hass.config.components.add("kitchen_sink")
     resp = await client.post(
         f"/api/config/config_entries/entry/{entry.entry_id}/reload"
     )
@@ -280,6 +299,7 @@ async def test_reload_entry_in_failed_state(
     """Test reloading an entry via the API that has already failed to unload."""
     entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.FAILED_UNLOAD)
     entry.add_to_hass(hass)
+    hass.config.components.add("demo")
     resp = await client.post(
         f"/api/config/config_entries/entry/{entry.entry_id}/reload"
     )
@@ -304,10 +324,11 @@ async def test_reload_entry_in_setup_retry(
             async_migrate_entry=mock_migrate_entry,
         ),
     )
-    mock_entity_platform(hass, "config_flow.comp", None)
+    mock_platform(hass, "comp.config_flow", None)
     entry = MockConfigEntry(domain="comp", state=core_ce.ConfigEntryState.SETUP_RETRY)
     entry.supports_unload = True
     entry.add_to_hass(hass)
+    hass.config.components.add("comp")
 
     with patch.dict(HANDLERS, {"comp": ConfigFlow, "test": ConfigFlow}):
         resp = await client.post(
@@ -322,18 +343,18 @@ async def test_reload_entry_in_setup_retry(
 
 @pytest.mark.parametrize(
     ("type_filter", "result"),
-    (
+    [
         (None, {"hello", "another", "world"}),
         ("integration", {"hello", "another"}),
         ("helper", {"world"}),
-    ),
+    ],
 )
 async def test_available_flows(
     hass: HomeAssistant, client, type_filter, result
 ) -> None:
     """Test querying the available flows."""
     with patch.object(
-        config_flows,
+        loader,
         "FLOWS",
         {"integration": ["hello", "another"], "helper": ["world"]},
     ):
@@ -353,7 +374,7 @@ async def test_available_flows(
 
 async def test_initialize_flow(hass: HomeAssistant, client) -> None:
     """Test we can initialize a flow."""
-    mock_entity_platform(hass, "config_flow.test", None)
+    mock_platform(hass, "test.config_flow", None)
 
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
@@ -396,12 +417,13 @@ async def test_initialize_flow(hass: HomeAssistant, client) -> None:
         },
         "errors": {"username": "Should be unique."},
         "last_step": None,
+        "preview": None,
     }
 
 
 async def test_initialize_flow_unmet_dependency(hass: HomeAssistant, client) -> None:
     """Test unmet dependencies are listed."""
-    mock_entity_platform(hass, "config_flow.test", None)
+    mock_platform(hass, "test.config_flow", None)
 
     config_schema = vol.Schema({"comp_conf": {"hello": str}}, required=True)
     mock_integration(
@@ -457,7 +479,7 @@ async def test_initialize_flow_unauth(
 
 async def test_abort(hass: HomeAssistant, client) -> None:
     """Test a flow that aborts."""
-    mock_entity_platform(hass, "config_flow.test", None)
+    mock_platform(hass, "test.config_flow", None)
 
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
@@ -483,7 +505,7 @@ async def test_create_account(
     hass: HomeAssistant, client, enable_custom_integrations: None
 ) -> None:
     """Test a flow that creates an account."""
-    mock_entity_platform(hass, "config_flow.test", None)
+    mock_platform(hass, "test.config_flow", None)
 
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
@@ -520,6 +542,7 @@ async def test_create_account(
             "entry_id": entries[0].entry_id,
             "source": core_ce.SOURCE_USER,
             "state": core_ce.ConfigEntryState.LOADED.value,
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -527,10 +550,13 @@ async def test_create_account(
             "pref_disable_polling": False,
             "title": "Test Entry",
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
         },
         "description": None,
         "description_placeholders": None,
         "options": {},
+        "minor_version": 1,
     }
 
 
@@ -541,7 +567,7 @@ async def test_two_step_flow(
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
     )
-    mock_entity_platform(hass, "config_flow.test", None)
+    mock_platform(hass, "test.config_flow", None)
 
     class TestFlow(core_ce.ConfigFlow):
         VERSION = 1
@@ -571,6 +597,7 @@ async def test_two_step_flow(
             "description_placeholders": None,
             "errors": None,
             "last_step": None,
+            "preview": None,
         }
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
@@ -596,6 +623,7 @@ async def test_two_step_flow(
                 "entry_id": entries[0].entry_id,
                 "source": core_ce.SOURCE_USER,
                 "state": core_ce.ConfigEntryState.LOADED.value,
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -603,10 +631,13 @@ async def test_two_step_flow(
                 "pref_disable_polling": False,
                 "title": "user-title",
                 "reason": None,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
             },
             "description": None,
             "description_placeholders": None,
             "options": {},
+            "minor_version": 1,
         }
 
 
@@ -617,7 +648,7 @@ async def test_continue_flow_unauth(
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
     )
-    mock_entity_platform(hass, "config_flow.test", None)
+    mock_platform(hass, "test.config_flow", None)
 
     class TestFlow(core_ce.ConfigFlow):
         VERSION = 1
@@ -647,6 +678,7 @@ async def test_continue_flow_unauth(
             "description_placeholders": None,
             "errors": None,
             "last_step": None,
+            "preview": None,
         }
 
     hass_admin_user.groups = []
@@ -663,7 +695,7 @@ async def test_get_progress_index(
 ) -> None:
     """Test querying for the flows that are in progress."""
     assert await async_setup_component(hass, "config", {})
-    mock_entity_platform(hass, "config_flow.test", None)
+    mock_platform(hass, "test.config_flow", None)
     ws_client = await hass_ws_client(hass)
 
     class TestFlow(core_ce.ConfigFlow):
@@ -711,7 +743,7 @@ async def test_get_progress_index_unauth(
 
 async def test_get_progress_flow(hass: HomeAssistant, client) -> None:
     """Test we can query the API for same result as we get from init a flow."""
-    mock_entity_platform(hass, "config_flow.test", None)
+    mock_platform(hass, "test.config_flow", None)
 
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
@@ -747,7 +779,7 @@ async def test_get_progress_flow_unauth(
     hass: HomeAssistant, client, hass_admin_user: MockUser
 ) -> None:
     """Test we can can't query the API for result of flow."""
-    mock_entity_platform(hass, "config_flow.test", None)
+    mock_platform(hass, "test.config_flow", None)
 
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
@@ -795,10 +827,13 @@ async def test_options_flow(hass: HomeAssistant, client) -> None:
                         description_placeholders={"enabled": "Set to true to be true"},
                     )
 
+                async def async_step_user(self, user_input=None):
+                    raise NotImplementedError
+
             return OptionsFlowHandler()
 
     mock_integration(hass, MockModule("test"))
-    mock_entity_platform(hass, "config_flow.test", None)
+    mock_platform(hass, "test.config_flow", None)
     MockConfigEntry(
         domain="test",
         entry_id="test1",
@@ -822,7 +857,54 @@ async def test_options_flow(hass: HomeAssistant, client) -> None:
         "description_placeholders": {"enabled": "Set to true to be true"},
         "errors": None,
         "last_step": None,
+        "preview": None,
     }
+
+
+@pytest.mark.parametrize(
+    ("endpoint", "method"),
+    [
+        ("/api/config/config_entries/options/flow", "post"),
+        ("/api/config/config_entries/options/flow/1", "get"),
+        ("/api/config/config_entries/options/flow/1", "post"),
+    ],
+)
+async def test_options_flow_unauth(
+    hass: HomeAssistant, client, hass_admin_user: MockUser, endpoint: str, method: str
+) -> None:
+    """Test unauthorized on options flow."""
+
+    class TestFlow(core_ce.ConfigFlow):
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            class OptionsFlowHandler(data_entry_flow.FlowHandler):
+                async def async_step_init(self, user_input=None):
+                    schema = OrderedDict()
+                    schema[vol.Required("enabled")] = bool
+                    return self.async_show_form(
+                        step_id="user",
+                        data_schema=schema,
+                        description_placeholders={"enabled": "Set to true to be true"},
+                    )
+
+            return OptionsFlowHandler()
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    MockConfigEntry(
+        domain="test",
+        entry_id="test1",
+        source="bla",
+    ).add_to_hass(hass)
+    entry = hass.config_entries.async_entries()[0]
+
+    hass_admin_user.groups = []
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        resp = await getattr(client, method)(endpoint, json={"handler": entry.entry_id})
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_two_step_options_flow(hass: HomeAssistant, client) -> None:
@@ -830,7 +912,7 @@ async def test_two_step_options_flow(hass: HomeAssistant, client) -> None:
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
     )
-    mock_entity_platform(hass, "config_flow.test", None)
+    mock_platform(hass, "test.config_flow", None)
 
     class TestFlow(core_ce.ConfigFlow):
         @staticmethod
@@ -871,6 +953,7 @@ async def test_two_step_options_flow(hass: HomeAssistant, client) -> None:
             "description_placeholders": None,
             "errors": None,
             "last_step": None,
+            "preview": None,
         }
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
@@ -885,7 +968,6 @@ async def test_two_step_options_flow(hass: HomeAssistant, client) -> None:
             "handler": "test1",
             "type": "create_entry",
             "title": "Enable disable",
-            "version": 1,
             "description": None,
             "description_placeholders": None,
         }
@@ -896,7 +978,7 @@ async def test_options_flow_with_invalid_data(hass: HomeAssistant, client) -> No
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
     )
-    mock_entity_platform(hass, "config_flow.test", None)
+    mock_platform(hass, "test.config_flow", None)
 
     class TestFlow(core_ce.ConfigFlow):
         @staticmethod
@@ -952,6 +1034,7 @@ async def test_options_flow_with_invalid_data(hass: HomeAssistant, client) -> No
             "description_placeholders": None,
             "errors": None,
             "last_step": None,
+            "preview": None,
         }
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
@@ -961,12 +1044,7 @@ async def test_options_flow_with_invalid_data(hass: HomeAssistant, client) -> No
         )
         assert resp.status == HTTPStatus.BAD_REQUEST
         data = await resp.json()
-        assert data == {
-            "message": (
-                "User input malformed: invalid is not a valid option for "
-                "dictionary value @ data['choices']"
-            )
-        }
+        assert data == {"errors": {"choices": "invalid is not a valid option"}}
 
 
 async def test_get_single(
@@ -998,8 +1076,11 @@ async def test_get_single(
         "pref_disable_new_entities": False,
         "pref_disable_polling": False,
         "reason": None,
+        "error_reason_translation_key": None,
+        "error_reason_translation_placeholders": None,
         "source": "user",
         "state": "loaded",
+        "supports_reconfigure": False,
         "supports_options": False,
         "supports_remove_device": False,
         "supports_unload": False,
@@ -1031,6 +1112,7 @@ async def test_update_prefrences(
         domain="kitchen_sink", state=core_ce.ConfigEntryState.LOADED
     )
     entry.add_to_hass(hass)
+    hass.config.components.add("kitchen_sink")
 
     assert entry.pref_disable_new_entities is False
     assert entry.pref_disable_polling is False
@@ -1131,6 +1213,7 @@ async def test_disable_entry(
     )
     entry.add_to_hass(hass)
     assert entry.disabled_by is None
+    hass.config.components.add("kitchen_sink")
 
     # Disable
     await ws_client.send_json(
@@ -1210,7 +1293,7 @@ async def test_ignore_flow(
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
     )
-    mock_entity_platform(hass, "config_flow.test", None)
+    mock_platform(hass, "test.config_flow", None)
 
     class TestFlow(core_ce.ConfigFlow):
         VERSION = 1
@@ -1219,13 +1302,16 @@ async def test_ignore_flow(
             await self.async_set_unique_id("mock-unique-id")
             return self.async_show_form(step_id="account")
 
+        async def async_step_account(self, user_input=None):
+            raise NotImplementedError
+
     ws_client = await hass_ws_client(hass)
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
         result = await hass.config_entries.flow.async_init(
             "test", context={"source": core_ce.SOURCE_USER}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         await ws_client.send_json(
             {
@@ -1329,8 +1415,11 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1343,8 +1432,11 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": "Unsupported API",
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla2",
             "state": "setup_error",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1357,8 +1449,11 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla3",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1371,8 +1466,11 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla4",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1385,8 +1483,11 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla5",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1410,8 +1511,11 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1434,8 +1538,11 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla4",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1448,8 +1555,11 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla5",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1472,8 +1582,11 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1486,8 +1599,11 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla3",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1516,8 +1632,11 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1530,8 +1649,11 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": "Unsupported API",
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla2",
             "state": "setup_error",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1544,8 +1666,11 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla3",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1558,8 +1683,11 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla4",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1572,8 +1700,11 @@ async def test_get_matching_entries_ws(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "source": "bla5",
             "state": "not_loaded",
+            "supports_reconfigure": False,
             "supports_options": False,
             "supports_remove_device": False,
             "supports_unload": False,
@@ -1670,8 +1801,11 @@ async def test_subscribe_entries_ws(
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "source": "bla",
                 "state": "not_loaded",
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -1687,8 +1821,11 @@ async def test_subscribe_entries_ws(
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": "Unsupported API",
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "source": "bla2",
                 "state": "setup_error",
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -1704,8 +1841,11 @@ async def test_subscribe_entries_ws(
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "source": "bla3",
                 "state": "not_loaded",
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -1725,8 +1865,11 @@ async def test_subscribe_entries_ws(
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "source": "bla",
                 "state": "not_loaded",
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -1747,8 +1890,11 @@ async def test_subscribe_entries_ws(
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "source": "bla",
                 "state": "not_loaded",
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -1769,8 +1915,11 @@ async def test_subscribe_entries_ws(
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "source": "bla",
                 "state": "not_loaded",
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -1850,8 +1999,11 @@ async def test_subscribe_entries_ws_filtered(
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "source": "bla",
                 "state": "not_loaded",
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -1867,8 +2019,11 @@ async def test_subscribe_entries_ws_filtered(
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "source": "bla3",
                 "state": "not_loaded",
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -1890,8 +2045,11 @@ async def test_subscribe_entries_ws_filtered(
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "source": "bla",
                 "state": "not_loaded",
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -1911,8 +2069,11 @@ async def test_subscribe_entries_ws_filtered(
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "source": "bla3",
                 "state": "not_loaded",
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -1934,8 +2095,11 @@ async def test_subscribe_entries_ws_filtered(
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "source": "bla",
                 "state": "not_loaded",
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -1956,8 +2120,11 @@ async def test_subscribe_entries_ws_filtered(
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "source": "bla",
                 "state": "not_loaded",
+                "supports_reconfigure": False,
                 "supports_options": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
@@ -1966,3 +2133,211 @@ async def test_subscribe_entries_ws_filtered(
             "type": "added",
         }
     ]
+
+
+async def test_flow_with_multiple_schema_errors(hass: HomeAssistant, client) -> None:
+    """Test an config flow with multiple schema errors."""
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(core_ce.ConfigFlow):
+        async def async_step_user(self, user_input=None):
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_LATITUDE): cv.latitude,
+                        vol.Required(CONF_LONGITUDE): cv.longitude,
+                        vol.Required(CONF_RADIUS): vol.All(int, vol.Range(min=5)),
+                    }
+                ),
+            )
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        resp = await client.post(
+            "/api/config/config_entries/flow", json={"handler": "test"}
+        )
+        assert resp.status == HTTPStatus.OK
+        flow_id = (await resp.json())["flow_id"]
+
+        resp = await client.post(
+            f"/api/config/config_entries/flow/{flow_id}",
+            json={"latitude": 30000, "longitude": 30000, "radius": 1},
+        )
+        assert resp.status == HTTPStatus.BAD_REQUEST
+        data = await resp.json()
+        assert data == {
+            "errors": {
+                "latitude": "invalid latitude",
+                "longitude": "invalid longitude",
+                "radius": "value must be at least 5",
+            }
+        }
+
+
+async def test_flow_with_multiple_schema_errors_base(
+    hass: HomeAssistant, client
+) -> None:
+    """Test an config flow with multiple schema errors where fields are not in the schema."""
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(core_ce.ConfigFlow):
+        async def async_step_user(self, user_input=None):
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_LATITUDE): cv.latitude,
+                    }
+                ),
+            )
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        resp = await client.post(
+            "/api/config/config_entries/flow", json={"handler": "test"}
+        )
+        assert resp.status == HTTPStatus.OK
+        flow_id = (await resp.json())["flow_id"]
+
+        resp = await client.post(
+            f"/api/config/config_entries/flow/{flow_id}",
+            json={"invalid": 30000, "invalid_2": 30000},
+        )
+        assert resp.status == HTTPStatus.BAD_REQUEST
+        data = await resp.json()
+        assert data == {
+            "errors": {
+                "base": [
+                    "extra keys not allowed @ data['invalid']",
+                    "extra keys not allowed @ data['invalid_2']",
+                ],
+                "latitude": "required key not provided",
+            }
+        }
+
+
+async def test_supports_reconfigure(
+    hass: HomeAssistant, client, enable_custom_integrations: None
+) -> None:
+    """Test a flow that support reconfigure step."""
+    mock_platform(hass, "test.config_flow", None)
+
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+
+    class TestFlow(core_ce.ConfigFlow):
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            return self.async_create_entry(
+                title="Test Entry", data={"secret": "account_token"}
+            )
+
+        async def async_step_reconfigure(self, user_input=None):
+            if user_input is None:
+                return self.async_show_form(
+                    step_id="reconfigure", data_schema=vol.Schema({})
+                )
+            return self.async_create_entry(
+                title="Test Entry", data={"secret": "account_token"}
+            )
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        resp = await client.post(
+            "/api/config/config_entries/flow",
+            json={"handler": "test", "entry_id": "1"},
+        )
+
+    assert resp.status == HTTPStatus.OK
+
+    data = await resp.json()
+    flow_id = data.pop("flow_id")
+
+    assert data == {
+        "type": "form",
+        "handler": "test",
+        "step_id": "reconfigure",
+        "data_schema": [],
+        "last_step": None,
+        "preview": None,
+        "description_placeholders": None,
+        "errors": None,
+    }
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        resp = await client.post(
+            f"/api/config/config_entries/flow/{flow_id}",
+            json={},
+        )
+    assert resp.status == HTTPStatus.OK
+
+    entries = hass.config_entries.async_entries("test")
+    assert len(entries) == 1
+
+    data = await resp.json()
+    data.pop("flow_id")
+    assert data == {
+        "handler": "test",
+        "title": "Test Entry",
+        "type": "create_entry",
+        "version": 1,
+        "result": {
+            "disabled_by": None,
+            "domain": "test",
+            "entry_id": entries[0].entry_id,
+            "source": core_ce.SOURCE_RECONFIGURE,
+            "state": core_ce.ConfigEntryState.LOADED.value,
+            "supports_reconfigure": True,
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "title": "Test Entry",
+            "reason": None,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+        },
+        "description": None,
+        "description_placeholders": None,
+        "options": {},
+        "minor_version": 1,
+    }
+
+
+async def test_does_not_support_reconfigure(
+    hass: HomeAssistant, client: TestClient, enable_custom_integrations: None
+) -> None:
+    """Test a flow that does not support reconfigure step."""
+    mock_platform(hass, "test.config_flow", None)
+
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+
+    class TestFlow(core_ce.ConfigFlow):
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            return self.async_create_entry(
+                title="Test Entry", data={"secret": "account_token"}
+            )
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        resp = await client.post(
+            "/api/config/config_entries/flow",
+            json={"handler": "test", "entry_id": "1"},
+        )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    response = await resp.text()
+    assert (
+        response
+        == '{"message":"Handler ConfigEntriesFlowManager doesn\'t support step reconfigure"}'
+    )

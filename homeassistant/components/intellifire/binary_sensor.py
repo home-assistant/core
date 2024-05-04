@@ -1,4 +1,5 @@
 """Support for IntelliFire Binary Sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -21,14 +22,14 @@ from .const import DOMAIN
 from .entity import IntellifireEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class IntellifireBinarySensorRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[IntellifirePollData], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class IntellifireBinarySensorEntityDescription(
     BinarySensorEntityDescription, IntellifireBinarySensorRequiredKeysMixin
 ):
@@ -38,103 +39,97 @@ class IntellifireBinarySensorEntityDescription(
 INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...] = (
     IntellifireBinarySensorEntityDescription(
         key="on_off",  # This is the sensor name
-        name="Flame",  # This is the human readable name
-        icon="mdi:fire",
+        translation_key="flame",  # This is the translation key
         value_fn=lambda data: data.is_on,
     ),
     IntellifireBinarySensorEntityDescription(
         key="timer_on",
-        name="Timer on",
-        icon="mdi:camera-timer",
+        translation_key="timer_on",
         value_fn=lambda data: data.timer_on,
     ),
     IntellifireBinarySensorEntityDescription(
         key="pilot_light_on",
-        name="Pilot light on",
-        icon="mdi:fire-alert",
+        translation_key="pilot_light_on",
         value_fn=lambda data: data.pilot_on,
     ),
     IntellifireBinarySensorEntityDescription(
         key="thermostat_on",
-        name="Thermostat on",
-        icon="mdi:home-thermometer-outline",
+        translation_key="thermostat_on",
         value_fn=lambda data: data.thermostat_on,
     ),
     IntellifireBinarySensorEntityDescription(
         key="error_pilot_flame",
-        name="Pilot flame error",
+        translation_key="pilot_flame_error",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_pilot_flame,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     IntellifireBinarySensorEntityDescription(
         key="error_flame",
-        name="Flame Error",
+        translation_key="flame_error",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_flame,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     IntellifireBinarySensorEntityDescription(
         key="error_fan_delay",
-        name="Fan delay error",
-        icon="mdi:fan-alert",
+        translation_key="fan_delay_error",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_fan_delay,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     IntellifireBinarySensorEntityDescription(
         key="error_maintenance",
-        name="Maintenance error",
+        translation_key="maintenance_error",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_maintenance,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     IntellifireBinarySensorEntityDescription(
         key="error_disabled",
-        name="Disabled error",
+        translation_key="disabled_error",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_disabled,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     IntellifireBinarySensorEntityDescription(
         key="error_fan",
-        name="Fan error",
-        icon="mdi:fan-alert",
+        translation_key="fan_error",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_fan,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     IntellifireBinarySensorEntityDescription(
         key="error_lights",
-        name="Lights error",
+        translation_key="lights_error",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_lights,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     IntellifireBinarySensorEntityDescription(
         key="error_accessory",
-        name="Accessory error",
+        translation_key="accessory_error",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_accessory,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     IntellifireBinarySensorEntityDescription(
         key="error_soft_lock_out",
-        name="Soft lock out error",
+        translation_key="soft_lock_out_error",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_soft_lock_out,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     IntellifireBinarySensorEntityDescription(
         key="error_ecm_offline",
-        name="ECM offline error",
+        translation_key="ecm_offline_error",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_ecm_offline,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     IntellifireBinarySensorEntityDescription(
         key="error_offline",
-        name="Offline error",
+        translation_key="offline_error",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_offline,
         device_class=BinarySensorDeviceClass.PROBLEM,

@@ -1,4 +1,5 @@
 """Tests for HomematicIP Cloud light."""
+
 from homematicip.base.enums import RGBColorState
 
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
@@ -55,7 +56,7 @@ async def test_hmip_light(hass: HomeAssistant, default_mock_hap_factory) -> None
     await async_manipulate_test_data(hass, hmip_device, "on", False)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_OFF
-    assert ATTR_COLOR_MODE not in ha_state.attributes
+    assert ha_state.attributes[ATTR_COLOR_MODE] is None
     assert ha_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
     assert ha_state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
@@ -87,7 +88,7 @@ async def test_hmip_notification_light(
     )
 
     assert ha_state.state == STATE_OFF
-    assert ATTR_COLOR_MODE not in ha_state.attributes
+    assert ha_state.attributes[ATTR_COLOR_MODE] is None
     assert ha_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.HS]
     assert ha_state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
     service_call_counter = len(hmip_device.mock_calls)
@@ -184,7 +185,7 @@ async def test_hmip_dimmer(hass: HomeAssistant, default_mock_hap_factory) -> Non
     )
 
     assert ha_state.state == STATE_OFF
-    assert ATTR_COLOR_MODE not in ha_state.attributes
+    assert ha_state.attributes[ATTR_COLOR_MODE] is None
     assert ha_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
     assert ha_state.attributes[ATTR_SUPPORTED_FEATURES] == 0
     service_call_counter = len(hmip_device.mock_calls)
@@ -244,7 +245,7 @@ async def test_hmip_light_measuring(
     )
 
     assert ha_state.state == STATE_OFF
-    assert ATTR_COLOR_MODE not in ha_state.attributes
+    assert ha_state.attributes[ATTR_COLOR_MODE] is None
     assert ha_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
     assert ha_state.attributes[ATTR_SUPPORTED_FEATURES] == 0
     service_call_counter = len(hmip_device.mock_calls)
@@ -290,7 +291,7 @@ async def test_hmip_wired_multi_dimmer(
     )
 
     assert ha_state.state == STATE_OFF
-    assert ATTR_COLOR_MODE not in ha_state.attributes
+    assert ha_state.attributes[ATTR_COLOR_MODE] is None
     assert ha_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
     assert ha_state.attributes[ATTR_SUPPORTED_FEATURES] == 0
     service_call_counter = len(hmip_device.mock_calls)

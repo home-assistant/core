@@ -1,18 +1,22 @@
 """The tests for the MQTT device_tracker platform."""
-from unittest.mock import patch
 
+from datetime import UTC, datetime
+
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import device_tracker, mqtt
 from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
+    help_custom_config,
     help_test_reloadable,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_skipped_async_ha_write_state,
 )
 
 from tests.common import async_fire_mqtt_message
@@ -30,13 +34,6 @@ DEFAULT_CONFIG = {
         }
     }
 }
-
-
-@pytest.fixture(autouse=True)
-def device_tracker_platform_only():
-    """Only setup the device_tracker platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.DEVICE_TRACKER]):
-        yield
 
 
 async def test_discover_device_tracker(
@@ -199,9 +196,10 @@ async def test_duplicate_device_tracker_removal(
 async def test_device_tracker_discovery_update(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test for a discovery update event."""
+    freezer.move_to("2023-08-22 19:15:00+00:00")
     await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
@@ -213,7 +211,9 @@ async def test_device_tracker_discovery_update(
     state = hass.states.get("device_tracker.beer")
     assert state is not None
     assert state.name == "Beer"
+    assert state.last_updated == datetime(2023, 8, 22, 19, 15, tzinfo=UTC)
 
+    freezer.move_to("2023-08-22 19:16:00+00:00")
     async_fire_mqtt_message(
         hass,
         "homeassistant/device_tracker/bla/config",
@@ -224,6 +224,21 @@ async def test_device_tracker_discovery_update(
     state = hass.states.get("device_tracker.beer")
     assert state is not None
     assert state.name == "Cider"
+    assert state.last_updated == datetime(2023, 8, 22, 19, 16, tzinfo=UTC)
+
+    freezer.move_to("2023-08-22 19:20:00+00:00")
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/device_tracker/bla/config",
+        '{ "name": "Cider", "state_topic": "test-topic" }',
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("device_tracker.beer")
+    assert state is not None
+    assert state.name == "Cider"
+    # Entity was not updated as the state was not changed
+    assert state.last_updated == datetime(2023, 8, 22, 19, 16, tzinfo=UTC)
 
 
 async def test_cleanup_device_tracker(
@@ -249,7 +264,7 @@ async def test_cleanup_device_tracker(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are created
-    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry is not None
     entity_entry = entity_registry.async_get("device_tracker.mqtt_unique")
     assert entity_entry is not None
@@ -259,21 +274,15 @@ async def test_cleanup_device_tracker(
 
     # Remove MQTT from the device
     mqtt_config_entry = hass.config_entries.async_entries(MQTT_DOMAIN)[0]
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": mqtt_config_entry.entry_id,
-            "device_id": device_entry.id,
-        }
+    response = await ws_client.remove_device(
+        device_entry.id, mqtt_config_entry.entry_id
     )
-    response = await ws_client.receive_json()
     assert response["success"]
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     # Verify device and registry entries are cleared
-    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry is None
     entity_entry = entity_registry.async_get("device_tracker.mqtt_unique")
     assert entity_entry is None
@@ -616,3 +625,66 @@ async def test_reloadable(
     domain = device_tracker.DOMAIN
     config = DEFAULT_CONFIG
     await help_test_reloadable(hass, mqtt_client_mock, domain, config)
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            device_tracker.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "availability_topic": "availability-topic",
+                    "json_attributes_topic": "json-attributes-topic",
+                },
+            ),
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("topic", "payload1", "payload2"),
+    [
+        ("test-topic", "home", "work"),
+        ("availability-topic", "online", "offline"),
+        ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
+    ],
+)
+async def test_skipped_async_ha_write_state(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    topic: str,
+    payload1: str,
+    payload2: str,
+) -> None:
+    """Test a write state command is only called when there is change."""
+    await mqtt_mock_entry()
+    await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            device_tracker.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "value_template": "{{ value_json.some_var * 1 }}",
+                },
+            ),
+        )
+    ],
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
+    )

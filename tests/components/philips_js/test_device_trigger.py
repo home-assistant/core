@@ -1,17 +1,15 @@
 """The tests for Philips TV device triggers."""
+
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.philips_js.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    async_get_device_automations,
-    async_mock_service,
-)
+from tests.common import async_get_device_automations, async_mock_service
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")

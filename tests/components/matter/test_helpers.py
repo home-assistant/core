@@ -1,4 +1,5 @@
 """Test the Matter helpers."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock
@@ -37,12 +38,13 @@ async def test_get_device_id(
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_get_node_from_device_entry(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
 ) -> None:
     """Test get_node_from_device_entry."""
-    device_registry = dr.async_get(hass)
     other_domain = "other_domain"
     other_config_entry = MockConfigEntry(domain=other_domain)
+    other_config_entry.add_to_hass(hass)
     other_device_entry = device_registry.async_get_or_create(
         config_entry_id=other_config_entry.entry_id,
         identifiers={(other_domain, "1234")},
@@ -55,20 +57,17 @@ async def test_get_node_from_device_entry(
         device_registry, config_entry.entry_id
     )[0]
     assert device_entry
-    node_from_device_entry = await get_node_from_device_entry(hass, device_entry)
+    node_from_device_entry = get_node_from_device_entry(hass, device_entry)
 
     assert node_from_device_entry is node
 
-    with pytest.raises(ValueError) as value_error:
-        await get_node_from_device_entry(hass, other_device_entry)
-
-    assert f"Device {other_device_entry.id} is not a Matter device" in str(
-        value_error.value
-    )
+    # test non-Matter device returns None
+    assert get_node_from_device_entry(hass, other_device_entry) is None
 
     matter_client.server_info = None
 
+    # test non-initialized server raises RuntimeError
     with pytest.raises(RuntimeError) as runtime_error:
-        node_from_device_entry = await get_node_from_device_entry(hass, device_entry)
+        node_from_device_entry = get_node_from_device_entry(hass, device_entry)
 
     assert "Matter server information is not available" in str(runtime_error.value)

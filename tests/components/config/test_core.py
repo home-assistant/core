@@ -1,11 +1,13 @@
 """Test core config."""
+
 from http import HTTPStatus
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
+from homeassistant.components.config import core
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import (
     CONF_UNIT_SYSTEM,
@@ -23,7 +25,7 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 @pytest.fixture
 async def client(hass, hass_ws_client):
     """Fixture that can interact with the config manager API."""
-    with patch.object(config, "SECTIONS", ["core"]):
+    with patch.object(config, "SECTIONS", [core]):
         assert await async_setup_component(hass, "config", {})
     return await hass_ws_client(hass)
 
@@ -32,14 +34,19 @@ async def test_validate_config_ok(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test checking config."""
-    with patch.object(config, "SECTIONS", ["core"]):
+    with patch.object(config, "SECTIONS", [core]):
         await async_setup_component(hass, "config", {})
 
     client = await hass_client()
 
+    no_error = Mock()
+    no_error.errors = None
+    no_error.error_str = ""
+    no_error.warning_str = ""
+
     with patch(
-        "homeassistant.components.config.core.async_check_ha_config_file",
-        return_value=None,
+        "homeassistant.components.config.core.check_config.async_check_ha_config_file",
+        return_value=no_error,
     ):
         resp = await client.post("/api/config/core/check_config")
 
@@ -47,10 +54,16 @@ async def test_validate_config_ok(
     result = await resp.json()
     assert result["result"] == "valid"
     assert result["errors"] is None
+    assert result["warnings"] is None
+
+    error_warning = Mock()
+    error_warning.errors = ["beer"]
+    error_warning.error_str = "beer"
+    error_warning.warning_str = "milk"
 
     with patch(
-        "homeassistant.components.config.core.async_check_ha_config_file",
-        return_value="beer",
+        "homeassistant.components.config.core.check_config.async_check_ha_config_file",
+        return_value=error_warning,
     ):
         resp = await client.post("/api/config/core/check_config")
 
@@ -58,6 +71,39 @@ async def test_validate_config_ok(
     result = await resp.json()
     assert result["result"] == "invalid"
     assert result["errors"] == "beer"
+    assert result["warnings"] == "milk"
+
+    warning = Mock()
+    warning.errors = None
+    warning.error_str = ""
+    warning.warning_str = "milk"
+
+    with patch(
+        "homeassistant.components.config.core.check_config.async_check_ha_config_file",
+        return_value=warning,
+    ):
+        resp = await client.post("/api/config/core/check_config")
+
+    assert resp.status == HTTPStatus.OK
+    result = await resp.json()
+    assert result["result"] == "valid"
+    assert result["errors"] is None
+    assert result["warnings"] == "milk"
+
+
+async def test_validate_config_requires_admin(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test checking configuration does not work as a normal user."""
+    with patch.object(config, "SECTIONS", [core]):
+        await async_setup_component(hass, "config", {})
+
+    client = await hass_client(hass_read_only_access_token)
+    resp = await client.post("/api/config/core/check_config")
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_websocket_core_update(hass: HomeAssistant, client) -> None:
@@ -74,9 +120,12 @@ async def test_websocket_core_update(hass: HomeAssistant, client) -> None:
     assert hass.config.country != "SE"
     assert hass.config.language != "sv"
 
-    with patch("homeassistant.util.dt.set_default_time_zone") as mock_set_tz, patch(
-        "homeassistant.components.config.core.async_update_suggested_units"
-    ) as mock_update_sensor_units:
+    with (
+        patch("homeassistant.util.dt.set_default_time_zone") as mock_set_tz,
+        patch(
+            "homeassistant.components.config.core.async_update_suggested_units"
+        ) as mock_update_sensor_units,
+    ):
         await client.send_json(
             {
                 "id": 5,
@@ -114,9 +163,12 @@ async def test_websocket_core_update(hass: HomeAssistant, client) -> None:
     assert len(mock_set_tz.mock_calls) == 1
     assert mock_set_tz.mock_calls[0][1][0] == dt_util.get_time_zone("America/New_York")
 
-    with patch("homeassistant.util.dt.set_default_time_zone") as mock_set_tz, patch(
-        "homeassistant.components.config.core.async_update_suggested_units"
-    ) as mock_update_sensor_units:
+    with (
+        patch("homeassistant.util.dt.set_default_time_zone") as mock_set_tz,
+        patch(
+            "homeassistant.components.config.core.async_update_suggested_units"
+        ) as mock_update_sensor_units,
+    ):
         await client.send_json(
             {
                 "id": 6,
@@ -136,7 +188,7 @@ async def test_websocket_core_update_not_admin(
 ) -> None:
     """Test core config fails for non admin."""
     hass_admin_user.groups = []
-    with patch.object(config, "SECTIONS", ["core"]):
+    with patch.object(config, "SECTIONS", [core]):
         await async_setup_component(hass, "config", {})
 
     client = await hass_ws_client(hass)

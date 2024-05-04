@@ -19,7 +19,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import AUTO_BYPASS, CONF_USERCODES, DOMAIN
 
-PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR, Platform.BUTTON]
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -78,7 +78,7 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
         client.locations[location_id].auto_bypass_low_battery = bypass
 
 
-class TotalConnectDataUpdateCoordinator(DataUpdateCoordinator[None]):
+class TotalConnectDataUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to fetch data from TotalConnect."""
 
     config_entry: ConfigEntry

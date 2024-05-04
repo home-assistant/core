@@ -1,4 +1,5 @@
 """Numeric derivative of data coming from a source sensor over time."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -18,8 +19,13 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTime,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -56,8 +62,6 @@ UNIT_TIME = {
     UnitOfTime.DAYS: 24 * 60 * 60,
 }
 
-ICON = "mdi:chart-line"
-
 DEFAULT_ROUND = 3
 DEFAULT_TIME_WINDOW = 0
 
@@ -86,8 +90,30 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE]
     )
 
-    unit_prefix = config_entry.options[CONF_UNIT_PREFIX]
-    if unit_prefix == "none":
+    source_entity = registry.async_get(source_entity_id)
+    dev_reg = dr.async_get(hass)
+    # Resolve source entity device
+    if (
+        (source_entity is not None)
+        and (source_entity.device_id is not None)
+        and (
+            (
+                device := dev_reg.async_get(
+                    device_id=source_entity.device_id,
+                )
+            )
+            is not None
+        )
+    ):
+        device_info = DeviceInfo(
+            identifiers=device.identifiers,
+            connections=device.connections,
+        )
+    else:
+        device_info = None
+
+    if (unit_prefix := config_entry.options.get(CONF_UNIT_PREFIX)) == "none":
+        # Before we had support for optional selectors, "none" was used for selecting nothing
         unit_prefix = None
 
     derivative_sensor = DerivativeSensor(
@@ -99,6 +125,7 @@ async def async_setup_entry(
         unit_of_measurement=None,
         unit_prefix=unit_prefix,
         unit_time=config_entry.options[CONF_UNIT_TIME],
+        device_info=device_info,
     )
 
     async_add_entities([derivative_sensor])
@@ -126,9 +153,9 @@ async def async_setup_platform(
 
 
 class DerivativeSensor(RestoreSensor, SensorEntity):
-    """Representation of an derivative sensor."""
+    """Representation of a derivative sensor."""
 
-    _attr_icon = ICON
+    _attr_translation_key = "derivative"
     _attr_should_poll = False
 
     def __init__(
@@ -142,9 +169,11 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         unit_prefix: str | None,
         unit_time: UnitOfTime,
         unique_id: str | None,
+        device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize the derivative sensor."""
         self._attr_unique_id = unique_id
+        self._attr_device_info = device_info
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
         self._state: float | int | Decimal = 0
@@ -180,14 +209,12 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 _LOGGER.warning("Could not restore last state: %s", err)
 
         @callback
-        def calc_derivative(event: Event) -> None:
+        def calc_derivative(event: Event[EventStateChangedData]) -> None:
             """Handle the sensor state changes."""
-            old_state: State | None
-            new_state: State | None
             if (
-                (old_state := event.data.get("old_state")) is None
+                (old_state := event.data["old_state"]) is None
                 or old_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-                or (new_state := event.data.get("new_state")) is None
+                or (new_state := event.data["new_state"]) is None
                 or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
             ):
                 return

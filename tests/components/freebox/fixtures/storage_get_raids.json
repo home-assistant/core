@@ -1,0 +1,64 @@
+[
+  {
+    "degraded": false,
+    "raid_disks": 2,
+    "next_check": 0,
+    "sync_action": "idle",
+    "level": "raid1",
+    "uuid": "dc8679f8-13f9-11ee-9106-38d547790df8",
+    "sysfs_state": "clear",
+    "id": 0,
+    "sync_completed_pos": 0,
+    "members": [
+      {
+        "total_bytes": 2000000000000,
+        "active_device": 1,
+        "id": 1000,
+        "corrected_read_errors": 0,
+        "array_id": 0,
+        "disk": {
+          "firmware": "0001",
+          "temp": 29,
+          "serial": "ZDZLBFHC",
+          "model": "ST2000LM015-2E8174"
+        },
+        "role": "active",
+        "sct_erc_supported": false,
+        "sct_erc_enabled": false,
+        "dev_uuid": "fca8720e-13f9-11ee-9106-38d547790df8",
+        "device_location": "sata-internal-p2",
+        "set_name": "Freebox",
+        "set_uuid": "dc8679f8-13f9-11ee-9106-38d547790df8"
+      },
+      {
+        "total_bytes": 2000000000000,
+        "active_device": 0,
+        "id": 2000,
+        "corrected_read_errors": 0,
+        "array_id": 0,
+        "disk": {
+          "firmware": "0001",
+          "temp": 30,
+          "serial": "ZDZLEJXE",
+          "model": "ST2000LM015-2E8174"
+        },
+        "role": "active",
+        "sct_erc_supported": false,
+        "sct_erc_enabled": false,
+        "dev_uuid": "16bf00d6-13fa-11ee-9106-38d547790df8",
+        "device_location": "sata-internal-p0",
+        "set_name": "Freebox",
+        "set_uuid": "dc8679f8-13f9-11ee-9106-38d547790df8"
+      }
+    ],
+    "array_size": 2000000000000,
+    "state": "running",
+    "sync_speed": 0,
+    "name": "Freebox",
+    "check_interval": 0,
+    "disk_id": 3000,
+    "last_check": 1682884357,
+    "sync_completed_end": 0,
+    "sync_completed_percent": 0
+  }
+]

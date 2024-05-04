@@ -1,4 +1,5 @@
 """Support for Bond lights."""
+
 from __future__ import annotations
 
 import logging
@@ -9,21 +10,19 @@ from bond_async import Action, BPUPSubscriptions, DeviceType
 import voluptuous as vol
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import BondConfigEntry
 from .const import (
     ATTR_POWER_STATE,
-    DOMAIN,
     SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
     SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
 )
 from .entity import BondEntity
-from .models import BondData
 from .utils import BondDevice, BondHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,11 +40,11 @@ ENTITY_SERVICES = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: BondConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Bond light devices."""
-    data: BondData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     hub = data.hub
     bpup_subs = data.bpup_subs
     platform = entity_platform.async_get_current_platform()
@@ -138,7 +137,7 @@ class BondBaseLight(BondEntity, LightEntity):
         except ClientResponseError as ex:
             raise HomeAssistantError(
                 "The bond API returned an error calling set_brightness_belief for"
-                f" {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
+                f" {self.entity_id}.  Code: {ex.status}  Message: {ex.message}"
             ) from ex
 
     async def async_set_power_belief(self, power_state: bool) -> None:
@@ -150,7 +149,7 @@ class BondBaseLight(BondEntity, LightEntity):
         except ClientResponseError as ex:
             raise HomeAssistantError(
                 "The bond API returned an error calling set_light_state_belief for"
-                f" {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
+                f" {self.entity_id}.  Code: {ex.status}  Message: {ex.message}"
             ) from ex
 
 
@@ -273,6 +272,7 @@ class BondFireplace(BondEntity, LightEntity):
 
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_translation_key = "fireplace"
 
     def _apply_state(self) -> None:
         state = self._device.state
@@ -280,7 +280,6 @@ class BondFireplace(BondEntity, LightEntity):
         flame = state.get("flame")
         self._attr_is_on = power == 1
         self._attr_brightness = round(flame * 255 / 100) if flame else None
-        self._attr_icon = "mdi:fireplace" if power == 1 else "mdi:fireplace-off"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the fireplace on."""
@@ -313,7 +312,7 @@ class BondFireplace(BondEntity, LightEntity):
         except ClientResponseError as ex:
             raise HomeAssistantError(
                 "The bond API returned an error calling set_brightness_belief for"
-                f" {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
+                f" {self.entity_id}.  Code: {ex.status}  Message: {ex.message}"
             ) from ex
 
     async def async_set_power_belief(self, power_state: bool) -> None:
@@ -325,5 +324,5 @@ class BondFireplace(BondEntity, LightEntity):
         except ClientResponseError as ex:
             raise HomeAssistantError(
                 "The bond API returned an error calling set_power_state_belief for"
-                f" {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
+                f" {self.entity_id}.  Code: {ex.status}  Message: {ex.message}"
             ) from ex

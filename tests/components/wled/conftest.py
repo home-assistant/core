@@ -1,7 +1,9 @@
 """Fixtures for WLED integration tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from wled import Device as WLEDDevice
 
@@ -51,10 +53,11 @@ def device_fixture() -> str:
 @pytest.fixture
 def mock_wled(device_fixture: str) -> Generator[MagicMock, None, None]:
     """Return a mocked WLED client."""
-    with patch(
-        "homeassistant.components.wled.coordinator.WLED", autospec=True
-    ) as wled_mock, patch(
-        "homeassistant.components.wled.config_flow.WLED", new=wled_mock
+    with (
+        patch(
+            "homeassistant.components.wled.coordinator.WLED", autospec=True
+        ) as wled_mock,
+        patch("homeassistant.components.wled.config_flow.WLED", new=wled_mock),
     ):
         wled = wled_mock.return_value
         wled.update.return_value = WLEDDevice(
@@ -67,12 +70,19 @@ def mock_wled(device_fixture: str) -> Generator[MagicMock, None, None]:
 
 @pytest.fixture
 async def init_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_wled: MagicMock
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_wled: MagicMock,
 ) -> MockConfigEntry:
     """Set up the WLED integration for testing."""
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+    # Let some time pass so coordinators can be reliably triggered by bumping
+    # time by SCAN_INTERVAL
+    freezer.tick(1)
 
     return mock_config_entry

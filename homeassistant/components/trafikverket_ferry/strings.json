@@ -30,13 +30,35 @@
   "selector": {
     "weekday": {
       "options": {
-        "mon": "Monday",
-        "tue": "Tuesday",
-        "wed": "Wednesday",
-        "thu": "Thursday",
-        "fri": "Friday",
-        "sat": "Saturday",
-        "sun": "Sunday"
+        "mon": "[%key:common::time::monday%]",
+        "tue": "[%key:common::time::tuesday%]",
+        "wed": "[%key:common::time::wednesday%]",
+        "thu": "[%key:common::time::thursday%]",
+        "fri": "[%key:common::time::friday%]",
+        "sat": "[%key:common::time::saturday%]",
+        "sun": "[%key:common::time::sunday%]"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "departure_time": {
+        "name": "Departure time"
+      },
+      "departure_from": {
+        "name": "Departure from"
+      },
+      "departure_to": {
+        "name": "Departure to"
+      },
+      "departure_modified": {
+        "name": "Departure modified"
+      },
+      "departure_time_next": {
+        "name": "Departure time next"
+      },
+      "departure_time_next_next": {
+        "name": "Departure time next after"
       }
     }
   }

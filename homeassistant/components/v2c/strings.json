@@ -1,0 +1,70 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your V2C Trydan EVSE."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connected": {
+        "name": "Connected"
+      },
+      "charging": {
+        "name": "Charging"
+      },
+      "ready": {
+        "name": "Ready"
+      }
+    },
+    "number": {
+      "intensity": {
+        "name": "Intensity"
+      }
+    },
+    "sensor": {
+      "charge_power": {
+        "name": "Charge power"
+      },
+      "charge_energy": {
+        "name": "Charge energy"
+      },
+      "charge_time": {
+        "name": "Charge time"
+      },
+      "house_power": {
+        "name": "House power"
+      },
+      "fv_power": {
+        "name": "Photovoltaic power"
+      }
+    },
+    "switch": {
+      "paused": {
+        "name": "Pause session"
+      },
+      "locked": {
+        "name": "Lock EVSE"
+      },
+      "timer": {
+        "name": "Charge point timer"
+      },
+      "dynamic": {
+        "name": "Dynamic intensity modulation"
+      },
+      "pause_dynamic": {
+        "name": "Pause dynamic control modulation"
+      }
+    }
+  }
+}

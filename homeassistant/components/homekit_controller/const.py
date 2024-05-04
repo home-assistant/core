@@ -1,5 +1,4 @@
 """Constants for the homekit_controller component."""
-import asyncio
 
 from aiohomekit.exceptions import (
     AccessoryDisconnectedError,
@@ -53,6 +52,10 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     ServicesTypes.TELEVISION: "media_player",
     ServicesTypes.VALVE: "switch",
     ServicesTypes.CAMERA_RTP_STREAM_MANAGEMENT: "camera",
+    ServicesTypes.DOORBELL: "event",
+    ServicesTypes.STATELESS_PROGRAMMABLE_SWITCH: "event",
+    ServicesTypes.SERVICE_LABEL: "event",
+    ServicesTypes.AIR_PURIFIER: "fan",
 }
 
 CHARACTERISTIC_PLATFORMS = {
@@ -74,6 +77,9 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.VENDOR_EVE_ENERGY_WATT: "sensor",
     CharacteristicsTypes.VENDOR_EVE_DEGREE_AIR_PRESSURE: "sensor",
     CharacteristicsTypes.VENDOR_EVE_DEGREE_ELEVATION: "number",
+    CharacteristicsTypes.VENDOR_EVE_MOTION_DURATION: "number",
+    CharacteristicsTypes.VENDOR_EVE_MOTION_SENSITIVITY: "number",
+    CharacteristicsTypes.VENDOR_EVE_THERMO_VALVE_POSITION: "sensor",
     CharacteristicsTypes.VENDOR_HAA_SETUP: "button",
     CharacteristicsTypes.VENDOR_HAA_UPDATE: "button",
     CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY: "sensor",
@@ -98,10 +104,13 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.MUTE: "switch",
     CharacteristicsTypes.FILTER_LIFE_LEVEL: "sensor",
     CharacteristicsTypes.VENDOR_AIRVERSA_SLEEP_MODE: "switch",
+    CharacteristicsTypes.TEMPERATURE_UNITS: "select",
+    CharacteristicsTypes.AIR_PURIFIER_STATE_CURRENT: "sensor",
+    CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET: "select",
 }
 
 STARTUP_EXCEPTIONS = (
-    asyncio.TimeoutError,
+    TimeoutError,
     AccessoryNotFoundError,
     EncryptionError,
     AccessoryDisconnectedError,
@@ -113,3 +122,5 @@ STARTUP_EXCEPTIONS = (
 # also happens to be the same value used by
 # the update coordinator.
 DEBOUNCE_COOLDOWN = 10  # seconds
+
+SUBSCRIBE_COOLDOWN = 0.25  # seconds

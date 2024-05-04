@@ -1,4 +1,5 @@
 """Webhook handlers for mobile_app."""
+
 from __future__ import annotations
 
 import asyncio
@@ -99,7 +100,6 @@ from .const import (
     DATA_DEVICES,
     DOMAIN,
     ERR_ENCRYPTION_ALREADY_ENABLED,
-    ERR_ENCRYPTION_NOT_AVAILABLE,
     ERR_ENCRYPTION_REQUIRED,
     ERR_INVALID_FORMAT,
     ERR_SENSOR_NOT_REGISTERED,
@@ -114,7 +114,6 @@ from .helpers import (
     error_response,
     registration_context,
     safe_registration,
-    supports_encryption,
     webhook_response,
 )
 
@@ -142,6 +141,16 @@ WEBHOOK_PAYLOAD_SCHEMA = vol.Any(
             vol.Optional(ATTR_WEBHOOK_ENCRYPTED_DATA): cv.string,
         }
     ),
+)
+
+SENSOR_SCHEMA_FULL = vol.Schema(
+    {
+        vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
+        vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): vol.Any(None, cv.icon),
+        vol.Required(ATTR_SENSOR_STATE): vol.Any(None, bool, int, float, str),
+        vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
+        vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
+    }
 )
 
 
@@ -287,7 +296,7 @@ async def webhook_call_service(
             config_entry.data[ATTR_DEVICE_NAME],
             ex,
         )
-        raise HTTPBadRequest() from ex
+        raise HTTPBadRequest from ex
 
     return empty_okay_response()
 
@@ -473,13 +482,6 @@ async def webhook_enable_encryption(
             ERR_ENCRYPTION_ALREADY_ENABLED, "Encryption already enabled"
         )
 
-    if not supports_encryption():
-        _LOGGER.warning(
-            "Unable to enable encryption for %s because libsodium is unavailable!",
-            config_entry.data[ATTR_DEVICE_NAME],
-        )
-        return error_response(ERR_ENCRYPTION_NOT_AVAILABLE, "Encryption is unavailable")
-
     secret = secrets.token_hex(SecretBox.KEY_SIZE)
 
     update_data = {
@@ -597,12 +599,12 @@ async def webhook_register_sensor(
         if changes:
             entity_registry.async_update_entity(existing_sensor, **changes)
 
-        async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, unique_store_key, data)
+        async_dispatcher_send(hass, f"{SIGNAL_SENSOR_UPDATE}-{unique_store_key}", data)
     else:
         data[CONF_UNIQUE_ID] = unique_store_key
-        data[
-            CONF_NAME
-        ] = f"{config_entry.data[ATTR_DEVICE_NAME]} {data[ATTR_SENSOR_NAME]}"
+        data[CONF_NAME] = (
+            f"{config_entry.data[ATTR_DEVICE_NAME]} {data[ATTR_SENSOR_NAME]}"
+        )
 
         register_signal = f"{DOMAIN}_{data[ATTR_SENSOR_TYPE]}_register"
         async_dispatcher_send(hass, register_signal, data)
@@ -636,18 +638,6 @@ async def webhook_update_sensor_states(
     hass: HomeAssistant, config_entry: ConfigEntry, data: list[dict[str, Any]]
 ) -> Response:
     """Handle an update sensor states webhook."""
-    sensor_schema_full = vol.Schema(
-        {
-            vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
-            vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): vol.Any(
-                None, cv.icon
-            ),
-            vol.Required(ATTR_SENSOR_STATE): vol.Any(None, bool, int, float, str),
-            vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
-            vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
-        }
-    )
-
     device_name: str = config_entry.data[ATTR_DEVICE_NAME]
     resp: dict[str, Any] = {}
     entity_registry = er.async_get(hass)
@@ -677,7 +667,7 @@ async def webhook_update_sensor_states(
             continue
 
         try:
-            sensor = sensor_schema_full(sensor)
+            sensor = SENSOR_SCHEMA_FULL(sensor)
         except vol.Invalid as err:
             err_msg = vol.humanize.humanize_error(sensor, err)
             _LOGGER.error(
@@ -695,8 +685,7 @@ async def webhook_update_sensor_states(
         sensor[CONF_WEBHOOK_ID] = config_entry.data[CONF_WEBHOOK_ID]
         async_dispatcher_send(
             hass,
-            SIGNAL_SENSOR_UPDATE,
-            unique_store_key,
+            f"{SIGNAL_SENSOR_UPDATE}-{unique_store_key}",
             sensor,
         )
 
@@ -746,7 +735,7 @@ async def webhook_get_config(
         resp[CONF_CLOUDHOOK_URL] = config_entry.data[CONF_CLOUDHOOK_URL]
 
     if cloud.async_active_subscription(hass):
-        with suppress(hass.components.cloud.CloudNotAvailable):
+        with suppress(cloud.CloudNotAvailable):
             resp[CONF_REMOTE_UI_URL] = cloud.async_remote_ui_url(hass)
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]

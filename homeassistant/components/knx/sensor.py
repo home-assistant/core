@@ -1,9 +1,11 @@
 """Support for KNX/IP sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from functools import partial
 from typing import Any
 
 from xknx import XKNX
@@ -39,7 +41,7 @@ from .schema import SensorSchema
 SCAN_INTERVAL = timedelta(seconds=10)
 
 
-@dataclass
+@dataclass(frozen=True)
 class KNXSystemEntityDescription(SensorEntityDescription):
     """Class describing KNX system sensor entities."""
 
@@ -54,7 +56,6 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
     KNXSystemEntityDescription(
         key="individual_address",
         always_available=False,
-        icon="mdi:router-network",
         should_poll=False,
         value_fn=lambda knx: str(knx.xknx.current_address),
     ),
@@ -75,7 +76,6 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
     ),
     KNXSystemEntityDescription(
         key="telegrams_incoming",
-        icon="mdi:upload-network",
         entity_registry_enabled_default=False,
         force_update=True,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -83,13 +83,11 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
     ),
     KNXSystemEntityDescription(
         key="telegrams_incoming_error",
-        icon="mdi:help-network",
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda knx: knx.xknx.connection_manager.cemi_count_incoming_error,
     ),
     KNXSystemEntityDescription(
         key="telegrams_outgoing",
-        icon="mdi:download-network",
         entity_registry_enabled_default=False,
         force_update=True,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -97,13 +95,11 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
     ),
     KNXSystemEntityDescription(
         key="telegrams_outgoing_error",
-        icon="mdi:close-network",
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda knx: knx.xknx.connection_manager.cemi_count_outgoing_error,
     ),
     KNXSystemEntityDescription(
         key="telegram_count",
-        icon="mdi:plus-network",
         force_update=True,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda knx: knx.xknx.connection_manager.cemi_count_outgoing
@@ -221,9 +217,9 @@ class KNXSystemSensor(SensorEntity):
         self.knx.xknx.connection_manager.register_connection_state_changed_cb(
             self.after_update_callback
         )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect device object when removed."""
-        self.knx.xknx.connection_manager.unregister_connection_state_changed_cb(
-            self.after_update_callback
+        self.async_on_remove(
+            partial(
+                self.knx.xknx.connection_manager.unregister_connection_state_changed_cb,
+                self.after_update_callback,
+            )
         )

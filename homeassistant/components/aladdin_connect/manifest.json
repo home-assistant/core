@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/aladdin_connect",
   "iot_class": "cloud_polling",
   "loggers": ["aladdin_connect"],
-  "requirements": ["AIOAladdinConnect==0.1.56"]
+  "quality_scale": "platinum",
+  "requirements": ["AIOAladdinConnect==0.1.58"]
 }

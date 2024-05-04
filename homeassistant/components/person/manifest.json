@@ -3,7 +3,7 @@
   "name": "Person",
   "after_dependencies": ["device_tracker"],
   "codeowners": [],
-  "dependencies": ["image_upload"],
+  "dependencies": ["image_upload", "http"],
   "documentation": "https://www.home-assistant.io/integrations/person",
   "integration_type": "system",
   "iot_class": "calculated",

@@ -1,13 +1,13 @@
 """Config flow for Tellduslive."""
+
 import asyncio
 import logging
 import os
 
-import async_timeout
 from tellduslive import Session, supports_local_api
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST
 from homeassistant.util.json import load_json_object
 
@@ -29,7 +29,7 @@ KEY_TOKEN_SECRET = "token_secret"
 _LOGGER = logging.getLogger(__name__)
 
 
-class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
@@ -91,11 +91,11 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 auth_url = await self.hass.async_add_executor_job(self._get_auth_url)
             if not auth_url:
                 return self.async_abort(reason="unknown_authorize_url_generation")
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return self.async_abort(reason="authorize_url_timeout")
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected error generating auth url")

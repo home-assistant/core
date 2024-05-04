@@ -9,5 +9,5 @@
   },
   "iot_class": "cloud_push",
   "loggers": ["jaraco.abode", "lomond"],
-  "requirements": ["jaraco.abode==3.3.0"]
+  "requirements": ["jaraco.abode==3.3.0", "jaraco.functools==3.9.0"]
 }

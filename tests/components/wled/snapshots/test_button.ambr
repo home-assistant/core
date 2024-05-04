@@ -8,6 +8,7 @@
     'context': <ANY>,
     'entity_id': 'button.wled_rgb_light_restart',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
@@ -29,6 +30,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -36,6 +39,7 @@
     'original_icon': None,
     'original_name': 'Restart',
     'platform': 'wled',
+    'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aabbccddeeff_restart',
@@ -64,10 +68,13 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'WLED',
     'model': 'DIY light',
     'name': 'WLED RGB Light',
     'name_by_user': None,
+    'serial_number': None,
     'suggested_area': None,
     'sw_version': '0.8.5',
     'via_device_id': None,

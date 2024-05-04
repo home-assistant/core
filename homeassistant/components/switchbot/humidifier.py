@@ -1,4 +1,5 @@
 """Support for Switchbot humidifier."""
+
 from __future__ import annotations
 
 import logging
@@ -40,6 +41,8 @@ class SwitchBotHumidifier(SwitchbotSwitchedEntity, HumidifierEntity):
     _attr_available_modes = [MODE_NORMAL, MODE_AUTO]
     _device: switchbot.SwitchbotHumidifier
     _attr_min_humidity = 1
+    _attr_translation_key = "humidifier"
+    _attr_name = None
 
     @property
     def is_on(self) -> bool | None:

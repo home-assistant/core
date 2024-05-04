@@ -1,4 +1,5 @@
 """Tests for the devolo_home_control integration."""
+
 from homeassistant.components.devolo_home_control.const import DOMAIN
 from homeassistant.core import HomeAssistant
 

@@ -1,4 +1,5 @@
 """Support for sensorpush ble sensors."""
+
 from __future__ import annotations
 
 from sensorpush_ble import DeviceClass, DeviceKey, SensorUpdate, Units
@@ -110,7 +111,9 @@ async def async_setup_entry(
             SensorPushBluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
+    entry.async_on_unload(
+        coordinator.async_register_processor(processor, SensorEntityDescription)
+    )
 
 
 class SensorPushBluetoothSensorEntity(

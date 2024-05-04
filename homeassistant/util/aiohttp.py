@@ -1,4 +1,5 @@
 """Utilities to help with aiohttp."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -65,6 +66,11 @@ class MockRequest:
     def content(self) -> MockStreamReader:
         """Return the body as text."""
         return MockStreamReader(self._content)
+
+    @property
+    def body_exists(self) -> bool:
+        """Return True if request has HTTP BODY, False otherwise."""
+        return bool(self._text)
 
     async def json(self, loads: JSONDecoder = json_loads) -> Any:
         """Return the body as JSON."""

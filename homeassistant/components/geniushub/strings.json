@@ -1,0 +1,46 @@
+{
+  "services": {
+    "set_zone_mode": {
+      "name": "Set zone mode",
+      "description": "Set the zone to an operating mode.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "The zone's entity_id."
+        },
+        "mode": {
+          "name": "[%key:common::config_flow::data::mode%]",
+          "description": "One of: off, timer or footprint."
+        }
+      }
+    },
+    "set_zone_override": {
+      "name": "Set zone override",
+      "description": "Overrides the zone's set point for a given duration.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "[%key:component::geniushub::services::set_zone_mode::fields::entity_id::description%]"
+        },
+        "temperature": {
+          "name": "Temperature",
+          "description": "The target temperature."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "The duration of the override. Optional, default 1 hour, maximum 24 hours."
+        }
+      }
+    },
+    "set_switch_override": {
+      "name": "Set switch override",
+      "description": "Overrides switch for a given duration.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "[%key:component::geniushub::services::set_zone_override::fields::duration::description%]"
+        }
+      }
+    }
+  }
+}

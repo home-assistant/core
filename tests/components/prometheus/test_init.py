@@ -1,4 +1,5 @@
 """The tests for the Prometheus exporter."""
+
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
@@ -20,10 +21,12 @@ from homeassistant.components import (
     input_number,
     light,
     lock,
+    number,
     person,
     prometheus,
     sensor,
     switch,
+    update,
 )
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
@@ -44,7 +47,6 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONTENT_TYPE_TEXT_PLAIN,
     DEGREE,
-    EVENT_STATE_CHANGED,
     PERCENTAGE,
     STATE_CLOSED,
     STATE_CLOSING,
@@ -55,14 +57,17 @@ from homeassistant.const import (
     STATE_ON,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_UNAVAILABLE,
     STATE_UNLOCKED,
     UnitOfEnergy,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+
+from tests.typing import ClientSessionGenerator
 
 PROMETHEUS_PATH = "homeassistant.components.prometheus"
 
@@ -76,7 +81,11 @@ class FilterTest:
 
 
 @pytest.fixture(name="client")
-async def setup_prometheus_client(hass, hass_client, namespace):
+async def setup_prometheus_client(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    namespace: str,
+):
     """Initialize an hass_client with Prometheus component."""
     # Reset registry
     prometheus_client.REGISTRY = prometheus_client.CollectorRegistry(auto_describe=True)
@@ -109,7 +118,42 @@ async def generate_latest_metrics(client):
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_view_empty_namespace(client, sensor_entities) -> None:
+async def test_setup_enumeration(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    namespace: str,
+) -> None:
+    """Test that setup enumerates existing states/entities."""
+
+    # The order of when things are created must be carefully controlled in
+    # this test, so we don't use fixtures.
+
+    sensor_1 = entity_registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="sensor_1",
+        unit_of_measurement=UnitOfTemperature.CELSIUS,
+        original_device_class=SensorDeviceClass.TEMPERATURE,
+        suggested_object_id="outside_temperature",
+        original_name="Outside Temperature",
+    )
+    set_state_with_entry(hass, sensor_1, 12.3, {})
+    assert await async_setup_component(hass, prometheus.DOMAIN, {prometheus.DOMAIN: {}})
+
+    client = await hass_client()
+    body = await generate_latest_metrics(client)
+    assert (
+        'homeassistant_sensor_temperature_celsius{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 12.3' in body
+    )
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_view_empty_namespace(
+    client: ClientSessionGenerator, sensor_entities: dict[str, er.RegistryEntry]
+) -> None:
     """Test prometheus metrics view."""
     body = await generate_latest_metrics(client)
 
@@ -133,7 +177,9 @@ async def test_view_empty_namespace(client, sensor_entities) -> None:
 
 
 @pytest.mark.parametrize("namespace", [None])
-async def test_view_default_namespace(client, sensor_entities) -> None:
+async def test_view_default_namespace(
+    client: ClientSessionGenerator, sensor_entities: dict[str, er.RegistryEntry]
+) -> None:
     """Test prometheus metrics view."""
     body = await generate_latest_metrics(client)
 
@@ -151,7 +197,9 @@ async def test_view_default_namespace(client, sensor_entities) -> None:
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_sensor_unit(client, sensor_entities) -> None:
+async def test_sensor_unit(
+    client: ClientSessionGenerator, sensor_entities: dict[str, er.RegistryEntry]
+) -> None:
     """Test prometheus metrics for sensors with a unit."""
     body = await generate_latest_metrics(client)
 
@@ -181,7 +229,9 @@ async def test_sensor_unit(client, sensor_entities) -> None:
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_sensor_without_unit(client, sensor_entities) -> None:
+async def test_sensor_without_unit(
+    client: ClientSessionGenerator, sensor_entities: dict[str, er.RegistryEntry]
+) -> None:
     """Test prometheus metrics for sensors without a unit."""
     body = await generate_latest_metrics(client)
 
@@ -205,7 +255,9 @@ async def test_sensor_without_unit(client, sensor_entities) -> None:
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_sensor_device_class(client, sensor_entities) -> None:
+async def test_sensor_device_class(
+    client: ClientSessionGenerator, sensor_entities: dict[str, er.RegistryEntry]
+) -> None:
     """Test prometheus metrics for sensor with a device_class."""
     body = await generate_latest_metrics(client)
 
@@ -233,9 +285,17 @@ async def test_sensor_device_class(client, sensor_entities) -> None:
         'friendly_name="Radio Energy"} 14.0' in body
     )
 
+    assert (
+        'sensor_timestamp_seconds{domain="sensor",'
+        'entity="sensor.timestamp",'
+        'friendly_name="Timestamp"} 1.691445808136036e+09' in body
+    )
+
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_input_number(client, input_number_entities) -> None:
+async def test_input_number(
+    client: ClientSessionGenerator, input_number_entities: dict[str, er.RegistryEntry]
+) -> None:
     """Test prometheus metrics for input_number."""
     body = await generate_latest_metrics(client)
 
@@ -259,7 +319,35 @@ async def test_input_number(client, input_number_entities) -> None:
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_battery(client, sensor_entities) -> None:
+async def test_number(
+    client: ClientSessionGenerator, number_entities: dict[str, er.RegistryEntry]
+) -> None:
+    """Test prometheus metrics for number."""
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'number_state{domain="number",'
+        'entity="number.threshold",'
+        'friendly_name="Threshold"} 5.2' in body
+    )
+
+    assert (
+        'number_state{domain="number",'
+        'entity="number.brightness",'
+        'friendly_name="None"} 60.0' in body
+    )
+
+    assert (
+        'number_state_celsius{domain="number",'
+        'entity="number.target_temperature",'
+        'friendly_name="Target temperature"} 22.7' in body
+    )
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_battery(
+    client: ClientSessionGenerator, sensor_entities: dict[str, er.RegistryEntry]
+) -> None:
     """Test prometheus metrics for battery."""
     body = await generate_latest_metrics(client)
 
@@ -271,7 +359,10 @@ async def test_battery(client, sensor_entities) -> None:
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_climate(client, climate_entities) -> None:
+async def test_climate(
+    client: ClientSessionGenerator,
+    climate_entities: dict[str, er.RegistryEntry | dict[str, Any]],
+) -> None:
     """Test prometheus metrics for climate entities."""
     body = await generate_latest_metrics(client)
 
@@ -307,7 +398,10 @@ async def test_climate(client, climate_entities) -> None:
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_humidifier(client, humidifier_entities) -> None:
+async def test_humidifier(
+    client: ClientSessionGenerator,
+    humidifier_entities: dict[str, er.RegistryEntry | dict[str, Any]],
+) -> None:
     """Test prometheus metrics for humidifier entities."""
     body = await generate_latest_metrics(client)
 
@@ -338,7 +432,10 @@ async def test_humidifier(client, humidifier_entities) -> None:
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_attributes(client, switch_entities) -> None:
+async def test_attributes(
+    client: ClientSessionGenerator,
+    switch_entities: dict[str, er.RegistryEntry | dict[str, Any]],
+) -> None:
     """Test prometheus metrics for entity attributes."""
     body = await generate_latest_metrics(client)
 
@@ -368,7 +465,9 @@ async def test_attributes(client, switch_entities) -> None:
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_binary_sensor(client, binary_sensor_entities) -> None:
+async def test_binary_sensor(
+    client: ClientSessionGenerator, binary_sensor_entities: dict[str, er.RegistryEntry]
+) -> None:
     """Test prometheus metrics for binary_sensor."""
     body = await generate_latest_metrics(client)
 
@@ -386,7 +485,9 @@ async def test_binary_sensor(client, binary_sensor_entities) -> None:
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_input_boolean(client, input_boolean_entities) -> None:
+async def test_input_boolean(
+    client: ClientSessionGenerator, input_boolean_entities: dict[str, er.RegistryEntry]
+) -> None:
     """Test prometheus metrics for input_boolean."""
     body = await generate_latest_metrics(client)
 
@@ -404,7 +505,9 @@ async def test_input_boolean(client, input_boolean_entities) -> None:
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_light(client, light_entities) -> None:
+async def test_light(
+    client: ClientSessionGenerator, light_entities: dict[str, er.RegistryEntry]
+) -> None:
     """Test prometheus metrics for lights."""
     body = await generate_latest_metrics(client)
 
@@ -432,9 +535,17 @@ async def test_light(client, light_entities) -> None:
         'friendly_name="PC"} 70.58823529411765' in body
     )
 
+    assert (
+        'light_brightness_percent{domain="light",'
+        'entity="light.hallway",'
+        'friendly_name="Hallway"} 100.0' in body
+    )
+
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_lock(client, lock_entities) -> None:
+async def test_lock(
+    client: ClientSessionGenerator, lock_entities: dict[str, er.RegistryEntry]
+) -> None:
     """Test prometheus metrics for lock."""
     body = await generate_latest_metrics(client)
 
@@ -452,7 +563,9 @@ async def test_lock(client, lock_entities) -> None:
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_cover(client, cover_entities) -> None:
+async def test_cover(
+    client: ClientSessionGenerator, cover_entities: dict[str, er.RegistryEntry]
+) -> None:
     """Test prometheus metrics for cover."""
     data = {**cover_entities}
     body = await generate_latest_metrics(client)
@@ -511,7 +624,28 @@ async def test_cover(client, cover_entities) -> None:
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_counter(client, counter_entities) -> None:
+async def test_device_tracker(
+    client: ClientSessionGenerator, device_tracker_entities: dict[str, er.RegistryEntry]
+) -> None:
+    """Test prometheus metrics for device_tracker."""
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'device_tracker_state{domain="device_tracker",'
+        'entity="device_tracker.phone",'
+        'friendly_name="Phone"} 1.0' in body
+    )
+    assert (
+        'device_tracker_state{domain="device_tracker",'
+        'entity="device_tracker.watch",'
+        'friendly_name="Watch"} 0.0' in body
+    )
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_counter(
+    client: ClientSessionGenerator, counter_entities: dict[str, er.RegistryEntry]
+) -> None:
     """Test prometheus metrics for counter."""
     body = await generate_latest_metrics(client)
 
@@ -523,12 +657,31 @@ async def test_counter(client, counter_entities) -> None:
 
 
 @pytest.mark.parametrize("namespace", [""])
+async def test_update(
+    client: ClientSessionGenerator, update_entities: dict[str, er.RegistryEntry]
+) -> None:
+    """Test prometheus metrics for update."""
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'update_state{domain="update",'
+        'entity="update.firmware",'
+        'friendly_name="Firmware"} 1.0' in body
+    )
+    assert (
+        'update_state{domain="update",'
+        'entity="update.addon",'
+        'friendly_name="Addon"} 0.0' in body
+    )
+
+
+@pytest.mark.parametrize("namespace", [""])
 async def test_renaming_entity_name(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    client,
-    sensor_entities,
-    climate_entities,
+    client: ClientSessionGenerator,
+    sensor_entities: dict[str, er.RegistryEntry],
+    climate_entities: dict[str, er.RegistryEntry | dict[str, Any]],
 ) -> None:
     """Test renaming entity name."""
     data = {**sensor_entities, **climate_entities}
@@ -652,9 +805,9 @@ async def test_renaming_entity_name(
 async def test_renaming_entity_id(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    client,
-    sensor_entities,
-    climate_entities,
+    client: ClientSessionGenerator,
+    sensor_entities: dict[str, er.RegistryEntry],
+    climate_entities: dict[str, er.RegistryEntry | dict[str, Any]],
 ) -> None:
     """Test renaming entity id."""
     data = {**sensor_entities, **climate_entities}
@@ -732,9 +885,9 @@ async def test_renaming_entity_id(
 async def test_deleting_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    client,
-    sensor_entities,
-    climate_entities,
+    client: ClientSessionGenerator,
+    sensor_entities: dict[str, er.RegistryEntry],
+    climate_entities: dict[str, er.RegistryEntry | dict[str, Any]],
 ) -> None:
     """Test deleting a entity."""
     data = {**sensor_entities, **climate_entities}
@@ -811,9 +964,9 @@ async def test_deleting_entity(
 async def test_disabling_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    client,
-    sensor_entities,
-    climate_entities,
+    client: ClientSessionGenerator,
+    sensor_entities: dict[str, er.RegistryEntry],
+    climate_entities: dict[str, er.RegistryEntry | dict[str, Any]],
 ) -> None:
     """Test disabling a entity."""
     data = {**sensor_entities, **climate_entities}
@@ -898,6 +1051,126 @@ async def test_disabling_entity(
         'entity_available{domain="sensor",'
         'entity="sensor.outside_humidity",'
         'friendly_name="Outside Humidity"} 1.0' in body
+    )
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_entity_becomes_unavailable_with_export(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client: ClientSessionGenerator,
+    sensor_entities: dict[str, er.RegistryEntry],
+) -> None:
+    """Test an entity that becomes unavailable is still exported."""
+    data = {**sensor_entities}
+
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'sensor_temperature_celsius{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 15.6' in body
+    )
+
+    assert (
+        'state_change_total{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 1.0' in body
+    )
+
+    assert (
+        'entity_available{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 1.0' in body
+    )
+
+    assert (
+        'sensor_humidity_percent{domain="sensor",'
+        'entity="sensor.outside_humidity",'
+        'friendly_name="Outside Humidity"} 54.0' in body
+    )
+
+    assert (
+        'state_change_total{domain="sensor",'
+        'entity="sensor.outside_humidity",'
+        'friendly_name="Outside Humidity"} 1.0' in body
+    )
+
+    assert (
+        'entity_available{domain="sensor",'
+        'entity="sensor.outside_humidity",'
+        'friendly_name="Outside Humidity"} 1.0' in body
+    )
+
+    # Make sensor_1 unavailable.
+    set_state_with_entry(
+        hass, data["sensor_1"], STATE_UNAVAILABLE, data["sensor_1_attributes"]
+    )
+
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+
+    # Check that only the availability changed on sensor_1.
+    assert (
+        'sensor_temperature_celsius{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 15.6' in body
+    )
+
+    assert (
+        'state_change_total{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 2.0' in body
+    )
+
+    assert (
+        'entity_available{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 0.0' in body
+    )
+
+    # The other sensor should be unchanged.
+    assert (
+        'sensor_humidity_percent{domain="sensor",'
+        'entity="sensor.outside_humidity",'
+        'friendly_name="Outside Humidity"} 54.0' in body
+    )
+
+    assert (
+        'state_change_total{domain="sensor",'
+        'entity="sensor.outside_humidity",'
+        'friendly_name="Outside Humidity"} 1.0' in body
+    )
+
+    assert (
+        'entity_available{domain="sensor",'
+        'entity="sensor.outside_humidity",'
+        'friendly_name="Outside Humidity"} 1.0' in body
+    )
+
+    # Bring sensor_1 back and check that it is correct.
+    set_state_with_entry(hass, data["sensor_1"], 200.0, data["sensor_1_attributes"])
+
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'sensor_temperature_celsius{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 200.0' in body
+    )
+
+    assert (
+        'state_change_total{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 3.0' in body
+    )
+
+    assert (
+        'entity_available{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 1.0' in body
     )
 
 
@@ -1033,6 +1306,16 @@ async def sensor_fixture(
     set_state_with_entry(hass, sensor_11, 50)
     data["sensor_11"] = sensor_11
 
+    sensor_12 = entity_registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="sensor_12",
+        original_device_class=SensorDeviceClass.TIMESTAMP,
+        suggested_object_id="Timestamp",
+        original_name="Timestamp",
+    )
+    set_state_with_entry(hass, sensor_12, "2023-08-07T15:03:28.136036-0700")
+    data["sensor_12"] = sensor_12
     await hass.async_block_till_done()
     return data
 
@@ -1243,7 +1526,7 @@ async def cover_fixture(
         suggested_object_id="position_shade",
         original_name="Position Shade",
     )
-    cover_position_attributes = {cover.ATTR_POSITION: 50}
+    cover_position_attributes = {cover.ATTR_CURRENT_POSITION: 50}
     set_state_with_entry(hass, cover_position, STATE_OPEN, cover_position_attributes)
     data["cover_position"] = cover_position
 
@@ -1254,7 +1537,7 @@ async def cover_fixture(
         suggested_object_id="tilt_position_shade",
         original_name="Tilt Position Shade",
     )
-    cover_tilt_position_attributes = {cover.ATTR_TILT_POSITION: 50}
+    cover_tilt_position_attributes = {cover.ATTR_CURRENT_TILT_POSITION: 50}
     set_state_with_entry(
         hass, cover_tilt_position, STATE_OPEN, cover_tilt_position_attributes
     )
@@ -1299,6 +1582,46 @@ async def input_number_fixture(
     )
     set_state_with_entry(hass, input_number_3, 22.7)
     data["input_number_3"] = input_number_3
+
+    await hass.async_block_till_done()
+    return data
+
+
+@pytest.fixture(name="number_entities")
+async def number_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry]:
+    """Simulate number entities."""
+    data = {}
+    number_1 = entity_registry.async_get_or_create(
+        domain=number.DOMAIN,
+        platform="test",
+        unique_id="number_1",
+        suggested_object_id="threshold",
+        original_name="Threshold",
+    )
+    set_state_with_entry(hass, number_1, 5.2)
+    data["number_1"] = number_1
+
+    number_2 = entity_registry.async_get_or_create(
+        domain=number.DOMAIN,
+        platform="test",
+        unique_id="number_2",
+        suggested_object_id="brightness",
+    )
+    set_state_with_entry(hass, number_2, 60)
+    data["number_2"] = number_2
+
+    number_3 = entity_registry.async_get_or_create(
+        domain=number.DOMAIN,
+        platform="test",
+        unique_id="number_3",
+        suggested_object_id="target_temperature",
+        original_name="Target temperature",
+        unit_of_measurement=UnitOfTemperature.CELSIUS,
+    )
+    set_state_with_entry(hass, number_3, 22.7)
+    data["number_3"] = number_3
 
     await hass.async_block_till_done()
     return data
@@ -1414,6 +1737,19 @@ async def light_fixture(
     data["light_4"] = light_4
     data["light_4_attributes"] = light_4_attributes
 
+    light_5 = entity_registry.async_get_or_create(
+        domain=light.DOMAIN,
+        platform="test",
+        unique_id="light_5",
+        suggested_object_id="hallway",
+        original_name="Hallway",
+    )
+    # Light is on, but brightness is unset; expect metrics to report
+    # brightness of 100%.
+    light_5_attributes = {light.ATTR_BRIGHTNESS: None}
+    set_state_with_entry(hass, light_5, STATE_ON, light_5_attributes)
+    data["light_5"] = light_5
+    data["light_5_attributes"] = light_5_attributes
     await hass.async_block_till_done()
     return data
 
@@ -1531,6 +1867,36 @@ async def counter_fixture(
     return data
 
 
+@pytest.fixture(name="update_entities")
+async def update_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry]:
+    """Simulate update entities."""
+    data = {}
+    update_1 = entity_registry.async_get_or_create(
+        domain=update.DOMAIN,
+        platform="test",
+        unique_id="update_1",
+        suggested_object_id="firmware",
+        original_name="Firmware",
+    )
+    set_state_with_entry(hass, update_1, STATE_ON)
+    data["update_1"] = update_1
+
+    update_2 = entity_registry.async_get_or_create(
+        domain=update.DOMAIN,
+        platform="test",
+        unique_id="update_2",
+        suggested_object_id="addon",
+        original_name="Addon",
+    )
+    set_state_with_entry(hass, update_2, STATE_OFF)
+    data["update_2"] = update_2
+
+    await hass.async_block_till_done()
+    return data
+
+
 def set_state_with_entry(
     hass: HomeAssistant,
     entry: er.RegistryEntry,
@@ -1568,30 +1934,21 @@ def mock_client_fixture():
         yield counter_client
 
 
-@pytest.fixture
-def mock_bus(hass):
-    """Mock the event bus listener."""
-    hass.bus.listen = mock.MagicMock()
-
-
-@pytest.mark.usefixtures("mock_bus")
-async def test_minimal_config(hass: HomeAssistant, mock_client) -> None:
+async def test_minimal_config(hass: HomeAssistant, mock_client: mock.MagicMock) -> None:
     """Test the minimal config and defaults of component."""
     config = {prometheus.DOMAIN: {}}
     assert await async_setup_component(hass, prometheus.DOMAIN, config)
     await hass.async_block_till_done()
-    assert hass.bus.listen.called
-    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
 
 
-@pytest.mark.usefixtures("mock_bus")
-async def test_full_config(hass: HomeAssistant, mock_client) -> None:
+async def test_full_config(hass: HomeAssistant, mock_client: mock.MagicMock) -> None:
     """Test the full config of component."""
     config = {
         prometheus.DOMAIN: {
             "namespace": "ns",
             "default_metric": "m",
             "override_metric": "m",
+            "requires_auth": False,
             "component_config": {"fake.test": {"override_metric": "km"}},
             "component_config_glob": {"fake.time_*": {"override_metric": "h"}},
             "component_config_domain": {"climate": {"override_metric": "°C"}},
@@ -1607,35 +1964,18 @@ async def test_full_config(hass: HomeAssistant, mock_client) -> None:
     }
     assert await async_setup_component(hass, prometheus.DOMAIN, config)
     await hass.async_block_till_done()
-    assert hass.bus.listen.called
-    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
 
 
-def make_event(entity_id):
-    """Make a mock event for test."""
-    domain = split_entity_id(entity_id)[0]
-    state = mock.MagicMock(
-        state="not blank",
-        domain=domain,
-        entity_id=entity_id,
-        object_id="entity",
-        attributes={},
-    )
-    return mock.MagicMock(data={"new_state": state}, time_fired=12345)
-
-
-async def _setup(hass, filter_config):
+async def _setup(hass: HomeAssistant, filter_config):
     """Shared set up for filtering tests."""
     config = {prometheus.DOMAIN: {"filter": filter_config}}
     assert await async_setup_component(hass, prometheus.DOMAIN, config)
     await hass.async_block_till_done()
-    return hass.bus.listen.call_args_list[0][0][1]
 
 
-@pytest.mark.usefixtures("mock_bus")
-async def test_allowlist(hass: HomeAssistant, mock_client) -> None:
+async def test_allowlist(hass: HomeAssistant, mock_client: mock.MagicMock) -> None:
     """Test an allowlist only config."""
-    handler_method = await _setup(
+    await _setup(
         hass,
         {
             "include_domains": ["fake"],
@@ -1654,18 +1994,17 @@ async def test_allowlist(hass: HomeAssistant, mock_client) -> None:
     ]
 
     for test in tests:
-        event = make_event(test.id)
-        handler_method(event)
+        hass.states.async_set(test.id, "not blank")
+        await hass.async_block_till_done()
 
         was_called = mock_client.labels.call_count == 1
         assert test.should_pass == was_called
         mock_client.labels.reset_mock()
 
 
-@pytest.mark.usefixtures("mock_bus")
-async def test_denylist(hass: HomeAssistant, mock_client) -> None:
+async def test_denylist(hass: HomeAssistant, mock_client: mock.MagicMock) -> None:
     """Test a denylist only config."""
-    handler_method = await _setup(
+    await _setup(
         hass,
         {
             "exclude_domains": ["fake"],
@@ -1684,18 +2023,19 @@ async def test_denylist(hass: HomeAssistant, mock_client) -> None:
     ]
 
     for test in tests:
-        event = make_event(test.id)
-        handler_method(event)
+        hass.states.async_set(test.id, "not blank")
+        await hass.async_block_till_done()
 
         was_called = mock_client.labels.call_count == 1
         assert test.should_pass == was_called
         mock_client.labels.reset_mock()
 
 
-@pytest.mark.usefixtures("mock_bus")
-async def test_filtered_denylist(hass: HomeAssistant, mock_client) -> None:
+async def test_filtered_denylist(
+    hass: HomeAssistant, mock_client: mock.MagicMock
+) -> None:
     """Test a denylist config with a filtering allowlist."""
-    handler_method = await _setup(
+    await _setup(
         hass,
         {
             "include_entities": ["fake.included", "test.excluded_test"],
@@ -1715,8 +2055,8 @@ async def test_filtered_denylist(hass: HomeAssistant, mock_client) -> None:
     ]
 
     for test in tests:
-        event = make_event(test.id)
-        handler_method(event)
+        hass.states.async_set(test.id, "not blank")
+        await hass.async_block_till_done()
 
         was_called = mock_client.labels.call_count == 1
         assert test.should_pass == was_called

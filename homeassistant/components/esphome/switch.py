@@ -1,4 +1,5 @@
 """Support for ESPHome switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -11,7 +12,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
-from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .entity import (
+    EsphomeEntity,
+    convert_api_error_ha_error,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 
 
 async def async_setup_entry(
@@ -22,7 +28,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="switch",
         info_type=SwitchInfo,
         entity_type=EsphomeSwitch,
         state_type=SwitchState,
@@ -48,10 +53,12 @@ class EsphomeSwitch(EsphomeEntity[SwitchInfo, SwitchState], SwitchEntity):
         """Return true if the switch is on."""
         return self._state.state
 
+    @convert_api_error_ha_error
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self._client.switch_command(self._key, True)
+        self._client.switch_command(self._key, True)
 
+    @convert_api_error_ha_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self._client.switch_command(self._key, False)
+        self._client.switch_command(self._key, False)

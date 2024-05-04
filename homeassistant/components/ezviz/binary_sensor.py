@@ -1,4 +1,5 @@
 """Support for EZVIZ binary sensors."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -22,9 +23,13 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
         device_class=BinarySensorDeviceClass.MOTION,
     ),
     "alarm_schedules_enabled": BinarySensorEntityDescription(
-        key="alarm_schedules_enabled"
+        key="alarm_schedules_enabled",
+        translation_key="alarm_schedules_enabled",
     ),
-    "encrypted": BinarySensorEntityDescription(key="encrypted"),
+    "encrypted": BinarySensorEntityDescription(
+        key="encrypted",
+        translation_key="encrypted",
+    ),
 }
 
 
@@ -59,7 +64,6 @@ class EzvizBinarySensor(EzvizEntity, BinarySensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator, serial)
         self._sensor_name = binary_sensor
-        self._attr_name = f"{self._camera_name} {binary_sensor.title()}"
         self._attr_unique_id = f"{serial}_{self._camera_name}.{binary_sensor}"
         self.entity_description = BINARY_SENSOR_TYPES[binary_sensor]
 

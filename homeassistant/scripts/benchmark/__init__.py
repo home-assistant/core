@@ -1,4 +1,5 @@
 """Script to run benchmarks."""
+
 from __future__ import annotations
 
 import argparse
@@ -49,7 +50,7 @@ def run(args):
 
 async def run_benchmark(bench):
     """Run a benchmark."""
-    hass = core.HomeAssistant()
+    hass = core.HomeAssistant("")
     runtime = await bench(hass)
     print(f"Benchmark {bench.__name__} done in {runtime}s")
     await hass.async_stop()
@@ -96,7 +97,7 @@ async def fire_events_with_filter(hass):
     events_to_fire = 10**6
 
     @core.callback
-    def event_filter(event):
+    def event_filter(event_data):
         """Filter event."""
         return False
 

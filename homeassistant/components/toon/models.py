@@ -1,9 +1,10 @@
 """DataUpdate Coordinator, and base Entity and Device models for Toon."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -151,7 +152,7 @@ class ToonBoilerDeviceEntity(ToonEntity):
         )
 
 
-@dataclass
+@dataclass(frozen=True)
 class ToonRequiredKeysMixin:
     """Mixin for required keys."""
 

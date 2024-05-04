@@ -1,9 +1,10 @@
 """Type definitions for 1-Wire integration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 
 
 @dataclass
@@ -15,4 +16,4 @@ class OWDeviceDescription:
     family: str
     id: str
     path: str
-    type: str
+    type: str | None

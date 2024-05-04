@@ -1,7 +1,8 @@
 """Support for esphome sensors."""
+
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 import math
 
 from aioesphomeapi import (
@@ -25,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
-from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 from .enum_mapper import EsphomeEnumMapper
 
 
@@ -37,7 +38,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="sensor",
         info_type=SensorInfo,
         entity_type=EsphomeSensor,
         state_type=SensorState,
@@ -46,22 +46,21 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="text_sensor",
         info_type=TextSensorInfo,
         entity_type=EsphomeTextSensor,
         state_type=TextSensorState,
     )
 
 
-_STATE_CLASSES: EsphomeEnumMapper[
-    EsphomeSensorStateClass, SensorStateClass | None
-] = EsphomeEnumMapper(
-    {
-        EsphomeSensorStateClass.NONE: None,
-        EsphomeSensorStateClass.MEASUREMENT: SensorStateClass.MEASUREMENT,
-        EsphomeSensorStateClass.TOTAL_INCREASING: SensorStateClass.TOTAL_INCREASING,
-        EsphomeSensorStateClass.TOTAL: SensorStateClass.TOTAL,
-    }
+_STATE_CLASSES: EsphomeEnumMapper[EsphomeSensorStateClass, SensorStateClass | None] = (
+    EsphomeEnumMapper(
+        {
+            EsphomeSensorStateClass.NONE: None,
+            EsphomeSensorStateClass.MEASUREMENT: SensorStateClass.MEASUREMENT,
+            EsphomeSensorStateClass.TOTAL_INCREASING: SensorStateClass.TOTAL_INCREASING,
+            EsphomeSensorStateClass.TOTAL: SensorStateClass.TOTAL,
+        }
+    )
 )
 
 
@@ -74,7 +73,10 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         super()._on_static_info_update(static_info)
         static_info = self._static_info
         self._attr_force_update = static_info.force_update
-        self._attr_native_unit_of_measurement = static_info.unit_of_measurement
+        # protobuf doesn't support nullable strings so we need to check
+        # if the string is empty
+        if unit_of_measurement := static_info.unit_of_measurement:
+            self._attr_native_unit_of_measurement = unit_of_measurement
         self._attr_device_class = try_parse_enum(
             SensorDeviceClass, static_info.device_class
         )
@@ -95,7 +97,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
     def native_value(self) -> datetime | str | None:
         """Return the state of the entity."""
         state = self._state
-        if math.isnan(state.state) or state.missing_state:
+        if state.missing_state or not math.isfinite(state.state):
             return None
         if self._attr_device_class == SensorDeviceClass.TIMESTAMP:
             return dt_util.utc_from_timestamp(state.state)
@@ -105,9 +107,27 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
 class EsphomeTextSensor(EsphomeEntity[TextSensorInfo, TextSensorState], SensorEntity):
     """A text sensor implementation for ESPHome."""
 
+    @callback
+    def _on_static_info_update(self, static_info: EntityInfo) -> None:
+        """Set attrs from static info."""
+        super()._on_static_info_update(static_info)
+        static_info = self._static_info
+        self._attr_device_class = try_parse_enum(
+            SensorDeviceClass, static_info.device_class
+        )
+
     @property
     @esphome_state_property
-    def native_value(self) -> str | None:
+    def native_value(self) -> str | datetime | date | None:
         """Return the state of the entity."""
         state = self._state
-        return None if state.missing_state else state.state
+        if state.missing_state:
+            return None
+        if self._attr_device_class is SensorDeviceClass.TIMESTAMP:
+            return dt_util.parse_datetime(state.state)
+        if (
+            self._attr_device_class is SensorDeviceClass.DATE
+            and (value := dt_util.parse_datetime(state.state)) is not None
+        ):
+            return value.date()
+        return state.state

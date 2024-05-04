@@ -1,4 +1,5 @@
 """Dormakaba dKey integration sensor platform."""
+
 from __future__ import annotations
 
 from py_dormakaba_dkey import DKEYLock
@@ -22,7 +23,6 @@ from .models import DormakabaDkeyData
 BINARY_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key="battery_level",
-        name="Battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,

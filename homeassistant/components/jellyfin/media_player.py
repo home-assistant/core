@@ -1,4 +1,5 @@
 """Support for the Jellyfin media player."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -13,7 +14,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import parse_datetime
 
@@ -90,6 +91,7 @@ class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
                 sw_version=self.app_version,
                 via_device=(DOMAIN, coordinator.server_id),
             )
+            self._attr_name = None
         else:
             self._attr_device_info = None
             self._attr_has_entity_name = False
@@ -148,7 +150,9 @@ class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
             media_content_type = CONTENT_TYPE_MAP.get(self.now_playing["Type"], None)
             media_content_id = self.now_playing["Id"]
             media_title = self.now_playing["Name"]
-            media_duration = int(self.now_playing["RunTimeTicks"] / 10000000)
+
+            if "RunTimeTicks" in self.now_playing:
+                media_duration = int(self.now_playing["RunTimeTicks"] / 10000000)
 
             if media_content_type == MediaType.EPISODE:
                 media_content_type = MediaType.TVSHOW

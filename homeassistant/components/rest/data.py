@@ -1,4 +1,5 @@
 """Support for RESTful API."""
+
 from __future__ import annotations
 
 import logging
@@ -55,6 +56,10 @@ class RestData:
         self.last_exception: Exception | None = None
         self.headers: httpx.Headers | None = None
 
+    def set_payload(self, payload: str) -> None:
+        """Set request data."""
+        self._request_data = payload
+
     @property
     def url(self) -> str:
         """Get url."""
@@ -81,7 +86,7 @@ class RestData:
                     "REST xml result could not be parsed and converted to JSON"
                 )
             else:
-                _LOGGER.debug("JSON converted from XML: %s", self.data)
+                _LOGGER.debug("JSON converted from XML: %s", value)
         return value
 
     async def async_update(self, log_errors: bool = True) -> None:

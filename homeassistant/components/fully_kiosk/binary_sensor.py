@@ -1,4 +1,5 @@
 """Fully Kiosk Browser sensor."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -18,18 +19,18 @@ from .entity import FullyKioskEntity
 SENSORS: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="kioskMode",
-        name="Kiosk mode",
+        translation_key="kiosk_mode",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
         key="plugged",
-        name="Plugged in",
+        translation_key="plugged_in",
         device_class=BinarySensorDeviceClass.PLUG,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
         key="isDeviceAdmin",
-        name="Device admin",
+        translation_key="device_admin",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )

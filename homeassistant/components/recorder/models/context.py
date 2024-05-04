@@ -1,4 +1,5 @@
 """Models for Recorder."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -17,8 +18,8 @@ def ulid_to_bytes_or_none(ulid: str | None) -> bytes | None:
         return None
     try:
         return ulid_to_bytes(ulid)
-    except ValueError as ex:
-        _LOGGER.error("Error converting ulid %s to bytes: %s", ulid, ex, exc_info=True)
+    except ValueError:
+        _LOGGER.exception("Error converting ulid %s to bytes", ulid)
         return None
 
 
@@ -28,10 +29,8 @@ def bytes_to_ulid_or_none(_bytes: bytes | None) -> str | None:
         return None
     try:
         return bytes_to_ulid(_bytes)
-    except ValueError as ex:
-        _LOGGER.error(
-            "Error converting bytes %s to ulid: %s", _bytes, ex, exc_info=True
-        )
+    except ValueError:
+        _LOGGER.exception("Error converting bytes %s to ulid", _bytes)
         return None
 
 

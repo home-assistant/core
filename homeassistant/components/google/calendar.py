@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from datetime import datetime, timedelta
+import itertools
 import logging
 from typing import Any, cast
 
@@ -18,6 +19,7 @@ from gcal_sync.model import AccessRole, DateOrDatetime, Event
 from gcal_sync.store import ScopedCalendarStore
 from gcal_sync.sync import CalendarEventSyncManager
 from gcal_sync.timeline import Timeline
+from ical.iter import SortableItemValue
 
 from homeassistant.components.calendar import (
     CREATE_EVENT_SCHEMA,
@@ -36,7 +38,7 @@ from homeassistant.components.calendar import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITIES, CONF_NAME, CONF_OFFSET
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import entity_platform, entity_registry as er
 from homeassistant.helpers.entity import generate_entity_id
@@ -76,6 +78,9 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
+# Maximum number of upcoming events to consider for state changes between
+# coordinator updates.
+MAX_UPCOMING_EVENTS = 20
 
 # Avoid syncing super old data on initial syncs. Note that old but active
 # recurring events are still included.
@@ -240,10 +245,27 @@ async def async_setup_entry(
             SERVICE_CREATE_EVENT,
             CREATE_EVENT_SCHEMA,
             async_create_event,
+            required_features=CalendarEntityFeature.CREATE_EVENT,
         )
 
 
-class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
+def _truncate_timeline(timeline: Timeline, max_events: int) -> Timeline:
+    """Truncate the timeline to a maximum number of events.
+
+    This is used to avoid repeated expansion of recurring events during
+    state machine updates.
+    """
+    upcoming = timeline.active_after(dt_util.now())
+    truncated = list(itertools.islice(upcoming, max_events))
+    return Timeline(
+        [
+            SortableItemValue(event.timespan_of(dt_util.DEFAULT_TIME_ZONE), event)
+            for event in truncated
+        ]
+    )
+
+
+class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):  # pylint: disable=hass-enforce-coordinator-module
     """Coordinator for calendar RPC calls that use an efficient sync."""
 
     config_entry: ConfigEntry
@@ -262,6 +284,7 @@ class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
             update_interval=MIN_TIME_BETWEEN_UPDATES,
         )
         self.sync = sync
+        self._upcoming_timeline: Timeline | None = None
 
     async def _async_update_data(self) -> Timeline:
         """Fetch data from API endpoint."""
@@ -270,9 +293,11 @@ class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
         except ApiException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-        return await self.sync.store_service.async_get_timeline(
+        timeline = await self.sync.store_service.async_get_timeline(
             dt_util.DEFAULT_TIME_ZONE
         )
+        self._upcoming_timeline = _truncate_timeline(timeline, MAX_UPCOMING_EVENTS)
+        return timeline
 
     async def async_get_events(
         self, start_date: datetime, end_date: datetime
@@ -290,12 +315,12 @@ class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
     @property
     def upcoming(self) -> Iterable[Event] | None:
         """Return upcoming events if any."""
-        if self.data:
-            return self.data.active_after(dt_util.now())
+        if self._upcoming_timeline:
+            return self._upcoming_timeline.active_after(dt_util.now())
         return None
 
 
-class CalendarQueryUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
+class CalendarQueryUpdateCoordinator(DataUpdateCoordinator[list[Event]]):  # pylint: disable=hass-enforce-coordinator-module
     """Coordinator for calendar RPC calls.
 
     This sends a polling RPC, not using sync, as a workaround
@@ -383,7 +408,6 @@ class GoogleCalendarEntity(
         self._event: CalendarEvent | None = None
         self._attr_name = data[CONF_NAME].capitalize()
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
-        self._offset_value: timedelta | None = None
         self.entity_id = entity_id
         self._attr_unique_id = unique_id
         self._attr_entity_registry_enabled_default = entity_enabled
@@ -393,17 +417,6 @@ class GoogleCalendarEntity(
             )
 
     @property
-    def should_poll(self) -> bool:
-        """Enable polling for the entity.
-
-        The coordinator is not used by multiple entities, but instead
-        is used to poll the calendar API at a separate interval from the
-        entity state updates itself which happen more frequently (e.g. to
-        fire an alarm when the next event starts).
-        """
-        return True
-
-    @property
     def extra_state_attributes(self) -> dict[str, bool]:
         """Return the device state attributes."""
         return {"offset_reached": self.offset_reached}
@@ -411,16 +424,16 @@ class GoogleCalendarEntity(
     @property
     def offset_reached(self) -> bool:
         """Return whether or not the event offset was reached."""
-        if self._event and self._offset_value:
-            return is_offset_reached(
-                self._event.start_datetime_local, self._offset_value
-            )
+        (event, offset_value) = self._event_with_offset()
+        if event is not None and offset_value is not None:
+            return is_offset_reached(event.start_datetime_local, offset_value)
         return False
 
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        return self._event
+        (event, _) = self._event_with_offset()
+        return event
 
     def _event_filter(self, event: Event) -> bool:
         """Return True if the event is visible."""
@@ -435,12 +448,10 @@ class GoogleCalendarEntity(
         # We do not ask for an update with async_add_entities()
         # because it will update disabled entities. This is started as a
         # task to let if sync in the background without blocking startup
-        async def refresh() -> None:
-            await self.coordinator.async_request_refresh()
-            self._apply_coordinator_update()
-
         self.coordinator.config_entry.async_create_background_task(
-            self.hass, refresh(), "google.calendar-refresh"
+            self.hass,
+            self.coordinator.async_request_refresh(),
+            "google.calendar-refresh",
         )
 
     async def async_get_events(
@@ -453,8 +464,10 @@ class GoogleCalendarEntity(
             for event in filter(self._event_filter, result_items)
         ]
 
-    def _apply_coordinator_update(self) -> None:
-        """Copy state from the coordinator to this entity."""
+    def _event_with_offset(
+        self,
+    ) -> tuple[CalendarEvent | None, timedelta | None]:
+        """Get the calendar event and offset if any."""
         if api_event := next(
             filter(
                 self._event_filter,
@@ -462,27 +475,13 @@ class GoogleCalendarEntity(
             ),
             None,
         ):
-            self._event = _get_calendar_event(api_event)
-            (self._event.summary, self._offset_value) = extract_offset(
-                self._event.summary, self._offset
-            )
-        else:
-            self._event = None
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._apply_coordinator_update()
-        super()._handle_coordinator_update()
-
-    async def async_update(self) -> None:
-        """Disable update behavior.
-
-        This relies on the coordinator callback update to write home assistant
-        state with the next calendar event. This update is a no-op as no new data
-        fetch is needed to evaluate the state to determine if the next event has
-        started, handled by CalendarEntity parent class.
-        """
+            event = _get_calendar_event(api_event)
+            if self._offset:
+                (event.summary, offset_value) = extract_offset(
+                    event.summary, self._offset
+                )
+            return event, offset_value
+        return None, None
 
     async def async_create_event(self, **kwargs: Any) -> None:
         """Add a new event to calendar."""
@@ -546,8 +545,13 @@ class GoogleCalendarEntity(
 def _get_calendar_event(event: Event) -> CalendarEvent:
     """Return a CalendarEvent from an API event."""
     rrule: str | None = None
-    if len(event.recurrence) == 1:
-        rrule = event.recurrence[0].lstrip(RRULE_PREFIX)
+    # Home Assistant expects a single RRULE: and all other rule types are unsupported or ignored
+    if (
+        len(event.recurrence) == 1
+        and (raw_rule := event.recurrence[0])
+        and raw_rule.startswith(RRULE_PREFIX)
+    ):
+        rrule = raw_rule.removeprefix(RRULE_PREFIX)
     return CalendarEvent(
         uid=event.ical_uuid,
         recurrence_id=event.id if event.recurring_event_id else None,

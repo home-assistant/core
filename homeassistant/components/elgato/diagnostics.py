@@ -1,4 +1,5 @@
 """Diagnostics support for Elgato."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -16,6 +17,6 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator: ElgatoDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     return {
-        "info": coordinator.data.info.dict(),
-        "state": coordinator.data.state.dict(),
+        "info": coordinator.data.info.to_dict(),
+        "state": coordinator.data.state.to_dict(),
     }

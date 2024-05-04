@@ -1,4 +1,5 @@
 """Constants for the Jellyfin integration."""
+
 import logging
 from typing import Final
 

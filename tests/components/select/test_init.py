@@ -1,4 +1,5 @@
 """The tests for the Select component."""
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -17,7 +18,10 @@ from homeassistant.components.select import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
+
+from tests.common import setup_test_component_platform
 
 
 class MockSelectEntity(SelectEntity):
@@ -89,11 +93,11 @@ async def test_select(hass: HomeAssistant) -> None:
 
 
 async def test_custom_integration_and_validation(
-    hass: HomeAssistant, enable_custom_integrations: None
+    hass: HomeAssistant,
+    mock_select_entities: list[MockSelectEntity],
 ) -> None:
     """Test we can only select valid options."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_select_entities)
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -111,8 +115,8 @@ async def test_custom_integration_and_validation(
     await hass.async_block_till_done()
     assert hass.states.get("select.select_1").state == "option 2"
 
-    # test ValueError trigger
-    with pytest.raises(ValueError):
+    # test ServiceValidationError trigger
+    with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SELECT_OPTION,
@@ -120,11 +124,14 @@ async def test_custom_integration_and_validation(
             blocking=True,
         )
     await hass.async_block_till_done()
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "not_valid_option"
+
     assert hass.states.get("select.select_1").state == "option 2"
 
     assert hass.states.get("select.select_2").state == STATE_UNKNOWN
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SELECT_OPTION,

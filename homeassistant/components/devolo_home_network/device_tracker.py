@@ -1,4 +1,5 @@
 """Platform for device tracker integration."""
+
 from __future__ import annotations
 
 from devolo_plc_api.device import Device
@@ -27,9 +28,9 @@ async def async_setup_entry(
 ) -> None:
     """Get all devices and sensors and setup them via config entry."""
     device: Device = hass.data[DOMAIN][entry.entry_id]["device"]
-    coordinators: dict[
-        str, DataUpdateCoordinator[list[ConnectedStationInfo]]
-    ] = hass.data[DOMAIN][entry.entry_id]["coordinators"]
+    coordinators: dict[str, DataUpdateCoordinator[list[ConnectedStationInfo]]] = (
+        hass.data[DOMAIN][entry.entry_id]["coordinators"]
+    )
     registry = er.async_get(hass)
     tracked = set()
 

@@ -1,4 +1,5 @@
 """Utilities to help convert mp4s to fmp4s."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -91,7 +92,7 @@ def get_codec_string(mp4_bytes: bytes) -> str:
                 stsd_box[112:116], byteorder="big"
             )
             reverse = 0
-            for i in range(0, 32):
+            for i in range(32):
                 reverse |= general_profile_compatibility & 1
                 if i == 31:
                     break
@@ -151,7 +152,7 @@ def find_moov(mp4_io: BufferedIOBase) -> int:
     while 1:
         mp4_io.seek(index)
         box_header = mp4_io.read(8)
-        if len(box_header) != 8:
+        if len(box_header) != 8 or box_header[0:4] == b"\x00\x00\x00\x00":
             raise HomeAssistantError("moov atom not found")
         if box_header[4:8] == b"moov":
             return index
@@ -169,7 +170,7 @@ def read_init(bytes_io: BufferedIOBase) -> bytes:
 
 ZERO32 = b"\x00\x00\x00\x00"
 ONE32 = b"\x00\x01\x00\x00"
-NEGONE32 = b"\xFF\xFF\x00\x00"
+NEGONE32 = b"\xff\xff\x00\x00"
 XYW_ROW = ZERO32 + ZERO32 + b"\x40\x00\x00\x00"
 ROTATE_RIGHT = (ZERO32 + ONE32 + ZERO32) + (NEGONE32 + ZERO32 + ZERO32)
 ROTATE_LEFT = (ZERO32 + NEGONE32 + ZERO32) + (ONE32 + ZERO32 + ZERO32)

@@ -1,4 +1,5 @@
 """Support for control of ElkM1 lighting (X10, UPB, etc)."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -14,6 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ElkEntity, create_elk_entities
 from .const import DOMAIN
+from .models import ELKM1Data
 
 
 async def async_setup_entry(
@@ -22,9 +24,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Elk light platform."""
-    elk_data = hass.data[DOMAIN][config_entry.entry_id]
+    elk_data: ELKM1Data = hass.data[DOMAIN][config_entry.entry_id]
+    elk = elk_data.elk
     entities: list[ElkEntity] = []
-    elk = elk_data["elk"]
     create_elk_entities(elk_data, elk.lights, "plc", ElkLight, entities)
     async_add_entities(entities)
 
@@ -36,7 +38,7 @@ class ElkLight(ElkEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _element: Light
 
-    def __init__(self, element: Element, elk: Elk, elk_data: dict[str, Any]) -> None:
+    def __init__(self, element: Element, elk: Elk, elk_data: ELKM1Data) -> None:
         """Initialize the Elk light."""
         super().__init__(element, elk, elk_data)
         self._brightness = self._element.status

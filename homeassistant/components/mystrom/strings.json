@@ -5,6 +5,9 @@
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your myStrom device."
         }
       }
     },
@@ -15,10 +18,11 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The myStrom YAML configuration is being removed",
-      "description": "Configuring myStrom using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the myStrom YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+  "entity": {
+    "sensor": {
+      "avg_consumption": {
+        "name": "Average consumption"
+      }
     }
   }
 }

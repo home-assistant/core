@@ -1,8 +1,9 @@
 """The tests for Fan device actions."""
+
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.fan import DOMAIN
 from homeassistant.const import EntityCategory
@@ -35,7 +36,7 @@ async def test_get_actions(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
     expected_actions = []
@@ -44,7 +45,7 @@ async def test_get_actions(
             "domain": DOMAIN,
             "type": action,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
         for action in ["turn_on", "turn_off", "toggle"]
@@ -57,12 +58,12 @@ async def test_get_actions(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_actions_hidden_auxiliary(
     hass: HomeAssistant,
@@ -78,7 +79,7 @@ async def test_get_actions_hidden_auxiliary(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -92,7 +93,7 @@ async def test_get_actions_hidden_auxiliary(
             "domain": DOMAIN,
             "type": action,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
         for action in ["turn_on", "turn_off", "toggle"]
@@ -103,8 +104,22 @@ async def test_get_actions_hidden_auxiliary(
     assert actions == unordered(expected_actions)
 
 
-async def test_action(hass: HomeAssistant) -> None:
+async def test_action(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test for turn_on and turn_off actions."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -117,8 +132,8 @@ async def test_action(hass: HomeAssistant) -> None:
                     },
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "abcdefgh",
-                        "entity_id": "fan.entity",
+                        "device_id": device_entry.id,
+                        "entity_id": entry.id,
                         "type": "turn_off",
                     },
                 },
@@ -129,8 +144,8 @@ async def test_action(hass: HomeAssistant) -> None:
                     },
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "abcdefgh",
-                        "entity_id": "fan.entity",
+                        "device_id": device_entry.id,
+                        "entity_id": entry.id,
                         "type": "turn_on",
                     },
                 },
@@ -141,8 +156,8 @@ async def test_action(hass: HomeAssistant) -> None:
                     },
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "abcdefgh",
-                        "entity_id": "fan.entity",
+                        "device_id": device_entry.id,
+                        "entity_id": entry.id,
                         "type": "toggle",
                     },
                 },
@@ -157,6 +172,7 @@ async def test_action(hass: HomeAssistant) -> None:
     hass.bus.async_fire("test_event_turn_off")
     await hass.async_block_till_done()
     assert len(turn_off_calls) == 1
+    assert turn_off_calls[0].data["entity_id"] == entry.entity_id
     assert len(turn_on_calls) == 0
     assert len(toggle_calls) == 0
 
@@ -164,6 +180,7 @@ async def test_action(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(turn_off_calls) == 1
     assert len(turn_on_calls) == 1
+    assert turn_on_calls[0].data["entity_id"] == entry.entity_id
     assert len(toggle_calls) == 0
 
     hass.bus.async_fire("test_event_toggle")
@@ -171,3 +188,48 @@ async def test_action(hass: HomeAssistant) -> None:
     assert len(turn_off_calls) == 1
     assert len(turn_on_calls) == 1
     assert len(toggle_calls) == 1
+    assert toggle_calls[0].data["entity_id"] == entry.entity_id
+
+
+async def test_action_legacy(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test for turn_on and turn_off actions."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event_turn_off",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "entity_id": entry.entity_id,
+                        "type": "turn_off",
+                    },
+                },
+            ]
+        },
+    )
+
+    turn_off_calls = async_mock_service(hass, "fan", "turn_off")
+
+    hass.bus.async_fire("test_event_turn_off")
+    await hass.async_block_till_done()
+    assert len(turn_off_calls) == 1

@@ -1,4 +1,5 @@
 """Tests for the devolo Home Control integration."""
+
 from unittest.mock import patch
 
 from devolo_home_control_api.exceptions.gateway import GatewayOfflineError
@@ -65,6 +66,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 async def test_remove_device(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test removing a device."""
     assert await async_setup_component(hass, "config", {})
@@ -77,20 +79,11 @@ async def test_remove_device(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        device_registry = dr.async_get(hass)
         device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "Test")})
         assert device_entry
 
         client = await hass_ws_client(hass)
-        await client.send_json(
-            {
-                "id": 1,
-                "type": "config/device_registry/remove_config_entry",
-                "config_entry_id": entry.entry_id,
-                "device_id": device_entry.id,
-            }
-        )
-        response = await client.receive_json()
+        response = await client.remove_device(device_entry.id, entry.entry_id)
         assert response["success"]
         assert device_registry.async_get_device(identifiers={(DOMAIN, "Test")}) is None
         assert hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test") is None

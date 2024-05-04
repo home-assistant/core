@@ -1,4 +1,5 @@
 """The Nibe Heat Pump sensors."""
+
 from __future__ import annotations
 
 from nibe.coil import Coil, CoilData
@@ -16,6 +17,7 @@ from homeassistant.const import (
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfFrequency,
     UnitOfPower,
     UnitOfTemperature,
     UnitOfTime,
@@ -23,7 +25,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, CoilEntity, Coordinator
+from .const import DOMAIN
+from .coordinator import CoilEntity, Coordinator
 
 UNIT_DESCRIPTIONS = {
     "°C": SensorEntityDescription(
@@ -109,6 +112,13 @@ UNIT_DESCRIPTIONS = {
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfTime.HOURS,
+    ),
+    "Hz": SensorEntityDescription(
+        key="Hz",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
     ),
 }
 

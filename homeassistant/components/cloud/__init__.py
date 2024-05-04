@@ -1,15 +1,21 @@
 """Component to integrate the Home Assistant cloud."""
+
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 from enum import Enum
+from typing import cast
+from urllib.parse import quote_plus, urljoin
 
 from hass_nabucasa import Cloud
 import voluptuous as vol
 
-from homeassistant.components import alexa, google_assistant
+from homeassistant.components import alexa, google_assistant, http
+from homeassistant.components.auth import STRICT_CONNECTION_URL
+from homeassistant.components.http.auth import async_sign_path
+from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import (
     CONF_DESCRIPTION,
     CONF_MODE,
@@ -18,8 +24,21 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HassJob, HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import (
+    Event,
+    HassJob,
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    Unauthorized,
+    UnknownUser,
+)
 from homeassistant.helpers import config_validation as cv, entityfilter
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
@@ -28,9 +47,11 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util.signal_type import SignalType
 
 from . import account_link, http_api
 from .client import CloudClient
@@ -47,11 +68,11 @@ from .const import (
     CONF_FILTER,
     CONF_GOOGLE_ACTIONS,
     CONF_RELAYER_SERVER,
-    CONF_REMOTE_SNI_SERVER,
     CONF_REMOTESTATE_SERVER,
     CONF_SERVICEHANDLERS_SERVER,
     CONF_THINGTALK_SERVER,
     CONF_USER_POOL_ID,
+    DATA_PLATFORMS_SETUP,
     DOMAIN,
     MODE_DEV,
     MODE_PROD,
@@ -62,10 +83,14 @@ from .subscription import async_subscription_info
 
 DEFAULT_MODE = MODE_PROD
 
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.STT, Platform.TTS]
+
 SERVICE_REMOTE_CONNECT = "remote_connect"
 SERVICE_REMOTE_DISCONNECT = "remote_disconnect"
 
-SIGNAL_CLOUD_CONNECTION_STATE = "CLOUD_CONNECTION_STATE"
+SIGNAL_CLOUD_CONNECTION_STATE: SignalType[CloudConnectionState] = SignalType(
+    "CLOUD_CONNECTION_STATE"
+)
 
 STARTUP_REPAIR_DELAY = 1  # 1 hour
 
@@ -115,7 +140,6 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_ALEXA_SERVER): str,
                 vol.Optional(CONF_CLOUDHOOK_SERVER): str,
                 vol.Optional(CONF_RELAYER_SERVER): str,
-                vol.Optional(CONF_REMOTE_SNI_SERVER): str,
                 vol.Optional(CONF_REMOTESTATE_SERVER): str,
                 vol.Optional(CONF_THINGTALK_SERVER): str,
                 vol.Optional(CONF_SERVICEHANDLERS_SERVER): str,
@@ -172,6 +196,22 @@ def async_listen_connection_change(
 def async_active_subscription(hass: HomeAssistant) -> bool:
     """Test if user has an active subscription."""
     return async_is_logged_in(hass) and not hass.data[DOMAIN].subscription_expired
+
+
+async def async_get_or_create_cloudhook(hass: HomeAssistant, webhook_id: str) -> str:
+    """Get or create a cloudhook."""
+    if not async_is_connected(hass):
+        raise CloudNotConnected
+
+    if not async_is_logged_in(hass):
+        raise CloudNotAvailable
+
+    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    cloudhooks = cloud.client.cloudhooks
+    if hook := cloudhooks.get(webhook_id):
+        return cast(str, hook["cloudhook_url"])
+
+    return await async_create_cloudhook(hass, webhook_id)
 
 
 @bind_hass
@@ -242,18 +282,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
     _remote_handle_prefs_updated(cloud)
-
-    async def _service_handler(service: ServiceCall) -> None:
-        """Handle service for cloud."""
-        if service.service == SERVICE_REMOTE_CONNECT:
-            await prefs.async_update(remote_enabled=True)
-        elif service.service == SERVICE_REMOTE_DISCONNECT:
-            await prefs.async_update(remote_enabled=False)
-
-    async_register_admin_service(hass, DOMAIN, SERVICE_REMOTE_CONNECT, _service_handler)
-    async_register_admin_service(
-        hass, DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler
-    )
+    _setup_services(hass, prefs)
 
     async def async_startup_repairs(_: datetime) -> None:
         """Create repair issues after startup."""
@@ -264,9 +293,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async_manage_legacy_subscription_issue(hass, subscription_info)
 
     loaded = False
+    stt_platform_loaded = asyncio.Event()
+    tts_platform_loaded = asyncio.Event()
+    stt_tts_entities_added = asyncio.Event()
+    hass.data[DATA_PLATFORMS_SETUP] = {
+        Platform.STT: stt_platform_loaded,
+        Platform.TTS: tts_platform_loaded,
+        "stt_tts_entities_added": stt_tts_entities_added,
+    }
 
     async def _on_start() -> None:
-        """Discover platforms."""
+        """Handle cloud started after login."""
         nonlocal loaded
 
         # Prevent multiple discovery
@@ -274,15 +311,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return
         loaded = True
 
-        stt_platform_loaded = asyncio.Event()
-        tts_platform_loaded = asyncio.Event()
-        stt_info = {"platform_loaded": stt_platform_loaded}
-        tts_info = {"platform_loaded": tts_platform_loaded}
-
-        await async_load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
-        await async_load_platform(hass, Platform.STT, DOMAIN, stt_info, config)
-        await async_load_platform(hass, Platform.TTS, DOMAIN, tts_info, config)
-        await asyncio.gather(stt_platform_loaded.wait(), tts_platform_loaded.wait())
+        await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SYSTEM}
+        )
 
     async def _on_connect() -> None:
         """Handle cloud connect."""
@@ -306,9 +337,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     cloud.register_on_initialized(_on_initialized)
 
     await cloud.initialize()
-    await http_api.async_setup(hass)
+    http_api.async_setup(hass)
 
     account_link.async_setup(hass)
+
+    # Load legacy tts platform for backwards compatibility.
+    hass.async_create_task(
+        async_load_platform(
+            hass,
+            Platform.TTS,
+            DOMAIN,
+            {"platform_loaded": tts_platform_loaded},
+            config,
+        ),
+        eager_start=True,
+    )
 
     async_call_later(
         hass=hass,
@@ -342,3 +385,83 @@ def _remote_handle_prefs_updated(cloud: Cloud[CloudClient]) -> None:
                 await cloud.remote.disconnect()
 
     cloud.client.prefs.async_listen_updates(remote_prefs_updated)
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up a config entry."""
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    stt_tts_entities_added: asyncio.Event = hass.data[DATA_PLATFORMS_SETUP][
+        "stt_tts_entities_added"
+    ]
+    stt_tts_entities_added.set()
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+@callback
+def _setup_services(hass: HomeAssistant, prefs: CloudPreferences) -> None:
+    """Set up services for cloud component."""
+
+    async def _service_handler(service: ServiceCall) -> None:
+        """Handle service for cloud."""
+        if service.service == SERVICE_REMOTE_CONNECT:
+            await prefs.async_update(remote_enabled=True)
+        elif service.service == SERVICE_REMOTE_DISCONNECT:
+            await prefs.async_update(remote_enabled=False)
+
+    async_register_admin_service(hass, DOMAIN, SERVICE_REMOTE_CONNECT, _service_handler)
+    async_register_admin_service(
+        hass, DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler
+    )
+
+    async def create_temporary_strict_connection_url(
+        call: ServiceCall,
+    ) -> ServiceResponse:
+        """Create a strict connection url and return it."""
+        # Copied form homeassistant/helpers/service.py#_async_admin_handler
+        # as the helper supports no responses yet
+        if call.context.user_id:
+            user = await hass.auth.async_get_user(call.context.user_id)
+            if user is None:
+                raise UnknownUser(context=call.context)
+            if not user.is_admin:
+                raise Unauthorized(context=call.context)
+
+        if prefs.strict_connection is http.const.StrictConnectionMode.DISABLED:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="strict_connection_not_enabled",
+            )
+
+        try:
+            url = get_url(hass, require_cloud=True)
+        except NoURLAvailableError as ex:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_url_available",
+            ) from ex
+
+        path = async_sign_path(
+            hass,
+            STRICT_CONNECTION_URL,
+            timedelta(hours=1),
+            use_content_user=True,
+        )
+        url = urljoin(url, path)
+
+        return {
+            "url": f"https://login.home-assistant.io?u={quote_plus(url)}",
+            "direct_url": url,
+        }
+
+    hass.services.async_register(
+        DOMAIN,
+        "create_temporary_strict_connection_url",
+        create_temporary_strict_connection_url,
+        supports_response=SupportsResponse.ONLY,
+    )

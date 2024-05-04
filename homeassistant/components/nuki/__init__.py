@@ -1,14 +1,16 @@
 """The nuki component."""
+
 from __future__ import annotations
 
+import asyncio
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import timedelta
 from http import HTTPStatus
 import logging
 from typing import Generic, TypeVar
 
 from aiohttp import web
-import async_timeout
 from pynuki import NukiBridge, NukiLock, NukiOpener
 from pynuki.bridge import InvalidCredentialsException
 from pynuki.device import NukiDevice
@@ -30,6 +32,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -37,15 +40,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import (
-    DATA_BRIDGE,
-    DATA_COORDINATOR,
-    DATA_LOCKS,
-    DATA_OPENERS,
-    DEFAULT_TIMEOUT,
-    DOMAIN,
-    ERROR_STATES,
-)
+from .const import CONF_ENCRYPT_TOKEN, DEFAULT_TIMEOUT, DOMAIN, ERROR_STATES
 from .helpers import NukiWebhookException, parse_id
 
 _NukiDeviceT = TypeVar("_NukiDeviceT", bound=NukiDevice)
@@ -54,6 +49,16 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
 UPDATE_INTERVAL = timedelta(seconds=30)
+
+
+@dataclass(slots=True)
+class NukiEntryData:
+    """Class to hold Nuki data."""
+
+    coordinator: NukiCoordinator
+    bridge: NukiBridge
+    locks: list[NukiLock]
+    openers: list[NukiOpener]
 
 
 def _get_bridge_devices(bridge: NukiBridge) -> tuple[list[NukiLock], list[NukiOpener]]:
@@ -73,14 +78,15 @@ async def _create_webhook(
         except ValueError:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
 
-        locks = hass.data[DOMAIN][entry.entry_id][DATA_LOCKS]
-        openers = hass.data[DOMAIN][entry.entry_id][DATA_OPENERS]
+        entry_data: NukiEntryData = hass.data[DOMAIN][entry.entry_id]
+        locks = entry_data.locks
+        openers = entry_data.openers
 
         devices = [x for x in locks + openers if x.nuki_id == data["nukiId"]]
         if len(devices) == 1:
             devices[0].update_from_callback(data)
 
-        coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
+        coordinator = entry_data.coordinator
         coordinator.async_set_updated_data(None)
 
         return web.Response(status=HTTPStatus.OK)
@@ -125,7 +131,7 @@ async def _create_webhook(
         ir.async_delete_issue(hass, DOMAIN, "https_webhook")
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 await hass.async_add_executor_job(
                     _register_webhook, bridge, entry.entry_id, url
                 )
@@ -183,7 +189,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_HOST],
             entry.data[CONF_TOKEN],
             entry.data[CONF_PORT],
-            True,
+            entry.data.get(CONF_ENCRYPT_TOKEN, True),
             DEFAULT_TIMEOUT,
         )
 
@@ -204,6 +210,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name=f"Nuki Bridge {bridge_id}",
         model="Hardware Bridge",
         sw_version=info["versions"]["firmwareVersion"],
+        serial_number=parse_id(info["ids"]["hardwareId"]),
     )
 
     try:
@@ -215,7 +222,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Stop and remove the Nuki webhook."""
         webhook.async_unregister(hass, entry.entry_id)
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 await hass.async_add_executor_job(
                     _remove_webhook, bridge, entry.entry_id
                 )
@@ -231,13 +238,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     coordinator = NukiCoordinator(hass, bridge, locks, openers)
-
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_COORDINATOR: coordinator,
-        DATA_BRIDGE: bridge,
-        DATA_LOCKS: locks,
-        DATA_OPENERS: openers,
-    }
+    hass.data[DOMAIN][entry.entry_id] = NukiEntryData(
+        coordinator=coordinator,
+        bridge=bridge,
+        locks=locks,
+        openers=openers,
+    )
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
@@ -250,11 +256,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload the Nuki entry."""
     webhook.async_unregister(hass, entry.entry_id)
+    entry_data: NukiEntryData = hass.data[DOMAIN][entry.entry_id]
+
     try:
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             await hass.async_add_executor_job(
                 _remove_webhook,
-                hass.data[DOMAIN][entry.entry_id][DATA_BRIDGE],
+                entry_data.bridge,
                 entry.entry_id,
             )
     except InvalidCredentialsException as err:
@@ -273,7 +281,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class NukiCoordinator(DataUpdateCoordinator[None]):
+class NukiCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
     """Data Update Coordinator for the Nuki integration."""
 
     def __init__(self, hass, bridge, locks, openers):
@@ -298,9 +306,9 @@ class NukiCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Fetch data from Nuki bridge."""
         try:
-            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
+            # Note: TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 events = await self.hass.async_add_executor_job(
                     self.update_devices, self.locks + self.openers
                 )
@@ -326,6 +334,7 @@ class NukiCoordinator(DataUpdateCoordinator[None]):
 
         Returns:
             A dict with the events to be fired. The event type is the key and the device ids are the value
+
         """
 
         events: dict[str, set[str]] = defaultdict(set)
@@ -368,13 +377,14 @@ class NukiEntity(CoordinatorEntity[NukiCoordinator], Generic[_NukiDeviceT]):
         self._nuki_device = nuki_device
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Device info for Nuki entities."""
-        return {
-            "identifiers": {(DOMAIN, parse_id(self._nuki_device.nuki_id))},
-            "name": self._nuki_device.name,
-            "manufacturer": "Nuki Home Solutions GmbH",
-            "model": self._nuki_device.device_model_str.capitalize(),
-            "sw_version": self._nuki_device.firmware_version,
-            "via_device": (DOMAIN, self.coordinator.bridge_id),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, parse_id(self._nuki_device.nuki_id))},
+            name=self._nuki_device.name,
+            manufacturer="Nuki Home Solutions GmbH",
+            model=self._nuki_device.device_model_str.capitalize(),
+            sw_version=self._nuki_device.firmware_version,
+            via_device=(DOMAIN, self.coordinator.bridge_id),
+            serial_number=parse_id(self._nuki_device.nuki_id),
+        )

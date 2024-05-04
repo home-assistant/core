@@ -1,4 +1,5 @@
 """The Panasonic Viera integration."""
+
 from functools import partial
 import logging
 from urllib.error import HTTPError, URLError
@@ -176,8 +177,8 @@ class Remote:
             self._control = None
             self.state = STATE_OFF
             self.available = self._on_action is not None
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.exception("An unknown error occurred: %s", err)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("An unknown error occurred")
             self._control = None
             self.state = STATE_OFF
             self.available = self._on_action is not None
@@ -246,9 +247,6 @@ class Remote:
         """Handle errors from func, set available and reconnect if needed."""
         try:
             result = await self._hass.async_add_executor_job(func, *args)
-            self.state = STATE_ON
-            self.available = True
-            return result
         except EncryptionRequired:
             _LOGGER.error(
                 "The connection couldn't be encrypted. Please reconfigure your TV"
@@ -259,12 +257,18 @@ class Remote:
             self.state = STATE_OFF
             self.available = True
             await self.async_create_remote_control()
+            return None
         except (URLError, OSError) as err:
             _LOGGER.debug("An error occurred: %s", err)
             self.state = STATE_OFF
             self.available = self._on_action is not None
             await self.async_create_remote_control()
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.exception("An unknown error occurred: %s", err)
+            return None
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("An unknown error occurred")
             self.state = STATE_OFF
             self.available = self._on_action is not None
+            return None
+        self.state = STATE_ON
+        self.available = True
+        return result

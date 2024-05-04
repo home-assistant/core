@@ -1,4 +1,5 @@
 """Support for Transport NSW (AU) to query next leave event."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -6,7 +7,12 @@ from datetime import timedelta
 from TransportNSW import TransportNSW
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.const import ATTR_MODE, CONF_API_KEY, CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -70,6 +76,8 @@ class TransportNSWSensor(SensorEntity):
     """Implementation of an Transport NSW sensor."""
 
     _attr_attribution = "Data provided by Transport NSW"
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, data, stop_id, name):
         """Initialize the sensor."""
@@ -121,6 +129,11 @@ class TransportNSWSensor(SensorEntity):
         self._icon = ICONS[self._times[ATTR_MODE]]
 
 
+def _get_value(value):
+    """Replace the API response 'n/a' value with None."""
+    return None if (value is None or value == "n/a") else value
+
+
 class PublicTransportData:
     """The Class for handling the data retrieval."""
 
@@ -132,10 +145,10 @@ class PublicTransportData:
         self._api_key = api_key
         self.info = {
             ATTR_ROUTE: self._route,
-            ATTR_DUE_IN: "n/a",
-            ATTR_DELAY: "n/a",
-            ATTR_REAL_TIME: "n/a",
-            ATTR_DESTINATION: "n/a",
+            ATTR_DUE_IN: None,
+            ATTR_DELAY: None,
+            ATTR_REAL_TIME: None,
+            ATTR_DESTINATION: None,
             ATTR_MODE: None,
         }
         self.tnsw = TransportNSW()
@@ -146,10 +159,10 @@ class PublicTransportData:
             self._stop_id, self._route, self._destination, self._api_key
         )
         self.info = {
-            ATTR_ROUTE: _data["route"],
-            ATTR_DUE_IN: _data["due"],
-            ATTR_DELAY: _data["delay"],
-            ATTR_REAL_TIME: _data["real_time"],
-            ATTR_DESTINATION: _data["destination"],
-            ATTR_MODE: _data["mode"],
+            ATTR_ROUTE: _get_value(_data["route"]),
+            ATTR_DUE_IN: _get_value(_data["due"]),
+            ATTR_DELAY: _get_value(_data["delay"]),
+            ATTR_REAL_TIME: _get_value(_data["real_time"]),
+            ATTR_DESTINATION: _get_value(_data["destination"]),
+            ATTR_MODE: _get_value(_data["mode"]),
         }

@@ -1,4 +1,5 @@
 """Database executor helpers."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -39,7 +40,6 @@ class DBInterruptibleThreadPoolExecutor(InterruptibleThreadPoolExecutor):
 
         # When the executor gets lost, the weakref callback will wake up
         # the worker threads.
-        # pylint: disable=invalid-name
         def weakref_cb(  # type: ignore[no-untyped-def]
             _: Any,
             q=self._work_queue,

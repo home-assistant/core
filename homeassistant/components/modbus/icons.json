@@ -1,0 +1,9 @@
+{
+  "services": {
+    "reload": "mdi:reload",
+    "write_coil": "mdi:pencil",
+    "write_register": "mdi:database-edit",
+    "stop": "mdi:stop",
+    "restart": "mdi:restart"
+  }
+}

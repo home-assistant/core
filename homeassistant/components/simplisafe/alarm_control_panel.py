@@ -1,4 +1,5 @@
 """Support for SimpliSafe alarm control panels."""
+
 from __future__ import annotations
 
 from simplipy.errors import SimplipyError
@@ -13,7 +14,7 @@ from simplipy.websocket import (
     EVENT_ARMED_HOME,
     EVENT_AWAY_EXIT_DELAY_BY_KEYPAD,
     EVENT_AWAY_EXIT_DELAY_BY_REMOTE,
-    EVENT_DISARMED_BY_MASTER_PIN,
+    EVENT_DISARMED_BY_KEYPAD,
     EVENT_DISARMED_BY_REMOTE,
     EVENT_ENTRY_DELAY,
     EVENT_HOME_EXIT_DELAY,
@@ -86,7 +87,7 @@ STATE_MAP_FROM_WEBSOCKET_EVENT = {
     EVENT_ARMED_HOME: STATE_ALARM_ARMED_HOME,
     EVENT_AWAY_EXIT_DELAY_BY_KEYPAD: STATE_ALARM_ARMING,
     EVENT_AWAY_EXIT_DELAY_BY_REMOTE: STATE_ALARM_ARMING,
-    EVENT_DISARMED_BY_MASTER_PIN: STATE_ALARM_DISARMED,
+    EVENT_DISARMED_BY_KEYPAD: STATE_ALARM_DISARMED,
     EVENT_DISARMED_BY_REMOTE: STATE_ALARM_DISARMED,
     EVENT_ENTRY_DELAY: STATE_ALARM_PENDING,
     EVENT_HOME_EXIT_DELAY: STATE_ALARM_ARMING,
@@ -103,7 +104,7 @@ WEBSOCKET_EVENTS_TO_LISTEN_FOR = (
     EVENT_ARMED_HOME,
     EVENT_AWAY_EXIT_DELAY_BY_KEYPAD,
     EVENT_AWAY_EXIT_DELAY_BY_REMOTE,
-    EVENT_DISARMED_BY_MASTER_PIN,
+    EVENT_DISARMED_BY_KEYPAD,
     EVENT_DISARMED_BY_REMOTE,
     EVENT_HOME_EXIT_DELAY,
 )
@@ -127,6 +128,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
+    _attr_name = None
 
     def __init__(self, simplisafe: SimpliSafe, system: SystemType) -> None:
         """Initialize the SimpliSafe alarm."""

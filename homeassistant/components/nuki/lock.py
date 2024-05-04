@@ -1,4 +1,5 @@
 """Nuki.io lock platform."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -16,15 +17,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import NukiCoordinator, NukiEntity
+from . import NukiEntity, NukiEntryData
 from .const import (
     ATTR_BATTERY_CRITICAL,
     ATTR_ENABLE,
     ATTR_NUKI_ID,
     ATTR_UNLATCH,
-    DATA_COORDINATOR,
-    DATA_LOCKS,
-    DATA_OPENERS,
     DOMAIN as NUKI_DOMAIN,
     ERROR_STATES,
 )
@@ -37,14 +35,14 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Nuki lock platform."""
-    data = hass.data[NUKI_DOMAIN][entry.entry_id]
-    coordinator: NukiCoordinator = data[DATA_COORDINATOR]
+    entry_data: NukiEntryData = hass.data[NUKI_DOMAIN][entry.entry_id]
+    coordinator = entry_data.coordinator
 
     entities: list[NukiDeviceEntity] = [
-        NukiLockEntity(coordinator, lock) for lock in data[DATA_LOCKS]
+        NukiLockEntity(coordinator, lock) for lock in entry_data.locks
     ]
     entities.extend(
-        [NukiOpenerEntity(coordinator, opener) for opener in data[DATA_OPENERS]]
+        [NukiOpenerEntity(coordinator, opener) for opener in entry_data.openers]
     )
     async_add_entities(entities)
 
@@ -72,12 +70,14 @@ class NukiDeviceEntity(NukiEntity[_NukiDeviceT], LockEntity):
     _attr_has_entity_name = True
     _attr_supported_features = LockEntityFeature.OPEN
     _attr_translation_key = "nuki_lock"
+    _attr_name = None
 
     @property
     def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._nuki_device.nuki_id
 
+    # Deprecated, can be removed in 2024.10
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""

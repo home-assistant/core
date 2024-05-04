@@ -1,0 +1,19 @@
+# serializer version: 1
+# name: test_as_dict
+  dict({
+    'data': dict({
+    }),
+    'disabled_by': None,
+    'domain': 'test',
+    'entry_id': 'mock-entry',
+    'minor_version': 1,
+    'options': dict({
+    }),
+    'pref_disable_new_entities': False,
+    'pref_disable_polling': False,
+    'source': 'user',
+    'title': 'Mock Title',
+    'unique_id': None,
+    'version': 1,
+  })
+# ---

@@ -8,7 +8,7 @@ from omnilogic import OmniLogic, OmniLogicException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -20,7 +20,7 @@ from .const import ALL_ITEM_KINDS, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class OmniLogicUpdateCoordinator(DataUpdateCoordinator[dict[tuple, dict[str, Any]]]):
+class OmniLogicUpdateCoordinator(DataUpdateCoordinator[dict[tuple, dict[str, Any]]]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching update data from single endpoint."""
 
     def __init__(
@@ -60,7 +60,7 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator[dict[tuple, dict[str, Any
 
             if "systemId" in item:
                 system_id = item["systemId"]
-                current_id = current_id + (item_kind, system_id)
+                current_id = (*current_id, item_kind, system_id)
                 data[current_id] = item
 
             for kind in ALL_ITEM_KINDS:
@@ -69,9 +69,7 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator[dict[tuple, dict[str, Any
 
             return data
 
-        parsed_data = get_item_data(data, "Backyard", (), parsed_data)
-
-        return parsed_data
+        return get_item_data(data, "Backyard", (), parsed_data)
 
 
 class OmniLogicEntity(CoordinatorEntity[OmniLogicUpdateCoordinator]):

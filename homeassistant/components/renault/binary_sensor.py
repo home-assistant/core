@@ -1,7 +1,7 @@
 """Support for Renault binary sensors."""
+
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 
 from renault_api.kamereon.enums import ChargeState, PlugState
@@ -12,45 +12,34 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
+from . import RenaultConfigEntry
 from .entity import RenaultDataEntity, RenaultDataEntityDescription
-from .renault_hub import RenaultHub
 
 
-@dataclass
-class RenaultBinarySensorRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class RenaultBinarySensorEntityDescription(
+    BinarySensorEntityDescription,
+    RenaultDataEntityDescription,
+):
+    """Class describing Renault binary sensor entities."""
 
     on_key: str
     on_value: StateType
 
 
-@dataclass
-class RenaultBinarySensorEntityDescription(
-    BinarySensorEntityDescription,
-    RenaultDataEntityDescription,
-    RenaultBinarySensorRequiredKeysMixin,
-):
-    """Class describing Renault binary sensor entities."""
-
-    icon_fn: Callable[[RenaultBinarySensor], str] | None = None
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RenaultConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Renault entities from config entry."""
-    proxy: RenaultHub = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[RenaultBinarySensor] = [
         RenaultBinarySensor(vehicle, description)
-        for vehicle in proxy.vehicles.values()
+        for vehicle in config_entry.runtime_data.vehicles.values()
         for description in BINARY_SENSOR_TYPES
         if description.coordinator in vehicle.coordinators
     ]
@@ -71,13 +60,6 @@ class RenaultBinarySensor(
             return None
         return data == self.entity_description.on_value
 
-    @property
-    def icon(self) -> str | None:
-        """Icon handling."""
-        if self.entity_description.icon_fn:
-            return self.entity_description.icon_fn(self)
-        return None
-
 
 BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
     [
@@ -87,7 +69,6 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
             device_class=BinarySensorDeviceClass.PLUG,
             on_key="plugStatus",
             on_value=PlugState.PLUGGED.value,
-            translation_key="plugged_in",
         ),
         RenaultBinarySensorEntityDescription(
             key="charging",
@@ -95,12 +76,10 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
             device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
             on_key="chargingStatus",
             on_value=ChargeState.CHARGE_IN_PROGRESS.value,
-            translation_key="charging",
         ),
         RenaultBinarySensorEntityDescription(
             key="hvac_status",
             coordinator="hvac_status",
-            icon_fn=lambda e: "mdi:fan" if e.is_on else "mdi:fan-off",
             on_key="hvacStatus",
             on_value="on",
             translation_key="hvac_status",
@@ -112,7 +91,6 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
             device_class=BinarySensorDeviceClass.LOCK,
             on_key="lockStatus",
             on_value="unlocked",
-            translation_key="lock_status",
         ),
         RenaultBinarySensorEntityDescription(
             key="hatch_status",

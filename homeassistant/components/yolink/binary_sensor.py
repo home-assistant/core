@@ -1,4 +1,5 @@
 """YoLink BinarySensor."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -28,7 +29,7 @@ from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class YoLinkBinarySensorEntityDescription(BinarySensorEntityDescription):
     """YoLink BinarySensorEntityDescription."""
 
@@ -49,44 +50,36 @@ SENSOR_DEVICE_TYPE = [
 SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
     YoLinkBinarySensorEntityDescription(
         key="door_state",
-        icon="mdi:door",
         device_class=BinarySensorDeviceClass.DOOR,
-        name="State",
         value=lambda value: value == "open" if value is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_DOOR_SENSOR,
     ),
     YoLinkBinarySensorEntityDescription(
         key="motion_state",
         device_class=BinarySensorDeviceClass.MOTION,
-        name="Motion",
         value=lambda value: value == "alert" if value is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_MOTION_SENSOR,
     ),
     YoLinkBinarySensorEntityDescription(
         key="leak_state",
-        name="Leak",
-        icon="mdi:water",
         device_class=BinarySensorDeviceClass.MOISTURE,
-        value=lambda value: value == "alert" if value is not None else None,
+        value=lambda value: value in ("alert", "full") if value is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_LEAK_SENSOR,
     ),
     YoLinkBinarySensorEntityDescription(
         key="vibration_state",
-        name="Vibration",
         device_class=BinarySensorDeviceClass.VIBRATION,
         value=lambda value: value == "alert" if value is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_VIBRATION_SENSOR,
     ),
     YoLinkBinarySensorEntityDescription(
         key="co_detected",
-        name="Co Detected",
         device_class=BinarySensorDeviceClass.CO,
         value=lambda state: state.get("gasAlarm"),
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_CO_SMOKE_SENSOR,
     ),
     YoLinkBinarySensorEntityDescription(
         key="smoke_detected",
-        name="Smoke Detected",
         device_class=BinarySensorDeviceClass.SMOKE,
         value=lambda state: state.get("smokeAlarm"),
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_CO_SMOKE_SENSOR,
@@ -106,16 +99,14 @@ async def async_setup_entry(
         for device_coordinator in device_coordinators.values()
         if device_coordinator.device.device_type in SENSOR_DEVICE_TYPE
     ]
-    entities = []
-    for binary_sensor_device_coordinator in binary_sensor_device_coordinators:
-        for description in SENSOR_TYPES:
-            if description.exists_fn(binary_sensor_device_coordinator.device):
-                entities.append(
-                    YoLinkBinarySensorEntity(
-                        config_entry, binary_sensor_device_coordinator, description
-                    )
-                )
-    async_add_entities(entities)
+    async_add_entities(
+        YoLinkBinarySensorEntity(
+            config_entry, binary_sensor_device_coordinator, description
+        )
+        for binary_sensor_device_coordinator in binary_sensor_device_coordinators
+        for description in SENSOR_TYPES
+        if description.exists_fn(binary_sensor_device_coordinator.device)
+    )
 
 
 class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
@@ -135,9 +126,6 @@ class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
         self._attr_unique_id = (
             f"{coordinator.device.device_id} {self.entity_description.key}"
         )
-        self._attr_name = (
-            f"{coordinator.device.device_name} ({self.entity_description.name})"
-        )
 
     @callback
     def update_entity_state(self, state: dict[str, Any]) -> None:
@@ -146,3 +134,8 @@ class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
             state.get(self.entity_description.state_key)
         )
         self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Return true is device is available."""
+        return super().available and self.coordinator.dev_online

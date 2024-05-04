@@ -1,17 +1,18 @@
 """Tests for the update coordinator."""
-import asyncio
-from datetime import timedelta
+
+from datetime import datetime, timedelta
 import logging
 from unittest.mock import AsyncMock, Mock, patch
 import urllib.error
 
 import aiohttp
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import requests
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import update_coordinator
 from homeassistant.util.dt import utcnow
@@ -21,7 +22,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 _LOGGER = logging.getLogger(__name__)
 
 KNOWN_ERRORS: list[tuple[Exception, type[Exception], str]] = [
-    (asyncio.TimeoutError(), asyncio.TimeoutError, "Timeout fetching test data"),
+    (TimeoutError(), TimeoutError, "Timeout fetching test data"),
     (
         requests.exceptions.Timeout(),
         requests.exceptions.Timeout,
@@ -62,14 +63,13 @@ def get_crd(
         calls += 1
         return calls
 
-    crd = update_coordinator.DataUpdateCoordinator[int](
+    return update_coordinator.DataUpdateCoordinator[int](
         hass,
         _LOGGER,
         name="test",
         update_method=refresh,
         update_interval=update_interval,
     )
-    return crd
 
 
 DEFAULT_UPDATE_INTERVAL = timedelta(seconds=10)
@@ -329,11 +329,14 @@ async def test_refresh_no_update_method(
 
 
 async def test_update_interval(
-    hass: HomeAssistant, crd: update_coordinator.DataUpdateCoordinator[int]
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    crd: update_coordinator.DataUpdateCoordinator[int],
 ) -> None:
     """Test update interval works."""
     # Test we don't update without subscriber
-    async_fire_time_changed(hass, utcnow() + crd.update_interval)
+    freezer.tick(crd.update_interval)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert crd.data is None
 
@@ -342,18 +345,21 @@ async def test_update_interval(
     unsub = crd.async_add_listener(update_callback)
 
     # Test twice we update with subscriber
-    async_fire_time_changed(hass, utcnow() + crd.update_interval)
+    freezer.tick(crd.update_interval)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert crd.data == 1
 
-    async_fire_time_changed(hass, utcnow() + crd.update_interval)
+    freezer.tick(crd.update_interval)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert crd.data == 2
 
     # Test removing listener
     unsub()
 
-    async_fire_time_changed(hass, utcnow() + crd.update_interval)
+    freezer.tick(crd.update_interval)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Test we stop updating after we lose last subscriber
@@ -499,7 +505,7 @@ async def test_stop_refresh_on_ha_stop(
 
     # Fire Home Assistant stop event
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    hass.state = CoreState.stopping
+    hass.set_state(CoreState.stopping)
     await hass.async_block_till_done()
 
     # Make sure no update with subscriber after stop event
@@ -594,3 +600,150 @@ async def test_async_set_update_error(
 
     # Remove callbacks to avoid lingering timers
     remove_callbacks()
+
+
+async def test_only_callback_on_change_when_always_update_is_false(
+    crd: update_coordinator.DataUpdateCoordinator[int], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we do not callback listeners unless something has actually changed when always_update is false."""
+    update_callback = Mock()
+    crd.always_update = False
+    remove_callbacks = crd.async_add_listener(update_callback)
+    mocked_data = None
+    mocked_exception = None
+
+    async def _update_method() -> int:
+        nonlocal mocked_data
+        nonlocal mocked_exception
+        if mocked_exception is not None:
+            raise mocked_exception
+        return mocked_data
+
+    crd.update_method = _update_method
+
+    mocked_data = {"a": 1}
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    mocked_data = {"a": 1}
+    await crd.async_refresh()
+    update_callback.assert_not_called()
+    update_callback.reset_mock()
+
+    mocked_data = None
+    mocked_exception = aiohttp.ClientError("Client Failure #1")
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    mocked_data = None
+    mocked_exception = aiohttp.ClientError("Client Failure #1")
+    await crd.async_refresh()
+    update_callback.assert_not_called()
+    update_callback.reset_mock()
+
+    mocked_exception = None
+    mocked_data = {"a": 1}
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    mocked_data = {"a": 1}
+    await crd.async_refresh()
+    update_callback.assert_not_called()
+    update_callback.reset_mock()
+
+    mocked_data = {"a": 2}
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    mocked_data = {"a": 2}
+    await crd.async_refresh()
+    update_callback.assert_not_called()
+    update_callback.reset_mock()
+
+    mocked_data = {"a": 2, "b": 3}
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    remove_callbacks()
+
+
+async def test_always_callback_when_always_update_is_true(
+    crd: update_coordinator.DataUpdateCoordinator[int], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we callback listeners even though the data is the same when always_update is True."""
+    update_callback = Mock()
+    remove_callbacks = crd.async_add_listener(update_callback)
+    mocked_data = None
+    mocked_exception = None
+
+    async def _update_method() -> int:
+        nonlocal mocked_data
+        nonlocal mocked_exception
+        if mocked_exception is not None:
+            raise mocked_exception
+        return mocked_data
+
+    crd.update_method = _update_method
+
+    mocked_data = {"a": 1}
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    mocked_data = {"a": 1}
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    # But still don't fire it if we are only getting
+    # failure over and over
+    mocked_data = None
+    mocked_exception = aiohttp.ClientError("Client Failure #1")
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    mocked_data = None
+    mocked_exception = aiohttp.ClientError("Client Failure #1")
+    await crd.async_refresh()
+    update_callback.assert_not_called()
+    update_callback.reset_mock()
+
+    remove_callbacks()
+
+
+async def test_timestamp_date_update_coordinator(hass: HomeAssistant) -> None:
+    """Test last_update_success_time is set before calling listeners."""
+    last_update_success_times: list[datetime | None] = []
+
+    async def refresh() -> int:
+        return 1
+
+    crd = update_coordinator.TimestampDataUpdateCoordinator[int](
+        hass,
+        _LOGGER,
+        name="test",
+        update_method=refresh,
+        update_interval=timedelta(seconds=10),
+    )
+
+    @callback
+    def listener():
+        last_update_success_times.append(crd.last_update_success_time)
+
+    unsub = crd.async_add_listener(listener)
+
+    await crd.async_refresh()
+
+    assert len(last_update_success_times) == 1
+    # Ensure the time is set before the listener is called
+    assert last_update_success_times != [None]
+
+    unsub()
+    await crd.async_refresh()
+    assert len(last_update_success_times) == 1

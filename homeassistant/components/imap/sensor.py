@@ -1,4 +1,5 @@
 """IMAP sensor support."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
@@ -9,8 +10,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -21,6 +21,8 @@ IMAP_MAIL_COUNT_DESCRIPTION = SensorEntityDescription(
     key="imap_mail_count",
     state_class=SensorStateClass.MEASUREMENT,
     suggested_display_precision=0,
+    translation_key="imap_mail_count",
+    name=None,
 )
 
 
@@ -41,9 +43,7 @@ class ImapSensor(
 ):
     """Representation of an IMAP sensor."""
 
-    _attr_icon = "mdi:email-outline"
     _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(
         self,

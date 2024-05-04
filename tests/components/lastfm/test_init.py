@@ -1,4 +1,5 @@
 """Test LastFM component setup process."""
+
 from __future__ import annotations
 
 from homeassistant.components.lastfm.const import DOMAIN
@@ -20,11 +21,11 @@ async def test_load_unload_entry(
     await setup_integration(config_entry, default_user)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    state = hass.states.get("sensor.testaccount1")
+    state = hass.states.get("sensor.lastfm_testaccount1")
     assert state
 
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.testaccount1")
+    state = hass.states.get("sensor.lastfm_testaccount1")
     assert not state

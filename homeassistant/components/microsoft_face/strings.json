@@ -1,0 +1,80 @@
+{
+  "services": {
+    "create_group": {
+      "name": "Create group",
+      "description": "Creates a new person group.",
+      "fields": {
+        "name": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "description": "Name of the group."
+        }
+      }
+    },
+    "create_person": {
+      "name": "Create person",
+      "description": "Creates a new person in the group.",
+      "fields": {
+        "group": {
+          "name": "Group",
+          "description": "Name of the group."
+        },
+        "name": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "description": "Name of the person."
+        }
+      }
+    },
+    "delete_group": {
+      "name": "Delete group",
+      "description": "Deletes a new person group.",
+      "fields": {
+        "name": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "description": "Name of the group."
+        }
+      }
+    },
+    "delete_person": {
+      "name": "Delete person",
+      "description": "Deletes a person in the group.",
+      "fields": {
+        "group": {
+          "name": "Group",
+          "description": "Name of the group."
+        },
+        "name": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "description": "[%key:component::microsoft_face::services::create_person::fields::name::description%]"
+        }
+      }
+    },
+    "face_person": {
+      "name": "Face person",
+      "description": "Adds a new picture to a person.",
+      "fields": {
+        "camera_entity": {
+          "name": "Camera entity",
+          "description": "Camera to take a picture."
+        },
+        "group": {
+          "name": "Group",
+          "description": "Name of the group."
+        },
+        "person": {
+          "name": "Person",
+          "description": "[%key:component::microsoft_face::services::create_person::fields::name::description%]"
+        }
+      }
+    },
+    "train_group": {
+      "name": "Train group",
+      "description": "Trains a person group.",
+      "fields": {
+        "group": {
+          "name": "Group",
+          "description": "Name of the group."
+        }
+      }
+    }
+  }
+}

@@ -1,7 +1,9 @@
 """Tests for the WLED number platform."""
+
 import json
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
@@ -16,7 +18,6 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed, load_fixture
 
@@ -113,6 +114,7 @@ async def test_numbers(
 )
 async def test_speed_dynamically_handle_segments(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_wled: MagicMock,
     entity_id_segment0: str,
     entity_id_segment1: str,
@@ -130,7 +132,8 @@ async def test_speed_dynamically_handle_segments(
         json.loads(load_fixture("wled/rgb.json"))
     )
 
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (segment0 := hass.states.get(entity_id_segment0))
@@ -140,7 +143,8 @@ async def test_speed_dynamically_handle_segments(
 
     # Test remove segment again...
     mock_wled.update.return_value = return_value
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (segment0 := hass.states.get(entity_id_segment0))

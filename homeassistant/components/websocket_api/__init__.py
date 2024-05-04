@@ -1,4 +1,5 @@
 """WebSocket based API for Home Assistant."""
+
 from __future__ import annotations
 
 from typing import Final, cast
@@ -17,6 +18,7 @@ from .const import (  # noqa: F401
     ERR_INVALID_FORMAT,
     ERR_NOT_FOUND,
     ERR_NOT_SUPPORTED,
+    ERR_SERVICE_VALIDATION_ERROR,
     ERR_TEMPLATE_ERROR,
     ERR_TIMEOUT,
     ERR_UNAUTHORIZED,

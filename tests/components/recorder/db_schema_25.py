@@ -1,4 +1,5 @@
 """Models for SQLAlchemy."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -39,7 +40,6 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 import homeassistant.util.dt as dt_util
 
 # SQLAlchemy Schema
-# pylint: disable=invalid-name
 Base = declarative_base()
 
 SCHEMA_VERSION = 25
@@ -489,13 +489,11 @@ class StatisticsRuns(Base):  # type: ignore[misc,valid-type]
 
 
 @overload
-def process_timestamp(ts: None) -> None:
-    ...
+def process_timestamp(ts: None) -> None: ...
 
 
 @overload
-def process_timestamp(ts: datetime) -> datetime:
-    ...
+def process_timestamp(ts: datetime) -> datetime: ...
 
 
 def process_timestamp(ts: datetime | None) -> datetime | None:
@@ -509,13 +507,11 @@ def process_timestamp(ts: datetime | None) -> datetime | None:
 
 
 @overload
-def process_timestamp_to_utc_isoformat(ts: None) -> None:
-    ...
+def process_timestamp_to_utc_isoformat(ts: None) -> None: ...
 
 
 @overload
-def process_timestamp_to_utc_isoformat(ts: datetime) -> str:
-    ...
+def process_timestamp_to_utc_isoformat(ts: datetime) -> str: ...
 
 
 def process_timestamp_to_utc_isoformat(ts: datetime | None) -> str | None:
@@ -657,7 +653,7 @@ class LazyState(State):
             "last_updated": last_updated_isoformat,
         }
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Return the comparison."""
         return (
             other.__class__ in [self.__class__, State]

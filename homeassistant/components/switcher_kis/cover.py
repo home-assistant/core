@@ -1,7 +1,7 @@
 """Switcher integration Cover platform."""
+
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -18,8 +18,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -55,6 +55,8 @@ class SwitcherCoverEntity(
 ):
     """Representation of a Switcher cover entity."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_device_class = CoverDeviceClass.SHUTTER
     _attr_supported_features = (
         CoverEntityFeature.OPEN
@@ -67,7 +69,6 @@ class SwitcherCoverEntity(
         """Initialize the entity."""
         super().__init__(coordinator)
 
-        self._attr_name = coordinator.name
         self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
@@ -97,10 +98,12 @@ class SwitcherCoverEntity(
 
         try:
             async with SwitcherType2Api(
-                self.coordinator.data.ip_address, self.coordinator.data.device_id
+                self.coordinator.data.ip_address,
+                self.coordinator.data.device_id,
+                self.coordinator.data.device_key,
             ) as swapi:
                 response = await getattr(swapi, api)(*args)
-        except (asyncio.TimeoutError, OSError, RuntimeError) as err:
+        except (TimeoutError, OSError, RuntimeError) as err:
             error = repr(err)
 
         if error or not response or not response.successful:
@@ -123,6 +126,6 @@ class SwitcherCoverEntity(
         """Move the cover to a specific position."""
         await self._async_call_api(API_SET_POSITON, kwargs[ATTR_POSITION])
 
-    async def async_stop_cover(self, **_kwargs: Any) -> None:
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._async_call_api(API_STOP)

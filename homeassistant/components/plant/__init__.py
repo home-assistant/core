@@ -1,4 +1,5 @@
 """Support for monitoring plants."""
+
 from collections import deque
 from contextlib import suppress
 from datetime import datetime, timedelta
@@ -19,7 +20,13 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -28,6 +35,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
+from . import group as group_pre_import  # noqa: F401
 from .const import (
     ATTR_DICT_OF_UNITS_OF_MEASUREMENT,
     ATTR_MAX_BRIGHTNESS_HISTORY,
@@ -176,15 +184,16 @@ class Plant(Entity):
         self._brightness_history = DailyHistory(self._conf_check_days)
 
     @callback
-    def _state_changed_event(self, event):
+    def _state_changed_event(self, event: Event[EventStateChangedData]) -> None:
         """Sensor state change event."""
-        self.state_changed(event.data.get("entity_id"), event.data.get("new_state"))
+        self.state_changed(event.data["entity_id"], event.data["new_state"])
 
     @callback
-    def state_changed(self, entity_id, new_state):
+    def state_changed(self, entity_id: str, new_state: State | None) -> None:
         """Update the sensor status."""
         if new_state is None:
             return
+        value: str | float
         value = new_state.state
         _LOGGER.debug("Received callback from %s with value %s", entity_id, value)
         if value == STATE_UNKNOWN:

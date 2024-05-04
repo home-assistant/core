@@ -1,5 +1,8 @@
 """Support for bypassing Risco alarm zones."""
+
 from __future__ import annotations
+
+from typing import Any
 
 from pyrisco.common import Zone
 
@@ -40,6 +43,7 @@ class RiscoCloudSwitch(RiscoCloudZoneEntity, SwitchEntity):
     """Representation of a bypass switch for a Risco cloud zone."""
 
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "bypassed"
 
     def __init__(
         self, coordinator: RiscoDataUpdateCoordinator, zone_id: int, zone: Zone
@@ -47,7 +51,6 @@ class RiscoCloudSwitch(RiscoCloudZoneEntity, SwitchEntity):
         """Init the zone."""
         super().__init__(
             coordinator=coordinator,
-            name="Bypassed",
             suffix="_bypassed",
             zone_id=zone_id,
             zone=zone,
@@ -58,11 +61,11 @@ class RiscoCloudSwitch(RiscoCloudZoneEntity, SwitchEntity):
         """Return true if the zone is bypassed."""
         return self._zone.bypassed
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._bypass(True)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._bypass(False)
 
@@ -76,12 +79,12 @@ class RiscoLocalSwitch(RiscoLocalZoneEntity, SwitchEntity):
     """Representation of a bypass switch for a Risco local zone."""
 
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "bypassed"
 
     def __init__(self, system_id: str, zone_id: int, zone: Zone) -> None:
         """Init the zone."""
         super().__init__(
             system_id=system_id,
-            name="Bypassed",
             suffix="_bypassed",
             zone_id=zone_id,
             zone=zone,
@@ -92,11 +95,11 @@ class RiscoLocalSwitch(RiscoLocalZoneEntity, SwitchEntity):
         """Return true if the zone is bypassed."""
         return self._zone.bypassed
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._bypass(True)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._bypass(False)
 

@@ -1,4 +1,5 @@
 """Test HomeKit util module."""
+
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -14,8 +15,6 @@ from homeassistant.components.homekit.const import (
     DOMAIN,
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
-    HOMEKIT_PAIRING_QR,
-    HOMEKIT_PAIRING_QR_SECRET,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -23,6 +22,7 @@ from homeassistant.components.homekit.const import (
     TYPE_SWITCH,
     TYPE_VALVE,
 )
+from homeassistant.components.homekit.models import HomeKitEntryData
 from homeassistant.components.homekit.util import (
     accessory_friendly_name,
     async_dismiss_setup_message,
@@ -67,7 +67,6 @@ def _mock_socket(failure_attempts: int = 0) -> MagicMock:
         attempts += 1
         if attempts <= failure_attempts:
             raise OSError
-        return
 
     mock_socket.bind = Mock(side_effect=_simulate_bind)
     return mock_socket
@@ -251,8 +250,9 @@ async def test_async_show_setup_msg(
             hass, entry.entry_id, "bridge_name", pincode, "X-HM://0"
         )
         await hass.async_block_till_done()
-    assert hass.data[DOMAIN][entry.entry_id][HOMEKIT_PAIRING_QR_SECRET]
-    assert hass.data[DOMAIN][entry.entry_id][HOMEKIT_PAIRING_QR]
+    entry_data: HomeKitEntryData = hass.data[DOMAIN][entry.entry_id]
+    assert entry_data.pairing_qr_secret
+    assert entry_data.pairing_qr
 
     assert len(mock_create.mock_calls) == 1
     assert mock_create.mock_calls[0][1][3] == entry.entry_id
@@ -341,9 +341,12 @@ async def test_port_is_available_skips_existing_entries(hass: HomeAssistant) -> 
     ):
         assert async_port_is_available(next_port)
 
-    with pytest.raises(OSError), patch(
-        "homeassistant.components.homekit.util.socket.socket",
-        return_value=_mock_socket(10),
+    with (
+        pytest.raises(OSError),
+        patch(
+            "homeassistant.components.homekit.util.socket.socket",
+            return_value=_mock_socket(10),
+        ),
     ):
         async_find_next_available_port(hass, 65530)
 

@@ -1,4 +1,5 @@
 """Support for StarLine lock."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -30,9 +31,11 @@ async def async_setup_entry(
 class StarlineLock(StarlineEntity, LockEntity):
     """Representation of a StarLine lock."""
 
+    _attr_translation_key = "security"
+
     def __init__(self, account: StarlineAccount, device: StarlineDevice) -> None:
         """Initialize the lock."""
-        super().__init__(account, device, "lock", "Security")
+        super().__init__(account, device, "lock")
 
     @property
     def available(self) -> bool:
@@ -59,13 +62,6 @@ class StarlineLock(StarlineEntity, LockEntity):
         Documentation: https://developer.starline.ru/#api-Device-DeviceState
         """
         return self._device.alarm_state
-
-    @property
-    def icon(self) -> str:
-        """Icon to use in the frontend, if any."""
-        return (
-            "mdi:shield-check-outline" if self.is_locked else "mdi:shield-alert-outline"
-        )
 
     @property
     def is_locked(self) -> bool | None:

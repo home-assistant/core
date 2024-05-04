@@ -69,6 +69,7 @@
         "enable_vod": true,
         "live_view_preset_profile": "highest",
         "live_view_presets": ["low", "middle", "high", "highest"],
+        "motion_detection_enabled": true,
         "motion_announcement": false,
         "motion_snooze_preset_profile": "low",
         "motion_snooze_presets": ["null", "low", "medium", "high"]
@@ -133,6 +134,7 @@
         },
         "live_view_preset_profile": "highest",
         "live_view_presets": ["low", "middle", "high", "highest"],
+        "motion_detection_enabled": true,
         "motion_announcement": false,
         "motion_snooze_preset_profile": "low",
         "motion_snooze_presets": ["none", "low", "medium", "high"],
@@ -281,6 +283,7 @@
         },
         "live_view_preset_profile": "highest",
         "live_view_presets": ["low", "middle", "high", "highest"],
+        "motion_detection_enabled": false,
         "motion_announcement": false,
         "motion_snooze_preset_profile": "low",
         "motion_snooze_presets": ["none", "low", "medium", "high"],

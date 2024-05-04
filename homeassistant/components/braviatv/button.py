@@ -1,4 +1,5 @@
 """Button support for Bravia TV."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -19,24 +20,16 @@ from .coordinator import BraviaTVCoordinator
 from .entity import BraviaTVEntity
 
 
-@dataclass
-class BraviaTVButtonDescriptionMixin:
-    """Mixin to describe a Bravia TV Button entity."""
+@dataclass(frozen=True, kw_only=True)
+class BraviaTVButtonDescription(ButtonEntityDescription):
+    """Bravia TV Button description."""
 
     press_action: Callable[[BraviaTVCoordinator], Coroutine]
-
-
-@dataclass
-class BraviaTVButtonDescription(
-    ButtonEntityDescription, BraviaTVButtonDescriptionMixin
-):
-    """Bravia TV Button description."""
 
 
 BUTTONS: tuple[BraviaTVButtonDescription, ...] = (
     BraviaTVButtonDescription(
         key="reboot",
-        translation_key="restart",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_action=lambda coordinator: coordinator.async_reboot_device(),

@@ -11,10 +11,10 @@ from homeassistant.components.homekit_controller.const import (
     IDENTIFIER_LEGACY_ACCESSORY_ID,
     IDENTIFIER_LEGACY_SERIAL_NUMBER,
 )
-from homeassistant.components.thread import async_add_dataset
+from homeassistant.components.thread import async_add_dataset, dataset_store
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import setup_accessories_from_file, setup_platform, setup_test_accessories
 
@@ -90,17 +90,20 @@ DEVICE_MIGRATION_TESTS = [
 
 @pytest.mark.parametrize("variant", DEVICE_MIGRATION_TESTS)
 async def test_migrate_device_id_no_serial_skip_if_other_owner(
-    hass: HomeAssistant, variant: DeviceMigrationTest
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    variant: DeviceMigrationTest,
 ) -> None:
     """Don't migrate unrelated devices.
 
     Create a device registry entry that needs migrate, but belongs to a different
     config entry. It should be ignored.
     """
-    device_registry = dr.async_get(hass)
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
 
     bridge = device_registry.async_get_or_create(
-        config_entry_id="XX",
+        config_entry_id=entry.entry_id,
         identifiers=variant.before,
         manufacturer="RYSE Inc.",
         model="RYSE SmartBridge",
@@ -115,16 +118,16 @@ async def test_migrate_device_id_no_serial_skip_if_other_owner(
     bridge = device_registry.async_get(bridge.id)
 
     assert bridge.identifiers == variant.before
-    assert bridge.config_entries == {"XX"}
+    assert bridge.config_entries == {entry.entry_id}
 
 
 @pytest.mark.parametrize("variant", DEVICE_MIGRATION_TESTS)
 async def test_migrate_device_id_no_serial(
-    hass: HomeAssistant, variant: DeviceMigrationTest
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    variant: DeviceMigrationTest,
 ) -> None:
     """Test that a Ryse smart bridge with four shades can be migrated correctly in HA."""
-    device_registry = dr.async_get(hass)
-
     accessories = await setup_accessories_from_file(hass, variant.fixture)
 
     fake_controller = await setup_platform(hass)
@@ -213,7 +216,9 @@ async def test_thread_provision_no_creds(hass: HomeAssistant) -> None:
         )
 
 
-async def test_thread_provision(hass: HomeAssistant) -> None:
+async def test_thread_provision(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that a when a thread provision works the config entry is updated."""
     await async_add_dataset(
         hass,
@@ -222,6 +227,9 @@ async def test_thread_provision(hass: HomeAssistant) -> None:
         "E5AA15DD051000112233445566778899AABBCCDDEEFF030E4F70656E54687265616444656D6F01"
         "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F8",
     )
+    store = await dataset_store.async_get_store(hass)
+    dataset_id = list(store.datasets.values())[0].id
+    store.preferred_dataset = dataset_id
 
     accessories = await setup_accessories_from_file(hass, "nanoleaf_strip_nl55.json")
 
@@ -250,6 +258,13 @@ async def test_thread_provision(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    assert hass.states.get(
+        "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
+    )
+    assert entity_registry.async_get(
+        "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
+    )
+
     await hass.services.async_call(
         "button",
         "press",
@@ -258,8 +273,16 @@ async def test_thread_provision(hass: HomeAssistant) -> None:
         },
         blocking=True,
     )
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert config_entry.data["Connection"] == "CoAP"
+
+    assert not hass.states.get(
+        "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
+    )
+    assert not entity_registry.async_get(
+        "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
+    )
 
 
 async def test_thread_provision_migration_failed(hass: HomeAssistant) -> None:

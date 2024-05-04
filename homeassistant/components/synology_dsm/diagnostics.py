@@ -1,9 +1,8 @@
 """Diagnostics support for Synology DSM."""
+
 from __future__ import annotations
 
 from typing import Any
-
-from synology_dsm.api.surveillance_station.camera import SynoCamera
 
 from homeassistant.components.camera import diagnostics as camera_diagnostics
 from homeassistant.components.diagnostics import async_redact_data
@@ -46,7 +45,6 @@ async def async_get_config_entry_diagnostics(
     }
 
     if syno_api.network is not None:
-        intf: dict
         for intf in syno_api.network.interfaces:
             diag_data["network"]["interfaces"][intf["id"]] = {
                 "type": intf["type"],
@@ -54,7 +52,6 @@ async def async_get_config_entry_diagnostics(
             }
 
     if syno_api.storage is not None:
-        disk: dict
         for disk in syno_api.storage.disks:
             diag_data["storage"]["disks"][disk["id"]] = {
                 "name": disk["name"],
@@ -65,7 +62,6 @@ async def async_get_config_entry_diagnostics(
                 "size_total": disk["size_total"],
             }
 
-        volume: dict
         for volume in syno_api.storage.volumes:
             diag_data["storage"]["volumes"][volume["id"]] = {
                 "name": volume["fs_type"],
@@ -73,7 +69,6 @@ async def async_get_config_entry_diagnostics(
             }
 
     if syno_api.surveillance_station is not None:
-        camera: SynoCamera
         for camera in syno_api.surveillance_station.get_all_cameras():
             diag_data["surveillance_station"]["cameras"][camera.id] = {
                 "name": camera.name,

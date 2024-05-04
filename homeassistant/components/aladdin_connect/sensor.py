@@ -1,4 +1,5 @@
 """Support for Aladdin Connect Garage Door sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -16,25 +17,18 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .model import DoorDevice
 
 
-@dataclass
-class AccSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class AccSensorEntityDescription(SensorEntityDescription):
+    """Describes AladdinConnect sensor entity."""
 
     value_fn: Callable
-
-
-@dataclass
-class AccSensorEntityDescription(
-    SensorEntityDescription, AccSensorEntityDescriptionMixin
-):
-    """Describes AladdinConnect sensor entity."""
 
 
 SENSORS: tuple[AccSensorEntityDescription, ...] = (

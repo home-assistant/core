@@ -1,4 +1,5 @@
 """The command_line component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -55,6 +56,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.trigger_template_entity import CONF_AVAILABILITY
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN
@@ -80,6 +82,7 @@ BINARY_SENSOR_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_COMMAND): cv.string,
         vol.Optional(CONF_NAME, default=BINARY_SENSOR_DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_ICON): cv.template,
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
@@ -89,6 +92,7 @@ BINARY_SENSOR_SCHEMA = vol.Schema(
         vol.Optional(
             CONF_SCAN_INTERVAL, default=BINARY_SENSOR_DEFAULT_SCAN_INTERVAL
         ): vol.All(cv.time_period, cv.positive_timedelta),
+        vol.Optional(CONF_AVAILABILITY): cv.template,
     }
 )
 COVER_SCHEMA = vol.Schema(
@@ -98,12 +102,14 @@ COVER_SCHEMA = vol.Schema(
         vol.Optional(CONF_COMMAND_STATE): cv.string,
         vol.Optional(CONF_COMMAND_STOP, default="true"): cv.string,
         vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_ICON): cv.template,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_SCAN_INTERVAL, default=COVER_DEFAULT_SCAN_INTERVAL): vol.All(
             cv.time_period, cv.positive_timedelta
         ),
+        vol.Optional(CONF_AVAILABILITY): cv.template,
     }
 )
 NOTIFY_SCHEMA = vol.Schema(
@@ -119,6 +125,7 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_JSON_ATTRIBUTES): cv.ensure_list_csv,
         vol.Optional(CONF_NAME, default=SENSOR_DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_ICON): cv.template,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
@@ -127,6 +134,7 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Optional(CONF_SCAN_INTERVAL, default=SENSOR_DEFAULT_SCAN_INTERVAL): vol.All(
             cv.time_period, cv.positive_timedelta
         ),
+        vol.Optional(CONF_AVAILABILITY): cv.template,
     }
 )
 SWITCH_SCHEMA = vol.Schema(
@@ -142,6 +150,7 @@ SWITCH_SCHEMA = vol.Schema(
         vol.Optional(CONF_SCAN_INTERVAL, default=SWITCH_DEFAULT_SCAN_INTERVAL): vol.All(
             cv.time_period, cv.positive_timedelta
         ),
+        vol.Optional(CONF_AVAILABILITY): cv.template,
     }
 )
 COMBINED_SCHEMA = vol.Schema(
@@ -169,8 +178,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _reload_config(call: Event | ServiceCall) -> None:
         """Reload Command Line."""
-        reload_config = await async_integration_yaml_config(hass, "command_line")
-        reset_platforms = async_get_platforms(hass, "command_line")
+        reload_config = await async_integration_yaml_config(hass, DOMAIN)
+        reset_platforms = async_get_platforms(hass, DOMAIN)
         for reset_platform in reset_platforms:
             _LOGGER.debug("Reload resetting platform: %s", reset_platform.domain)
             await reset_platform.async_reset()
@@ -198,7 +207,7 @@ async def async_load_platforms(
 
     load_coroutines: list[Coroutine[Any, Any, None]] = []
     platforms: list[Platform] = []
-    reload_configs: list[tuple] = []
+    reload_configs: list[tuple[Platform, dict[str, Any]]] = []
     for platform_config in command_line_config:
         for platform, _config in platform_config.items():
             if (mapped_platform := PLATFORM_MAPPING[platform]) not in platforms:

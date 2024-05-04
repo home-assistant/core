@@ -1,4 +1,5 @@
 """Support for Ubiquiti's UniFi Protect NVR."""
+
 from __future__ import annotations
 
 import logging
@@ -46,7 +47,8 @@ async def async_setup_entry(
     """Discover cameras with speakers on a UniFi Protect NVR."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
-    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         if isinstance(device, Camera) and (
             device.has_speaker or device.has_removable_speaker
         ):
@@ -98,21 +100,32 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
-        self._attr_volume_level = float(self.device.speaker_settings.volume / 100)
+        updated_device = self.device
+        self._attr_volume_level = float(updated_device.speaker_settings.volume / 100)
 
         if (
-            self.device.talkback_stream is not None
-            and self.device.talkback_stream.is_running
+            updated_device.talkback_stream is not None
+            and updated_device.talkback_stream.is_running
         ):
             self._attr_state = MediaPlayerState.PLAYING
         else:
             self._attr_state = MediaPlayerState.IDLE
 
         is_connected = self.data.last_update_success and (
-            self.device.state == StateType.CONNECTED
-            or (not self.device.is_adopted_by_us and self.device.can_adopt)
+            updated_device.state is StateType.CONNECTED
+            or (not updated_device.is_adopted_by_us and updated_device.can_adopt)
         )
-        self._attr_available = is_connected and self.device.feature_flags.has_speaker
+        self._attr_available = is_connected and updated_device.feature_flags.has_speaker
+
+    @callback
+    def _async_get_state_attrs(self) -> tuple[Any, ...]:
+        """Retrieve data that goes into the current state of the entity.
+
+        Called before and after updating entity and state is only written if there
+        is a change.
+        """
+
+        return (self._attr_available, self._attr_state, self._attr_volume_level)
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""

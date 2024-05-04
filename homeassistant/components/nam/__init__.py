@@ -1,4 +1,5 @@
 """The Nettigo Air Monitor component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,7 +7,6 @@ import logging
 from typing import cast
 
 from aiohttp.client_exceptions import ClientConnectorError, ClientError
-import async_timeout
 from nettigo_air_monitor import (
     ApiError,
     AuthFailedError,
@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -50,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     options = ConnectionOptions(host=host, username=username, password=password)
     try:
         nam = await NettigoAirMonitor.create(websession, options)
-    except (ApiError, ClientError, ClientConnectorError, asyncio.TimeoutError) as err:
+    except (ApiError, ClientError, ClientConnectorError, TimeoutError) as err:
         raise ConfigEntryNotReady from err
 
     try:
@@ -91,7 +91,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class NAMDataUpdateCoordinator(DataUpdateCoordinator[NAMSensors]):
+class NAMDataUpdateCoordinator(DataUpdateCoordinator[NAMSensors]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching Nettigo Air Monitor data."""
 
     def __init__(
@@ -111,7 +111,7 @@ class NAMDataUpdateCoordinator(DataUpdateCoordinator[NAMSensors]):
     async def _async_update_data(self) -> NAMSensors:
         """Update data via library."""
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 data = await self.nam.async_update()
         # We do not need to catch AuthFailed exception here because sensor data is
         # always available without authorization.

@@ -1,4 +1,5 @@
 """Dormakaba dKey integration binary sensor platform."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -22,30 +23,22 @@ from .entity import DormakabaDkeyEntity
 from .models import DormakabaDkeyData
 
 
-@dataclass
-class DormakabaDkeyBinarySensorDescriptionMixin:
-    """Class for keys required by Dormakaba dKey binary sensor entity."""
+@dataclass(frozen=True, kw_only=True)
+class DormakabaDkeyBinarySensorDescription(BinarySensorEntityDescription):
+    """Describes Dormakaba dKey binary sensor entity."""
 
     is_on: Callable[[Notifications], bool]
-
-
-@dataclass
-class DormakabaDkeyBinarySensorDescription(
-    BinarySensorEntityDescription, DormakabaDkeyBinarySensorDescriptionMixin
-):
-    """Describes Dormakaba dKey binary sensor entity."""
 
 
 BINARY_SENSOR_DESCRIPTIONS = (
     DormakabaDkeyBinarySensorDescription(
         key="door_position",
-        name="Door",
         device_class=BinarySensorDeviceClass.DOOR,
         is_on=lambda state: state.door_position == DoorPosition.OPEN,
     ),
     DormakabaDkeyBinarySensorDescription(
         key="security_locked",
-        name="Deadbolt",
+        translation_key="deadbolt",
         device_class=BinarySensorDeviceClass.LOCK,
         is_on=lambda state: state.unlock_status
         not in (UnlockStatus.SECURITY_LOCKED, UnlockStatus.UNLOCKED_SECURITY_LOCKED),

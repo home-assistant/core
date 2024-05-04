@@ -1,4 +1,5 @@
 """Script to ensure a configuration file exists."""
+
 import argparse
 import asyncio
 import os
@@ -39,8 +40,7 @@ def run(args):
 
 async def async_run(config_dir):
     """Make sure config exists."""
-    hass = HomeAssistant()
-    hass.config.config_dir = config_dir
+    hass = HomeAssistant(config_dir)
     path = await config_util.async_ensure_config_exists(hass)
     await hass.async_stop(force=True)
     return path

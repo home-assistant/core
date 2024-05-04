@@ -1,28 +1,35 @@
 """Config flow for DoorBird integration."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
-from ipaddress import ip_address
 import logging
+from typing import Any
 
 from doorbirdpy import DoorBird
 import requests
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
-from homeassistant.util.network import is_ipv4_address, is_link_local
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import CONF_EVENTS, DOMAIN, DOORBIRD_OUI
-from .util import get_mac_address_from_doorstation_info
+from .util import get_mac_address_from_door_station_info
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def _schema_with_defaults(host=None, name=None):
+def _schema_with_defaults(
+    host: str | None = None, name: str | None = None
+) -> vol.Schema:
     return vol.Schema(
         {
             vol.Required(CONF_HOST, default=host): str,
@@ -33,12 +40,12 @@ def _schema_with_defaults(host=None, name=None):
     )
 
 
-def _check_device(device):
+def _check_device(device: DoorBird) -> tuple[tuple[bool, int], dict[str, Any]]:
     """Verify we can connect to the device and return the status."""
     return device.ready(), device.info()
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect."""
     device = DoorBird(data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD])
     try:
@@ -53,13 +60,13 @@ async def validate_input(hass: core.HomeAssistant, data):
     if not status[0]:
         raise CannotConnect
 
-    mac_addr = get_mac_address_from_doorstation_info(info)
+    mac_addr = get_mac_address_from_door_station_info(info)
 
     # Return info that you want to store in the config entry.
     return {"title": data[CONF_HOST], "mac_addr": mac_addr}
 
 
-async def async_verify_supported_device(hass, host):
+async def async_verify_supported_device(hass: HomeAssistant, host: str) -> bool:
     """Verify the doorbell state endpoint returns a 401."""
     device = DoorBird(host, "", "")
     try:
@@ -72,18 +79,20 @@ async def async_verify_supported_device(hass, host):
     return False
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for DoorBird."""
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the DoorBird config flow."""
-        self.discovery_schema = {}
+        self.discovery_schema: vol.Schema | None = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             info, errors = await self._async_validate_or_error(user_input)
             if not errors:
@@ -96,19 +105,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Prepare configuration for a discovered doorbird device."""
         macaddress = discovery_info.properties["macaddress"]
-        host = discovery_info.host
 
         if macaddress[:6] != DOORBIRD_OUI:
             return self.async_abort(reason="not_doorbird_device")
-        if is_link_local(ip_address(host)):
+        if discovery_info.ip_address.is_link_local:
             return self.async_abort(reason="link_local_address")
-        if not is_ipv4_address(host):
+        if discovery_info.ip_address.version != 4:
             return self.async_abort(reason="not_ipv4_address")
 
         await self.async_set_unique_id(macaddress)
+        host = discovery_info.host
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         self._async_abort_entries_match({CONF_HOST: host})
@@ -127,7 +136,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def _async_validate_or_error(self, user_input):
+    async def _async_validate_or_error(
+        self, user_input: dict[str, Any]
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
         """Validate doorbird or error."""
         errors = {}
         info = {}
@@ -145,20 +156,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for doorbird."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
             events = [event.strip() for event in user_input[CONF_EVENTS].split(",")]
@@ -175,9 +188,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(step_id="init", data_schema=options_schema)
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""

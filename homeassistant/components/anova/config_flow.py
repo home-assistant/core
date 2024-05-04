@@ -1,31 +1,31 @@
 """Config flow for Anova."""
+
 from __future__ import annotations
 
 from anova_wifi import AnovaApi, InvalidLogin, NoDevicesFound
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import aiohttp_client
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 from .util import serialize_device_list
 
 
-class AnovaConfligFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AnovaConfligFlow(ConfigFlow, domain=DOMAIN):
     """Sets up a config flow for Anova."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors: dict[str, str] = {}
         if user_input is not None:
             api = AnovaApi(
-                aiohttp_client.async_get_clientsession(self.hass),
+                async_get_clientsession(self.hass),
                 user_input[CONF_USERNAME],
                 user_input[CONF_PASSWORD],
             )
@@ -48,7 +48,7 @@ class AnovaConfligFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_USERNAME: api.username,
                         CONF_PASSWORD: api.password,
-                        "devices": device_list,
+                        CONF_DEVICES: device_list,
                     },
                 )
 

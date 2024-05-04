@@ -1,7 +1,9 @@
 """Support for Aranet sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from aranet4.client import Aranet4Advertisement
 from bleak.backends.device import BLEDevice
@@ -21,22 +23,25 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    ATTR_MANUFACTURER,
     ATTR_NAME,
     ATTR_SW_VERSION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
+    EntityCategory,
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import ARANET_MANUFACTURER_NAME, DOMAIN
 
 
-@dataclass
+@dataclass(frozen=True)
 class AranetSensorEntityDescription(SensorEntityDescription):
     """Class to describe an Aranet sensor entity."""
 
@@ -44,6 +49,7 @@ class AranetSensorEntityDescription(SensorEntityDescription):
     # Restrict the type to satisfy the type checker and catch attempts
     # to use UNDEFINED in the entity descriptions.
     name: str | None = None
+    scale: float | int = 1
 
 
 SENSOR_DESCRIPTIONS = {
@@ -75,12 +81,31 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    "radiation_rate": AranetSensorEntityDescription(
+        key="radiation_rate",
+        translation_key="radiation_rate",
+        name="Radiation Dose Rate",
+        native_unit_of_measurement="μSv/h",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        scale=0.001,
+    ),
+    "radiation_total": AranetSensorEntityDescription(
+        key="radiation_total",
+        translation_key="radiation_total",
+        name="Radiation Total Dose",
+        native_unit_of_measurement="mSv",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=4,
+        scale=0.000001,
+    ),
     "battery": AranetSensorEntityDescription(
         key="battery",
         name="Battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "interval": AranetSensorEntityDescription(
         key="update_interval",
@@ -90,6 +115,7 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         # The interval setting is not a generally useful entity for most users.
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
 
@@ -109,6 +135,7 @@ def _sensor_device_info_to_hass(
     hass_device_info = DeviceInfo({})
     if adv.readings and adv.readings.name:
         hass_device_info[ATTR_NAME] = adv.readings.name
+        hass_device_info[ATTR_MANUFACTURER] = ARANET_MANUFACTURER_NAME
     if adv.manufacturer_data:
         hass_device_info[ATTR_SW_VERSION] = str(adv.manufacturer_data.version)
     return hass_device_info
@@ -118,22 +145,23 @@ def sensor_update_to_bluetooth_data_update(
     adv: Aranet4Advertisement,
 ) -> PassiveBluetoothDataUpdate:
     """Convert a sensor update to a Bluetooth data update."""
+    data: dict[PassiveBluetoothEntityKey, Any] = {}
+    names: dict[PassiveBluetoothEntityKey, str | None] = {}
+    descs: dict[PassiveBluetoothEntityKey, EntityDescription] = {}
+    for key, desc in SENSOR_DESCRIPTIONS.items():
+        tag = _device_key_to_bluetooth_entity_key(adv.device, key)
+        val = getattr(adv.readings, key)
+        if val == -1:
+            continue
+        val *= desc.scale
+        data[tag] = val
+        names[tag] = desc.name
+        descs[tag] = desc
     return PassiveBluetoothDataUpdate(
         devices={adv.device.address: _sensor_device_info_to_hass(adv)},
-        entity_descriptions={
-            _device_key_to_bluetooth_entity_key(adv.device, key): desc
-            for key, desc in SENSOR_DESCRIPTIONS.items()
-        },
-        entity_data={
-            _device_key_to_bluetooth_entity_key(adv.device, key): getattr(
-                adv.readings, key, None
-            )
-            for key in SENSOR_DESCRIPTIONS
-        },
-        entity_names={
-            _device_key_to_bluetooth_entity_key(adv.device, key): desc.name
-            for key, desc in SENSOR_DESCRIPTIONS.items()
-        },
+        entity_descriptions=descs,
+        entity_data=data,
+        entity_names=names,
     )
 
 

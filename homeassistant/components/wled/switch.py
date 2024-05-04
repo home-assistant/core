@@ -1,4 +1,5 @@
 """Support for WLED switches."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -53,9 +54,8 @@ async def async_setup_entry(
 class WLEDNightlightSwitch(WLEDEntity, SwitchEntity):
     """Defines a WLED nightlight switch."""
 
-    _attr_icon = "mdi:weather-night"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_name = "Nightlight"
+    _attr_translation_key = "nightlight"
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED nightlight switch."""
@@ -91,9 +91,8 @@ class WLEDNightlightSwitch(WLEDEntity, SwitchEntity):
 class WLEDSyncSendSwitch(WLEDEntity, SwitchEntity):
     """Defines a WLED sync send switch."""
 
-    _attr_icon = "mdi:upload-network-outline"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_name = "Sync send"
+    _attr_translation_key = "sync_send"
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED sync send switch."""
@@ -124,9 +123,8 @@ class WLEDSyncSendSwitch(WLEDEntity, SwitchEntity):
 class WLEDSyncReceiveSwitch(WLEDEntity, SwitchEntity):
     """Defines a WLED sync receive switch."""
 
-    _attr_icon = "mdi:download-network-outline"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_name = "Sync receive"
+    _attr_translation_key = "sync_receive"
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED sync receive switch."""
@@ -157,9 +155,8 @@ class WLEDSyncReceiveSwitch(WLEDEntity, SwitchEntity):
 class WLEDReverseSwitch(WLEDEntity, SwitchEntity):
     """Defines a WLED reverse effect switch."""
 
-    _attr_icon = "mdi:swap-horizontal-bold"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_name = "Reverse"
+    _attr_translation_key = "reverse"
     _segment: int
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator, segment: int) -> None:
@@ -169,7 +166,8 @@ class WLEDReverseSwitch(WLEDEntity, SwitchEntity):
         # Segment 0 uses a simpler name, which is more natural for when using
         # a single segment / using WLED with one big LED strip.
         if segment != 0:
-            self._attr_name = f"Segment {segment} reverse"
+            self._attr_translation_key = "segment_reverse"
+            self._attr_translation_placeholders = {"segment": str(segment)}
 
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_reverse_{segment}"
         self._segment = segment

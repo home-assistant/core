@@ -1,10 +1,10 @@
 """Integrate with FreeDNS Dynamic DNS service at freedns.afraid.org."""
+
 import asyncio
 from datetime import datetime, timedelta
 import logging
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_SCAN_INTERVAL, CONF_URL
@@ -76,7 +76,7 @@ async def _update_freedns(hass, session, url, auth_token):
         params[auth_token] = ""
 
     try:
-        async with async_timeout.timeout(TIMEOUT):
+        async with asyncio.timeout(TIMEOUT):
             resp = await session.get(url, params=params)
             body = await resp.text()
 
@@ -97,7 +97,7 @@ async def _update_freedns(hass, session, url, auth_token):
     except aiohttp.ClientError:
         _LOGGER.warning("Can't connect to FreeDNS API")
 
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _LOGGER.warning("Timeout from FreeDNS API at %s", url)
 
     return False

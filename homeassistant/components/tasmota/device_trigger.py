@@ -1,4 +1,5 @@
 """Provides device automations for Tasmota."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -223,8 +224,7 @@ async def async_setup_trigger(
 
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
-        set(),
-        {(CONNECTION_NETWORK_MAC, tasmota_trigger.cfg.mac)},
+        connections={(CONNECTION_NETWORK_MAC, tasmota_trigger.cfg.mac)},
     )
 
     if device is None:

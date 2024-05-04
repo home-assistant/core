@@ -1,4 +1,5 @@
 """Offer Z-Wave JS event listening automation trigger."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -196,9 +197,9 @@ async def async_attach_trigger(
         else:
             payload["description"] = primary_desc
 
-        payload[
-            "description"
-        ] = f"{payload['description']} with event data: {event_data}"
+        payload["description"] = (
+            f"{payload['description']} with event data: {event_data}"
+        )
 
         hass.async_run_hass_job(job, {"trigger": payload})
 
@@ -232,21 +233,20 @@ async def async_attach_trigger(
             assert driver is not None  # The node comes from the driver.
             drivers.add(driver)
             device_identifier = get_device_id(driver, node)
-            device = dev_reg.async_get_device({device_identifier})
+            device = dev_reg.async_get_device(identifiers={device_identifier})
             assert device
             # We need to store the device for the callback
             unsubs.append(
                 node.on(event_name, functools.partial(async_on_event, device=device))
             )
-
-        for driver in drivers:
-            unsubs.append(
-                async_dispatcher_connect(
-                    hass,
-                    f"{DOMAIN}_{driver.controller.home_id}_connected_to_server",
-                    _create_zwave_listeners,
-                )
+        unsubs.extend(
+            async_dispatcher_connect(
+                hass,
+                f"{DOMAIN}_{driver.controller.home_id}_connected_to_server",
+                _create_zwave_listeners,
             )
+            for driver in drivers
+        )
 
     _create_zwave_listeners()
 

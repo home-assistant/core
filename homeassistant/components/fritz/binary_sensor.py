@@ -1,4 +1,5 @@
 """AVM FRITZ!Box connectivity sensor."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -26,7 +27,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzBinarySensorEntityDescription(
     BinarySensorEntityDescription, FritzEntityDescription
 ):
@@ -68,7 +69,7 @@ async def async_setup_entry(
         if description.is_suitable(connection_info)
     ]
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class FritzBoxBinarySensor(FritzBoxBaseCoordinatorEntity, BinarySensorEntity):

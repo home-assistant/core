@@ -1,4 +1,5 @@
 """Fan definition for Intellifire."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -26,7 +27,7 @@ from .coordinator import IntellifireDataUpdateCoordinator
 from .entity import IntellifireEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class IntellifireFanRequiredKeysMixin:
     """Required keys for fan entity."""
 
@@ -35,7 +36,7 @@ class IntellifireFanRequiredKeysMixin:
     speed_range: tuple[int, int]
 
 
-@dataclass
+@dataclass(frozen=True)
 class IntellifireFanEntityDescription(
     FanEntityDescription, IntellifireFanRequiredKeysMixin
 ):
@@ -45,7 +46,7 @@ class IntellifireFanEntityDescription(
 INTELLIFIRE_FANS: tuple[IntellifireFanEntityDescription, ...] = (
     IntellifireFanEntityDescription(
         key="fan",
-        name="Fan",
+        translation_key="fan",
         set_fn=lambda control_api, speed: control_api.set_fan_speed(speed=speed),
         value_fn=lambda data: data.fanspeed,
         speed_range=(1, 4),

@@ -1,4 +1,5 @@
 """Support for OwnTracks."""
+
 from collections import defaultdict
 import json
 import logging
@@ -186,19 +187,17 @@ async def handle_webhook(hass, webhook_id, request):
 
     async_dispatcher_send(hass, DOMAIN, hass, context, message)
 
-    response = []
-
-    for person in hass.states.async_all("person"):
-        if "latitude" in person.attributes and "longitude" in person.attributes:
-            response.append(
-                {
-                    "_type": "location",
-                    "lat": person.attributes["latitude"],
-                    "lon": person.attributes["longitude"],
-                    "tid": "".join(p[0] for p in person.name.split(" ")[:2]),
-                    "tst": int(person.last_updated.timestamp()),
-                }
-            )
+    response = [
+        {
+            "_type": "location",
+            "lat": person.attributes["latitude"],
+            "lon": person.attributes["longitude"],
+            "tid": "".join(p[0] for p in person.name.split(" ")[:2]),
+            "tst": int(person.last_updated.timestamp()),
+        }
+        for person in hass.states.async_all("person")
+        if "latitude" in person.attributes and "longitude" in person.attributes
+    ]
 
     if message["_type"] == "encrypted" and context.secret:
         return json_response(
@@ -278,7 +277,6 @@ class OwnTracksContext:
             func(**msg)
         self._pending_msg.clear()
 
-    # pylint: disable=method-hidden
     @callback
     def async_see(self, **data):
         """Send a see message to the device tracker."""

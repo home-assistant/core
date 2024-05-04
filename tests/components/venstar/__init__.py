@@ -1,4 +1,5 @@
 """Tests for the venstar integration."""
+
 from requests import RequestException
 
 
@@ -18,7 +19,8 @@ class VenstarColorTouchMock:
         """Initialize the Venstar library."""
         self.status = {}
         self.model = "COLORTOUCH"
-        self._api_ver = 5
+        self._api_ver = 7
+        self._firmware_ver = tuple(5, 28)
         self.name = "TestVenstar"
         self._info = {}
         self._sensors = {}

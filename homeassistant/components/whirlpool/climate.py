@@ -1,4 +1,5 @@
 """Platform for climate integration."""
+
 from __future__ import annotations
 
 import logging
@@ -26,7 +27,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo, generate_entity_id
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import WhirlpoolData
@@ -93,6 +95,7 @@ class AirConEntity(ClimateEntity):
 
     _attr_fan_modes = SUPPORTED_FAN_MODES
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_hvac_modes = SUPPORTED_HVAC_MODES
     _attr_max_temp = SUPPORTED_MAX_TEMP
     _attr_min_temp = SUPPORTED_MIN_TEMP
@@ -101,10 +104,13 @@ class AirConEntity(ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_swing_modes = SUPPORTED_SWING_MODES
     _attr_target_temperature_step = SUPPORTED_TARGET_TEMPERATURE_STEP
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

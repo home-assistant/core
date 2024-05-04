@@ -1,4 +1,5 @@
 """Support for the GPSLogger device tracking."""
+
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -9,8 +10,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -39,17 +40,16 @@ async def async_setup_entry(
 
         async_add_entities([GPSLoggerEntity(device, gps, battery, accuracy, attrs)])
 
-    hass.data[GPL_DOMAIN]["unsub_device_tracker"][
-        entry.entry_id
-    ] = async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
+    hass.data[GPL_DOMAIN]["unsub_device_tracker"][entry.entry_id] = (
+        async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
+    )
 
     # Restore previously loaded devices
     dev_reg = dr.async_get(hass)
     dev_ids = {
         identifier[1]
-        for device in dev_reg.devices.values()
+        for device in dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
         for identifier in device.identifiers
-        if identifier[0] == GPL_DOMAIN
     }
     if not dev_ids:
         return
@@ -66,8 +66,11 @@ async def async_setup_entry(
 class GPSLoggerEntity(TrackerEntity, RestoreEntity):
     """Represent a tracked device."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, device, location, battery, accuracy, attributes):
-        """Set up Geofency entity."""
+        """Set up GPSLogger entity."""
         self._accuracy = accuracy
         self._attributes = attributes
         self._name = device
@@ -102,11 +105,6 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
         return self._accuracy
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
     def unique_id(self):
         """Return the unique ID."""
         return self._unique_id
@@ -114,7 +112,10 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return DeviceInfo(identifiers={(GPL_DOMAIN, self._unique_id)}, name=self._name)
+        return DeviceInfo(
+            identifiers={(GPL_DOMAIN, self._unique_id)},
+            name=self._name,
+        )
 
     @property
     def source_type(self) -> SourceType:
@@ -165,7 +166,7 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
     @callback
     def _async_receive_data(self, device, location, battery, accuracy, attributes):
         """Mark the device as seen."""
-        if device != self.name:
+        if device != self._name:
             return
 
         self._location = location

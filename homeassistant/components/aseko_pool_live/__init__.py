@@ -1,19 +1,19 @@
 """The Aseko Pool Live integration."""
+
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
-from aioaseko import APIUnavailable, MobileAccount, Unit, Variable
+from aioaseko import APIUnavailable, InvalidAuthCredentials, MobileAccount
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, Platform
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
+from .coordinator import AsekoDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,11 +23,15 @@ PLATFORMS: list[str] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Aseko Pool Live from a config entry."""
     account = MobileAccount(
-        async_get_clientsession(hass), access_token=entry.data[CONF_ACCESS_TOKEN]
+        async_get_clientsession(hass),
+        username=entry.data[CONF_EMAIL],
+        password=entry.data[CONF_PASSWORD],
     )
 
     try:
         units = await account.get_units()
+    except InvalidAuthCredentials as err:
+        raise ConfigEntryAuthFailed from err
     except APIUnavailable as err:
         raise ConfigEntryNotReady from err
 
@@ -51,26 +55,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class AsekoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Variable]]):
-    """Class to manage fetching Aseko unit data from single endpoint."""
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
 
-    def __init__(self, hass: HomeAssistant, unit: Unit) -> None:
-        """Initialize global Aseko unit data updater."""
-        self._unit = unit
+    if config_entry.version == 1:
+        new = {
+            CONF_EMAIL: config_entry.title,
+            CONF_PASSWORD: "",
+        }
 
-        if self._unit.name:
-            name = self._unit.name
-        else:
-            name = f"{self._unit.type}-{self._unit.serial_number}"
+        hass.config_entries.async_update_entry(config_entry, data=new, version=2)
 
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=name,
-            update_interval=timedelta(minutes=2),
-        )
+        _LOGGER.debug("Migration to version %s successful", config_entry.version)
+        return True
 
-    async def _async_update_data(self) -> dict[str, Variable]:
-        """Fetch unit data."""
-        await self._unit.get_state()
-        return {variable.type: variable for variable in self._unit.variables}
+    _LOGGER.error("Attempt to migrate from unknown version %s", config_entry.version)
+    return False

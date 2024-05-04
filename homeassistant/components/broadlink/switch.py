@@ -1,4 +1,5 @@
 """Support for Broadlink switches."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -128,7 +129,7 @@ async def async_setup_entry(
     elif device.api.type == "BG1":
         switches.extend(BroadlinkBG1Slot(device, slot) for slot in range(1, 3))
 
-    elif device.api.type == "MP1":
+    elif device.api.type in {"MP1", "MP1S"}:
         switches.extend(BroadlinkMP1Slot(device, slot) for slot in range(1, 5))
 
     async_add_entities(switches)
@@ -221,6 +222,7 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
 
     _attr_assumed_state = False
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, device, *args, **kwargs):
         """Initialize the switch."""

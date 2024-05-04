@@ -3,12 +3,45 @@
     "step": {
       "user": {
         "data": {
-          "county": "County"
+          "county": "County",
+          "phone_number": "Phone Number"
+        },
+        "data_description": {
+          "county": "County used for outage number retrieval",
+          "phone_number": "Phone number associated with the PECO account (optional). Adding a phone number adds a binary sensor confirming if your power is out or not, and not an issue with a breaker or an issue on your end."
         }
       }
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "incompatible_meter": "Your meter is not compatible with smart meter checking."
+    },
+    "progress": {
+      "verifying_meter": "One moment. Verifying that your meter is compatible. This may take a minute or two."
+    },
+    "error": {
+      "invalid_phone_number": "Please enter a valid phone number.",
+      "unresponsive_meter": "Your meter is not responding. Please try again later.",
+      "http_error": "There was an error communicating with PECO. The issue that is most likely is that you entered an invalid phone number. Please check the phone number or try again later."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "customers_out": {
+        "name": "Customers out"
+      },
+      "percent_customers_out": {
+        "name": "Percent customers out"
+      },
+      "outage_count": {
+        "name": "Outage count"
+      },
+      "customers_served": {
+        "name": "Customers served"
+      },
+      "map_alert": {
+        "name": "Map alert"
+      }
     }
   }
 }

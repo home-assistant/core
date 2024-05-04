@@ -1,14 +1,19 @@
 """Support for TPLink Omada device firmware updates."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 from typing import Any, NamedTuple
 
+from tplink_omada_client import OmadaSiteClient
 from tplink_omada_client.devices import OmadaFirmwareUpdate, OmadaListDevice
 from tplink_omada_client.exceptions import OmadaClientException, RequestFailed
-from tplink_omada_client.omadasiteclient import OmadaSiteClient
 
-from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
+from homeassistant.components.update import (
+    UpdateDeviceClass,
+    UpdateEntity,
+    UpdateEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -30,7 +35,7 @@ class FirmwareUpdateStatus(NamedTuple):
     firmware: OmadaFirmwareUpdate | None
 
 
-class OmadaFirmwareUpdateCoodinator(OmadaCoordinator[FirmwareUpdateStatus]):
+class OmadaFirmwareUpdateCoodinator(OmadaCoordinator[FirmwareUpdateStatus]):  # pylint: disable=hass-enforce-coordinator-module
     """Coordinator for getting details about ports on a switch."""
 
     def __init__(self, hass: HomeAssistant, omada_client: OmadaSiteClient) -> None:
@@ -83,7 +88,7 @@ async def async_setup_entry(
 
 
 class OmadaDeviceUpdate(
-    OmadaDeviceEntity[FirmwareUpdateStatus],
+    OmadaDeviceEntity[OmadaFirmwareUpdateCoodinator],
     UpdateEntity,
 ):
     """Firmware update status for Omada SDN devices."""
@@ -94,7 +99,7 @@ class OmadaDeviceUpdate(
         | UpdateEntityFeature.RELEASE_NOTES
     )
     _attr_has_entity_name = True
-    _attr_name = "Firmware update"
+    _attr_device_class = UpdateDeviceClass.FIRMWARE
 
     def __init__(
         self,

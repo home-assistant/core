@@ -1,4 +1,5 @@
 """Set up the demo environment that mimics interaction with devices."""
+
 from __future__ import annotations
 
 import asyncio
@@ -26,15 +27,18 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CAMERA,
+    Platform.CALENDAR,
     Platform.CLIMATE,
     Platform.COVER,
     Platform.DATE,
     Platform.DATETIME,
+    Platform.EVENT,
     Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.MEDIA_PLAYER,
+    Platform.NOTIFY,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
@@ -46,15 +50,13 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.UPDATE,
     Platform.VACUUM,
     Platform.WATER_HEATER,
+    Platform.WEATHER,
 ]
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
     Platform.TTS,
-    Platform.STT,
     Platform.MAILBOX,
-    Platform.NOTIFY,
     Platform.IMAGE_PROCESSING,
-    Platform.CALENDAR,
     Platform.DEVICE_TRACKER,
 ]
 

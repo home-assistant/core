@@ -1,4 +1,5 @@
 """Test the Z-Wave JS number platform."""
+
 from unittest.mock import MagicMock
 
 from zwave_js_server.const import CURRENT_VALUE_PROPERTY, CommandClass
@@ -307,9 +308,7 @@ async def test_config_parameter_select(
     assert entity_entry.disabled
     assert entity_entry.entity_category == EntityCategory.CONFIG
 
-    updated_entry = ent_reg.async_update_entity(
-        select_entity_id, **{"disabled_by": None}
-    )
+    updated_entry = ent_reg.async_update_entity(select_entity_id, disabled_by=None)
     assert updated_entry != entity_entry
     assert updated_entry.disabled is False
 
@@ -320,3 +319,30 @@ async def test_config_parameter_select(
     state = hass.states.get(select_entity_id)
     assert state
     assert state.state == "Normal"
+
+
+async def test_lock_popp_electric_strike_lock_control_select(
+    hass: HomeAssistant, client, lock_popp_electric_strike_lock_control, integration
+) -> None:
+    """Test that the Popp Electric Strike Lock Control select entity."""
+    LOCK_SELECT_ENTITY = "select.node_62_current_lock_mode"
+    state = hass.states.get(LOCK_SELECT_ENTITY)
+    assert state
+    assert state.state == "Unsecured"
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": LOCK_SELECT_ENTITY, "option": "UnsecuredWithTimeout"},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == lock_popp_electric_strike_lock_control.node_id
+    assert args["valueId"] == {
+        "endpoint": 0,
+        "commandClass": 98,
+        "property": "targetMode",
+    }
+    assert args["value"] == 1

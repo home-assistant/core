@@ -1,4 +1,5 @@
 """Support for BTHome binary sensors."""
+
 from __future__ import annotations
 
 from bthome_ble import (
@@ -186,7 +187,9 @@ async def async_setup_entry(
             BTHomeBluetoothBinarySensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
+    entry.async_on_unload(
+        coordinator.async_register_processor(processor, BinarySensorEntityDescription)
+    )
 
 
 class BTHomeBluetoothBinarySensorEntity(
@@ -203,7 +206,4 @@ class BTHomeBluetoothBinarySensorEntity(
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        coordinator: BTHomePassiveBluetoothProcessorCoordinator = (
-            self.processor.coordinator
-        )
-        return coordinator.device_data.sleepy_device or super().available
+        return self.processor.coordinator.sleepy_device or super().available

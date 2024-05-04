@@ -1,4 +1,5 @@
 """Tests for YouTube."""
+
 import http
 import time
 from unittest.mock import patch
@@ -126,7 +127,7 @@ async def test_device_info(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     channel_id = entry.options[CONF_CHANNELS][0]
     device = device_registry.async_get_device(
-        {(DOMAIN, f"{entry.entry_id}_{channel_id}")}
+        identifiers={(DOMAIN, f"{entry.entry_id}_{channel_id}")}
     )
 
     assert device.entry_type is dr.DeviceEntryType.SERVICE

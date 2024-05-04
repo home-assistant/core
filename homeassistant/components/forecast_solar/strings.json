@@ -8,7 +8,7 @@
           "declination": "Declination (0 = Horizontal, 90 = Vertical)",
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]",
-          "modules power": "Total Watt peak power of your solar modules",
+          "modules_power": "Total Watt peak power of your solar modules",
           "name": "[%key:common::config_flow::data::name%]"
         }
       }
@@ -22,13 +22,51 @@
       "init": {
         "description": "These values allow tweaking the Forecast.Solar result. Please refer to the documentation if a field is unclear.",
         "data": {
-          "api_key": "Forecast.Solar API Key (optional)",
-          "azimuth": "Azimuth (360 degrees, 0 = North, 90 = East, 180 = South, 270 = West)",
-          "damping": "Damping factor: adjusts the results in the morning and evening",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "azimuth": "[%key:component::forecast_solar::config::step::user::data::azimuth%]",
+          "damping_morning": "Damping factor: adjusts the results in the morning",
+          "damping_evening": "Damping factor: adjusts the results in the evening",
           "inverter_size": "Inverter size (Watt)",
-          "declination": "Declination (0 = Horizontal, 90 = Vertical)",
-          "modules power": "Total Watt peak power of your solar modules"
+          "declination": "[%key:component::forecast_solar::config::step::user::data::declination%]",
+          "modules_power": "[%key:component::forecast_solar::config::step::user::data::modules_power%]"
         }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "energy_production_today": {
+        "name": "Estimated energy production - today"
+      },
+      "energy_production_today_remaining": {
+        "name": "Estimated energy production - remaining today"
+      },
+      "energy_production_tomorrow": {
+        "name": "Estimated energy production - tomorrow"
+      },
+      "power_highest_peak_time_today": {
+        "name": "Highest power peak time - today"
+      },
+      "power_highest_peak_time_tomorrow": {
+        "name": "Highest power peak time - tomorrow"
+      },
+      "power_production_now": {
+        "name": "Estimated power production - now"
+      },
+      "power_production_next_hour": {
+        "name": "Estimated power production - next hour"
+      },
+      "power_production_next_12hours": {
+        "name": "Estimated power production - next 12 hours"
+      },
+      "power_production_next_24hours": {
+        "name": "Estimated power production - next 24 hours"
+      },
+      "energy_current_hour": {
+        "name": "Estimated energy production - this hour"
+      },
+      "energy_next_hour": {
+        "name": "Estimated energy production - next hour"
       }
     }
   }

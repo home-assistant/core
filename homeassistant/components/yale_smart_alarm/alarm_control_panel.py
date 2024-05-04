@@ -1,4 +1,5 @@
 """Support for Yale Alarm."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -13,26 +14,24 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import COORDINATOR, DOMAIN, STATE_MAP, YALE_ALL_ERRORS
+from . import YaleConfigEntry
+from .const import DOMAIN, STATE_MAP, YALE_ALL_ERRORS
 from .coordinator import YaleDataUpdateCoordinator
 from .entity import YaleAlarmEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: YaleConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the alarm entry."""
 
-    async_add_entities(
-        [YaleAlarmDevice(coordinator=hass.data[DOMAIN][entry.entry_id][COORDINATOR])]
-    )
+    async_add_entities([YaleAlarmDevice(coordinator=entry.runtime_data)])
 
 
 class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
@@ -43,6 +42,7 @@ class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
+    _attr_name = None
 
     def __init__(self, coordinator: YaleDataUpdateCoordinator) -> None:
         """Initialize the Yale Alarm Device."""
@@ -81,8 +81,12 @@ class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
                 )
         except YALE_ALL_ERRORS as error:
             raise HomeAssistantError(
-                f"Could not set alarm for {self.coordinator.entry.data[CONF_NAME]}:"
-                f" {error}"
+                translation_domain=DOMAIN,
+                translation_key="set_alarm",
+                translation_placeholders={
+                    "name": self.coordinator.entry.data[CONF_NAME],
+                    "error": str(error),
+                },
             ) from error
 
         if alarm_state:
@@ -90,7 +94,8 @@ class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
             self.async_write_ha_state()
             return
         raise HomeAssistantError(
-            "Could not change alarm check system ready for arming."
+            translation_domain=DOMAIN,
+            translation_key="could_not_change_alarm",
         )
 
     @property

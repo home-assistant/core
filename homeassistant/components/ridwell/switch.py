@@ -1,4 +1,5 @@
 """Support for Ridwell buttons."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -16,12 +17,9 @@ from .const import DOMAIN
 from .coordinator import RidwellDataUpdateCoordinator
 from .entity import RidwellEntity
 
-SWITCH_TYPE_OPT_IN = "opt_in"
-
 SWITCH_DESCRIPTION = SwitchEntityDescription(
-    key=SWITCH_TYPE_OPT_IN,
-    name="Opt-in to next pickup",
-    icon="mdi:calendar-check",
+    key="opt_in",
+    translation_key="opt_in",
 )
 
 

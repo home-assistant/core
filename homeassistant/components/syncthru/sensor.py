@@ -1,4 +1,5 @@
 """Support for Samsung Printers with SyncThru web interface."""
+
 from __future__ import annotations
 
 from pysyncthru import SyncThru, SyncthruState
@@ -7,7 +8,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -21,7 +22,7 @@ COLORS = ["black", "cyan", "magenta", "yellow"]
 DRUM_COLORS = COLORS
 TONER_COLORS = COLORS
 TRAYS = range(1, 6)
-OUTPUT_TRAYS = range(0, 6)
+OUTPUT_TRAYS = range(6)
 DEFAULT_MONITORED_CONDITIONS = []
 DEFAULT_MONITORED_CONDITIONS.extend([f"toner_{key}" for key in TONER_COLORS])
 DEFAULT_MONITORED_CONDITIONS.extend([f"drum_{key}" for key in DRUM_COLORS])
@@ -61,15 +62,15 @@ async def async_setup_entry(
         SyncThruMainSensor(coordinator, name),
         SyncThruActiveAlertSensor(coordinator, name),
     ]
-
-    for key in supp_toner:
-        entities.append(SyncThruTonerSensor(coordinator, name, key))
-    for key in supp_drum:
-        entities.append(SyncThruDrumSensor(coordinator, name, key))
-    for key in supp_tray:
-        entities.append(SyncThruInputTraySensor(coordinator, name, key))
-    for int_key in supp_output_tray:
-        entities.append(SyncThruOutputTraySensor(coordinator, name, int_key))
+    entities.extend(SyncThruTonerSensor(coordinator, name, key) for key in supp_toner)
+    entities.extend(SyncThruDrumSensor(coordinator, name, key) for key in supp_drum)
+    entities.extend(
+        SyncThruInputTraySensor(coordinator, name, key) for key in supp_tray
+    )
+    entities.extend(
+        SyncThruOutputTraySensor(coordinator, name, int_key)
+        for int_key in supp_output_tray
+    )
 
     async_add_entities(entities)
 
@@ -109,6 +110,8 @@ class SyncThruMainSensor(SyncThruSensor):
     the displayed current status message.
     """
 
+    _attr_entity_registry_enabled_default = False
+
     def __init__(self, coordinator: DataUpdateCoordinator[SyncThru], name: str) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, name)
@@ -125,11 +128,6 @@ class SyncThruMainSensor(SyncThruSensor):
         return {
             "display_text": self.syncthru.device_status_details(),
         }
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Disable entity by default."""
-        return False
 
 
 class SyncThruTonerSensor(SyncThruSensor):

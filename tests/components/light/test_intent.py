@@ -1,4 +1,5 @@
 """Tests for the light intents."""
+
 from homeassistant.components import light
 from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode, intent
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON

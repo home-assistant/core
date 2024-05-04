@@ -1,4 +1,5 @@
 """TOLO Sauna light controls."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -26,7 +27,7 @@ class ToloLight(ToloSaunaCoordinatorEntity, LightEntity):
     """Sauna light control."""
 
     _attr_color_mode = ColorMode.ONOFF
-    _attr_name = "Sauna Light"
+    _attr_translation_key = "light"
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
     def __init__(

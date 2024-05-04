@@ -1,11 +1,11 @@
 """Prowl notification service."""
+
 from __future__ import annotations
 
 import asyncio
 from http import HTTPStatus
 import logging
 
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -64,7 +64,7 @@ class ProwlNotificationService(BaseNotificationService):
         session = async_get_clientsession(self._hass)
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 response = await session.post(url, data=payload)
                 result = await response.text()
 
@@ -74,5 +74,5 @@ class ProwlNotificationService(BaseNotificationService):
                     response.status,
                     result,
                 )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.error("Timeout accessing Prowl at %s", url)

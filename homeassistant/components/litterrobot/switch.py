@@ -1,4 +1,5 @@
 """Support for Litter-Robot switches."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -18,15 +19,14 @@ from .entity import LitterRobotEntity, _RobotT
 from .hub import LitterRobotHub
 
 
-@dataclass
+@dataclass(frozen=True)
 class RequiredKeysMixin(Generic[_RobotT]):
     """A class that describes robot switch entity required keys."""
 
-    icons: tuple[str, str]
     set_fn: Callable[[_RobotT, bool], Coroutine[Any, Any, bool]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RobotSwitchEntityDescription(SwitchEntityDescription, RequiredKeysMixin[_RobotT]):
     """A class that describes robot switch entities."""
 
@@ -36,14 +36,12 @@ class RobotSwitchEntityDescription(SwitchEntityDescription, RequiredKeysMixin[_R
 ROBOT_SWITCHES = [
     RobotSwitchEntityDescription[LitterRobot | FeederRobot](
         key="night_light_mode_enabled",
-        name="Night light mode",
-        icons=("mdi:lightbulb-on", "mdi:lightbulb-off"),
+        translation_key="night_light_mode",
         set_fn=lambda robot, value: robot.set_night_light(value),
     ),
     RobotSwitchEntityDescription[LitterRobot | FeederRobot](
         key="panel_lock_enabled",
-        name="Panel lockout",
-        icons=("mdi:lock", "mdi:lock-open"),
+        translation_key="panel_lockout",
         set_fn=lambda robot, value: robot.set_panel_lockout(value),
     ),
 ]
@@ -58,12 +56,6 @@ class RobotSwitchEntity(LitterRobotEntity[_RobotT], SwitchEntity):
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
         return bool(getattr(self.robot, self.entity_description.key))
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        icon_on, icon_off = self.entity_description.icons
-        return icon_on if self.is_on else icon_off
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""

@@ -1,4 +1,5 @@
 """Helpers for device automations."""
+
 from __future__ import annotations
 
 import asyncio
@@ -19,6 +20,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
+    CONF_ENTITY_ID,
     CONF_PLATFORM,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -132,8 +134,7 @@ async def async_get_device_automation_platform(
     hass: HomeAssistant,
     domain: str,
     automation_type: Literal[DeviceAutomationType.TRIGGER],
-) -> DeviceAutomationTriggerProtocol:
-    ...
+) -> DeviceAutomationTriggerProtocol: ...
 
 
 @overload
@@ -141,8 +142,7 @@ async def async_get_device_automation_platform(
     hass: HomeAssistant,
     domain: str,
     automation_type: Literal[DeviceAutomationType.CONDITION],
-) -> DeviceAutomationConditionProtocol:
-    ...
+) -> DeviceAutomationConditionProtocol: ...
 
 
 @overload
@@ -150,15 +150,13 @@ async def async_get_device_automation_platform(
     hass: HomeAssistant,
     domain: str,
     automation_type: Literal[DeviceAutomationType.ACTION],
-) -> DeviceAutomationActionProtocol:
-    ...
+) -> DeviceAutomationActionProtocol: ...
 
 
 @overload
 async def async_get_device_automation_platform(
     hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType
-) -> DeviceAutomationPlatformType:
-    ...
+) -> DeviceAutomationPlatformType: ...
 
 
 async def async_get_device_automation_platform(
@@ -171,7 +169,7 @@ async def async_get_device_automation_platform(
     platform_name = automation_type.value.section
     try:
         integration = await async_get_integration_with_requirements(hass, domain)
-        platform = integration.get_platform(platform_name)
+        platform = await integration.async_get_platform(platform_name)
     except IntegrationNotFound as err:
         raise InvalidDeviceAutomationConfig(
             f"Integration '{domain}' not found"
@@ -246,9 +244,9 @@ async def async_get_device_automations(
     match_device_ids = set(device_ids or device_registry.devices)
     combined_results: dict[str, list[dict[str, Any]]] = {}
 
-    for entry in entity_registry.entities.values():
-        if not entry.disabled_by and entry.device_id in match_device_ids:
-            device_entities_domains.setdefault(entry.device_id, set()).add(entry.domain)
+    for device_id in match_device_ids:
+        for entry in entity_registry.entities.get_entries_for_device_id(device_id):
+            device_entities_domains.setdefault(device_id, set()).add(entry.domain)
 
     for device_id in match_device_ids:
         combined_results[device_id] = []
@@ -340,8 +338,24 @@ def async_get_entity_registry_entry_or_raise(
     return entry
 
 
+@callback
+def async_validate_entity_schema(
+    hass: HomeAssistant, config: ConfigType, schema: vol.Schema
+) -> ConfigType:
+    """Validate schema and resolve entity registry entry id to entity_id."""
+    config = schema(config)
+
+    registry = er.async_get(hass)
+    if CONF_ENTITY_ID in config:
+        config[CONF_ENTITY_ID] = er.async_resolve_entity_id(
+            registry, config[CONF_ENTITY_ID]
+        )
+
+    return config
+
+
 def handle_device_errors(
-    func: Callable[[HomeAssistant, ActiveConnection, dict[str, Any]], Awaitable[None]]
+    func: Callable[[HomeAssistant, ActiveConnection, dict[str, Any]], Awaitable[None]],
 ) -> Callable[
     [HomeAssistant, ActiveConnection, dict[str, Any]], Coroutine[Any, Any, None]
 ]:

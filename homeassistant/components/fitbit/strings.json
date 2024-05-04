@@ -1,0 +1,58 @@
+{
+  "config": {
+    "step": {
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "auth": {
+        "title": "Link Fitbit"
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Fitbit integration needs to re-authenticate your account"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "wrong_account": "The user credentials provided do not match this Fitbit account.",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery": {
+        "name": "Battery"
+      },
+      "battery_level": {
+        "name": "Battery level"
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_no_import": {
+      "title": "Fitbit YAML configuration is being removed",
+      "description": "Configuring Fitbit using YAML is being removed.\n\nRemove the `fitbit` configuration from your configuration.yaml file and remove fitbit.conf if it exists and restart Home Assistant and [set up the integration](/config/integrations/dashboard/add?domain=fitbit) manually."
+    },
+    "deprecated_yaml_import": {
+      "title": "Fitbit YAML configuration is being removed",
+      "description": "Configuring Fitbit using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically, including OAuth Application Credentials.\n\nRemove the `fitbit` configuration from your configuration.yaml file and remove fitbit.conf and restart Home Assistant to fix this issue."
+    },
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "title": "The Fitbit YAML configuration import failed",
+      "description": "Configuring Fitbit using YAML is being removed but there was a connection error importing your YAML configuration.\n\nRestart Home Assistant to try again or remove the Fitbit YAML configuration from your configuration.yaml file and remove the fitbit.conf and continue to [set up the integration](/config/integrations/dashboard/add?domain=fitbit) manually."
+    }
+  }
+}

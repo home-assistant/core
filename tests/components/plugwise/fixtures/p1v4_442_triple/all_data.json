@@ -1,0 +1,62 @@
+{
+  "devices": {
+    "03e65b16e4b247a29ae0d75a78cb492e": {
+      "binary_sensors": {
+        "plugwise_notification": true
+      },
+      "dev_class": "gateway",
+      "firmware": "4.4.2",
+      "hardware": "AME Smile 2.0 board",
+      "location": "03e65b16e4b247a29ae0d75a78cb492e",
+      "mac_address": "012345670001",
+      "model": "Gateway",
+      "name": "Smile P1",
+      "vendor": "Plugwise"
+    },
+    "b82b6b3322484f2ea4e25e0bd5f3d61f": {
+      "available": true,
+      "dev_class": "smartmeter",
+      "location": "03e65b16e4b247a29ae0d75a78cb492e",
+      "model": "XMX5LGF0010453051839",
+      "name": "P1",
+      "sensors": {
+        "electricity_consumed_off_peak_cumulative": 70537.898,
+        "electricity_consumed_off_peak_interval": 314,
+        "electricity_consumed_off_peak_point": 5553,
+        "electricity_consumed_peak_cumulative": 161328.641,
+        "electricity_consumed_peak_interval": 0,
+        "electricity_consumed_peak_point": 0,
+        "electricity_phase_one_consumed": 1763,
+        "electricity_phase_one_produced": 0,
+        "electricity_phase_three_consumed": 2080,
+        "electricity_phase_three_produced": 0,
+        "electricity_phase_two_consumed": 1703,
+        "electricity_phase_two_produced": 0,
+        "electricity_produced_off_peak_cumulative": 0.0,
+        "electricity_produced_off_peak_interval": 0,
+        "electricity_produced_off_peak_point": 0,
+        "electricity_produced_peak_cumulative": 0.0,
+        "electricity_produced_peak_interval": 0,
+        "electricity_produced_peak_point": 0,
+        "gas_consumed_cumulative": 16811.37,
+        "gas_consumed_interval": 0.06,
+        "net_electricity_cumulative": 231866.539,
+        "net_electricity_point": 5553,
+        "voltage_phase_one": 233.2,
+        "voltage_phase_three": 234.7,
+        "voltage_phase_two": 234.4
+      },
+      "vendor": "XEMEX NV"
+    }
+  },
+  "gateway": {
+    "gateway_id": "03e65b16e4b247a29ae0d75a78cb492e",
+    "item_count": 40,
+    "notifications": {
+      "97a04c0c263049b29350a660b4cdd01e": {
+        "warning": "The Smile P1 is not connected to a smart meter."
+      }
+    },
+    "smile_name": "Smile P1"
+  }
+}

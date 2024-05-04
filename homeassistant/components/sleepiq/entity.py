@@ -1,4 +1,5 @@
 """Entity for the SleepIQ integration."""
+
 from abc import abstractmethod
 from typing import TypeVar
 
@@ -6,7 +7,8 @@ from asyncsleepiq import SleepIQBed, SleepIQSleeper
 
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ENTITY_TYPES, ICON_OCCUPIED
@@ -26,6 +28,14 @@ def device_from_bed(bed: SleepIQBed) -> DeviceInfo:
         name=bed.name,
         model=bed.model,
     )
+
+
+def sleeper_for_side(bed: SleepIQBed, side: str) -> SleepIQSleeper:
+    """Find the sleeper for a side or the first sleeper."""
+    for sleeper in bed.sleepers:
+        if sleeper.side == side:
+            return sleeper
+    return bed.sleepers[0]
 
 
 class SleepIQEntity(Entity):

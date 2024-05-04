@@ -1,38 +1,28 @@
 ptz:
-  name: PTZ
-  description: If your ONVIF camera supports PTZ, you will be able to pan, tilt or zoom your camera.
   target:
     entity:
       integration: onvif
       domain: camera
   fields:
     tilt:
-      name: Tilt
-      description: "Tilt direction."
       selector:
         select:
           options:
             - "DOWN"
             - "UP"
     pan:
-      name: Pan
-      description: "Pan direction."
       selector:
         select:
           options:
             - "LEFT"
             - "RIGHT"
     zoom:
-      name: Zoom
-      description: "Zoom."
       selector:
         select:
           options:
             - "ZOOM_IN"
             - "ZOOM_OUT"
     distance:
-      name: Distance
-      description: "Distance coefficient. Sets how much PTZ should be executed in one request."
       default: 0.1
       selector:
         number:
@@ -40,8 +30,6 @@ ptz:
           max: 1
           step: 0.01
     speed:
-      name: Speed
-      description: "Speed coefficient. Sets how fast PTZ will be executed."
       default: 0.5
       selector:
         number:
@@ -49,8 +37,6 @@ ptz:
           max: 1
           step: 0.01
     continuous_duration:
-      name: Continuous duration
-      description: "Set ContinuousMove delay in seconds before stopping the move"
       default: 0.5
       selector:
         number:
@@ -58,15 +44,11 @@ ptz:
           max: 1
           step: 0.01
     preset:
-      name: Preset
-      description: "PTZ preset profile token. Sets the preset profile token which is executed with GotoPreset"
       example: "1"
       default: "0"
       selector:
         text:
     move_mode:
-      name: Move Mode
-      description: "PTZ moving mode."
       default: "RelativeMove"
       selector:
         select:

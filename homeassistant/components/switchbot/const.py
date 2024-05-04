@@ -1,7 +1,8 @@
 """Constants for the switchbot integration."""
-from switchbot import SwitchbotModel
 
-from homeassistant.backports.enum import StrEnum
+from enum import StrEnum
+
+from switchbot import SwitchbotModel
 
 DOMAIN = "switchbot"
 MANUFACTURER = "switchbot"

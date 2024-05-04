@@ -1,4 +1,5 @@
 """Tests for the sensors provided by the Roku integration."""
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -7,7 +8,6 @@ from homeassistant.components.roku.const import DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
     STATE_UNKNOWN,
     EntityCategory,
 )
@@ -34,8 +34,7 @@ async def test_roku_sensors(
     assert entry.unique_id == f"{UPNP_SERIAL}_active_app"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == "Roku"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Roku 3 Active App"
-    assert state.attributes.get(ATTR_ICON) == "mdi:application"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Roku 3 Active app"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
     state = hass.states.get("sensor.my_roku_3_active_app_id")
@@ -45,8 +44,7 @@ async def test_roku_sensors(
     assert entry.unique_id == f"{UPNP_SERIAL}_active_app_id"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Roku 3 Active App ID"
-    assert state.attributes.get(ATTR_ICON) == "mdi:application-cog"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Roku 3 Active app ID"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
     assert entry.device_id
@@ -83,8 +81,7 @@ async def test_rokutv_sensors(
     assert entry.unique_id == "YN00H5555555_active_app"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == "Antenna TV"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == '58" Onn Roku TV Active App'
-    assert state.attributes.get(ATTR_ICON) == "mdi:application"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == '58" Onn Roku TV Active app'
     assert ATTR_DEVICE_CLASS not in state.attributes
 
     state = hass.states.get("sensor.58_onn_roku_tv_active_app_id")
@@ -94,8 +91,7 @@ async def test_rokutv_sensors(
     assert entry.unique_id == "YN00H5555555_active_app_id"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == "tvinput.dtv"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == '58" Onn Roku TV Active App ID'
-    assert state.attributes.get(ATTR_ICON) == "mdi:application-cog"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == '58" Onn Roku TV Active app ID'
     assert ATTR_DEVICE_CLASS not in state.attributes
 
     assert entry.device_id

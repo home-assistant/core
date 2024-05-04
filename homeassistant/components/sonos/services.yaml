@@ -1,49 +1,33 @@
 snapshot:
-  name: Snapshot
-  description: Take a snapshot of the media player.
   fields:
     entity_id:
-      name: Entity
-      description: Name of entity that will be snapshot.
       selector:
         entity:
           integration: sonos
           domain: media_player
     with_group:
-      name: With group
-      description: True or False. Also snapshot the group layout.
       default: true
       selector:
         boolean:
 
 restore:
-  name: Restore
-  description: Restore a snapshot of the media player.
   fields:
     entity_id:
-      name: Entity
-      description: Name of entity that will be restored.
       selector:
         entity:
           integration: sonos
           domain: media_player
     with_group:
-      name: With group
-      description: True or False. Also restore the group layout.
       default: true
       selector:
         boolean:
 
 set_sleep_timer:
-  name: Set timer
-  description: Set a Sonos timer.
   target:
     device:
       integration: sonos
   fields:
     sleep_time:
-      name: Sleep Time
-      description: Number of seconds to set the timer.
       selector:
         number:
           min: 0
@@ -51,22 +35,16 @@ set_sleep_timer:
           unit_of_measurement: seconds
 
 clear_sleep_timer:
-  name: Clear timer
-  description: Clear a Sonos timer.
   target:
     device:
       integration: sonos
 
 play_queue:
-  name: Play queue
-  description: Start playing the queue from the first item.
   target:
     device:
       integration: sonos
   fields:
     queue_position:
-      name: Queue position
-      description: Position of the song in the queue to start playing from.
       selector:
         number:
           min: 0
@@ -74,15 +52,11 @@ play_queue:
           mode: box
 
 remove_from_queue:
-  name: Remove from queue
-  description: Removes an item from the queue.
   target:
     device:
       integration: sonos
   fields:
     queue_position:
-      name: Queue position
-      description: Position in the queue to remove.
       selector:
         number:
           min: 0
@@ -90,15 +64,11 @@ remove_from_queue:
           mode: box
 
 update_alarm:
-  name: Update alarm
-  description: Updates an alarm with new time and volume settings.
   target:
     device:
       integration: sonos
   fields:
     alarm_id:
-      name: Alarm ID
-      description: ID for the alarm to be updated.
       required: true
       selector:
         number:
@@ -106,26 +76,18 @@ update_alarm:
           max: 1440
           mode: box
     time:
-      name: Time
-      description: Set time for the alarm.
       example: "07:00"
       selector:
         time:
     volume:
-      name: Volume
-      description: Set alarm volume level.
       selector:
         number:
           min: 0
           max: 1
           step: 0.01
     enabled:
-      name: Alarm enabled
-      description: Enable or disable the alarm.
       selector:
         boolean:
     include_linked_zones:
-      name: Include linked zones
-      description: Enable or disable including grouped rooms.
       selector:
         boolean:

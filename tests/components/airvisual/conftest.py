@@ -1,4 +1,5 @@
 """Define test fixtures for AirVisual."""
+
 from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, Mock, patch
@@ -69,6 +70,7 @@ def config_entry_fixture(hass, config, config_entry_version, integration_type):
     """Define a config entry fixture."""
     entry = MockConfigEntry(
         domain=DOMAIN,
+        entry_id="3bd2acb0e4f0476d40865546d0d91921",
         unique_id=async_get_geography_id(config),
         data={**config, CONF_INTEGRATION_TYPE: integration_type},
         options={CONF_SHOW_ON_MAP: True},
@@ -111,18 +113,23 @@ def integration_type_fixture():
 @pytest.fixture(name="mock_pyairvisual")
 async def mock_pyairvisual_fixture(cloud_api, node_samba):
     """Define a fixture to patch pyairvisual."""
-    with patch(
-        "homeassistant.components.airvisual.CloudAPI",
-        return_value=cloud_api,
-    ), patch(
-        "homeassistant.components.airvisual.config_flow.CloudAPI",
-        return_value=cloud_api,
-    ), patch(
-        "homeassistant.components.airvisual_pro.NodeSamba",
-        return_value=node_samba,
-    ), patch(
-        "homeassistant.components.airvisual_pro.config_flow.NodeSamba",
-        return_value=node_samba,
+    with (
+        patch(
+            "homeassistant.components.airvisual.CloudAPI",
+            return_value=cloud_api,
+        ),
+        patch(
+            "homeassistant.components.airvisual.config_flow.CloudAPI",
+            return_value=cloud_api,
+        ),
+        patch(
+            "homeassistant.components.airvisual_pro.NodeSamba",
+            return_value=node_samba,
+        ),
+        patch(
+            "homeassistant.components.airvisual_pro.config_flow.NodeSamba",
+            return_value=node_samba,
+        ),
     ):
         yield
 

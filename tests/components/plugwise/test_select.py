@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 async def test_adam_select_entities(
     hass: HomeAssistant, mock_smile_adam: MagicMock, init_integration: MockConfigEntry
 ) -> None:
-    """Test a select."""
+    """Test a thermostat Select."""
 
     state = hass.states.get("select.zone_lisa_wk_thermostat_schedule")
     assert state
@@ -40,5 +40,34 @@ async def test_adam_change_select_entity(
 
     assert mock_smile_adam.set_schedule_state.call_count == 1
     mock_smile_adam.set_schedule_state.assert_called_with(
-        "c50f167537524366a5af7aa3942feb1e", "Badkamer Schema", "on"
+        "c50f167537524366a5af7aa3942feb1e",
+        "on",
+        "Badkamer Schema",
     )
+
+
+async def test_adam_select_regulation_mode(
+    hass: HomeAssistant, mock_smile_adam_3: MagicMock, init_integration: MockConfigEntry
+) -> None:
+    """Test a regulation_mode select.
+
+    Also tests a change in climate _previous mode.
+    """
+
+    state = hass.states.get("select.adam_gateway_mode")
+    assert state
+    assert state.state == "full"
+    state = hass.states.get("select.adam_regulation_mode")
+    assert state
+    assert state.state == "cooling"
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            "entity_id": "select.adam_regulation_mode",
+            "option": "heating",
+        },
+        blocking=True,
+    )
+    assert mock_smile_adam_3.set_regulation_mode.call_count == 1
+    mock_smile_adam_3.set_regulation_mode.assert_called_with("heating")

@@ -1,4 +1,5 @@
 """Fully Kiosk Browser media player."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -12,7 +13,7 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import AUDIOMANAGER_STREAM_MUSIC, DOMAIN, MEDIA_SUPPORT_FULLYKIOSK
@@ -33,6 +34,7 @@ async def async_setup_entry(
 class FullyMediaPlayer(FullyKioskEntity, MediaPlayerEntity):
     """Representation of a Fully Kiosk Browser media player entity."""
 
+    _attr_name = None
     _attr_supported_features = MEDIA_SUPPORT_FULLYKIOSK
     _attr_assumed_state = True
 
@@ -81,3 +83,13 @@ class FullyMediaPlayer(FullyKioskEntity, MediaPlayerEntity):
             media_content_id,
             content_filter=lambda item: item.media_content_type.startswith("audio/"),
         )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_state = (
+            MediaPlayerState.PLAYING
+            if "soundUrlPlaying" in self.coordinator.data
+            else MediaPlayerState.IDLE
+        )
+        self.async_write_ha_state()

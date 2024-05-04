@@ -1,6 +1,5 @@
 """The tests for the REST binary sensor platform."""
 
-import asyncio
 from http import HTTPStatus
 import ssl
 from unittest.mock import MagicMock, patch
@@ -107,7 +106,7 @@ async def test_setup_fail_on_ssl_erros(
 @respx.mock
 async def test_setup_timeout(hass: HomeAssistant) -> None:
     """Test setup when connection timeout occurs."""
-    respx.get("http://localhost").mock(side_effect=asyncio.TimeoutError())
+    respx.get("http://localhost").mock(side_effect=TimeoutError())
     assert await async_setup_component(
         hass,
         BINARY_SENSOR_DOMAIN,
@@ -500,3 +499,27 @@ async def test_entity_config(hass: HomeAssistant) -> None:
         "friendly_name": "REST Binary Sensor",
         "icon": "mdi:one_two_three",
     }
+
+
+@respx.mock
+async def test_availability_in_config(hass: HomeAssistant) -> None:
+    """Test entity configuration."""
+
+    config = {
+        BINARY_SENSOR_DOMAIN: {
+            # REST configuration
+            "platform": DOMAIN,
+            "method": "GET",
+            "resource": "http://localhost",
+            # Entity configuration
+            "availability": "{{value==1}}",
+            "name": "{{'REST' + ' ' + 'Binary Sensor'}}",
+        },
+    }
+
+    respx.get("http://localhost") % HTTPStatus.OK
+    assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.rest_binary_sensor")
+    assert state.state == STATE_UNAVAILABLE

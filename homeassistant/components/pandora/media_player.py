@@ -1,4 +1,5 @@
 """Component for controlling Pandora stations through the pianobar client."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -223,11 +224,9 @@ class PandoraMediaPlayer(MediaPlayerEntity):
             _LOGGER.warning("On unexpected station list page")
             self._pianobar.sendcontrol("m")  # press enter
             self._pianobar.sendcontrol("m")  # do it again b/c an 'i' got in
-            # pylint: disable=assignment-from-none
             response = self.update_playing_status()
         elif match_idx == 3:
             _LOGGER.debug("Received new playlist list")
-            # pylint: disable=assignment-from-none
             response = self.update_playing_status()
         else:
             response = self._pianobar.before.decode("utf-8")

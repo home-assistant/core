@@ -1,0 +1,8 @@
+{
+  "wifi_ssid": "My Wi-Fi",
+  "wifi_strength": 94,
+  "total_power_import_t1_kwh": 63.651,
+  "total_power_export_t1_kwh": 0,
+  "active_power_w": 1457.277,
+  "active_power_l1_w": 1457.277
+}

@@ -1,4 +1,5 @@
 """Data update coordinator for the Jellyfin integration."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -47,6 +48,7 @@ class JellyfinDataUpdateCoordinator(DataUpdateCoordinator[JellyfinDataT], ABC):
         self.user_id: str = user_id
 
         self.session_ids: set[str] = set()
+        self.device_ids: set[str] = set()
 
     async def _async_update_data(self) -> JellyfinDataT:
         """Get the latest data from Jellyfin."""
@@ -74,5 +76,7 @@ class SessionsDataUpdateCoordinator(
             if session["DeviceId"] != self.client_device_id
             and session["Client"] != USER_APP_NAME
         }
+
+        self.device_ids = {session["DeviceId"] for session in sessions_by_id.values()}
 
         return sessions_by_id

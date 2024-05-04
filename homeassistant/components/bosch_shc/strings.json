@@ -6,10 +6,16 @@
         "title": "SHC authentication parameters",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Bosch Smart Home Controller."
         }
       },
       "credentials": {
         "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
           "password": "Password of the Smart Home Controller"
         }
       },
@@ -39,23 +45,26 @@
   },
   "entity": {
     "sensor": {
+      "purity_rating": {
+        "name": "Purity rating"
+      },
       "purity": {
         "name": "Purity"
       },
       "valvetappet": {
         "name": "Valvetappet"
       },
-      "airquality": {
-        "name": "Air Quality"
+      "air_quality": {
+        "name": "Air quality"
       },
       "temperature_rating": {
-        "name": "Temperature Rating"
+        "name": "Temperature rating"
       },
       "humidity_rating": {
-        "name": "Humidity Rating"
+        "name": "Humidity rating"
       },
       "communication_quality": {
-        "name": "Communication Quality"
+        "name": "Communication quality"
       }
     },
     "switch": {

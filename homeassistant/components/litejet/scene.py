@@ -1,4 +1,5 @@
 """Support for LiteJet scenes."""
+
 import logging
 from typing import Any
 
@@ -8,7 +9,7 @@ from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -51,7 +52,7 @@ class LiteJetScene(Scene):
             identifiers={(DOMAIN, f"{entry_id}_mcp")},
             name="LiteJet",
             manufacturer="Centralite",
-            model="CL24",
+            model=system.model_name,
         )
 
     async def async_added_to_hass(self) -> None:
@@ -76,4 +77,4 @@ class LiteJetScene(Scene):
         try:
             await self._lj.activate_scene(self._index)
         except LiteJetError as exc:
-            raise HomeAssistantError() from exc
+            raise HomeAssistantError from exc

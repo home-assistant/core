@@ -1,0 +1,126 @@
+# serializer version: 1
+# name: test_state[False][water_heater.my_water_heater-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max_temp': 130,
+      'min_temp': 95,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'water_heater',
+    'entity_category': None,
+    'entity_id': 'water_heater.my_water_heater',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'aosmith',
+    'previous_unique_id': None,
+    'supported_features': <WaterHeaterEntityFeature: 5>,
+    'translation_key': None,
+    'unique_id': 'junctionId',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[False][water_heater.my_water_heater-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'away_mode': 'off',
+      'current_temperature': None,
+      'friendly_name': 'My water heater',
+      'max_temp': 130,
+      'min_temp': 95,
+      'supported_features': <WaterHeaterEntityFeature: 5>,
+      'target_temp_high': None,
+      'target_temp_low': None,
+      'temperature': 130,
+    }),
+    'context': <ANY>,
+    'entity_id': 'water_heater.my_water_heater',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'electric',
+  })
+# ---
+# name: test_state[True][water_heater.my_water_heater-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max_temp': 130,
+      'min_temp': 95,
+      'operation_list': list([
+        'electric',
+        'eco',
+        'heat_pump',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'water_heater',
+    'entity_category': None,
+    'entity_id': 'water_heater.my_water_heater',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'aosmith',
+    'previous_unique_id': None,
+    'supported_features': <WaterHeaterEntityFeature: 7>,
+    'translation_key': None,
+    'unique_id': 'junctionId',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[True][water_heater.my_water_heater-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'away_mode': 'off',
+      'current_temperature': None,
+      'friendly_name': 'My water heater',
+      'max_temp': 130,
+      'min_temp': 95,
+      'operation_list': list([
+        'electric',
+        'eco',
+        'heat_pump',
+      ]),
+      'operation_mode': 'heat_pump',
+      'supported_features': <WaterHeaterEntityFeature: 7>,
+      'target_temp_high': None,
+      'target_temp_low': None,
+      'temperature': 130,
+    }),
+    'context': <ANY>,
+    'entity_id': 'water_heater.my_water_heater',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_pump',
+  })
+# ---

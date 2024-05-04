@@ -1,4 +1,5 @@
 """Test the NZBGet sensors."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -34,14 +35,14 @@ async def test_sensors(hass: HomeAssistant, nzbget_api) -> None:
         ),
         "average_speed": (
             "AverageDownloadRate",
-            "1.19",
+            "1.250000",
             UnitOfDataRate.MEGABYTES_PER_SECOND,
             SensorDeviceClass.DATA_RATE,
         ),
         "download_paused": ("DownloadPaused", "False", None, None),
         "speed": (
             "DownloadRate",
-            "2.38",
+            "2.500000",
             UnitOfDataRate.MEGABYTES_PER_SECOND,
             SensorDeviceClass.DATA_RATE,
         ),
@@ -68,7 +69,7 @@ async def test_sensors(hass: HomeAssistant, nzbget_api) -> None:
         "uptime": ("UpTimeSec", uptime.isoformat(), None, SensorDeviceClass.TIMESTAMP),
         "speed_limit": (
             "DownloadLimit",
-            "0.95",
+            "1.000000",
             UnitOfDataRate.MEGABYTES_PER_SECOND,
             SensorDeviceClass.DATA_RATE,
         ),

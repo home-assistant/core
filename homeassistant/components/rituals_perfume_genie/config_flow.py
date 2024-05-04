@@ -1,4 +1,5 @@
 """Config flow for Rituals Perfume Genie integration."""
+
 from __future__ import annotations
 
 import logging
@@ -8,9 +9,8 @@ from aiohttp import ClientResponseError
 from pyrituals import Account, AuthenticationException
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import ACCOUNT_HASH, DOMAIN
@@ -25,14 +25,14 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class RitualsPerfumeGenieConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Rituals Perfume Genie."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)

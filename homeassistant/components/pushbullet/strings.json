@@ -15,5 +15,39 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "application_name": {
+        "name": "Application name"
+      },
+      "body": {
+        "name": "Body"
+      },
+      "notification_id": {
+        "name": "Notification ID"
+      },
+      "notification_tag": {
+        "name": "Notification tag"
+      },
+      "package_name": {
+        "name": "Package name"
+      },
+      "receiver_email": {
+        "name": "Receiver email"
+      },
+      "sender_email": {
+        "name": "Sender email"
+      },
+      "source_device_identifier": {
+        "name": "Sender device ID"
+      },
+      "title": {
+        "name": "Title"
+      },
+      "type": {
+        "name": "Type"
+      }
+    }
   }
 }

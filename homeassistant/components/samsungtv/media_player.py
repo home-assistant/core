@@ -1,11 +1,11 @@
 """Support for interface with an Samsung TV."""
+
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine, Sequence
+from collections.abc import Sequence
 from typing import Any
 
-import async_timeout
 from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequester
 from async_upnp_client.client import UpnpDevice, UpnpService, UpnpStateVariable
 from async_upnp_client.client_factory import UpnpFactory
@@ -36,6 +36,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.trigger import PluggableAction
+from homeassistant.util.async_ import create_eager_task
 
 from .bridge import SamsungTVBridge, SamsungTVWSBridge
 from .const import CONF_SSDP_RENDERING_CONTROL_LOCATION, DOMAIN, LOGGER
@@ -45,15 +46,17 @@ from .triggers.turn_on import async_get_turn_on_trigger
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
 
 SUPPORT_SAMSUNGTV = (
-    MediaPlayerEntityFeature.PAUSE
-    | MediaPlayerEntityFeature.VOLUME_STEP
-    | MediaPlayerEntityFeature.VOLUME_MUTE
-    | MediaPlayerEntityFeature.PREVIOUS_TRACK
-    | MediaPlayerEntityFeature.SELECT_SOURCE
-    | MediaPlayerEntityFeature.NEXT_TRACK
-    | MediaPlayerEntityFeature.TURN_OFF
+    MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.PAUSE
     | MediaPlayerEntityFeature.PLAY
     | MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.STOP
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_STEP
 )
 
 
@@ -73,6 +76,8 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
     """Representation of a Samsung TV."""
 
     _attr_source_list: list[str]
+    _attr_name = None
+    _attr_device_class = MediaPlayerDeviceClass.TV
 
     def __init__(
         self,
@@ -91,7 +96,6 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         self._playing: bool = True
 
         self._attr_is_volume_muted: bool = False
-        self._attr_device_class = MediaPlayerDeviceClass.TV
         self._attr_source_list = list(SOURCES)
         self._app_list: dict[str, str] | None = None
         self._app_list_event: asyncio.Event = asyncio.Event()
@@ -171,15 +175,15 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
                 await self._dmr_device.async_unsubscribe_services()
             return
 
-        startup_tasks: list[Coroutine[Any, Any, Any]] = []
+        startup_tasks: list[asyncio.Task[Any]] = []
 
         if not self._app_list_event.is_set():
-            startup_tasks.append(self._async_startup_app_list())
+            startup_tasks.append(create_eager_task(self._async_startup_app_list()))
 
         if self._dmr_device and not self._dmr_device.is_subscribed:
-            startup_tasks.append(self._async_resubscribe_dmr())
+            startup_tasks.append(create_eager_task(self._async_resubscribe_dmr()))
         if not self._dmr_device and self._ssdp_rendering_control_location:
-            startup_tasks.append(self._async_startup_dmr())
+            startup_tasks.append(create_eager_task(self._async_startup_dmr()))
 
         if startup_tasks:
             await asyncio.gather(*startup_tasks)
@@ -217,9 +221,9 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
             # enter it unless we have to (Python 3.11 will have zero cost try)
             return
         try:
-            async with async_timeout.timeout(APP_LIST_DELAY):
+            async with asyncio.timeout(APP_LIST_DELAY):
                 await self._app_list_event.wait()
-        except asyncio.TimeoutError as err:
+        except TimeoutError as err:
             # No need to try again
             self._app_list_event.set()
             LOGGER.debug("Failed to load app list from %s: %r", self._host, err)

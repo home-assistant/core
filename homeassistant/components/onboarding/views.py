@@ -1,22 +1,32 @@
 """Onboarding views."""
+
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine
 from http import HTTPStatus
+from typing import TYPE_CHECKING, Any, cast
 
+from aiohttp import web
 from aiohttp.web_exceptions import HTTPUnauthorized
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
+from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components import person
 from homeassistant.components.auth import indieauth
-from homeassistant.components.http import KEY_HASS_REFRESH_TOKEN_ID
+from homeassistant.components.http import KEY_HASS, KEY_HASS_REFRESH_TOKEN_ID
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.translation import async_get_translations
+from homeassistant.setup import async_setup_component
+from homeassistant.util.async_ import create_eager_task
+
+if TYPE_CHECKING:
+    from . import OnboardingData, OnboardingStorage, OnboardingStoreData
 
 from .const import (
     DEFAULT_AREAS,
@@ -29,7 +39,9 @@ from .const import (
 )
 
 
-async def async_setup(hass, data, store):
+async def async_setup(
+    hass: HomeAssistant, data: OnboardingStoreData, store: OnboardingStorage
+) -> None:
     """Set up the onboarding view."""
     hass.http.register_view(OnboardingView(data, store))
     hass.http.register_view(InstallationTypeOnboardingView(data))
@@ -46,12 +58,12 @@ class OnboardingView(HomeAssistantView):
     url = "/api/onboarding"
     name = "api:onboarding"
 
-    def __init__(self, data, store):
+    def __init__(self, data: OnboardingStoreData, store: OnboardingStorage) -> None:
         """Initialize the onboarding view."""
         self._store = store
         self._data = data
 
-    async def get(self, request):
+    async def get(self, request: web.Request) -> web.Response:
         """Return the onboarding status."""
         return self.json(
             [{"step": key, "done": key in self._data["done"]} for key in STEPS]
@@ -65,16 +77,16 @@ class InstallationTypeOnboardingView(HomeAssistantView):
     url = "/api/onboarding/installation_type"
     name = "api:onboarding:installation_type"
 
-    def __init__(self, data):
+    def __init__(self, data: OnboardingStoreData) -> None:
         """Initialize the onboarding installation type view."""
         self._data = data
 
-    async def get(self, request):
+    async def get(self, request: web.Request) -> web.Response:
         """Return the onboarding status."""
         if self._data["done"]:
-            raise HTTPUnauthorized()
+            raise HTTPUnauthorized
 
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         info = await async_get_system_info(hass)
         return self.json({"installation_type": info["installation_type"]})
 
@@ -82,26 +94,29 @@ class InstallationTypeOnboardingView(HomeAssistantView):
 class _BaseOnboardingView(HomeAssistantView):
     """Base class for onboarding."""
 
-    step: str | None = None
+    step: str
 
-    def __init__(self, data, store):
+    def __init__(self, data: OnboardingStoreData, store: OnboardingStorage) -> None:
         """Initialize the onboarding view."""
         self._store = store
         self._data = data
         self._lock = asyncio.Lock()
 
     @callback
-    def _async_is_done(self):
+    def _async_is_done(self) -> bool:
         """Return if this step is done."""
         return self.step in self._data["done"]
 
-    async def _async_mark_done(self, hass):
+    async def _async_mark_done(self, hass: HomeAssistant) -> None:
         """Mark step as done."""
         self._data["done"].append(self.step)
         await self._store.async_save(self._data)
 
         if set(self._data["done"]) == set(STEPS):
-            hass.data[DOMAIN] = True
+            data: OnboardingData = hass.data[DOMAIN]
+            data.onboarded = True
+            for listener in data.listeners:
+                listener()
 
 
 class UserOnboardingView(_BaseOnboardingView):
@@ -123,9 +138,9 @@ class UserOnboardingView(_BaseOnboardingView):
             }
         )
     )
-    async def post(self, request, data):
+    async def post(self, request: web.Request, data: dict[str, str]) -> web.Response:
         """Handle user creation, area creation."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
 
         async with self._lock:
             if self._async_is_done():
@@ -137,13 +152,10 @@ class UserOnboardingView(_BaseOnboardingView):
             user = await hass.auth.async_create_user(
                 data["name"], group_ids=[GROUP_ID_ADMIN]
             )
-            await hass.async_add_executor_job(
-                provider.data.add_auth, data["username"], data["password"]
-            )
+            await provider.async_add_auth(data["username"], data["password"])
             credentials = await provider.async_get_or_create_credentials(
                 {"username": data["username"]}
             )
-            await provider.data.async_save()
             await hass.auth.async_link_user(user, credentials)
             if "person" in hass.config.components:
                 await person.async_create_person(hass, data["name"], user_id=user.id)
@@ -180,9 +192,9 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
     name = "api:onboarding:core_config"
     step = STEP_CORE_CONFIG
 
-    async def post(self, request):
+    async def post(self, request: web.Request) -> web.Response:
         """Handle finishing core config step."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
 
         async with self._lock:
             if self._async_is_done():
@@ -193,26 +205,39 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
             await self._async_mark_done(hass)
 
             # Integrations to set up when finishing onboarding
-            onboard_integrations = ["met", "radio_browser"]
+            onboard_integrations = [
+                "google_translate",
+                "met",
+                "radio_browser",
+                "shopping_list",
+            ]
 
             # pylint: disable-next=import-outside-toplevel
             from homeassistant.components import hassio
 
             if (
                 hassio.is_hassio(hass)
-                and "raspberrypi" in hassio.get_core_info(hass)["machine"]
+                and (core_info := hassio.get_core_info(hass))
+                and "raspberrypi" in core_info["machine"]
             ):
                 onboard_integrations.append("rpi_power")
 
-            # Set up integrations after onboarding
-            await asyncio.gather(
-                *(
-                    hass.config_entries.flow.async_init(
-                        domain, context={"source": "onboarding"}
-                    )
-                    for domain in onboard_integrations
+            coros: list[Coroutine[Any, Any, Any]] = [
+                hass.config_entries.flow.async_init(
+                    domain, context={"source": "onboarding"}
                 )
-            )
+                for domain in onboard_integrations
+            ]
+
+            if "analytics" not in hass.config.components:
+                # If by some chance that analytics has not finished
+                # setting up, wait for it here so its ready for the
+                # next step.
+                coros.append(async_setup_component(hass, "analytics", {}))
+
+            # Set up integrations after onboarding and ensure
+            # analytics is ready for the next step.
+            await asyncio.gather(*(create_eager_task(coro) for coro in coros))
 
             return self.json({})
 
@@ -227,9 +252,9 @@ class IntegrationOnboardingView(_BaseOnboardingView):
     @RequestDataValidator(
         vol.Schema({vol.Required("client_id"): str, vol.Required("redirect_uri"): str})
     )
-    async def post(self, request, data):
+    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle token creation."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         refresh_token_id = request[KEY_HASS_REFRESH_TOKEN_ID]
 
         async with self._lock:
@@ -242,13 +267,13 @@ class IntegrationOnboardingView(_BaseOnboardingView):
 
             # Validate client ID and redirect uri
             if not await indieauth.verify_redirect_uri(
-                request.app["hass"], data["client_id"], data["redirect_uri"]
+                request.app[KEY_HASS], data["client_id"], data["redirect_uri"]
             ):
                 return self.json_message(
                     "invalid client id or redirect uri", HTTPStatus.BAD_REQUEST
                 )
 
-            refresh_token = await hass.auth.async_get_refresh_token(refresh_token_id)
+            refresh_token = hass.auth.async_get_refresh_token(refresh_token_id)
             if refresh_token is None or refresh_token.credential is None:
                 return self.json_message(
                     "Credentials for user not available", HTTPStatus.FORBIDDEN
@@ -271,9 +296,9 @@ class AnalyticsOnboardingView(_BaseOnboardingView):
     name = "api:onboarding:analytics"
     step = STEP_ANALYTICS
 
-    async def post(self, request):
+    async def post(self, request: web.Request) -> web.Response:
         """Handle finishing analytics step."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
 
         async with self._lock:
             if self._async_is_done():
@@ -287,10 +312,10 @@ class AnalyticsOnboardingView(_BaseOnboardingView):
 
 
 @callback
-def _async_get_hass_provider(hass):
+def _async_get_hass_provider(hass: HomeAssistant) -> HassAuthProvider:
     """Get the Home Assistant auth provider."""
     for prv in hass.auth.auth_providers:
         if prv.type == "homeassistant":
-            return prv
+            return cast(HassAuthProvider, prv)
 
     raise RuntimeError("No Home Assistant provider found")

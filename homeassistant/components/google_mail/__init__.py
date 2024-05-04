@@ -1,12 +1,10 @@
 """Support for Google Mail."""
-from __future__ import annotations
 
-from aiohttp.client_exceptions import ClientError, ClientResponseError
+from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
@@ -35,16 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
     auth = AsyncConfigEntryAuth(session)
-    try:
-        await auth.check_and_refresh_token()
-    except ClientResponseError as err:
-        if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed(
-                "OAuth session is not valid, reauth required"
-            ) from err
-        raise ConfigEntryNotReady from err
-    except ClientError as err:
-        raise ConfigEntryNotReady from err
+    await auth.check_and_refresh_token()
     hass.data[DOMAIN][entry.entry_id] = auth
 
     hass.async_create_task(
@@ -76,7 +65,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if entry.state == ConfigEntryState.LOADED
     ]
     if len(loaded_entries) == 1:
-        for service_name in hass.services.async_services()[DOMAIN]:
+        for service_name in hass.services.async_services_for_domain(DOMAIN):
             hass.services.async_remove(DOMAIN, service_name)
 
     return unload_ok

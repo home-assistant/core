@@ -1,4 +1,5 @@
 """Constants for Met Office Integration."""
+
 from datetime import timedelta
 
 from homeassistant.components.weather import (
@@ -51,6 +52,11 @@ CONDITION_CLASSES: dict[str, list[str]] = {
     ATTR_CONDITION_WINDY: [],
     ATTR_CONDITION_WINDY_VARIANT: [],
     ATTR_CONDITION_EXCEPTIONAL: [],
+}
+CONDITION_MAP = {
+    cond_code: cond_ha
+    for cond_ha, cond_codes in CONDITION_CLASSES.items()
+    for cond_code in cond_codes
 }
 
 VISIBILITY_CLASSES = {

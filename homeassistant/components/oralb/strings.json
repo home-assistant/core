@@ -1,11 +1,11 @@
 {
   "config": {
-    "flow_title": "[%key:component::bluetooth::config::flow_title%]",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "description": "[%key:component::bluetooth::config::step::user::description%]",
         "data": {
-          "address": "[%key:component::bluetooth::config::step::user::data::address%]"
+          "address": "[%key:common::config_flow::data::device%]"
         }
       },
       "bluetooth_confirm": {
@@ -17,6 +17,25 @@
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "sector": {
+        "name": "Sector"
+      },
+      "number_of_sectors": {
+        "name": "Number of sectors"
+      },
+      "sector_timer": {
+        "name": "Sector timer"
+      },
+      "pressure": {
+        "name": "Pressure"
+      },
+      "mode": {
+        "name": "Brushing mode"
+      }
     }
   }
 }

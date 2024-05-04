@@ -1,8 +1,9 @@
 """The tests for Netatmo device triggers."""
+
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.netatmo import DOMAIN as NETATMO_DOMAIN
 from homeassistant.components.netatmo.const import (
@@ -62,18 +63,18 @@ async def test_get_triggers(
     expected_triggers = []
     for event_type in event_types:
         if event_type in SUBTYPES:
-            for subtype in SUBTYPES[event_type]:
-                expected_triggers.append(
-                    {
-                        "platform": "device",
-                        "domain": NETATMO_DOMAIN,
-                        "type": event_type,
-                        "subtype": subtype,
-                        "device_id": device_entry.id,
-                        "entity_id": entity_entry.id,
-                        "metadata": {"secondary": False},
-                    }
-                )
+            expected_triggers.extend(
+                {
+                    "platform": "device",
+                    "domain": NETATMO_DOMAIN,
+                    "type": event_type,
+                    "subtype": subtype,
+                    "device_id": device_entry.id,
+                    "entity_id": entity_entry.id,
+                    "metadata": {"secondary": False},
+                }
+                for subtype in SUBTYPES[event_type]
+            )
         else:
             expected_triggers.append(
                 {
@@ -161,7 +162,7 @@ async def test_if_fires_on_event(
         },
     )
 
-    device = device_registry.async_get_device(set(), {connection})
+    device = device_registry.async_get_device(connections={connection})
     assert device is not None
 
     # Fake that the entity is turning on.
@@ -244,7 +245,7 @@ async def test_if_fires_on_event_legacy(
         },
     )
 
-    device = device_registry.async_get_device(set(), {connection})
+    device = device_registry.async_get_device(connections={connection})
     assert device is not None
 
     # Fake that the entity is turning on.
@@ -328,7 +329,7 @@ async def test_if_fires_on_event_with_subtype(
         },
     )
 
-    device = device_registry.async_get_device(set(), {connection})
+    device = device_registry.async_get_device(connections={connection})
     assert device is not None
 
     # Fake that the entity is turning on.

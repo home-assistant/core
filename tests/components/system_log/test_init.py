@@ -1,9 +1,11 @@
 """Test system log component."""
+
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable
 import logging
+import re
 import traceback
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -85,11 +87,6 @@ class WatchLogErrorHandler(system_log.LogErrorHandler):
         super().handle(record)
         if record.message in self.watch_message:
             self.watch_event.set()
-
-
-def get_frame(name):
-    """Get log stack frame."""
-    return (name, 5, None, None)
 
 
 async def async_setup_system_log(hass, config) -> WatchLogErrorHandler:
@@ -362,20 +359,30 @@ async def test_unknown_path(
     assert log["source"] == ["unknown_path", 0]
 
 
+def get_frame(path: str, previous_frame: MagicMock | None) -> MagicMock:
+    """Get log stack frame."""
+    return MagicMock(
+        f_back=previous_frame,
+        f_code=MagicMock(co_filename=path),
+        f_lineno=5,
+    )
+
+
 async def async_log_error_from_test_path(hass, path, watcher):
     """Log error while mocking the path."""
     call_path = "internal_path.py"
-    with patch.object(
-        _LOGGER, "findCaller", MagicMock(return_value=(call_path, 0, None, None))
-    ), patch(
-        "traceback.extract_stack",
-        MagicMock(
-            return_value=[
-                get_frame("main_path/main.py"),
-                get_frame(path),
-                get_frame(call_path),
-                get_frame("venv_path/logging/log.py"),
-            ]
+    main_frame = get_frame("main_path/main.py", None)
+    path_frame = get_frame(path, main_frame)
+    call_path_frame = get_frame(call_path, path_frame)
+    logger_frame = get_frame("venv_path/logging/log.py", call_path_frame)
+
+    with (
+        patch.object(
+            _LOGGER, "findCaller", MagicMock(return_value=(call_path, 0, None, None))
+        ),
+        patch(
+            "homeassistant.components.system_log.sys._getframe",
+            return_value=logger_frame,
         ),
     ):
         wait_empty = watcher.add_watcher("error message")
@@ -441,3 +448,58 @@ async def test_raise_during_log_capture(
     log = find_log(await get_error_log(hass_ws_client), "ERROR")
     assert log is not None
     assert_log(log, "", "Bad logger message: repr error", "ERROR")
+
+
+async def test__figure_out_source(hass: HomeAssistant) -> None:
+    """Test that source is figured out correctly.
+
+    We have to test this directly for exception tracebacks since
+    we cannot generate a trackback from a Home Assistant component
+    in a test because the test is not a component.
+    """
+    try:
+        raise ValueError("test")
+    except ValueError as ex:
+        exc_info = (type(ex), ex, ex.__traceback__)
+    mock_record = MagicMock(
+        pathname="figure_out_source is False",
+        lineno=5,
+        exc_info=exc_info,
+    )
+    regex_str = f"({__file__})"
+    paths_re = re.compile(regex_str)
+    file, line_no = system_log._figure_out_source(
+        mock_record,
+        paths_re,
+        list(traceback.walk_tb(exc_info[2])),
+    )
+    assert file == __file__
+    assert line_no != 5
+
+    entry = system_log.LogEntry(mock_record, paths_re, figure_out_source=False)
+    assert entry.source == ("figure_out_source is False", 5)
+
+
+async def test_formatting_exception(hass: HomeAssistant) -> None:
+    """Test that exceptions are formatted correctly."""
+    try:
+        raise ValueError("test")
+    except ValueError as ex:
+        exc_info = (type(ex), ex, ex.__traceback__)
+    mock_record = MagicMock(
+        pathname="figure_out_source is False",
+        lineno=5,
+        exc_info=exc_info,
+        exc_text=None,
+    )
+    regex_str = f"({__file__})"
+    paths_re = re.compile(regex_str)
+
+    mock_formatter = MagicMock(
+        formatException=MagicMock(return_value="formatted exception")
+    )
+    entry = system_log.LogEntry(
+        mock_record, paths_re, formatter=mock_formatter, figure_out_source=False
+    )
+    assert entry.exception == "formatted exception"
+    assert mock_record.exc_text == "formatted exception"

@@ -22,131 +22,108 @@ if TYPE_CHECKING:
     from homeassistant.helpers.typing import StateType
 
 
-@dataclass
-class BaseEntityDescriptionMixin:
-    """Mixin for required descriptor keys."""
+@dataclass(frozen=True, kw_only=True)
+class KaleidescapeSensorEntityDescription(SensorEntityDescription):
+    """Describes Kaleidescape sensor entity."""
 
     value_fn: Callable[[KaleidescapeDevice], StateType]
-
-
-@dataclass
-class KaleidescapeSensorEntityDescription(
-    SensorEntityDescription, BaseEntityDescriptionMixin
-):
-    """Describes Kaleidescape sensor entity."""
 
 
 SENSOR_TYPES: tuple[KaleidescapeSensorEntityDescription, ...] = (
     KaleidescapeSensorEntityDescription(
         key="media_location",
-        name="Media Location",
-        icon="mdi:monitor",
+        translation_key="media_location",
         value_fn=lambda device: device.automation.movie_location,
     ),
     KaleidescapeSensorEntityDescription(
         key="play_status",
-        name="Play Status",
-        icon="mdi:monitor",
+        translation_key="play_status",
         value_fn=lambda device: device.movie.play_status,
     ),
     KaleidescapeSensorEntityDescription(
         key="play_speed",
-        name="Play Speed",
-        icon="mdi:monitor",
+        translation_key="play_speed",
         value_fn=lambda device: device.movie.play_speed,
     ),
     KaleidescapeSensorEntityDescription(
         key="video_mode",
-        name="Video Mode",
-        icon="mdi:monitor-screenshot",
+        translation_key="video_mode",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.automation.video_mode,
     ),
     KaleidescapeSensorEntityDescription(
         key="video_color_eotf",
-        name="Video Color EOTF",
-        icon="mdi:monitor-eye",
+        translation_key="video_color_eotf",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.automation.video_color_eotf,
     ),
     KaleidescapeSensorEntityDescription(
         key="video_color_space",
-        name="Video Color Space",
-        icon="mdi:monitor-eye",
+        translation_key="video_color_space",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.automation.video_color_space,
     ),
     KaleidescapeSensorEntityDescription(
         key="video_color_depth",
-        name="Video Color Depth",
-        icon="mdi:monitor-eye",
+        translation_key="video_color_depth",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.automation.video_color_depth,
     ),
     KaleidescapeSensorEntityDescription(
         key="video_color_sampling",
-        name="Video Color Sampling",
-        icon="mdi:monitor-eye",
+        translation_key="video_color_sampling",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.automation.video_color_sampling,
     ),
     KaleidescapeSensorEntityDescription(
         key="screen_mask_ratio",
-        name="Screen Mask Ratio",
-        icon="mdi:monitor-screenshot",
+        translation_key="screen_mask_ratio",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.automation.screen_mask_ratio,
     ),
     KaleidescapeSensorEntityDescription(
         key="screen_mask_top_trim_rel",
-        name="Screen Mask Top Trim Rel",
-        icon="mdi:monitor-screenshot",
+        translation_key="screen_mask_top_trim_rel",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda device: device.automation.screen_mask_top_trim_rel / 10.0,
     ),
     KaleidescapeSensorEntityDescription(
         key="screen_mask_bottom_trim_rel",
-        name="Screen Mask Bottom Trim Rel",
-        icon="mdi:monitor-screenshot",
+        translation_key="screen_mask_bottom_trim_rel",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda device: device.automation.screen_mask_bottom_trim_rel / 10.0,
     ),
     KaleidescapeSensorEntityDescription(
         key="screen_mask_conservative_ratio",
-        name="Screen Mask Conservative Ratio",
-        icon="mdi:monitor-screenshot",
+        translation_key="screen_mask_conservative_ratio",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.automation.screen_mask_conservative_ratio,
     ),
     KaleidescapeSensorEntityDescription(
         key="screen_mask_top_mask_abs",
-        name="Screen Mask Top Mask Abs",
-        icon="mdi:monitor-screenshot",
+        translation_key="screen_mask_top_mask_abs",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda device: device.automation.screen_mask_top_mask_abs / 10.0,
     ),
     KaleidescapeSensorEntityDescription(
         key="screen_mask_bottom_mask_abs",
-        name="Screen Mask Bottom Mask Abs",
-        icon="mdi:monitor-screenshot",
+        translation_key="screen_mask_bottom_mask_abs",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda device: device.automation.screen_mask_bottom_mask_abs / 10.0,
     ),
     KaleidescapeSensorEntityDescription(
         key="cinemascape_mask",
-        name="Cinemascape Mask",
-        icon="mdi:monitor-star",
+        translation_key="cinemascape_mask",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.automation.cinemascape_mask,
     ),
     KaleidescapeSensorEntityDescription(
         key="cinemascape_mode",
-        name="Cinemascape Mode",
-        icon="mdi:monitor-star",
+        translation_key="cinemascape_mode",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.automation.cinemascape_mode,
     ),
@@ -177,7 +154,6 @@ class KaleidescapeSensor(KaleidescapeEntity, SensorEntity):
         super().__init__(device)
         self.entity_description = entity_description
         self._attr_unique_id = f"{self._attr_unique_id}-{entity_description.key}"
-        self._attr_name = f"{self._attr_name} {entity_description.name}"
 
     @property
     def native_value(self) -> StateType:

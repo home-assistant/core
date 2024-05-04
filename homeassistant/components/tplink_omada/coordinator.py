@@ -1,11 +1,12 @@
 """Generic Omada API coordinator."""
+
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Generic, TypeVar
 
-import async_timeout
+from tplink_omada_client import OmadaSiteClient
 from tplink_omada_client.exceptions import OmadaClientException
-from tplink_omada_client.omadaclient import OmadaSiteClient
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -37,7 +38,7 @@ class OmadaCoordinator(DataUpdateCoordinator[dict[str, T]], Generic[T]):
     async def _async_update_data(self) -> dict[str, T]:
         """Fetch data from API endpoint."""
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 return await self.poll_update()
         except OmadaClientException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err

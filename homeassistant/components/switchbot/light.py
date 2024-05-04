@@ -1,4 +1,5 @@
 """Switchbot integration light platform."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -46,6 +47,7 @@ class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
     """Representation of switchbot light bulb."""
 
     _device: SwitchbotBaseLight
+    _attr_name = None
 
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
         """Initialize the Switchbot light."""

@@ -1,4 +1,5 @@
 """Platform for sensor integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -10,8 +11,7 @@ from geocachingapi.models import GeocachingStatus
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -19,55 +19,43 @@ from .const import DOMAIN
 from .coordinator import GeocachingDataUpdateCoordinator
 
 
-@dataclass
-class GeocachingRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class GeocachingSensorEntityDescription(SensorEntityDescription):
+    """Define Sensor entity description class."""
 
     value_fn: Callable[[GeocachingStatus], str | int | None]
-
-
-@dataclass
-class GeocachingSensorEntityDescription(
-    SensorEntityDescription, GeocachingRequiredKeysMixin
-):
-    """Define Sensor entity description class."""
 
 
 SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
     GeocachingSensorEntityDescription(
         key="find_count",
-        name="Total finds",
-        icon="mdi:notebook-edit-outline",
+        translation_key="find_count",
         native_unit_of_measurement="caches",
         value_fn=lambda status: status.user.find_count,
     ),
     GeocachingSensorEntityDescription(
         key="hide_count",
-        name="Total hides",
-        icon="mdi:eye-off-outline",
+        translation_key="hide_count",
         native_unit_of_measurement="caches",
         entity_registry_visible_default=False,
         value_fn=lambda status: status.user.hide_count,
     ),
     GeocachingSensorEntityDescription(
         key="favorite_points",
-        name="Favorite points",
-        icon="mdi:heart-outline",
+        translation_key="favorite_points",
         native_unit_of_measurement="points",
         entity_registry_visible_default=False,
         value_fn=lambda status: status.user.favorite_points,
     ),
     GeocachingSensorEntityDescription(
         key="souvenir_count",
-        name="Total souvenirs",
-        icon="mdi:license",
+        translation_key="souvenir_count",
         native_unit_of_measurement="souvenirs",
         value_fn=lambda status: status.user.souvenir_count,
     ),
     GeocachingSensorEntityDescription(
         key="awarded_favorite_points",
-        name="Awarded favorite points",
-        icon="mdi:heart",
+        translation_key="awarded_favorite_points",
         native_unit_of_measurement="points",
         entity_registry_visible_default=False,
         value_fn=lambda status: status.user.awarded_favorite_points,

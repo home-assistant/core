@@ -1,4 +1,5 @@
 """Test UniFi Network diagnostics."""
+
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
@@ -7,7 +8,7 @@ from homeassistant.components.unifi.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .test_controller import setup_unifi_integration
+from .test_hub import setup_unifi_integration
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -129,6 +130,7 @@ async def test_entry_diagnostics(
             "disabled_by": None,
             "domain": "unifi",
             "entry_id": "1",
+            "minor_version": 1,
             "options": {
                 "allow_bandwidth_sensors": True,
                 "allow_uptime_sensors": True,
@@ -141,7 +143,7 @@ async def test_entry_diagnostics(
             "unique_id": "1",
             "version": 1,
         },
-        "site_role": "admin",
+        "role_is_admin": True,
         "clients": {
             "00:00:00:00:00:00": {
                 "blocked": False,

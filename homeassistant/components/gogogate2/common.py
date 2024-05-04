@@ -1,4 +1,5 @@
 """Common code for GogoGate2 component."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Mapping
@@ -24,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -47,7 +48,7 @@ class StateData(NamedTuple):
 
 class DeviceDataUpdateCoordinator(
     DataUpdateCoordinator[GogoGate2InfoResponse | ISmartGateInfoResponse]
-):
+):  # pylint: disable=hass-enforce-coordinator-module
     """Manages polling for state changes from the device."""
 
     def __init__(
@@ -113,9 +114,10 @@ class GoGoGate2Entity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
     def device_info(self) -> DeviceInfo:
         """Device info for the controller."""
         data = self.coordinator.data
-        configuration_url = (
-            f"https://{data.remoteaccess}" if data.remoteaccess else None
-        )
+        if data.remoteaccessenabled:
+            configuration_url = f"https://{data.remoteaccess}"
+        else:
+            configuration_url = f"http://{self._config_entry.data[CONF_IP_ADDRESS]}"
         return DeviceInfo(
             configuration_url=configuration_url,
             identifiers={(DOMAIN, str(self._config_entry.unique_id))},

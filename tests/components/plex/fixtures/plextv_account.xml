@@ -1,15 +1,18 @@
-<user email="myplexusername@email.com" id="12345" uuid="1234567890" mailing_list_status="active" thumb="https://plex.tv/users/1234567890abcdef/avatar?c=11111" username="User 1" title="User 1" cloudSyncDevice="" locale="" authenticationToken="faketoken" authToken="faketoken" scrobbleTypes="" restricted="0" home="1" guest="0" queueEmail="queue+1234567890@save.plex.tv" queueUid="" hasPassword="true" homeSize="2" maxHomeSize="15" secure="1" certificateVersion="2">
-  <subscription active="1" status="Active" plan="lifetime">
-    <feature id="companions_sonos"/>
+<user id="12345" uuid="1234567890" username="User 1" title="User 1" email="myplexusername@email.com" friendlyName="User 1" locale="" confirmed="1" joinedAt="946730096" emailOnlyAuth="0" hasPassword="1" protected="0" thumb="https://plex.tv/users/1234567890abcdef/avatar?c=12345" authToken="faketoken" mailingListStatus="unsubscribed" mailingListActive="0" scrobbleTypes="" country="CA" subscriptionDescription="" restricted="0" anonymous="" home="1" guest="0" homeSize="2" homeAdmin="1" maxHomeSize="15" rememberExpiresAt="1680893707" adsConsent="" adsConsentSetAt="" adsConsentReminderAt="" experimentalFeatures="0" twoFactorEnabled="1" backupCodesCreated="1">
+  <subscription active="1" subscribedAt="2023-09-19 00:00:00 UTC" status="Active" paymentService="" plan="lifetime">
+    <features>
+      <feature id="companions_sonos"/>
+    </features>
   </subscription>
+  <profile autoSelectAudio="0" defaultAudioLanguage="en" defaultSubtitleLanguage="en" autoSelectSubtitle="0" defaultSubtitleAccessibility="0" defaultSubtitleForced="0"/>
+  <entitlements>
+    <entitlement id="all"/>
+  </entitlements>
   <roles>
     <role id="plexpass"/>
   </roles>
-  <entitlements all="1"/>
-  <profile_settings default_audio_language="en" default_subtitle_language="en" auto_select_subtitle="1" auto_select_audio="1" default_subtitle_accessibility="0" default_subtitle_forced="0"/>
-  <services/>
-  <username>testuser</username>
-  <email>testuser@email.com</email>
-  <joined-at type="datetime">2000-01-01 12:34:56 UTC</joined-at>
-  <authentication-token>faketoken</authentication-token>
+  <subscriptions>
+  </subscriptions>
+ <services>
+ </services>
 </user>

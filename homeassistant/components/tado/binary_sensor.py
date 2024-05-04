@@ -1,4 +1,5 @@
 """Support for Tado sensors for each zone."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -17,6 +18,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from . import TadoConnector
 from .const import (
     DATA,
     DOMAIN,
@@ -32,49 +34,39 @@ from .entity import TadoDeviceEntity, TadoZoneEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class TadoBinarySensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class TadoBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes Tado binary sensor entity."""
 
     state_fn: Callable[[Any], bool]
-
-
-@dataclass
-class TadoBinarySensorEntityDescription(
-    BinarySensorEntityDescription, TadoBinarySensorEntityDescriptionMixin
-):
-    """Describes Tado binary sensor entity."""
 
     attributes_fn: Callable[[Any], dict[Any, StateType]] | None = None
 
 
 BATTERY_STATE_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="battery state",
-    name="Battery state",
     state_fn=lambda data: data["batteryState"] == "LOW",
     device_class=BinarySensorDeviceClass.BATTERY,
 )
 CONNECTION_STATE_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="connection state",
-    name="Connection state",
+    translation_key="connection_state",
     state_fn=lambda data: data.get("connectionState", {}).get("value", False),
     device_class=BinarySensorDeviceClass.CONNECTIVITY,
 )
 POWER_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="power",
-    name="Power",
     state_fn=lambda data: data.power == "ON",
     device_class=BinarySensorDeviceClass.POWER,
 )
 LINK_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="link",
-    name="Link",
     state_fn=lambda data: data.link == "ONLINE",
     device_class=BinarySensorDeviceClass.CONNECTIVITY,
 )
 OVERLAY_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="overlay",
-    name="Overlay",
+    translation_key="overlay",
     state_fn=lambda data: data.overlay_active,
     attributes_fn=lambda data: {"termination": data.overlay_termination_type}
     if data.overlay_active
@@ -83,14 +75,13 @@ OVERLAY_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
 )
 OPEN_WINDOW_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="open window",
-    name="Open window",
     state_fn=lambda data: bool(data.open_window or data.open_window_detected),
     attributes_fn=lambda data: data.open_window_attr,
     device_class=BinarySensorDeviceClass.WINDOW,
 )
 EARLY_START_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="early start",
-    name="Early start",
+    translation_key="early_start",
     state_fn=lambda data: data.preparation,
     device_class=BinarySensorDeviceClass.POWER,
 )
@@ -173,10 +164,11 @@ class TadoDeviceBinarySensor(TadoDeviceEntity, BinarySensorEntity):
 
     entity_description: TadoBinarySensorEntityDescription
 
-    _attr_has_entity_name = True
-
     def __init__(
-        self, tado, device_info, entity_description: TadoBinarySensorEntityDescription
+        self,
+        tado: TadoConnector,
+        device_info: dict[str, Any],
+        entity_description: TadoBinarySensorEntityDescription,
     ) -> None:
         """Initialize of the Tado Sensor."""
         self.entity_description = entity_description
@@ -189,7 +181,6 @@ class TadoDeviceBinarySensor(TadoDeviceEntity, BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
-
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -202,13 +193,13 @@ class TadoDeviceBinarySensor(TadoDeviceEntity, BinarySensorEntity):
         self._async_update_device_data()
 
     @callback
-    def _async_update_callback(self):
+    def _async_update_callback(self) -> None:
         """Update and write state."""
         self._async_update_device_data()
         self.async_write_ha_state()
 
     @callback
-    def _async_update_device_data(self):
+    def _async_update_device_data(self) -> None:
         """Handle update callbacks."""
         try:
             self._device_info = self._tado.data["device"][self.device_id]
@@ -227,13 +218,11 @@ class TadoZoneBinarySensor(TadoZoneEntity, BinarySensorEntity):
 
     entity_description: TadoBinarySensorEntityDescription
 
-    _attr_has_entity_name = True
-
     def __init__(
         self,
-        tado,
-        zone_name,
-        zone_id,
+        tado: TadoConnector,
+        zone_name: str,
+        zone_id: int,
         entity_description: TadoBinarySensorEntityDescription,
     ) -> None:
         """Initialize of the Tado Sensor."""
@@ -245,7 +234,6 @@ class TadoZoneBinarySensor(TadoZoneEntity, BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
-
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -258,13 +246,13 @@ class TadoZoneBinarySensor(TadoZoneEntity, BinarySensorEntity):
         self._async_update_zone_data()
 
     @callback
-    def _async_update_callback(self):
+    def _async_update_callback(self) -> None:
         """Update and write state."""
         self._async_update_zone_data()
         self.async_write_ha_state()
 
     @callback
-    def _async_update_zone_data(self):
+    def _async_update_zone_data(self) -> None:
         """Handle update callbacks."""
         try:
             tado_zone_data = self._tado.data["zone"][self.zone_id]

@@ -1,4 +1,5 @@
 """Test shopping list component."""
+
 from http import HTTPStatus
 
 import pytest
@@ -34,7 +35,8 @@ async def test_add_item(hass: HomeAssistant, sl_setup) -> None:
         hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
     )
 
-    assert response.speech["plain"]["speech"] == "I've added beer to your shopping list"
+    # Response text is now handled by default conversation agent
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
 
 
 async def test_remove_item(hass: HomeAssistant, sl_setup) -> None:

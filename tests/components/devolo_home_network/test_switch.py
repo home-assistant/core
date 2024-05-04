@@ -1,9 +1,11 @@
 """Tests for the devolo Home Network switch."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from devolo_plc_api.device_api import WifiGuestAccessGet
 from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnavailable
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -24,7 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
-from homeassistant.util import dt as dt_util
 
 from . import configure_integration
 from .mock import MockDevice
@@ -40,7 +41,7 @@ async def test_switch_setup(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(f"{PLATFORM}.{device_name}_enable_guest_wifi") is not None
+    assert hass.states.get(f"{PLATFORM}.{device_name}_enable_guest_wi_fi") is not None
     assert hass.states.get(f"{PLATFORM}.{device_name}_enable_leds") is not None
 
     await hass.config_entries.async_unload(entry.entry_id)
@@ -75,12 +76,13 @@ async def test_update_enable_guest_wifi(
     hass: HomeAssistant,
     mock_device: MockDevice,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test state change of a enable_guest_wifi switch device."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    state_key = f"{PLATFORM}.{device_name}_enable_guest_wifi"
+    state_key = f"{PLATFORM}.{device_name}_enable_guest_wi_fi"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -92,7 +94,8 @@ async def test_update_enable_guest_wifi(
     mock_device.device.async_get_wifi_guest_access.return_value = WifiGuestAccessGet(
         enabled=True
     )
-    async_fire_time_changed(hass, dt_util.utcnow() + SHORT_UPDATE_INTERVAL)
+    freezer.tick(SHORT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
@@ -116,9 +119,8 @@ async def test_update_enable_guest_wifi(
         assert state.state == STATE_OFF
         turn_off.assert_called_once_with(False)
 
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN)
-    )
+    freezer.tick(REQUEST_REFRESH_DEFAULT_COOLDOWN)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Switch on
@@ -138,9 +140,8 @@ async def test_update_enable_guest_wifi(
         assert state.state == STATE_ON
         turn_on.assert_called_once_with(True)
 
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN)
-    )
+    freezer.tick(REQUEST_REFRESH_DEFAULT_COOLDOWN)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Device unavailable
@@ -164,6 +165,7 @@ async def test_update_enable_leds(
     hass: HomeAssistant,
     mock_device: MockDevice,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test state change of a enable_leds switch device."""
@@ -179,7 +181,8 @@ async def test_update_enable_leds(
 
     # Emulate state change
     mock_device.device.async_get_led_setting.return_value = True
-    async_fire_time_changed(hass, dt_util.utcnow() + SHORT_UPDATE_INTERVAL)
+    freezer.tick(SHORT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
@@ -201,9 +204,8 @@ async def test_update_enable_leds(
         assert state.state == STATE_OFF
         turn_off.assert_called_once_with(False)
 
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN)
-    )
+    freezer.tick(REQUEST_REFRESH_DEFAULT_COOLDOWN)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Switch on
@@ -221,9 +223,8 @@ async def test_update_enable_leds(
         assert state.state == STATE_ON
         turn_on.assert_called_once_with(True)
 
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN)
-    )
+    freezer.tick(REQUEST_REFRESH_DEFAULT_COOLDOWN)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Device unavailable
@@ -246,13 +247,14 @@ async def test_update_enable_leds(
 @pytest.mark.parametrize(
     ("name", "get_method", "update_interval"),
     [
-        ["enable_guest_wifi", "async_get_wifi_guest_access", SHORT_UPDATE_INTERVAL],
-        ["enable_leds", "async_get_led_setting", SHORT_UPDATE_INTERVAL],
+        ("enable_guest_wi_fi", "async_get_wifi_guest_access", SHORT_UPDATE_INTERVAL),
+        ("enable_leds", "async_get_led_setting", SHORT_UPDATE_INTERVAL),
     ],
 )
 async def test_device_failure(
     hass: HomeAssistant,
     mock_device: MockDevice,
+    freezer: FrozenDateTimeFactory,
     name: str,
     get_method: str,
     update_interval: timedelta,
@@ -270,7 +272,8 @@ async def test_device_failure(
 
     api = getattr(mock_device.device, get_method)
     api.side_effect = DeviceUnavailable
-    async_fire_time_changed(hass, dt_util.utcnow() + update_interval)
+    freezer.tick(update_interval)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
@@ -281,8 +284,8 @@ async def test_device_failure(
 @pytest.mark.parametrize(
     ("name", "set_method"),
     [
-        ["enable_guest_wifi", "async_set_wifi_guest_access"],
-        ["enable_leds", "async_set_led_setting"],
+        ("enable_guest_wi_fi", "async_set_wifi_guest_access"),
+        ("enable_leds", "async_set_led_setting"),
     ],
 )
 async def test_auth_failed(
@@ -307,6 +310,9 @@ async def test_auth_failed(
         await hass.services.async_call(
             PLATFORM, SERVICE_TURN_ON, {"entity_id": state_key}, blocking=True
         )
+
+    await hass.async_block_till_done()
+
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
 

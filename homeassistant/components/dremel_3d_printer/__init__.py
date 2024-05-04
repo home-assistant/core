@@ -1,4 +1,5 @@
 """The Dremel 3D Printer (3D20, 3D40, 3D45) integration."""
+
 from __future__ import annotations
 
 from dremel3dpy import Dremel3DPrinter
@@ -12,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import CAMERA_MODEL, DOMAIN
 from .coordinator import Dremel3DPrinterDataUpdateCoordinator
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.CAMERA, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:

@@ -1,4 +1,5 @@
 """Support for OpenWRT (ubus) routers."""
+
 from __future__ import annotations
 
 import logging
@@ -75,13 +76,13 @@ class UbusDeviceScanner(DeviceScanner):
 
     def __init__(self, config):
         """Initialize the scanner."""
-        host = config[CONF_HOST]
+        self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
 
         self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
         self.last_results = {}
-        self.url = f"http://{host}/ubus"
+        self.url = f"http://{self.host}/ubus"
 
         self.ubus = Ubus(self.url, self.username, self.password)
         self.hostapd = []
@@ -105,8 +106,11 @@ class UbusDeviceScanner(DeviceScanner):
         if self.mac2name is None:
             # Generation of mac2name dictionary failed
             return None
-        name = self.mac2name.get(device.upper(), None)
-        return name
+        return self.mac2name.get(device.upper(), None)
+
+    async def async_get_extra_attributes(self, device: str) -> dict[str, str]:
+        """Return the host to distinguish between multiple routers."""
+        return {"host": self.host}
 
     @_refresh_on_access_denied
     def _update_info(self):

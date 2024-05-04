@@ -1,4 +1,5 @@
 """The sensor entity for the Youless integration."""
+
 from __future__ import annotations
 
 from youless_api import YoulessAPI
@@ -19,7 +20,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (

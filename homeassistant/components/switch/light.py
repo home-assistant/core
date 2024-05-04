@@ -1,4 +1,5 @@
 """Light support for switch entities."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -15,7 +16,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -93,7 +94,9 @@ class LightSwitch(LightEntity):
         """Register callbacks."""
 
         @callback
-        def async_state_changed_listener(event: Event | None = None) -> None:
+        def async_state_changed_listener(
+            event: Event[EventStateChangedData] | None = None,
+        ) -> None:
             """Handle child updates."""
             if (
                 state := self.hass.states.get(self._switch_entity_id)

@@ -1,10 +1,13 @@
 """Test check_config script."""
+
+import logging
 from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.http.const import StrictConnectionMode
 from homeassistant.config import YAML_CONFIG_FILE
-import homeassistant.scripts.check_config as check_config
+from homeassistant.scripts import check_config
 
 from tests.common import get_test_config_dir
 
@@ -20,6 +23,15 @@ BASE_CONFIG = (
 )
 
 BAD_CORE_CONFIG = "homeassistant:\n  unit_system: bad\n\n\n"
+
+
+@pytest.fixture(autouse=True)
+def reset_log_level():
+    """Reset log level after each test case."""
+    logger = logging.getLogger("homeassistant.loader")
+    orig_level = logger.level
+    yield
+    logger.setLevel(orig_level)
 
 
 @pytest.fixture(autouse=True)
@@ -49,6 +61,7 @@ def test_bad_core_config(mock_is_file, event_loop, mock_hass_config_yaml: None) 
     res = check_config.check(get_test_config_dir())
     assert res["except"].keys() == {"homeassistant"}
     assert res["except"]["homeassistant"][1] == {"unit_system": "bad"}
+    assert res["warn"] == {}
 
 
 @pytest.mark.parametrize("hass_config_yaml", [BASE_CONFIG + "light:\n  platform: demo"])
@@ -62,6 +75,7 @@ def test_config_platform_valid(
     assert res["except"] == {}
     assert res["secret_cache"] == {}
     assert res["secrets"] == {}
+    assert res["warn"] == {}
     assert len(res["yaml_files"]) == 1
 
 
@@ -76,7 +90,10 @@ def test_config_platform_valid(
         (
             BASE_CONFIG + "light:\n  platform: beer",
             {"homeassistant", "light"},
-            "Platform error light.beer - Integration 'beer' not found.",
+            (
+                "Platform error 'light' from integration 'beer' - "
+                "Integration 'beer' not found."
+            ),
         ),
     ],
 )
@@ -87,9 +104,10 @@ def test_component_platform_not_found(
     # Make sure they don't exist
     res = check_config.check(get_test_config_dir())
     assert res["components"].keys() == platforms
-    assert res["except"] == {check_config.ERROR_STR: [error]}
+    assert res["except"] == {}
     assert res["secret_cache"] == {}
     assert res["secrets"] == {}
+    assert res["warn"] == {check_config.WARNING_STR: [error]}
     assert len(res["yaml_files"]) == 1
 
 
@@ -117,11 +135,15 @@ def test_secrets(mock_is_file, event_loop, mock_hass_config_yaml: None) -> None:
         "login_attempts_threshold": -1,
         "server_port": 8123,
         "ssl_profile": "modern",
+        "strict_connection": StrictConnectionMode.DISABLED,
+        "use_x_frame_options": True,
+        "server_host": ["0.0.0.0", "::"],
     }
     assert res["secret_cache"] == {
         get_test_config_dir("secrets.yaml"): {"http_pw": "http://google.com"}
     }
     assert res["secrets"] == {"http_pw": "http://google.com"}
+    assert res["warn"] == {}
     assert normalize_yaml_files(res) == [
         ".../configuration.yaml",
         ".../secrets.yaml",
@@ -135,13 +157,12 @@ def test_package_invalid(mock_is_file, event_loop, mock_hass_config_yaml: None) 
     """Test an invalid package."""
     res = check_config.check(get_test_config_dir())
 
-    assert res["except"].keys() == {"homeassistant.packages.p1.group"}
-    assert res["except"]["homeassistant.packages.p1.group"][1] == {"group": ["a"]}
-    assert len(res["except"]) == 1
+    assert res["except"] == {}
     assert res["components"].keys() == {"homeassistant"}
-    assert len(res["components"]) == 1
     assert res["secret_cache"] == {}
     assert res["secrets"] == {}
+    assert res["warn"].keys() == {"homeassistant.packages.p1.group"}
+    assert res["warn"]["homeassistant.packages.p1.group"][1] == {"group": ["a"]}
     assert len(res["yaml_files"]) == 1
 
 
@@ -157,4 +178,5 @@ def test_bootstrap_error(event_loop, mock_hass_config_yaml: None) -> None:
     assert res["components"] == {}  # No components, load failed
     assert res["secret_cache"] == {}
     assert res["secrets"] == {}
+    assert res["warn"] == {}
     assert res["yaml_files"] == {}

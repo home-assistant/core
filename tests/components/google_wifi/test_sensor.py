@@ -1,4 +1,5 @@
 """The tests for the Google Wifi platform."""
+
 from datetime import datetime, timedelta
 from http import HTTPStatus
 from unittest.mock import Mock, patch
@@ -30,7 +31,7 @@ MOCK_DATA_NEXT = (
     '"ipAddress":false}}'
 )
 
-MOCK_DATA_MISSING = '{"software": {},' '"system": {},' '"wan": {}}'
+MOCK_DATA_MISSING = '{"software": {},"system": {},"wan": {}}'
 
 
 async def test_setup_minimum(

@@ -1,6 +1,6 @@
 """Sample API response data for tests."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from homeassistant.components.subaru.const import (
     API_GEN_1,
@@ -58,7 +58,7 @@ VEHICLE_DATA = {
     },
 }
 
-MOCK_DATETIME = datetime.fromtimestamp(1595560000, timezone.utc)
+MOCK_DATETIME = datetime.fromtimestamp(1595560000, UTC)
 
 VEHICLE_STATUS_EV = {
     VEHICLE_STATUS: {

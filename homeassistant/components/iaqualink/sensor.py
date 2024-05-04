@@ -1,5 +1,8 @@
 """Support for Aqualink temperature sensors."""
+
 from __future__ import annotations
+
+from iaqualink.device import AqualinkSensor
 
 from homeassistant.components.sensor import DOMAIN, SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -19,28 +22,25 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up discovered sensors."""
-    devs = []
-    for dev in hass.data[AQUALINK_DOMAIN][DOMAIN]:
-        devs.append(HassAqualinkSensor(dev))
-    async_add_entities(devs, True)
+    async_add_entities(
+        (HassAqualinkSensor(dev) for dev in hass.data[AQUALINK_DOMAIN][DOMAIN]), True
+    )
 
 
 class HassAqualinkSensor(AqualinkEntity, SensorEntity):
     """Representation of a sensor."""
 
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self.dev.label
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the measurement unit for the sensor."""
-        if self.dev.name.endswith("_temp"):
-            if self.dev.system.temp_unit == "F":
-                return UnitOfTemperature.FAHRENHEIT
-            return UnitOfTemperature.CELSIUS
-        return None
+    def __init__(self, dev: AqualinkSensor) -> None:
+        """Initialize AquaLink sensor."""
+        super().__init__(dev)
+        self._attr_name = dev.label
+        if not dev.name.endswith("_temp"):
+            return
+        self._attr_device_class = SensorDeviceClass.TEMPERATURE
+        if dev.system.temp_unit == "F":
+            self._attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
+            return
+        self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     @property
     def native_value(self) -> int | float | None:
@@ -52,10 +52,3 @@ class HassAqualinkSensor(AqualinkEntity, SensorEntity):
             return int(self.dev.state)
         except ValueError:
             return float(self.dev.state)
-
-    @property
-    def device_class(self) -> SensorDeviceClass | None:
-        """Return the class of the sensor."""
-        if self.dev.name.endswith("_temp"):
-            return SensorDeviceClass.TEMPERATURE
-        return None

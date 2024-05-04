@@ -1,12 +1,13 @@
 """Define RainMachine utilities."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import StrEnum
 from typing import Any
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -60,9 +61,10 @@ def async_finish_entity_domain_replacements(
         try:
             [registry_entry] = [
                 registry_entry
-                for registry_entry in ent_reg.entities.values()
-                if registry_entry.config_entry_id == entry.entry_id
-                and registry_entry.domain == strategy.old_domain
+                for registry_entry in ent_reg.entities.get_entries_for_config_entry_id(
+                    entry.entry_id
+                )
+                if registry_entry.domain == strategy.old_domain
                 and registry_entry.unique_id == strategy.old_unique_id
             ]
         except ValueError:
@@ -84,7 +86,7 @@ def key_exists(data: dict[str, Any], search_key: str) -> bool:
     return False
 
 
-class RainMachineDataUpdateCoordinator(DataUpdateCoordinator[dict]):
+class RainMachineDataUpdateCoordinator(DataUpdateCoordinator[dict]):  # pylint: disable=hass-enforce-coordinator-module
     """Define an extended DataUpdateCoordinator."""
 
     config_entry: ConfigEntry
@@ -106,6 +108,7 @@ class RainMachineDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             name=name,
             update_interval=update_interval,
             update_method=update_method,
+            always_update=False,
         )
 
         self._rebooting = False
@@ -118,7 +121,8 @@ class RainMachineDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             self.config_entry.entry_id
         )
 
-    async def async_initialize(self) -> None:
+    @callback
+    def async_initialize(self) -> None:
         """Initialize the coordinator."""
 
         @callback

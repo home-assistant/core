@@ -1,4 +1,5 @@
 """The Z-Wave-Me WS integration."""
+
 import logging
 
 from zwave_me_ws import ZWaveMe, ZWaveMeData
@@ -8,8 +9,9 @@ from homeassistant.const import CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, PLATFORMS, ZWaveMePlatform
 
@@ -26,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         registry = dr.async_get(hass)
         controller.remove_stale_devices(registry)
         return True
-    raise ConfigEntryNotReady()
+    raise ConfigEntryNotReady
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -61,8 +63,7 @@ class ZWaveMeController:
 
     async def async_establish_connection(self):
         """Get connection status."""
-        is_connected = await self.zwave_api.get_connection()
-        return is_connected
+        return await self.zwave_api.get_connection()
 
     def add_device(self, device: ZWaveMeData) -> None:
         """Send signal to create device."""
@@ -96,7 +97,7 @@ class ZWaveMeController:
         """Remove old-format devices in the registry."""
         for device_id in self.device_ids:
             device = registry.async_get_device(
-                {(DOMAIN, f"{self.config.unique_id}-{device_id}")}
+                identifiers={(DOMAIN, f"{self.config.unique_id}-{device_id}")}
             )
             if device is not None:
                 registry.async_remove_device(device.id)

@@ -1,4 +1,5 @@
 """Deal with Cast discovery."""
+
 import logging
 import threading
 

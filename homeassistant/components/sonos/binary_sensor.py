@@ -1,4 +1,5 @@
 """Entity representing a Sonos power sensor."""
+
 from __future__ import annotations
 
 import logging
@@ -10,7 +11,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -31,12 +32,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up Sonos from a config entry."""
 
-    async def _async_create_battery_entity(speaker: SonosSpeaker) -> None:
+    @callback
+    def _async_create_battery_entity(speaker: SonosSpeaker) -> None:
         _LOGGER.debug("Creating battery binary_sensor on %s", speaker.zone_name)
         entity = SonosPowerEntity(speaker)
         async_add_entities([entity])
 
-    async def _async_create_mic_entity(speaker: SonosSpeaker) -> None:
+    @callback
+    def _async_create_mic_entity(speaker: SonosSpeaker) -> None:
         _LOGGER.debug("Creating microphone binary_sensor on %s", speaker.zone_name)
         async_add_entities([SonosMicrophoneSensorEntity(speaker)])
 
@@ -58,7 +61,6 @@ class SonosPowerEntity(SonosEntity, BinarySensorEntity):
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
-    _attr_name = "Power"
 
     def __init__(self, speaker: SonosSpeaker) -> None:
         """Initialize the power entity binary sensor."""
@@ -91,8 +93,7 @@ class SonosMicrophoneSensorEntity(SonosEntity, BinarySensorEntity):
     """Representation of a Sonos microphone sensor entity."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_icon = "mdi:microphone"
-    _attr_name = "Microphone"
+    _attr_translation_key = "microphone"
 
     def __init__(self, speaker: SonosSpeaker) -> None:
         """Initialize the microphone binary sensor entity."""

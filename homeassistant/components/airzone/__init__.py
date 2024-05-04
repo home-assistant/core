@@ -1,4 +1,5 @@
 """The Airzone integration."""
+
 from __future__ import annotations
 
 import logging
@@ -24,6 +25,7 @@ PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.WATER_HEATER,
 ]
 
 _LOGGER = logging.getLogger(__name__)

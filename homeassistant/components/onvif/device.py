@@ -1,4 +1,5 @@
 """ONVIF device abstraction."""
+
 from __future__ import annotations
 
 import asyncio
@@ -217,12 +218,13 @@ class ONVIFDevice:
             try:
                 await device_mgmt.SetSystemDateAndTime(dt_param)
                 LOGGER.debug("%s: SetSystemDateAndTime: success", self.name)
-                return
             # Some cameras don't support setting the timezone and will throw an IndexError
             # if we try to set it. If we get an error, try again without the timezone.
             except (IndexError, Fault):
                 if idx == timezone_max_idx:
                     raise
+            else:
+                return
 
     async def async_check_date_and_time(self) -> None:
         """Warns if device and system date not synced."""
@@ -343,7 +345,7 @@ class ONVIFDevice:
                     mac = interface.Info.HwAddress
         except Fault as fault:
             if "not implemented" not in fault.message:
-                raise fault
+                raise
 
             LOGGER.debug(
                 "Couldn't get network interfaces from ONVIF device '%s'. Error: %s",
@@ -387,8 +389,12 @@ class ONVIFDevice:
                 "WSPullPointSupport"
             )
             LOGGER.debug("%s: WSPullPointSupport: %s", self.name, pull_point_support)
+            # Even if the camera claims it does not support PullPoint, try anyway
+            # since at least some AXIS and Bosch models do. The reverse is also
+            # true where some cameras claim they support PullPoint but don't so
+            # the only way to know is to try.
             return await self.events.async_start(
-                pull_point_support is not False,
+                True,
                 self.config_entry.options.get(
                     CONF_ENABLE_WEBHOOKS, DEFAULT_ENABLE_WEBHOOKS
                 ),

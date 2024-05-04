@@ -3,7 +3,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'WLED RGB Light Live override',
-      'icon': 'mdi:theater',
       'options': list([
         '0',
         '1',
@@ -13,6 +12,7 @@
     'context': <ANY>,
     'entity_id': 'select.wled_rgb_light_live_override',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -40,13 +40,16 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:theater',
+    'original_icon': None,
     'original_name': 'Live override',
     'platform': 'wled',
+    'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'live_override',
     'unique_id': 'aabbccddeeff_live_override',
@@ -75,10 +78,13 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'WLED',
     'model': 'DIY light',
     'name': 'WLED RGB Light',
     'name_by_user': None,
+    'serial_number': None,
     'suggested_area': None,
     'sw_version': '0.8.5',
     'via_device_id': None,
@@ -88,7 +94,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'WLED RGB Light Segment 1 color palette',
-      'icon': 'mdi:palette-outline',
       'options': list([
         'Analogous',
         'April Night',
@@ -145,6 +150,7 @@
     'context': <ANY>,
     'entity_id': 'select.wled_rgb_light_segment_1_color_palette',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Random Cycle',
   })
@@ -219,15 +225,18 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:palette-outline',
+    'original_icon': None,
     'original_name': 'Segment 1 color palette',
     'platform': 'wled',
+    'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'segment_color_palette',
     'unique_id': 'aabbccddeeff_palette_1',
     'unit_of_measurement': None,
   })
@@ -254,10 +263,13 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'WLED',
     'model': 'DIY light',
     'name': 'WLED RGB Light',
     'name_by_user': None,
+    'serial_number': None,
     'suggested_area': None,
     'sw_version': '0.8.5',
     'via_device_id': None,
@@ -267,7 +279,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'WLED RGBW Light Playlist',
-      'icon': 'mdi:play-speed',
       'options': list([
         'Playlist 1',
         'Playlist 2',
@@ -276,6 +287,7 @@
     'context': <ANY>,
     'entity_id': 'select.wled_rgbw_light_playlist',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Playlist 1',
   })
@@ -302,15 +314,18 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:play-speed',
+    'original_icon': None,
     'original_name': 'Playlist',
     'platform': 'wled',
+    'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'playlist',
     'unique_id': 'aabbccddee11_playlist',
     'unit_of_measurement': None,
   })
@@ -337,10 +352,13 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'WLED',
     'model': 'DIY light',
     'name': 'WLED RGBW Light',
     'name_by_user': None,
+    'serial_number': None,
     'suggested_area': None,
     'sw_version': '0.8.6b4',
     'via_device_id': None,
@@ -350,7 +368,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'WLED RGBW Light Preset',
-      'icon': 'mdi:playlist-play',
       'options': list([
         'Preset 1',
         'Preset 2',
@@ -359,6 +376,7 @@
     'context': <ANY>,
     'entity_id': 'select.wled_rgbw_light_preset',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Preset 1',
   })
@@ -385,15 +403,18 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:playlist-play',
+    'original_icon': None,
     'original_name': 'Preset',
     'platform': 'wled',
+    'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'preset',
     'unique_id': 'aabbccddee11_preset',
     'unit_of_measurement': None,
   })
@@ -420,10 +441,13 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'WLED',
     'model': 'DIY light',
     'name': 'WLED RGBW Light',
     'name_by_user': None,
+    'serial_number': None,
     'suggested_area': None,
     'sw_version': '0.8.6b4',
     'via_device_id': None,

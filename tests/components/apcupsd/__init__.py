@@ -1,4 +1,5 @@
 """Tests for the APCUPSd component."""
+
 from collections import OrderedDict
 from typing import Final
 from unittest.mock import patch
@@ -20,6 +21,7 @@ MOCK_STATUS: Final = OrderedDict(
         ("CABLE", "USB Cable"),
         ("DRIVER", "USB UPS Driver"),
         ("UPSMODE", "Stand Alone"),
+        ("UPSNAME", "MyUPS"),
         ("MODEL", "Back-UPS ES 600"),
         ("STATUS", "ONLINE"),
         ("LINEV", "124.0 Volts"),
@@ -94,9 +96,7 @@ async def async_init_integration(
 
     entry.add_to_hass(hass)
 
-    with patch("apcaccess.status.parse", return_value=status), patch(
-        "apcaccess.status.get", return_value=b""
-    ):
+    with patch("aioapcaccess.request_status", return_value=status):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 

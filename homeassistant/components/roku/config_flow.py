@@ -1,4 +1,5 @@
 """Config flow for Roku."""
+
 from __future__ import annotations
 
 import logging
@@ -9,10 +10,9 @@ from rokuecp import Roku, RokuError
 import voluptuous as vol
 
 from homeassistant.components import ssdp, zeroconf
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -52,7 +52,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
         self.discovery_info = {}
 
     @callback
-    def _show_form(self, errors: dict[str, Any] | None = None) -> FlowResult:
+    def _show_form(self, errors: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Show the form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -62,7 +62,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if not user_input:
             return self._show_form()
@@ -86,7 +86,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_homekit(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by homekit discovery."""
 
         # If we already have the host configured do
@@ -114,7 +114,9 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_discovery_confirm()
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
         host = urlparse(discovery_info.ssdp_location).hostname
         name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
@@ -140,7 +142,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery_confirm(
         self, user_input: dict | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle user-confirmation of discovered device."""
         if user_input is None:
             return self.async_show_form(

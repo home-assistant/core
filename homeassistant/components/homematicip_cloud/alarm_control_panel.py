@@ -1,4 +1,5 @@
 """Support for HomematicIP Cloud alarm control panel."""
+
 from __future__ import annotations
 
 import logging
@@ -17,7 +18,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN as HMIPC_DOMAIN

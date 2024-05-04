@@ -5,6 +5,9 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "access_token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Vilfo router."
         }
       }
     },
@@ -15,6 +18,16 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "load": {
+        "name": "Load"
+      },
+      "boot_time": {
+        "name": "Boot time"
+      }
     }
   }
 }

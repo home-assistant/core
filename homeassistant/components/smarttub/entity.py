@@ -1,7 +1,8 @@
 """Base classes for SmartTub entities."""
+
 import smarttub
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -25,27 +26,14 @@ class SmartTubEntity(CoordinatorEntity):
 
         super().__init__(coordinator)
         self.spa = spa
-        self._entity_name = entity_name
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique id for the entity."""
-        return f"{self.spa.id}-{self._entity_name}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.spa.id)},
-            manufacturer=self.spa.brand,
-            model=self.spa.model,
+        self._attr_unique_id = f"{spa.id}-{entity_name}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, spa.id)},
+            manufacturer=spa.brand,
+            model=spa.model,
         )
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
         spa_name = get_spa_name(self.spa)
-        return f"{spa_name} {self._entity_name}"
+        self._attr_name = f"{spa_name} {entity_name}"
 
     @property
     def spa_status(self) -> smarttub.SpaState:
@@ -57,12 +45,12 @@ class SmartTubEntity(CoordinatorEntity):
 class SmartTubSensorBase(SmartTubEntity):
     """Base class for SmartTub sensors."""
 
-    def __init__(self, coordinator, spa, sensor_name, attr_name):
+    def __init__(self, coordinator, spa, sensor_name, state_key):
         """Initialize the entity."""
         super().__init__(coordinator, spa, sensor_name)
-        self._attr_name = attr_name
+        self._state_key = state_key
 
     @property
     def _state(self):
         """Retrieve the underlying state from the spa."""
-        return getattr(self.spa_status, self._attr_name)
+        return getattr(self.spa_status, self._state_key)

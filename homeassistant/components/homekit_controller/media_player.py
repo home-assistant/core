@@ -1,4 +1,5 @@
 """Support for HomeKit Controller Televisions."""
+
 from __future__ import annotations
 
 import logging
@@ -159,6 +160,7 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
             characteristics={CharacteristicsTypes.IDENTIFIER: active_identifier},
             parent_service=this_tv,
         )
+        assert input_source
         char = input_source[CharacteristicsTypes.CONFIGURED_NAME]
         return char.value
 

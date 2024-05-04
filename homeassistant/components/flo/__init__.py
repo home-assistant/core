@@ -1,4 +1,5 @@
 """The flo integration."""
+
 import asyncio
 import logging
 

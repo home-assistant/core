@@ -1,4 +1,5 @@
 """The tests for the MQTT lock platform."""
+
 from typing import Any
 from unittest.mock import patch
 
@@ -22,7 +23,7 @@ from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    Platform,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 
@@ -50,6 +51,7 @@ from .test_common import (
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_skipped_async_ha_write_state,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
@@ -80,13 +82,6 @@ CONFIG_WITH_STATES = {
 }
 
 
-@pytest.fixture(autouse=True)
-def lock_platform_only():
-    """Only setup the lock platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LOCK]):
-        yield
-
-
 @pytest.mark.parametrize(
     ("hass_config", "payload", "lock_state"),
     [
@@ -106,7 +101,7 @@ async def test_controlling_state_via_topic(
     await mqtt_mock_entry()
 
     state = hass.states.get("lock.test")
-    assert state.state is STATE_UNLOCKED
+    assert state.state is STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
     assert not state.attributes.get(ATTR_SUPPORTED_FEATURES)
 
@@ -124,6 +119,7 @@ async def test_controlling_state_via_topic(
         (CONFIG_WITH_STATES, "closing", STATE_LOCKING),
         (CONFIG_WITH_STATES, "open", STATE_UNLOCKED),
         (CONFIG_WITH_STATES, "opening", STATE_UNLOCKING),
+        (CONFIG_WITH_STATES, "None", STATE_UNKNOWN),
     ],
 )
 async def test_controlling_non_default_state_via_topic(
@@ -136,7 +132,7 @@ async def test_controlling_non_default_state_via_topic(
     await mqtt_mock_entry()
 
     state = hass.states.get("lock.test")
-    assert state.state is STATE_UNLOCKED
+    assert state.state is STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "state-topic", payload)
@@ -184,6 +180,15 @@ async def test_controlling_non_default_state_via_topic(
             '{"val":"open"}',
             STATE_UNLOCKED,
         ),
+        (
+            help_custom_config(
+                lock.DOMAIN,
+                CONFIG_WITH_STATES,
+                ({"value_template": "{{ value_json.val }}"},),
+            ),
+            '{"val":null}',
+            STATE_UNKNOWN,
+        ),
     ],
 )
 async def test_controlling_state_via_topic_and_json_message(
@@ -196,7 +201,7 @@ async def test_controlling_state_via_topic_and_json_message(
     await mqtt_mock_entry()
 
     state = hass.states.get("lock.test")
-    assert state.state is STATE_UNLOCKED
+    assert state.state is STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "state-topic", payload)
 
@@ -255,7 +260,7 @@ async def test_controlling_non_default_state_via_topic_and_json_message(
     await mqtt_mock_entry()
 
     state = hass.states.get("lock.test")
-    assert state.state is STATE_UNLOCKED
+    assert state.state is STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "state-topic", payload)
 
@@ -573,7 +578,7 @@ async def test_sending_mqtt_commands_pessimistic(
     mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("lock.test")
-    assert state.state is STATE_UNLOCKED
+    assert state.state is STATE_UNKNOWN
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == LockEntityFeature.OPEN
 
     # send lock command to lock
@@ -796,7 +801,7 @@ async def test_discovery_removal_lock(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of discovered lock."""
-    data = '{ "name": "test",' '  "command_topic": "test_topic" }'
+    data = '{ "name": "test", "command_topic": "test_topic" }'
     await help_test_discovery_removal(hass, mqtt_mock_entry, caplog, lock.DOMAIN, data)
 
 
@@ -855,7 +860,7 @@ async def test_discovery_broken(
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
-    data2 = '{ "name": "Milk",' '  "command_topic": "test_topic" }'
+    data2 = '{ "name": "Milk", "command_topic": "test_topic" }'
     await help_test_discovery_broken(
         hass, mqtt_mock_entry, caplog, lock.DOMAIN, data1, data2
     )
@@ -1006,7 +1011,11 @@ async def test_encoding_subscribable_topics(
     )
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
@@ -1025,4 +1034,70 @@ async def test_unload_entry(
     config = DEFAULT_CONFIG
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry, domain, config
+    )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            lock.DOMAIN,
+            CONFIG_WITH_STATES,
+            (
+                {
+                    "availability_topic": "availability-topic",
+                    "json_attributes_topic": "json-attributes-topic",
+                },
+            ),
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("topic", "payload1", "payload2"),
+    [
+        ("availability-topic", "online", "offline"),
+        ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
+        ("state-topic", "closed", "open"),
+        ("state-topic", "closed", "opening"),
+        ("state-topic", "open", "closing"),
+    ],
+)
+async def test_skipped_async_ha_write_state(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    topic: str,
+    payload1: str,
+    payload2: str,
+) -> None:
+    """Test a write state command is only called when there is change."""
+    await mqtt_mock_entry()
+    await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            lock.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "state_topic": "test-topic",
+                    "value_template": "{{ value_json.some_var * 1 }}",
+                },
+            ),
+        )
+    ],
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
     )

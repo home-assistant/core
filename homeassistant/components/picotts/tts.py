@@ -1,4 +1,5 @@
 """Support for the Pico TTS speech service."""
+
 import logging
 import os
 import shutil
@@ -51,7 +52,7 @@ class PicoProvider(Provider):
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmpf:
             fname = tmpf.name
 
-        cmd = ["pico2wave", "--wave", fname, "-l", language, message]
+        cmd = ["pico2wave", "--wave", fname, "-l", language, "--", message]
         subprocess.call(cmd)
         data = None
         try:

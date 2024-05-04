@@ -1,4 +1,5 @@
 """Support for Litter-Robot updates."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -24,7 +25,6 @@ SCAN_INTERVAL = timedelta(days=1)
 
 FIRMWARE_UPDATE_ENTITY = UpdateEntityDescription(
     key="firmware",
-    name="Firmware",
     device_class=UpdateDeviceClass.FIRMWARE,
 )
 

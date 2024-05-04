@@ -1,18 +1,24 @@
 """Config flow for ScreenLogic."""
+
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from screenlogicpy import ScreenLogicError, discovery
-from screenlogicpy.const import SL_GATEWAY_IP, SL_GATEWAY_NAME, SL_GATEWAY_PORT
+from screenlogicpy.const.common import SL_GATEWAY_IP, SL_GATEWAY_NAME, SL_GATEWAY_PORT
 from screenlogicpy.requests import login
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import dhcp
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
@@ -59,30 +65,32 @@ def name_for_mac(mac):
     return f"Pentair: {short_mac(mac)}"
 
 
-class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ScreenlogicConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow to setup screen logic devices."""
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize ScreenLogic ConfigFlow."""
-        self.discovered_gateways = {}
-        self.discovered_ip = None
+        self.discovered_gateways: dict[str, dict[str, Any]] = {}
+        self.discovered_ip: str | None = None
 
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> ScreenLogicOptionsFlowHandler:
         """Get the options flow for ScreenLogic."""
         return ScreenLogicOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         self.discovered_gateways = await async_discover_gateways_by_unique_id(self.hass)
         return await self.async_step_gateway_select()
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle dhcp discovery."""
         mac = format_mac(discovery_info.macaddress)
         await self.async_set_unique_id(mac)
@@ -93,7 +101,7 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"name": discovery_info.hostname}
         return await self.async_step_gateway_entry()
 
-    async def async_step_gateway_select(self, user_input=None):
+    async def async_step_gateway_select(self, user_input=None) -> ConfigFlowResult:
         """Handle the selection of a discovered ScreenLogic gateway."""
         existing = self._async_current_ids()
         unconfigured_gateways = {
@@ -105,7 +113,7 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not unconfigured_gateways:
             return await self.async_step_gateway_entry()
 
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             if user_input[GATEWAY_SELECT_KEY] == GATEWAY_MANUAL_ENTRY:
                 return await self.async_step_gateway_entry()
@@ -140,9 +148,9 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={},
         )
 
-    async def async_step_gateway_entry(self, user_input=None):
+    async def async_step_gateway_entry(self, user_input=None) -> ConfigFlowResult:
         """Handle the manual entry of a ScreenLogic gateway."""
-        errors = {}
+        errors: dict[str, str] = {}
         ip_address = self.discovered_ip
         port = 80
 
@@ -179,14 +187,14 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class ScreenLogicOptionsFlowHandler(config_entries.OptionsFlow):
+class ScreenLogicOptionsFlowHandler(OptionsFlow):
     """Handles the options for the ScreenLogic integration."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Init the screen logic options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(

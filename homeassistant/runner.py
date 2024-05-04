@@ -1,4 +1,5 @@
 """Run Home Assistant."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,8 +9,11 @@ import logging
 import os
 import subprocess
 import threading
+from time import monotonic
 import traceback
 from typing import Any
+
+import packaging.tags
 
 from . import bootstrap
 from .core import callback
@@ -29,7 +33,6 @@ from .util.thread import deadlock_safe_shutdown
 #
 MAX_EXECUTOR_WORKERS = 64
 TASK_CANCELATION_TIMEOUT = 5
-ALPINE_RELEASE_FILE = "/etc/alpine-release"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +44,7 @@ class RuntimeConfig:
     config_dir: str
     skip_pip: bool = False
     skip_pip_packages: list[str] = dataclasses.field(default_factory=list)
-    safe_mode: bool = False
+    recovery_mode: bool = False
 
     verbose: bool = False
 
@@ -51,6 +54,8 @@ class RuntimeConfig:
 
     debug: bool = False
     open_ui: bool = False
+
+    safe_mode: bool = False
 
 
 def can_use_pidfd() -> bool:
@@ -102,6 +107,7 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
     def new_event_loop(self) -> asyncio.AbstractEventLoop:
         """Get the event loop."""
         loop: asyncio.AbstractEventLoop = super().new_event_loop()
+        setattr(loop, "_thread_ident", threading.get_ident())
         loop.set_exception_handler(_async_loop_exception_handler)
         if self.debug:
             loop.set_debug(True)
@@ -113,6 +119,10 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
         loop.set_default_executor = warn_use(  # type: ignore[method-assign]
             loop.set_default_executor, "sets default executor on the event loop"
         )
+        # bind the built-in time.monotonic directly as loop.time to avoid the
+        # overhead of the additional method call since its the most called loop
+        # method and its roughly 10%+ of all the call time in base_events.py
+        loop.time = monotonic  # type: ignore[method-assign]
         return loop
 
 
@@ -157,15 +167,16 @@ async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
 
 def _enable_posix_spawn() -> None:
     """Enable posix_spawn on Alpine Linux."""
-    # pylint: disable=protected-access
-    if subprocess._USE_POSIX_SPAWN:
+    if subprocess._USE_POSIX_SPAWN:  # pylint: disable=protected-access
         return
 
     # The subprocess module does not know about Alpine Linux/musl
     # and will use fork() instead of posix_spawn() which significantly
     # less efficient. This is a workaround to force posix_spawn()
-    # on Alpine Linux which is supported by musl.
-    subprocess._USE_POSIX_SPAWN = os.path.exists(ALPINE_RELEASE_FILE)
+    # when using musl since cpython is not aware its supported.
+    tag = next(packaging.tags.sys_tags())
+    # pylint: disable-next=protected-access
+    subprocess._USE_POSIX_SPAWN = "musllinux" in tag.platform
 
 
 def run(runtime_config: RuntimeConfig) -> int:
@@ -196,7 +207,7 @@ def _cancel_all_tasks_with_timeout(
         return
 
     for task in to_cancel:
-        task.cancel()
+        task.cancel("Final process shutdown")
 
     loop.run_until_complete(asyncio.wait(to_cancel, timeout=timeout))
 

@@ -1,5 +1,7 @@
 """Test device_registry API."""
+
 import pytest
+from pytest_unordered import unordered
 
 from homeassistant.components.config import device_registry
 from homeassistant.core import HomeAssistant
@@ -7,7 +9,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
-from tests.typing import WebSocketGenerator
+from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -15,26 +17,32 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     """Stub copying the blueprints to the config folder."""
 
 
-@pytest.fixture
-def client(hass, hass_ws_client):
+@pytest.fixture(name="client")
+async def client_fixture(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> MockHAClientWebSocket:
     """Fixture that can interact with the config manager API."""
-    hass.loop.run_until_complete(device_registry.async_setup(hass))
-    return hass.loop.run_until_complete(hass_ws_client(hass))
+    device_registry.async_setup(hass)
+    return await hass_ws_client(hass)
 
 
 async def test_list_devices(
-    hass: HomeAssistant, client, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test list entries."""
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
     device1 = device_registry.async_get_or_create(
-        config_entry_id="1234",
+        config_entry_id=entry.entry_id,
         connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
     )
     device2 = device_registry.async_get_or_create(
-        config_entry_id="1234",
+        config_entry_id=entry.entry_id,
         identifiers={("bridgeid", "1234")},
         manufacturer="manufacturer",
         model="model",
@@ -42,41 +50,45 @@ async def test_list_devices(
         entry_type=dr.DeviceEntryType.SERVICE,
     )
 
-    await client.send_json({"id": 5, "type": "config/device_registry/list"})
+    await client.send_json_auto_id({"type": "config/device_registry/list"})
     msg = await client.receive_json()
 
-    dev1, dev2 = (entry.pop("id") for entry in msg["result"])
+    dev1, _ = (entry.pop("id") for entry in msg["result"])
 
     assert msg["result"] == [
         {
             "area_id": None,
-            "config_entries": ["1234"],
+            "config_entries": [entry.entry_id],
             "configuration_url": None,
             "connections": [["ethernet", "12:34:56:78:90:AB:CD:EF"]],
             "disabled_by": None,
             "entry_type": None,
             "hw_version": None,
             "identifiers": [["bridgeid", "0123"]],
+            "labels": [],
             "manufacturer": "manufacturer",
             "model": "model",
             "name_by_user": None,
             "name": None,
+            "serial_number": None,
             "sw_version": None,
             "via_device_id": None,
         },
         {
             "area_id": None,
-            "config_entries": ["1234"],
+            "config_entries": [entry.entry_id],
             "configuration_url": None,
             "connections": [],
             "disabled_by": None,
             "entry_type": dr.DeviceEntryType.SERVICE,
             "hw_version": None,
             "identifiers": [["bridgeid", "1234"]],
+            "labels": [],
             "manufacturer": "manufacturer",
             "model": "model",
             "name_by_user": None,
             "name": None,
+            "serial_number": None,
             "sw_version": None,
             "via_device_id": dev1,
         },
@@ -88,13 +100,13 @@ async def test_list_devices(
     device_registry.async_update_device(device2.id, name=Unserializable())
     await hass.async_block_till_done()
 
-    await client.send_json({"id": 6, "type": "config/device_registry/list"})
+    await client.send_json_auto_id({"type": "config/device_registry/list"})
     msg = await client.receive_json()
 
     assert msg["result"] == [
         {
             "area_id": None,
-            "config_entries": ["1234"],
+            "config_entries": [entry.entry_id],
             "configuration_url": None,
             "connections": [["ethernet", "12:34:56:78:90:AB:CD:EF"]],
             "disabled_by": None,
@@ -102,10 +114,12 @@ async def test_list_devices(
             "hw_version": None,
             "id": device1.id,
             "identifiers": [["bridgeid", "0123"]],
+            "labels": [],
             "manufacturer": "manufacturer",
             "model": "model",
             "name_by_user": None,
             "name": None,
+            "serial_number": None,
             "sw_version": None,
             "via_device_id": None,
         }
@@ -118,25 +132,27 @@ async def test_list_devices(
 @pytest.mark.parametrize(
     ("payload_key", "payload_value"),
     [
-        ["area_id", "12345A"],
-        ["area_id", None],
-        ["disabled_by", dr.DeviceEntryDisabler.USER],
-        ["disabled_by", "user"],
-        ["disabled_by", None],
-        ["name_by_user", "Test Friendly Name"],
-        ["name_by_user", None],
+        ("area_id", "12345A"),
+        ("area_id", None),
+        ("disabled_by", dr.DeviceEntryDisabler.USER),
+        ("disabled_by", "user"),
+        ("disabled_by", None),
+        ("name_by_user", "Test Friendly Name"),
+        ("name_by_user", None),
     ],
 )
 async def test_update_device(
     hass: HomeAssistant,
-    client,
+    client: MockHAClientWebSocket,
     device_registry: dr.DeviceRegistry,
-    payload_key,
-    payload_value,
+    payload_key: str,
+    payload_value: str | None | dr.DeviceEntryDisabler,
 ) -> None:
     """Test update entry."""
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
     device = device_registry.async_get_or_create(
-        config_entry_id="1234",
+        config_entry_id=entry.entry_id,
         connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
@@ -145,9 +161,8 @@ async def test_update_device(
 
     assert not getattr(device, payload_key)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 1,
             "type": "config/device_registry/update",
             "device_id": device.id,
             payload_key: payload_value,
@@ -167,6 +182,45 @@ async def test_update_device(
     assert getattr(device, payload_key) == payload_value
 
     assert isinstance(device.disabled_by, (dr.DeviceEntryDisabler, type(None)))
+
+
+async def test_update_device_labels(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test update entry labels."""
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    assert not device.labels
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/device_registry/update",
+            "device_id": device.id,
+            "labels": ["label1", "label2"],
+        }
+    )
+
+    msg = await client.receive_json()
+    await hass.async_block_till_done()
+    assert len(device_registry.devices) == 1
+
+    device = device_registry.async_get_device(
+        identifiers={("bridgeid", "0123")},
+        connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
+    )
+
+    assert msg["result"]["labels"] == unordered(["label1", "label2"])
+    assert device.labels == {"label1", "label2"}
 
 
 async def test_remove_config_entry_from_device(
@@ -224,32 +278,16 @@ async def test_remove_config_entry_from_device(
 
     # Try removing a config entry from the device, it should fail because
     # async_remove_config_entry_device returns False
-    await ws_client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": entry_1.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(device_entry.id, entry_1.entry_id)
 
     assert not response["success"]
-    assert response["error"]["code"] == "unknown_error"
+    assert response["error"]["code"] == "home_assistant_error"
 
     # Make async_remove_config_entry_device return True
     can_remove = True
 
     # Remove the 1st config entry
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": entry_1.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(device_entry.id, entry_1.entry_id)
 
     assert response["success"]
     assert response["result"]["config_entries"] == [entry_2.entry_id]
@@ -260,15 +298,7 @@ async def test_remove_config_entry_from_device(
     }
 
     # Remove the 2nd config entry
-    await ws_client.send_json(
-        {
-            "id": 7,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": entry_2.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(device_entry.id, entry_2.entry_id)
 
     assert response["success"]
     assert response["result"] is None
@@ -347,62 +377,30 @@ async def test_remove_config_entry_from_device_fails(
     assert device_entry.id != fake_device_id
 
     # Try removing a non existing config entry from the device
-    await ws_client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": fake_entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(device_entry.id, fake_entry_id)
 
     assert not response["success"]
-    assert response["error"]["code"] == "unknown_error"
+    assert response["error"]["code"] == "home_assistant_error"
     assert response["error"]["message"] == "Unknown config entry"
 
     # Try removing a config entry which does not support removal from the device
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": entry_1.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(device_entry.id, entry_1.entry_id)
 
     assert not response["success"]
-    assert response["error"]["code"] == "unknown_error"
+    assert response["error"]["code"] == "home_assistant_error"
     assert (
         response["error"]["message"] == "Config entry does not support device removal"
     )
 
     # Try removing a config entry from a device which does not exist
-    await ws_client.send_json(
-        {
-            "id": 7,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": entry_2.entry_id,
-            "device_id": fake_device_id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(fake_device_id, entry_2.entry_id)
 
     assert not response["success"]
-    assert response["error"]["code"] == "unknown_error"
+    assert response["error"]["code"] == "home_assistant_error"
     assert response["error"]["message"] == "Unknown device"
 
     # Try removing a config entry from a device which it's not connected to
-    await ws_client.send_json(
-        {
-            "id": 8,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": entry_2.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(device_entry.id, entry_2.entry_id)
 
     assert response["success"]
     assert set(response["result"]["config_entries"]) == {
@@ -410,31 +408,15 @@ async def test_remove_config_entry_from_device_fails(
         entry_3.entry_id,
     }
 
-    await ws_client.send_json(
-        {
-            "id": 9,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": entry_2.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(device_entry.id, entry_2.entry_id)
 
     assert not response["success"]
-    assert response["error"]["code"] == "unknown_error"
+    assert response["error"]["code"] == "home_assistant_error"
     assert response["error"]["message"] == "Config entry not in device"
 
     # Try removing a config entry which can't be loaded from a device - allowed
-    await ws_client.send_json(
-        {
-            "id": 10,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": entry_3.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(device_entry.id, entry_3.entry_id)
 
     assert not response["success"]
-    assert response["error"]["code"] == "unknown_error"
+    assert response["error"]["code"] == "home_assistant_error"
     assert response["error"]["message"] == "Integration not found"

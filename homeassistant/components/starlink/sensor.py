@@ -1,4 +1,5 @@
 """Contains sensors exposed by the Starlink integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -40,18 +41,11 @@ async def async_setup_entry(
     )
 
 
-@dataclass
-class StarlinkSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class StarlinkSensorEntityDescription(SensorEntityDescription):
+    """Describes a Starlink sensor entity."""
 
     value_fn: Callable[[StarlinkData], datetime | StateType]
-
-
-@dataclass
-class StarlinkSensorEntityDescription(
-    SensorEntityDescription, StarlinkSensorEntityDescriptionMixin
-):
-    """Describes a Starlink sensor entity."""
 
 
 class StarlinkSensorEntity(StarlinkEntity, SensorEntity):
@@ -68,8 +62,7 @@ class StarlinkSensorEntity(StarlinkEntity, SensorEntity):
 SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
     StarlinkSensorEntityDescription(
         key="ping",
-        name="Ping",
-        icon="mdi:speedometer",
+        translation_key="ping",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         suggested_display_precision=0,
@@ -77,8 +70,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
     ),
     StarlinkSensorEntityDescription(
         key="azimuth",
-        name="Azimuth",
-        icon="mdi:compass",
+        translation_key="azimuth",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DEGREE,
@@ -88,8 +80,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
     ),
     StarlinkSensorEntityDescription(
         key="elevation",
-        name="Elevation",
-        icon="mdi:compass",
+        translation_key="elevation",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DEGREE,
@@ -99,8 +90,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
     ),
     StarlinkSensorEntityDescription(
         key="uplink_throughput",
-        name="Uplink throughput",
-        icon="mdi:upload",
+        translation_key="uplink_throughput",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.BITS_PER_SECOND,
@@ -109,8 +99,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
     ),
     StarlinkSensorEntityDescription(
         key="downlink_throughput",
-        name="Downlink throughput",
-        icon="mdi:download",
+        translation_key="downlink_throughput",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.BITS_PER_SECOND,
@@ -119,17 +108,16 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
     ),
     StarlinkSensorEntityDescription(
         key="last_boot_time",
-        name="Last boot time",
-        icon="mdi:clock",
+        translation_key="last_boot_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: now() - timedelta(seconds=data.status["uptime"]),
     ),
     StarlinkSensorEntityDescription(
         key="ping_drop_rate",
-        name="Ping Drop Rate",
+        translation_key="ping_drop_rate",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda data: data.status["pop_ping_drop_rate"],
+        value_fn=lambda data: data.status["pop_ping_drop_rate"] * 100,
     ),
 )

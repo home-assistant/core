@@ -1,13 +1,14 @@
 """Custom loader."""
+
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 import fnmatch
 from io import StringIO, TextIOWrapper
 import logging
 import os
 from pathlib import Path
-from typing import Any, TextIO, TypeVar, overload
+from typing import Any, TextIO, overload
 
 import yaml
 
@@ -21,17 +22,23 @@ except ImportError:
         SafeLoader as FastestAvailableSafeLoader,
     )
 
+from functools import cached_property
+
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.frame import report
 
 from .const import SECRET_YAML
 from .objects import Input, NodeDictClass, NodeListClass, NodeStrClass
 
 # mypy: allow-untyped-calls, no-warn-return-any
 
-JSON_TYPE = list | dict | str  # pylint: disable=invalid-name
-_DictT = TypeVar("_DictT", bound=dict)
+JSON_TYPE = list | dict | str
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class YamlTypeError(HomeAssistantError):
+    """Raised by load_yaml_dict if top level data is not a dict."""
 
 
 class Secrets:
@@ -101,62 +108,119 @@ class Secrets:
         return secrets
 
 
-class SafeLoader(FastestAvailableSafeLoader):
-    """The fastest available safe loader."""
+class _LoaderMixin:
+    """Mixin class with extensions for YAML loader."""
+
+    name: str
+    stream: Any
+
+    @cached_property
+    def get_name(self) -> str:
+        """Get the name of the loader."""
+        return self.name
+
+    @cached_property
+    def get_stream_name(self) -> str:
+        """Get the name of the stream."""
+        return getattr(self.stream, "name", "")
+
+
+class FastSafeLoader(FastestAvailableSafeLoader, _LoaderMixin):
+    """The fastest available safe loader, either C or Python."""
 
     def __init__(self, stream: Any, secrets: Secrets | None = None) -> None:
         """Initialize a safe line loader."""
         self.stream = stream
+
+        # Set name in same way as the Python loader does in yaml.reader.__init__
         if isinstance(stream, str):
             self.name = "<unicode string>"
         elif isinstance(stream, bytes):
             self.name = "<byte string>"
         else:
             self.name = getattr(stream, "name", "<file>")
+
         super().__init__(stream)
         self.secrets = secrets
 
-    def get_name(self) -> str:
-        """Get the name of the loader."""
-        return self.name
 
-    def get_stream_name(self) -> str:
-        """Get the name of the stream."""
-        return self.stream.name or ""
+class SafeLoader(FastSafeLoader):
+    """Provided for backwards compatibility. Logs when instantiated."""
+
+    def __init__(*args: Any, **kwargs: Any) -> None:
+        """Log a warning and call super."""
+        SafeLoader.__report_deprecated()
+        FastSafeLoader.__init__(*args, **kwargs)
+
+    @classmethod
+    def add_constructor(cls, tag: str, constructor: Callable) -> None:
+        """Log a warning and call super."""
+        SafeLoader.__report_deprecated()
+        FastSafeLoader.add_constructor(tag, constructor)
+
+    @classmethod
+    def add_multi_constructor(
+        cls, tag_prefix: str, multi_constructor: Callable
+    ) -> None:
+        """Log a warning and call super."""
+        SafeLoader.__report_deprecated()
+        FastSafeLoader.add_multi_constructor(tag_prefix, multi_constructor)
+
+    @staticmethod
+    def __report_deprecated() -> None:
+        """Log deprecation warning."""
+        report(
+            "uses deprecated 'SafeLoader' instead of 'FastSafeLoader', "
+            "which will stop working in HA Core 2024.6,"
+        )
 
 
-class SafeLineLoader(yaml.SafeLoader):
-    """Loader class that keeps track of line numbers."""
+class PythonSafeLoader(yaml.SafeLoader, _LoaderMixin):
+    """Python safe loader."""
 
     def __init__(self, stream: Any, secrets: Secrets | None = None) -> None:
         """Initialize a safe line loader."""
         super().__init__(stream)
         self.secrets = secrets
 
-    def compose_node(  # type: ignore[override]
-        self, parent: yaml.nodes.Node, index: int
-    ) -> yaml.nodes.Node:
-        """Annotate a node with the first line it was seen."""
-        last_line: int = self.line
-        node: yaml.nodes.Node = super().compose_node(  # type: ignore[assignment]
-            parent, index
+
+class SafeLineLoader(PythonSafeLoader):
+    """Provided for backwards compatibility. Logs when instantiated."""
+
+    def __init__(*args: Any, **kwargs: Any) -> None:
+        """Log a warning and call super."""
+        SafeLineLoader.__report_deprecated()
+        PythonSafeLoader.__init__(*args, **kwargs)
+
+    @classmethod
+    def add_constructor(cls, tag: str, constructor: Callable) -> None:
+        """Log a warning and call super."""
+        SafeLineLoader.__report_deprecated()
+        PythonSafeLoader.add_constructor(tag, constructor)
+
+    @classmethod
+    def add_multi_constructor(
+        cls, tag_prefix: str, multi_constructor: Callable
+    ) -> None:
+        """Log a warning and call super."""
+        SafeLineLoader.__report_deprecated()
+        PythonSafeLoader.add_multi_constructor(tag_prefix, multi_constructor)
+
+    @staticmethod
+    def __report_deprecated() -> None:
+        """Log deprecation warning."""
+        report(
+            "uses deprecated 'SafeLineLoader' instead of 'PythonSafeLoader', "
+            "which will stop working in HA Core 2024.6,"
         )
-        node.__line__ = last_line + 1  # type: ignore[attr-defined]
-        return node
-
-    def get_name(self) -> str:
-        """Get the name of the loader."""
-        return self.name
-
-    def get_stream_name(self) -> str:
-        """Get the name of the stream."""
-        return getattr(self.stream, "name", "")
 
 
-LoaderType = SafeLineLoader | SafeLoader
+LoaderType = FastSafeLoader | PythonSafeLoader
 
 
-def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE:
+def load_yaml(
+    fname: str | os.PathLike[str], secrets: Secrets | None = None
+) -> JSON_TYPE | None:
     """Load a YAML file."""
     try:
         with open(fname, encoding="utf-8") as conf_file:
@@ -166,94 +230,110 @@ def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE:
         raise HomeAssistantError(exc) from exc
 
 
+def load_yaml_dict(
+    fname: str | os.PathLike[str], secrets: Secrets | None = None
+) -> dict:
+    """Load a YAML file and ensure the top level is a dict.
+
+    Raise if the top level is not a dict.
+    Return an empty dict if the file is empty.
+    """
+    loaded_yaml = load_yaml(fname, secrets)
+    if loaded_yaml is None:
+        loaded_yaml = {}
+    if not isinstance(loaded_yaml, dict):
+        raise YamlTypeError(f"YAML file {fname} does not contain a dict")
+    return loaded_yaml
+
+
 def parse_yaml(
     content: str | TextIO | StringIO, secrets: Secrets | None = None
 ) -> JSON_TYPE:
     """Parse YAML with the fastest available loader."""
     if not HAS_C_LOADER:
-        return _parse_yaml_pure_python(content, secrets)
+        return _parse_yaml_python(content, secrets)
     try:
-        return _parse_yaml(SafeLoader, content, secrets)
+        return _parse_yaml(FastSafeLoader, content, secrets)
     except yaml.YAMLError:
-        # Loading failed, so we now load with the slow line loader
-        # since the C one will not give us line numbers
+        # Loading failed, so we now load with the Python loader which has more
+        # readable exceptions
         if isinstance(content, (StringIO, TextIO, TextIOWrapper)):
             # Rewind the stream so we can try again
             content.seek(0, 0)
-        return _parse_yaml_pure_python(content, secrets)
+        return _parse_yaml_python(content, secrets)
 
 
-def _parse_yaml_pure_python(
+def _parse_yaml_python(
     content: str | TextIO | StringIO, secrets: Secrets | None = None
 ) -> JSON_TYPE:
-    """Parse YAML with the pure python loader (this is very slow)."""
+    """Parse YAML with the python loader (this is very slow)."""
     try:
-        return _parse_yaml(SafeLineLoader, content, secrets)
+        return _parse_yaml(PythonSafeLoader, content, secrets)
     except yaml.YAMLError as exc:
         _LOGGER.error(str(exc))
         raise HomeAssistantError(exc) from exc
 
 
 def _parse_yaml(
-    loader: type[SafeLoader] | type[SafeLineLoader],
+    loader: type[FastSafeLoader | PythonSafeLoader],
     content: str | TextIO,
     secrets: Secrets | None = None,
 ) -> JSON_TYPE:
     """Load a YAML file."""
-    # If configuration file is empty YAML returns None
-    # We convert that to an empty dict
-    return (
-        yaml.load(content, Loader=lambda stream: loader(stream, secrets))
-        or NodeDictClass()
-    )
+    return yaml.load(content, Loader=lambda stream: loader(stream, secrets))  # type: ignore[arg-type]
 
 
 @overload
 def _add_reference(
-    obj: list | NodeListClass,
-    loader: LoaderType,
-    node: yaml.nodes.Node,
-) -> NodeListClass:
-    ...
+    obj: list | NodeListClass, loader: LoaderType, node: yaml.nodes.Node
+) -> NodeListClass: ...
 
 
 @overload
 def _add_reference(
-    obj: str | NodeStrClass,
-    loader: LoaderType,
-    node: yaml.nodes.Node,
-) -> NodeStrClass:
-    ...
+    obj: str | NodeStrClass, loader: LoaderType, node: yaml.nodes.Node
+) -> NodeStrClass: ...
 
 
 @overload
-def _add_reference(obj: _DictT, loader: LoaderType, node: yaml.nodes.Node) -> _DictT:
-    ...
+def _add_reference(
+    obj: dict | NodeDictClass, loader: LoaderType, node: yaml.nodes.Node
+) -> NodeDictClass: ...
 
 
-def _add_reference(  # type: ignore[no-untyped-def]
-    obj, loader: LoaderType, node: yaml.nodes.Node
-):
+def _add_reference(
+    obj: dict | list | str | NodeDictClass | NodeListClass | NodeStrClass,
+    loader: LoaderType,
+    node: yaml.nodes.Node,
+) -> NodeDictClass | NodeListClass | NodeStrClass:
     """Add file reference information to an object."""
     if isinstance(obj, list):
         obj = NodeListClass(obj)
-    if isinstance(obj, str):
+    elif isinstance(obj, str):
         obj = NodeStrClass(obj)
-    setattr(obj, "__config_file__", loader.get_name())
-    setattr(obj, "__line__", node.start_mark.line)
+    elif isinstance(obj, dict):
+        obj = NodeDictClass(obj)
+    try:  # suppress is much slower
+        obj.__config_file__ = loader.get_name
+        obj.__line__ = node.start_mark.line + 1
+    except AttributeError:
+        pass
     return obj
 
 
 def _include_yaml(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
-    """Load another YAML file and embeds it using the !include tag.
+    """Load another YAML file and embed it using the !include tag.
 
     Example:
         device_tracker: !include device_tracker.yaml
 
     """
-    fname = os.path.join(os.path.dirname(loader.get_name()), node.value)
+    fname = os.path.join(os.path.dirname(loader.get_name), node.value)
     try:
-        return _add_reference(load_yaml(fname, loader.secrets), loader, node)
+        loaded_yaml = load_yaml(fname, loader.secrets)
+        if loaded_yaml is None:
+            loaded_yaml = NodeDictClass()
+        return _add_reference(loaded_yaml, loader, node)
     except FileNotFoundError as exc:
         raise HomeAssistantError(
             f"{node.start_mark}: Unable to read file {fname}."
@@ -278,12 +358,17 @@ def _find_files(directory: str, pattern: str) -> Iterator[str]:
 def _include_dir_named_yaml(loader: LoaderType, node: yaml.nodes.Node) -> NodeDictClass:
     """Load multiple files from directory as a dictionary."""
     mapping = NodeDictClass()
-    loc = os.path.join(os.path.dirname(loader.get_name()), node.value)
+    loc = os.path.join(os.path.dirname(loader.get_name), node.value)
     for fname in _find_files(loc, "*.yaml"):
         filename = os.path.splitext(os.path.basename(fname))[0]
         if os.path.basename(fname) == SECRET_YAML:
             continue
-        mapping[filename] = load_yaml(fname, loader.secrets)
+        loaded_yaml = load_yaml(fname, loader.secrets)
+        if loaded_yaml is None:
+            # Special case, an empty file included by !include_dir_named is treated
+            # as an empty dictionary
+            loaded_yaml = NodeDictClass()
+        mapping[filename] = loaded_yaml
     return _add_reference(mapping, loader, node)
 
 
@@ -292,7 +377,7 @@ def _include_dir_merge_named_yaml(
 ) -> NodeDictClass:
     """Load multiple files from directory as a merged dictionary."""
     mapping = NodeDictClass()
-    loc = os.path.join(os.path.dirname(loader.get_name()), node.value)
+    loc = os.path.join(os.path.dirname(loader.get_name), node.value)
     for fname in _find_files(loc, "*.yaml"):
         if os.path.basename(fname) == SECRET_YAML:
             continue
@@ -306,11 +391,12 @@ def _include_dir_list_yaml(
     loader: LoaderType, node: yaml.nodes.Node
 ) -> list[JSON_TYPE]:
     """Load multiple files from directory as a list."""
-    loc = os.path.join(os.path.dirname(loader.get_name()), node.value)
+    loc = os.path.join(os.path.dirname(loader.get_name), node.value)
     return [
-        load_yaml(f, loader.secrets)
+        loaded_yaml
         for f in _find_files(loc, "*.yaml")
         if os.path.basename(f) != SECRET_YAML
+        and (loaded_yaml := load_yaml(f, loader.secrets)) is not None
     ]
 
 
@@ -318,7 +404,7 @@ def _include_dir_merge_list_yaml(
     loader: LoaderType, node: yaml.nodes.Node
 ) -> JSON_TYPE:
     """Load multiple files from directory as a merged list."""
-    loc: str = os.path.join(os.path.dirname(loader.get_name()), node.value)
+    loc: str = os.path.join(os.path.dirname(loader.get_name), node.value)
     merged_list: list[JSON_TYPE] = []
     for fname in _find_files(loc, "*.yaml"):
         if os.path.basename(fname) == SECRET_YAML:
@@ -337,22 +423,27 @@ def _handle_mapping_tag(
     nodes = loader.construct_pairs(node)
 
     seen: dict = {}
-    for (key, _), (child_node, _) in zip(nodes, node.value):
+    for (key, _), (child_node, _) in zip(nodes, node.value, strict=False):
         line = child_node.start_mark.line
 
         try:
             hash(key)
         except TypeError as exc:
-            fname = loader.get_stream_name()
+            fname = loader.get_stream_name
             raise yaml.MarkedYAMLError(
                 context=f'invalid key: "{key}"',
                 context_mark=yaml.Mark(
-                    fname, 0, line, -1, None, None  # type: ignore[arg-type]
+                    fname,
+                    0,
+                    line,
+                    -1,
+                    None,
+                    None,  # type: ignore[arg-type]
                 ),
             ) from exc
 
         if key in seen:
-            fname = loader.get_stream_name()
+            fname = loader.get_stream_name
             _LOGGER.warning(
                 'YAML file %s contains duplicate key "%s". Check lines %d and %d',
                 fname,
@@ -368,6 +459,16 @@ def _handle_mapping_tag(
 def _construct_seq(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
     """Add line number and file name to Load YAML sequence."""
     (obj,) = loader.construct_yaml_seq(node)
+    return _add_reference(obj, loader, node)
+
+
+def _handle_scalar_tag(
+    loader: LoaderType, node: yaml.nodes.ScalarNode
+) -> str | int | float | None:
+    """Add line number and file name to Load YAML sequence."""
+    obj = node.value
+    if not isinstance(obj, str):
+        return obj
     return _add_reference(obj, loader, node)
 
 
@@ -389,17 +490,18 @@ def secret_yaml(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
     if loader.secrets is None:
         raise HomeAssistantError("Secrets not supported in this YAML file")
 
-    return loader.secrets.get(loader.get_name(), node.value)
+    return loader.secrets.get(loader.get_name, node.value)
 
 
 def add_constructor(tag: Any, constructor: Any) -> None:
     """Add to constructor to all loaders."""
-    for yaml_loader in (SafeLoader, SafeLineLoader):
+    for yaml_loader in (FastSafeLoader, PythonSafeLoader):
         yaml_loader.add_constructor(tag, constructor)
 
 
 add_constructor("!include", _include_yaml)
 add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _handle_mapping_tag)
+add_constructor(yaml.resolver.BaseResolver.DEFAULT_SCALAR_TAG, _handle_scalar_tag)
 add_constructor(yaml.resolver.BaseResolver.DEFAULT_SEQUENCE_TAG, _construct_seq)
 add_constructor("!env_var", _env_var_yaml)
 add_constructor("!secret", secret_yaml)

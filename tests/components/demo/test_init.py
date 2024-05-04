@@ -1,4 +1,5 @@
 """The tests for the Demo component."""
+
 import json
 from unittest.mock import patch
 

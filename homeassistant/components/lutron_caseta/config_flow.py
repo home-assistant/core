@@ -1,4 +1,5 @@
 """Config flow for Lutron Caseta."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,16 +7,14 @@ import logging
 import os
 import ssl
 
-import async_timeout
 from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY, async_pair
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     ABORT_REASON_CANNOT_CONNECT,
@@ -46,7 +45,7 @@ DATA_SCHEMA_USER = vol.Schema({vol.Required(CONF_HOST): str})
 TLS_ASSET_TEMPLATE = "lutron_caseta-{}-{}.pem"
 
 
-class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle Lutron Caseta config flow."""
 
     VERSION = 1
@@ -68,7 +67,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         hostname = discovery_info.hostname
         if hostname is None or not hostname.lower().startswith("lutron-"):
@@ -89,7 +88,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_homekit(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by homekit discovery."""
         return await self.async_step_zeroconf(discovery_info)
 
@@ -118,7 +117,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             assets = None
             try:
                 assets = await async_pair(self.data[CONF_HOST])
-            except (asyncio.TimeoutError, OSError):
+            except (TimeoutError, OSError):
                 errors["base"] = "cannot_connect"
 
             if not errors:
@@ -226,9 +225,9 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return None
 
         try:
-            async with async_timeout.timeout(BRIDGE_TIMEOUT):
+            async with asyncio.timeout(BRIDGE_TIMEOUT):
                 await bridge.connect()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.error(
                 "Timeout while trying to connect to bridge at %s",
                 self.data[CONF_HOST],

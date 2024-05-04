@@ -1,4 +1,5 @@
 """Support for interacting with Digital Ocean droplets."""
+
 from __future__ import annotations
 
 import logging
@@ -63,7 +64,7 @@ class DigitalOceanSwitch(SwitchEntity):
 
     _attr_attribution = ATTRIBUTION
 
-    def __init__(self, do, droplet_id):  # pylint: disable=invalid-name
+    def __init__(self, do, droplet_id):
         """Initialize a new Digital Ocean sensor."""
         self._digital_ocean = do
         self._droplet_id = droplet_id

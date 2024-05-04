@@ -1,4 +1,5 @@
 """Exposures to KNX bus."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -17,7 +18,13 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, StateType
 
@@ -119,12 +126,12 @@ class KNXExposeSensor:
         """Extract value from state."""
         if state is None or state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             value = self.expose_default
+        elif self.expose_attribute is not None:
+            _attr = state.attributes.get(self.expose_attribute)
+            value = _attr if _attr is not None else self.expose_default
         else:
-            value = (
-                state.state
-                if self.expose_attribute is None
-                else state.attributes.get(self.expose_attribute, self.expose_default)
-            )
+            value = state.state
+
         if self.expose_type == "binary":
             if value in (1, STATE_ON, "True"):
                 return True
@@ -145,12 +152,12 @@ class KNXExposeSensor:
             return str(value)[:14]
         return value
 
-    async def _async_entity_changed(self, event: Event) -> None:
+    async def _async_entity_changed(self, event: Event[EventStateChangedData]) -> None:
         """Handle entity change."""
-        new_state = event.data.get("new_state")
+        new_state = event.data["new_state"]
         if (new_value := self._get_expose_value(new_state)) is None:
             return
-        old_state = event.data.get("old_state")
+        old_state = event.data["old_state"]
         # don't use default value for comparison on first state change (old_state is None)
         old_value = self._get_expose_value(old_state) if old_state is not None else None
         # don't send same value sequentially

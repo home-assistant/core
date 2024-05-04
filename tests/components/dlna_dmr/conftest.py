@@ -1,4 +1,5 @@
 """Fixtures for DLNA tests."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -74,14 +75,14 @@ def domain_data_mock(hass: HomeAssistant) -> Iterable[Mock]:
     seal(upnp_device)
     domain_data.upnp_factory.async_create_device.return_value = upnp_device
 
-    with patch.dict(hass.data, {DLNA_DOMAIN: domain_data}):
-        yield domain_data
+    hass.data[DLNA_DOMAIN] = domain_data
+    return domain_data
 
 
 @pytest.fixture
 def config_entry_mock() -> MockConfigEntry:
     """Mock a config entry for this platform."""
-    mock_entry = MockConfigEntry(
+    return MockConfigEntry(
         unique_id=MOCK_DEVICE_UDN,
         domain=DLNA_DOMAIN,
         data={
@@ -93,13 +94,12 @@ def config_entry_mock() -> MockConfigEntry:
         title=MOCK_DEVICE_NAME,
         options={},
     )
-    return mock_entry
 
 
 @pytest.fixture
 def config_entry_mock_no_mac() -> MockConfigEntry:
     """Mock a config entry that does not already contain a MAC address."""
-    mock_entry = MockConfigEntry(
+    return MockConfigEntry(
         unique_id=MOCK_DEVICE_UDN,
         domain=DLNA_DOMAIN,
         data={
@@ -110,7 +110,6 @@ def config_entry_mock_no_mac() -> MockConfigEntry:
         title=MOCK_DEVICE_NAME,
         options={},
     )
-    return mock_entry
 
 
 @pytest.fixture
@@ -129,6 +128,7 @@ def dmr_device_mock(domain_data_mock: Mock) -> Iterable[Mock]:
         device.manufacturer = "device_manufacturer"
         device.model_name = "device_model_name"
         device.name = "device_name"
+        device.preset_names = ["preset1", "preset2"]
 
         yield device
 

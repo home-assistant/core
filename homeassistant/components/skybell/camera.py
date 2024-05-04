@@ -1,4 +1,5 @@
 """Camera support for the Skybell HD Doorbell."""
+
 from __future__ import annotations
 
 from aiohttp import web
@@ -17,8 +18,14 @@ from .coordinator import SkybellDataUpdateCoordinator
 from .entity import SkybellEntity
 
 CAMERA_TYPES: tuple[CameraEntityDescription, ...] = (
-    CameraEntityDescription(key="activity", name="Last activity"),
-    CameraEntityDescription(key="avatar", name="Camera"),
+    CameraEntityDescription(
+        key="activity",
+        translation_key="activity",
+    ),
+    CameraEntityDescription(
+        key="avatar",
+        translation_key="camera",
+    ),
 )
 
 

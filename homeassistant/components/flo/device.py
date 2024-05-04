@@ -1,12 +1,14 @@
 """Flo device object."""
+
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timedelta
 from typing import Any
 
 from aioflo.api import API
 from aioflo.errors import RequestError
-from async_timeout import timeout
+from orjson import JSONDecodeError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -15,8 +17,10 @@ import homeassistant.util.dt as dt_util
 from .const import DOMAIN as FLO_DOMAIN, LOGGER
 
 
-class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
+class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
     """Flo device object."""
+
+    _failure_count: int = 0
 
     def __init__(
         self, hass: HomeAssistant, api_client: API, location_id: str, device_id: str
@@ -39,12 +43,15 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via library."""
         try:
-            async with timeout(20):
+            async with asyncio.timeout(20):
                 await self.send_presence_ping()
                 await self._update_device()
                 await self._update_consumption_data()
-        except RequestError as error:
-            raise UpdateFailed(error) from error
+                self._failure_count = 0
+        except (RequestError, TimeoutError, JSONDecodeError) as error:
+            self._failure_count += 1
+            if self._failure_count > 3:
+                raise UpdateFailed(error) from error
 
     @property
     def location_id(self) -> str:
@@ -139,9 +146,9 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         return self._device_information["fwVersion"]
 
     @property
-    def serial_number(self) -> str:
+    def serial_number(self) -> str | None:
         """Return the serial number for the device."""
-        return self._device_information["serialNumber"]
+        return self._device_information.get("serialNumber")
 
     @property
     def pending_info_alerts_count(self) -> int:

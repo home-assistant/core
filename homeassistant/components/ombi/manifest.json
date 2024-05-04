@@ -2,7 +2,7 @@
   "domain": "ombi",
   "name": "Ombi",
   "codeowners": ["@larssont"],
-  "documentation": "https://www.home-assistant.io/integrations/ombi/",
+  "documentation": "https://www.home-assistant.io/integrations/ombi",
   "iot_class": "local_polling",
   "requirements": ["pyombi==0.1.10"]
 }

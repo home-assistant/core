@@ -1,4 +1,5 @@
 """Support for Fibaro sensors."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -26,7 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import convert
 
-from . import FIBARO_DEVICES, FibaroDevice
+from . import FibaroController, FibaroDevice
 from .const import DOMAIN
 
 # List of known sensors which represents a fibaro device
@@ -105,19 +106,28 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fibaro controller devices."""
-    entities: list[SensorEntity] = []
 
-    for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][Platform.SENSOR]:
-        entity_description = MAIN_SENSOR_TYPES.get(device.type)
+    controller: FibaroController = hass.data[DOMAIN][entry.entry_id]
+    entities: list[SensorEntity] = [
+        FibaroSensor(device, MAIN_SENSOR_TYPES.get(device.type))
+        for device in controller.fibaro_devices[Platform.SENSOR]
+    ]
 
-        # main sensors are created even if the entity type is not known
-        entities.append(FibaroSensor(device, entity_description))
-
-    for platform in (Platform.COVER, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH):
-        for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][platform]:
-            for entity_description in ADDITIONAL_SENSOR_TYPES:
-                if entity_description.key in device.properties:
-                    entities.append(FibaroAdditionalSensor(device, entity_description))
+    entities.extend(
+        FibaroAdditionalSensor(device, entity_description)
+        for platform in (
+            Platform.BINARY_SENSOR,
+            Platform.CLIMATE,
+            Platform.COVER,
+            Platform.LIGHT,
+            Platform.LOCK,
+            Platform.SENSOR,
+            Platform.SWITCH,
+        )
+        for device in controller.fibaro_devices[platform]
+        for entity_description in ADDITIONAL_SENSOR_TYPES
+        if entity_description.key in device.properties
+    )
 
     async_add_entities(entities, True)
 

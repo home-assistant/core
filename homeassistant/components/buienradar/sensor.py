@@ -1,4 +1,5 @@
 """Support for Buienradar.nl weather service."""
+
 from __future__ import annotations
 
 import logging
@@ -129,14 +130,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="humidity",
-        translation_key="humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:water-percent",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="temperature",
-        translation_key="temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -150,7 +150,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="windspeed",
-        translation_key="windspeed",
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
@@ -174,7 +173,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="pressure",
-        translation_key="pressure",
+        device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.HPA,
         icon="mdi:gauge",
         state_class=SensorStateClass.MEASUREMENT,
@@ -194,14 +193,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="precipitation",
-        translation_key="precipitation",
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     SensorEntityDescription(
         key="irradiance",
-        translation_key="irradiance",
         device_class=SensorDeviceClass.IRRADIANCE,
         native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -718,17 +715,18 @@ async def async_setup_entry(
         timeframe,
     )
 
+    # create weather entities:
     entities = [
         BrSensor(config.get(CONF_NAME, "Buienradar"), coordinates, description)
         for description in SENSOR_TYPES
     ]
 
-    async_add_entities(entities)
-
+    # create weather data:
     data = BrData(hass, coordinates, timeframe, entities)
-    # schedule the first update in 1 minute from now:
-    await data.schedule_update(1)
     hass.data[DOMAIN][entry.entry_id][Platform.SENSOR] = data
+    await data.async_update()
+
+    async_add_entities(entities)
 
 
 class BrSensor(SensorEntity):
@@ -744,8 +742,9 @@ class BrSensor(SensorEntity):
         """Initialize the sensor."""
         self.entity_description = description
         self._measured = None
-        self._attr_unique_id = "{:2.6f}{:2.6f}{}".format(
-            coordinates[CONF_LATITUDE], coordinates[CONF_LONGITUDE], description.key
+        self._attr_unique_id = (
+            f"{coordinates[CONF_LATITUDE]:2.6f}{coordinates[CONF_LONGITUDE]:2.6f}"
+            f"{description.key}"
         )
 
         # All continuous sensors should be forced to be updated
@@ -757,9 +756,9 @@ class BrSensor(SensorEntity):
             self._timeframe = None
 
     @callback
-    def data_updated(self, data):
+    def data_updated(self, data: BrData):
         """Update data."""
-        if self.hass and self._load_data(data):
+        if self._load_data(data.data) and self.hass:
             self.async_write_ha_state()
 
     @callback
@@ -775,13 +774,7 @@ class BrSensor(SensorEntity):
         self._measured = data.get(MEASURED)
         sensor_type = self.entity_description.key
 
-        if (
-            sensor_type.endswith("_1d")
-            or sensor_type.endswith("_2d")
-            or sensor_type.endswith("_3d")
-            or sensor_type.endswith("_4d")
-            or sensor_type.endswith("_5d")
-        ):
+        if sensor_type.endswith(("_1d", "_2d", "_3d", "_4d", "_5d")):
             # update forecasting sensors:
             fcday = 0
             if sensor_type.endswith("_2d"):
@@ -794,7 +787,7 @@ class BrSensor(SensorEntity):
                 fcday = 4
 
             # update weather symbol & status text
-            if sensor_type.startswith(SYMBOL) or sensor_type.startswith(CONDITION):
+            if sensor_type.startswith((SYMBOL, CONDITION)):
                 try:
                     condition = data.get(FORECAST)[fcday].get(CONDITION)
                 except IndexError:
@@ -826,22 +819,23 @@ class BrSensor(SensorEntity):
                     self._attr_native_value = data.get(FORECAST)[fcday].get(
                         sensor_type[:-3]
                     )
-                    if self.state is not None:
-                        self._attr_native_value = round(self.state * 3.6, 1)
-                    return True
                 except IndexError:
                     _LOGGER.warning("No forecast for fcday=%s", fcday)
                     return False
+
+                if self.state is not None:
+                    self._attr_native_value = round(self.state * 3.6, 1)
+                return True
 
             # update all other sensors
             try:
                 self._attr_native_value = data.get(FORECAST)[fcday].get(
                     sensor_type[:-3]
                 )
-                return True
             except IndexError:
                 _LOGGER.warning("No forecast for fcday=%s", fcday)
                 return False
+            return True
 
         if sensor_type == SYMBOL or sensor_type.startswith(CONDITION):
             # update weather symbol & status text

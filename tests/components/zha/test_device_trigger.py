@@ -1,14 +1,19 @@
 """ZHA device automation trigger tests."""
+
 from datetime import timedelta
 import time
 from unittest.mock import patch
 
 import pytest
+from zigpy.application import ControllerApplication
 import zigpy.profiles.zha
-import zigpy.zcl.clusters.general as general
+from zigpy.zcl.clusters import general
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.components.zha.core.const import ATTR_ENDPOINT_ID
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -20,6 +25,7 @@ from .common import async_enable_traffic
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 from tests.common import (
+    MockConfigEntry,
     async_fire_time_changed,
     async_get_device_automations,
     async_mock_service,
@@ -45,6 +51,16 @@ LONG_PRESS = "remote_button_long_press"
 LONG_RELEASE = "remote_button_long_release"
 
 
+SWITCH_SIGNATURE = {
+    1: {
+        SIG_EP_INPUT: [general.Basic.cluster_id],
+        SIG_EP_OUTPUT: [general.OnOff.cluster_id],
+        SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+        SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+    }
+}
+
+
 @pytest.fixture(autouse=True)
 def sensor_platforms_only():
     """Only set up the sensor platform and required base platforms to speed up tests."""
@@ -56,10 +72,7 @@ def _same_lists(list_a, list_b):
     if len(list_a) != len(list_b):
         return False
 
-    for item in list_a:
-        if item not in list_b:
-            return False
-    return True
+    return all(item in list_b for item in list_a)
 
 
 @pytest.fixture
@@ -72,16 +85,7 @@ def calls(hass):
 async def mock_devices(hass, zigpy_device_mock, zha_device_joined_restored):
     """IAS device fixture."""
 
-    zigpy_device = zigpy_device_mock(
-        {
-            1: {
-                SIG_EP_INPUT: [general.Basic.cluster_id],
-                SIG_EP_OUTPUT: [general.OnOff.cluster_id],
-                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
-                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
-            }
-        }
-    )
+    zigpy_device = zigpy_device_mock(SWITCH_SIGNATURE)
 
     zha_device = await zha_device_joined_restored(zigpy_device)
     zha_device.update_available(True)
@@ -105,7 +109,9 @@ async def test_triggers(hass: HomeAssistant, mock_devices) -> None:
     ieee_address = str(zha_device.ieee)
 
     ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
+    reg_device = ha_device_registry.async_get_device(
+        identifiers={("zha", ieee_address)}
+    )
 
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, reg_device.id
@@ -171,7 +177,9 @@ async def test_no_triggers(hass: HomeAssistant, mock_devices) -> None:
     ieee_address = str(zha_device.ieee)
 
     ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
+    reg_device = ha_device_registry.async_get_device(
+        identifiers={("zha", ieee_address)}
+    )
 
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, reg_device.id
@@ -203,7 +211,9 @@ async def test_if_fires_on_event(hass: HomeAssistant, mock_devices, calls) -> No
 
     ieee_address = str(zha_device.ieee)
     ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
+    reg_device = ha_device_registry.async_get_device(
+        identifiers={("zha", ieee_address)}
+    )
 
     assert await async_setup_component(
         hass,
@@ -312,7 +322,9 @@ async def test_exception_no_triggers(
 
     ieee_address = str(zha_device.ieee)
     ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
+    reg_device = ha_device_registry.async_get_device(
+        identifiers={("zha", ieee_address)}
+    )
 
     await async_setup_component(
         hass,
@@ -359,7 +371,9 @@ async def test_exception_bad_trigger(
 
     ieee_address = str(zha_device.ieee)
     ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
+    reg_device = ha_device_registry.async_get_device(
+        identifiers={("zha", ieee_address)}
+    )
 
     await async_setup_component(
         hass,
@@ -387,3 +401,109 @@ async def test_exception_bad_trigger(
         "Unnamed automation failed to setup triggers and has been disabled: "
         "device does not have trigger ('junk', 'junk')" in caplog.text
     )
+
+
+async def test_validate_trigger_config_missing_info(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    zigpy_device_mock,
+    mock_zigpy_connect: ControllerApplication,
+    zha_device_joined,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test device triggers referring to a missing device."""
+
+    # Join a device
+    switch = zigpy_device_mock(SWITCH_SIGNATURE)
+    await zha_device_joined(switch)
+
+    # After we unload the config entry, trigger info was not cached on startup, nor can
+    # it be pulled from the current device, making it impossible to validate triggers
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    ha_device_registry = dr.async_get(hass)
+    reg_device = ha_device_registry.async_get_device(
+        identifiers={("zha", str(switch.ieee))}
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "device_id": reg_device.id,
+                        "domain": "zha",
+                        "platform": "device",
+                        "type": "junk",
+                        "subtype": "junk",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data": {"message": "service called"},
+                    },
+                }
+            ]
+        },
+    )
+
+    assert "Unable to get zha device" in caplog.text
+
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await async_get_device_automations(
+            hass, DeviceAutomationType.TRIGGER, reg_device.id
+        )
+
+
+async def test_validate_trigger_config_unloaded_bad_info(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    zigpy_device_mock,
+    mock_zigpy_connect: ControllerApplication,
+    zha_device_joined,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test device triggers referring to a missing device."""
+
+    # Join a device
+    switch = zigpy_device_mock(SWITCH_SIGNATURE)
+    await zha_device_joined(switch)
+
+    # After we unload the config entry, trigger info was not cached on startup, nor can
+    # it be pulled from the current device, making it impossible to validate triggers
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    # Reload ZHA to persist the device info in the cache
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    ha_device_registry = dr.async_get(hass)
+    reg_device = ha_device_registry.async_get_device(
+        identifiers={("zha", str(switch.ieee))}
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "device_id": reg_device.id,
+                        "domain": "zha",
+                        "platform": "device",
+                        "type": "junk",
+                        "subtype": "junk",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data": {"message": "service called"},
+                    },
+                }
+            ]
+        },
+    )
+
+    assert "Unable to find trigger" in caplog.text

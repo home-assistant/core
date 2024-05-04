@@ -1,6 +1,8 @@
 """Repairs implementation for supervisor integration."""
 
-from collections.abc import Callable
+from __future__ import annotations
+
+from collections.abc import Callable, Coroutine
 from types import MethodType
 from typing import Any
 
@@ -17,10 +19,10 @@ from .const import (
     PLACEHOLDER_KEY_REFERENCE,
     SupervisorIssueContext,
 )
-from .handler import HassioAPIError, async_apply_suggestion
+from .handler import async_apply_suggestion
 from .issues import Issue, Suggestion
 
-SUGGESTION_CONFIRMATION_REQUIRED = {"system_execute_reboot"}
+SUGGESTION_CONFIRMATION_REQUIRED = {"system_adopt_data_disk", "system_execute_reboot"}
 
 EXTRA_PLACEHOLDERS = {
     "issue_mount_mount_failed": {
@@ -86,14 +88,20 @@ class SupervisorIssueRepairFlow(RepairsFlow):
             )
 
         if len(self.issue.suggestions) > 1:
-            return self.async_show_menu(
-                step_id="fix_menu",
-                menu_options=[suggestion.key for suggestion in self.issue.suggestions],
-                description_placeholders=self.description_placeholders,
-            )
+            return await self.async_step_fix_menu()
 
         # Always show a form for one suggestion to explain to user what's happening
         return self._async_form_for_suggestion(self.issue.suggestions[0])
+
+    async def async_step_fix_menu(self, _: None = None) -> FlowResult:
+        """Show the fix menu."""
+        assert self.issue
+
+        return self.async_show_menu(
+            step_id="fix_menu",
+            menu_options=[suggestion.key for suggestion in self.issue.suggestions],
+            description_placeholders=self.description_placeholders,
+        )
 
     async def _async_step_apply_suggestion(
         self, suggestion: Suggestion, confirmed: bool = False
@@ -102,15 +110,17 @@ class SupervisorIssueRepairFlow(RepairsFlow):
         if not confirmed and suggestion.key in SUGGESTION_CONFIRMATION_REQUIRED:
             return self._async_form_for_suggestion(suggestion)
 
-        try:
-            await async_apply_suggestion(self.hass, suggestion.uuid)
-        except HassioAPIError:
-            return self.async_abort(reason="apply_suggestion_fail")
-
-        return self.async_create_entry(data={})
+        if await async_apply_suggestion(self.hass, suggestion.uuid):
+            return self.async_create_entry(data={})
+        return self.async_abort(reason="apply_suggestion_fail")
 
     @staticmethod
-    def _async_step(suggestion: Suggestion) -> Callable:
+    def _async_step(
+        suggestion: Suggestion,
+    ) -> Callable[
+        [SupervisorIssueRepairFlow, dict[str, str] | None],
+        Coroutine[Any, Any, FlowResult],
+    ]:
         """Generate a step handler for a suggestion."""
 
         async def _async_step(

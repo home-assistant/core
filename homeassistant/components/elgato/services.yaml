@@ -1,8 +1,4 @@
 identify:
-  name: Identify
-  description: >-
-    Identify an Elgato Light. Blinks the light, which can be useful
-    for, e.g., a visual notification.
   target:
     entity:
       integration: elgato

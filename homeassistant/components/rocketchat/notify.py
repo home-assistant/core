@@ -1,4 +1,5 @@
 """Rocket.Chat notification service."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -23,7 +24,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-# pylint: disable=no-value-for-parameter
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_URL): vol.Url(),

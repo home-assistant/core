@@ -1,10 +1,11 @@
 """Config flow for Huisbaasje integration."""
+
 import logging
 
 from energyflip import EnergyFlip, EnergyFlipConnectionException, EnergyFlipException
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import AbortFlow
 
@@ -17,7 +18,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class HuisbaasjeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class HuisbaasjeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Huisbaasje."""
 
     VERSION = 1

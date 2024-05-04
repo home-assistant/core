@@ -1,4 +1,5 @@
 """Diagnostics support for Pure Energie."""
+
 from __future__ import annotations
 
 from dataclasses import asdict

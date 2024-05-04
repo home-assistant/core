@@ -1,4 +1,5 @@
 """Allows the creation of a sensor that filters state property."""
+
 from __future__ import annotations
 
 from collections import Counter, deque
@@ -34,7 +35,13 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -217,10 +224,12 @@ class SensorFilter(SensorEntity):
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_id}
 
     @callback
-    def _update_filter_sensor_state_event(self, event: Event) -> None:
+    def _update_filter_sensor_state_event(
+        self, event: Event[EventStateChangedData]
+    ) -> None:
         """Handle device state changes."""
         _LOGGER.debug("Update filter on event: %s", event)
-        self._update_filter_sensor_state(event.data.get("new_state"))
+        self._update_filter_sensor_state(event.data["new_state"])
 
     @callback
     def _update_filter_sensor_state(
@@ -463,7 +472,7 @@ class Filter:
 
     def _filter_state(self, new_state: FilterState) -> FilterState:
         """Implement filter."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def filter_state(self, new_state: _State) -> _State:
         """Implement a common interface for filters."""

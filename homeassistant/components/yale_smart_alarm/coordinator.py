@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for the Yale integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -16,7 +17,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, YALE_BASE_ERRORS
 
 
-class YaleDataUpdateCoordinator(DataUpdateCoordinator):
+class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """A Yale Data Update Coordinator."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -28,6 +29,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
             LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            always_update=False,
         )
 
     async def _async_update_data(self) -> dict[str, Any]:

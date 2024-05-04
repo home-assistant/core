@@ -1,0 +1,23 @@
+{
+  "title": "Jellyfin",
+  "media_class": "directory",
+  "media_content_type": "",
+  "media_content_id": "media-source://jellyfin",
+  "children_media_class": "directory",
+  "can_play": false,
+  "can_expand": true,
+  "thumbnail": null,
+  "not_shown": 0,
+  "children": [
+    {
+      "title": "COLLECTION FOLDER",
+      "media_class": "directory",
+      "media_content_type": "",
+      "media_content_id": "media-source://jellyfin/COLLECTION-FOLDER-UUID",
+      "children_media_class": null,
+      "can_play": false,
+      "can_expand": true,
+      "thumbnail": null
+    }
+  ]
+}

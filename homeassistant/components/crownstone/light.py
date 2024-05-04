@@ -1,4 +1,5 @@
 """Support for Crownstone devices."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -70,7 +71,8 @@ class CrownstoneEntity(CrownstoneBaseEntity, LightEntity):
     Light platform is used to support dimming.
     """
 
-    _attr_icon = "mdi:power-socket-de"
+    _attr_name = None
+    _attr_translation_key = "german_power_outlet"
 
     def __init__(
         self, crownstone_data: Crownstone, usb: CrownstoneUart | None = None
@@ -79,7 +81,6 @@ class CrownstoneEntity(CrownstoneBaseEntity, LightEntity):
         super().__init__(crownstone_data)
         self.usb = usb
         # Entity class attributes
-        self._attr_name = str(self.device.name)
         self._attr_unique_id = f"{self.cloud_id}-{CROWNSTONE_SUFFIX}"
 
     @property

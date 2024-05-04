@@ -1,4 +1,5 @@
 """Support for WiZ sensors."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
@@ -23,7 +24,6 @@ from .models import WizData
 SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="rssi",
-        name="Signal strength",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -36,7 +36,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
 POWER_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="power",
-        name="Current power",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,

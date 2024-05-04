@@ -1,10 +1,11 @@
 """Support for Notion binary sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Literal
 
-from aionotion.sensor.models import ListenerKind
+from aionotion.listener.models import ListenerKind
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -30,29 +31,22 @@ from .const import (
     SENSOR_SMOKE_CO,
     SENSOR_WINDOW_HINGED,
 )
-from .model import NotionEntityDescriptionMixin
+from .coordinator import NotionDataUpdateCoordinator
+from .model import NotionEntityDescription
 
 
-@dataclass
-class NotionBinarySensorDescriptionMixin:
-    """Define an entity description mixin for binary and regular sensors."""
-
-    on_state: Literal["alarm", "leak", "low", "not_missing", "open"]
-
-
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class NotionBinarySensorDescription(
-    BinarySensorEntityDescription,
-    NotionBinarySensorDescriptionMixin,
-    NotionEntityDescriptionMixin,
+    BinarySensorEntityDescription, NotionEntityDescription
 ):
     """Describe a Notion binary sensor."""
+
+    on_state: Literal["alarm", "leak", "low", "not_missing", "open"]
 
 
 BINARY_SENSOR_DESCRIPTIONS = (
     NotionBinarySensorDescription(
         key=SENSOR_BATTERY,
-        name="Low battery",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         listener_kind=ListenerKind.BATTERY,
@@ -60,28 +54,24 @@ BINARY_SENSOR_DESCRIPTIONS = (
     ),
     NotionBinarySensorDescription(
         key=SENSOR_DOOR,
-        name="Door",
         device_class=BinarySensorDeviceClass.DOOR,
         listener_kind=ListenerKind.DOOR,
         on_state="open",
     ),
     NotionBinarySensorDescription(
         key=SENSOR_GARAGE_DOOR,
-        name="Garage door",
         device_class=BinarySensorDeviceClass.GARAGE_DOOR,
         listener_kind=ListenerKind.GARAGE_DOOR,
         on_state="open",
     ),
     NotionBinarySensorDescription(
         key=SENSOR_LEAK,
-        name="Leak detector",
         device_class=BinarySensorDeviceClass.MOISTURE,
         listener_kind=ListenerKind.LEAK_STATUS,
         on_state="leak",
     ),
     NotionBinarySensorDescription(
         key=SENSOR_MISSING,
-        name="Missing",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         listener_kind=ListenerKind.CONNECTED,
@@ -89,28 +79,28 @@ BINARY_SENSOR_DESCRIPTIONS = (
     ),
     NotionBinarySensorDescription(
         key=SENSOR_SAFE,
-        name="Safe",
+        translation_key="safe",
         device_class=BinarySensorDeviceClass.DOOR,
         listener_kind=ListenerKind.SAFE,
         on_state="open",
     ),
     NotionBinarySensorDescription(
         key=SENSOR_SLIDING,
-        name="Sliding door/window",
+        translation_key="sliding_door_window",
         device_class=BinarySensorDeviceClass.DOOR,
         listener_kind=ListenerKind.SLIDING_DOOR_OR_WINDOW,
         on_state="open",
     ),
     NotionBinarySensorDescription(
         key=SENSOR_SMOKE_CO,
-        name="Smoke/Carbon monoxide detector",
+        translation_key="smoke_carbon_monoxide_detector",
         device_class=BinarySensorDeviceClass.SMOKE,
         listener_kind=ListenerKind.SMOKE,
         on_state="alarm",
     ),
     NotionBinarySensorDescription(
         key=SENSOR_WINDOW_HINGED,
-        name="Hinged window",
+        translation_key="hinged_window",
         listener_kind=ListenerKind.HINGED_WINDOW,
         on_state="open",
     ),
@@ -121,7 +111,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Notion sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: NotionDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [
@@ -130,12 +120,11 @@ async def async_setup_entry(
                 listener_id,
                 sensor.uuid,
                 sensor.bridge.id,
-                sensor.system_id,
                 description,
             )
             for listener_id, listener in coordinator.data.listeners.items()
             for description in BINARY_SENSOR_DESCRIPTIONS
-            if description.listener_kind == listener.listener_kind
+            if description.listener_kind.value == listener.definition_id
             and (sensor := coordinator.data.sensors[listener.sensor_id])
         ]
     )
@@ -150,6 +139,6 @@ class NotionBinarySensor(NotionEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if not self.listener.insights.primary.value:
-            LOGGER.warning("Unknown listener structure: %s", self.listener.dict())
+            LOGGER.warning("Unknown listener structure: %s", self.listener)
             return False
         return self.listener.insights.primary.value == self.entity_description.on_state

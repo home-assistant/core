@@ -1,49 +1,22 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
+
 from datetime import timedelta
 import logging
 
 from freebox_api.exceptions import HttpRequestError
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORMS, SERVICE_REBOOT
 from .router import FreeboxRouter, get_api
 
-FREEBOX_SCHEMA = vol.Schema(
-    {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_PORT): cv.port}
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [FREEBOX_SCHEMA]))},
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
 SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Freebox integration."""
-    if DOMAIN in config:
-        for entry_config in config[DOMAIN]:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry_config
-                )
-            )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

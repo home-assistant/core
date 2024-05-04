@@ -1,4 +1,5 @@
 """Support for monitoring OctoPrint sensors."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -54,7 +55,7 @@ async def async_setup_entry(
         if not coordinator.data["printer"]:
             return
 
-        new_tools = []
+        new_tools: list[OctoPrintTemperatureSensor] = []
         for tool in [
             tool
             for tool in coordinator.data["printer"].temperatures
@@ -62,15 +63,15 @@ async def async_setup_entry(
         ]:
             assert device_id is not None
             known_tools.add(tool.name)
-            for temp_type in ("actual", "target"):
-                new_tools.append(
-                    OctoPrintTemperatureSensor(
-                        coordinator,
-                        tool.name,
-                        temp_type,
-                        device_id,
-                    )
+            new_tools.extend(
+                OctoPrintTemperatureSensor(
+                    coordinator,
+                    tool.name,
+                    temp_type,
+                    device_id,
                 )
+                for temp_type in ("actual", "target")
+            )
         async_add_entities(new_tools)
 
     config_entry.async_on_unload(coordinator.async_add_listener(async_add_tool_sensors))
@@ -104,11 +105,7 @@ class OctoPrintSensorBase(
         self._device_id = device_id
         self._attr_name = f"OctoPrint {sensor_type}"
         self._attr_unique_id = f"{sensor_type}-{device_id}"
-
-    @property
-    def device_info(self):
-        """Device info."""
-        return self.coordinator.device_info
+        self._attr_device_info = coordinator.device_info
 
 
 class OctoPrintStatusSensor(OctoPrintSensorBase):

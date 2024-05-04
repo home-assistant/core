@@ -1,4 +1,5 @@
 """Tests for the AVM Fritz!Box integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -22,9 +23,9 @@ async def setup_config_entry(
     hass: HomeAssistant,
     data: dict[str, Any],
     unique_id: str = "any",
-    device: Mock = None,
-    fritz: Mock = None,
-    template: Mock = None,
+    device: Mock | None = None,
+    fritz: Mock | None = None,
+    template: Mock | None = None,
 ) -> bool:
     """Do setup of a MockConfigEntry."""
     entry = MockConfigEntry(
@@ -43,6 +44,17 @@ async def setup_config_entry(
     if device is not None:
         await hass.async_block_till_done()
     return result
+
+
+def set_devices(
+    fritz: Mock, devices: list[Mock] | None = None, templates: list[Mock] | None = None
+) -> None:
+    """Set list of devices or templates."""
+    if devices is not None:
+        fritz().get_devices.return_value = devices
+
+    if templates is not None:
+        fritz().get_templates.return_value = templates
 
 
 class FritzEntityBaseMock(Mock):

@@ -1,10 +1,10 @@
 """Support for Google Domains."""
+
 import asyncio
 from datetime import timedelta
 import logging
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.const import CONF_DOMAIN, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
@@ -69,11 +69,11 @@ async def _update_google_domains(hass, session, domain, user, password, timeout)
     params = {"hostname": domain}
 
     try:
-        async with async_timeout.timeout(timeout):
+        async with asyncio.timeout(timeout):
             resp = await session.get(url, params=params)
             body = await resp.text()
 
-            if body.startswith("good") or body.startswith("nochg"):
+            if body.startswith(("good", "nochg")):
                 return True
 
             _LOGGER.warning("Updating Google Domains failed: %s => %s", domain, body)
@@ -81,7 +81,7 @@ async def _update_google_domains(hass, session, domain, user, password, timeout)
     except aiohttp.ClientError:
         _LOGGER.warning("Can't connect to Google Domains API")
 
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _LOGGER.warning("Timeout from Google Domains API for domain: %s", domain)
 
     return False

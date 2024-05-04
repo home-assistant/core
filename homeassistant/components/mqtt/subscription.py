@@ -1,8 +1,9 @@
 """Helper to handle a set of topics to subscribe to."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import attr
 
@@ -31,7 +32,8 @@ class EntitySubscription:
     ) -> None:
         """Re-subscribe to the new topic if necessary."""
         if not self._should_resubscribe(other):
-            assert other
+            if TYPE_CHECKING:
+                assert other
             self.unsubscribe_callback = other.unsubscribe_callback
             return
 

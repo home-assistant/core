@@ -1,4 +1,5 @@
 """Ferry information for departures, provided by Trafikverket."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -11,16 +12,15 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import as_utc
 
+from . import TVFerryConfigEntry
 from .const import ATTRIBUTION, DOMAIN
 from .coordinator import TVDataUpdateCoordinator
 
@@ -29,52 +29,40 @@ ATTR_TO = "to_harbour"
 ATTR_MODIFIED_TIME = "modified_time"
 ATTR_OTHER_INFO = "other_info"
 
-ICON = "mdi:ferry"
 SCAN_INTERVAL = timedelta(minutes=5)
 
 
-@dataclass
-class TrafikverketRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class TrafikverketSensorEntityDescription(SensorEntityDescription):
+    """Describes Trafikverket sensor entity."""
 
     value_fn: Callable[[dict[str, Any]], StateType | datetime]
     info_fn: Callable[[dict[str, Any]], StateType | list] | None
 
 
-@dataclass
-class TrafikverketSensorEntityDescription(
-    SensorEntityDescription, TrafikverketRequiredKeysMixin
-):
-    """Describes Trafikverket sensor entity."""
-
-
 SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     TrafikverketSensorEntityDescription(
         key="departure_time",
-        name="Departure time",
-        icon="mdi:clock",
+        translation_key="departure_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: as_utc(data["departure_time"]),
         info_fn=lambda data: cast(list[str], data["departure_information"]),
     ),
     TrafikverketSensorEntityDescription(
         key="departure_from",
-        name="Departure from",
-        icon="mdi:ferry",
+        translation_key="departure_from",
         value_fn=lambda data: cast(str, data["departure_from"]),
         info_fn=lambda data: cast(list[str], data["departure_information"]),
     ),
     TrafikverketSensorEntityDescription(
         key="departure_to",
-        name="Departure to",
-        icon="mdi:ferry",
+        translation_key="departure_to",
         value_fn=lambda data: cast(str, data["departure_to"]),
         info_fn=lambda data: cast(list[str], data["departure_information"]),
     ),
     TrafikverketSensorEntityDescription(
         key="departure_modified",
-        name="Departure modified",
-        icon="mdi:clock",
+        translation_key="departure_modified",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: as_utc(data["departure_modified"]),
         info_fn=lambda data: cast(list[str], data["departure_information"]),
@@ -82,8 +70,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     ),
     TrafikverketSensorEntityDescription(
         key="departure_time_next",
-        name="Departure time next",
-        icon="mdi:clock",
+        translation_key="departure_time_next",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: as_utc(data["departure_time_next"]),
         info_fn=None,
@@ -91,8 +78,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     ),
     TrafikverketSensorEntityDescription(
         key="departure_time_next_next",
-        name="Departure time next after",
-        icon="mdi:clock",
+        translation_key="departure_time_next_next",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: as_utc(data["departure_time_next_next"]),
         info_fn=None,
@@ -102,11 +88,13 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TVFerryConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Trafikverket sensor entry."""
 
-    coordinator: TVDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         [

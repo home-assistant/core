@@ -1,4 +1,5 @@
 """Support for Google - Calendar Event Devices."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

@@ -1,6 +1,5 @@
 """Tests for the Android IP Webcam integration."""
 
-
 from unittest.mock import Mock
 
 import aiohttp
@@ -31,7 +30,7 @@ async def test_successful_config_entry(
 
     await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_setup_failed_connection_error(
@@ -48,7 +47,7 @@ async def test_setup_failed_connection_error(
 
     await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_failed_invalid_auth(
@@ -65,7 +64,7 @@ async def test_setup_failed_invalid_auth(
 
     await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_entry(hass: HomeAssistant, aioclient_mock_fixture) -> None:

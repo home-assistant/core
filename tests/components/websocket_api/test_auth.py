@@ -1,4 +1,5 @@
 """Test auth of websocket API."""
+
 from unittest.mock import patch
 
 import aiohttp
@@ -23,7 +24,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro
 from tests.typing import ClientSessionGenerator
 
 
@@ -72,7 +72,6 @@ async def test_auth_via_msg_incorrect_pass(no_auth_websocket_client) -> None:
     """Test authenticating."""
     with patch(
         "homeassistant.components.websocket_api.auth.process_wrong_login",
-        return_value=mock_coro(),
     ) as mock_process_wrong_login:
         await no_auth_websocket_client.send_json(
             {"type": TYPE_AUTH, "api_password": "wrong"}
@@ -136,7 +135,7 @@ async def test_auth_active_user_inactive(
     hass_access_token: str,
 ) -> None:
     """Test authenticating with a token."""
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
     refresh_token.user.is_active = False
     assert await async_setup_component(hass, "websocket_api", {})
     await hass.async_block_till_done()
@@ -218,11 +217,11 @@ async def test_auth_close_after_revoke(
     """Test that a websocket is closed after the refresh token is revoked."""
     assert not websocket_client.closed
 
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
-    await hass.auth.async_remove_refresh_token(refresh_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
+    hass.auth.async_remove_refresh_token(refresh_token)
 
     msg = await websocket_client.receive()
-    assert msg.type == aiohttp.WSMsgType.CLOSE
+    assert msg.type is aiohttp.WSMsgType.CLOSE
     assert websocket_client.closed
 
 
@@ -296,7 +295,6 @@ async def test_auth_sending_unknown_type_disconnects(
         auth_msg = await ws.receive_json()
         assert auth_msg["type"] == TYPE_AUTH_REQUIRED
 
-        # pylint: disable-next=protected-access
         await ws._writer._send_frame(b"1" * 130, 0x30)
         auth_msg = await ws.receive()
         assert auth_msg.type == WSMsgType.close

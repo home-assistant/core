@@ -1,37 +1,27 @@
 # Describes the format for available counter services
 
 decrement:
-  name: Decrement
-  description: Decrement a counter.
   target:
     entity:
       domain: counter
 
 increment:
-  name: Increment
-  description: Increment a counter.
   target:
     entity:
       domain: counter
 
 reset:
-  name: Reset
-  description: Reset a counter.
   target:
     entity:
       domain: counter
 
 set_value:
-  name: Set
-  description: Set the counter value
   target:
     entity:
       domain: counter
   fields:
     value:
-      name: Value
       required: true
-      description: The new counter value the entity should be set to.
       selector:
         number:
           min: 0

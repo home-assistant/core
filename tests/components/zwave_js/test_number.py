@@ -1,4 +1,5 @@
 """Test the Z-Wave JS number platform."""
+
 from unittest.mock import patch
 
 import pytest
@@ -8,8 +9,6 @@ from homeassistant.const import STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from .common import BASIC_NUMBER_ENTITY
 
 from tests.common import MockConfigEntry
 
@@ -124,7 +123,7 @@ async def test_number_writeable(
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 1
+    assert len(client.async_send_command.call_args_list) == 2
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 4
@@ -219,18 +218,6 @@ async def test_volume_number(
     assert state.state == STATE_UNKNOWN
 
 
-async def test_disabled_basic_number(
-    hass: HomeAssistant, ge_in_wall_dimmer_switch, integration
-) -> None:
-    """Test number is created from Basic CC and is disabled."""
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(BASIC_NUMBER_ENTITY)
-
-    assert entity_entry
-    assert entity_entry.disabled
-    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-
-
 async def test_config_parameter_number(
     hass: HomeAssistant, climate_adc_t3000, integration
 ) -> None:
@@ -245,7 +232,7 @@ async def test_config_parameter_number(
         assert entity_entry.entity_category == EntityCategory.CONFIG
 
     for entity_id in (number_entity_id, number_with_states_entity_id):
-        updated_entry = ent_reg.async_update_entity(entity_id, **{"disabled_by": None})
+        updated_entry = ent_reg.async_update_entity(entity_id, disabled_by=None)
         assert updated_entry != entity_entry
         assert updated_entry.disabled is False
 

@@ -1,4 +1,5 @@
 """Support the binary sensors of a BloomSky weather station."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -49,7 +50,7 @@ def setup_platform(
 class BloomSkySensor(BinarySensorEntity):
     """Representation of a single binary sensor in a BloomSky device."""
 
-    def __init__(self, bs, device, sensor_name):  # pylint: disable=invalid-name
+    def __init__(self, bs, device, sensor_name):
         """Initialize a BloomSky binary sensor."""
         self._bloomsky = bs
         self._device_id = device["DeviceID"]

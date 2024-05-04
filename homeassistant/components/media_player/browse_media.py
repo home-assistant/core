@@ -1,4 +1,5 @@
 """Browse media features for media player."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -42,9 +43,8 @@ def async_process_play_media_url(
     if parsed.is_absolute():
         if not is_hass_url(hass, media_content_id):
             return media_content_id
-    else:
-        if media_content_id[0] != "/":
-            return media_content_id
+    elif media_content_id[0] != "/":
+        return media_content_id
 
     if parsed.query:
         logging.getLogger(__name__).debug(

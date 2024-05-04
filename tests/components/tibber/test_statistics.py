@@ -1,4 +1,5 @@
 """Test adding external statistics from Tibber."""
+
 from unittest.mock import AsyncMock
 
 from homeassistant.components.recorder import Recorder

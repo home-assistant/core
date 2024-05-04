@@ -1,0 +1,113 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'config_entry_data': dict({
+      'language': 'Gibberish',
+      'latitude': '**REDACTED**',
+      'longitude': '**REDACTED**',
+      'station': 'XX/1234567',
+    }),
+    'weather_data': dict({
+      'condition': dict({
+        'label': 'Condition',
+        'value': 'Mainly Sunny',
+      }),
+      'dewpoint': dict({
+        'label': 'Dew Point',
+        'unit': 'C',
+        'value': 1.4,
+      }),
+      'high_temp': dict({
+        'label': 'High Temperature',
+        'unit': 'C',
+        'value': 18,
+      }),
+      'humidex': dict({
+        'label': 'Humidex',
+        'value': None,
+      }),
+      'humidity': dict({
+        'label': 'Humidity',
+        'unit': '%',
+        'value': 40,
+      }),
+      'icon_code': dict({
+        'label': 'Icon Code',
+        'value': '01',
+      }),
+      'low_temp': dict({
+        'label': 'Low Temperature',
+        'unit': 'C',
+        'value': -1,
+      }),
+      'normal_high': dict({
+        'label': 'Normal High Temperature',
+        'unit': 'C',
+        'value': 15,
+      }),
+      'normal_low': dict({
+        'label': 'Normal Low Temperature',
+        'unit': 'C',
+        'value': 6,
+      }),
+      'pop': dict({
+        'label': 'Chance of Precip.',
+        'value': None,
+      }),
+      'precip_yesterday': dict({
+        'label': 'Precipitation Yesterday',
+        'unit': 'mm',
+        'value': 0.0,
+      }),
+      'pressure': dict({
+        'label': 'Pressure',
+        'unit': 'kPa',
+        'value': 102.7,
+      }),
+      'temperature': dict({
+        'label': 'Temperature',
+        'unit': 'C',
+        'value': 14.9,
+      }),
+      'tendency': dict({
+        'label': 'Tendency',
+        'value': 'falling',
+      }),
+      'text_summary': dict({
+        'label': 'Forecast',
+        'value': 'Tonight. Clear. Fog patches developing after midnight. Low minus 1 with frost.',
+      }),
+      'uv_index': dict({
+        'label': 'UV Index',
+        'value': 5,
+      }),
+      'visibility': dict({
+        'label': 'Visibility',
+        'unit': 'km',
+        'value': 24.1,
+      }),
+      'wind_bearing': dict({
+        'label': 'Wind Bearing',
+        'unit': 'degrees',
+        'value': 0,
+      }),
+      'wind_chill': dict({
+        'label': 'Wind Chill',
+        'value': None,
+      }),
+      'wind_dir': dict({
+        'label': 'Wind Direction',
+        'value': 'N',
+      }),
+      'wind_gust': dict({
+        'label': 'Wind Gust',
+        'value': None,
+      }),
+      'wind_speed': dict({
+        'label': 'Wind Speed',
+        'unit': 'km/h',
+        'value': 1,
+      }),
+    }),
+  })
+# ---

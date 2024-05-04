@@ -1,9 +1,10 @@
 """Support for switch controlled using a telnet connection."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 import logging
-import telnetlib
+import telnetlib  # pylint: disable=deprecated-module
 from typing import Any
 
 import voluptuous as vol

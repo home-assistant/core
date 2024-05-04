@@ -23,26 +23,19 @@ from .models import (
 )
 
 
-@dataclass
-class MelnorZoneTimeEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class MelnorZoneTimeEntityDescription(TimeEntityDescription):
+    """Describes Melnor number entity."""
 
     set_time_fn: Callable[[Valve, time], Coroutine[Any, Any, None]]
     state_fn: Callable[[Valve], Any]
-
-
-@dataclass
-class MelnorZoneTimeEntityDescription(
-    TimeEntityDescription, MelnorZoneTimeEntityDescriptionMixin
-):
-    """Describes Melnor number entity."""
 
 
 ZONE_ENTITY_DESCRIPTIONS: list[MelnorZoneTimeEntityDescription] = [
     MelnorZoneTimeEntityDescription(
         entity_category=EntityCategory.CONFIG,
         key="frequency_start_time",
-        name="Schedule Start Time",
+        translation_key="frequency_start_time",
         set_time_fn=lambda valve, value: valve.set_frequency_start_time(value),
         state_fn=lambda valve: valve.frequency.start_time,
     ),

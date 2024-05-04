@@ -1,11 +1,14 @@
 """The lock tests for the august platform."""
+
 import datetime
 from unittest.mock import Mock
 
 from aiohttp import ClientResponseError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from yalexs.pubnub_async import AugustPubNub
 
+from homeassistant.components.august.activity import INITIAL_LOCK_RESYNC_TIME
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     STATE_JAMMED,
@@ -35,12 +38,12 @@ from .mocks import (
 from tests.common import async_fire_time_changed
 
 
-async def test_lock_device_registry(hass: HomeAssistant) -> None:
+async def test_lock_device_registry(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test creation of a lock with doorsense and bridge ands up in the registry."""
     lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
     await _create_august_with_devices(hass, [lock_one])
-
-    device_registry = dr.async_get(hass)
 
     reg_device = device_registry.async_get_device(
         identifiers={("august", "online_with_doorsense")}
@@ -106,7 +109,9 @@ async def test_state_jammed(hass: HomeAssistant) -> None:
     assert lock_online_with_doorsense_name.state == STATE_JAMMED
 
 
-async def test_one_lock_operation(hass: HomeAssistant) -> None:
+async def test_one_lock_operation(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test creation of a lock with doorsense and bridge."""
     lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
     await _create_august_with_devices(hass, [lock_one])
@@ -141,7 +146,6 @@ async def test_one_lock_operation(hass: HomeAssistant) -> None:
     assert lock_online_with_doorsense_name.state == STATE_LOCKED
 
     # No activity means it will be unavailable until the activity feed has data
-    entity_registry = er.async_get(hass)
     lock_operator_sensor = entity_registry.async_get(
         "sensor.online_with_doorsense_name_operator"
     )
@@ -152,7 +156,11 @@ async def test_one_lock_operation(hass: HomeAssistant) -> None:
     )
 
 
-async def test_one_lock_operation_pubnub_connected(hass: HomeAssistant) -> None:
+async def test_one_lock_operation_pubnub_connected(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test lock and unlock operations are async when pubnub is connected."""
     lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
     assert lock_one.pubsub_channel == "pubsub"
@@ -217,7 +225,6 @@ async def test_one_lock_operation_pubnub_connected(hass: HomeAssistant) -> None:
     assert lock_online_with_doorsense_name.state == STATE_LOCKED
 
     # No activity means it will be unavailable until the activity feed has data
-    entity_registry = er.async_get(hass)
     lock_operator_sensor = entity_registry.async_get(
         "sensor.online_with_doorsense_name_operator"
     )
@@ -226,6 +233,23 @@ async def test_one_lock_operation_pubnub_connected(hass: HomeAssistant) -> None:
         hass.states.get("sensor.online_with_doorsense_name_operator").state
         == STATE_UNKNOWN
     )
+
+    freezer.tick(INITIAL_LOCK_RESYNC_TIME)
+
+    pubnub.message(
+        pubnub,
+        Mock(
+            channel=lock_one.pubsub_channel,
+            timetoken=(dt_util.utcnow().timestamp() + 2) * 10000000,
+            message={
+                "status": "kAugLockState_Unlocked",
+            },
+        ),
+    )
+    await hass.async_block_till_done()
+
+    lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
+    assert lock_online_with_doorsense_name.state == STATE_UNLOCKED
 
 
 async def test_lock_jammed(hass: HomeAssistant) -> None:

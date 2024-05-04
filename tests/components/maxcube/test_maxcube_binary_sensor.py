@@ -1,4 +1,5 @@
 """Test EQ3 Max! Window Shutters."""
+
 from datetime import timedelta
 
 from maxcube.cube import MaxCube
@@ -23,10 +24,12 @@ BATTERY_ENTITY_ID = f"{ENTITY_ID}_battery"
 
 
 async def test_window_shuttler(
-    hass: HomeAssistant, cube: MaxCube, windowshutter: MaxWindowShutter
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    cube: MaxCube,
+    windowshutter: MaxWindowShutter,
 ) -> None:
     """Test a successful setup with a shuttler device."""
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_is_registered(ENTITY_ID)
     entity = entity_registry.async_get(ENTITY_ID)
     assert entity.unique_id == "AABBCCDD03"
@@ -40,17 +43,19 @@ async def test_window_shuttler(
 
     windowshutter.is_open = False
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
 
 
 async def test_window_shuttler_battery(
-    hass: HomeAssistant, cube: MaxCube, windowshutter: MaxWindowShutter
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    cube: MaxCube,
+    windowshutter: MaxWindowShutter,
 ) -> None:
     """Test battery binary_state with a shuttler device."""
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_is_registered(BATTERY_ENTITY_ID)
     entity = entity_registry.async_get(BATTERY_ENTITY_ID)
     assert entity.unique_id == "AABBCCDD03_battery"
@@ -63,12 +68,12 @@ async def test_window_shuttler_battery(
 
     windowshutter.battery = 1  # maxcube-api MAX_DEVICE_BATTERY_LOW
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get(BATTERY_ENTITY_ID)
     assert state.state == STATE_ON  # on means low
 
     windowshutter.battery = 0  # maxcube-api MAX_DEVICE_BATTERY_OK
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get(BATTERY_ENTITY_ID)
     assert state.state == STATE_OFF  # off means normal

@@ -1,4 +1,5 @@
 """Support for Ubiquiti mFi switches."""
+
 from __future__ import annotations
 
 import logging

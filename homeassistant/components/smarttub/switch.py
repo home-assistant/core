@@ -1,7 +1,8 @@
 """Platform for switch integration."""
+
+import asyncio
 from typing import Any
 
-import async_timeout
 from smarttub import SpaPump
 
 from homeassistant.components.switch import SwitchEntity
@@ -38,16 +39,12 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
         super().__init__(coordinator, pump.spa, "pump")
         self.pump_id = pump.id
         self.pump_type = pump.type
+        self._attr_unique_id = f"{super().unique_id}-{pump.id}"
 
     @property
     def pump(self) -> SpaPump:
         """Return the underlying SpaPump object for this entity."""
         return self.coordinator.data[self.spa.id][ATTR_PUMPS][self.pump_id]
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID for this pump entity."""
-        return f"{super().unique_id}-{self.pump_id}"
 
     @property
     def name(self) -> str:
@@ -80,6 +77,6 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
 
     async def async_toggle(self, **kwargs: Any) -> None:
         """Toggle the pump on or off."""
-        async with async_timeout.timeout(API_TIMEOUT):
+        async with asyncio.timeout(API_TIMEOUT):
             await self.pump.toggle()
         await self.coordinator.async_request_refresh()

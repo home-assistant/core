@@ -1,4 +1,5 @@
 """Support for getting status from a Pi-hole system."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -8,7 +9,6 @@ from typing import Any
 from hole import Hole
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -22,63 +22,18 @@ from . import PiHoleEntity
 from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN as PIHOLE_DOMAIN
 
 
-@dataclass
-class RequiredPiHoleBinaryDescription:
-    """Represent the required attributes of the PiHole binary description."""
-
-    state_value: Callable[[Hole], bool]
-
-
-@dataclass
-class PiHoleBinarySensorEntityDescription(
-    BinarySensorEntityDescription, RequiredPiHoleBinaryDescription
-):
+@dataclass(frozen=True, kw_only=True)
+class PiHoleBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes PiHole binary sensor entity."""
 
+    state_value: Callable[[Hole], bool]
     extra_value: Callable[[Hole], dict[str, Any] | None] = lambda api: None
 
 
 BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
     PiHoleBinarySensorEntityDescription(
-        # Deprecated, scheduled to be removed in 2022.6
-        key="core_update_available",
-        name="Core Update Available",
-        entity_registry_enabled_default=False,
-        device_class=BinarySensorDeviceClass.UPDATE,
-        extra_value=lambda api: {
-            "current_version": api.versions["core_current"],
-            "latest_version": api.versions["core_latest"],
-        },
-        state_value=lambda api: bool(api.versions["core_update"]),
-    ),
-    PiHoleBinarySensorEntityDescription(
-        # Deprecated, scheduled to be removed in 2022.6
-        key="web_update_available",
-        name="Web Update Available",
-        entity_registry_enabled_default=False,
-        device_class=BinarySensorDeviceClass.UPDATE,
-        extra_value=lambda api: {
-            "current_version": api.versions["web_current"],
-            "latest_version": api.versions["web_latest"],
-        },
-        state_value=lambda api: bool(api.versions["web_update"]),
-    ),
-    PiHoleBinarySensorEntityDescription(
-        # Deprecated, scheduled to be removed in 2022.6
-        key="ftl_update_available",
-        name="FTL Update Available",
-        entity_registry_enabled_default=False,
-        device_class=BinarySensorDeviceClass.UPDATE,
-        extra_value=lambda api: {
-            "current_version": api.versions["FTL_current"],
-            "latest_version": api.versions["FTL_latest"],
-        },
-        state_value=lambda api: bool(api.versions["FTL_update"]),
-    ),
-    PiHoleBinarySensorEntityDescription(
         key="status",
         translation_key="status",
-        icon="mdi:pi-hole",
         state_value=lambda api: bool(api.data.get("status") == "enabled"),
     ),
 )

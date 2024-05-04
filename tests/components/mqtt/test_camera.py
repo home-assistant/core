@@ -1,4 +1,5 @@
 """The tests for mqtt camera component."""
+
 from base64 import b64encode
 from http import HTTPStatus
 import json
@@ -8,7 +9,6 @@ import pytest
 
 from homeassistant.components import camera, mqtt
 from homeassistant.components.mqtt.camera import MQTT_CAMERA_ATTRIBUTES_BLOCKED
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .test_common import (
@@ -46,13 +46,6 @@ from tests.typing import (
 )
 
 DEFAULT_CONFIG = {mqtt.DOMAIN: {camera.DOMAIN: {"name": "test", "topic": "test_topic"}}}
-
-
-@pytest.fixture(autouse=True)
-def camera_platform_only():
-    """Only setup the camera platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.CAMERA]):
-        yield
 
 
 @pytest.mark.parametrize(
@@ -439,7 +432,11 @@ async def test_reloadable(
     await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:

@@ -1,4 +1,5 @@
 """Tests for the Elgato Key Light integration."""
+
 from unittest.mock import MagicMock
 
 from elgato import ElgatoConnectionError

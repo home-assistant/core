@@ -1,4 +1,5 @@
 """Sensor support for Skybell Doorbells."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -22,45 +23,34 @@ from homeassistant.helpers.typing import StateType
 from .entity import DOMAIN, SkybellEntity
 
 
-@dataclass
-class SkybellSensorEntityDescriptionMixIn:
-    """Mixin for Skybell sensor."""
+@dataclass(frozen=True, kw_only=True)
+class SkybellSensorEntityDescription(SensorEntityDescription):
+    """Class to describe a Skybell sensor."""
 
     value_fn: Callable[[SkybellDevice], StateType | datetime]
-
-
-@dataclass
-class SkybellSensorEntityDescription(
-    SensorEntityDescription, SkybellSensorEntityDescriptionMixIn
-):
-    """Class to describe a Skybell sensor."""
 
 
 SENSOR_TYPES: tuple[SkybellSensorEntityDescription, ...] = (
     SkybellSensorEntityDescription(
         key="chime_level",
-        name="Chime level",
-        icon="mdi:bell-ring",
+        translation_key="chime_level",
         value_fn=lambda device: device.outdoor_chime_level,
     ),
     SkybellSensorEntityDescription(
         key="last_button_event",
-        name="Last button event",
-        icon="mdi:clock",
+        translation_key="last_button_event",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda device: device.latest("button").get(CONST.CREATED_AT),
     ),
     SkybellSensorEntityDescription(
         key="last_motion_event",
-        name="Last motion event",
-        icon="mdi:clock",
+        translation_key="last_motion_event",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda device: device.latest("motion").get(CONST.CREATED_AT),
     ),
     SkybellSensorEntityDescription(
         key=CONST.ATTR_LAST_CHECK_IN,
-        name="Last check in",
-        icon="mdi:clock",
+        translation_key="last_check_in",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -68,31 +58,28 @@ SENSOR_TYPES: tuple[SkybellSensorEntityDescription, ...] = (
     ),
     SkybellSensorEntityDescription(
         key="motion_threshold",
-        name="Motion threshold",
-        icon="mdi:walk",
+        translation_key="motion_threshold",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.motion_threshold,
     ),
     SkybellSensorEntityDescription(
         key="video_profile",
-        name="Video profile",
+        translation_key="video_profile",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.video_profile,
     ),
     SkybellSensorEntityDescription(
         key=CONST.ATTR_WIFI_SSID,
-        name="Wifi SSID",
-        icon="mdi:wifi-settings",
+        translation_key="wifi_ssid",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.wifi_ssid,
     ),
     SkybellSensorEntityDescription(
         key=CONST.ATTR_WIFI_STATUS,
-        name="Wifi status",
-        icon="mdi:wifi-strength-3",
+        translation_key="wifi_status",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.wifi_status,

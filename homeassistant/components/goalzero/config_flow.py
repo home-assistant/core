@@ -1,4 +1,5 @@
 """Config flow for Goal Zero Yeti integration."""
+
 from __future__ import annotations
 
 import logging
@@ -7,10 +8,9 @@ from typing import Any
 from goalzero import Yeti, exceptions
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import dhcp
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
@@ -19,7 +19,7 @@ from .const import DEFAULT_NAME, DOMAIN, MANUFACTURER
 _LOGGER = logging.getLogger(__name__)
 
 
-class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class GoalZeroFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Goal Zero Yeti."""
 
     VERSION = 1
@@ -28,11 +28,13 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize a Goal Zero Yeti flow."""
         self.ip_address: str | None = None
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle dhcp discovery."""
         self.ip_address = discovery_info.ip
 
-        await self.async_set_unique_id(discovery_info.macaddress)
+        await self.async_set_unique_id(format_mac(discovery_info.macaddress))
         self._abort_if_unique_id_configured(updates={CONF_HOST: self.ip_address})
         self._async_abort_entries_match({CONF_HOST: self.ip_address})
 
@@ -43,7 +45,7 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm_discovery(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Allow the user to confirm adding the device."""
         if user_input is not None:
             return self.async_create_entry(
@@ -65,7 +67,7 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input is not None:

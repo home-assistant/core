@@ -1,4 +1,5 @@
 """Base entity for Android TV Remote."""
+
 from __future__ import annotations
 
 from androidtvremote2 import AndroidTVRemote, ConnectionClosed
@@ -7,8 +8,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
@@ -16,6 +17,7 @@ from .const import DOMAIN
 class AndroidTVRemoteBaseEntity(Entity):
     """Android TV Remote Base Entity."""
 
+    _attr_name = None
     _attr_has_entity_name = True
     _attr_should_poll = False
 

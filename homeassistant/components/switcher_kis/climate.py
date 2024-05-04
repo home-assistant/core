@@ -1,7 +1,7 @@
 """Switcher integration Climate platform."""
+
 from __future__ import annotations
 
-import asyncio
 from typing import Any, cast
 
 from aioswitcher.api import SwitcherBaseResponse, SwitcherType2Api
@@ -30,8 +30,8 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -84,6 +84,10 @@ class SwitcherClimateEntity(
 ):
     """Representation of a Switcher climate entity."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+    _enable_turn_on_off_backwards_compatibility = False
+
     def __init__(
         self, coordinator: SwitcherDataUpdateCoordinator, remote: SwitcherBreezeRemote
     ) -> None:
@@ -91,7 +95,6 @@ class SwitcherClimateEntity(
         super().__init__(coordinator)
         self._remote = remote
 
-        self._attr_name = coordinator.name
         self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
@@ -116,6 +119,10 @@ class SwitcherClimateEntity(
             if features["swing"] and not remote.separated_swing_command:
                 self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
 
+        # There is always support for off + minimum one other mode so no need to check
+        self._attr_supported_features |= (
+            ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+        )
         self._update_data(True)
 
     @callback
@@ -160,10 +167,12 @@ class SwitcherClimateEntity(
 
         try:
             async with SwitcherType2Api(
-                self.coordinator.data.ip_address, self.coordinator.data.device_id
+                self.coordinator.data.ip_address,
+                self.coordinator.data.device_id,
+                self.coordinator.data.device_key,
             ) as swapi:
                 response = await swapi.control_breeze_device(self._remote, **kwargs)
-        except (asyncio.TimeoutError, OSError, RuntimeError) as err:
+        except (TimeoutError, OSError, RuntimeError) as err:
             error = repr(err)
 
         if error or not response or not response.successful:

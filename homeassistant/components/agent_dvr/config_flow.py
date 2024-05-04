@@ -1,11 +1,13 @@
 """Config flow to configure Agent devices."""
+
 from contextlib import suppress
+from typing import Any
 
 from agent import AgentConnectionError, AgentError
 from agent.a import Agent
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -15,14 +17,12 @@ from .helpers import generate_url
 DEFAULT_PORT = 8090
 
 
-class AgentFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class AgentFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an Agent config flow."""
 
-    def __init__(self):
-        """Initialize the Agent config flow."""
-        self.device_config = {}
-
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle an Agent config flow."""
         errors = {}
 
@@ -49,13 +49,15 @@ class AgentFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     }
                 )
 
-                self.device_config = {
+                device_config = {
                     CONF_HOST: host,
                     CONF_PORT: port,
                     SERVER_URL: server_origin,
                 }
 
-                return await self._create_entry(agent_client.name)
+                return self.async_create_entry(
+                    title=agent_client.name, data=device_config
+                )
 
             errors["base"] = "cannot_connect"
 
@@ -66,11 +68,6 @@ class AgentFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            description_placeholders=self.device_config,
             data_schema=vol.Schema(data),
             errors=errors,
         )
-
-    async def _create_entry(self, server_name):
-        """Create entry for device."""
-        return self.async_create_entry(title=server_name, data=self.device_config)

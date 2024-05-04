@@ -1,9 +1,14 @@
 """Test KNX services."""
+
+from unittest.mock import patch
+
 import pytest
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
+from homeassistant.components.knx import async_unload_entry as knx_async_unload_entry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import KNXTestKit
 
@@ -203,6 +208,7 @@ async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
 
     # no exposure registered
     hass.states.async_set(test_entity, STATE_ON, {})
+    await hass.async_block_till_done()
     await knx.assert_no_telegram()
 
     # register exposure
@@ -213,6 +219,7 @@ async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
         blocking=True,
     )
     hass.states.async_set(test_entity, STATE_OFF, {})
+    await hass.async_block_till_done()
     await knx.assert_write(test_address, False)
 
     # register exposure
@@ -223,6 +230,7 @@ async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
         blocking=True,
     )
     hass.states.async_set(test_entity, STATE_ON, {})
+    await hass.async_block_till_done()
     await knx.assert_no_telegram()
 
     # register exposure for attribute with default
@@ -240,13 +248,55 @@ async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
     )
     # no attribute on first change wouldn't work because no attribute change since last test
     hass.states.async_set(test_entity, STATE_ON, {test_attribute: 30})
+    await hass.async_block_till_done()
     await knx.assert_write(test_address, (30,))
     hass.states.async_set(test_entity, STATE_OFF, {})
+    await hass.async_block_till_done()
     await knx.assert_write(test_address, (0,))
     # don't send same value sequentially
     hass.states.async_set(test_entity, STATE_ON, {test_attribute: 25})
     hass.states.async_set(test_entity, STATE_ON, {test_attribute: 25})
     hass.states.async_set(test_entity, STATE_ON, {test_attribute: 25, "unrelated": 2})
     hass.states.async_set(test_entity, STATE_OFF, {test_attribute: 25})
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
     await knx.assert_telegram_count(1)
     await knx.assert_write(test_address, (25,))
+
+
+async def test_reload_service(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+) -> None:
+    """Test reload service."""
+    await knx.setup_integration({})
+
+    with (
+        patch(
+            "homeassistant.components.knx.async_unload_entry",
+            wraps=knx_async_unload_entry,
+        ) as mock_unload_entry,
+        patch("homeassistant.components.knx.async_setup_entry") as mock_setup_entry,
+    ):
+        await hass.services.async_call(
+            "knx",
+            "reload",
+            blocking=True,
+        )
+        mock_unload_entry.assert_called_once()
+        mock_setup_entry.assert_called_once()
+
+
+async def test_service_setup_failed(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test service setup failed."""
+    await knx.setup_integration({})
+    await knx.mock_config_entry.async_unload(hass)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            "knx",
+            "send",
+            {"address": "1/2/3", "payload": True, "response": False},
+            blocking=True,
+        )
+        assert str(exc_info.value) == "KNX entry not loaded"

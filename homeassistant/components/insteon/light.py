@@ -1,7 +1,9 @@
 """Support for Insteon lights via PowerLinc Modem."""
+
 from typing import Any
 
 from pyinsteon.config import ON_LEVEL
+from pyinsteon.device_types.device_base import Device as InsteonDevice
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -50,6 +52,13 @@ class InsteonDimmerEntity(InsteonEntity, LightEntity):
 
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
+    def __init__(self, device: InsteonDevice, group: int) -> None:
+        """Init the InsteonDimmerEntity entity."""
+        super().__init__(device=device, group=group)
+        if not self._insteon_device_group.is_dimmable:
+            self._attr_color_mode = ColorMode.ONOFF
+            self._attr_supported_color_modes = {ColorMode.ONOFF}
 
     @property
     def brightness(self):

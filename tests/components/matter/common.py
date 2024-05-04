@@ -1,4 +1,5 @@
 """Provide common test tools."""
+
 from __future__ import annotations
 
 from functools import cache
@@ -71,6 +72,10 @@ async def trigger_subscription_callback(
     data: Any = None,
 ) -> None:
     """Trigger a subscription callback."""
-    callback = client.subscribe.call_args.kwargs["callback"]
-    callback(event, data)
+    # trigger callback on all subscribers
+    for sub in client.subscribe_events.call_args_list:
+        callback = sub.kwargs["callback"]
+        event_filter = sub.kwargs.get("event_filter")
+        if event_filter in (None, event):
+            callback(event, data)
     await hass.async_block_till_done()

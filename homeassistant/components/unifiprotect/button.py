@@ -1,4 +1,5 @@
 """Support for Ubiquiti's UniFi Protect NVR."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -28,7 +29,7 @@ from .utils import async_dispatch_id as _ufpd
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class ProtectButtonEntityDescription(
     ProtectSetableKeysMixin[T], ButtonEntityDescription
 ):
@@ -113,7 +114,8 @@ async def async_setup_entry(
     """Discover devices on a UniFi Protect NVR."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
-    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         entities = async_all_device_entities(
             data,
             ProtectButton,
@@ -183,7 +185,8 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
         super()._async_update_device_from_protect(device)
 
         if self.entity_description.key == KEY_ADOPT:
-            self._attr_available = self.device.can_adopt and self.device.can_create(
+            device = self.device
+            self._attr_available = device.can_adopt and device.can_create(
                 self.data.api.bootstrap.auth_user
             )
 

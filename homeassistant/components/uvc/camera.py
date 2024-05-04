@@ -1,4 +1,5 @@
 """Support for Ubiquiti's UVC cameras."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -242,7 +243,7 @@ class UnifiVideoCamera(Camera):
         """Return the source of the stream."""
         for channel in self._caminfo["channels"]:
             if channel["isRtspEnabled"]:
-                uri = next(
+                return next(
                     (
                         uri
                         for i, uri in enumerate(channel["rtspUris"])
@@ -250,7 +251,6 @@ class UnifiVideoCamera(Camera):
                         if re.search(self._nvr._host, uri)
                     )
                 )
-                return uri
 
         return None
 

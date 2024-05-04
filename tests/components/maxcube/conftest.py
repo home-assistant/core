@@ -1,4 +1,5 @@
 """Tests for EQ3 Max! component."""
+
 from unittest.mock import create_autospec, patch
 
 from maxcube.device import MAX_DEVICE_MODE_AUTOMATIC, MAX_DEVICE_MODE_MANUAL

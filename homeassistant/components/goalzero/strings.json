@@ -6,6 +6,9 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Goal Zero Yeti."
         }
       },
       "confirm_discovery": {
@@ -21,6 +24,68 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "backlight": {
+        "name": "Backlight"
+      },
+      "app_online": {
+        "name": "App online"
+      },
+      "input_detected": {
+        "name": "Input detected"
+      }
+    },
+    "sensor": {
+      "watts_in": {
+        "name": "Power in"
+      },
+      "amps_in": {
+        "name": "Current in"
+      },
+      "watts_out": {
+        "name": "Power out"
+      },
+      "amps_out": {
+        "name": "Current out"
+      },
+      "wh_out": {
+        "name": "Energy out"
+      },
+      "wh_stored": {
+        "name": "Energy stored"
+      },
+      "soc_percent": {
+        "name": "State of charge percent"
+      },
+      "time_to_empty_full": {
+        "name": "Time to empty/full"
+      },
+      "wifi_strength": {
+        "name": "Wi-Fi strength"
+      },
+      "timestamp": {
+        "name": "Total run time"
+      },
+      "ssid": {
+        "name": "Wi-Fi SSID"
+      },
+      "ip_addr": {
+        "name": "IP address"
+      }
+    },
+    "switch": {
+      "v12_port_status": {
+        "name": "12V port status"
+      },
+      "usb_port_status": {
+        "name": "USB port status"
+      },
+      "ac_port_status": {
+        "name": "AC port status"
+      }
     }
   }
 }

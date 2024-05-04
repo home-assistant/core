@@ -1,11 +1,11 @@
 {
   "config": {
-    "flow_title": "{name}",
+    "flow_title": "{name} {manufacturer} {model}",
     "step": {
       "user": {
         "description": "Choose a device to set up",
         "data": {
-          "address": "Device"
+          "address": "[%key:common::config_flow::data::device%]"
         }
       },
       "bluetooth_confirm": {
@@ -18,7 +18,7 @@
         }
       },
       "single_adapter": {
-        "description": "Do you want to set up the Bluetooth adapter {name}?"
+        "description": "Do you want to set up the Bluetooth adapter {name} {manufacturer} {model}?"
       }
     },
     "abort": {

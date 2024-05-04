@@ -1,29 +1,17 @@
 """The Nobø Ecohub integration."""
+
 from __future__ import annotations
 
 from pynobo import nobo
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_NAME,
-    CONF_IP_ADDRESS,
-    EVENT_HOMEASSISTANT_STOP,
-    Platform,
-)
+from homeassistant.const import CONF_IP_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+import homeassistant.util.dt as dt_util
 
-from .const import (
-    ATTR_HARDWARE_VERSION,
-    ATTR_SERIAL,
-    ATTR_SOFTWARE_VERSION,
-    CONF_AUTO_DISCOVERED,
-    CONF_SERIAL,
-    DOMAIN,
-    NOBO_MANUFACTURER,
-)
+from .const import CONF_AUTO_DISCOVERED, CONF_SERIAL, DOMAIN
 
-PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
+PLATFORMS = [Platform.CLIMATE, Platform.SELECT, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -32,21 +20,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     serial = entry.data[CONF_SERIAL]
     discover = entry.data[CONF_AUTO_DISCOVERED]
     ip_address = None if discover else entry.data[CONF_IP_ADDRESS]
-    hub = nobo(serial=serial, ip=ip_address, discover=discover, synchronous=False)
+    hub = nobo(
+        serial=serial,
+        ip=ip_address,
+        discover=discover,
+        synchronous=False,
+        timezone=dt_util.DEFAULT_TIME_ZONE,
+    )
     await hub.connect()
 
     hass.data.setdefault(DOMAIN, {})
-
-    # Register hub as device
-    dev_reg = dr.async_get(hass)
-    dev_reg.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, hub.hub_info[ATTR_SERIAL])},
-        manufacturer=NOBO_MANUFACTURER,
-        name=hub.hub_info[ATTR_NAME],
-        model=f"Nobø Ecohub ({hub.hub_info[ATTR_HARDWARE_VERSION]})",
-        sw_version=hub.hub_info[ATTR_SOFTWARE_VERSION],
-    )
 
     async def _async_close(event):
         """Close the Nobø Ecohub socket connection when HA stops."""

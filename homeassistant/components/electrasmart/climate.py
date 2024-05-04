@@ -28,7 +28,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -111,6 +111,7 @@ class ElectraClimateEntity(ClimateEntity):
     _attr_hvac_modes = ELECTRA_MODES
     _attr_has_entity_name = True
     _attr_name = None
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, device: ElectraAirConditioner, api: ElectraAPI) -> None:
         """Initialize Electra climate entity."""
@@ -118,7 +119,11 @@ class ElectraClimateEntity(ClimateEntity):
         self._electra_ac_device = device
         self._attr_unique_id = device.mac
         self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
 
         swing_modes: list = []

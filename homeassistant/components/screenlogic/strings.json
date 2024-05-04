@@ -14,7 +14,7 @@
         }
       },
       "gateway_select": {
-        "title": "ScreenLogic",
+        "title": "[%key:component::screenlogic::config::step::gateway_entry::title%]",
         "description": "The following ScreenLogic gateways were discovered. Please select one to configure, or choose to manually configure a ScreenLogic gateway.",
         "data": {
           "selected_gateway": "Gateway"
@@ -28,10 +28,63 @@
   "options": {
     "step": {
       "init": {
-        "title": "ScreenLogic",
+        "title": "[%key:component::screenlogic::config::step::gateway_entry::title%]",
         "description": "Specify settings for {gateway_name}",
         "data": {
           "scan_interval": "Seconds between scans"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_color_mode": {
+      "name": "Set Color Mode",
+      "description": "Sets the color mode for all color-capable lights attached to this ScreenLogic gateway.",
+      "fields": {
+        "config_entry": {
+          "name": "Config Entry",
+          "description": "The config entry to use for this service."
+        },
+        "color_mode": {
+          "name": "Color Mode",
+          "description": "The ScreenLogic color mode to set."
+        }
+      }
+    },
+    "start_super_chlorination": {
+      "name": "Start Super Chlorination",
+      "description": "Begins super chlorination, running for the specified period or 24 hours if none is specified.",
+      "fields": {
+        "config_entry": {
+          "name": "Config Entry",
+          "description": "The config entry to use for this service."
+        },
+        "runtime": {
+          "name": "Run Time",
+          "description": "Number of hours for super chlorination to run."
+        }
+      }
+    },
+    "stop_super_chlorination": {
+      "name": "Stop Super Chlorination",
+      "description": "Stops super chlorination.",
+      "fields": {
+        "config_entry": {
+          "name": "Config Entry",
+          "description": "The config entry to use for this service."
+        }
+      }
+    }
+  },
+  "issues": {
+    "service_target_deprecation": {
+      "title": "Deprecating use of target for ScreenLogic services",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Deprecating target for ScreenLogic services",
+            "description": "Use of an Area, Device, or Entity as a target for ScreenLogic services is being deprecated. Instead, use `config_entry` with the entry_id of the desired ScreenLogic integration.\n\nPlease update your automations and scripts and select **submit** to fix this issue."
+          }
         }
       }
     }

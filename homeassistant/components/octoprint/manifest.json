@@ -6,7 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/octoprint",
   "iot_class": "local_polling",
   "loggers": ["pyoctoprintapi"],
-  "requirements": ["pyoctoprintapi==0.1.11"],
+  "requirements": ["pyoctoprintapi==0.1.12"],
   "ssdp": [
     {
       "manufacturer": "The OctoPrint Project",

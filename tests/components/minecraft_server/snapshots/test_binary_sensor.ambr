@@ -1,0 +1,57 @@
+# serializer version: 1
+# name: test_binary_sensor[bedrock_mock_config_entry-BedrockServer-lookup-status_response1]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Minecraft Server Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.minecraft_server_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor[java_mock_config_entry-JavaServer-async_lookup-status_response0]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Minecraft Server Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.minecraft_server_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor_update[bedrock_mock_config_entry-BedrockServer-lookup-status_response1]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Minecraft Server Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.minecraft_server_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor_update[java_mock_config_entry-JavaServer-async_lookup-status_response0]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Minecraft Server Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.minecraft_server_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

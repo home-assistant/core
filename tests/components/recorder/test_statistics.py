@@ -1,7 +1,6 @@
 """The tests for sensor recorder platform."""
-from collections.abc import Callable
 
-# pylint: disable=invalid-name
+from collections.abc import Callable
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -24,8 +23,9 @@ from homeassistant.components.recorder.statistics import (
     async_import_statistics,
     get_last_short_term_statistics,
     get_last_statistics,
-    get_latest_short_term_statistics,
+    get_latest_short_term_statistics_with_session,
     get_metadata,
+    get_short_term_statistics_run_cache,
     list_statistic_ids,
 )
 from homeassistant.components.recorder.table_managers.statistics_meta import (
@@ -50,8 +50,6 @@ from .common import (
 from tests.common import mock_registry
 from tests.typing import WebSocketGenerator
 
-ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
-
 
 def test_converters_align_with_sensor() -> None:
     """Ensure STATISTIC_UNIT_TO_UNIT_CONVERTER is aligned with UNIT_CONVERTERS."""
@@ -72,9 +70,13 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     # Should not fail if there is nothing there yet
-    stats = get_latest_short_term_statistics(
-        hass, {"sensor.test1"}, {"last_reset", "max", "mean", "min", "state", "sum"}
-    )
+    with session_scope(hass=hass, read_only=True) as session:
+        stats = get_latest_short_term_statistics_with_session(
+            hass,
+            session,
+            {"sensor.test1"},
+            {"last_reset", "max", "mean", "min", "state", "sum"},
+        )
     assert stats == {}
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
@@ -173,19 +175,38 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
     )
     assert stats == {"sensor.test1": [expected_2]}
 
-    stats = get_latest_short_term_statistics(
-        hass, {"sensor.test1"}, {"last_reset", "max", "mean", "min", "state", "sum"}
-    )
+    with session_scope(hass=hass, read_only=True) as session:
+        stats = get_latest_short_term_statistics_with_session(
+            hass,
+            session,
+            {"sensor.test1"},
+            {"last_reset", "max", "mean", "min", "state", "sum"},
+        )
+    assert stats == {"sensor.test1": [expected_2]}
+
+    # Now wipe the latest_short_term_statistics_ids table and test again
+    # to make sure we can rebuild the missing data
+    run_cache = get_short_term_statistics_run_cache(instance.hass)
+    run_cache._latest_id_by_metadata_id = {}
+    with session_scope(hass=hass, read_only=True) as session:
+        stats = get_latest_short_term_statistics_with_session(
+            hass,
+            session,
+            {"sensor.test1"},
+            {"last_reset", "max", "mean", "min", "state", "sum"},
+        )
     assert stats == {"sensor.test1": [expected_2]}
 
     metadata = get_metadata(hass, statistic_ids={"sensor.test1"})
 
-    stats = get_latest_short_term_statistics(
-        hass,
-        {"sensor.test1"},
-        {"last_reset", "max", "mean", "min", "state", "sum"},
-        metadata=metadata,
-    )
+    with session_scope(hass=hass, read_only=True) as session:
+        stats = get_latest_short_term_statistics_with_session(
+            hass,
+            session,
+            {"sensor.test1"},
+            {"last_reset", "max", "mean", "min", "state", "sum"},
+            metadata=metadata,
+        )
     assert stats == {"sensor.test1": [expected_2]}
 
     stats = get_last_short_term_statistics(
@@ -217,9 +238,28 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
 
     instance.get_session().query(StatisticsShortTerm).delete()
     # Should not fail there is nothing in the table
-    stats = get_latest_short_term_statistics(
-        hass, {"sensor.test1"}, {"last_reset", "max", "mean", "min", "state", "sum"}
-    )
+    with session_scope(hass=hass, read_only=True) as session:
+        stats = get_latest_short_term_statistics_with_session(
+            hass,
+            session,
+            {"sensor.test1"},
+            {"last_reset", "max", "mean", "min", "state", "sum"},
+        )
+        assert stats == {}
+
+    # Delete again, and manually wipe the cache since we deleted all the data
+    instance.get_session().query(StatisticsShortTerm).delete()
+    run_cache = get_short_term_statistics_run_cache(instance.hass)
+    run_cache._latest_id_by_metadata_id = {}
+
+    # And test again to make sure there is no data
+    with session_scope(hass=hass, read_only=True) as session:
+        stats = get_latest_short_term_statistics_with_session(
+            hass,
+            session,
+            {"sensor.test1"},
+            {"last_reset", "max", "mean", "min", "state", "sum"},
+        )
     assert stats == {}
 
 
@@ -240,7 +280,7 @@ def mock_sensor_statistics():
             "stat": {"start": start},
         }
 
-    def get_fake_stats(_hass, start, _end):
+    def get_fake_stats(_hass, session, start, _end):
         return statistics.PlatformCompiledStatistics(
             [
                 sensor_stats("sensor.test1", start),
@@ -391,7 +431,7 @@ def test_rename_entity(hass_recorder: Callable[..., HomeAssistant]) -> None:
 
 
 def test_statistics_during_period_set_back_compat(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test statistics_during_period can handle a list instead of a set."""
     hass = hass_recorder()
@@ -414,7 +454,11 @@ def test_statistics_during_period_set_back_compat(
 def test_rename_entity_collision(
     hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test statistics is migrated when entity_id is changed."""
+    """Test statistics is migrated when entity_id is changed.
+
+    This test relies on the safeguard in the statistics_meta_manager
+    and should not hit the filter_unique_constraint_integrity_error safeguard.
+    """
     hass = hass_recorder()
     setup_component(hass, "sensor", {})
 
@@ -491,7 +535,116 @@ def test_rename_entity_collision(
     # Statistics failed to migrate due to the collision
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
+
+    # Verify the safeguard in the states meta manager was hit
+    assert (
+        "Cannot rename statistic_id `sensor.test1` to `sensor.test99` "
+        "because the new statistic_id is already in use"
+    ) in caplog.text
+
+    # Verify the filter_unique_constraint_integrity_error safeguard was not hit
+    assert "Blocked attempt to insert duplicated statistic rows" not in caplog.text
+
+
+def test_rename_entity_collision_states_meta_check_disabled(
+    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test statistics is migrated when entity_id is changed.
+
+    This test disables the safeguard in the statistics_meta_manager
+    and relies on the filter_unique_constraint_integrity_error safeguard.
+    """
+    hass = hass_recorder()
+    setup_component(hass, "sensor", {})
+
+    entity_reg = mock_registry(hass)
+
+    @callback
+    def add_entry():
+        reg_entry = entity_reg.async_get_or_create(
+            "sensor",
+            "test",
+            "unique_0000",
+            suggested_object_id="test1",
+        )
+        assert reg_entry.entity_id == "sensor.test1"
+
+    hass.add_job(add_entry)
+    hass.block_till_done()
+
+    zero, four, states = record_states(hass)
+    hist = history.get_significant_states(hass, zero, four, list(states))
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
+
+    for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
+        stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
+        assert stats == {}
+    stats = get_last_short_term_statistics(
+        hass,
+        0,
+        "sensor.test1",
+        True,
+        {"last_reset", "max", "mean", "min", "state", "sum"},
+    )
+    assert stats == {}
+
+    do_adhoc_statistics(hass, start=zero)
+    wait_recording_done(hass)
+    expected_1 = {
+        "start": process_timestamp(zero).timestamp(),
+        "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
+        "mean": pytest.approx(14.915254237288135),
+        "min": pytest.approx(10.0),
+        "max": pytest.approx(20.0),
+        "last_reset": None,
+        "state": None,
+        "sum": None,
+    }
+    expected_stats1 = [expected_1]
+    expected_stats2 = [expected_1]
+
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
+
+    # Insert metadata for sensor.test99
+    metadata_1 = {
+        "has_mean": True,
+        "has_sum": False,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "sensor.test99",
+        "unit_of_measurement": "kWh",
+    }
+
+    with session_scope(hass=hass) as session:
+        session.add(recorder.db_schema.StatisticsMeta.from_meta(metadata_1))
+
+    instance = recorder.get_instance(hass)
+    # Patch out the safeguard in the states meta manager
+    # so that we hit the filter_unique_constraint_integrity_error safeguard in the statistics
+    with patch.object(instance.statistics_meta_manager, "get", return_value=None):
+        # Rename entity sensor.test1 to sensor.test99
+        @callback
+        def rename_entry():
+            entity_reg.async_update_entity(
+                "sensor.test1", new_entity_id="sensor.test99"
+            )
+
+        hass.add_job(rename_entry)
+        wait_recording_done(hass)
+
+    # Statistics failed to migrate due to the collision
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
+
+    # Verify the filter_unique_constraint_integrity_error safeguard was hit
     assert "Blocked attempt to insert duplicated statistic rows" in caplog.text
+
+    # Verify the safeguard in the states meta manager was not hit
+    assert (
+        "Cannot rename statistic_id `sensor.test1` to `sensor.test99` "
+        "because the new statistic_id is already in use"
+    ) not in caplog.text
 
 
 def test_statistics_duplicated(
@@ -529,13 +682,13 @@ def test_statistics_duplicated(
         caplog.clear()
 
 
-@pytest.mark.parametrize("last_reset_str", ("2022-01-01T00:00:00+02:00", None))
+@pytest.mark.parametrize("last_reset_str", ["2022-01-01T00:00:00+02:00", None])
 @pytest.mark.parametrize(
     ("source", "statistic_id", "import_fn"),
-    (
+    [
         ("test", "test:total_energy_import", async_add_external_statistics),
         ("recorder", "sensor.total_energy_import", async_import_statistics),
-    ),
+    ],
 )
 async def test_import_statistics(
     recorder_mock: Recorder,
@@ -744,9 +897,8 @@ async def test_import_statistics(
     }
 
     # Adjust the statistics in a different unit
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 1,
             "type": "recorder/adjust_sum_statistics",
             "statistic_id": statistic_id,
             "start_time": period2.isoformat(),
@@ -967,9 +1119,7 @@ def test_daily_statistics_sum(
     timezone,
 ) -> None:
     """Test daily statistics."""
-    dt_util.set_default_time_zone(dt_util.get_time_zone(timezone))
-
-    hass = hass_recorder()
+    hass = hass_recorder(timezone=timezone)
     wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
@@ -1139,8 +1289,6 @@ def test_daily_statistics_sum(
     )
     assert stats == {}
 
-    dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
-
 
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
@@ -1150,9 +1298,7 @@ def test_weekly_statistics_mean(
     timezone,
 ) -> None:
     """Test weekly statistics."""
-    dt_util.set_default_time_zone(dt_util.get_time_zone(timezone))
-
-    hass = hass_recorder()
+    hass = hass_recorder(timezone=timezone)
     wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
@@ -1277,8 +1423,6 @@ def test_weekly_statistics_mean(
     )
     assert stats == {}
 
-    dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
-
 
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
@@ -1288,9 +1432,7 @@ def test_weekly_statistics_sum(
     timezone,
 ) -> None:
     """Test weekly statistics."""
-    dt_util.set_default_time_zone(dt_util.get_time_zone(timezone))
-
-    hass = hass_recorder()
+    hass = hass_recorder(timezone=timezone)
     wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
@@ -1460,8 +1602,6 @@ def test_weekly_statistics_sum(
     )
     assert stats == {}
 
-    dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
-
 
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
@@ -1471,9 +1611,7 @@ def test_monthly_statistics_sum(
     timezone,
 ) -> None:
     """Test monthly statistics."""
-    dt_util.set_default_time_zone(dt_util.get_time_zone(timezone))
-
-    hass = hass_recorder()
+    hass = hass_recorder(timezone=timezone)
     wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
@@ -1699,8 +1837,6 @@ def test_monthly_statistics_sum(
     )
     assert stats == {}
 
-    dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
-
 
 def test_cache_key_for_generate_statistics_during_period_stmt() -> None:
     """Test cache key for _generate_statistics_during_period_stmt."""
@@ -1794,9 +1930,7 @@ def test_change(
     timezone,
 ) -> None:
     """Test deriving change from sum statistic."""
-    dt_util.set_default_time_zone(dt_util.get_time_zone(timezone))
-
-    hass = hass_recorder()
+    hass = hass_recorder(timezone=timezone)
     wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
@@ -2121,8 +2255,6 @@ def test_change(
     )
     assert stats == {}
 
-    dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
-
 
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
@@ -2136,9 +2268,7 @@ def test_change_with_none(
     This tests the behavior when some record has None sum. The calculated change
     is not expected to be correct, but we should not raise on this error.
     """
-    dt_util.set_default_time_zone(dt_util.get_time_zone(timezone))
-
-    hass = hass_recorder()
+    hass = hass_recorder(timezone=timezone)
     wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
@@ -2350,5 +2480,3 @@ def test_change_with_none(
         types={"change"},
     )
     assert stats == {}
-
-    dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))

@@ -1,4 +1,5 @@
 """Binary Sensor platform for CoolMasterNet integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -32,13 +33,11 @@ async def async_setup_entry(
 class CoolmasterCleanFilter(CoolmasterEntity, BinarySensorEntity):
     """Representation of a unit's filter state (true means need to be cleaned)."""
 
-    _attr_has_entity_name = True
     entity_description = BinarySensorEntityDescription(
         key="clean_filter",
+        translation_key="clean_filter",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="Clean filter",
-        icon="mdi:air-filter",
     )
 
     @property

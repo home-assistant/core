@@ -1,4 +1,5 @@
 """Test the Brottsplatskartan config flow."""
+
 from __future__ import annotations
 
 import pytest
@@ -18,18 +19,16 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_AREA: "none",
-        },
+        {},
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Brottsplatskartan HOME"
     assert result2["data"] == {
         "area": None,
@@ -45,13 +44,12 @@ async def test_form_location(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_AREA: "none",
             CONF_LOCATION: {
                 CONF_LATITUDE: 59.32,
                 CONF_LONGITUDE: 18.06,
@@ -60,7 +58,7 @@ async def test_form_location(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Brottsplatskartan 59.32, 18.06"
     assert result2["data"] == {
         "area": None,
@@ -76,7 +74,7 @@ async def test_form_area(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -91,7 +89,7 @@ async def test_form_area(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Brottsplatskartan Stockholms län"
     assert result2["data"] == {
         "latitude": None,

@@ -1,4 +1,5 @@
 """Demo platform that has two fake binary sensors."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -7,7 +8,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN

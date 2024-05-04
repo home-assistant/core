@@ -1,4 +1,5 @@
 """Test the init functions for AEH."""
+
 from datetime import timedelta
 import logging
 from unittest.mock import patch
@@ -68,7 +69,7 @@ async def test_unload_entry(hass: HomeAssistant, entry, mock_create_batch) -> No
     """
     assert await hass.config_entries.async_unload(entry.entry_id)
     mock_create_batch.add.assert_not_called()
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_failed_test_connection(
@@ -84,7 +85,7 @@ async def test_failed_test_connection(
     entry.add_to_hass(hass)
     mock_get_eventhub_properties.side_effect = EventHubError("Test")
     await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_send_batch_error(

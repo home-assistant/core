@@ -1,4 +1,5 @@
 """deCONZ switch platform tests."""
+
 from unittest.mock import patch
 
 from homeassistant.components.siren import ATTR_DURATION, DOMAIN as SIREN_DOMAIN

@@ -1,4 +1,5 @@
 """Support for D-Link Power Plug Switches."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -17,7 +18,6 @@ SCAN_INTERVAL = timedelta(minutes=2)
 
 SWITCH_TYPE = SwitchEntityDescription(
     key="switch",
-    name="Switch",
 )
 
 
@@ -34,6 +34,8 @@ async def async_setup_entry(
 class SmartPlugSwitch(DLinkEntity, SwitchEntity):
     """Representation of a D-Link Smart Plug switch."""
 
+    _attr_name = None
+
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the device."""
@@ -49,12 +51,10 @@ class SmartPlugSwitch(DLinkEntity, SwitchEntity):
         except ValueError:
             total_consumption = None
 
-        attrs = {
+        return {
             ATTR_TOTAL_CONSUMPTION: total_consumption,
             ATTR_TEMPERATURE: temperature,
         }
-
-        return attrs
 
     @property
     def is_on(self) -> bool:

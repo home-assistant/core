@@ -1,4 +1,5 @@
 """Support for VeSync switches."""
+
 import logging
 from typing import Any
 
@@ -53,6 +54,8 @@ def _setup_entities(devices, async_add_entities):
 
 class VeSyncBaseSwitch(VeSyncDevice, SwitchEntity):
     """Base class for VeSync switch Device Representations."""
+
+    _attr_name = None
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""

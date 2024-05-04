@@ -3,6 +3,8 @@
 To update, run python3 -m script.languages [frontend_tag]
 """
 
+DEFAULT_LANGUAGE = "en"
+
 LANGUAGES = {
     "af",
     "ar",
@@ -65,4 +67,47 @@ LANGUAGES = {
     "vi",
     "zh-Hans",
     "zh-Hant",
+}
+
+NATIVE_ENTITY_IDS = {
+    "af",
+    "bs",
+    "ca",
+    "cs",
+    "cy",
+    "da",
+    "de",
+    "en",
+    "en-GB",
+    "eo",
+    "es",
+    "es-419",
+    "et",
+    "eu",
+    "fi",
+    "fr",
+    "fy",
+    "gl",
+    "gsw",
+    "hr",
+    "hu",
+    "id",
+    "is",
+    "it",
+    "ka",
+    "lb",
+    "lt",
+    "lv",
+    "nb",
+    "nl",
+    "nn",
+    "pl",
+    "pt",
+    "pt-BR",
+    "ro",
+    "sk",
+    "sl",
+    "sr-Latn",
+    "sv",
+    "tr",
 }

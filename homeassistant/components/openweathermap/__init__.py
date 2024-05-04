@@ -1,4 +1,5 @@
 """The openweathermap component."""
+
 from __future__ import annotations
 
 import logging
@@ -10,6 +11,7 @@ from pyowm.utils.config import get_default_config
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_LANGUAGE,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MODE,
@@ -18,7 +20,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .const import (
-    CONF_LANGUAGE,
     CONFIG_FLOW_VERSION,
     DOMAIN,
     ENTRY_NAME,
@@ -78,10 +79,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             mode = FORECAST_MODE_ONECALL_DAILY
 
         new_data = {**data, CONF_MODE: mode}
-        version = entry.version = CONFIG_FLOW_VERSION
-        config_entries.async_update_entry(entry, data=new_data)
+        config_entries.async_update_entry(
+            entry, data=new_data, version=CONFIG_FLOW_VERSION
+        )
 
-    _LOGGER.info("Migration to version %s successful", version)
+    _LOGGER.info("Migration to version %s successful", CONFIG_FLOW_VERSION)
 
     return True
 

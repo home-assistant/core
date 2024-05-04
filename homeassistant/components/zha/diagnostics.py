@@ -1,4 +1,5 @@
 """Provides diagnostics for ZHA."""
+
 from __future__ import annotations
 
 import dataclasses
@@ -25,14 +26,11 @@ from .core.const import (
     ATTR_PROFILE_ID,
     ATTR_VALUE,
     CONF_ALARM_MASTER_CODE,
-    DATA_ZHA,
-    DATA_ZHA_CONFIG,
-    DATA_ZHA_GATEWAY,
     UNKNOWN,
 )
 from .core.device import ZHADevice
 from .core.gateway import ZHAGateway
-from .core.helpers import async_get_zha_device
+from .core.helpers import async_get_zha_device, get_zha_data, get_zha_gateway
 
 KEYS_TO_REDACT = {
     ATTR_IEEE,
@@ -66,18 +64,19 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    config: dict = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {})
-    gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    zha_data = get_zha_data(hass)
+    gateway: ZHAGateway = get_zha_gateway(hass)
+    app = gateway.application_controller
 
-    energy_scan = await gateway.application_controller.energy_scan(
+    energy_scan = await app.energy_scan(
         channels=Channels.ALL_CHANNELS, duration_exp=4, count=1
     )
 
     return async_redact_data(
         {
-            "config": config,
+            "config": zha_data.yaml_config,
             "config_entry": config_entry.as_dict(),
-            "application_state": shallow_asdict(gateway.application_controller.state),
+            "application_state": shallow_asdict(app.state),
             "energy_scan": {
                 channel: 100 * energy / 255 for channel, energy in energy_scan.items()
             },
@@ -90,6 +89,14 @@ async def async_get_config_entry_diagnostics(
                 "zigpy_zigate": version("zigpy-zigate"),
                 "zhaquirks": version("zha-quirks"),
             },
+            "devices": [
+                {
+                    "manufacturer": device.manufacturer,
+                    "model": device.model,
+                    "logical_type": device.device_type,
+                }
+                for device in gateway.devices.values()
+            ],
         },
         KEYS_TO_REDACT,
     )
@@ -143,6 +150,19 @@ def get_endpoint_cluster_attr_data(zha_device: ZHADevice) -> dict:
 
 def get_cluster_attr_data(cluster: Cluster) -> dict:
     """Return cluster attribute data."""
+    unsupported_attributes = {}
+    for u_attr in cluster.unsupported_attributes:
+        try:
+            u_attr_def = cluster.find_attribute(u_attr)
+            unsupported_attributes[f"0x{u_attr_def.id:04x}"] = {
+                ATTR_ATTRIBUTE_NAME: u_attr_def.name
+            }
+        except KeyError:
+            if isinstance(u_attr, int):
+                unsupported_attributes[f"0x{u_attr:04x}"] = {}
+            else:
+                unsupported_attributes[u_attr] = {}
+
     return {
         ATTRIBUTES: {
             f"0x{attr_id:04x}": {
@@ -152,10 +172,5 @@ def get_cluster_attr_data(cluster: Cluster) -> dict:
             for attr_id, attr_def in cluster.attributes.items()
             if (attr_value := cluster.get(attr_def.name)) is not None
         },
-        UNSUPPORTED_ATTRIBUTES: {
-            f"0x{cluster.find_attribute(u_attr).id:04x}": {
-                ATTR_ATTRIBUTE_NAME: cluster.find_attribute(u_attr).name
-            }
-            for u_attr in cluster.unsupported_attributes
-        },
+        UNSUPPORTED_ATTRIBUTES: unsupported_attributes,
     }

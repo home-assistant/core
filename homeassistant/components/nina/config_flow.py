@@ -1,4 +1,5 @@
 """Config flow for Nina integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,9 +7,13 @@ from typing import Any
 from pynina import ApiError, Nina
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_registry import (
@@ -18,12 +23,14 @@ from homeassistant.helpers.entity_registry import (
 
 from .const import (
     _LOGGER,
-    CONF_FILTER_CORONA,
+    CONF_AREA_FILTER,
+    CONF_HEADLINE_FILTER,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
     CONST_REGION_MAPPING,
     CONST_REGIONS,
     DOMAIN,
+    NO_MATCH_REGEX,
 )
 
 
@@ -79,7 +86,7 @@ def prepare_user_input(
     return user_input
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NINA."""
 
     VERSION: int = 1
@@ -94,14 +101,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.regions[name] = {}
 
     async def async_step_user(
-        self: ConfigFlow,
+        self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, Any] = {}
-
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
 
         if not self._all_region_codes_sorted:
             nina: Nina = Nina(async_get_clientsession(self.hass))
@@ -125,6 +129,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if group_input := user_input.get(group):
                     user_input[CONF_REGIONS] += group_input
 
+            if not user_input[CONF_HEADLINE_FILTER]:
+                user_input[CONF_HEADLINE_FILTER] = NO_MATCH_REGEX
+
             if user_input[CONF_REGIONS]:
                 return self.async_create_entry(
                     title="NINA",
@@ -144,7 +151,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_MESSAGE_SLOTS, default=5): vol.All(
                         int, vol.Range(min=1, max=20)
                     ),
-                    vol.Required(CONF_FILTER_CORONA, default=True): cv.boolean,
+                    vol.Optional(CONF_HEADLINE_FILTER, default=""): cv.string,
                 }
             ),
             errors=errors,
@@ -153,16 +160,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for nut."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
         self.data = dict(self.config_entry.data)
@@ -215,7 +222,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 removed_entities_slots = [
                     f"{region}-{slot_id}"
                     for region in self.data[CONF_REGIONS]
-                    for slot_id in range(0, self.data[CONF_MESSAGE_SLOTS] + 1)
+                    for slot_id in range(self.data[CONF_MESSAGE_SLOTS] + 1)
                     if slot_id > user_input[CONF_MESSAGE_SLOTS]
                 ]
 
@@ -255,10 +262,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_MESSAGE_SLOTS,
                         default=self.data[CONF_MESSAGE_SLOTS],
                     ): vol.All(int, vol.Range(min=1, max=20)),
-                    vol.Required(
-                        CONF_FILTER_CORONA,
-                        default=self.data[CONF_FILTER_CORONA],
-                    ): cv.boolean,
+                    vol.Optional(
+                        CONF_HEADLINE_FILTER,
+                        default=self.data[CONF_HEADLINE_FILTER],
+                    ): cv.string,
+                    vol.Optional(
+                        CONF_AREA_FILTER,
+                        default=self.data[CONF_AREA_FILTER],
+                    ): cv.string,
                 }
             ),
             errors=errors,

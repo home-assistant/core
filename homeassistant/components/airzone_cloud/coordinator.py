@@ -1,13 +1,14 @@
 """The Airzone Cloud integration coordinator."""
+
 from __future__ import annotations
 
+from asyncio import timeout
 from datetime import timedelta
 import logging
 from typing import Any
 
 from aioairzone_cloud.cloudapi import AirzoneCloudApi
 from aioairzone_cloud.exceptions import AirzoneCloudError
-import async_timeout
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -25,6 +26,7 @@ class AirzoneUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def __init__(self, hass: HomeAssistant, airzone: AirzoneCloudApi) -> None:
         """Initialize."""
         self.airzone = airzone
+        self.airzone.set_update_callback(self.async_set_updated_data)
 
         super().__init__(
             hass,
@@ -35,7 +37,7 @@ class AirzoneUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
-        async with async_timeout.timeout(AIOAIRZONE_CLOUD_TIMEOUT_SEC):
+        async with timeout(AIOAIRZONE_CLOUD_TIMEOUT_SEC):
             try:
                 await self.airzone.update()
             except AirzoneCloudError as error:

@@ -1,7 +1,7 @@
 """Config flow for Xiaomi Bluetooth integration."""
+
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 import dataclasses
 from typing import Any
@@ -17,9 +17,8 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
     async_process_advertisements,
 )
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -77,7 +76,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
@@ -96,7 +95,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             self._discovery_info = await self._async_wait_for_full_advertisement(
                 discovery_info, device
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             # This device might have a really long advertising interval
             # So create a config entry for it, and if we discover it has
             # encryption later, we can do a reauth
@@ -110,7 +109,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_get_encryption_key_legacy(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Enter a legacy bindkey for a v2/v3 MiBeacon device."""
         assert self._discovery_info
         assert self._discovered_device
@@ -123,7 +122,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             if len(bindkey) != 24:
                 errors["bindkey"] = "expected_24_characters"
             else:
-                self._discovered_device.bindkey = bytes.fromhex(bindkey)
+                self._discovered_device.set_bindkey(bytes.fromhex(bindkey))
 
                 # If we got this far we already know supported will
                 # return true so we don't bother checking that again
@@ -144,7 +143,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_get_encryption_key_4_5(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Enter a bindkey for a v4/v5 MiBeacon device."""
         assert self._discovery_info
         assert self._discovered_device
@@ -157,7 +156,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             if len(bindkey) != 32:
                 errors["bindkey"] = "expected_32_characters"
             else:
-                self._discovered_device.bindkey = bytes.fromhex(bindkey)
+                self._discovered_device.set_bindkey(bytes.fromhex(bindkey))
 
                 # If we got this far we already know supported will
                 # return true so we don't bother checking that again
@@ -178,7 +177,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm discovery."""
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             return self._async_get_or_create_entry()
@@ -191,7 +190,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm_slow(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Ack that device is slow."""
         if user_input is not None:
             return self._async_get_or_create_entry()
@@ -204,7 +203,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user step to pick discovered device."""
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
@@ -220,7 +219,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._discovery_info = await self._async_wait_for_full_advertisement(
                     discovery.discovery_info, discovery.device
                 )
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 # This device might have a really long advertising interval
                 # So create a config entry for it, and if we discover
                 # it has encryption later, we can do a reauth
@@ -261,7 +260,9 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_ADDRESS): vol.In(titles)}),
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by a reauth event."""
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         assert entry is not None
@@ -280,8 +281,10 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         # Otherwise there wasn't actually encryption so abort
         return self.async_abort(reason="reauth_successful")
 
-    def _async_get_or_create_entry(self, bindkey=None):
-        data = {}
+    def _async_get_or_create_entry(
+        self, bindkey: str | None = None
+    ) -> ConfigFlowResult:
+        data: dict[str, Any] = {}
 
         if bindkey:
             data["bindkey"] = bindkey
@@ -289,15 +292,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         if entry_id := self.context.get("entry_id"):
             entry = self.hass.config_entries.async_get_entry(entry_id)
             assert entry is not None
-
-            self.hass.config_entries.async_update_entry(entry, data=data)
-
-            # Reload the config entry to notify of updated config
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(entry.entry_id)
-            )
-
-            return self.async_abort(reason="reauth_successful")
+            return self.async_update_reload_and_abort(entry, data=data)
 
         return self.async_create_entry(
             title=self.context["title_placeholders"]["name"],

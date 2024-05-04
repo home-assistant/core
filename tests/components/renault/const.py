@@ -1,4 +1,5 @@
 """Constants for the Renault integration tests."""
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.renault.const import (
     CONF_KAMEREON_ACCOUNT_ID,
@@ -126,7 +127,12 @@ MOCK_VEHICLES = {
             {
                 ATTR_ENTITY_ID: "select.reg_number_charge_mode",
                 ATTR_ICON: "mdi:calendar-remove",
-                ATTR_OPTIONS: ["always", "always_charging", "schedule_mode"],
+                ATTR_OPTIONS: [
+                    "always",
+                    "always_charging",
+                    "schedule_mode",
+                    "scheduled",
+                ],
                 ATTR_STATE: "always",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_charge_mode",
             },
@@ -151,7 +157,7 @@ MOCK_VEHICLES = {
             },
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY,
-                ATTR_ENTITY_ID: "sensor.reg_number_battery_level",
+                ATTR_ENTITY_ID: "sensor.reg_number_battery",
                 ATTR_STATE: "60",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_battery_level",
@@ -198,6 +204,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT,
             },
             {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.DURATION,
                 ATTR_ENTITY_ID: "sensor.reg_number_charging_remaining_time",
                 ATTR_ICON: "mdi:timer",
                 ATTR_STATE: "145",
@@ -361,7 +368,12 @@ MOCK_VEHICLES = {
             {
                 ATTR_ENTITY_ID: "select.reg_number_charge_mode",
                 ATTR_ICON: "mdi:calendar-clock",
-                ATTR_OPTIONS: ["always", "always_charging", "schedule_mode"],
+                ATTR_OPTIONS: [
+                    "always",
+                    "always_charging",
+                    "schedule_mode",
+                    "scheduled",
+                ],
                 ATTR_STATE: "schedule_mode",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_charge_mode",
             },
@@ -386,7 +398,7 @@ MOCK_VEHICLES = {
             },
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY,
-                ATTR_ENTITY_ID: "sensor.reg_number_battery_level",
+                ATTR_ENTITY_ID: "sensor.reg_number_battery",
                 ATTR_STATE: "50",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_battery_level",
@@ -433,6 +445,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT,
             },
             {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.DURATION,
                 ATTR_ENTITY_ID: "sensor.reg_number_charging_remaining_time",
                 ATTR_ICON: "mdi:timer",
                 ATTR_STATE: STATE_UNKNOWN,
@@ -596,7 +609,12 @@ MOCK_VEHICLES = {
             {
                 ATTR_ENTITY_ID: "select.reg_number_charge_mode",
                 ATTR_ICON: "mdi:calendar-remove",
-                ATTR_OPTIONS: ["always", "always_charging", "schedule_mode"],
+                ATTR_OPTIONS: [
+                    "always",
+                    "always_charging",
+                    "schedule_mode",
+                    "scheduled",
+                ],
                 ATTR_STATE: "always",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_charge_mode",
             },
@@ -621,7 +639,7 @@ MOCK_VEHICLES = {
             },
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY,
-                ATTR_ENTITY_ID: "sensor.reg_number_battery_level",
+                ATTR_ENTITY_ID: "sensor.reg_number_battery",
                 ATTR_STATE: "60",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_battery_level",
@@ -668,6 +686,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT,
             },
             {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.DURATION,
                 ATTR_ENTITY_ID: "sensor.reg_number_charging_remaining_time",
                 ATTR_ICON: "mdi:timer",
                 ATTR_STATE: "145",

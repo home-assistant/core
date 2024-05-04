@@ -1,4 +1,5 @@
 """Support for the QNAP QSW binary sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
@@ -23,13 +24,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import UNDEFINED
 
 from .const import ATTR_MESSAGE, DOMAIN, QSW_COORD_DATA
 from .coordinator import QswDataCoordinator
 from .entity import QswEntityDescription, QswEntityType, QswSensorEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class QswBinarySensorEntityDescription(
     BinarySensorEntityDescription, QswEntityDescription
 ):
@@ -48,7 +50,6 @@ BINARY_SENSOR_TYPES: Final[tuple[QswBinarySensorEntityDescription, ...]] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         key=QSD_FIRMWARE_CONDITION,
-        name="Anomaly",
         subkey=QSD_ANOMALY,
     ),
 )
@@ -82,14 +83,14 @@ async def async_setup_entry(
     """Add QNAP QSW binary sensors from a config_entry."""
     coordinator: QswDataCoordinator = hass.data[DOMAIN][entry.entry_id][QSW_COORD_DATA]
 
-    entities: list[QswBinarySensor] = []
-
-    for description in BINARY_SENSOR_TYPES:
+    entities: list[QswBinarySensor] = [
+        QswBinarySensor(coordinator, description, entry)
+        for description in BINARY_SENSOR_TYPES
         if (
             description.key in coordinator.data
             and description.subkey in coordinator.data[description.key]
-        ):
-            entities.append(QswBinarySensor(coordinator, description, entry))
+        )
+    ]
 
     for description in LACP_PORT_BINARY_SENSOR_TYPES:
         if (
@@ -140,8 +141,10 @@ class QswBinarySensor(QswSensorEntity, BinarySensorEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry, type_id)
-
-        self._attr_name = f"{self.product} {description.name}"
+        if description.name == UNDEFINED:
+            self._attr_has_entity_name = True
+        else:
+            self._attr_name = f"{self.product} {description.name}"
         self._attr_unique_id = (
             f"{entry.unique_id}_{description.key}"
             f"{description.sep_key}{description.subkey}"

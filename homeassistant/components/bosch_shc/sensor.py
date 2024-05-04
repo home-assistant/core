@@ -1,4 +1,5 @@
 """Platform for sensor integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -30,19 +31,12 @@ from .const import DATA_SESSION, DOMAIN
 from .entity import SHCEntity
 
 
-@dataclass
-class SHCSensorEntityDescriptionMixin:
-    """Describes the mixin variables for SHC sensors."""
+@dataclass(frozen=True, kw_only=True)
+class SHCSensorEntityDescription(SensorEntityDescription):
+    """Describes a SHC sensor."""
 
     value_fn: Callable[[SHCDevice], Any | None]
     attributes_fn: Callable[[SHCDevice], dict[str, Any]] | None
-
-
-@dataclass
-class SHCSensorEntityDescription(
-    SensorEntityDescription, SHCSensorEntityDescriptionMixin
-):
-    """Describes a SHC sensor."""
 
 
 TEMPERATURE_SENSOR = "temperature"

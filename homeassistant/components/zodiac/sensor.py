@@ -1,15 +1,18 @@
 """Support for tracking the zodiac sign."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import as_local, utcnow
 
 from .const import (
     ATTR_ELEMENT,
     ATTR_MODALITY,
+    DEFAULT_NAME,
     DOMAIN,
     ELEMENT_AIR,
     ELEMENT_EARTH,
@@ -143,39 +146,22 @@ ZODIAC_BY_DATE = (
     ),
 )
 
-ZODIAC_ICONS = {
-    SIGN_ARIES: "mdi:zodiac-aries",
-    SIGN_TAURUS: "mdi:zodiac-taurus",
-    SIGN_GEMINI: "mdi:zodiac-gemini",
-    SIGN_CANCER: "mdi:zodiac-cancer",
-    SIGN_LEO: "mdi:zodiac-leo",
-    SIGN_VIRGO: "mdi:zodiac-virgo",
-    SIGN_LIBRA: "mdi:zodiac-libra",
-    SIGN_SCORPIO: "mdi:zodiac-scorpio",
-    SIGN_SAGITTARIUS: "mdi:zodiac-sagittarius",
-    SIGN_CAPRICORN: "mdi:zodiac-capricorn",
-    SIGN_AQUARIUS: "mdi:zodiac-aquarius",
-    SIGN_PISCES: "mdi:zodiac-pisces",
-}
 
-
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Zodiac sensor platform."""
-    if discovery_info is None:
-        return
+    """Initialize the entries."""
 
-    async_add_entities([ZodiacSensor()], True)
+    async_add_entities([ZodiacSensor(entry_id=entry.entry_id)], True)
 
 
 class ZodiacSensor(SensorEntity):
     """Representation of a Zodiac sensor."""
 
-    _attr_name = "Zodiac"
+    _attr_name = None
+    _attr_has_entity_name = True
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_options = [
         SIGN_AQUARIUS,
@@ -194,6 +180,14 @@ class ZodiacSensor(SensorEntity):
     _attr_translation_key = "sign"
     _attr_unique_id = DOMAIN
 
+    def __init__(self, entry_id: str) -> None:
+        """Initialize Zodiac sensor."""
+        self._attr_device_info = DeviceInfo(
+            name=DEFAULT_NAME,
+            identifiers={(DOMAIN, entry_id)},
+            entry_type=DeviceEntryType.SERVICE,
+        )
+
     async def async_update(self) -> None:
         """Get the time and updates the state."""
         today = as_local(utcnow()).date()
@@ -203,6 +197,5 @@ class ZodiacSensor(SensorEntity):
                 today.month == sign[1][1] and today.day <= sign[1][0]
             ):
                 self._attr_native_value = sign[2]
-                self._attr_icon = ZODIAC_ICONS.get(sign[2])
                 self._attr_extra_state_attributes = sign[3]
                 break

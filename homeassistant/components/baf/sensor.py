@@ -1,4 +1,5 @@
 """Support for Big Ass Fans sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -28,25 +29,18 @@ from .entity import BAFEntity
 from .models import BAFData
 
 
-@dataclass
-class BAFSensorDescriptionMixin:
-    """Required values for BAF sensors."""
-
-    value_fn: Callable[[Device], int | float | str | None]
-
-
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class BAFSensorDescription(
     SensorEntityDescription,
-    BAFSensorDescriptionMixin,
 ):
     """Class describing BAF sensor entities."""
+
+    value_fn: Callable[[Device], int | float | str | None]
 
 
 AUTO_COMFORT_SENSORS = (
     BAFSensorDescription(
         key="temperature",
-        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -57,7 +51,6 @@ AUTO_COMFORT_SENSORS = (
 DEFINED_ONLY_SENSORS = (
     BAFSensorDescription(
         key="humidity",
-        name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -68,7 +61,7 @@ DEFINED_ONLY_SENSORS = (
 FAN_SENSORS = (
     BAFSensorDescription(
         key="current_rpm",
-        name="Current RPM",
+        translation_key="current_rpm",
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -76,7 +69,7 @@ FAN_SENSORS = (
     ),
     BAFSensorDescription(
         key="target_rpm",
-        name="Target RPM",
+        translation_key="target_rpm",
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -84,14 +77,14 @@ FAN_SENSORS = (
     ),
     BAFSensorDescription(
         key="wifi_ssid",
-        name="WiFi SSID",
+        translation_key="wifi_ssid",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: cast(int | None, device.wifi_ssid),
     ),
     BAFSensorDescription(
         key="ip_address",
-        name="IP Address",
+        translation_key="ip_address",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: cast(str | None, device.ip_address),
@@ -107,10 +100,11 @@ async def async_setup_entry(
     """Set up BAF fan sensors."""
     data: BAFData = hass.data[DOMAIN][entry.entry_id]
     device = data.device
-    sensors_descriptions: list[BAFSensorDescription] = []
-    for description in DEFINED_ONLY_SENSORS:
-        if getattr(device, description.key):
-            sensors_descriptions.append(description)
+    sensors_descriptions: list[BAFSensorDescription] = [
+        description
+        for description in DEFINED_ONLY_SENSORS
+        if getattr(device, description.key)
+    ]
     if device.has_auto_comfort:
         sensors_descriptions.extend(AUTO_COMFORT_SENSORS)
     if device.has_fan:
@@ -128,7 +122,7 @@ class BAFSensor(BAFEntity, SensorEntity):
     def __init__(self, device: Device, description: BAFSensorDescription) -> None:
         """Initialize the entity."""
         self.entity_description = description
-        super().__init__(device, f"{device.name} {description.name}")
+        super().__init__(device)
         self._attr_unique_id = f"{self._device.mac_address}-{description.key}"
 
     @callback

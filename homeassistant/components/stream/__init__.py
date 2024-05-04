@@ -14,6 +14,7 @@ are no active output formats, the background worker is shut down and access
 tokens are expired. Alternatively, a Stream can be configured with keepalive
 to always keep workers active.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -29,11 +30,13 @@ from typing import TYPE_CHECKING, Any, Final, cast
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EVENT_LOGGING_CHANGED
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.setup import SetupPhases, async_pause_setup
+from homeassistant.util.async_ import create_eager_task
 
 from .const import (
     ATTR_ENDPOINTS,
@@ -188,36 +191,39 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def filter_libav_logging() -> None:
-    """Filter libav logging to only log when the stream logger is at DEBUG."""
+def set_pyav_logging(enable: bool) -> None:
+    """Turn PyAV logging on or off."""
+    import av  # pylint: disable=import-outside-toplevel
 
-    def libav_filter(record: logging.LogRecord) -> bool:
-        return logging.getLogger(__name__).isEnabledFor(logging.DEBUG)
-
-    for logging_namespace in (
-        "libav.NULL",
-        "libav.h264",
-        "libav.hevc",
-        "libav.hls",
-        "libav.mp4",
-        "libav.mpegts",
-        "libav.rtsp",
-        "libav.tcp",
-        "libav.tls",
-    ):
-        logging.getLogger(logging_namespace).addFilter(libav_filter)
-
-    # Set log level to error for libav.mp4
-    logging.getLogger("libav.mp4").setLevel(logging.ERROR)
-    # Suppress "deprecated pixel format" WARNING
-    logging.getLogger("libav.swscaler").setLevel(logging.ERROR)
+    av.logging.set_level(av.logging.VERBOSE if enable else av.logging.FATAL)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up stream."""
+    debug_enabled = _LOGGER.isEnabledFor(logging.DEBUG)
 
-    # Drop libav log messages if stream logging is above DEBUG
-    filter_libav_logging()
+    @callback
+    def update_pyav_logging(_event: Event | None = None) -> None:
+        """Adjust libav logging to only log when the stream logger is at DEBUG."""
+        nonlocal debug_enabled
+        if (new_debug_enabled := _LOGGER.isEnabledFor(logging.DEBUG)) == debug_enabled:
+            return
+        debug_enabled = new_debug_enabled
+        # enable PyAV logging iff Stream logger is set to debug
+        set_pyav_logging(new_debug_enabled)
+
+    # Only pass through PyAV log messages if stream logging is above DEBUG
+    cancel_logging_listener = hass.bus.async_listen(
+        EVENT_LOGGING_CHANGED, update_pyav_logging
+    )
+    # libav.mp4 and libav.swscaler have a few unimportant messages that are logged
+    # at logging.WARNING. Set those Logger levels to logging.ERROR
+    for logging_namespace in ("libav.mp4", "libav.swscaler"):
+        logging.getLogger(logging_namespace).setLevel(logging.ERROR)
+
+    # This will load av so we run it in the executor
+    with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PACKAGES):
+        await hass.async_add_executor_job(set_pyav_logging, debug_enabled)
 
     # Keep import here so that we can import stream integration without installing reqs
     # pylint: disable-next=import-outside-toplevel
@@ -253,11 +259,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for stream in hass.data[DOMAIN][ATTR_STREAMS]:
             stream.dynamic_stream_settings.preload_stream = False
         if awaitables := [
-            asyncio.create_task(stream.stop())
+            create_eager_task(stream.stop())
             for stream in hass.data[DOMAIN][ATTR_STREAMS]
         ]:
             await asyncio.wait(awaitables)
         _LOGGER.debug("Stopped stream workers")
+        cancel_logging_listener()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
@@ -402,6 +409,13 @@ class Stream:
         self._fast_restart_once = True
         self._thread_quit.set()
 
+    def _set_state(self, available: bool) -> None:
+        """Set the stream state by updating the callback."""
+        # Call with call_soon_threadsafe since we know _async_update_state is always
+        # all callback function instead of using add_job which would have to work
+        # it out each time
+        self.hass.loop.call_soon_threadsafe(self._async_update_state, available)
+
     def _run_worker(self) -> None:
         """Handle consuming streams and restart keepalive streams."""
         # Keep import here so that we can import stream integration without installing reqs
@@ -412,7 +426,7 @@ class Stream:
         wait_timeout = 0
         while not self._thread_quit.wait(timeout=wait_timeout):
             start_time = time.time()
-            self.hass.add_job(self._async_update_state, True)
+            self._set_state(True)
             self._diagnostics.set_value(
                 "keepalive", self.dynamic_stream_settings.preload_stream
             )
@@ -444,7 +458,7 @@ class Stream:
                     continue
                 break
 
-            self.hass.add_job(self._async_update_state, False)
+            self._set_state(False)
             # To avoid excessive restarts, wait before restarting
             # As the required recovery time may be different for different setups, start
             # with trying a short wait_timeout and increase it on each reconnection attempt.
@@ -537,6 +551,7 @@ class Stream:
         self,
         width: int | None = None,
         height: int | None = None,
+        wait_for_next_keyframe: bool = False,
     ) -> bytes | None:
         """Fetch an image from the Stream and return it as a jpeg in bytes.
 
@@ -548,7 +563,9 @@ class Stream:
         self.add_provider(HLS_PROVIDER)
         await self.start()
         return await self._keyframe_converter.async_get_image(
-            width=width, height=height
+            width=width,
+            height=height,
+            wait_for_next_keyframe=wait_for_next_keyframe,
         )
 
     def get_diagnostics(self) -> dict[str, Any]:

@@ -1,4 +1,5 @@
 """Support for the DIRECTV remote."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -28,18 +29,18 @@ async def async_setup_entry(
 ) -> None:
     """Load DirecTV remote based on a config entry."""
     dtv = hass.data[DOMAIN][entry.entry_id]
-    entities = []
 
-    for location in dtv.device.locations:
-        entities.append(
+    async_add_entities(
+        (
             DIRECTVRemote(
                 dtv=dtv,
                 name=str.title(location.name),
                 address=location.address,
             )
-        )
-
-    async_add_entities(entities, True)
+            for location in dtv.device.locations
+        ),
+        True,
+    )
 
 
 class DIRECTVRemote(DIRECTVEntity, RemoteEntity):
@@ -49,11 +50,11 @@ class DIRECTVRemote(DIRECTVEntity, RemoteEntity):
         """Initialize DirecTV remote."""
         super().__init__(
             dtv=dtv,
+            name=name,
             address=address,
         )
 
         self._attr_unique_id = self._device_id
-        self._attr_name = name
         self._attr_available = False
         self._attr_is_on = True
 

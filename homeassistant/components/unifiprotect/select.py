@@ -1,4 +1,5 @@
 """Component providing select entities for UniFi Protect."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -41,10 +42,17 @@ from .utils import async_dispatch_id as _ufpd, async_get_light_motion_current
 _LOGGER = logging.getLogger(__name__)
 _KEY_LIGHT_MOTION = "light_motion"
 
+HDR_MODES = [
+    {"id": "always", "name": "Always On"},
+    {"id": "off", "name": "Always Off"},
+    {"id": "auto", "name": "Auto"},
+]
+
 INFRARED_MODES = [
     {"id": IRLEDMode.AUTO.value, "name": "Auto"},
     {"id": IRLEDMode.ON.value, "name": "Always Enable"},
     {"id": IRLEDMode.AUTO_NO_LED.value, "name": "Auto (Filter Only, no LED's)"},
+    {"id": IRLEDMode.CUSTOM.value, "name": "Auto (Custom Lux)"},
     {"id": IRLEDMode.OFF.value, "name": "Always Disable"},
 ]
 
@@ -92,7 +100,7 @@ DEVICE_RECORDING_MODES = [
 DEVICE_CLASS_LCD_MESSAGE: Final = "unifiprotect__lcd_message"
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class ProtectSelectEntityDescription(
     ProtectSetableKeysMixin[T], SelectEntityDescription
 ):
@@ -116,7 +124,7 @@ def _get_doorbell_options(api: ProtectApiClient) -> list[dict[str, Any]]:
 
     for item in messages:
         msg_type = item.type.value
-        if item.type == DoorbellMessageType.CUSTOM_MESSAGE:
+        if item.type is DoorbellMessageType.CUSTOM_MESSAGE:
             msg_type = f"{DoorbellMessageType.CUSTOM_MESSAGE.value}:{item.text}"
 
         built_messages.append({"id": msg_type, "name": item.text})
@@ -129,8 +137,10 @@ def _get_doorbell_options(api: ProtectApiClient) -> list[dict[str, Any]]:
 
 def _get_paired_camera_options(api: ProtectApiClient) -> list[dict[str, Any]]:
     options = [{"id": TYPE_EMPTY_VALUE, "name": "Not Paired"}]
-    for camera in api.bootstrap.cameras.values():
-        options.append({"id": camera.id, "name": camera.display_name or camera.type})
+    options.extend(
+        {"id": camera.id, "name": camera.display_name or camera.type}
+        for camera in api.bootstrap.cameras.values()
+    )
 
     return options
 
@@ -224,6 +234,17 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_set_method="set_chime_type",
         ufp_perm=PermRequired.WRITE,
     ),
+    ProtectSelectEntityDescription(
+        key="hdr_mode",
+        name="HDR Mode",
+        icon="mdi:brightness-7",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="feature_flags.has_hdr",
+        ufp_options=HDR_MODES,
+        ufp_value="hdr_mode_display",
+        ufp_set_method="set_hdr_mode",
+        ufp_perm=PermRequired.WRITE,
+    ),
 )
 
 LIGHT_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
@@ -306,7 +327,8 @@ async def async_setup_entry(
     """Set up number entities for UniFi Protect integration."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
-    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         entities = async_all_device_entities(
             data,
             ProtectSelects,
@@ -349,47 +371,44 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         description: ProtectSelectEntityDescription,
     ) -> None:
         """Initialize the unifi protect select entity."""
+        self._async_set_options(data, description)
         super().__init__(data, device, description)
         self._attr_name = f"{self.device.display_name} {self.entity_description.name}"
-        self._async_set_options()
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
-
+        entity_description = self.entity_description
         # entities with categories are not exposed for voice
         # and safe to update dynamically
         if (
-            self.entity_description.entity_category is not None
-            and self.entity_description.ufp_options_fn is not None
+            entity_description.entity_category is not None
+            and entity_description.ufp_options_fn is not None
         ):
             _LOGGER.debug(
-                "Updating dynamic select options for %s", self.entity_description.name
+                "Updating dynamic select options for %s", entity_description.name
             )
-            self._async_set_options()
+            self._async_set_options(self.data, entity_description)
+        if (unifi_value := entity_description.get_ufp_value(device)) is None:
+            unifi_value = TYPE_EMPTY_VALUE
+        self._attr_current_option = self._unifi_to_hass_options.get(
+            unifi_value, unifi_value
+        )
 
     @callback
-    def _async_set_options(self) -> None:
+    def _async_set_options(
+        self, data: ProtectData, description: ProtectSelectEntityDescription
+    ) -> None:
         """Set options attributes from UniFi Protect device."""
-
-        if self.entity_description.ufp_options is not None:
-            options = self.entity_description.ufp_options
+        if (ufp_options := description.ufp_options) is not None:
+            options = ufp_options
         else:
-            assert self.entity_description.ufp_options_fn is not None
-            options = self.entity_description.ufp_options_fn(self.data.api)
+            assert description.ufp_options_fn is not None
+            options = description.ufp_options_fn(data.api)
 
         self._attr_options = [item["name"] for item in options]
         self._hass_to_unifi_options = {item["name"]: item["id"] for item in options}
         self._unifi_to_hass_options = {item["id"]: item["name"] for item in options}
-
-    @property
-    def current_option(self) -> str:
-        """Return the current selected option."""
-
-        unifi_value = self.entity_description.get_ufp_value(self.device)
-        if unifi_value is None:
-            unifi_value = TYPE_EMPTY_VALUE
-        return self._unifi_to_hass_options.get(unifi_value, unifi_value)
 
     async def async_select_option(self, option: str) -> None:
         """Change the Select Entity Option."""
@@ -404,3 +423,13 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         if self.entity_description.ufp_enum_type is not None:
             unifi_value = self.entity_description.ufp_enum_type(unifi_value)
         await self.entity_description.ufp_set(self.device, unifi_value)
+
+    @callback
+    def _async_get_state_attrs(self) -> tuple[Any, ...]:
+        """Retrieve data that goes into the current state of the entity.
+
+        Called before and after updating entity and state is only written if there
+        is a change.
+        """
+
+        return (self._attr_available, self._attr_options, self._attr_current_option)

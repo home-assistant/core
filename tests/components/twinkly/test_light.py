@@ -1,24 +1,23 @@
 """Tests for the integration of a twinly device."""
+
 from __future__ import annotations
 
+from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
+
 from homeassistant.components.light import ATTR_BRIGHTNESS, LightEntityFeature
-from homeassistant.components.twinkly.const import (
-    CONF_HOST,
-    CONF_ID,
-    CONF_NAME,
-    DOMAIN as TWINKLY_DOMAIN,
-)
-from homeassistant.const import CONF_MODEL
+from homeassistant.components.twinkly.const import DOMAIN as TWINKLY_DOMAIN
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_registry import RegistryEntry
 
-from . import TEST_MODEL, TEST_NAME_ORIGINAL, ClientMock
+from . import TEST_MODEL, TEST_NAME, TEST_NAME_ORIGINAL, ClientMock
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_initial_state(hass: HomeAssistant) -> None:
@@ -28,16 +27,12 @@ async def test_initial_state(hass: HomeAssistant) -> None:
     state = hass.states.get(entity.entity_id)
 
     # Basic state properties
-    assert state.name == entity.unique_id
+    assert state.name == TEST_NAME
     assert state.state == "on"
     assert state.attributes[ATTR_BRIGHTNESS] == 26
-    assert state.attributes["friendly_name"] == entity.unique_id
-    assert state.attributes["icon"] == "mdi:string-lights"
+    assert state.attributes["friendly_name"] == TEST_NAME
 
-    assert entity.original_name == entity.unique_id
-    assert entity.original_icon == "mdi:string-lights"
-
-    assert device.name == entity.unique_id
+    assert device.name == TEST_NAME
     assert device.model == TEST_MODEL
     assert device.manufacturer == "LEDWORKS"
 
@@ -288,7 +283,11 @@ async def test_turn_off(hass: HomeAssistant) -> None:
     assert state.state == "off"
 
 
-async def test_update_name(hass: HomeAssistant) -> None:
+async def test_update_name(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Validate device's name update behavior.
 
     Validate that if device name is changed from the Twinkly app,
@@ -298,14 +297,14 @@ async def test_update_name(hass: HomeAssistant) -> None:
     entity, _, client, config_entry = await _create_entries(hass)
 
     client.change_name("new_device_name")
-    await hass.services.async_call(
-        "light", "turn_off", service_data={"entity_id": entity.entity_id}, blocking=True
-    )  # We call turn_off which will automatically cause an async_update
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    state = hass.states.get(entity.entity_id)
+    dev_entry = device_registry.async_get_device({(TWINKLY_DOMAIN, client.id)})
 
+    assert dev_entry.name == "new_device_name"
     assert config_entry.data[CONF_NAME] == "new_device_name"
-    assert state.attributes["friendly_name"] == "new_device_name"
 
 
 async def test_unload(hass: HomeAssistant) -> None:
@@ -342,7 +341,7 @@ async def _create_entries(
 
     entity_id = entity_registry.async_get_entity_id("light", TWINKLY_DOMAIN, client.id)
     entity_entry = entity_registry.async_get(entity_id)
-    device = device_registry.async_get_device({(TWINKLY_DOMAIN, client.id)})
+    device = device_registry.async_get_device(identifiers={(TWINKLY_DOMAIN, client.id)})
 
     assert entity_entry is not None
     assert device is not None

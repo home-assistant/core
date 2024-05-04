@@ -1,0 +1,10 @@
+{
+  "domain": "fyta",
+  "name": "FYTA",
+  "codeowners": ["@dontinelli"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/fyta",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "requirements": ["fyta_cli==0.4.1"]
+}

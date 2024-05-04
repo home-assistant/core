@@ -1,5 +1,8 @@
 """Support for Aqualink temperature sensors."""
+
 from __future__ import annotations
+
+from iaqualink.device import AqualinkBinarySensor
 
 from homeassistant.components.binary_sensor import (
     DOMAIN,
@@ -22,28 +25,23 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up discovered binary sensors."""
-    devs = []
-    for dev in hass.data[AQUALINK_DOMAIN][DOMAIN]:
-        devs.append(HassAqualinkBinarySensor(dev))
-    async_add_entities(devs, True)
+    async_add_entities(
+        (HassAqualinkBinarySensor(dev) for dev in hass.data[AQUALINK_DOMAIN][DOMAIN]),
+        True,
+    )
 
 
 class HassAqualinkBinarySensor(AqualinkEntity, BinarySensorEntity):
     """Representation of a binary sensor."""
 
-    @property
-    def name(self) -> str:
-        """Return the name of the binary sensor."""
-        return self.dev.label
+    def __init__(self, dev: AqualinkBinarySensor) -> None:
+        """Initialize AquaLink binary sensor."""
+        super().__init__(dev)
+        self._attr_name = dev.label
+        if dev.label == "Freeze Protection":
+            self._attr_device_class = BinarySensorDeviceClass.COLD
 
     @property
     def is_on(self) -> bool:
         """Return whether the binary sensor is on or not."""
         return self.dev.is_on
-
-    @property
-    def device_class(self) -> BinarySensorDeviceClass | None:
-        """Return the class of the binary sensor."""
-        if self.name == "Freeze Protection":
-            return BinarySensorDeviceClass.COLD
-        return None

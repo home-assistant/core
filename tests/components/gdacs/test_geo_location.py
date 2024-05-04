@@ -1,10 +1,10 @@
 """The tests for the GDACS Feed integration."""
+
 import datetime
 from unittest.mock import patch
 
 from freezegun import freeze_time
 
-from homeassistant.components import gdacs
 from homeassistant.components.gdacs import DEFAULT_SCAN_INTERVAL, DOMAIN, FEED
 from homeassistant.components.gdacs.geo_location import (
     ATTR_ALERT_LEVEL,
@@ -33,18 +33,21 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import _generate_mock_feed_entry
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
-CONFIG = {gdacs.DOMAIN: {CONF_RADIUS: 200}}
+CONFIG = {CONF_RADIUS: 200}
 
 
-async def test_setup(hass: HomeAssistant) -> None:
+async def test_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
+) -> None:
     """Test the general setup of the integration."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -58,8 +61,8 @@ async def test_setup(hass: HomeAssistant) -> None:
         alert_level="Alert Level 1",
         country="Country 1",
         attribution="Attribution 1",
-        from_date=datetime.datetime(2020, 1, 10, 8, 0, tzinfo=datetime.timezone.utc),
-        to_date=datetime.datetime(2020, 1, 20, 8, 0, tzinfo=datetime.timezone.utc),
+        from_date=datetime.datetime(2020, 1, 10, 8, 0, tzinfo=datetime.UTC),
+        to_date=datetime.datetime(2020, 1, 20, 8, 0, tzinfo=datetime.UTC),
         duration_in_week=1,
         population="Population 1",
         severity="Severity 1",
@@ -90,12 +93,17 @@ async def test_setup(hass: HomeAssistant) -> None:
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with freeze_time(utcnow), patch(
-        "aio_georss_client.feed.GeoRssFeed.update"
-    ) as mock_feed_update:
+    with (
+        freeze_time(utcnow),
+        patch("aio_georss_client.feed.GeoRssFeed.update") as mock_feed_update,
+    ):
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]
-        assert await async_setup_component(hass, gdacs.DOMAIN, CONFIG)
-        await hass.async_block_till_done()
+
+        config_entry.add_to_hass(hass)
+        hass.config_entries.async_update_entry(
+            config_entry, data=config_entry.data | CONFIG
+        )
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         # Artificially trigger update and collect events.
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
@@ -106,7 +114,6 @@ async def test_setup(hass: HomeAssistant) -> None:
             + len(hass.states.async_entity_ids("sensor"))
             == 4
         )
-        entity_registry = er.async_get(hass)
         assert len(entity_registry.entities) == 4
 
         state = hass.states.get("geo_location.drought_name_1")
@@ -120,12 +127,8 @@ async def test_setup(hass: HomeAssistant) -> None:
             ATTR_DESCRIPTION: "Description 1",
             ATTR_COUNTRY: "Country 1",
             ATTR_ATTRIBUTION: "Attribution 1",
-            ATTR_FROM_DATE: datetime.datetime(
-                2020, 1, 10, 8, 0, tzinfo=datetime.timezone.utc
-            ),
-            ATTR_TO_DATE: datetime.datetime(
-                2020, 1, 20, 8, 0, tzinfo=datetime.timezone.utc
-            ),
+            ATTR_FROM_DATE: datetime.datetime(2020, 1, 10, 8, 0, tzinfo=datetime.UTC),
+            ATTR_TO_DATE: datetime.datetime(2020, 1, 20, 8, 0, tzinfo=datetime.UTC),
             ATTR_DURATION_IN_WEEK: 1,
             ATTR_ALERT_LEVEL: "Alert Level 1",
             ATTR_POPULATION: "Population 1",
@@ -207,7 +210,9 @@ async def test_setup(hass: HomeAssistant) -> None:
         assert len(entity_registry.entities) == 1
 
 
-async def test_setup_imperial(hass: HomeAssistant) -> None:
+async def test_setup_imperial(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test the setup of the integration using imperial unit system."""
     hass.config.units = US_CUSTOMARY_SYSTEM
     # Set up some mock feed entries for this test.
@@ -223,15 +228,19 @@ async def test_setup_imperial(hass: HomeAssistant) -> None:
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with freeze_time(utcnow), patch(
-        "aio_georss_client.feed.GeoRssFeed.update"
-    ) as mock_feed_update, patch(
-        "aio_georss_client.feed.GeoRssFeed.last_timestamp", create=True
+    with (
+        freeze_time(utcnow),
+        patch("aio_georss_client.feed.GeoRssFeed.update") as mock_feed_update,
+        patch("aio_georss_client.feed.GeoRssFeed.last_timestamp", create=True),
     ):
         mock_feed_update.return_value = "OK", [mock_entry_1]
-        assert await async_setup_component(hass, gdacs.DOMAIN, CONFIG)
-        await hass.async_block_till_done()
-        # Artificially trigger update and collect events.
+        config_entry.add_to_hass(hass)
+        hass.config_entries.async_update_entry(
+            config_entry, data=config_entry.data | CONFIG
+        )
+        assert await hass.config_entries.async_setup(
+            config_entry.entry_id
+        )  # Artificially trigger update and collect events.
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 

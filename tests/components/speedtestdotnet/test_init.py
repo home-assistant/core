@@ -18,25 +18,6 @@ import homeassistant.util.dt as dt_util
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_successful_config_entry(hass: HomeAssistant) -> None:
-    """Test that SpeedTestDotNet is configured successfully."""
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        options={
-            CONF_SERVER_NAME: "Country1 - Sponsor1 - Server1",
-            CONF_SERVER_ID: "1",
-        },
-    )
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-
-    assert entry.state == ConfigEntryState.LOADED
-    assert hass.data[DOMAIN]
-
-
 async def test_setup_failed(hass: HomeAssistant, mock_api: MagicMock) -> None:
     """Test SpeedTestDotNet failed due to an error."""
 
@@ -50,15 +31,23 @@ async def test_setup_failed(hass: HomeAssistant, mock_api: MagicMock) -> None:
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_entry(hass: HomeAssistant) -> None:
-    """Test removing SpeedTestDotNet."""
+async def test_entry_lifecycle(hass: HomeAssistant, mock_api: MagicMock) -> None:
+    """Test the SpeedTestDotNet entry lifecycle."""
     entry = MockConfigEntry(
         domain=DOMAIN,
+        data={},
+        options={
+            CONF_SERVER_NAME: "Country1 - Sponsor1 - Server1",
+            CONF_SERVER_ID: "1",
+        },
     )
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.data[DOMAIN]
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -85,7 +74,7 @@ async def test_server_not_found(hass: HomeAssistant, mock_api: MagicMock) -> Non
         hass,
         dt_util.utcnow() + timedelta(minutes=61),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("sensor.speedtest_ping")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE

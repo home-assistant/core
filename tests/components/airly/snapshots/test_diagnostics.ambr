@@ -1,0 +1,53 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'api_key': '**REDACTED**',
+        'latitude': '**REDACTED**',
+        'longitude': '**REDACTED**',
+        'name': 'Home',
+      }),
+      'disabled_by': None,
+      'domain': 'airly',
+      'entry_id': '3bd2acb0e4f0476d40865546d0d91921',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Home',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'coordinator_data': dict({
+      'ADVICE': 'Catch your breath!',
+      'CAQI': 7.29,
+      'CO': 162.49,
+      'CO_LIMIT': 4000,
+      'CO_PERCENT': 4.06,
+      'DESCRIPTION': 'Great air here today!',
+      'HUMIDITY': 68.35,
+      'LEVEL': 'very low',
+      'NO2': 16.04,
+      'NO2_LIMIT': 25,
+      'NO2_PERCENT': 64.17,
+      'O3': 41.52,
+      'O3_LIMIT': 100,
+      'O3_PERCENT': 41.52,
+      'PM1': 2.83,
+      'PM10': 6.06,
+      'PM10_LIMIT': 45,
+      'PM10_PERCENT': 14.5,
+      'PM25': 4.37,
+      'PM25_LIMIT': 15,
+      'PM25_PERCENT': 29.13,
+      'PRESSURE': 1019.86,
+      'SO2': 13.97,
+      'SO2_LIMIT': 40,
+      'SO2_PERCENT': 34.93,
+      'TEMPERATURE': 14.37,
+    }),
+  })
+# ---

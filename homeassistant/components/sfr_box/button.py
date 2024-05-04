@@ -1,4 +1,5 @@
 """SFR Box button platform."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
@@ -19,6 +20,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -29,7 +31,7 @@ _P = ParamSpec("_P")
 
 
 def with_error_wrapping(
-    func: Callable[Concatenate[SFRBoxButton, _P], Awaitable[_T]]
+    func: Callable[Concatenate[SFRBoxButton, _P], Awaitable[_T]],
 ) -> Callable[Concatenate[SFRBoxButton, _P], Coroutine[Any, Any, _T]]:
     """Catch SFR errors."""
 
@@ -48,16 +50,11 @@ def with_error_wrapping(
     return wrapper
 
 
-@dataclass
-class SFRBoxButtonMixin:
-    """Mixin for SFR Box buttons."""
+@dataclass(frozen=True, kw_only=True)
+class SFRBoxButtonEntityDescription(ButtonEntityDescription):
+    """Description for SFR Box buttons."""
 
     async_press: Callable[[SFRBox], Coroutine[None, None, None]]
-
-
-@dataclass
-class SFRBoxButtonEntityDescription(ButtonEntityDescription, SFRBoxButtonMixin):
-    """Description for SFR Box buttons."""
 
 
 BUTTON_TYPES: tuple[SFRBoxButtonEntityDescription, ...] = (
@@ -66,7 +63,6 @@ BUTTON_TYPES: tuple[SFRBoxButtonEntityDescription, ...] = (
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         key="system_reboot",
-        translation_key="reboot",
     ),
 )
 
@@ -100,7 +96,9 @@ class SFRBoxButton(ButtonEntity):
         self.entity_description = description
         self._box = box
         self._attr_unique_id = f"{system_info.mac_addr}_{description.key}"
-        self._attr_device_info = {"identifiers": {(DOMAIN, system_info.mac_addr)}}
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, system_info.mac_addr)},
+        )
 
     @with_error_wrapping
     async def async_press(self) -> None:

@@ -1,4 +1,5 @@
 """Support for the Hive devices and services."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
@@ -17,12 +18,12 @@ from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORM_LOOKUP, PLATFORMS
@@ -89,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         devices = await hive.session.startSession(hive_config)
     except HTTPException as error:
         _LOGGER.error("Could not connect to the internet: %s", error)
-        raise ConfigEntryNotReady() from error
+        raise ConfigEntryNotReady from error
     except HiveReauthRequired as err:
         raise ConfigEntryAuthFailed from err
 
@@ -131,7 +132,7 @@ async def async_remove_config_entry_device(
 
 
 def refresh_system(
-    func: Callable[Concatenate[_HiveEntityT, _P], Awaitable[Any]]
+    func: Callable[Concatenate[_HiveEntityT, _P], Awaitable[Any]],
 ) -> Callable[Concatenate[_HiveEntityT, _P], Coroutine[Any, Any, None]]:
     """Force update all entities after state change."""
 

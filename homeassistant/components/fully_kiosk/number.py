@@ -1,4 +1,5 @@
 """Fully Kiosk Browser number entity."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -16,7 +17,7 @@ from .entity import FullyKioskEntity
 ENTITY_TYPES: tuple[NumberEntityDescription, ...] = (
     NumberEntityDescription(
         key="timeToScreensaverV2",
-        name="Screensaver timer",
+        translation_key="screensaver_time",
         native_max_value=9999,
         native_step=1,
         native_min_value=0,
@@ -25,7 +26,7 @@ ENTITY_TYPES: tuple[NumberEntityDescription, ...] = (
     ),
     NumberEntityDescription(
         key="screensaverBrightness",
-        name="Screensaver brightness",
+        translation_key="screensaver_brightness",
         native_max_value=255,
         native_step=1,
         native_min_value=0,
@@ -33,7 +34,7 @@ ENTITY_TYPES: tuple[NumberEntityDescription, ...] = (
     ),
     NumberEntityDescription(
         key="timeToScreenOffV2",
-        name="Screen off timer",
+        translation_key="screen_off_time",
         native_max_value=9999,
         native_step=1,
         native_min_value=0,
@@ -42,10 +43,11 @@ ENTITY_TYPES: tuple[NumberEntityDescription, ...] = (
     ),
     NumberEntityDescription(
         key="screenBrightness",
-        name="Screen brightness",
+        translation_key="screen_brightness",
         native_max_value=255,
         native_step=1,
         native_min_value=0,
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 

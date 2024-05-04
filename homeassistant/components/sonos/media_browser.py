@@ -1,4 +1,5 @@
 """Support for media browsing."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -6,6 +7,7 @@ from contextlib import suppress
 from functools import partial
 import logging
 from typing import cast
+import urllib.parse
 
 from soco.data_structures import DidlObject
 from soco.ms_data_structures import MusicServiceItem
@@ -59,12 +61,14 @@ def get_thumbnail_url_full(
             media_content_id,
             media_content_type,
         )
-        return getattr(item, "album_art_uri", None)
+        return urllib.parse.unquote(getattr(item, "album_art_uri", ""))
 
-    return get_browse_image_url(
-        media_content_type,
-        media_content_id,
-        media_image_id,
+    return urllib.parse.unquote(
+        get_browse_image_url(
+            media_content_type,
+            media_content_id,
+            media_image_id,
+        )
     )
 
 
@@ -165,6 +169,7 @@ def build_item_response(
         payload["idstring"] = "A:ALBUMARTIST/" + "/".join(
             payload["idstring"].split("/")[2:]
         )
+        payload["idstring"] = urllib.parse.unquote(payload["idstring"])
 
     try:
         search_type = MEDIA_TYPES_TO_SONOS[payload["search_type"]]
@@ -194,13 +199,19 @@ def build_item_response(
         payload["search_type"] == MediaType.ALBUM
         and media[0].item_class == "object.item.audioItem.musicTrack"
     ):
-        item = get_media(media_library, payload["idstring"], SONOS_ALBUM_ARTIST)
+        idstring = payload["idstring"]
+        if idstring.startswith("A:ALBUMARTIST/"):
+            search_type = SONOS_ALBUM_ARTIST
+        elif idstring.startswith("A:ALBUM/"):
+            search_type = SONOS_ALBUM
+        item = get_media(media_library, idstring, search_type)
+
         title = getattr(item, "title", None)
-        thumbnail = get_thumbnail_url(SONOS_ALBUM_ARTIST, payload["idstring"])
+        thumbnail = get_thumbnail_url(search_type, payload["idstring"])
 
     if not title:
         try:
-            title = payload["idstring"].split("/")[1]
+            title = urllib.parse.unquote(payload["idstring"].split("/")[1])
         except IndexError:
             title = LIBRARY_TITLES_MAPPING[payload["idstring"]]
 
@@ -488,16 +499,59 @@ def get_content_id(item: DidlObject) -> str:
 
 def get_media(
     media_library: MusicLibrary, item_id: str, search_type: str
-) -> MusicServiceItem:
-    """Fetch media/album."""
+) -> MusicServiceItem | None:
+    """Fetch a single media/album."""
+    _LOGGER.debug("get_media item_id [%s], search_type [%s]", item_id, search_type)
     search_type = MEDIA_TYPES_TO_SONOS.get(search_type, search_type)
+
+    if search_type == "playlists":
+        # Format is S:TITLE or S:ITEM_ID
+        splits = item_id.split(":")
+        title = splits[1] if len(splits) > 1 else None
+        return next(
+            (
+                p
+                for p in media_library.get_playlists()
+                if (item_id == p.item_id or title == p.title)
+            ),
+            None,
+        )
 
     if not item_id.startswith("A:ALBUM") and search_type == SONOS_ALBUM:
         item_id = "A:ALBUMARTIST/" + "/".join(item_id.split("/")[2:])
 
-    search_term = item_id.split("/")[-1]
-    matches = media_library.get_music_library_information(
-        search_type, search_term=search_term, full_album_art_uri=True
+    if item_id.startswith("A:ALBUM/") or search_type == "tracks":
+        search_term = urllib.parse.unquote(item_id.split("/")[-1])
+        matches = media_library.get_music_library_information(
+            search_type, search_term=search_term, full_album_art_uri=True
+        )
+    else:
+        # When requesting media by album_artist, composer, genre use the browse interface
+        # to navigate the hierarchy. This occurs when invoked from media browser or service
+        # calls
+        # Example: A:ALBUMARTIST/Neil Young/Greatest Hits - get specific album
+        # Example: A:ALBUMARTIST/Neil Young - get all albums
+        # Others: composer, genre
+        # A:<topic>/<name>/<optional title>
+        splits = item_id.split("/")
+        title = urllib.parse.unquote(splits[2]) if len(splits) > 2 else None
+        browse_id_string = splits[0] + "/" + splits[1]
+        matches = media_library.browse_by_idstring(
+            search_type, browse_id_string, full_album_art_uri=True
+        )
+        if title:
+            result = next(
+                (item for item in matches if (title == item.title)),
+                None,
+            )
+            matches = [result]
+
+    _LOGGER.debug(
+        "get_media search_type [%s] item_id [%s] matches [%d]",
+        search_type,
+        item_id,
+        len(matches),
     )
     if len(matches) > 0:
         return matches[0]
+    return None

@@ -1,18 +1,17 @@
 """Tests for the Bond module."""
-import asyncio
+
 from unittest.mock import MagicMock, Mock
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from bond_async import DeviceType
 import pytest
 
-from homeassistant.components.bond.const import DOMAIN
+from homeassistant.components.bond import DOMAIN, BondData
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ASSUMED_STATE, CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -25,7 +24,6 @@ from .common import (
     patch_bond_version,
     patch_setup_entry,
     patch_start_bpup,
-    remove_device,
     setup_bond_entity,
     setup_platform,
 )
@@ -46,7 +44,7 @@ async def test_async_setup_no_domain_config(hass: HomeAssistant) -> None:
     [
         ClientConnectionError,
         ClientResponseError(MagicMock(), MagicMock(), status=404),
-        asyncio.TimeoutError,
+        TimeoutError,
         OSError,
     ],
 )
@@ -82,6 +80,7 @@ async def test_async_setup_raises_fails_if_auth_fails(hass: HomeAssistant) -> No
 
 async def test_async_setup_entry_sets_up_hub_and_supported_domains(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that configuring entry sets up cover domain."""
     config_entry = MockConfigEntry(
@@ -89,30 +88,30 @@ async def test_async_setup_entry_sets_up_hub_and_supported_domains(
         data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
     )
 
-    with patch_bond_bridge(), patch_bond_version(
-        return_value={
-            "bondid": "ZXXX12345",
-            "target": "test-model",
-            "fw_ver": "test-version",
-            "mcu_ver": "test-hw-version",
-        }
-    ), patch_setup_entry("cover") as mock_cover_async_setup_entry, patch_setup_entry(
-        "fan"
-    ) as mock_fan_async_setup_entry, patch_setup_entry(
-        "light"
-    ) as mock_light_async_setup_entry, patch_setup_entry(
-        "switch"
-    ) as mock_switch_async_setup_entry:
+    with (
+        patch_bond_bridge(),
+        patch_bond_version(
+            return_value={
+                "bondid": "ZXXX12345",
+                "target": "test-model",
+                "fw_ver": "test-version",
+                "mcu_ver": "test-hw-version",
+            }
+        ),
+        patch_setup_entry("cover") as mock_cover_async_setup_entry,
+        patch_setup_entry("fan") as mock_fan_async_setup_entry,
+        patch_setup_entry("light") as mock_light_async_setup_entry,
+        patch_setup_entry("switch") as mock_switch_async_setup_entry,
+    ):
         result = await setup_bond_entity(hass, config_entry, patch_device_ids=True)
         assert result is True
         await hass.async_block_till_done()
 
-    assert config_entry.entry_id in hass.data[DOMAIN]
+    assert isinstance(config_entry.runtime_data, BondData)
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == "ZXXX12345"
 
     # verify hub device is registered correctly
-    device_registry = dr.async_get(hass)
     hub = device_registry.async_get_device(identifiers={(DOMAIN, "ZXXX12345")})
     assert hub.name == "bond-name"
     assert hub.manufacturer == "Olibra"
@@ -149,20 +148,21 @@ async def test_unload_config_entry(hass: HomeAssistant) -> None:
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.entry_id not in hass.data[DOMAIN]
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_old_identifiers_are_removed(hass: HomeAssistant) -> None:
+async def test_old_identifiers_are_removed(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test we remove the old non-unique identifiers."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
     )
+    config_entry.add_to_hass(hass)
 
     old_identifers = (DOMAIN, "device_id")
     new_identifiers = (DOMAIN, "ZXXX12345", "device_id")
-    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={old_identifers},
@@ -170,30 +170,29 @@ async def test_old_identifiers_are_removed(hass: HomeAssistant) -> None:
         name="old",
     )
 
-    config_entry.add_to_hass(hass)
-
-    with patch_bond_bridge(), patch_bond_version(
-        return_value={
-            "bondid": "ZXXX12345",
-            "target": "test-model",
-            "fw_ver": "test-version",
-        }
-    ), patch_start_bpup(), patch_bond_device_ids(
-        return_value=["bond-device-id", "device_id"]
-    ), patch_bond_device(
-        return_value={
-            "name": "test1",
-            "type": DeviceType.GENERIC_DEVICE,
-        }
-    ), patch_bond_device_properties(
-        return_value={}
-    ), patch_bond_device_state(
-        return_value={}
+    with (
+        patch_bond_bridge(),
+        patch_bond_version(
+            return_value={
+                "bondid": "ZXXX12345",
+                "target": "test-model",
+                "fw_ver": "test-version",
+            }
+        ),
+        patch_start_bpup(),
+        patch_bond_device_ids(return_value=["bond-device-id", "device_id"]),
+        patch_bond_device(
+            return_value={
+                "name": "test1",
+                "type": DeviceType.GENERIC_DEVICE,
+            }
+        ),
+        patch_bond_device_properties(return_value={}),
+        patch_bond_device_state(return_value={}),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
         await hass.async_block_till_done()
 
-    assert config_entry.entry_id in hass.data[DOMAIN]
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == "ZXXX12345"
 
@@ -202,7 +201,9 @@ async def test_old_identifiers_are_removed(hass: HomeAssistant) -> None:
     assert device_registry.async_get_device(identifiers={new_identifiers}) is not None
 
 
-async def test_smart_by_bond_device_suggested_area(hass: HomeAssistant) -> None:
+async def test_smart_by_bond_device_suggested_area(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test we can setup a smart by bond device and get the suggested area."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -211,41 +212,41 @@ async def test_smart_by_bond_device_suggested_area(hass: HomeAssistant) -> None:
 
     config_entry.add_to_hass(hass)
 
-    with patch_bond_bridge(
-        side_effect=ClientResponseError(Mock(), Mock(), status=404)
-    ), patch_bond_version(
-        return_value={
-            "bondid": "KXXX12345",
-            "target": "test-model",
-            "fw_ver": "test-version",
-        }
-    ), patch_start_bpup(), patch_bond_device_ids(
-        return_value=["bond-device-id", "device_id"]
-    ), patch_bond_device(
-        return_value={
-            "name": "test1",
-            "type": DeviceType.GENERIC_DEVICE,
-            "location": "Den",
-        }
-    ), patch_bond_device_properties(
-        return_value={}
-    ), patch_bond_device_state(
-        return_value={}
+    with (
+        patch_bond_bridge(side_effect=ClientResponseError(Mock(), Mock(), status=404)),
+        patch_bond_version(
+            return_value={
+                "bondid": "KXXX12345",
+                "target": "test-model",
+                "fw_ver": "test-version",
+            }
+        ),
+        patch_start_bpup(),
+        patch_bond_device_ids(return_value=["bond-device-id", "device_id"]),
+        patch_bond_device(
+            return_value={
+                "name": "test1",
+                "type": DeviceType.GENERIC_DEVICE,
+                "location": "Den",
+            }
+        ),
+        patch_bond_device_properties(return_value={}),
+        patch_bond_device_state(return_value={}),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
         await hass.async_block_till_done()
 
-    assert config_entry.entry_id in hass.data[DOMAIN]
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == "KXXX12345"
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, "KXXX12345")})
     assert device is not None
     assert device.suggested_area == "Den"
 
 
-async def test_bridge_device_suggested_area(hass: HomeAssistant) -> None:
+async def test_bridge_device_suggested_area(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test we can setup a bridge bond device and get the suggested area."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -254,45 +255,48 @@ async def test_bridge_device_suggested_area(hass: HomeAssistant) -> None:
 
     config_entry.add_to_hass(hass)
 
-    with patch_bond_bridge(
-        return_value={
-            "name": "Office Bridge",
-            "location": "Office",
-        }
-    ), patch_bond_version(
-        return_value={
-            "bondid": "ZXXX12345",
-            "target": "test-model",
-            "fw_ver": "test-version",
-        }
-    ), patch_start_bpup(), patch_bond_device_ids(
-        return_value=["bond-device-id", "device_id"]
-    ), patch_bond_device(
-        return_value={
-            "name": "test1",
-            "type": DeviceType.GENERIC_DEVICE,
-            "location": "Bathroom",
-        }
-    ), patch_bond_device_properties(
-        return_value={}
-    ), patch_bond_device_state(
-        return_value={}
+    with (
+        patch_bond_bridge(
+            return_value={
+                "name": "Office Bridge",
+                "location": "Office",
+            }
+        ),
+        patch_bond_version(
+            return_value={
+                "bondid": "ZXXX12345",
+                "target": "test-model",
+                "fw_ver": "test-version",
+            }
+        ),
+        patch_start_bpup(),
+        patch_bond_device_ids(return_value=["bond-device-id", "device_id"]),
+        patch_bond_device(
+            return_value={
+                "name": "test1",
+                "type": DeviceType.GENERIC_DEVICE,
+                "location": "Bathroom",
+            }
+        ),
+        patch_bond_device_properties(return_value={}),
+        patch_bond_device_state(return_value={}),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
         await hass.async_block_till_done()
 
-    assert config_entry.entry_id in hass.data[DOMAIN]
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == "ZXXX12345"
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, "ZXXX12345")})
     assert device is not None
     assert device.suggested_area == "Office"
 
 
 async def test_device_remove_devices(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we can only remove a device that no longer exists."""
     assert await async_setup_component(hass, "config", {})
@@ -305,51 +309,34 @@ async def test_device_remove_devices(
         bond_device_id="test-device-id",
     )
 
-    registry: EntityRegistry = er.async_get(hass)
-    entity = registry.entities["fan.name_1"]
+    entity = entity_registry.entities["fan.name_1"]
     assert entity.unique_id == "test-hub-id_test-device-id"
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get(entity.device_id)
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), device_entry.id, config_entry.entry_id
-        )
-        is False
-    )
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "test-hub-id", "remove-device-id")},
     )
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), dead_device_entry.id, config_entry.entry_id
-        )
-        is True
-    )
+    response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
+    assert response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "wrong-hub-id", "test-device-id")},
     )
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), dead_device_entry.id, config_entry.entry_id
-        )
-        is True
-    )
+    response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
+    assert response["success"]
 
     hub_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "test-hub-id")},
     )
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), hub_device_entry.id, config_entry.entry_id
-        )
-        is False
-    )
+    response = await client.remove_device(hub_device_entry.id, config_entry.entry_id)
+    assert not response["success"]
 
 
 async def test_smart_by_bond_v3_firmware(hass: HomeAssistant) -> None:

@@ -1,4 +1,5 @@
 """Support for HDMI CEC."""
+
 from __future__ import annotations
 
 from functools import reduce
@@ -123,11 +124,12 @@ SERVICE_SELECT_DEVICE = "select_device"
 SERVICE_POWER_ON = "power_on"
 SERVICE_STANDBY = "standby"
 
-# pylint: disable=unnecessary-lambda
 DEVICE_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.All(cv.positive_int): vol.Any(
-            lambda devices: DEVICE_SCHEMA(devices), cv.string
+            # pylint: disable-next=unnecessary-lambda
+            lambda devices: DEVICE_SCHEMA(devices),
+            cv.string,
         )
     }
 )
@@ -170,7 +172,7 @@ def parse_mapping(mapping, parents=None):
         if isinstance(addr, (str,)) and isinstance(val, (str,)):
             yield (addr, PhysicalAddress(val))
         else:
-            cur = parents + [addr]
+            cur = [*parents, addr]
             if isinstance(val, dict):
                 yield from parse_mapping(val, cur)
             elif isinstance(val, str):
@@ -194,9 +196,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
 
     loop = (
         # Create own thread if more than 1 CPU
-        hass.loop
-        if multiprocessing.cpu_count() < 2
-        else None
+        hass.loop if multiprocessing.cpu_count() < 2 else None
     )
     host = base_config[DOMAIN].get(CONF_HOST)
     display_name = base_config[DOMAIN].get(CONF_DISPLAY_NAME, DEFAULT_DISPLAY_NAME)
@@ -253,7 +253,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
             hdmi_network.send_command(KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
         else:
             att = 1 if att == "" else int(att)
-            for _ in range(0, att):
+            for _ in range(att):
                 hdmi_network.send_command(KeyPressCommand(cmd, dst=ADDR_AUDIOSYSTEM))
                 hdmi_network.send_command(KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
 

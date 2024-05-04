@@ -24,7 +24,7 @@
           "fix_menu": {
             "description": "Could not connect to `{reference}`. Check host logs for errors from the mount service for more details.\n\nUse reload to try to connect again. If you need to update `{reference}`, go to [storage]({storage_url}).",
             "menu_options": {
-              "mount_execute_reload": "Reload",
+              "mount_execute_reload": "[%key:common::action::reload%]",
               "mount_execute_remove": "Remove"
             }
           }
@@ -51,8 +51,15 @@
       "title": "Multiple data disks detected",
       "fix_flow": {
         "step": {
-          "system_rename_data_disk": {
-            "description": "`{reference}` is a filesystem with the name hassos-data and is not the active data disk. This can cause Home Assistant to choose the wrong data disk at system reboot.\n\nUse the fix option to rename the filesystem to prevent this. Alternatively you can move the data disk to the drive (overwriting its contents) or remove the drive from the system."
+          "fix_menu": {
+            "description": "At `{reference}`, we detected another active data disk (containing a file system `hassos-data` from another Home Assistant installation).\n\nYou need to decide what to do with it. Otherwise Home Assistant might choose the wrong data disk at system reboot.\n\nIf you don't want to use this data disk, unplug it from your system. If you leave it plugged in, choose one of the following options:",
+            "menu_options": {
+              "system_rename_data_disk": "Mark as inactive data disk (rename file system)",
+              "system_adopt_data_disk": "Use the detected data disk instead of the current system"
+            }
+          },
+          "system_adopt_data_disk": {
+            "description": "Select submit to make `{reference}` the active data disk. The one and only.\n\nYou won't have access anymore to the current Home Assistant data (will be marked as inactive data disk). After reboot, your system will be in the state of the Home Assistant data on `{reference}`."
           }
         },
         "abort": {
@@ -180,22 +187,210 @@
     "unsupported_systemd_resolved": {
       "title": "Unsupported system - Systemd-Resolved issues",
       "description": "System is unsupported because Systemd Resolved is missing, inactive or misconfigured. Use the link to learn more and how to fix this."
+    },
+    "unsupported_virtualization_image": {
+      "title": "Unsupported system - Incorrect OS image for virtualization",
+      "description": "System is unsupported because the Home Assistant OS image in use is not intended for use in a virtualized environment. Use the link to learn more and how to fix this."
     }
   },
   "entity": {
     "binary_sensor": {
-      "state": { "name": "Running" }
+      "state": {
+        "name": "Running"
+      }
     },
     "sensor": {
-      "agent_version": { "name": "OS Agent version" },
-      "apparmor_version": { "name": "Apparmor version" },
-      "cpu_percent": { "name": "CPU percent" },
-      "disk_free": { "name": "Disk free" },
-      "disk_total": { "name": "Disk total" },
-      "disk_used": { "name": "Disk used" },
-      "memory_percent": { "name": "Memory percent" },
-      "version": { "name": "Version" },
-      "version_latest": { "name": "Newest version" }
+      "agent_version": {
+        "name": "OS Agent version"
+      },
+      "apparmor_version": {
+        "name": "Apparmor version"
+      },
+      "cpu_percent": {
+        "name": "CPU percent"
+      },
+      "disk_free": {
+        "name": "Disk free"
+      },
+      "disk_total": {
+        "name": "Disk total"
+      },
+      "disk_used": {
+        "name": "Disk used"
+      },
+      "memory_percent": {
+        "name": "Memory percent"
+      },
+      "version": {
+        "name": "Version"
+      },
+      "version_latest": {
+        "name": "Newest version"
+      }
+    }
+  },
+  "services": {
+    "addon_start": {
+      "name": "Start add-on",
+      "description": "Starts an add-on.",
+      "fields": {
+        "addon": {
+          "name": "Add-on",
+          "description": "The add-on slug."
+        }
+      }
+    },
+    "addon_restart": {
+      "name": "Restart add-on.",
+      "description": "Restarts an add-on.",
+      "fields": {
+        "addon": {
+          "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
+          "description": "[%key:component::hassio::services::addon_start::fields::addon::description%]"
+        }
+      }
+    },
+    "addon_stdin": {
+      "name": "Write data to add-on stdin.",
+      "description": "Writes data to add-on stdin.",
+      "fields": {
+        "addon": {
+          "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
+          "description": "[%key:component::hassio::services::addon_start::fields::addon::description%]"
+        }
+      }
+    },
+    "addon_stop": {
+      "name": "Stop add-on.",
+      "description": "Stops an add-on.",
+      "fields": {
+        "addon": {
+          "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
+          "description": "[%key:component::hassio::services::addon_start::fields::addon::description%]"
+        }
+      }
+    },
+    "addon_update": {
+      "name": "Update add-on.",
+      "description": "Updates an add-on. This service should be used with caution since add-on updates can contain breaking changes. It is highly recommended that you review release notes/change logs before updating an add-on.",
+      "fields": {
+        "addon": {
+          "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
+          "description": "[%key:component::hassio::services::addon_start::fields::addon::description%]"
+        }
+      }
+    },
+    "host_reboot": {
+      "name": "Reboot the host system.",
+      "description": "Reboots the host system."
+    },
+    "host_shutdown": {
+      "name": "Power off the host system.",
+      "description": "Powers off the host system."
+    },
+    "backup_full": {
+      "name": "Create a full backup.",
+      "description": "Creates a full backup.",
+      "fields": {
+        "name": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "description": "Optional (default = current date and time)."
+        },
+        "password": {
+          "name": "[%key:common::config_flow::data::password%]",
+          "description": "Password to protect the backup with."
+        },
+        "compressed": {
+          "name": "Compressed",
+          "description": "Compresses the backup files."
+        },
+        "location": {
+          "name": "[%key:common::config_flow::data::location%]",
+          "description": "Name of a backup network storage to host backups."
+        },
+        "homeassistant_exclude_database": {
+          "name": "Home Assistant exclude database",
+          "description": "Exclude the Home Assistant database file from backup"
+        }
+      }
+    },
+    "backup_partial": {
+      "name": "Create a partial backup.",
+      "description": "Creates a partial backup.",
+      "fields": {
+        "homeassistant": {
+          "name": "Home Assistant settings",
+          "description": "Includes Home Assistant settings in the backup."
+        },
+        "addons": {
+          "name": "Add-ons",
+          "description": "List of add-ons to include in the backup. Use the name slug of the add-on."
+        },
+        "folders": {
+          "name": "Folders",
+          "description": "List of directories to include in the backup."
+        },
+        "name": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "description": "[%key:component::hassio::services::backup_full::fields::name::description%]"
+        },
+        "password": {
+          "name": "[%key:common::config_flow::data::password%]",
+          "description": "[%key:component::hassio::services::backup_full::fields::password::description%]"
+        },
+        "compressed": {
+          "name": "[%key:component::hassio::services::backup_full::fields::compressed::name%]",
+          "description": "[%key:component::hassio::services::backup_full::fields::compressed::description%]"
+        },
+        "location": {
+          "name": "[%key:common::config_flow::data::location%]",
+          "description": "[%key:component::hassio::services::backup_full::fields::location::description%]"
+        },
+        "homeassistant_exclude_database": {
+          "name": "Home Assistant exclude database",
+          "description": "Exclude the Home Assistant database file from backup"
+        }
+      }
+    },
+    "restore_full": {
+      "name": "Restore from full backup.",
+      "description": "Restores from full backup.",
+      "fields": {
+        "slug": {
+          "name": "Slug",
+          "description": "Slug of backup to restore from."
+        },
+        "password": {
+          "name": "[%key:common::config_flow::data::password%]",
+          "description": "Optional password."
+        }
+      }
+    },
+    "restore_partial": {
+      "name": "Restore from partial backup.",
+      "description": "Restores from a partial backup.",
+      "fields": {
+        "slug": {
+          "name": "[%key:component::hassio::services::restore_full::fields::slug::name%]",
+          "description": "[%key:component::hassio::services::restore_full::fields::slug::description%]"
+        },
+        "homeassistant": {
+          "name": "[%key:component::hassio::services::backup_partial::fields::homeassistant::name%]",
+          "description": "Restores Home Assistant."
+        },
+        "folders": {
+          "name": "[%key:component::hassio::services::backup_partial::fields::folders::name%]",
+          "description": "[%key:component::hassio::services::backup_partial::fields::folders::description%]"
+        },
+        "addons": {
+          "name": "[%key:component::hassio::services::backup_partial::fields::addons::name%]",
+          "description": "[%key:component::hassio::services::backup_partial::fields::addons::description%]"
+        },
+        "password": {
+          "name": "[%key:common::config_flow::data::password%]",
+          "description": "[%key:component::hassio::services::restore_full::fields::password::description%]"
+        }
+      }
     }
   }
 }

@@ -1,16 +1,50 @@
 """Support for Vilfo Router sensors."""
-from homeassistant.components.sensor import SensorEntity
+
+from dataclasses import dataclass
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    ATTR_API_DATA_FIELD_BOOT_TIME,
+    ATTR_API_DATA_FIELD_LOAD,
+    ATTR_BOOT_TIME,
+    ATTR_LOAD,
     DOMAIN,
     ROUTER_DEFAULT_MODEL,
     ROUTER_DEFAULT_NAME,
     ROUTER_MANUFACTURER,
-    SENSOR_TYPES,
-    VilfoSensorEntityDescription,
+)
+
+
+@dataclass(frozen=True, kw_only=True)
+class VilfoSensorEntityDescription(SensorEntityDescription):
+    """Describes Vilfo sensor entity."""
+
+    api_key: str
+
+
+SENSOR_TYPES: tuple[VilfoSensorEntityDescription, ...] = (
+    VilfoSensorEntityDescription(
+        key=ATTR_LOAD,
+        translation_key=ATTR_LOAD,
+        native_unit_of_measurement=PERCENTAGE,
+        api_key=ATTR_API_DATA_FIELD_LOAD,
+    ),
+    VilfoSensorEntityDescription(
+        key=ATTR_BOOT_TIME,
+        translation_key=ATTR_BOOT_TIME,
+        api_key=ATTR_API_DATA_FIELD_BOOT_TIME,
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
 )
 
 
@@ -31,35 +65,25 @@ class VilfoRouterSensor(SensorEntity):
     """Define a Vilfo Router Sensor."""
 
     entity_description: VilfoSensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(self, api, description: VilfoSensorEntityDescription) -> None:
         """Initialize."""
         self.entity_description = description
         self.api = api
-        self._device_info = {
-            "identifiers": {(DOMAIN, api.host, api.mac_address)},
-            "name": ROUTER_DEFAULT_NAME,
-            "manufacturer": ROUTER_MANUFACTURER,
-            "model": ROUTER_DEFAULT_MODEL,
-            "sw_version": api.firmware_version,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, api.host, api.mac_address)},  # type: ignore[arg-type]
+            name=ROUTER_DEFAULT_NAME,
+            manufacturer=ROUTER_MANUFACTURER,
+            model=ROUTER_DEFAULT_MODEL,
+            sw_version=api.firmware_version,
+        )
         self._attr_unique_id = f"{api.unique_id}_{description.key}"
 
     @property
     def available(self) -> bool:
         """Return whether the sensor is available or not."""
         return self.api.available
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return self._device_info
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        parent_device_name = self._device_info["name"]
-        return f"{parent_device_name} {self.entity_description.name}"
 
     async def async_update(self) -> None:
         """Update the router data."""

@@ -1,8 +1,9 @@
 """Support for Actiontec MI424WR (Verizon FIOS) routers."""
+
 from __future__ import annotations
 
 import logging
-import telnetlib
+import telnetlib  # pylint: disable=deprecated-module
 from typing import Final
 
 import voluptuous as vol

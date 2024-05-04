@@ -1,4 +1,5 @@
 """The tests for SleepIQ binary sensor platform."""
+
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,

@@ -1,4 +1,5 @@
 """Support for interacting with Snapcast clients."""
+
 from __future__ import annotations
 
 from snapcast.control.server import Snapserver
@@ -118,7 +119,7 @@ class SnapcastGroupDevice(MediaPlayerEntity):
         self._attr_available = True
         self._group = group
         self._entry_id = entry_id
-        self._uid = f"{GROUP_PREFIX}{uid_part}_{self._group.identifier}"
+        self._attr_unique_id = f"{GROUP_PREFIX}{uid_part}_{self._group.identifier}"
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to group events."""
@@ -141,11 +142,6 @@ class SnapcastGroupDevice(MediaPlayerEntity):
         if self.is_volume_muted:
             return MediaPlayerState.IDLE
         return STREAM_STATUS.get(self._group.stream_status)
-
-    @property
-    def unique_id(self):
-        """Return the ID of snapcast group."""
-        return self._uid
 
     @property
     def identifier(self):
@@ -218,7 +214,8 @@ class SnapcastClientDevice(MediaPlayerEntity):
         """Initialize the Snapcast client device."""
         self._attr_available = True
         self._client = client
-        self._uid = f"{CLIENT_PREFIX}{uid_part}_{self._client.identifier}"
+        # Note: Host part is needed, when using multiple snapservers
+        self._attr_unique_id = f"{CLIENT_PREFIX}{uid_part}_{self._client.identifier}"
         self._entry_id = entry_id
 
     async def async_added_to_hass(self) -> None:
@@ -235,14 +232,6 @@ class SnapcastClientDevice(MediaPlayerEntity):
         """Set availability of group."""
         self._attr_available = available
         self.schedule_update_ha_state()
-
-    @property
-    def unique_id(self):
-        """Return the ID of this snapcast client.
-
-        Note: Host part is needed, when using multiple snapservers
-        """
-        return self._uid
 
     @property
     def identifier(self):

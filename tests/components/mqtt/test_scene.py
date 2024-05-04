@@ -1,11 +1,13 @@
 """The tests for the MQTT scene platform."""
+
 import copy
+from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import mqtt, scene
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_UNKNOWN, Platform
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 
 from .test_common import (
@@ -16,10 +18,23 @@ from .test_common import (
     help_test_discovery_broken,
     help_test_discovery_removal,
     help_test_discovery_update,
+    help_test_discovery_update_attr,
     help_test_discovery_update_unchanged,
+    help_test_entity_debug_info_message,
+    help_test_entity_device_info_remove,
+    help_test_entity_device_info_update,
+    help_test_entity_device_info_with_connection,
+    help_test_entity_device_info_with_identifier,
+    help_test_entity_id_update_discovery_update,
+    help_test_publishing_with_custom_encoding,
     help_test_reloadable,
+    help_test_setting_attribute_via_mqtt_json_message,
+    help_test_setting_attribute_with_template,
+    help_test_setting_blocked_attribute_via_mqtt_json_message,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
+    help_test_update_with_json_attrs_bad_json,
+    help_test_update_with_json_attrs_not_dict,
 )
 
 from tests.common import mock_restore_cache
@@ -34,13 +49,6 @@ DEFAULT_CONFIG = {
         }
     }
 }
-
-
-@pytest.fixture(autouse=True)
-def scene_platform_only():
-    """Only setup the scene platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SCENE]):
-        yield
 
 
 @pytest.mark.parametrize(
@@ -180,7 +188,7 @@ async def test_discovery_removal_scene(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of discovered scene."""
-    data = '{ "name": "test",' '  "command_topic": "test_topic" }'
+    data = '{ "name": "test",  "command_topic": "test_topic" }'
     await help_test_discovery_removal(hass, mqtt_mock_entry, caplog, scene.DOMAIN, data)
 
 
@@ -213,7 +221,7 @@ async def test_discovery_update_unchanged_scene(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered scene."""
-    data1 = '{ "name": "Beer",' '  "command_topic": "test_topic" }'
+    data1 = '{ "name": "Beer",  "command_topic": "test_topic" }'
     with patch(
         "homeassistant.components.mqtt.scene.MqttScene.discovery_update"
     ) as discovery_update:
@@ -235,9 +243,175 @@ async def test_discovery_broken(
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
-    data2 = '{ "name": "Milk",' '  "command_topic": "test_topic" }'
+    data2 = '{ "name": "Milk",  "command_topic": "test_topic" }'
     await help_test_discovery_broken(
         hass, mqtt_mock_entry, caplog, scene.DOMAIN, data1, data2
+    )
+
+
+async def test_setting_attribute_via_mqtt_json_message(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_attribute_via_mqtt_json_message(
+        hass, mqtt_mock_entry, scene.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_setting_blocked_attribute_via_mqtt_json_message(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_blocked_attribute_via_mqtt_json_message(
+        hass, mqtt_mock_entry, scene.DOMAIN, DEFAULT_CONFIG, None
+    )
+
+
+async def test_setting_attribute_with_template(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_attribute_with_template(
+        hass, mqtt_mock_entry, scene.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_update_with_json_attrs_not_dict(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes get extracted from a JSON result."""
+    await help_test_update_with_json_attrs_not_dict(
+        hass,
+        mqtt_mock_entry,
+        caplog,
+        scene.DOMAIN,
+        DEFAULT_CONFIG,
+    )
+
+
+async def test_update_with_json_attrs_bad_json(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes get extracted from a JSON result."""
+    await help_test_update_with_json_attrs_bad_json(
+        hass,
+        mqtt_mock_entry,
+        caplog,
+        scene.DOMAIN,
+        DEFAULT_CONFIG,
+    )
+
+
+async def test_discovery_update_attr(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test update of discovered MQTTAttributes."""
+    await help_test_discovery_update_attr(
+        hass,
+        mqtt_mock_entry,
+        caplog,
+        scene.DOMAIN,
+        DEFAULT_CONFIG,
+    )
+
+
+async def test_entity_device_info_with_connection(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test MQTT button device registry integration."""
+    await help_test_entity_device_info_with_connection(
+        hass, mqtt_mock_entry, scene.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_entity_device_info_with_identifier(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test MQTT button device registry integration."""
+    await help_test_entity_device_info_with_identifier(
+        hass, mqtt_mock_entry, scene.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_entity_device_info_update(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test device registry update."""
+    await help_test_entity_device_info_update(
+        hass, mqtt_mock_entry, scene.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_entity_device_info_remove(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test device registry remove."""
+    await help_test_entity_device_info_remove(
+        hass, mqtt_mock_entry, scene.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_entity_id_update_discovery_update(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test MQTT discovery update when entity_id is updated."""
+    await help_test_entity_id_update_discovery_update(
+        hass, mqtt_mock_entry, scene.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_entity_debug_info_message(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test MQTT debug info."""
+    await help_test_entity_debug_info_message(
+        hass,
+        mqtt_mock_entry,
+        scene.DOMAIN,
+        DEFAULT_CONFIG,
+        scene.SERVICE_TURN_ON,
+        command_payload="test-payload-on",
+        state_topic=None,
+    )
+
+
+@pytest.mark.parametrize(
+    ("service", "topic", "parameters", "payload", "template"),
+    [
+        (scene.SERVICE_TURN_ON, "command_topic", None, "test-payload-on", None),
+    ],
+)
+async def test_publishing_with_custom_encoding(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    service: str,
+    topic: str,
+    parameters: dict[str, Any],
+    payload: str,
+    template: str | None,
+) -> None:
+    """Test publishing MQTT payload with different encoding."""
+    domain = scene.DOMAIN
+    config = DEFAULT_CONFIG
+
+    await help_test_publishing_with_custom_encoding(
+        hass,
+        mqtt_mock_entry,
+        caplog,
+        domain,
+        config,
+        service,
+        topic,
+        parameters,
+        payload,
+        template,
     )
 
 
@@ -251,7 +425,11 @@ async def test_reloadable(
     await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:

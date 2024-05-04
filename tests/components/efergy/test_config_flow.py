@@ -1,4 +1,5 @@
 """Test Efergy config flow."""
+
 from unittest.mock import patch
 
 from pyefergy import exceptions
@@ -23,14 +24,14 @@ async def test_flow_user(hass: HomeAssistant) -> None:
             DOMAIN,
             context={CONF_SOURCE: SOURCE_USER},
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=CONF_DATA,
         )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == DEFAULT_NAME
         assert result["data"] == CONF_DATA
         assert result["result"].unique_id == HID
@@ -43,7 +44,7 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=CONF_DATA
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"]["base"] == "cannot_connect"
 
@@ -55,7 +56,7 @@ async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=CONF_DATA
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"]["base"] == "invalid_auth"
 
@@ -67,7 +68,7 @@ async def test_flow_user_unknown(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=CONF_DATA
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"]["base"] == "unknown"
 
@@ -86,7 +87,7 @@ async def test_flow_reauth(hass: HomeAssistant) -> None:
             data=CONF_DATA,
         )
 
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
 
         new_conf = {CONF_API_KEY: "1234567890"}
@@ -94,6 +95,6 @@ async def test_flow_reauth(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input=new_conf,
         )
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
         assert entry.data == new_conf

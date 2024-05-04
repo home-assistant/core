@@ -18,7 +18,7 @@
       },
       "reauth": {
         "data": {
-          "personal_access_token": "Personal Access Token (PAT)"
+          "personal_access_token": "[%key:component::azure_devops::config::step::user::data::personal_access_token%]"
         },
         "description": "Authentication failed for {project_url}. Please enter your current credentials.",
         "title": "Reauthentication"
@@ -27,6 +27,13 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "latest_build": {
+        "name": "{definition_name} latest build"
+      }
     }
   }
 }

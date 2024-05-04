@@ -1,4 +1,5 @@
 """Sensor for the zamg integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -21,8 +22,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -38,16 +38,11 @@ from .const import (
 from .coordinator import ZamgDataUpdateCoordinator
 
 
-@dataclass
-class ZamgRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class ZamgSensorEntityDescription(SensorEntityDescription):
+    """Describes Zamg sensor entity."""
 
     para_name: str
-
-
-@dataclass
-class ZamgSensorEntityDescription(SensorEntityDescription, ZamgRequiredKeysMixin):
-    """Describes Zamg sensor entity."""
 
 
 SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
@@ -203,7 +198,7 @@ class ZamgSensor(CoordinatorEntity, SensorEntity):
             identifiers={(DOMAIN, station_id)},
             manufacturer=ATTRIBUTION,
             configuration_url=MANUFACTURER_URL,
-            name=coordinator.name,
+            name=name,
         )
         coordinator.api_fields = API_FIELDS
 

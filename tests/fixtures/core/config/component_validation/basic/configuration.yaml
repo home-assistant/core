@@ -1,0 +1,63 @@
+iot_domain:
+  # This is correct and should not generate errors
+  - platform: non_adr_0007
+    option1: abc
+  # This violates the iot_domain platform schema (platform missing)
+  - paltfrom: non_adr_0007
+  # This violates the non_adr_0007.iot_domain platform schema (option1 wrong type)
+  - platform: non_adr_0007
+    option1: 123
+  # This violates the non_adr_0007.iot_domain platform schema (no_such_option does not exist)
+  - platform: non_adr_0007
+    no_such_option: abc
+    option1: abc
+  # This violates the non_adr_0007.iot_domain platform schema:
+  # - no_such_option does not exist
+  # - option1 is missing
+  # - option2 is wrong type
+  - platform: non_adr_0007
+    no_such_option: abc
+    option2: 123
+
+# This is correct and should not generate errors
+adr_0007_1:
+  host: blah.com
+
+# Host is missing
+adr_0007_2:
+
+# Port is wrong type
+adr_0007_3:
+  host: blah.com
+  port: foo
+
+# no_such_option does not exist
+adr_0007_4:
+  host: blah.com
+  no_such_option: foo
+
+# Multiple errors:
+# - host is missing
+# - no_such_option does not exist
+# - port is wrong type
+adr_0007_5:
+  no_such_option: foo
+  port: foo
+
+# This is correct and should not generate errors
+custom_validator_ok_1:
+  host: blah.com
+
+# Host is missing
+custom_validator_ok_2:
+
+# This always raises HomeAssistantError
+custom_validator_bad_1:
+
+# This always raises ValueError
+custom_validator_bad_2:
+
+# Invalid domains
+"iot_domain ":
+"":
+5:

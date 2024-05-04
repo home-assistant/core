@@ -1,4 +1,5 @@
 """Support for pico and keypad buttons."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,7 +7,7 @@ from typing import Any
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LutronCasetaDevice

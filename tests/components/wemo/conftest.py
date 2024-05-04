@@ -1,5 +1,5 @@
 """Fixtures for pywemo."""
-import asyncio
+
 import contextlib
 from unittest.mock import create_autospec, patch
 
@@ -33,11 +33,9 @@ async def async_pywemo_registry_fixture():
     registry = create_autospec(pywemo.SubscriptionRegistry, instance=True)
 
     registry.callbacks = {}
-    registry.semaphore = asyncio.Semaphore(value=0)
 
     def on_func(device, type_filter, callback):
         registry.callbacks[device.name] = callback
-        registry.semaphore.release()
 
     registry.on.side_effect = on_func
     registry.is_subscribed.return_value = False
@@ -84,8 +82,9 @@ def create_pywemo_device(pywemo_registry, pywemo_model):
         device.switch_state = 0
 
     url = f"http://{MOCK_HOST}:{MOCK_PORT}/setup.xml"
-    with patch("pywemo.setup_url_for_address", return_value=url), patch(
-        "pywemo.discovery.device_from_description", return_value=device
+    with (
+        patch("pywemo.setup_url_for_address", return_value=url),
+        patch("pywemo.discovery.device_from_description", return_value=device),
     ):
         yield device
 

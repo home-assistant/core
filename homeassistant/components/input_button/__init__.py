@@ -1,10 +1,10 @@
 """Support to keep track of user controlled buttons which can be used in automations."""
+
 from __future__ import annotations
 
 import logging
-from typing import cast
+from typing import Self, cast
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.components.button import SERVICE_PRESS, ButtonEntity
@@ -19,9 +19,6 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.integration_platform import (
-    async_process_integration_platform_for_component,
-)
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
@@ -80,10 +77,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input button."""
     component = EntityComponent[InputButton](_LOGGER, DOMAIN, hass)
 
-    # Process integration platforms right away since
-    # we will create entities before firing EVENT_COMPONENT_LOADED
-    await async_process_integration_platform_for_component(hass, DOMAIN)
-
     id_manager = collection.IDManager()
 
     yaml_collection = collection.YamlCollection(
@@ -137,6 +130,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 class InputButton(collection.CollectionEntity, ButtonEntity, RestoreEntity):
     """Representation of a button."""
+
+    _unrecorded_attributes = frozenset({ATTR_EDITABLE})
 
     _attr_should_poll = False
     editable: bool

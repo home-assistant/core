@@ -1,4 +1,5 @@
 """Light/LED support for the Skybell HD Doorbell."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -35,6 +36,7 @@ class SkybellLight(SkybellEntity, LightEntity):
 
     _attr_color_mode = ColorMode.RGB
     _attr_supported_color_modes = {ColorMode.RGB}
+    _attr_name = None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""

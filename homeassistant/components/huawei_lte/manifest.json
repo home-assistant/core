@@ -7,7 +7,7 @@
   "iot_class": "local_polling",
   "loggers": ["huawei_lte_api.Session"],
   "requirements": [
-    "huawei-lte-api==1.6.11",
+    "huawei-lte-api==1.7.3",
     "stringcase==1.2.0",
     "url-normalize==1.4.3"
   ],

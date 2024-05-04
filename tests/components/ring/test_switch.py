@@ -1,9 +1,17 @@
 """The tests for the Ring switch platform."""
-import requests_mock
 
-from homeassistant.const import Platform
+from unittest.mock import PropertyMock, patch
+
+import pytest
+import requests_mock
+import ring_doorbell
+
+from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .common import setup_platform
 
@@ -32,7 +40,7 @@ async def test_siren_off_reports_correctly(
 
     state = hass.states.get("switch.front_siren")
     assert state.state == "off"
-    assert state.attributes.get("friendly_name") == "Front siren"
+    assert state.attributes.get("friendly_name") == "Front Siren"
 
 
 async def test_siren_on_reports_correctly(
@@ -43,8 +51,7 @@ async def test_siren_on_reports_correctly(
 
     state = hass.states.get("switch.internal_siren")
     assert state.state == "on"
-    assert state.attributes.get("friendly_name") == "Internal siren"
-    assert state.attributes.get("icon") == "mdi:alarm-bell"
+    assert state.attributes.get("friendly_name") == "Internal Siren"
 
 
 async def test_siren_can_be_turned_on(
@@ -84,9 +91,56 @@ async def test_updates_work(
         text=load_fixture("devices_updated.json", "ring"),
     )
 
-    await hass.services.async_call("ring", "update", {}, blocking=True)
+    await async_setup_component(hass, "homeassistant", {})
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: ["switch.front_siren"]},
+        blocking=True,
+    )
 
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.front_siren")
     assert state.state == "on"
+
+
+@pytest.mark.parametrize(
+    ("exception_type", "reauth_expected"),
+    [
+        (ring_doorbell.AuthenticationError, True),
+        (ring_doorbell.RingTimeout, False),
+        (ring_doorbell.RingError, False),
+    ],
+    ids=["Authentication", "Timeout", "Other"],
+)
+async def test_switch_errors_when_turned_on(
+    hass: HomeAssistant,
+    requests_mock: requests_mock.Mocker,
+    exception_type,
+    reauth_expected,
+) -> None:
+    """Tests the switch turns on correctly."""
+    await setup_platform(hass, Platform.SWITCH)
+    config_entry = hass.config_entries.async_entries("ring")[0]
+
+    assert not any(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+    with patch.object(
+        ring_doorbell.RingStickUpCam, "siren", new_callable=PropertyMock
+    ) as mock_switch:
+        mock_switch.side_effect = exception_type
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                "switch", "turn_on", {"entity_id": "switch.front_siren"}, blocking=True
+            )
+        await hass.async_block_till_done()
+    assert mock_switch.call_count == 1
+    assert (
+        any(
+            flow
+            for flow in config_entry.async_get_active_flows(hass, {SOURCE_REAUTH})
+            if flow["handler"] == "ring"
+        )
+        == reauth_expected
+    )

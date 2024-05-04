@@ -1,4 +1,5 @@
 """Tests for the P1 Monitor integration."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from p1monitor import P1MonitorConnectionError

@@ -14,6 +14,9 @@
           "port": "[%key:common::config_flow::data::port%]",
           "password": "[%key:common::config_flow::data::password%]",
           "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your VLC media player."
         }
       },
       "hassio_confirm": {

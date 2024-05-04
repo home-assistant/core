@@ -2,9 +2,27 @@
   "config": {
     "step": {
       "user": {
+        "title": "Configure your Whirlpool account",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "region": "Region",
+          "brand": "Brand"
+        },
+        "data_description": {
+          "brand": "Please choose the brand of the mobile app you use, or the brand of the appliances in your account"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Correct your Whirlpool account credentials",
+        "description": "For 'brand', please choose the brand of the mobile app you use, or the brand of the appliances in your account",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "region": "Region",
+          "brand": "Brand"
+        },
+        "data_description": {
+          "brand": "Please choose the brand of the mobile app you use, or the brand of the appliances in your account"
         }
       }
     },
@@ -21,13 +39,14 @@
   "entity": {
     "sensor": {
       "whirlpool_machine": {
+        "name": "State",
         "state": {
           "standby": "[%key:common::state::standby%]",
           "setting": "Setting",
           "delay_countdown": "Delay Countdown",
           "delay_paused": "Delay Paused",
           "smart_delay": "Smart Delay",
-          "smart_grid_pause": "Smart Delay",
+          "smart_grid_pause": "[%key:component::whirlpool::entity::sensor::whirlpool_machine::state::smart_delay%]",
           "pause": "[%key:common::state::paused%]",
           "running_maincycle": "Running Maincycle",
           "running_postcycle": "Running Postcycle",
@@ -51,6 +70,7 @@
         }
       },
       "whirlpool_tank": {
+        "name": "Detergent level",
         "state": {
           "unknown": "Unknown",
           "empty": "Empty",
@@ -59,6 +79,9 @@
           "100": "100%",
           "active": "[%key:common::state::active%]"
         }
+      },
+      "end_time": {
+        "name": "End time"
       }
     }
   }
