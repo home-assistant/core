@@ -35,8 +35,8 @@ from .entity import SHCEntity
 class SHCSensorEntityDescription(SensorEntityDescription):
     """Describes a SHC sensor."""
 
-    value_fn: Callable[[SHCDevice], Any | None]
-    attributes_fn: Callable[[SHCDevice], dict[str, Any]] | None
+    value_fn: Callable[[SHCDevice], StateType]
+    attributes_fn: Callable[[SHCDevice], dict[str, Any]] | None = None
 
 
 TEMPERATURE_SENSOR = "temperature"
@@ -58,21 +58,18 @@ SENSOR_DESCRIPTIONS: dict[str, SHCSensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda device: device.temperature,
-        attributes_fn=None,
     ),
     HUMIDITY_SENSOR: SHCSensorEntityDescription(
         key=HUMIDITY_SENSOR,
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda device: device.humidity,
-        attributes_fn=None,
     ),
     VALVE_TAPPET_SENSOR: SHCSensorEntityDescription(
         key=VALVE_TAPPET_SENSOR,
         translation_key=VALVE_TAPPET_SENSOR,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:gauge",
         value_fn=lambda device: device.position,
         attributes_fn=lambda device: {
             "valve_tappet_state": device.valvestate.name,
@@ -82,9 +79,7 @@ SENSOR_DESCRIPTIONS: dict[str, SHCSensorEntityDescription] = {
         key=PURITY_SENSOR,
         translation_key=PURITY_SENSOR,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        icon="mdi:molecule-co2",
         value_fn=lambda device: device.purity,
-        attributes_fn=None,
     ),
     AIR_QUALITY_SENSOR: SHCSensorEntityDescription(
         key=AIR_QUALITY_SENSOR,
@@ -98,26 +93,22 @@ SENSOR_DESCRIPTIONS: dict[str, SHCSensorEntityDescription] = {
         key=TEMPERATURE_RATING_SENSOR,
         translation_key=TEMPERATURE_RATING_SENSOR,
         value_fn=lambda device: device.temperature_rating.name,
-        attributes_fn=None,
     ),
     HUMIDITY_RATING_SENSOR: SHCSensorEntityDescription(
         key=HUMIDITY_RATING_SENSOR,
         translation_key=HUMIDITY_RATING_SENSOR,
         value_fn=lambda device: device.humidty_rating.name,
-        attributes_fn=None,
     ),
     PURITY_RATING_SENSOR: SHCSensorEntityDescription(
         key=PURITY_RATING_SENSOR,
         translation_key=PURITY_RATING_SENSOR,
         value_fn=lambda device: device.purity_rating.name,
-        attributes_fn=None,
     ),
     POWER_SENSOR: SHCSensorEntityDescription(
         key=POWER_SENSOR,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         value_fn=lambda device: device.powerconsumption,
-        attributes_fn=None,
     ),
     ENERGY_SENSOR: SHCSensorEntityDescription(
         key=ENERGY_SENSOR,
@@ -125,14 +116,11 @@ SENSOR_DESCRIPTIONS: dict[str, SHCSensorEntityDescription] = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value_fn=lambda device: device.energyconsumption / 1000.0,
-        attributes_fn=None,
     ),
     COMMUNICATION_QUALITY_SENSOR: SHCSensorEntityDescription(
         key=COMMUNICATION_QUALITY_SENSOR,
         translation_key=COMMUNICATION_QUALITY_SENSOR,
-        icon="mdi:wifi",
         value_fn=lambda device: device.communicationquality.name,
-        attributes_fn=None,
     ),
 }
 
@@ -143,32 +131,38 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SHC sensor platform."""
-    entities: list[SensorEntity] = []
     session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
 
-    for device in session.device_helper.thermostats:
-        for sensor_type in (TEMPERATURE_SENSOR, VALVE_TAPPET_SENSOR):
-            entities.append(
-                SHCSensor(
-                    device,
-                    SENSOR_DESCRIPTIONS[sensor_type],
-                    session.information.unique_id,
-                    config_entry.entry_id,
-                )
-            )
+    entities: list[SensorEntity] = [
+        SHCSensor(
+            device,
+            SENSOR_DESCRIPTIONS[sensor_type],
+            session.information.unique_id,
+            config_entry.entry_id,
+        )
+        for device in session.device_helper.thermostats
+        for sensor_type in (TEMPERATURE_SENSOR, VALVE_TAPPET_SENSOR)
+    ]
 
-    for device in session.device_helper.wallthermostats:
-        for sensor_type in (TEMPERATURE_SENSOR, HUMIDITY_SENSOR):
-            entities.append(
-                SHCSensor(
-                    device,
-                    SENSOR_DESCRIPTIONS[sensor_type],
-                    session.information.unique_id,
-                    config_entry.entry_id,
-                )
-            )
+    entities.extend(
+        SHCSensor(
+            device,
+            SENSOR_DESCRIPTIONS[sensor_type],
+            session.information.unique_id,
+            config_entry.entry_id,
+        )
+        for device in session.device_helper.wallthermostats
+        for sensor_type in (TEMPERATURE_SENSOR, HUMIDITY_SENSOR)
+    )
 
-    for device in session.device_helper.twinguards:
+    entities.extend(
+        SHCSensor(
+            device,
+            SENSOR_DESCRIPTIONS[sensor_type],
+            session.information.unique_id,
+            config_entry.entry_id,
+        )
+        for device in session.device_helper.twinguards
         for sensor_type in (
             TEMPERATURE_SENSOR,
             HUMIDITY_SENSOR,
@@ -177,39 +171,32 @@ async def async_setup_entry(
             TEMPERATURE_RATING_SENSOR,
             HUMIDITY_RATING_SENSOR,
             PURITY_RATING_SENSOR,
-        ):
-            entities.append(
-                SHCSensor(
-                    device,
-                    SENSOR_DESCRIPTIONS[sensor_type],
-                    session.information.unique_id,
-                    config_entry.entry_id,
-                )
-            )
+        )
+    )
 
-    for device in (
-        session.device_helper.smart_plugs + session.device_helper.light_switches_bsm
-    ):
-        for sensor_type in (POWER_SENSOR, ENERGY_SENSOR):
-            entities.append(
-                SHCSensor(
-                    device,
-                    SENSOR_DESCRIPTIONS[sensor_type],
-                    session.information.unique_id,
-                    config_entry.entry_id,
-                )
-            )
+    entities.extend(
+        SHCSensor(
+            device,
+            SENSOR_DESCRIPTIONS[sensor_type],
+            session.information.unique_id,
+            config_entry.entry_id,
+        )
+        for device in (
+            session.device_helper.smart_plugs + session.device_helper.light_switches_bsm
+        )
+        for sensor_type in (POWER_SENSOR, ENERGY_SENSOR)
+    )
 
-    for device in session.device_helper.smart_plugs_compact:
-        for sensor_type in (POWER_SENSOR, ENERGY_SENSOR, COMMUNICATION_QUALITY_SENSOR):
-            entities.append(
-                SHCSensor(
-                    device,
-                    SENSOR_DESCRIPTIONS[sensor_type],
-                    session.information.unique_id,
-                    config_entry.entry_id,
-                )
-            )
+    entities.extend(
+        SHCSensor(
+            device,
+            SENSOR_DESCRIPTIONS[sensor_type],
+            session.information.unique_id,
+            config_entry.entry_id,
+        )
+        for device in session.device_helper.smart_plugs_compact
+        for sensor_type in (POWER_SENSOR, ENERGY_SENSOR, COMMUNICATION_QUALITY_SENSOR)
+    )
 
     async_add_entities(entities)
 

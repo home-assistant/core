@@ -193,8 +193,8 @@ class SHCSwitch(SHCEntity, SwitchEntity):
 class SHCRoutingSwitch(SHCEntity, SwitchEntity):
     """Representation of a SHC routing switch."""
 
-    _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "routing"
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
         """Initialize an SHC communication quality reporting sensor."""
