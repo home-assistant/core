@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -52,10 +53,15 @@ def async_get_client_by_device_entry(
 
     Raises ValueError if client is not found.
     """
-    domain_data: dict[str, SamsungTVBridge] = hass.data[DOMAIN]
     for config_entry_id in device.config_entries:
-        if bridge := domain_data.get(config_entry_id):
-            return bridge
+        entry = hass.config_entries.async_get_entry(config_entry_id)
+        if (
+            entry
+            and entry.state == ConfigEntryState.LOADED
+            and hasattr(entry, "runtime_data")
+            and isinstance(entry.runtime_data, SamsungTVBridge)
+        ):
+            return entry.runtime_data
 
     raise ValueError(
         f"Device {device.id} is not from an existing {DOMAIN} config entry"
