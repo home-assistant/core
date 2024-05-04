@@ -1,4 +1,4 @@
-"""Test KNX scene."""
+"""Test KNX interface device."""
 
 from unittest.mock import patch
 
@@ -8,12 +8,14 @@ from xknx.telegram import IndividualAddress
 from homeassistant.components.knx.sensor import SCAN_INTERVAL
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import KNXTestKit
 
 from tests.common import async_capture_events, async_fire_time_changed
+from tests.typing import WebSocketGenerator
 
 
 async def test_diagnostic_entities(
@@ -111,3 +113,28 @@ async def test_removed_entity(
         )
         await hass.async_block_till_done()
         unregister_mock.assert_called_once()
+
+
+async def test_remove_interface_device(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test device removal."""
+    assert await async_setup_component(hass, "config", {})
+    await knx.setup_integration({})
+    client = await hass_ws_client(hass)
+    knx_devices = device_registry.devices.get_devices_for_config_entry_id(
+        knx.mock_config_entry.entry_id
+    )
+    assert len(knx_devices) == 1
+    assert knx_devices[0].name == "KNX Interface"
+    device_id = knx_devices[0].id
+    # interface device can't be removed
+    res = await client.remove_device(device_id, knx.mock_config_entry.entry_id)
+    assert not res["success"]
+    assert (
+        res["error"]["message"]
+        == "Failed to remove device entry, rejected by integration"
+    )
