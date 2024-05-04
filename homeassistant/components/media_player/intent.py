@@ -43,7 +43,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             SERVICE_VOLUME_SET,
             extra_slots={
                 ATTR_MEDIA_VOLUME_LEVEL: vol.All(
-                    vol.Range(min=0, max=100), lambda val: val / 100
+                    vol.Coerce(int), vol.Range(min=0, max=100), lambda val: val / 100
                 )
             },
         ),
