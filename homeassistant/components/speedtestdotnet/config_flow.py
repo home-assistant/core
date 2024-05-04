@@ -14,6 +14,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import callback
 
+from . import SpeedTestConfigEntry
 from .const import (
     CONF_SERVER_ID,
     CONF_SERVER_NAME,
@@ -52,7 +53,7 @@ class SpeedTestFlowHandler(ConfigFlow, domain=DOMAIN):
 class SpeedTestOptionsFlowHandler(OptionsFlow):
     """Handle SpeedTest options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: SpeedTestConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
         self._servers: dict = {}
@@ -73,7 +74,7 @@ class SpeedTestOptionsFlowHandler(OptionsFlow):
 
             return self.async_create_entry(title="", data=user_input)
 
-        self._servers = self.hass.data[DOMAIN].servers
+        self._servers = self.config_entry.runtime_data.servers
 
         options = {
             vol.Optional(
