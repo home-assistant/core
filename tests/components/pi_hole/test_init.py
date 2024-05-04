@@ -184,13 +184,13 @@ async def test_unload(hass: HomeAssistant) -> None:
     with _patch_init_hole(mocked_hole):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert isinstance(entry.runtime_data, PiHoleData)
     assert await hass.config_entries.async_unload(entry.entry_id)
 
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_remove_obsolete(hass: HomeAssistant) -> None:

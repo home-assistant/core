@@ -143,7 +143,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-class PiHoleEntity(CoordinatorEntity["DataUpdateCoordinator[None]"]):
+class PiHoleEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
     """Representation of a Pi-hole entity."""
 
     def __init__(
