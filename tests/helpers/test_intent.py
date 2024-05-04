@@ -214,7 +214,7 @@ async def test_match_device_area(
 
 def test_async_validate_slots() -> None:
     """Test async_validate_slots of IntentHandler."""
-    handler1 = MockIntentHandler({vol.Required("name"): cv.string})
+    handler1 = MockIntentHandler(vol.Schema({vol.Required("name"): cv.string}))
 
     with pytest.raises(vol.error.MultipleInvalid):
         handler1.async_validate_slots({})
@@ -275,7 +275,7 @@ def test_async_register_dynamic_service_intent_handler(hass: HomeAssistant) -> N
     handler = intent.DynamicServiceIntentHandler(
         "test_intent", extra_slots={"extra_slot": str}
     )
-    handler.slot_schema = {"test_slot": str}
+    handler.slot_schema = vol.Schema({"test_slot": str})
 
     intent.async_register(hass, handler)
 

@@ -211,7 +211,7 @@ async def test_async_function_tool(hass: HomeAssistant) -> None:
         platform: str,
         context: Context,
         required_arg: int,
-        optional_arg: float | None = None,
+        optional_arg: None | float = None,
     ):
         """Test tool description."""
         call["hass"] = hass
@@ -354,14 +354,7 @@ async def test_intent_tool_with_area_and_floor(
             vol.Optional("floor"): cv.string,
         }
     )
-    slot_schema = vol.Schema(
-        {
-            key: vol.Schema({"value": validator}, extra=vol.ALLOW_EXTRA)
-            for key, validator in schema.schema.items()
-        },
-        extra=vol.ALLOW_EXTRA,
-    )
-    tool = llm.IntentTool("test_intent", slot_schema)
+    tool = llm.IntentTool("test_intent", schema)
     assert tool.description == "Execute Home Assistant test_intent intent"
     assert tool.parameters == schema
     assert tool.as_dict() == {
