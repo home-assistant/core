@@ -46,9 +46,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> 
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    if unload_ok:
-        # We only want to remove the SNMP engine when unloading the last config entry
-        if len(hass.config_entries.async_entries(DOMAIN)) == 1:
-            hass.data[DOMAIN].pop(SNMP)
+    # We only want to remove the SNMP engine when unloading the last config entry
+    if (
+        unload_ok
+        and len(
+            hass.config_entries.async_entries(
+                DOMAIN, include_ignore=False, include_disabled=False
+            )
+        )
+        == 1
+    ):
+        hass.data[DOMAIN].pop(SNMP)
 
     return unload_ok
