@@ -22,7 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import bind_hass
 
 from . import (
     area_registry,
@@ -51,7 +50,6 @@ SPEECH_TYPE_SSML = "ssml"
 
 
 @callback
-@bind_hass
 def async_register(hass: HomeAssistant, handler: IntentHandler) -> None:
     """Register an intent with Home Assistant."""
     if (intents := hass.data.get(DATA_KEY)) is None:
@@ -68,7 +66,6 @@ def async_register(hass: HomeAssistant, handler: IntentHandler) -> None:
 
 
 @callback
-@bind_hass
 def async_remove(hass: HomeAssistant, intent_type: str) -> None:
     """Remove an intent from Home Assistant."""
     if (intents := hass.data.get(DATA_KEY)) is None:
@@ -77,7 +74,6 @@ def async_remove(hass: HomeAssistant, intent_type: str) -> None:
     intents.pop(intent_type, None)
 
 
-@bind_hass
 async def async_handle(
     hass: HomeAssistant,
     platform: str,
@@ -276,7 +272,6 @@ def _filter_by_areas(
 
 
 @callback
-@bind_hass
 def async_match_states(
     hass: HomeAssistant,
     name: str | None = None,
@@ -407,6 +402,13 @@ class IntentHandler:
         """Test if an intent can be handled."""
         return self.platforms is None or intent_obj.platform in self.platforms
 
+    @cached_property
+    def effective_slot_schema(self) -> vol.Schema:
+        """Return the schema including any extra slots."""
+        if self.slot_schema is None:
+            return vol.Schema({})
+        return self.slot_schema
+
     @callback
     def async_validate_slots(self, slots: _SlotsType) -> _SlotsType:
         """Validate slot information."""
@@ -418,11 +420,10 @@ class IntentHandler:
     @cached_property
     def _slot_schema(self) -> vol.Schema:
         """Create validation schema for slots."""
-        assert self.slot_schema is not None
         return vol.Schema(
             {
                 key: SLOT_SCHEMA.extend({"value": validator})
-                for key, validator in self.slot_schema.items()
+                for key, validator in self.effective_slot_schema.schema.items()
             },
             extra=vol.ALLOW_EXTRA,
         )
@@ -442,11 +443,13 @@ class DynamicServiceIntentHandler(IntentHandler):
     Service specific intent handler that calls a service by name/entity_id.
     """
 
-    slot_schema = {
-        vol.Any("name", "area", "floor"): cv.string,
-        vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
-    }
+    slot_schema = vol.Schema(
+        {
+            vol.Any("name", "area", "floor"): cv.string,
+            vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
+        }
+    )
 
     # We use a small timeout in service calls to (hopefully) pass validation
     # checks, but not try to wait for the call to fully complete.
@@ -464,29 +467,12 @@ class DynamicServiceIntentHandler(IntentHandler):
         self.extra_slots = extra_slots
 
     @cached_property
-    def _slot_schema(self) -> vol.Schema:
+    def effective_slot_schema(self) -> vol.Schema:
         """Create validation schema for slots (with extra required slots)."""
-        if self.slot_schema is None:
-            raise ValueError("Slot schema is not defined")
+        if not self.extra_slots:
+            return self.slot_schema
 
-        if self.extra_slots:
-            slot_schema = {
-                **self.slot_schema,
-                **{
-                    vol.Required(key): schema
-                    for key, schema in self.extra_slots.items()
-                },
-            }
-        else:
-            slot_schema = self.slot_schema
-
-        return vol.Schema(
-            {
-                key: SLOT_SCHEMA.extend({"value": validator})
-                for key, validator in slot_schema.items()
-            },
-            extra=vol.ALLOW_EXTRA,
-        )
+        return self.slot_schema.extend(self.extra_slots)
 
     @abstractmethod
     def get_domain_and_service(
