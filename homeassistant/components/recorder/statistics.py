@@ -485,6 +485,11 @@ def compile_statistics(instance: Recorder, start: datetime, fire_events: bool) -
 
     The actual calculation is delegated to the platforms.
     """
+    # Define modified_statistic_ids outside of the "with" statement as context managers
+    # with exception suppressing prevent defining the value of the local variable, yet
+    # the flow continues
+    modified_statistic_ids = None
+
     # Return if we already have 5-minute statistics for the requested period
     with session_scope(
         session=instance.get_session(),
@@ -496,17 +501,13 @@ def compile_statistics(instance: Recorder, start: datetime, fire_events: bool) -
             instance, session, start, fire_events
         )
 
-        if modified_statistic_ids:
-            # In the rare case that we have modified statistic_ids, we reload the modified
-            # statistics meta data into the cache in a fresh session to ensure that the
-            # cache is up to date and future calls to get statistics meta data will
-            # not have to hit the database again.
-            with session_scope(
-                session=instance.get_session(), read_only=True
-            ) as session:
-                instance.statistics_meta_manager.get_many(
-                    session, modified_statistic_ids
-                )
+    if modified_statistic_ids:
+        # In the rare case that we have modified statistic_ids, we reload the modified
+        # statistics meta data into the cache in a fresh session to ensure that the
+        # cache is up to date and future calls to get statistics meta data will
+        # not have to hit the database again.
+        with session_scope(session=instance.get_session(), read_only=True) as session:
+            instance.statistics_meta_manager.get_many(session, modified_statistic_ids)
 
     return True
 
