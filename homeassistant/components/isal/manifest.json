@@ -5,5 +5,5 @@
   "codeowners": ["@bdraco"],
   "integration_type": "system",
   "quality_scale": "internal",
-  "requirements": "isal==1.6.1"
+  "requirements": ["isal==1.6.1"]
 }
