@@ -36,7 +36,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [FujitsuHVACDevice(coordinator, dev) for dev in coordinator.data.values()]
+        FujitsuHVACDevice(coordinator, dev) for dev in coordinator.data.values()
     )
 
 
@@ -73,18 +73,12 @@ class FujitsuHVACDevice(CoordinatorEntity[FujitsuHVACCoordinator], ClimateEntity
 
     @property
     def fan_mode(self) -> str | None:
-        """Return the fan setting.
-
-        Requires ClimateEntityFeature.FAN_MODE.
-        """
+        """Return the fan setting."""
         return FUJI_TO_HA_FAN.get(self._dev.fan_speed)
 
     @property
     def fan_modes(self) -> list[str]:
-        """Return the list of available fan modes.
-
-        Requires ClimateEntityFeature.FAN_MODE.
-        """
+        """Return the list of available fan modes."""
         return [
             FUJI_TO_HA_FAN[mode]
             for mode in self._dev.supported_fan_speeds
