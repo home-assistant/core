@@ -30,11 +30,11 @@ from .weather_update_coordinator import WeatherUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-OpenweathermapConfigEntry = ConfigEntry["OpenweathermapRuntimeData"]
+OpenweathermapConfigEntry = ConfigEntry["OpenweathermapData"]
 
 
 @dataclass
-class OpenweathermapRuntimeData:
+class OpenweathermapData:
     """Runtime data definition."""
 
     name: str
@@ -63,7 +63,7 @@ async def async_setup_entry(
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
-    entry.runtime_data = OpenweathermapRuntimeData(name, weather_coordinator)
+    entry.runtime_data = OpenweathermapData(name, weather_coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
