@@ -145,7 +145,7 @@ def dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None: ...
 @bind_hass  # type: ignore[misc]  # workaround; exclude typing of 2 overload in func def
 def dispatcher_send(hass: HomeAssistant, signal: SignalType[*_Ts], *args: *_Ts) -> None:
     """Send signal and data."""
-    hass.loop.call_soon_threadsafe(async_dispatcher_send, hass, signal, *args)
+    hass.loop.call_soon_threadsafe(async_dispatcher_send_internal, hass, signal, *args)
 
 
 def _format_err(
@@ -199,9 +199,24 @@ def async_dispatcher_send(
 
     This method must be run in the event loop.
     """
-    if hass.config.debug:
-        hass.verify_event_loop_thread("async_dispatcher_send")
+    hass.verify_event_loop_thread("async_dispatcher_send")
+    async_dispatcher_send_internal(hass, signal, *args)
 
+
+@callback
+@bind_hass
+def async_dispatcher_send_internal(
+    hass: HomeAssistant, signal: SignalType[*_Ts] | str, *args: *_Ts
+) -> None:
+    """Send signal and data.
+
+    This method is intended to only be used by core internally
+    and should not be considered a stable API. We will make
+    breaking changes to this function in the future and it
+    should not be used in integrations.
+
+    This method must be run in the event loop.
+    """
     if (maybe_dispatchers := hass.data.get(DATA_DISPATCHER)) is None:
         return
     dispatchers: _DispatcherDataType[*_Ts] = maybe_dispatchers
