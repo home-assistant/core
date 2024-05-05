@@ -126,8 +126,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HabiticaConfigEntry) -> 
         api = None
         for entry in entries:
             if entry.data[CONF_NAME] == name:
-                coordinator = entry.runtime_data
-                api = coordinator.api
+                api = entry.runtime_data.api
                 break
         if api is None:
             _LOGGER.error("API_CALL: User '%s' not configured", name)
