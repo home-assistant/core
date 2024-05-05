@@ -22,7 +22,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import DATA_HASS_CONFIG, DOMAIN
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
