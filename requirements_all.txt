@@ -2256,9 +2256,6 @@ python-juicenet==1.1.0
 # homeassistant.components.tplink
 python-kasa[speedups]==0.6.2.1
 
-# homeassistant.components.lirc
-# python-lirc==1.2.3
-
 # homeassistant.components.matter
 python-matter-server==5.10.0
 
