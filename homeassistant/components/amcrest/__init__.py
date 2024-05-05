@@ -35,7 +35,7 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import Unauthorized, UnknownUser
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
@@ -177,7 +177,8 @@ class AmcrestChecker(ApiWrapper):
         """Return event flag that indicates if camera's API is responding."""
         return self._async_wrap_event_flag
 
-    def _start_recovery(self) -> None:
+    @callback
+    def _async_start_recovery(self) -> None:
         self.available_flag.clear()
         self.async_available_flag.clear()
         async_dispatcher_send(
@@ -222,16 +223,21 @@ class AmcrestChecker(ApiWrapper):
             yield
         except LoginError as ex:
             async with self._async_wrap_lock:
-                self._handle_offline(ex)
+                self._async_handle_offline(ex)
             raise
         except AmcrestError:
             async with self._async_wrap_lock:
-                self._handle_error()
+                self._async_handle_error()
             raise
         async with self._async_wrap_lock:
-            self._set_online()
+            self._async_set_online()
 
     def _handle_offline(self, ex: Exception) -> None:
+        """Handle camera offline status from a thread."""
+        self._hass.loop.call_soon_threadsafe(self._async_handle_offline, ex)
+
+    @callback
+    def _async_handle_offline(self, ex: Exception) -> None:
         with self._wrap_lock:
             was_online = self.available
             was_login_err = self._wrap_login_err
@@ -239,9 +245,14 @@ class AmcrestChecker(ApiWrapper):
         if not was_login_err:
             _LOGGER.error("%s camera offline: Login error: %s", self._wrap_name, ex)
         if was_online:
-            self._start_recovery()
+            self._async_start_recovery()
 
     def _handle_error(self) -> None:
+        """Handle camera error status from a thread."""
+        self._hass.loop.call_soon_threadsafe(self._async_handle_error)
+
+    @callback
+    def _async_handle_error(self) -> None:
         with self._wrap_lock:
             was_online = self.available
             errs = self._wrap_errors = self._wrap_errors + 1
@@ -249,9 +260,14 @@ class AmcrestChecker(ApiWrapper):
         _LOGGER.debug("%s camera errs: %i", self._wrap_name, errs)
         if was_online and offline:
             _LOGGER.error("%s camera offline: Too many errors", self._wrap_name)
-            self._start_recovery()
+            self._async_start_recovery()
 
     def _set_online(self) -> None:
+        """Set camera online status from a thread."""
+        self._hass.loop.call_soon_threadsafe(self._async_set_online)
+
+    @callback
+    def _async_set_online(self) -> None:
         with self._wrap_lock:
             was_offline = not self.available
             self._wrap_errors = 0
