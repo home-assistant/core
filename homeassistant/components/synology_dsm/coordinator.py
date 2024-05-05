@@ -46,6 +46,7 @@ def async_re_login_on_expired(
                 return await func(self, *args, **kwargs)
             except SynologyDSMNotLoggedInException:
                 # If login is expired, try to login again
+                _LOGGER.debug("login is expired, try to login again")
                 try:
                     await self.api.async_login()
                 except SYNOLOGY_AUTH_FAILED_EXCEPTIONS as err:
