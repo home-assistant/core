@@ -10,6 +10,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.filter_battery',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '12',
   })
@@ -25,6 +26,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.filter_battery',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -40,6 +42,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.filter_current_water_pressure',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '263.3797174',
   })
@@ -55,6 +58,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.filter_current_water_pressure',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
@@ -62,14 +66,15 @@
 # name: test_sensors[filter][sensor.filter_water_flow_rate-data]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'volume_flow_rate',
       'friendly_name': 'Filter Water flow rate',
-      'icon': 'mdi:shower-head',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'gpm',
+      'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 'gal/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.filter_water_flow_rate',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '19.84',
   })
@@ -77,14 +82,15 @@
 # name: test_sensors[filter][sensor.filter_water_flow_rate-reset]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'volume_flow_rate',
       'friendly_name': 'Filter Water flow rate',
-      'icon': 'mdi:shower-head',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'gpm',
+      'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 'gal/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.filter_water_flow_rate',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -100,6 +106,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.hub_drop_1_c0ffee_average_daily_water_usage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '287.691295584',
   })
@@ -115,6 +122,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.hub_drop_1_c0ffee_average_daily_water_usage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -130,6 +138,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.hub_drop_1_c0ffee_battery',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50',
   })
@@ -145,6 +154,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.hub_drop_1_c0ffee_battery',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -160,6 +170,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.hub_drop_1_c0ffee_current_water_pressure',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '428.8538854',
   })
@@ -175,6 +186,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.hub_drop_1_c0ffee_current_water_pressure',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -190,6 +202,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.hub_drop_1_c0ffee_high_water_pressure_today',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '427.474934',
   })
@@ -205,6 +218,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.hub_drop_1_c0ffee_high_water_pressure_today',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -220,6 +234,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.hub_drop_1_c0ffee_low_water_pressure_today',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '420.580177',
   })
@@ -235,6 +250,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.hub_drop_1_c0ffee_low_water_pressure_today',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -242,14 +258,15 @@
 # name: test_sensors[hub][sensor.hub_drop_1_c0ffee_peak_water_flow_rate_today-data]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'volume_flow_rate',
       'friendly_name': 'Hub DROP-1_C0FFEE Peak water flow rate today',
-      'icon': 'mdi:shower-head',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'gpm',
+      'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 'gal/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hub_drop_1_c0ffee_peak_water_flow_rate_today',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '13.8',
   })
@@ -257,14 +274,15 @@
 # name: test_sensors[hub][sensor.hub_drop_1_c0ffee_peak_water_flow_rate_today-reset]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'volume_flow_rate',
       'friendly_name': 'Hub DROP-1_C0FFEE Peak water flow rate today',
-      'icon': 'mdi:shower-head',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'gpm',
+      'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 'gal/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hub_drop_1_c0ffee_peak_water_flow_rate_today',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -280,6 +298,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.hub_drop_1_c0ffee_total_water_used_today',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '881.13030096168',
   })
@@ -295,6 +314,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.hub_drop_1_c0ffee_total_water_used_today',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -302,14 +322,15 @@
 # name: test_sensors[hub][sensor.hub_drop_1_c0ffee_water_flow_rate-data]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'volume_flow_rate',
       'friendly_name': 'Hub DROP-1_C0FFEE Water flow rate',
-      'icon': 'mdi:shower-head',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'gpm',
+      'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 'gal/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hub_drop_1_c0ffee_water_flow_rate',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5.77',
   })
@@ -317,14 +338,15 @@
 # name: test_sensors[hub][sensor.hub_drop_1_c0ffee_water_flow_rate-reset]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'volume_flow_rate',
       'friendly_name': 'Hub DROP-1_C0FFEE Water flow rate',
-      'icon': 'mdi:shower-head',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'gpm',
+      'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 'gal/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hub_drop_1_c0ffee_water_flow_rate',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -340,6 +362,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.leak_detector_battery',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
@@ -355,6 +378,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.leak_detector_battery',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -370,6 +394,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.leak_detector_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20.1111111111111',
   })
@@ -385,6 +410,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.leak_detector_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-17.7777777777778',
   })
@@ -400,6 +426,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.protection_valve_battery',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -415,6 +442,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.protection_valve_battery',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -430,6 +458,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.protection_valve_current_water_pressure',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '422.6486041',
   })
@@ -445,6 +474,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.protection_valve_current_water_pressure',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -460,6 +490,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.protection_valve_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21.3888888888889',
   })
@@ -475,6 +506,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.protection_valve_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-17.7777777777778',
   })
@@ -482,14 +514,15 @@
 # name: test_sensors[protection_valve][sensor.protection_valve_water_flow_rate-data]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'volume_flow_rate',
       'friendly_name': 'Protection Valve Water flow rate',
-      'icon': 'mdi:shower-head',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'gpm',
+      'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 'gal/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.protection_valve_water_flow_rate',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '7.1',
   })
@@ -497,14 +530,15 @@
 # name: test_sensors[protection_valve][sensor.protection_valve_water_flow_rate-reset]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'volume_flow_rate',
       'friendly_name': 'Protection Valve Water flow rate',
-      'icon': 'mdi:shower-head',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'gpm',
+      'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 'gal/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.protection_valve_water_flow_rate',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -520,6 +554,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.pump_controller_current_water_pressure',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '428.8538854',
   })
@@ -535,6 +570,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.pump_controller_current_water_pressure',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -550,6 +586,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.pump_controller_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20.4444444444444',
   })
@@ -565,6 +602,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.pump_controller_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-17.7777777777778',
   })
@@ -572,14 +610,15 @@
 # name: test_sensors[pump_controller][sensor.pump_controller_water_flow_rate-data]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'volume_flow_rate',
       'friendly_name': 'Pump Controller Water flow rate',
-      'icon': 'mdi:shower-head',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'gpm',
+      'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 'gal/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pump_controller_water_flow_rate',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.2',
   })
@@ -587,14 +626,15 @@
 # name: test_sensors[pump_controller][sensor.pump_controller_water_flow_rate-reset]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'volume_flow_rate',
       'friendly_name': 'Pump Controller Water flow rate',
-      'icon': 'mdi:shower-head',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'gpm',
+      'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 'gal/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pump_controller_water_flow_rate',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -603,13 +643,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'RO Filter Cartridge 1 life remaining',
-      'icon': 'mdi:gauge',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ro_filter_cartridge_1_life_remaining',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '59',
   })
@@ -618,13 +658,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'RO Filter Cartridge 1 life remaining',
-      'icon': 'mdi:gauge',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ro_filter_cartridge_1_life_remaining',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -633,13 +673,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'RO Filter Cartridge 2 life remaining',
-      'icon': 'mdi:gauge',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ro_filter_cartridge_2_life_remaining',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '80',
   })
@@ -648,13 +688,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'RO Filter Cartridge 2 life remaining',
-      'icon': 'mdi:gauge',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ro_filter_cartridge_2_life_remaining',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -663,13 +703,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'RO Filter Cartridge 3 life remaining',
-      'icon': 'mdi:gauge',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ro_filter_cartridge_3_life_remaining',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '59',
   })
@@ -678,13 +718,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'RO Filter Cartridge 3 life remaining',
-      'icon': 'mdi:gauge',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ro_filter_cartridge_3_life_remaining',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -693,13 +733,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'RO Filter Inlet TDS',
-      'icon': 'mdi:water-opacity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ro_filter_inlet_tds',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '164',
   })
@@ -708,13 +748,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'RO Filter Inlet TDS',
-      'icon': 'mdi:water-opacity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ro_filter_inlet_tds',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -723,13 +763,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'RO Filter Outlet TDS',
-      'icon': 'mdi:water-opacity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ro_filter_outlet_tds',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '9',
   })
@@ -738,13 +778,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'RO Filter Outlet TDS',
-      'icon': 'mdi:water-opacity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ro_filter_outlet_tds',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -760,6 +800,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.softener_battery',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
@@ -775,6 +816,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.softener_battery',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
@@ -790,6 +832,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.softener_capacity_remaining',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3785.411784',
   })
@@ -805,6 +848,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.softener_capacity_remaining',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -820,6 +864,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.softener_current_water_pressure',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '348.1852285',
   })
@@ -835,6 +880,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.softener_current_water_pressure',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
@@ -842,14 +888,15 @@
 # name: test_sensors[softener][sensor.softener_water_flow_rate-data]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'volume_flow_rate',
       'friendly_name': 'Softener Water flow rate',
-      'icon': 'mdi:shower-head',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'gpm',
+      'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 'gal/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.softener_water_flow_rate',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5.0',
   })
@@ -857,14 +904,15 @@
 # name: test_sensors[softener][sensor.softener_water_flow_rate-reset]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'volume_flow_rate',
       'friendly_name': 'Softener Water flow rate',
-      'icon': 'mdi:shower-head',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'gpm',
+      'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 'gal/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.softener_water_flow_rate',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
