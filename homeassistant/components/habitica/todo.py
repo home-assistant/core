@@ -285,7 +285,18 @@ class HabiticaDailiesListEntity(BaseHabiticaListEntity):
                 return dt_util.as_local(
                     datetime.datetime.fromisoformat(task["nextDue"][0])
                 ).date()
-            except (ValueError, IndexError):
+            except ValueError:
+                # sometimes nextDue dates are in this format instead of iso:
+                # "Mon May 06 2024 00:00:00 GMT+0200"
+                try:
+                    return dt_util.as_local(
+                        datetime.datetime.strptime(
+                            task["nextDue"][0], "%a %b %d %Y %H:%M:%S %Z%z"
+                        )
+                    ).date()
+                except ValueError:
+                    return None
+            except IndexError:
                 return None
 
         return [
