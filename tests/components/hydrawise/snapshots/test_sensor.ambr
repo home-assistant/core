@@ -344,7 +344,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
-    'original_icon': 'mdi:water-outline',
+    'original_icon': None,
     'original_name': 'Daily active water use',
     'platform': 'hydrawise',
     'previous_unique_id': None,
@@ -360,7 +360,6 @@
       'attribution': 'Data provided by hydrawise.com',
       'device_class': 'volume',
       'friendly_name': 'Zone Two Daily active water use',
-      'icon': 'mdi:water-outline',
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
     'context': <ANY>,
@@ -416,7 +415,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '9999-12-31T23:59:59+00:00',
+    'state': 'unknown',
   })
 # ---
 # name: test_all_sensors[sensor.zone_two_watering_time-entry]

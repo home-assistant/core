@@ -126,11 +126,11 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
             return int(current_run.remaining_time.total_seconds() / 60)
         return 0
 
-    def _get_next_cycle(self) -> datetime:
+    def _get_next_cycle(self) -> datetime | None:
         assert self.zone is not None
         if (next_run := self.zone.scheduled_runs.next_run) is not None:
             return dt_util.as_utc(next_run.start_time)
-        return datetime.max.replace(tzinfo=dt_util.UTC)
+        return None
 
     def _get_daily_active_water_use(self) -> float:
         daily_water_summary = self.coordinator.data.daily_water_use[self.controller.id]
