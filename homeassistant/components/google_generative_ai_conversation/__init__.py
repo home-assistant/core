@@ -220,10 +220,14 @@ class GoogleGenerativeAIAgent(conversation.AbstractConversationAgent):
             )
 
         _LOGGER.debug("Response: %s", chat_response.parts)
-        self.history[conversation_id] = chat.history
+        if chat_response.parts:
+            self.history[conversation_id] = chat.history
+            response_text = chat_response.text
+        else:
+            response_text = "No response (likely blocked)"
 
         intent_response = intent.IntentResponse(language=user_input.language)
-        intent_response.async_set_speech(chat_response.text)
+        intent_response.async_set_speech(response_text)
         return conversation.ConversationResult(
             response=intent_response, conversation_id=conversation_id
         )
