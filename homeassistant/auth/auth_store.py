@@ -6,6 +6,7 @@ from datetime import timedelta
 import hmac
 import itertools
 from logging import getLogger
+import time
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
@@ -290,7 +291,7 @@ class AuthStore:
         perm_lookup = PermissionLookup(ent_reg, dev_reg)
         self._perm_lookup = perm_lookup
 
-        now_ts = dt_util.utcnow().timestamp()
+        now_ts = time.time()
 
         if data is None or not isinstance(data, dict):
             self._set_defaults()
