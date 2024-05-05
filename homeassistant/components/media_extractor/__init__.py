@@ -125,7 +125,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     def play_media(call: ServiceCall) -> None:
         """Get stream URL and send it to the play_media service."""
-        MediaExtractor(hass, config[DOMAIN], call.data).extract_and_send()
+        MediaExtractor(hass, config.get(DOMAIN, {}), call.data).extract_and_send()
 
     default_format_query = config.get(DOMAIN, {}).get(
         CONF_DEFAULT_STREAM_QUERY, DEFAULT_STREAM_QUERY
