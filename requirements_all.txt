@@ -413,7 +413,7 @@ aioymaps==1.2.2
 airly==1.1.0
 
 # homeassistant.components.airthings_ble
-airthings-ble==0.8.0
+airthings-ble==0.9.0
 
 # homeassistant.components.airthings
 airthings-cloud==0.2.0
@@ -1159,6 +1159,9 @@ intellifire4py==2.2.2
 
 # homeassistant.components.iperf3
 iperf3==0.1.11
+
+# homeassistant.components.isal
+isal==1.6.1
 
 # homeassistant.components.gogogate2
 ismartgate==5.0.1

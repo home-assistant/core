@@ -14,6 +14,7 @@ from unittest.mock import MagicMock, Mock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
+from sqlalchemy.pool import QueuePool
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import (
@@ -30,7 +31,6 @@ from homeassistant.components.recorder import (
     db_schema,
     get_instance,
     migration,
-    pool,
     statistics,
 )
 from homeassistant.components.recorder.const import (
@@ -2265,7 +2265,7 @@ async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
         def engine_created(*args): ...
 
         def get_dialect_pool_class(self, *args):
-            return pool.RecorderPool
+            return QueuePool
 
         def initialize(*args): ...
 
