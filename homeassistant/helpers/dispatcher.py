@@ -199,6 +199,15 @@ def async_dispatcher_send(
 
     This method must be run in the event loop.
     """
+    # We turned on asyncio debug in April 2024 in the dev containers
+    # in the hope of catching some of the issues that have been
+    # reported. It will take a while to get all the issues fixed in
+    # custom components.
+    #
+    # In 2025.5 we should guard the `verify_event_loop_thread`
+    # check with a check for the `hass.config.debug` flag being set as
+    # long term we don't want to be checking this in production
+    # environments since it is a performance hit.
     hass.verify_event_loop_thread("async_dispatcher_send")
     async_dispatcher_send_internal(hass, signal, *args)
 
