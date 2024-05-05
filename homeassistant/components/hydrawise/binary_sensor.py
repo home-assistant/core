@@ -83,7 +83,6 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
         return self.coordinator.last_update_success
 
     def _get_rain_sensor(self) -> bool | None:
-        assert self.sensor is not None
         return self.sensor.status.active
 
     def _get_is_watering(self) -> bool:
