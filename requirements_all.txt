@@ -579,7 +579,7 @@ bluemaestro-ble==0.2.3
 # bluepy==1.3.0
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.19.1
+bluetooth-adapters==0.19.2
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.4.2
@@ -1371,7 +1371,7 @@ netdata==1.1.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==3.0.0
+nettigo-air-monitor==3.0.1
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1

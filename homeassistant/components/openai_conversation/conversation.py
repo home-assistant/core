@@ -35,7 +35,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up conversation entities."""
-    agent = OpenAIConversationEntity(hass, config_entry)
+    agent = OpenAIConversationEntity(config_entry)
     async_add_entities([agent])
 
 
@@ -46,9 +46,8 @@ class OpenAIConversationEntity(
 
     _attr_has_entity_name = True
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the agent."""
-        self.hass = hass
         self.entry = entry
         self.history: dict[str, list[dict]] = {}
         self._attr_name = entry.title
