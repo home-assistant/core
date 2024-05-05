@@ -29,7 +29,7 @@ ADVISE_MSG = (
 )
 
 
-class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
+class RecorderPool(SingletonThreadPool, NullPool):
     """A hybrid of NullPool and SingletonThreadPool.
 
     When called from the creating thread or db executor acts like SingletonThreadPool
@@ -49,6 +49,22 @@ class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
         ), "recorder_and_worker_thread_ids is required"
         self.recorder_and_worker_thread_ids = recorder_and_worker_thread_ids
         SingletonThreadPool.__init__(self, creator, **kw)
+
+    def recreate(self) -> "RecorderPool":
+        """Recreate the pool."""
+        self.logger.info("Pool recreating")
+        return self.__class__(
+            self._creator,
+            pool_size=self.size,
+            recycle=self._recycle,
+            echo=self.echo,
+            pre_ping=self._pre_ping,
+            logging_name=self._orig_logging_name,
+            reset_on_return=self._reset_on_return,
+            _dispatch=self.dispatch,
+            dialect=self._dialect,
+            recorder_and_worker_thread_ids=self.recorder_and_worker_thread_ids,
+        )
 
     def _do_return_conn(self, record: ConnectionPoolEntry) -> None:
         if threading.get_ident() in self.recorder_and_worker_thread_ids:
