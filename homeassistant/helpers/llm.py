@@ -69,21 +69,8 @@ class Tool:
 
     name: str
     description: str | None
-    parameters: vol.Schema
-    custom_serializer: Callable[[Any], Any]
-
-    def __init__(
-        self,
-        name: str,
-        description: str | None,
-        parameters: vol.Schema = vol.Schema({}),
-        custom_serializer: Callable[[Any], Any] = default_custom_serializer,
-    ) -> None:
-        """Init the class."""
-        self.name = name
-        self.description = description
-        self.parameters = parameters
-        self.custom_serializer = custom_serializer
+    parameters: vol.Schema = vol.Schema({})
+    custom_serializer: Callable[[Any], Any] = staticmethod(default_custom_serializer)
 
     @cached_property
     def specification(self) -> dict[str, Any]:
@@ -119,11 +106,9 @@ class IntentTool(Tool):
         slot_schema: vol.Schema = vol.Schema({}),
     ) -> None:
         """Init the class."""
-        super().__init__(
-            intent_type,
-            f"Execute Home Assistant {intent_type} intent",
-            slot_schema,
-        )
+        self.name = intent_type
+        self.description = f"Execute Home Assistant {intent_type} intent"
+        self.parameters = slot_schema
 
     async def async_call(self, hass: HomeAssistant, tool_input: ToolInput) -> Any:
         """Handle the intent."""
@@ -207,11 +192,11 @@ class FunctionTool(Tool):
 
         self.function = function
 
-        name = function.__name__
-        if name.startswith("async_"):
-            name = name[len("async_") :]
+        self.name = function.__name__
+        if self.name.startswith("async_"):
+            self.name = self.name[len("async_") :]
 
-        description = inspect.getdoc(function)
+        self.description = inspect.getdoc(function)
 
         schema = {}
         annotations = get_type_hints(function)
@@ -241,11 +226,7 @@ class FunctionTool(Tool):
                 else vol.Optional(param.name, default=param.default)
             ] = hint
 
-        super().__init__(
-            name,
-            description,
-            vol.Schema(schema),
-        )
+        self.parameters = vol.Schema(schema)
 
     async def async_call(self, hass: HomeAssistant, tool_input: ToolInput) -> Any:
         """Call the function."""

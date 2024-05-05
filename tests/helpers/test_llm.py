@@ -20,7 +20,9 @@ from homeassistant.util.color import color_name_to_rgb
 
 def test_async_register(hass: HomeAssistant) -> None:
     """Test registering an llm tool and verifying it is stored correctly."""
-    tool = llm.Tool("test_tool", "test_description")
+    tool = llm.Tool()
+    tool.name = "test_tool"
+    tool.description = "test_description"
 
     llm.async_register_tool(hass, tool)
 
@@ -30,8 +32,12 @@ def test_async_register(hass: HomeAssistant) -> None:
 
 def test_async_register_overwrite(hass: HomeAssistant) -> None:
     """Test registering multiple tools with the same name, ensuring the second time an exception is raised."""
-    tool1 = llm.Tool("test_tool", "test_tool_1")
-    tool2 = llm.Tool("test_tool", "test_tool_2")
+    tool1 = llm.Tool()
+    tool1.name = "test_tool"
+    tool1.description = "test_tool_1"
+    tool2 = llm.Tool()
+    tool2.name = "test_tool"
+    tool2.description = "test_tool_2"
 
     llm.async_register_tool(hass, tool1)
     with pytest.raises(HomeAssistantError):
@@ -43,7 +49,9 @@ def test_async_register_overwrite(hass: HomeAssistant) -> None:
 
 def test_async_remove(hass: HomeAssistant) -> None:
     """Test removing a tool and verifying it is no longer present in the Home Assistant data."""
-    tool = llm.Tool("test_tool", "test_description")
+    tool = llm.Tool()
+    tool.name = "test_tool"
+    tool.description = "test_description"
 
     llm.async_register_tool(hass, tool)
     llm.async_remove_tool(hass, tool)
@@ -54,7 +62,9 @@ def test_async_remove(hass: HomeAssistant) -> None:
 
 def test_async_remove_no_existing_entry(hass: HomeAssistant) -> None:
     """Test the removal of a non-existing tool from Home Assistant's data."""
-    tool = llm.Tool("test_tool", "test_description")
+    tool = llm.Tool()
+    tool.name = "test_tool"
+    tool.description = "test_description"
     llm.async_register_tool(hass, tool)
 
     llm.async_remove_tool(hass, "test_tool2")
@@ -76,7 +86,10 @@ def test_async_remove_no_existing(hass: HomeAssistant) -> None:
 
 async def test_call_tool(hass: HomeAssistant) -> None:
     """Test calling an llm tool."""
-    tool = llm.Tool("test_tool", "test_description", vol.Schema({"test_arg": str}))
+    tool = llm.Tool()
+    tool.name = "test_tool"
+    tool.description = "test_description"
+    tool.parameters = vol.Schema({"test_arg": str})
     tool.async_call = AsyncMock(return_value={"result": "test_response"})
 
     llm.async_register_tool(hass, tool)
