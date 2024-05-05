@@ -87,7 +87,7 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error(
                 "Unknown error occurred from %s: %s", discovery_info.address, err
             )
-            raise err
+            raise
         return data
 
     async def async_step_bluetooth(

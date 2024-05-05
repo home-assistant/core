@@ -750,6 +750,7 @@ class NotifySchema(KNXPlatformSchema):
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_TYPE, default="latin_1"): string_type_validator,
             vol.Required(KNX_ADDRESS): ga_validator,
+            vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
         }
     )
 

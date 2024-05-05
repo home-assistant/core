@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+from functools import cached_property
 import re
-from typing import TYPE_CHECKING, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from haffmpeg.core import HAFFmpeg
 from haffmpeg.tools import IMAGE_JPEG, FFVersion, ImageFrame
@@ -19,7 +20,6 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
-    SignalType,
     async_dispatcher_connect,
     async_dispatcher_send,
 )
@@ -27,12 +27,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.system_info import is_official_image
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
+from homeassistant.util.signal_type import SignalType
 
 _HAFFmpegT = TypeVar("_HAFFmpegT", bound=HAFFmpeg)
 
@@ -138,10 +133,9 @@ async def async_get_image(
         else:
             extra_cmd += " " + size_cmd
 
-    image = await asyncio.shield(
+    return await asyncio.shield(
         ffmpeg.get_image(input_source, output_format=output_format, extra_cmd=extra_cmd)
     )
-    return image
 
 
 class FFmpegManager:
@@ -229,7 +223,7 @@ class FFmpegBase(Entity, Generic[_HAFFmpegT]):
 
         This method is a coroutine.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def _async_stop_ffmpeg(self, entity_ids: list[str] | None) -> None:
         """Stop a FFmpeg process.

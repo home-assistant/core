@@ -36,7 +36,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     )
 
     if site is None:
-        raise CannotConnect()
+        raise CannotConnect
 
     return {"site_name": site.name}
 

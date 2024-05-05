@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 from homeassistant.components import tplink
 from homeassistant.components.tplink.const import DOMAIN
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -16,7 +17,7 @@ from tests.common import MockConfigEntry
 async def test_color_light_with_an_emeter(hass: HomeAssistant) -> None:
     """Test a light with an emeter."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
@@ -56,7 +57,7 @@ async def test_color_light_with_an_emeter(hass: HomeAssistant) -> None:
 async def test_plug_with_an_emeter(hass: HomeAssistant) -> None:
     """Test a plug with an emeter."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     plug = _mocked_plug()
@@ -91,7 +92,7 @@ async def test_plug_with_an_emeter(hass: HomeAssistant) -> None:
 async def test_color_light_no_emeter(hass: HomeAssistant) -> None:
     """Test a light without an emeter."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
@@ -120,7 +121,7 @@ async def test_color_light_no_emeter(hass: HomeAssistant) -> None:
 async def test_sensor_unique_id(hass: HomeAssistant) -> None:
     """Test a sensor unique ids."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     plug = _mocked_plug()

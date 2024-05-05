@@ -175,7 +175,7 @@ async def test_operation_mode_validation(
             DOMAIN, SERVICE_SET_OPERATION_MODE, data, blocking=True
         )
     assert (
-        str(exc.value) == "Operation mode test not valid for entity water_heater.test. "
+        str(exc.value) == "Operation mode test is not valid for water_heater.test. "
         "The operation list is not defined"
     )
     assert exc.value.translation_domain == DOMAIN
@@ -191,7 +191,7 @@ async def test_operation_mode_validation(
             DOMAIN, SERVICE_SET_OPERATION_MODE, data, blocking=True
         )
     assert (
-        str(exc.value) == "Operation mode test not valid for entity water_heater.test. "
+        str(exc.value) == "Operation mode test is not valid for water_heater.test. "
         "Valid operation modes are: gas, eco"
     )
     assert exc.value.translation_domain == DOMAIN

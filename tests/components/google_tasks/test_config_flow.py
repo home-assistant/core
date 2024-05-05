@@ -1,9 +1,11 @@
 """Test the Google Tasks config flow."""
 
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import Mock, patch
 
 from googleapiclient.errors import HttpError
 from httplib2 import Response
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.google_tasks.const import (
@@ -15,18 +17,37 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from tests.common import load_fixture
+from tests.common import MockConfigEntry, load_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
 
+@pytest.fixture
+def user_identifier() -> str:
+    """Return a unique user ID."""
+    return "123"
+
+
+@pytest.fixture
+def setup_userinfo(user_identifier: str) -> Generator[Mock, None, None]:
+    """Set up userinfo."""
+    with patch("homeassistant.components.google_tasks.config_flow.build") as mock:
+        mock.return_value.userinfo.return_value.get.return_value.execute.return_value = {
+            "id": user_identifier,
+            "name": "Test Name",
+        }
+        yield mock
+
+
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth,
-    aioclient_mock,
+    aioclient_mock: AiohttpClientMocker,
     current_request_with_host,
     setup_credentials,
+    setup_userinfo,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -44,7 +65,8 @@ async def test_full_flow(
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
-        "&scope=https://www.googleapis.com/auth/tasks"
+        "&scope=https://www.googleapis.com/auth/tasks+"
+        "https://www.googleapis.com/auth/userinfo.profile"
         "&access_type=offline&prompt=consent"
     )
 
@@ -65,9 +87,11 @@ async def test_full_flow(
 
     with patch(
         "homeassistant.components.google_tasks.async_setup_entry", return_value=True
-    ) as mock_setup, patch("homeassistant.components.google_tasks.config_flow.build"):
+    ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "123"
+    assert result["result"].title == "Test Name"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
 
@@ -75,9 +99,10 @@ async def test_full_flow(
 async def test_api_not_enabled(
     hass: HomeAssistant,
     hass_client_no_auth,
-    aioclient_mock,
+    aioclient_mock: AiohttpClientMocker,
     current_request_with_host,
     setup_credentials,
+    setup_userinfo,
 ) -> None:
     """Check flow aborts if api is not enabled."""
     result = await hass.config_entries.flow.async_init(
@@ -95,7 +120,8 @@ async def test_api_not_enabled(
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
-        "&scope=https://www.googleapis.com/auth/tasks"
+        "&scope=https://www.googleapis.com/auth/tasks+"
+        "https://www.googleapis.com/auth/userinfo.profile"
         "&access_type=offline&prompt=consent"
     )
 
@@ -123,7 +149,7 @@ async def test_api_not_enabled(
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "access_not_configured"
     assert (
         result["description_placeholders"]["message"]
@@ -134,9 +160,10 @@ async def test_api_not_enabled(
 async def test_general_exception(
     hass: HomeAssistant,
     hass_client_no_auth,
-    aioclient_mock,
+    aioclient_mock: AiohttpClientMocker,
     current_request_with_host,
     setup_credentials,
+    setup_userinfo,
 ) -> None:
     """Check flow aborts if exception happens."""
     result = await hass.config_entries.flow.async_init(
@@ -154,7 +181,8 @@ async def test_general_exception(
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
-        "&scope=https://www.googleapis.com/auth/tasks"
+        "&scope=https://www.googleapis.com/auth/tasks+"
+        "https://www.googleapis.com/auth/userinfo.profile"
         "&access_type=offline&prompt=consent"
     )
 
@@ -179,5 +207,110 @@ async def test_general_exception(
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
+
+
+@pytest.mark.parametrize(
+    ("user_identifier", "abort_reason", "resulting_access_token", "starting_unique_id"),
+    [
+        (
+            "123",
+            "reauth_successful",
+            "updated-access-token",
+            "123",
+        ),
+        (
+            "123",
+            "reauth_successful",
+            "updated-access-token",
+            None,
+        ),
+        (
+            "345",
+            "wrong_account",
+            "mock-access",
+            "123",
+        ),
+    ],
+)
+async def test_reauth(
+    hass: HomeAssistant,
+    hass_client_no_auth,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host,
+    setup_credentials,
+    setup_userinfo,
+    user_identifier: str,
+    abort_reason: str,
+    resulting_access_token: str,
+    starting_unique_id: str | None,
+) -> None:
+    """Test the re-authentication case updates the correct config entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=starting_unique_id,
+        data={
+            "token": {
+                "refresh_token": "mock-refresh-token",
+                "access_token": "mock-access",
+            }
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    config_entry.async_start_reauth(hass)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    result = flows[0]
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+    assert result["url"] == (
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}"
+        "&scope=https://www.googleapis.com/auth/tasks+"
+        "https://www.googleapis.com/auth/userinfo.profile"
+        "&access_type=offline&prompt=consent"
+    )
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "updated-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    with patch(
+        "homeassistant.components.google_tasks.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+    assert result["type"] == "abort"
+    assert result["reason"] == abort_reason
+
+    assert config_entry.unique_id == "123"
+    assert "token" in config_entry.data
+    # Verify access token is refreshed
+    assert config_entry.data["token"]["access_token"] == resulting_access_token
+    assert config_entry.data["token"]["refresh_token"] == "mock-refresh-token"

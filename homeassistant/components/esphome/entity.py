@@ -166,14 +166,14 @@ def convert_api_error_ha_error(
 ICON_SCHEMA = vol.Schema(cv.icon)
 
 
-ENTITY_CATEGORIES: EsphomeEnumMapper[
-    EsphomeEntityCategory, EntityCategory | None
-] = EsphomeEnumMapper(
-    {
-        EsphomeEntityCategory.NONE: None,
-        EsphomeEntityCategory.CONFIG: EntityCategory.CONFIG,
-        EsphomeEntityCategory.DIAGNOSTIC: EntityCategory.DIAGNOSTIC,
-    }
+ENTITY_CATEGORIES: EsphomeEnumMapper[EsphomeEntityCategory, EntityCategory | None] = (
+    EsphomeEnumMapper(
+        {
+            EsphomeEntityCategory.NONE: None,
+            EsphomeEntityCategory.CONFIG: EntityCategory.CONFIG,
+            EsphomeEntityCategory.DIAGNOSTIC: EntityCategory.DIAGNOSTIC,
+        }
+    )
 )
 
 

@@ -398,8 +398,15 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
                 manifests_resorted.append(integration.manifest_path)
     if config.action == "generate" and manifests_resorted:
         subprocess.run(
-            ["pre-commit", "run", "--hook-stage", "manual", "prettier", "--files"]
-            + manifests_resorted,
+            [
+                "pre-commit",
+                "run",
+                "--hook-stage",
+                "manual",
+                "prettier",
+                "--files",
+                *manifests_resorted,
+            ],
             stdout=subprocess.DEVNULL,
             check=True,
         )

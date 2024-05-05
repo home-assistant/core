@@ -25,17 +25,14 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_SHOW_ON_MAP,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -115,8 +112,9 @@ def async_get_remove_sensor_options(
     device_registry = dr.async_get(hass)
     return [
         SelectOptionDict(value=device_entry.id, label=cast(str, device_entry.name))
-        for device_entry in device_registry.devices.values()
-        if config_entry.entry_id in device_entry.config_entries
+        for device_entry in device_registry.devices.get_devices_for_config_entry_id(
+            config_entry.entry_id
+        )
     ]
 
 

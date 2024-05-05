@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/switchbot_cloud",
   "iot_class": "cloud_polling",
   "loggers": ["switchbot-api"],
-  "requirements": ["switchbot-api==2.0.0"]
+  "requirements": ["switchbot-api==2.1.0"]
 }

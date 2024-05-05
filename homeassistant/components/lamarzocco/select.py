@@ -36,7 +36,7 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
         translation_key="steam_temp_select",
         options=["1", "2", "3"],
         select_option_fn=lambda coordinator, option: coordinator.lm.set_steam_level(
-            int(option)
+            int(option), coordinator.async_get_ble_device()
         ),
         current_option_fn=lambda lm: lm.current_status["steam_level_set"],
         supported_fn=lambda coordinator: coordinator.lm.model_name

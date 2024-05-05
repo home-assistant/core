@@ -36,7 +36,7 @@ class UptimeRobotConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         response: UptimeRobotApiResponse | UptimeRobotApiError | None = None
         key: str = data[CONF_API_KEY]
-        if key.startswith("ur") or key.startswith("m"):
+        if key.startswith(("ur", "m")):
             LOGGER.error("Wrong API key type detected, use the 'main' API key")
             errors["base"] = "not_main_key"
             return errors, None

@@ -571,7 +571,7 @@ class HassIO:
         # such as ../../../../etc/passwd
         if url != str(joined_url):
             _LOGGER.error("Invalid request %s", command)
-            raise HassioAPIError()
+            raise HassioAPIError
 
         try:
             response = await self.websession.request(
@@ -598,7 +598,7 @@ class HassIO:
                     method,
                     response.status,
                 )
-                raise HassioAPIError()
+                raise HassioAPIError
 
             if return_text:
                 return await response.text(encoding="utf-8")
@@ -611,4 +611,4 @@ class HassIO:
         except aiohttp.ClientError as err:
             _LOGGER.error("Client error on %s request %s", command, err)
 
-        raise HassioAPIError()
+        raise HassioAPIError

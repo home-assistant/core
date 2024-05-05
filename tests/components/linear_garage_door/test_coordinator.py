@@ -38,7 +38,7 @@ async def test_invalid_password(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.SETUP_ERROR
+    assert entries[0].state is ConfigEntryState.SETUP_ERROR
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flows
     assert len(flows) == 1
@@ -70,4 +70,4 @@ async def test_invalid_login(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.SETUP_RETRY
+    assert entries[0].state is ConfigEntryState.SETUP_RETRY

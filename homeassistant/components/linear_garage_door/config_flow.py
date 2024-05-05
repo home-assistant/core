@@ -53,14 +53,12 @@ async def validate_input(
     finally:
         await hub.close()
 
-    info = {
+    return {
         "email": data["email"],
         "password": data["password"],
         "sites": sites,
         "device_id": device_id,
     }
-
-    return info
 
 
 class LinearGarageDoorConfigFlow(ConfigFlow, domain=DOMAIN):

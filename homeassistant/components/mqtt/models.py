@@ -7,7 +7,6 @@ import asyncio
 from collections import deque
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
-import datetime as dt
 from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, TypedDict
@@ -58,7 +57,7 @@ class PublishMessage:
     retain: bool
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class ReceiveMessage:
     """MQTT Message received."""
 
@@ -67,7 +66,7 @@ class ReceiveMessage:
     qos: int
     retain: bool
     subscribed_topic: str
-    timestamp: dt.datetime
+    timestamp: float
 
 
 AsyncMessageCallbackType = Callable[[ReceiveMessage], Coroutine[Any, Any, None]]
@@ -115,6 +114,8 @@ class MqttOriginInfo(TypedDict, total=False):
 
 class MqttCommandTemplateException(ServiceValidationError):
     """Handle MqttCommandTemplate exceptions."""
+
+    _message: str
 
     def __init__(
         self,
@@ -226,6 +227,8 @@ class MqttCommandTemplate:
 
 class MqttValueTemplateException(TemplateError):
     """Handle MqttValueTemplate exceptions."""
+
+    _message: str
 
     def __init__(
         self,
