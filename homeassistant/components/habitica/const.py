@@ -5,6 +5,7 @@ from homeassistant.const import CONF_PATH
 CONF_API_USER = "api_user"
 
 DEFAULT_URL = "https://habitica.com"
+ASSETS_URL = "https://habitica-assets.s3.amazonaws.com/mobileApp/images/"
 DOMAIN = "habitica"
 
 # service constants

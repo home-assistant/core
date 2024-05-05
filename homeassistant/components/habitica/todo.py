@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientResponseError
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.todo import (
     TodoItem,
     TodoItemStatus,
@@ -24,7 +25,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from . import HabiticaConfigEntry
-from .const import DOMAIN, MANUFACTURER, NAME
+from .const import ASSETS_URL, DOMAIN, MANUFACTURER, NAME
 from .coordinator import HabiticaDataUpdateCoordinator
 
 
@@ -165,12 +166,16 @@ class BaseHabiticaListEntity(
                 current_item.status == TodoItemStatus.NEEDS_ACTION
                 and item.status == TodoItemStatus.COMPLETED
             ):
-                await self.coordinator.api.tasks[item.uid].score["up"].post()
+                score_result = (
+                    await self.coordinator.api.tasks[item.uid].score["up"].post()
+                )
             elif (
                 current_item.status == TodoItemStatus.COMPLETED
                 and item.status == TodoItemStatus.NEEDS_ACTION
             ):
-                await self.coordinator.api.tasks[item.uid].score["down"].post()
+                score_result = (
+                    await self.coordinator.api.tasks[item.uid].score["down"].post()
+                )
 
         except ClientResponseError as e:
             raise HomeAssistantError(
@@ -178,6 +183,15 @@ class BaseHabiticaListEntity(
                 translation_key=f"score_{self.idx}_item_failed",
                 translation_placeholders={"name": item.summary or ""},
             ) from e
+
+        if drop := score_result.get("_tmp", {}).get("drop", False):
+            msg = (
+                f"![{drop["key"]}]({ASSETS_URL}Pet_{drop["type"]}_{drop["key"]}.png)\n"
+                f"{drop["dialog"]}"
+            )
+            persistent_notification.async_create(
+                self.hass, message=msg, title="Habitica"
+            )
 
         await self.coordinator.async_refresh()
 
