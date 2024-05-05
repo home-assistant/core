@@ -92,11 +92,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def extract_media_url(call: ServiceCall) -> ServiceResponse:
         """Extract media url."""
-        youtube_dl = YoutubeDL(
-            {"quiet": True, "logger": _LOGGER, "format": call.data[ATTR_FORMAT_QUERY]}
-        )
 
         def extract_info() -> dict[str, Any]:
+            youtube_dl = YoutubeDL(
+                {
+                    "quiet": True,
+                    "logger": _LOGGER,
+                    "format": call.data[ATTR_FORMAT_QUERY],
+                }
+            )
             return cast(
                 dict[str, Any],
                 youtube_dl.extract_info(
