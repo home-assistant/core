@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import logging
 from typing import Any
 
 from tibber import Tibber
@@ -17,12 +16,12 @@ from homeassistant.components.notify import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as TIBBER_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .repairs import migrate_notify_issue
 
 
 async def async_get_service(
@@ -51,11 +50,14 @@ class TibberNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to Tibber devices."""
+        migrate_notify_issue(self.hass)
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         try:
             await self._notify(title=title, message=message)
-        except TimeoutError:
-            _LOGGER.error("Timeout sending message with Tibber")
+        except TimeoutError as exc:
+            raise ServiceValidationError(
+                translation_domain=TIBBER_DOMAIN, translation_key="send_message_timeout"
+            ) from exc
 
 
 class TibberNotificationEntity(NotifyEntity):
@@ -73,5 +75,7 @@ class TibberNotificationEntity(NotifyEntity):
             await tibber_connection.send_notification(
                 title or ATTR_TITLE_DEFAULT, message
             )
-        except TimeoutError:
-            _LOGGER.error("Timeout sending message with Tibber")
+        except TimeoutError as exc:
+            raise ServiceValidationError(
+                translation_domain=TIBBER_DOMAIN, translation_key="send_message_timeout"
+            ) from exc

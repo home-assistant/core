@@ -101,5 +101,23 @@
         "description": "Enter your access token from {url}"
       }
     }
+  },
+  "exceptions": {
+    "send_message_timeout": {
+      "message": "Timeout sending message with Tibber"
+    }
+  },
+  "issues": {
+    "migrate_notify": {
+      "title": "Migration of Tibber notify service",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The Tibber `notify` service has been migrated. A new `notify` entity is available now.\n\nUpdate any automations to use the new `notify.send_message` service exposed by this new entity. When this is done, fix this issue and restart Home Assistant.",
+            "title": "Migrate legacy Tibber notify service"
+          }
+        }
+      }
+    }
   }
 }
