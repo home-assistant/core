@@ -1,0 +1,146 @@
+- id: "1711656820736"
+  alias: New automation1
+  description: ""
+  trigger:
+    - platform: device
+      type: turned_on
+      device_id: 51d457970608060bba5a32cba50e44eb
+      entity_id: 2d40a2f3d33c535240129a7f6600f246
+      domain: switch
+  condition: []
+  action:
+    - service: switch.turn_on
+      data: {}
+      target:
+        entity_id: switch.virtual_switch_17
+    - service: switch.turn_on
+      data: {}
+      target:
+        entity_id: switch.virtual_switch_5
+    - service: switch.turn_on
+      data: {}
+      target:
+        entity_id: switch.virtual_switch_6
+    - service: switch.turn_on
+      data: {}
+      target:
+        entity_id: switch.virtual_switch_17
+    - service: switch.turn_on
+      data: {}
+      target:
+        entity_id: switch.virtual_switch_16
+  mode: single
+- id: "1711657163538"
+  alias: New automation2
+  description: ""
+  trigger:
+    - platform: device
+      type: turned_on
+      device_id: a31dbce172882fdb600a1c86229324d6
+      entity_id: ed251f0b9d5abaccd12f39059e0a0e04
+      domain: switch
+  condition: []
+  action:
+    - service: switch.turn_on
+      data: {}
+      target:
+        entity_id: switch.virtual_switch_7
+    - service: switch.turn_on
+      data: {}
+      target:
+        entity_id: switch.virtual_switch_8
+    - parallel:
+        - service: switch.turn_on
+          data: {}
+          target:
+            entity_id: switch.virtual_switch_9
+        - service: switch.turn_on
+          data: {}
+          target:
+            entity_id: switch.virtual_switch_10
+    - service: switch.turn_on
+      data: {}
+      target:
+        entity_id:
+          - switch.virtual_switch_11
+          - switch.virtual_switch_12
+    - service: switch.turn_on
+      data: {}
+      target:
+        entity_id:
+          - switch.virtual_switch_13
+          - switch.virtual_switch_14
+  mode: single
+- id: "1711657622488"
+  alias: New automation3
+  description: ""
+  trigger:
+    - platform: device
+      type: turned_on
+      device_id: 4025a131fa92aa3fb8f868cc69ba27e5
+      entity_id: cbaf3e779017ece327d59bad1edd1c0a
+      domain: switch
+  condition: []
+  action:
+    - service: switch.turn_on
+      data: {}
+      target:
+        entity_id: switch.virtual_switch_15
+    - service: switch.turn_on
+      data: {}
+      target:
+        entity_id: switch.virtual_switch_17
+    - parallel:
+        - service: script.script1
+          data: {}
+        - service: script.script2
+          data: {}
+    - service: switch.turn_off
+      data: {}
+      target:
+        device_id: 3a640959dc5a26de9c7a04862d43679f
+  mode: single
+- id: "1711657899498"
+  alias: New automation4
+  description: ""
+  trigger:
+    - platform: device
+      type: turned_on
+      device_id: 6194a60912ad68da177cd3365d1bbf2b
+      entity_id: 70142b2e67ddbe3296ea0647c91c8efc
+      domain: switch
+  condition: []
+  action:
+    - parallel:
+        - service: script.script3
+          data: {}
+        - service: switch.turn_off
+          data: {}
+          target:
+            entity_id: switch.virtual_switch_3
+    - service: switch.turn_off
+      data: {}
+      target:
+        entity_id: switch.virtual_switch_17
+  mode: single
+- id: "1711658016274"
+  alias: New automation5
+  description: ""
+  trigger:
+    - platform: device
+      type: turned_on
+      device_id: a1ea680074f19ddbf3c475f2b2c641db
+      entity_id: 96da6bb2c9d68db88cb17a2e4e8d89c3
+      domain: switch
+  condition: []
+  action:
+    - service: switch.turn_off
+      data: {}
+      target:
+        entity_id: switch.virtual_switch_11
+    - parallel:
+        - service: script.script4
+          data: {}
+        - service: script.script5
+          data: {}
+  mode: single

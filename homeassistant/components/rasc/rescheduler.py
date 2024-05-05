@@ -5,6 +5,7 @@ import copy
 from datetime import datetime, timedelta
 import heapq
 from itertools import product
+import logging
 from typing import Optional
 
 from homeassistant.const import (
@@ -59,7 +60,7 @@ from homeassistant.helpers.rascalscheduler import (
 from homeassistant.helpers.typing import ConfigType
 
 from .abstraction import RASCAbstraction
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 from .entity import ActionEntity, Queue, get_entity_id_from_number
 from .metrics import ScheduleMetrics
 from .scheduler import (
@@ -70,6 +71,9 @@ from .scheduler import (
     TimeLineScheduler,
     get_target_entities,
 )
+
+LOGGER = logging.getLogger("rascal_rescheduler")
+LOGGER.setLevel(logging.DEBUG)
 
 
 class BaseRescheduler(TimeLineScheduler):
@@ -323,6 +327,15 @@ class BaseRescheduler(TimeLineScheduler):
         """Reschedule actions using the Early Start resource reclamation algorithm."""
         return self._lineage_table
 
+    def _target_entities(self, actions: list[ActionEntity]) -> set[str]:
+        """Return the target entities of the actions."""
+        entities = set[str]()
+        for action in actions:
+            if action.is_end_node:
+                continue
+            entities |= set(get_target_entities(self._hass, action.action))
+        return entities
+
     def affected_src_actions_after_len_diff(
         self, entity_id: str, action_id: str, time: datetime
     ) -> set[ActionEntity]:
@@ -350,7 +363,11 @@ class BaseRescheduler(TimeLineScheduler):
         for child in action.children:
             if child.action_id in affected_actions:
                 continue
+            if child.is_end_node:
+                continue
             affected_actions[child.action_id] = child
+        routine_actions = self._dependent_actions(action_id)
+        routine_target = self._target_entities(routine_actions)
 
         # the next action in the same entity's schedule is affected
         next_action_lock = self._lineage_table.lock_queues[entity_id].next(action_id)
@@ -365,10 +382,14 @@ class BaseRescheduler(TimeLineScheduler):
         routine_id = get_routine_id(action_id)
         routines_after = self._routines_serialized_after(routine_id)
         for routine_after_id in routines_after:
-            routine_src_actions = self._current_routine_source_actions(
-                routine_after_id, time
+            routine_after_src_actions = list(
+                self._current_routine_source_actions(routine_after_id, time)
             )
-            for action in routine_src_actions:
+            routine_after_actions = self._bfs_actions(routine_after_src_actions)
+            routine_after_target = self._target_entities(routine_after_actions)
+            if routine_target.isdisjoint(routine_after_target):
+                continue
+            for action in routine_after_src_actions:
                 if action.action_id in affected_actions:
                     continue
                 affected_actions[action.action_id] = action
@@ -646,6 +667,7 @@ class BaseRescheduler(TimeLineScheduler):
                 child
                 for child in action.children
                 if get_routine_id(child.action_id) == get_routine_id(action.action_id)
+                or child.is_end_node
             ]
 
     def _find_slot_including_time_range(
@@ -667,7 +689,7 @@ class BaseRescheduler(TimeLineScheduler):
         free_slots: dict[str, Queue[str, str]],
         lock_queues: dict[str, Queue[str, ActionInfo]],
     ) -> None:
-        """Insert action to the free slots at now based on lock leasing approach."""
+        """Insert action to the free slots and lock queues."""
 
         target_entities = get_target_entities(self._hass, action.action)
         dt_action_st = string_to_datetime(action_st)
@@ -1358,6 +1380,8 @@ class BaseRescheduler(TimeLineScheduler):
         while index < len(bfs_actions):
             action = bfs_actions[index]
             for child in action.children:
+                if child.is_end_node:
+                    continue
                 if child not in bfs_actions:
                     bfs_actions.append(child)
             index += 1
@@ -1435,6 +1459,8 @@ class BaseRescheduler(TimeLineScheduler):
                 # only when all parents of a child have been visited,
                 # add it to the next batch
                 for child in action.children:
+                    if child.is_end_node:
+                        continue
                     if all(parent in visited for parent in child.parents):
                         next_batch.add(child)
         return current_sources
@@ -2063,6 +2089,8 @@ class BaseRescheduler(TimeLineScheduler):
                     next_actions.append(action)
             for action in next_actions:
                 # self._find_slot_to_move_action_up_to(action.action_id)
+                if action.is_end_node:
+                    continue
                 next_actions += action.children
             metric = 0  # self._calculate_metric()
             if metric < best_metric:
@@ -2256,6 +2284,9 @@ class RascalRescheduler:
                     entity_id, action_id, old_end_time_dt
                 )
             )
+            if not affected_source_actions:
+                self._apply_schedule(old_sched)
+                return
             LOGGER.debug(
                 "Affected source actions after length difference: %s",
                 [action.action_id for action in affected_source_actions],
@@ -2309,7 +2340,7 @@ class RascalRescheduler:
         if not new_sched:
             self._apply_schedule(old_sched)
             return
-        LOGGER.debug("New schedule created at %s", datetime.now())
+        LOGGER.info("New schedule created at %s", datetime.now())
         # output_lock_queues(new_sched.lock_queues)
         # output_free_slots(new_sched.free_slots)
         self._apply_schedule(new_sched)
@@ -2418,16 +2449,19 @@ class RascalRescheduler:
         exp_end_time = string_to_datetime(action_lock.end_time)
         act_end_time = event.time_fired.replace(tzinfo=None)
         LOGGER.debug(
-            "Expected end time: %s, Actual end time: %s", exp_end_time, act_end_time
+            "Expected end time: %s, Actual end time: %s, diff: %s",
+            exp_end_time,
+            act_end_time,
+            (act_end_time - exp_end_time).total_seconds(),
         )
         return act_end_time - exp_end_time
 
     async def _handle_undertime(self, event: Event) -> None:
-        LOGGER.debug("Handling undertime on the rescheduler, time: %s", datetime.now())
-        self._cancel_overtime_check(event)
         diff = self._action_length_diff(event)
         if diff.total_seconds() >= -1:
             return
+        LOGGER.info("Handling undertime, diff: %s", diff.total_seconds())
+        self._cancel_overtime_check(event)
         entity_id: Optional[str] = event.data.get(ATTR_ENTITY_ID)
         action_id: Optional[str] = event.data.get(ATTR_ACTION_ID)
         if not entity_id or not action_id:
@@ -2437,9 +2471,9 @@ class RascalRescheduler:
     async def handle_event(self, event: Event) -> None:
         """Handle RASC events. This is called by the scheduler."""
 
-        LOGGER.debug("Handling RASC event %s on the rescheduler", event)
         if self._scheduling_policy not in (TIMELINE):
             return
+        LOGGER.debug("Handling event %s", event)
         response = event.data.get(CONF_TYPE)
         if response not in (RASC_START, RASC_COMPLETE):
             return

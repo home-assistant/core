@@ -1223,6 +1223,12 @@ class BaseScheduler:
                         action_id, entity_id
                     )
                 )
+            if new_action.action_id == action_id:
+                raise ValueError(
+                    "The action {} is already in {}'s lock queue {}".format(
+                        new_action.action_id, entity_id, lock_queues[entity_id]
+                    )
+                )
             if new_action_slot[1] <= action_info.start_time:
                 lock_queues[entity_id].insert_before(
                     action_id, new_action.action_id, new_action_info
@@ -2642,6 +2648,14 @@ class RascalScheduler(BaseScheduler):
         _LOGGER.error(
             "Routine %s failed to pass the eligibility test", routine.routine_id
         )
+        output_all(
+            _LOGGER,
+            locks=self._lineage_table.locks,
+            lock_queues=self._lineage_table.lock_queues,
+            free_slots=self._lineage_table.free_slots,
+            serialization_order=self._serialization_order,
+        )
+
         return False
 
     def initialize_routine(self, routine: RoutineEntity) -> None:

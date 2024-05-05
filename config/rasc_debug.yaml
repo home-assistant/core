@@ -1,0 +1,14 @@
+scheduling_policy: "tl" # from tl, jit, fcfs, fcfs_post
+rescheduling_policy: "sjfw" # from sjfw, sjfwo, optimal, rv, early_start
+rescheduling_trigger: "reactive" # from reactive, anticipatory, proactive
+optimal_schedule_metric: "min_length"
+# from min_length, min_avg_rtn_wait_time, min_p95_rtn_wait_time,
+# min_avg_rtn_latency, min_p95_rtn_latency, min_rtn_exect_time_std_dev,
+# min_avg_idle_time, min_p95_idle_time,
+# max_avg_parallelism, max_p05_parallelism
+rescheduling_window: 30
+routine_priority_policy: "earliest" # from shortest, longest, earliest, latest
+# rescheduling_estimation: true
+# rescheduling_accuracy: "reschedule_all"
+# mthresh: 1
+# mithresh: 2

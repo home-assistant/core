@@ -282,7 +282,7 @@ class ActionEntity:
             f"ActionEntity({self.action_id}, {self.duration}"
             f"{', end node' if self.is_end_node else ''}"
             f", parents: {[parent.action_id for parent in self.parents]}"
-            f", children: {[child.action_id for child in self.children]})"
+            f", children: {[child.action_id if not child.is_end_node else 'end' for child in self.children]})"
         )
 
     @property

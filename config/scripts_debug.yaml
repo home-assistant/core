@@ -1,0 +1,73 @@
+script1:
+  alias: script1
+  sequence:
+    - service: switch.turn_off
+      data: {}
+      target:
+        entity_id: switch.virtual_switch_5
+  mode: single
+script2:
+  alias: script2
+  sequence:
+    - service: switch.turn_off
+      data: {}
+      target:
+        entity_id:
+          - switch.virtual_switch_6
+          - switch.virtual_switch_7
+    - parallel:
+        - service: switch.turn_off
+          data: {}
+          target:
+            entity_id: switch.virtual_switch_8
+        - service: switch.turn_off
+          data: {}
+          target:
+            entity_id: switch.virtual_switch_9
+  mode: single
+script3:
+  alias: script3
+  sequence:
+    - parallel:
+        - service: switch.turn_off
+          data: {}
+          target:
+            entity_id: switch.virtual_switch_1
+        - service: switch.turn_off
+          data: {}
+          target:
+            entity_id: switch.virtual_switch_2
+    - service: switch.turn_on
+      data: {}
+      target:
+        entity_id: switch.virtual_switch_17
+  mode: single
+script4:
+  alias: script4
+  sequence:
+    - service: switch.turn_off
+      data: {}
+      target:
+        entity_id: switch.virtual_switch_12
+    - parallel:
+        - service: switch.turn_off
+          data: {}
+          target:
+            entity_id: switch.virtual_switch_13
+        - service: switch.turn_off
+          data: {}
+          target:
+            entity_id: switch.virtual_switch_14
+  mode: single
+script5:
+  alias: script5
+  sequence:
+    - service: switch.turn_off
+      data: {}
+      target:
+        entity_id: switch.virtual_switch_15
+    - service: switch.turn_off
+      data: {}
+      target:
+        entity_id: switch.virtual_switch_4
+  mode: single
