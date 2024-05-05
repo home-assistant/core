@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import json
-
 from homeassistant.components.slack.const import CONF_DEFAULT_CHANNEL, DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME
@@ -42,12 +40,12 @@ def mock_connection(
         if error == "invalid_auth":
             aioclient_mock.post(
                 AUTH_URL,
-                text=json.dumps({"ok": False, "error": "invalid_auth"}),
+                json={"ok": False, "error": "invalid_auth"},
             )
         else:
             aioclient_mock.post(
                 AUTH_URL,
-                text=json.dumps({"ok": False, "error": "cannot_connect"}),
+                json={"ok": False, "error": "cannot_connect"},
             )
     else:
         aioclient_mock.post(

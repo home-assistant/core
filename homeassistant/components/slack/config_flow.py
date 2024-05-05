@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
-from slack import WebClient
-from slack.errors import SlackApiError
+from slack_sdk.errors import SlackApiError
+from slack_sdk.web.async_client import AsyncWebClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_ICON, CONF_NAME, CONF_USERNAME
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_DEFAULT_CHANNEL, DOMAIN
 
@@ -59,11 +60,10 @@ class SlackFlowHandler(ConfigFlow, domain=DOMAIN):
         self, token: str
     ) -> tuple[str, None] | tuple[None, dict[str, str]]:
         """Try connecting to Slack."""
-        session = aiohttp_client.async_get_clientsession(self.hass)
-        client = WebClient(token=token, run_async=True, session=session)
+        client = AsyncWebClient(token=token, session=async_get_clientsession(self.hass))
 
         try:
-            info = await client.auth_test()
+            resp = await client.auth_test()
         except SlackApiError as ex:
             if ex.response["error"] == "invalid_auth":
                 return "invalid_auth", None
@@ -71,4 +71,4 @@ class SlackFlowHandler(ConfigFlow, domain=DOMAIN):
         except Exception:  # pylint:disable=broad-except
             _LOGGER.exception("Unexpected exception")
             return "unknown", None
-        return None, info
+        return None, cast(dict, resp.data)

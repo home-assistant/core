@@ -10,8 +10,8 @@ from urllib.parse import urlparse
 
 from aiohttp import BasicAuth, FormData
 from aiohttp.client_exceptions import ClientError
-from slack import WebClient
-from slack.errors import SlackApiError
+from slack_sdk.errors import SlackApiError
+from slack_sdk.web.async_client import AsyncWebClient
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -86,7 +86,7 @@ class FormDataT(TypedDict, total=False):
     filename: str
     initial_comment: str
     title: str
-    token: str
+    token: str | None
     thread_ts: str  # Optional key
 
 
@@ -136,7 +136,7 @@ class SlackNotificationService(BaseNotificationService):
     def __init__(
         self,
         hass: HomeAssistant,
-        client: WebClient,
+        client: AsyncWebClient,
         config: dict[str, str],
     ) -> None:
         """Initialize."""
@@ -200,7 +200,7 @@ class SlackNotificationService(BaseNotificationService):
         if username and password is not None:
             kwargs = {"auth": BasicAuth(username, password=password)}
 
-        resp = await session.request("get", url, **kwargs)
+        resp = await session.get(url, **kwargs)
 
         try:
             resp.raise_for_status()
