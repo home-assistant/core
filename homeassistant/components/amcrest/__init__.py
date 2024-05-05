@@ -232,7 +232,7 @@ class AmcrestChecker(ApiWrapper):
         async with self._async_wrap_lock:
             self._async_set_online()
 
-    def _handle_offline_shared(self, ex: Exception) -> bool:
+    def _handle_offline_thread_safe(self, ex: Exception) -> bool:
         """Handle camera offline status shared between threads and event loop.
 
         Returns if the camera was online as a bool.
@@ -247,15 +247,15 @@ class AmcrestChecker(ApiWrapper):
 
     def _handle_offline(self, ex: Exception) -> None:
         """Handle camera offline status from a thread."""
-        if self._handle_offline_shared(ex):
+        if self._handle_offline_thread_safe(ex):
             self._hass.loop.call_soon_threadsafe(self._async_start_recovery)
 
     @callback
     def _async_handle_offline(self, ex: Exception) -> None:
-        if self._handle_offline_shared(ex):
+        if self._handle_offline_thread_safe(ex):
             self._async_start_recovery()
 
-    def _handle_error_shared(self) -> bool:
+    def _handle_error_thread_safe(self) -> bool:
         """Handle camera error status shared between threads and event loop.
 
         Returns if the camera was online and is now offline as
@@ -270,18 +270,18 @@ class AmcrestChecker(ApiWrapper):
 
     def _handle_error(self) -> None:
         """Handle camera error status from a thread."""
-        if self._handle_error_shared():
+        if self._handle_error_thread_safe():
             _LOGGER.error("%s camera offline: Too many errors", self._wrap_name)
             self._hass.loop.call_soon_threadsafe(self._async_start_recovery)
 
     @callback
     def _async_handle_error(self) -> None:
         """Handle camera error status from the event loop."""
-        if self._handle_error_shared():
+        if self._handle_error_thread_safe():
             _LOGGER.error("%s camera offline: Too many errors", self._wrap_name)
             self._async_start_recovery()
 
-    def _set_online_shared(self) -> bool:
+    def _set_online_thread_safe(self) -> bool:
         """Set camera online status shared between threads and event loop.
 
         Returns if the camera was offline as a bool.
@@ -294,8 +294,14 @@ class AmcrestChecker(ApiWrapper):
 
     def _set_online(self) -> None:
         """Set camera online status from a thread."""
-        if self._set_online_shared():
+        if self._set_online_thread_safe():
             self._hass.loop.call_soon_threadsafe(self._async_signal_online)
+
+    @callback
+    def _async_set_online(self) -> None:
+        """Set camera online status from the event loop."""
+        if self._set_online_thread_safe():
+            self._async_signal_online()
 
     @callback
     def _async_signal_online(self) -> None:
@@ -309,12 +315,6 @@ class AmcrestChecker(ApiWrapper):
         async_dispatcher_send(
             self._hass, service_signal(SERVICE_UPDATE, self._wrap_name)
         )
-
-    @callback
-    def _async_set_online(self) -> None:
-        """Set camera online status from the event loop."""
-        if self._set_online_shared():
-            self._async_signal_online()
 
     async def _wrap_test_online(self, now: datetime) -> None:
         """Test if camera is back online."""
