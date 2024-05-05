@@ -62,9 +62,6 @@
   "exceptions": {
     "setup_rate_limit_exception": {
       "message": "Currently rate limited, try again later"
-    },
-    "setup_authentication_exception": {
-      "message": "Authentication failed, verify you `User ID` and `API Token`"
     }
   },
   "services": {

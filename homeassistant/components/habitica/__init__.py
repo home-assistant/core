@@ -18,7 +18,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -165,11 +165,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HabiticaConfigEntry) -> 
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="setup_rate_limit_exception",
-            ) from e
-        if e.status == HTTPStatus.UNAUTHORIZED:
-            raise ConfigEntryError(
-                translation_domain=DOMAIN,
-                translation_key="setup_authentication_exception",
             ) from e
         raise ConfigEntryNotReady(e) from e
 
