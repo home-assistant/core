@@ -41,7 +41,7 @@ async def test_removing_old_device(
     mock_dwdwfsapi: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test removing old device when reconfiguring the integration."""
+    """Test removing old device when reloading the integration."""
 
     mock_identifier_entry.add_to_hass(hass)
 
