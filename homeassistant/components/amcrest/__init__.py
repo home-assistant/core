@@ -232,56 +232,89 @@ class AmcrestChecker(ApiWrapper):
         async with self._async_wrap_lock:
             self._async_set_online()
 
-    def _handle_offline(self, ex: Exception) -> None:
-        """Handle camera offline status from a thread."""
-        self._hass.loop.call_soon_threadsafe(self._async_handle_offline, ex)
+    def _handle_offline_shared(self, ex: Exception) -> bool:
+        """Handle camera offline status shared between threads and event loop.
 
-    @callback
-    def _async_handle_offline(self, ex: Exception) -> None:
+        Returns if the camera was online as a bool.
+        """
         with self._wrap_lock:
             was_online = self.available
             was_login_err = self._wrap_login_err
             self._wrap_login_err = True
         if not was_login_err:
             _LOGGER.error("%s camera offline: Login error: %s", self._wrap_name, ex)
-        if was_online:
-            self._async_start_recovery()
+        return was_online
 
-    def _handle_error(self) -> None:
-        """Handle camera error status from a thread."""
-        self._hass.loop.call_soon_threadsafe(self._async_handle_error)
+    def _handle_offline(self, ex: Exception) -> None:
+        """Handle camera offline status from a thread."""
+        if self._handle_offline_shared(ex):
+            self._hass.loop.call_soon_threadsafe(self._async_start_recovery)
 
     @callback
-    def _async_handle_error(self) -> None:
+    def _async_handle_offline(self, ex: Exception) -> None:
+        if self._handle_offline_shared(ex):
+            self._async_start_recovery()
+
+    def _handle_error_shared(self) -> bool:
+        """Handle camera error status shared between threads and event loop.
+
+        Returns if the camera was online and is now offline as
+        a bool.
+        """
         with self._wrap_lock:
             was_online = self.available
             errs = self._wrap_errors = self._wrap_errors + 1
             offline = not self.available
         _LOGGER.debug("%s camera errs: %i", self._wrap_name, errs)
-        if was_online and offline:
+        return was_online and offline
+
+    def _handle_error(self) -> None:
+        """Handle camera error status from a thread."""
+        if self._handle_error_shared():
+            _LOGGER.error("%s camera offline: Too many errors", self._wrap_name)
+            self._hass.loop.call_soon_threadsafe(self._async_handle_error)
+
+    @callback
+    def _async_handle_error(self) -> None:
+        """Handle camera error status from the event loop."""
+        if self._handle_error_shared():
             _LOGGER.error("%s camera offline: Too many errors", self._wrap_name)
             self._async_start_recovery()
 
-    def _set_online(self) -> None:
-        """Set camera online status from a thread."""
-        self._hass.loop.call_soon_threadsafe(self._async_set_online)
+    def _set_online_shared(self) -> bool:
+        """Set camera online status shared between threads and event loop.
 
-    @callback
-    def _async_set_online(self) -> None:
+        Returns if the camera was offline as a bool.
+        """
         with self._wrap_lock:
             was_offline = not self.available
             self._wrap_errors = 0
             self._wrap_login_err = False
-        if was_offline:
-            assert self._unsub_recheck is not None
-            self._unsub_recheck()
-            self._unsub_recheck = None
-            _LOGGER.error("%s camera back online", self._wrap_name)
-            self.available_flag.set()
-            self.async_available_flag.set()
-            async_dispatcher_send(
-                self._hass, service_signal(SERVICE_UPDATE, self._wrap_name)
-            )
+        return was_offline
+
+    def _set_online(self) -> None:
+        """Set camera online status from a thread."""
+        if self._set_online_shared():
+            self._hass.loop.call_soon_threadsafe(self._async_signal_online)
+
+    @callback
+    def _async_signal_online(self) -> None:
+        """Signal that camera is back online."""
+        assert self._unsub_recheck is not None
+        self._unsub_recheck()
+        self._unsub_recheck = None
+        _LOGGER.error("%s camera back online", self._wrap_name)
+        self.available_flag.set()
+        self.async_available_flag.set()
+        async_dispatcher_send(
+            self._hass, service_signal(SERVICE_UPDATE, self._wrap_name)
+        )
+
+    @callback
+    def _async_set_online(self) -> None:
+        """Set camera online status from the event loop."""
+        if self._set_online_shared():
+            self._async_signal_online()
 
     async def _wrap_test_online(self, now: datetime) -> None:
         """Test if camera is back online."""
