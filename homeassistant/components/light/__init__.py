@@ -517,13 +517,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                     params[ATTR_COLOR_TEMP_KELVIN]
                 )
         elif ATTR_RGB_COLOR in params and ColorMode.RGB not in supported_color_modes:
-            assert (rgb_color := params.pop(ATTR_RGB_COLOR)) is not None
+            rgb_color = params.pop(ATTR_RGB_COLOR)
+            assert rgb_color is not None
             if ColorMode.RGBW in supported_color_modes:
                 params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
             elif ColorMode.RGBWW in supported_color_modes:
-                # https://github.com/python/mypy/issues/13673
                 params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
-                    *rgb_color,  # type: ignore[call-arg]
+                    *rgb_color,
                     light.min_color_temp_kelvin,
                     light.max_color_temp_kelvin,
                 )
@@ -584,9 +584,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         elif (
             ATTR_RGBWW_COLOR in params and ColorMode.RGBWW not in supported_color_modes
         ):
-            assert (rgbww_color := params.pop(ATTR_RGBWW_COLOR)) is not None
-            # https://github.com/python/mypy/issues/13673
-            rgb_color = color_util.color_rgbww_to_rgb(  # type: ignore[call-arg]
+            rgbww_color = params.pop(ATTR_RGBWW_COLOR)
+            assert rgbww_color is not None
+            rgb_color = color_util.color_rgbww_to_rgb(
                 *rgbww_color, light.min_color_temp_kelvin, light.max_color_temp_kelvin
             )
             if ColorMode.RGB in supported_color_modes:

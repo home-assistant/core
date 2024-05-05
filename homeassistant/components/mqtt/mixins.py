@@ -1015,7 +1015,8 @@ class MqttDiscoveryUpdate(Entity):
                 self.hass.async_create_task(
                     _async_process_discovery_update_and_remove(
                         payload, self._discovery_data
-                    )
+                    ),
+                    eager_start=False,
                 )
             elif self._discovery_update:
                 if old_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]:
@@ -1024,7 +1025,8 @@ class MqttDiscoveryUpdate(Entity):
                     self.hass.async_create_task(
                         _async_process_discovery_update(
                             payload, self._discovery_update, self._discovery_data
-                        )
+                        ),
+                        eager_start=False,
                     )
                 else:
                     # Non-empty, unchanged payload: Ignore to avoid changing states

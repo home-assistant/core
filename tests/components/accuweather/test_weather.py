@@ -7,30 +7,14 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.accuweather.const import ATTRIBUTION
+from homeassistant.components.accuweather.const import UPDATE_INTERVAL_DAILY_FORECAST
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
-    ATTR_WEATHER_APPARENT_TEMPERATURE,
-    ATTR_WEATHER_CLOUD_COVERAGE,
-    ATTR_WEATHER_DEW_POINT,
-    ATTR_WEATHER_HUMIDITY,
-    ATTR_WEATHER_PRESSURE,
-    ATTR_WEATHER_TEMPERATURE,
-    ATTR_WEATHER_UV_INDEX,
-    ATTR_WEATHER_VISIBILITY,
-    ATTR_WEATHER_WIND_BEARING,
-    ATTR_WEATHER_WIND_GUST_SPEED,
-    ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
     LEGACY_SERVICE_GET_FORECAST,
     SERVICE_GET_FORECASTS,
 )
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -42,34 +26,18 @@ from tests.common import (
     async_fire_time_changed,
     load_json_array_fixture,
     load_json_object_fixture,
+    snapshot_platform,
 )
 from tests.typing import WebSocketGenerator
 
 
-async def test_weather(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
+async def test_weather(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+) -> None:
     """Test states of the weather without forecast."""
-    await init_integration(hass)
-
-    state = hass.states.get("weather.home")
-    assert state
-    assert state.state == "sunny"
-    assert state.attributes.get(ATTR_WEATHER_HUMIDITY) == 67
-    assert state.attributes.get(ATTR_WEATHER_PRESSURE) == 1012.0
-    assert state.attributes.get(ATTR_WEATHER_TEMPERATURE) == 22.6
-    assert state.attributes.get(ATTR_WEATHER_VISIBILITY) == 16.1
-    assert state.attributes.get(ATTR_WEATHER_WIND_BEARING) == 180
-    assert state.attributes.get(ATTR_WEATHER_WIND_SPEED) == 14.5  # 4.03 m/s -> km/h
-    assert state.attributes.get(ATTR_WEATHER_APPARENT_TEMPERATURE) == 22.8
-    assert state.attributes.get(ATTR_WEATHER_DEW_POINT) == 16.2
-    assert state.attributes.get(ATTR_WEATHER_CLOUD_COVERAGE) == 10
-    assert state.attributes.get(ATTR_WEATHER_WIND_GUST_SPEED) == 20.3
-    assert state.attributes.get(ATTR_WEATHER_UV_INDEX) == 6
-    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert ATTR_SUPPORTED_FEATURES not in state.attributes
-
-    entry = entity_registry.async_get("weather.home")
-    assert entry
-    assert entry.unique_id == "0123456"
+    with patch("homeassistant.components.accuweather.PLATFORMS", [Platform.WEATHER]):
+        entry = await init_integration(hass)
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 async def test_availability(hass: HomeAssistant) -> None:
@@ -118,22 +86,17 @@ async def test_availability(hass: HomeAssistant) -> None:
 
 async def test_manual_update_entity(hass: HomeAssistant) -> None:
     """Test manual update entity via service homeassistant/update_entity."""
-    await init_integration(hass, forecast=True)
+    await init_integration(hass)
 
     await async_setup_component(hass, "homeassistant", {})
 
     current = load_json_object_fixture("accuweather/current_conditions_data.json")
-    forecast = load_json_array_fixture("accuweather/forecast_data.json")
 
     with (
         patch(
             "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
             return_value=current,
         ) as mock_current,
-        patch(
-            "homeassistant.components.accuweather.AccuWeather.async_get_daily_forecast",
-            return_value=forecast,
-        ) as mock_forecast,
         patch(
             "homeassistant.components.accuweather.AccuWeather.requests_remaining",
             new_callable=PropertyMock,
@@ -147,12 +110,11 @@ async def test_manual_update_entity(hass: HomeAssistant) -> None:
             blocking=True,
         )
     assert mock_current.call_count == 1
-    assert mock_forecast.call_count == 1
 
 
 async def test_unsupported_condition_icon_data(hass: HomeAssistant) -> None:
     """Test with unsupported condition icon data."""
-    await init_integration(hass, forecast=True, unsupported_icon=True)
+    await init_integration(hass, unsupported_icon=True)
 
     state = hass.states.get("weather.home")
     assert state.attributes.get(ATTR_FORECAST_CONDITION) is None
@@ -171,7 +133,7 @@ async def test_forecast_service(
     service: str,
 ) -> None:
     """Test multiple forecast."""
-    await init_integration(hass, forecast=True)
+    await init_integration(hass)
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
@@ -195,7 +157,7 @@ async def test_forecast_subscription(
     """Test multiple forecast."""
     client = await hass_ws_client(hass)
 
-    await init_integration(hass, forecast=True)
+    await init_integration(hass)
 
     await client.send_json_auto_id(
         {
@@ -235,7 +197,7 @@ async def test_forecast_subscription(
             return_value=10,
         ),
     ):
-        freezer.tick(timedelta(minutes=80) + timedelta(seconds=1))
+        freezer.tick(UPDATE_INTERVAL_DAILY_FORECAST + timedelta(seconds=1))
         await hass.async_block_till_done()
         msg = await client.receive_json()
 

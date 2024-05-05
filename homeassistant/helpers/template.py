@@ -9,7 +9,7 @@ import collections.abc
 from collections.abc import Callable, Generator, Iterable
 from contextlib import AbstractContextManager, suppress
 from contextvars import ContextVar
-from datetime import datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from functools import cache, lru_cache, partial, wraps
 import json
 import logging
@@ -695,6 +695,8 @@ class Template:
         **kwargs: Any,
     ) -> RenderInfo:
         """Render the template and collect an entity filter."""
+        if self.hass and self.hass.config.debug:
+            self.hass.verify_event_loop_thread("async_render_to_info")
         self._renders += 1
         assert self.hass and _render_info.get() is None
 
@@ -1347,8 +1349,8 @@ def device_id(hass: HomeAssistant, entity_id_or_device_name: str) -> str | None:
     dev_reg = device_registry.async_get(hass)
     return next(
         (
-            id
-            for id, device in dev_reg.devices.items()
+            device_id
+            for device_id, device in dev_reg.devices.items()
             if (name := device.name_by_user or device.name)
             and (str(entity_id_or_device_name) == name)
         ),
@@ -1453,8 +1455,7 @@ def floor_areas(hass: HomeAssistant, floor_id_or_name: str) -> Iterable[str]:
 
 def areas(hass: HomeAssistant) -> Iterable[str | None]:
     """Return all areas."""
-    area_reg = area_registry.async_get(hass)
-    return [area.id for area in area_reg.async_list_areas()]
+    return list(area_registry.async_get(hass).areas)
 
 
 def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
@@ -1580,7 +1581,7 @@ def labels(hass: HomeAssistant, lookup_value: Any = None) -> Iterable[str | None
     """Return all labels, or those from a area ID, device ID, or entity ID."""
     label_reg = label_registry.async_get(hass)
     if lookup_value is None:
-        return [label.label_id for label in label_reg.async_list_labels()]
+        return list(label_reg.labels)
 
     ent_reg = entity_registry.async_get(hass)
 
@@ -2002,12 +2003,12 @@ def square_root(value, default=_SENTINEL):
 def timestamp_custom(value, date_format=DATE_STR_FORMAT, local=True, default=_SENTINEL):
     """Filter to convert given timestamp to format."""
     try:
-        date = dt_util.utc_from_timestamp(value)
+        result = dt_util.utc_from_timestamp(value)
 
         if local:
-            date = dt_util.as_local(date)
+            result = dt_util.as_local(result)
 
-        return date.strftime(date_format)
+        return result.strftime(date_format)
     except (ValueError, TypeError):
         # If timestamp can't be converted
         if default is _SENTINEL:
@@ -2049,6 +2050,12 @@ def forgiving_as_timestamp(value, default=_SENTINEL):
 
 def as_datetime(value: Any, default: Any = _SENTINEL) -> Any:
     """Filter and to convert a time string or UNIX timestamp to datetime object."""
+    # Return datetime.datetime object without changes
+    if type(value) is datetime:
+        return value
+    # Add midnight to datetime.date object
+    if type(value) is date:
+        return datetime.combine(value, time(0, 0, 0))
     try:
         # Check for a valid UNIX timestamp string, int or float
         timestamp = float(value)
@@ -2469,10 +2476,15 @@ def relative_time(hass: HomeAssistant, value: Any) -> Any:
     The age can be in second, minute, hour, day, month or year. Only the
     biggest unit is considered, e.g. if it's 2 days and 3 hours, "2 days" will
     be returned.
-    Make sure date is not in the future, or else it will return None.
+    If the input datetime is in the future,
+    the input datetime will be returned.
 
     If the input are not a datetime object the input will be returned unmodified.
+
+    Note: This template function is deprecated in favor of `time_until`, but is still
+    supported so as not to break old templates.
     """
+
     if (render_info := _render_info.get()) is not None:
         render_info.has_time = True
 
@@ -2483,6 +2495,50 @@ def relative_time(hass: HomeAssistant, value: Any) -> Any:
     if dt_util.now() < value:
         return value
     return dt_util.get_age(value)
+
+
+def time_since(hass: HomeAssistant, value: Any | datetime, precision: int = 1) -> Any:
+    """Take a datetime and return its "age" as a string.
+
+    The age can be in seconds, minutes, hours, days, months and year.
+
+    precision is the number of units to return, with the last unit rounded.
+
+    If the value not a datetime object the input will be returned unmodified.
+    """
+    if (render_info := _render_info.get()) is not None:
+        render_info.has_time = True
+
+    if not isinstance(value, datetime):
+        return value
+    if not value.tzinfo:
+        value = dt_util.as_local(value)
+    if dt_util.now() < value:
+        return value
+
+    return dt_util.get_age(value, precision)
+
+
+def time_until(hass: HomeAssistant, value: Any | datetime, precision: int = 1) -> Any:
+    """Take a datetime and return the amount of time until that time as a string.
+
+    The time until can be in seconds, minutes, hours, days, months and years.
+
+    precision is the number of units to return, with the last unit rounded.
+
+    If the value not a datetime object the input will be returned unmodified.
+    """
+    if (render_info := _render_info.get()) is not None:
+        render_info.has_time = True
+
+    if not isinstance(value, datetime):
+        return value
+    if not value.tzinfo:
+        value = dt_util.as_local(value)
+    if dt_util.now() > value:
+        return value
+
+    return dt_util.get_time_remaining(value, precision)
 
 
 def urlencode(value):
@@ -2883,6 +2939,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "floor_id",
                 "floor_name",
                 "relative_time",
+                "time_since",
+                "time_until",
                 "today_at",
                 "label_id",
                 "label_name",
@@ -2939,6 +2997,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["now"] = hassfunction(now)
         self.globals["relative_time"] = hassfunction(relative_time)
         self.filters["relative_time"] = self.globals["relative_time"]
+        self.globals["time_since"] = hassfunction(time_since)
+        self.filters["time_since"] = self.globals["time_since"]
+        self.globals["time_until"] = hassfunction(time_until)
+        self.filters["time_until"] = self.globals["time_until"]
         self.globals["today_at"] = hassfunction(today_at)
         self.filters["today_at"] = self.globals["today_at"]
 
