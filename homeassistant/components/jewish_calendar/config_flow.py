@@ -48,12 +48,14 @@ LANGUAGE = [
     SelectOptionDict(value="english", label="English"),
 ]
 
-OPTIONS_SCHEMA = {
-    vol.Optional(CONF_CANDLE_LIGHT_MINUTES, default=DEFAULT_CANDLE_LIGHT): int,
-    vol.Optional(
-        CONF_HAVDALAH_OFFSET_MINUTES, default=DEFAULT_HAVDALAH_OFFSET_MINUTES
-    ): int,
-}
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_CANDLE_LIGHT_MINUTES, default=DEFAULT_CANDLE_LIGHT): int,
+        vol.Optional(
+            CONF_HAVDALAH_OFFSET_MINUTES, default=DEFAULT_HAVDALAH_OFFSET_MINUTES
+        ): int,
+    }
+)
 
 
 _LOGGER = logging.getLogger(__name__)

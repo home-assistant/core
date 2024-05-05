@@ -130,3 +130,25 @@ async def test_single_instance_allowed(
 
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "single_instance_allowed"
+
+
+async def test_options(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
+    """Test updating options."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_CANDLE_LIGHT_MINUTES: 25,
+            CONF_HAVDALAH_OFFSET_MINUTES: 34,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_CANDLE_LIGHT_MINUTES] == 25
+    assert result["data"][CONF_HAVDALAH_OFFSET_MINUTES] == 34
