@@ -58,14 +58,14 @@ async def async_setup_entry(
                 coordinator,
                 description,
                 controller,
-                sensor=sensor,
+                sensor_id=sensor.id,
             )
             for sensor in controller.sensors
             for description in RAIN_SENSOR_BINARY_SENSOR
             if "rain sensor" in sensor.model.name.lower()
         )
         entities.extend(
-            HydrawiseBinarySensor(coordinator, description, controller, zone=zone)
+            HydrawiseBinarySensor(coordinator, description, controller, zone_id=zone.id)
             for zone in controller.zones
             for description in ZONE_BINARY_SENSORS
         )

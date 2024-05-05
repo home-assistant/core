@@ -81,19 +81,23 @@ async def async_setup_entry(
     entities: list[HydrawiseSensor] = []
     for controller in coordinator.data.controllers.values():
         entities.extend(
-            HydrawiseSensor(coordinator, description, controller, zone=zone)
+            HydrawiseSensor(coordinator, description, controller, zone_id=zone.id)
             for zone in controller.zones
             for description in ZONE_SENSORS
         )
         entities.extend(
-            HydrawiseSensor(coordinator, description, controller, sensor=sensor)
+            HydrawiseSensor(coordinator, description, controller, sensor_id=sensor.id)
             for sensor in controller.sensors
             for description in FLOW_CONTROLLER_SENSORS
             if "flow meter" in sensor.model.name.lower()
         )
         entities.extend(
             HydrawiseSensor(
-                coordinator, description, controller, zone=zone, sensor=sensor
+                coordinator,
+                description,
+                controller,
+                zone_id=zone.id,
+                sensor_id=sensor.id,
             )
             for zone in controller.zones
             for sensor in controller.sensors

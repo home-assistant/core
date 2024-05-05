@@ -25,24 +25,29 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
         description: EntityDescription,
         controller: Controller,
         *,
-        zone: Zone | None = None,
-        sensor: Sensor | None = None,
+        zone_id: int | None = None,
+        sensor_id: int | None = None,
     ) -> None:
         """Initialize the Hydrawise entity."""
         super().__init__(coordinator=coordinator)
         self.entity_description = description
         self.controller = controller
-        self.zone_id = zone.id if zone else None
-        self.sensor_id = sensor.id if sensor else None
-        self._device_id = str(zone.id) if zone is not None else str(controller.id)
+        self.zone_id = zone_id
+        self.sensor_id = sensor_id
+        self._device_id = str(zone_id) if zone_id is not None else str(controller.id)
         self._attr_unique_id = f"{self._device_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
-            name=zone.name if zone is not None else controller.name,
-            model="Zone" if zone is not None else controller.hardware.model.description,
+            name=self.zone.name
+            if zone_id is not None
+            and self.zone is not None  # Redundant check but needed for mypy
+            else controller.name,
+            model="Zone"
+            if zone_id is not None
+            else controller.hardware.model.description,
             manufacturer=MANUFACTURER,
         )
-        if zone is not None or sensor is not None:
+        if zone_id is not None or sensor_id is not None:
             self._attr_device_info["via_device"] = (DOMAIN, str(controller.id))
         self._update_attrs()
 
