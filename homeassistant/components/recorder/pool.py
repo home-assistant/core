@@ -16,8 +16,6 @@ from sqlalchemy.pool import (
 from homeassistant.helpers.frame import report
 from homeassistant.util.loop import check_loop
 
-from .const import DB_WORKER_PREFIX
-
 _LOGGER = logging.getLogger(__name__)
 
 # For debugging the MutexPool
@@ -39,29 +37,22 @@ class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
     """
 
     def __init__(  # pylint: disable=super-init-not-called
-        self, *args: Any, **kw: Any
+        self, recorder_and_worker_thread_ids: set[int], *args: Any, **kw: Any
     ) -> None:
         """Create the pool."""
         kw["pool_size"] = POOL_SIZE
+        self.recorder_and_worker_thread_ids = recorder_and_worker_thread_ids
         SingletonThreadPool.__init__(self, *args, **kw)
 
-    @property
-    def recorder_or_dbworker(self) -> bool:
-        """Check if the thread is a recorder or dbworker thread."""
-        thread_name = threading.current_thread().name
-        return bool(
-            thread_name == "Recorder" or thread_name.startswith(DB_WORKER_PREFIX)
-        )
-
     def _do_return_conn(self, record: ConnectionPoolEntry) -> None:
-        if self.recorder_or_dbworker:
+        if threading.get_ident() in self.recorder_and_worker_thread_ids:
             return super()._do_return_conn(record)
         record.close()
 
     def shutdown(self) -> None:
         """Close the connection."""
         if (
-            self.recorder_or_dbworker
+            threading.get_ident() in self.recorder_and_worker_thread_ids
             and self._conn
             and hasattr(self._conn, "current")
             and (conn := self._conn.current())
@@ -70,11 +61,11 @@ class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
 
     def dispose(self) -> None:
         """Dispose of the connection."""
-        if self.recorder_or_dbworker:
+        if threading.get_ident() in self.recorder_and_worker_thread_ids:
             super().dispose()
 
     def _do_get(self) -> ConnectionPoolEntry:
-        if self.recorder_or_dbworker:
+        if threading.get_ident() in self.recorder_and_worker_thread_ids:
             return super()._do_get()
         check_loop(
             self._do_get_db_connection_protected,
