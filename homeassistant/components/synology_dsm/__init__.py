@@ -63,7 +63,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL}
         )
-    if (options := dict(entry.options)) and options.get(CONF_TIMEOUT):
+    if entry.options.get(CONF_TIMEOUT):
+        options = dict(entry.options)
         options.pop(CONF_TIMEOUT)
         hass.config_entries.async_update_entry(entry, data=entry.data, options=options)
 
