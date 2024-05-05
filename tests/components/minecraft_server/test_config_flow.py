@@ -37,10 +37,10 @@ async def test_show_config_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_device_already_configured(
+async def test_service_already_configured(
     hass: HomeAssistant, bedrock_mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test config flow abort if device is already configured."""
+    """Test config flow abort if service is already configured."""
     bedrock_mock_config_entry.add_to_hass(hass)
 
     with (
