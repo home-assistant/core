@@ -52,14 +52,16 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
         self._update_attrs()
 
     @property
-    def zone(self) -> Zone | None:
+    def zone(self) -> Zone:
         """Return the entity zone."""
-        return self.coordinator.data.zones[self.zone_id] if self.zone_id else None
+        assert self.zone_id is not None  # needed for mypy
+        return self.coordinator.data.zones[self.zone_id]
 
     @property
-    def sensor(self) -> Sensor | None:
+    def sensor(self) -> Sensor:
         """Return the entity sensor."""
-        return self.coordinator.data.sensors[self.sensor_id] if self.sensor_id else None
+        assert self.sensor_id is not None  # needed for mypy
+        return self.coordinator.data.sensors[self.sensor_id]
 
     def _update_attrs(self) -> None:
         """Update state attributes."""

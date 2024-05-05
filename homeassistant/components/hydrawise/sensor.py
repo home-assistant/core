@@ -125,31 +125,29 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
         self._attr_native_value = getattr(self, f"_get_{self.entity_description.key}")()
 
     def _get_watering_time(self) -> int:
-        assert self.zone is not None
         if (current_run := self.zone.scheduled_runs.current_run) is not None:
             return int(current_run.remaining_time.total_seconds() / 60)
         return 0
 
     def _get_next_cycle(self) -> datetime | None:
-        assert self.zone is not None
         if (next_run := self.zone.scheduled_runs.next_run) is not None:
             return dt_util.as_utc(next_run.start_time)
         return None
 
     def _get_daily_active_water_use(self) -> float:
         daily_water_summary = self.coordinator.data.daily_water_use[self.controller.id]
-        if self.zone is not None:
+        if self.zone_id is not None:
             # water use for the zone
             return float(
-                daily_water_summary.active_use_by_zone_id.get(self.zone.id, 0.0)
+                daily_water_summary.active_use_by_zone_id.get(self.zone_id, 0.0)
             )
-        if self.sensor is not None:
+        if self.sensor_id is not None:
             # water use for the controller
             return daily_water_summary.total_active_use
         return 0.0  # pragma: no cover
 
     def _get_daily_inactive_water_use(self) -> float | None:
-        if self.zone is None and self.sensor is not None:
+        if self.zone_id is None and self.sensor_id is not None:
             # water use for the controller
             daily_water_summary = self.coordinator.data.daily_water_use[
                 self.controller.id
@@ -158,7 +156,7 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
         return None  # pragma: no cover
 
     def _get_daily_total_water_use(self) -> float | None:
-        if self.zone is None and self.sensor is not None:
+        if self.zone_id is None and self.sensor_id is not None:
             # water use for the controller
             daily_water_summary = self.coordinator.data.daily_water_use[
                 self.controller.id

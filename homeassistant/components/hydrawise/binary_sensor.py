@@ -87,5 +87,4 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
         return self.sensor.status.active
 
     def _get_is_watering(self) -> bool:
-        assert self.zone is not None
         return self.zone.scheduled_runs.current_run is not None
