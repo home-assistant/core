@@ -35,6 +35,44 @@ async def test_show_config_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
+async def test_device_already_configured(hass: HomeAssistant) -> None:
+    """Test config flow abort if device is already configured."""
+    with (
+        patch(
+            "homeassistant.components.minecraft_server.api.BedrockServer.lookup",
+            return_value=BedrockServer(host=TEST_HOST, port=TEST_PORT),
+        ),
+        patch(
+            "homeassistant.components.minecraft_server.api.BedrockServer.async_status",
+            return_value=TEST_BEDROCK_STATUS_RESPONSE,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == USER_INPUT[CONF_ADDRESS]
+        assert result["data"][CONF_NAME] == USER_INPUT[CONF_NAME]
+        assert result["data"][CONF_ADDRESS] == TEST_ADDRESS
+        assert result["data"][CONF_TYPE] == MinecraftServerType.BEDROCK_EDITION
+
+    with (
+        patch(
+            "homeassistant.components.minecraft_server.api.BedrockServer.lookup",
+            return_value=BedrockServer(host=TEST_HOST, port=TEST_PORT),
+        ),
+        patch(
+            "homeassistant.components.minecraft_server.api.BedrockServer.async_status",
+            return_value=TEST_BEDROCK_STATUS_RESPONSE,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
+        )
+        assert result2["type"] is FlowResultType.ABORT
+        assert result2["reason"] == "already_configured"
+
+
 async def test_address_validation_failure(hass: HomeAssistant) -> None:
     """Test error in case of a failed connection."""
     with (
