@@ -180,6 +180,10 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
             self._send_launch_app_command(media_id)
             return
 
+        if media_type == MediaType.APP:
+            self._send_launch_app_command(f"market://launch?id={media_id}")
+            return
+
         raise ValueError(f"Invalid media type: {media_type}")
 
     async def _send_key_commands(
