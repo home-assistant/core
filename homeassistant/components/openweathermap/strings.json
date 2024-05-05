@@ -24,7 +24,8 @@
     "step": {
       "init": {
         "data": {
-          "language": "[%key:common::config_flow::data::language%]"
+          "language": "[%key:common::config_flow::data::language%]",
+          "mode": "[%key:common::config_flow::data::mode%]"
         }
       }
     }
