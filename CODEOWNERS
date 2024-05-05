@@ -1514,6 +1514,8 @@ build.json @home-assistant/supervisor
 /tests/components/velbus/ @Cereal2nd @brefra
 /homeassistant/components/velux/ @Julius2342 @DeerMaximum
 /tests/components/velux/ @Julius2342 @DeerMaximum
+/homeassistant/components/vemmio/ @vemmio
+/tests/components/vemmio/ @vemmio
 /homeassistant/components/venstar/ @garbled1 @jhollowe
 /tests/components/venstar/ @garbled1 @jhollowe
 /homeassistant/components/versasense/ @imstevenxyz

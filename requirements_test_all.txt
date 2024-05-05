@@ -2175,6 +2175,9 @@ vehicle==2.2.1
 # homeassistant.components.velbus
 velbus-aio==2024.4.1
 
+# homeassistant.components.vemmio
+vemmio-client==0.2.1
+
 # homeassistant.components.venstar
 venstarcolortouch==0.19
 

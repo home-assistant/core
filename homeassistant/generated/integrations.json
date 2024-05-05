@@ -6545,6 +6545,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "vemmio": {
+      "name": "Vemmio",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "venstar": {
       "name": "Venstar",
       "integration_type": "hub",
