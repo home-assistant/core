@@ -85,9 +85,7 @@ class FileConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input:
             user_input[CONF_PLATFORM] = "notify"
-            self._async_abort_entries_match(
-                {key: user_input[key] for key in (CONF_PLATFORM, CONF_FILENAME)}
-            )
+            self._async_abort_entries_match(user_input)
             filepath: str = os.path.join(
                 self.hass.config.config_dir, user_input[CONF_FILENAME]
             )
@@ -109,9 +107,7 @@ class FileConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input:
             user_input[CONF_PLATFORM] = "sensor"
-            self._async_abort_entries_match(
-                {key: user_input[key] for key in (CONF_PLATFORM, CONF_FILE_PATH)}
-            )
+            self._async_abort_entries_match(user_input)
             if not await self.validate_file_path(user_input[CONF_FILE_PATH]):
                 errors[CONF_FILE_PATH] = "not_allowed"
             else:
