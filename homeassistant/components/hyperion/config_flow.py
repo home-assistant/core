@@ -344,7 +344,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         # UI to approve the request for a new token).
         assert self._auth_id is not None
         self._request_token_task = self.hass.async_create_task(
-            self._request_token_task_func(self._auth_id)
+            self._request_token_task_func(self._auth_id), eager_start=False
         )
         return self.async_external_step(
             step_id="create_token_external", url=self._get_hyperion_url()

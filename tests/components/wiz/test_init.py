@@ -32,9 +32,9 @@ async def test_setup_retry(hass: HomeAssistant) -> None:
     bulb.getMac = AsyncMock(return_value=FAKE_MAC)
 
     with _patch_discovery(), _patch_wizlight(device=bulb):
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         async_fire_time_changed(hass, utcnow() + datetime.timedelta(minutes=15))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
     assert entry.state is ConfigEntryState.LOADED
 
 

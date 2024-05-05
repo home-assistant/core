@@ -1115,7 +1115,7 @@ async def test_flux_with_mired(
     hass: HomeAssistant,
     mock_light_entities: list[MockLight],
 ) -> None:
-    """Test the flux switch´s mode mired."""
+    """Test the flux switch's mode mired."""
     setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
 
     assert await async_setup_component(
@@ -1176,7 +1176,7 @@ async def test_flux_with_rgb(
     hass: HomeAssistant,
     mock_light_entities: list[MockLight],
 ) -> None:
-    """Test the flux switch´s mode rgb."""
+    """Test the flux switch's mode rgb."""
     setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
 
     assert await async_setup_component(

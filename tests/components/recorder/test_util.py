@@ -1040,14 +1040,14 @@ async def test_resolve_period(hass: HomeAssistant) -> None:
 
 def test_chunked_or_all():
     """Test chunked_or_all can iterate chunk sizes larger than the passed in collection."""
-    all = []
+    all_items = []
     incoming = (1, 2, 3, 4)
     for chunk in chunked_or_all(incoming, 2):
         assert len(chunk) == 2
-        all.extend(chunk)
-    assert all == [1, 2, 3, 4]
+        all_items.extend(chunk)
+    assert all_items == [1, 2, 3, 4]
 
-    all = []
+    all_items = []
     incoming = (1, 2, 3, 4)
     for chunk in chunked_or_all(incoming, 5):
         assert len(chunk) == 4
@@ -1055,5 +1055,5 @@ def test_chunked_or_all():
         # collection since we want to avoid copying the collection
         # if we don't need to
         assert chunk is incoming
-        all.extend(chunk)
-    assert all == [1, 2, 3, 4]
+        all_items.extend(chunk)
+    assert all_items == [1, 2, 3, 4]

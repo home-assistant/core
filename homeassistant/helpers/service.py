@@ -77,6 +77,8 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_DESCRIPTION_CACHE = "service_description_cache"
 ALL_SERVICE_DESCRIPTIONS_CACHE = "all_service_descriptions_cache"
 
+_T = TypeVar("_T")
+
 
 @cache
 def _base_components() -> dict[str, ModuleType]:
@@ -709,7 +711,7 @@ async def async_get_all_descriptions(
             contents = await hass.async_add_executor_job(
                 _load_services_files, hass, integrations
             )
-            loaded = dict(zip(domains_with_missing_services, contents))
+            loaded = dict(zip(domains_with_missing_services, contents, strict=False))
 
     # Load translations for all service domains
     translations = await translation.async_get_translations(
@@ -993,7 +995,7 @@ async def entity_service_call(
     )
 
     response_data: EntityServiceResponse = {}
-    for entity, result in zip(entities, results):
+    for entity, result in zip(entities, results, strict=False):
         if isinstance(result, BaseException):
             raise result from None
         response_data[entity.entity_id] = result
@@ -1154,40 +1156,67 @@ def verify_domain_control(
 
 
 class ReloadServiceHelper:
-    """Helper for reload services to minimize unnecessary reloads."""
+    """Helper for reload services.
 
-    def __init__(self, service_func: Callable[[ServiceCall], Awaitable]) -> None:
+    The helper has the following purposes:
+    - Make sure reloads do not happen in parallel
+    - Avoid redundant reloads of the same target
+    """
+
+    def __init__(
+        self,
+        service_func: Callable[[ServiceCall], Awaitable],
+        reload_targets_func: Callable[[ServiceCall], set[_T]],
+    ) -> None:
         """Initialize ReloadServiceHelper."""
         self._service_func = service_func
         self._service_running = False
         self._service_condition = asyncio.Condition()
+        self._pending_reload_targets: set[_T] = set()
+        self._reload_targets_func = reload_targets_func
 
     async def execute_service(self, service_call: ServiceCall) -> None:
         """Execute the service.
 
-        If a previous reload task if currently in progress, wait for it to finish first.
+        If a previous reload task is currently in progress, wait for it to finish first.
         Once the previous reload task has finished, one of the waiting tasks will be
-        assigned to execute the reload, the others will wait for the reload to finish.
+        assigned to execute the reload of the targets it is assigned to reload. The
+        other tasks will wait if they should reload the same target, otherwise they
+        will wait for the next round.
         """
 
         do_reload = False
+        reload_targets = None
         async with self._service_condition:
             if self._service_running:
-                # A previous reload task is already in progress, wait for it to finish
+                # A previous reload task is already in progress, wait for it to finish,
+                # because that task may be reloading a stale version of the resource.
                 await self._service_condition.wait()
 
-        async with self._service_condition:
-            if not self._service_running:
-                # This task will do the reload
-                self._service_running = True
-                do_reload = True
-            else:
-                # Another task will perform the reload, wait for it to finish
+        while True:
+            async with self._service_condition:
+                # Once we've passed this point, we assume the version of the resource is
+                # the one our task was assigned to reload, or a newer one. Regardless of
+                # which, our task is happy as long as the target is reloaded at least
+                # once.
+                if reload_targets is None:
+                    reload_targets = self._reload_targets_func(service_call)
+                    self._pending_reload_targets |= reload_targets
+                if not self._service_running:
+                    # This task will do a reload
+                    self._service_running = True
+                    do_reload = True
+                    break
+                # Another task will perform a reload, wait for it to finish
                 await self._service_condition.wait()
+                # Check if the reload this task is waiting for has been completed
+                if reload_targets.isdisjoint(self._pending_reload_targets):
+                    break
 
         if do_reload:
             # Reload, then notify other tasks
             await self._service_func(service_call)
             async with self._service_condition:
                 self._service_running = False
+                self._pending_reload_targets -= reload_targets
                 self._service_condition.notify_all()
