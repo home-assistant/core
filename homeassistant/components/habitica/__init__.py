@@ -151,15 +151,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: HabiticaConfigEntry) -> 
         hass, verify_ssl=entry.data.get(CONF_VERIFY_SSL, True)
     )
 
-    url = entry.data[CONF_URL]
-    username = entry.data[CONF_API_USER]
-    password = entry.data[CONF_API_KEY]
-
     api = HAHabitipyAsync(
-        {
-            "url": url,
-            "login": username,
-            "password": password,
+        conf={
+            "url": entry.data[CONF_URL],
+            "login": entry.data[CONF_API_USER],
+            "password": entry.data[CONF_API_KEY],
         }
     )
     try:
