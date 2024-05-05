@@ -1,0 +1,49 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Make a choice",
+        "menu_options": {
+          "sensor": "Set up a file based sensor",
+          "notify": "Set up a notification service"
+        }
+      },
+      "sensor": {
+        "title": "File sensor",
+        "description": "Set up a file based sensor",
+        "data": {
+          "file_path": "File path",
+          "name": "Name",
+          "value_template": "Value template",
+          "unit_of_measurement": "Unit of measurement"
+        },
+        "data_description": {
+          "file_path": "The local file path to rereive the sensor value from",
+          "name": "Name of the file based sensor",
+          "value_template": "A template to render the the sensors value based on the file content",
+          "unit_of_measurement": "Unit of measurement for the sensor"
+        }
+      },
+      "notify": {
+        "title": "Notification to file service",
+        "description": "Set up a service that allows to write notification to a file.",
+        "data": {
+          "filename": "Filename",
+          "name": "Name",
+          "timestamp": "Timestamp"
+        },
+        "data_description": {
+          "filename": "A relative file path in the hass config root to write the notification to",
+          "name": "Name of the notify service",
+          "timestamp": "Add a timestamp to the notification"
+        }
+      }
+    },
+    "error": {
+      "not_allowed": "Access to the selected file path is not allowed"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

@@ -24,11 +24,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from .const import FILE_ICON
+from .const import CONF_TIMESTAMP, FILE_ICON
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_TIMESTAMP = "timestamp"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -45,9 +43,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the file sensor."""
     config: dict[str, Any] = dict(entry.data)
-    if not await hass.async_add_executor_job(
-        hass.config.is_allowed_path, config[CONF_FILENAME]
-    ):
+    filepath: str = os.path.join(hass.config.config_dir, config[CONF_FILENAME])
+    if not await hass.async_add_executor_job(hass.config.is_allowed_path, filepath):
         _LOGGER.error("'%s' is not an allowed directory", config[CONF_FILENAME])
         return
     async_add_entities([FileNotifyEntity(config)])
@@ -70,6 +67,9 @@ class FileNotifyEntity(NotifyEntity):
         """Send a message to a file."""
         file: TextIO
         filepath: str = os.path.join(self.hass.config.config_dir, self.filename)
+        if not self.hass.config.is_allowed_path(filepath):
+            _LOGGER.error("'%s' is not an allowed directory", filepath)
+            return
         with open(filepath, "a", encoding="utf8") as file:
             if os.stat(filepath).st_size == 0:
                 title = (
@@ -109,6 +109,9 @@ class FileNotificationService(BaseNotificationService):
         """Send a message to a file."""
         file: TextIO
         filepath: str = os.path.join(self.hass.config.config_dir, self.filename)
+        if self.hass.config.is_allowed_path(filepath):
+            _LOGGER.error("'%s' is not an allowed directory", filepath)
+            return
         with open(filepath, "a", encoding="utf8") as file:
             if os.stat(filepath).st_size == 0:
                 title = (

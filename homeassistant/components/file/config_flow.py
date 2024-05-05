@@ -1,5 +1,6 @@
 """Config flow for file integration."""
 
+import os
 from typing import Any
 
 import voluptuous as vol
@@ -14,16 +15,45 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     Platform,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import (
+    BooleanSelector,
+    BooleanSelectorConfig,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+    TemplateSelector,
+    TemplateSelectorConfig,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import CONF_TIMESTAMP, DEFAULT_NAME, DOMAIN
+
+BOOLEAN_SELECTOR = BooleanSelector(BooleanSelectorConfig())
+PLATFORM_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=["notify", "sensor"],
+        mode=SelectSelectorMode.DROPDOWN,
+    )
+)
+TEMPLATE_SELECTOR = TemplateSelector(TemplateSelectorConfig())
+TEXT_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
 
 FILE_SENSOR_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_FILE_PATH): cv.isfile,
-        vol.Optional(CONF_NAME, default="File"): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_NAME): TEXT_SELECTOR,
+        vol.Required(CONF_FILE_PATH): TEXT_SELECTOR,
+        vol.Optional(CONF_VALUE_TEMPLATE): TEMPLATE_SELECTOR,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): TEXT_SELECTOR,
+    }
+)
+
+FILE_NOTIFY_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME): TEXT_SELECTOR,
+        vol.Required(CONF_FILENAME): TEXT_SELECTOR,
+        vol.Optional(CONF_TIMESTAMP, default=False): BOOLEAN_SELECTOR,
     }
 )
 
@@ -33,11 +63,72 @@ class FileConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    async def validate_file_path(self, file_path: str) -> bool:
+        """Ensure the file path is valid."""
+        return await self.hass.async_add_executor_job(
+            self.hass.config.is_allowed_path, file_path
+        )
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow initiated by the user."""
+        return self.async_show_menu(
+            step_id="user",
+            menu_options=["notify", "sensor"],
+        )
+
+    async def async_step_notify(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle file notifier config flow."""
+        errors: dict[str, str] = {}
+        if user_input:
+            user_input[CONF_PLATFORM] = "notify"
+            self._async_abort_entries_match(
+                {key: user_input[key] for key in (CONF_PLATFORM, CONF_FILENAME)}
+            )
+            filepath: str = os.path.join(
+                self.hass.config.config_dir, user_input[CONF_FILENAME]
+            )
+            if not await self.validate_file_path(filepath):
+                errors[CONF_FILENAME] = "not_allowed"
+            else:
+                name: str = user_input.get(CONF_NAME, DEFAULT_NAME)
+                title = f"{name} [{user_input[CONF_FILENAME]}]"
+                return self.async_create_entry(data=user_input, title=title)
+
+        return self.async_show_form(
+            step_id="notify", data_schema=FILE_NOTIFY_SCHEMA, errors=errors
+        )
+
+    async def async_step_sensor(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle file sensor config flow."""
+        errors: dict[str, str] = {}
+        if user_input:
+            user_input[CONF_PLATFORM] = "sensor"
+            self._async_abort_entries_match(
+                {key: user_input[key] for key in (CONF_PLATFORM, CONF_FILE_PATH)}
+            )
+            if not await self.validate_file_path(user_input[CONF_FILENAME]):
+                errors[CONF_FILE_PATH] = "not_allowed"
+            else:
+                name: str = user_input.get(CONF_NAME, DEFAULT_NAME)
+                title = f"{name} [{user_input[CONF_FILE_PATH]}]"
+                return self.async_create_entry(data=user_input, title=title)
+
+        return self.async_show_form(
+            step_id="sensor", data_schema=FILE_SENSOR_SCHEMA, errors=errors
+        )
+
     async def async_step_import(
         self, import_data: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Import `file`` config from configuration.yaml."""
         assert import_data is not None
+        self._async_abort_entries_match(import_data)
         platform = import_data[CONF_PLATFORM]
         name: str = import_data.get(CONF_NAME, DEFAULT_NAME)
         file_name: str
