@@ -13,7 +13,7 @@ from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def community_post():
     """Topic JSON with a codeblock marked as auto syntax."""
     return load_fixture("blueprint/community_post.json")

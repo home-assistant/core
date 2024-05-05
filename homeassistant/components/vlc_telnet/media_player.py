@@ -25,7 +25,8 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import DATA_AVAILABLE, DATA_VLC, DEFAULT_NAME, DOMAIN, LOGGER
+from . import VlcConfigEntry
+from .const import DEFAULT_NAME, DOMAIN, LOGGER
 
 MAX_VOLUME = 500
 
@@ -34,13 +35,13 @@ _P = ParamSpec("_P")
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: VlcConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the vlc platform."""
     # CONF_NAME is only present in imported YAML.
     name = entry.data.get(CONF_NAME) or DEFAULT_NAME
-    vlc = hass.data[DOMAIN][entry.entry_id][DATA_VLC]
-    available = hass.data[DOMAIN][entry.entry_id][DATA_AVAILABLE]
+    vlc = entry.runtime_data.vlc
+    available = entry.runtime_data.available
 
     async_add_entities([VlcDevice(entry, vlc, name, available)], True)
 

@@ -361,6 +361,8 @@ omit =
     homeassistant/components/environment_canada/weather.py
     homeassistant/components/envisalink/*
     homeassistant/components/ephember/climate.py
+    homeassistant/components/epic_games_store/__init__.py
+    homeassistant/components/epic_games_store/coordinator.py
     homeassistant/components/epion/__init__.py
     homeassistant/components/epion/coordinator.py
     homeassistant/components/epion/sensor.py
@@ -739,6 +741,7 @@ omit =
     homeassistant/components/lutron/binary_sensor.py
     homeassistant/components/lutron/cover.py
     homeassistant/components/lutron/entity.py
+    homeassistant/components/lutron/event.py
     homeassistant/components/lutron/fan.py
     homeassistant/components/lutron/light.py
     homeassistant/components/lutron/switch.py
@@ -936,6 +939,7 @@ omit =
     homeassistant/components/omnilogic/switch.py
     homeassistant/components/ondilo_ico/__init__.py
     homeassistant/components/ondilo_ico/api.py
+    homeassistant/components/ondilo_ico/coordinator.py
     homeassistant/components/ondilo_ico/sensor.py
     homeassistant/components/onkyo/media_player.py
     homeassistant/components/onvif/__init__.py
@@ -983,6 +987,7 @@ omit =
     homeassistant/components/orvibo/switch.py
     homeassistant/components/osoenergy/__init__.py
     homeassistant/components/osoenergy/const.py
+    homeassistant/components/osoenergy/sensor.py
     homeassistant/components/osoenergy/water_heater.py
     homeassistant/components/osramlightify/light.py
     homeassistant/components/otp/sensor.py
@@ -1154,8 +1159,10 @@ omit =
     homeassistant/components/roborock/coordinator.py
     homeassistant/components/rocketchat/notify.py
     homeassistant/components/romy/__init__.py
+    homeassistant/components/romy/binary_sensor.py
     homeassistant/components/romy/coordinator.py
     homeassistant/components/romy/entity.py
+    homeassistant/components/romy/sensor.py
     homeassistant/components/romy/vacuum.py
     homeassistant/components/roomba/__init__.py
     homeassistant/components/roomba/binary_sensor.py
@@ -1405,11 +1412,6 @@ omit =
     homeassistant/components/tado/water_heater.py
     homeassistant/components/tami4/button.py
     homeassistant/components/tank_utility/sensor.py
-    homeassistant/components/tankerkoenig/__init__.py
-    homeassistant/components/tankerkoenig/binary_sensor.py
-    homeassistant/components/tankerkoenig/coordinator.py
-    homeassistant/components/tankerkoenig/entity.py
-    homeassistant/components/tankerkoenig/sensor.py
     homeassistant/components/tapsaff/binary_sensor.py
     homeassistant/components/tautulli/__init__.py
     homeassistant/components/tautulli/coordinator.py

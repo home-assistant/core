@@ -52,14 +52,14 @@
       "fix_flow": {
         "step": {
           "fix_menu": {
-            "description": "`{reference}` is a filesystem with the name hassos-data and is not the active data disk. This can cause Home Assistant to choose the wrong data disk at system reboot.\n\nUse the 'Rename' option to rename the filesystem to prevent this. Use the 'Adopt' option to make that your data disk and rename the existing one. Alternatively you can move the data disk to the drive (overwriting its contents) or remove the drive from the system.",
+            "description": "At `{reference}`, we detected another active data disk (containing a file system `hassos-data` from another Home Assistant installation).\n\nYou need to decide what to do with it. Otherwise Home Assistant might choose the wrong data disk at system reboot.\n\nIf you don't want to use this data disk, unplug it from your system. If you leave it plugged in, choose one of the following options:",
             "menu_options": {
-              "system_rename_data_disk": "Rename",
-              "system_adopt_data_disk": "Adopt"
+              "system_rename_data_disk": "Mark as inactive data disk (rename file system)",
+              "system_adopt_data_disk": "Use the detected data disk instead of the current system"
             }
           },
           "system_adopt_data_disk": {
-            "description": "This fix will initiate a system reboot which will make Home Assistant and all the Add-ons inaccessible for a brief period. After the reboot `{reference}` will be the data disk of Home Assistant and your existing data disk will be renamed and ignored."
+            "description": "Select submit to make `{reference}` the active data disk. The one and only.\n\nYou won't have access anymore to the current Home Assistant data (will be marked as inactive data disk). After reboot, your system will be in the state of the Home Assistant data on `{reference}`."
           }
         },
         "abort": {

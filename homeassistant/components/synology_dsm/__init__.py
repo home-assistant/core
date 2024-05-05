@@ -161,6 +161,8 @@ async def async_remove_config_entry_device(
     return not device_entry.identifiers.intersection(
         (
             (DOMAIN, serial),  # Base device
-            *((DOMAIN, f"{serial}_{id}") for id in device_ids),  # Storage and cameras
+            *(
+                (DOMAIN, f"{serial}_{device_id}") for device_id in device_ids
+            ),  # Storage and cameras
         )
     )
