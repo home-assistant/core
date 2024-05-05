@@ -17,6 +17,7 @@ from homeassistant.components.openweathermap.const import (
     DEFAULT_LANGUAGE,
     DEFAULT_OWM_MODE,
     DOMAIN,
+    OWM_MODE_V25,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
@@ -38,7 +39,7 @@ CONFIG = {
     CONF_LATITUDE: 50,
     CONF_LONGITUDE: 40,
     CONF_LANGUAGE: DEFAULT_LANGUAGE,
-    CONF_MODE: DEFAULT_OWM_MODE,
+    CONF_MODE: OWM_MODE_V25,
 }
 
 VALID_YAML_CONFIG = {CONF_API_KEY: "foo"}
@@ -220,7 +221,8 @@ async def test_config_flow_options_change(
 
     new_language = "es"
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_LANGUAGE: new_language}
+        result["flow_id"],
+        user_input={CONF_MODE: DEFAULT_OWM_MODE, CONF_LANGUAGE: new_language},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
