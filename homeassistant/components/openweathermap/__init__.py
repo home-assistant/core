@@ -26,6 +26,7 @@ from .const import (
     OWM_MODE_V25,
     PLATFORMS,
 )
+from .repairs import create_issue
 from .weather_update_coordinator import WeatherUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,6 +52,9 @@ async def async_setup_entry(
     longitude = entry.data.get(CONF_LONGITUDE, hass.config.longitude)
     language = _get_config_value(entry, CONF_LANGUAGE)
     mode = _get_config_value(entry, CONF_MODE)
+
+    if mode == OWM_MODE_V25:
+        create_issue(hass)
 
     owm_client = OWMClient(api_key, mode, lang=language)
     weather_coordinator = WeatherUpdateCoordinator(

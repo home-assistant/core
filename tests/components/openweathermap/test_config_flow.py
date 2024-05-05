@@ -1,22 +1,30 @@
 """Define tests for the OpenWeatherMap config flow."""
 
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyopenweathermap import (
     CurrentWeather,
+    DailyTemperature,
     DailyWeatherForecast,
     RequestError,
+    WeatherCondition,
     WeatherReport,
 )
 import pytest
 
-from homeassistant.components.openweathermap.const import DEFAULT_LANGUAGE, DOMAIN
+from homeassistant.components.openweathermap.const import (
+    DEFAULT_LANGUAGE,
+    DEFAULT_OWM_MODE,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LANGUAGE,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    CONF_MODE,
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant
@@ -30,6 +38,7 @@ CONFIG = {
     CONF_LATITUDE: 50,
     CONF_LONGITUDE: 40,
     CONF_LANGUAGE: DEFAULT_LANGUAGE,
+    CONF_MODE: DEFAULT_OWM_MODE,
 }
 
 VALID_YAML_CONFIG = {CONF_API_KEY: "foo"}
@@ -37,50 +46,63 @@ VALID_YAML_CONFIG = {CONF_API_KEY: "foo"}
 
 def _create_mocked_owm_client(is_valid: bool):
     current_weather = CurrentWeather(
-        dt=1714063536,
-        temp=6.84,
+        date_time=datetime.fromtimestamp(1714063536, tz=UTC),
+        temperature=6.84,
         feels_like=2.07,
         pressure=1000,
         humidity=82,
         dew_point=3.99,
-        uvi=0.13,
-        clouds=75,
+        uv_index=0.13,
+        cloud_coverage=75,
         visibility=10000,
         wind_speed=9.83,
-        wind_deg=199,
-        weather=[
-            {
-                "id": 803,
-                "main": "Clouds",
-                "description": "broken clouds",
-                "icon": "04d",
-            }
-        ],
+        wind_bearing=199,
+        wind_gust=None,
+        rain={},
+        snow={},
+        condition=WeatherCondition(
+            id=803,
+            main="Clouds",
+            description="broken clouds",
+            icon="04d",
+        ),
     )
     daily_weather_forecast = DailyWeatherForecast(
-        dt=1714298400,
+        date_time=datetime.fromtimestamp(1714063536, tz=UTC),
         summary="There will be clear sky until morning, then partly cloudy",
-        temp={
-            "day": 18.76,
-            "min": 8.11,
-            "max": 21.26,
-            "night": 13.06,
-            "eve": 20.51,
-            "morn": 8.47,
-        },
-        feels_like={"day": 18.31, "night": 12.46, "eve": 20.76, "morn": 6.62},
+        temperature=DailyTemperature(
+            day=18.76,
+            min=8.11,
+            max=21.26,
+            night=13.06,
+            evening=20.51,
+            morning=8.47,
+        ),
+        feels_like=DailyTemperature(
+            day=18.76,
+            min=8.11,
+            max=21.26,
+            night=13.06,
+            evening=20.51,
+            morning=8.47,
+        ),
         pressure=1015,
         humidity=62,
         dew_point=11.34,
         wind_speed=8.14,
-        wind_deg=168,
+        wind_bearing=168,
         wind_gust=11.81,
-        weather=[
-            {"id": 803, "main": "Clouds", "description": "broken clouds", "icon": "04d"}
-        ],
-        clouds=84,
-        pop=0,
-        uvi=4.06,
+        condition=WeatherCondition(
+            id=803,
+            main="Clouds",
+            description="broken clouds",
+            icon="04d",
+        ),
+        cloud_coverage=84,
+        precipitation_probability=0,
+        uv_index=4.06,
+        rain=0,
+        snow=0,
     )
     weather_report = WeatherReport(current_weather, [], [daily_weather_forecast])
 
@@ -204,6 +226,7 @@ async def test_config_flow_options_change(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         CONF_LANGUAGE: new_language,
+        CONF_MODE: DEFAULT_OWM_MODE,
     }
 
     await hass.async_block_till_done()
@@ -223,6 +246,7 @@ async def test_config_flow_options_change(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         CONF_LANGUAGE: updated_language,
+        CONF_MODE: DEFAULT_OWM_MODE,
     }
 
     await hass.async_block_till_done()

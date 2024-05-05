@@ -136,8 +136,3 @@ class OpenWeatherMapOptionsFlow(OptionsFlow):
                 ): vol.In(LANGUAGES),
             }
         )
-
-
-async def _is_owm_api_key_valid(api_key):
-    owm_client = OWMClient(api_key)
-    return await owm_client.validate_key()

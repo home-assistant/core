@@ -28,5 +28,11 @@
         }
       }
     }
+  },
+  "issues": {
+    "deprecated_v25": {
+      "title": "OpenWeatherMap API V2.5 deprecated",
+      "description": "OWM API v2.5 will be closed in June 2024, migrate all your OpenWeatherMap integration to mode `v3.0."
+    }
   }
 }
