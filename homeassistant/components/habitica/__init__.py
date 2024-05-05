@@ -153,20 +153,16 @@ async def async_setup_entry(
         hass, verify_ssl=config_entry.data.get(CONF_VERIFY_SSL, True)
     )
 
-    url = config_entry.data[CONF_URL]
-    username = config_entry.data[CONF_API_USER]
-    password = config_entry.data[CONF_API_KEY]
-
     api = await hass.async_add_executor_job(
         HAHabitipyAsync,
         {
-            "url": url,
-            "login": username,
-            "password": password,
+            "url": config_entry.data[CONF_URL],
+            "login": config_entry.data[CONF_API_USER],
+            "password": config_entry.data[CONF_API_KEY],
         },
     )
     try:
-        user = await api.user.get(userFields="auth")
+        user = await api.user.get(userFields="profile")
     except ClientResponseError as e:
         if e.status == HTTPStatus.TOO_MANY_REQUESTS:
             raise ConfigEntryNotReady(
