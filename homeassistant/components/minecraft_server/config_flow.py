@@ -32,9 +32,8 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             address = user_input[CONF_ADDRESS]
 
-            # Abort config flow if device is already configured.
-            if await self._async_is_device_already_configured(address):
-                return self.async_abort(reason="already_configured")
+            # Abort config flow if service is already configured.
+            self._async_abort_entries_match({CONF_ADDRESS: address})
 
             # Prepare config entry data.
             config_data = {
@@ -65,16 +64,6 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         # Show configuration form (default form in case of no user_input,
         # form filled with user_input and eventually with errors otherwise).
         return self._show_config_form(user_input, errors)
-
-    async def _async_is_device_already_configured(self, address: str) -> bool:
-        """Check if device is already configured."""
-        config_entries = self.hass.config_entries.async_entries(DOMAIN)
-
-        for config_entry in config_entries:
-            if config_entry.data[CONF_ADDRESS] == address:
-                return True
-
-        return False
 
     def _show_config_form(
         self,
