@@ -53,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NAMConfigEntry) -> bool:
         raise ConfigEntryAuthFailed from err
 
     if TYPE_CHECKING:
-        assert entry.unique_id is not None
+        assert entry.unique_id
 
     coordinator = NAMDataUpdateCoordinator(hass, nam, entry.unique_id)
     await coordinator.async_config_entry_first_refresh()
