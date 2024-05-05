@@ -33,7 +33,9 @@ async def test_step_user_success(hass: HomeAssistant) -> None:
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_CONF
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=MOCK_CONF.copy(),
         )
 
         await hass.async_block_till_done()
@@ -84,6 +86,12 @@ async def test_step_user_new_form(hass: HomeAssistant) -> None:
         assert result["type"] is data_entry_flow.FlowResultType.FORM
         assert mock_setup_entry.call_count == 0
 
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_CONF
+        )
+        assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert mock_setup_entry.call_count == 1
+
 
 @pytest.mark.parametrize(
     ("key", "value"),
@@ -112,6 +120,12 @@ async def test_step_user_form_invalid_key(
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert mock_setup_entry.call_count == 0
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_CONF
+        )
+        assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert mock_setup_entry.call_count == 1
 
 
 async def test_step_import_good(

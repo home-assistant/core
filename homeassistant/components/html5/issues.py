@@ -2,7 +2,7 @@
 
 import logging
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DOMAIN
@@ -21,6 +21,7 @@ FAILED_IMPORT_LOG = """Loading HTML5 push notification via configuration.yaml is
 FAILED_IMPORT_TRANSLATION_KEY = "deprecated_yaml_import_issue"
 
 
+@callback
 def async_create_html5_issue(hass: HomeAssistant, import_success: bool) -> None:
     """Create issues for HTML5."""
     _LOGGER.warning(SUCCESSFUL_IMPORT_LOG if import_success else FAILED_IMPORT_LOG)

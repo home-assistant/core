@@ -11,6 +11,7 @@ from py_vapid.utils import b64urlencode
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import ATTR_VAPID_EMAIL, ATTR_VAPID_PRV_KEY, ATTR_VAPID_PUB_KEY, DOMAIN
@@ -41,10 +42,11 @@ def vapid_get_public_key(private_key: str):
 class HTML5ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for HTML5."""
 
-    def _create_entry(
+    @callback
+    def _async_create_html5_entry(
         self, data: dict[str, str]
     ) -> tuple[dict[str, str], ConfigFlowResult | None]:
-        """Create an entry."""
+        """Create an HTML5 entry."""
         errors = {}
         flow_result = None
         try:
@@ -74,7 +76,7 @@ class HTML5ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
         if user_input:
-            errors, flow_result = self._create_entry(user_input)
+            errors, flow_result = self._async_create_html5_entry(user_input)
             if flow_result:
                 return flow_result
         else:
@@ -94,7 +96,7 @@ class HTML5ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config: dict) -> ConfigFlowResult:
         """Handle config import from yaml."""
-        _, flow_result = self._create_entry(import_config)
+        _, flow_result = self._async_create_html5_entry(import_config)
         if not flow_result:
             async_create_html5_issue(self.hass, False)
             return self.async_abort(reason="invalid_config")

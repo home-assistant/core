@@ -21,22 +21,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HTML5 push notification component."""
     hass.data[DATA_HASS_CONFIG] = config
     existing_config_entry = hass.config_entries.async_entries(DOMAIN)
-    # Iterate all entries for notify to only get HTML5
-    if Platform.NOTIFY in config:
-        for entry in config[Platform.NOTIFY]:
-            if entry[CONF_PLATFORM] == DOMAIN:
-                # the configuration has already been imported
-                # but the YAML configuration is still present
-                if existing_config_entry:
-                    async_create_html5_issue(hass, True)
-                    return True
-                hass.async_create_task(
-                    hass.config_entries.flow.async_init(
-                        DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
-                    )
-                )
-                return True
 
+    # Iterate all entries for notify to only get HTML5
+    for entry in config.get(Platform.NOTIFY, {}):
+        if entry[CONF_PLATFORM] == DOMAIN:
+            # the configuration has already been imported
+            # but the YAML configuration is still present
+            if existing_config_entry:
+                async_create_html5_issue(hass, True)
+                return True
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
+                )
+            )
+            return True
     return True
 
 
