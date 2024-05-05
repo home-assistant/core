@@ -9,8 +9,9 @@ from twitchAPI.type import TwitchResourceNotFound
 from homeassistant.components.twitch import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_json_object_fixture
 from . import TwitchIterObject, get_generator_from_data, setup_integration
+
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 ENTITY_ID = "sensor.channel123"
 
