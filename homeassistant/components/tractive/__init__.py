@@ -119,6 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cancel_listen_task)
     )
+    entry.async_on_unload(tractive.unsubscribe)
 
     return True
 
@@ -152,10 +153,7 @@ async def _generate_trackables(
 
 async def async_unload_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        await entry.runtime_data.client.unsubscribe()
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class TractiveClient:
