@@ -6,7 +6,7 @@ from collections import namedtuple
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -212,7 +212,7 @@ class HabitipySensor(CoordinatorEntity[HabiticaDataUpdateCoordinator], SensorEnt
         data = self.coordinator.data.user
         for element in self.entity_description.value_path:
             data = data[element]
-        return data  # type: ignore[return-value]
+        return cast(StateType, data)
 
 
 class HabitipyTaskSensor(
@@ -250,10 +250,13 @@ class HabitipyTaskSensor(
     @property
     def native_value(self):
         """Return the state of the device."""
-        return len(list(
-            for task in self.coordinator.data.tasks
-            if task.get("type") in self._task_type.path
-        ))
+        return len(
+            [
+                task
+                for task in self.coordinator.data.tasks
+                if task.get("type") in self._task_type.path
+            ]
+        )
 
     @property
     def extra_state_attributes(self):
