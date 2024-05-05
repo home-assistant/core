@@ -35,8 +35,10 @@ from .const import (
     CONF_CODE_ARM_REQUIRED,
     CONF_CODE_DISARM_REQUIRED,
     CONF_COMMUNICATION_DELAY,
+    CONF_CONCURRENCY,
     CONF_HA_STATES_TO_RISCO,
     CONF_RISCO_STATES_TO_HA,
+    DEFAULT_ADVANCED_OPTIONS,
     DEFAULT_OPTIONS,
     DOMAIN,
     MAX_COMMUNICATION_DELAY,
@@ -225,11 +227,8 @@ class RiscoOptionsFlowHandler(OptionsFlow):
         self._data = {**DEFAULT_OPTIONS, **config_entry.options}
 
     def _options_schema(self) -> vol.Schema:
-        return vol.Schema(
+        schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_SCAN_INTERVAL, default=self._data[CONF_SCAN_INTERVAL]
-                ): int,
                 vol.Required(
                     CONF_CODE_ARM_REQUIRED, default=self._data[CONF_CODE_ARM_REQUIRED]
                 ): bool,
@@ -239,6 +238,19 @@ class RiscoOptionsFlowHandler(OptionsFlow):
                 ): bool,
             }
         )
+        if self.show_advanced_options:
+            self._data = {**DEFAULT_ADVANCED_OPTIONS, **self._data}
+            schema = schema.extend(
+                {
+                    vol.Required(
+                        CONF_SCAN_INTERVAL, default=self._data[CONF_SCAN_INTERVAL]
+                    ): int,
+                    vol.Required(
+                        CONF_CONCURRENCY, default=self._data[CONF_CONCURRENCY]
+                    ): int,
+                }
+            )
+        return schema
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

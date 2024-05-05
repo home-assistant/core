@@ -197,24 +197,20 @@ class DefaultAgent(ConversationEntity):
             self.hass.bus.async_listen(
                 ar.EVENT_AREA_REGISTRY_UPDATED,
                 self._async_clear_slot_list,
-                run_immediately=True,
             ),
             self.hass.bus.async_listen(
                 fr.EVENT_FLOOR_REGISTRY_UPDATED,
                 self._async_clear_slot_list,
-                run_immediately=True,
             ),
             self.hass.bus.async_listen(
                 er.EVENT_ENTITY_REGISTRY_UPDATED,
                 self._async_clear_slot_list,
                 event_filter=self._filter_entity_registry_changes,
-                run_immediately=True,
             ),
             self.hass.bus.async_listen(
                 EVENT_STATE_CHANGED,
                 self._async_clear_slot_list,
                 event_filter=self._filter_state_changes,
-                run_immediately=True,
             ),
             async_listen_entity_updates(self.hass, DOMAIN, self._async_clear_slot_list),
         ]

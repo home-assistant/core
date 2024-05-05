@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 import logging
 from typing import Any, Self
 
@@ -17,7 +17,6 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.const import (
     ATTR_EDITABLE,
-    ATTR_ENTITY_ID,
     ATTR_GPS_ACCURACY,
     ATTR_ID,
     ATTR_LATITUDE,
@@ -56,6 +55,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from . import group as group_pre_import  # noqa: F401
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,8 +66,6 @@ ATTR_DEVICE_TRACKERS = "device_trackers"
 CONF_DEVICE_TRACKERS = "device_trackers"
 CONF_USER_ID = "user_id"
 CONF_PICTURE = "picture"
-
-DOMAIN = "person"
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 2
@@ -242,20 +240,23 @@ class PersonStorageCollection(collection.DictStorageCollection):
             er.EVENT_ENTITY_REGISTRY_UPDATED,
             self._entity_registry_updated,
             event_filter=self._entity_registry_filter,
-            run_immediately=True,
         )
 
     @callback
-    def _entity_registry_filter(self, event_data: Mapping[str, Any]) -> bool:
+    def _entity_registry_filter(
+        self, event_data: er.EventEntityRegistryUpdatedData
+    ) -> bool:
         """Filter entity registry events."""
         return (
             event_data["action"] == "remove"
-            and split_entity_id(event_data[ATTR_ENTITY_ID])[0] == "device_tracker"
+            and split_entity_id(event_data["entity_id"])[0] == "device_tracker"
         )
 
-    async def _entity_registry_updated(self, event: Event) -> None:
+    async def _entity_registry_updated(
+        self, event: Event[er.EventEntityRegistryUpdatedData]
+    ) -> None:
         """Handle entity registry updated."""
-        entity_id = event.data[ATTR_ENTITY_ID]
+        entity_id = event.data["entity_id"]
         for person in list(self.data.values()):
             if entity_id not in person[CONF_DEVICE_TRACKERS]:
                 continue

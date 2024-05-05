@@ -500,3 +500,8 @@ def async_remove_shelly_rpc_entities(
         if entity_id := entity_reg.async_get_entity_id(domain, DOMAIN, f"{mac}-{key}"):
             LOGGER.debug("Removing entity: %s", entity_id)
             entity_reg.async_remove(entity_id)
+
+
+def is_rpc_thermostat_mode(ident: int, status: dict[str, Any]) -> bool:
+    """Return True if 'thermostat:<IDent>' is present in the status."""
+    return f"thermostat:{ident}" in status

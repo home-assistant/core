@@ -2,12 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
-import logging
-from typing import Any
-
-from ondilo import OndiloError
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -24,14 +18,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .api import OndiloClient
 from .const import DOMAIN
+from .coordinator import OndiloIcoCoordinator
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -78,66 +68,30 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 )
 
 
-SCAN_INTERVAL = timedelta(minutes=5)
-_LOGGER = logging.getLogger(__name__)
-
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Ondilo ICO sensors."""
 
-    api: OndiloClient = hass.data[DOMAIN][entry.entry_id]
+    coordinator: OndiloIcoCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    async def async_update_data() -> list[dict[str, Any]]:
-        """Fetch data from API endpoint.
-
-        This is the place to pre-process the data to lookup tables
-        so entities can quickly look up their data.
-        """
-        try:
-            return await hass.async_add_executor_job(api.get_all_pools_data)
-
-        except OndiloError as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        # Name of the data. For logging purposes.
-        name="sensor",
-        update_method=async_update_data,
-        # Polling interval. Will only be polled if there are subscribers.
-        update_interval=SCAN_INTERVAL,
+    async_add_entities(
+        OndiloICO(coordinator, poolidx, description)
+        for poolidx, pool in enumerate(coordinator.data)
+        for sensor in pool["sensors"]
+        for description in SENSOR_TYPES
+        if description.key == sensor["data_type"]
     )
 
-    # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_refresh()
 
-    entities = []
-    for poolidx, pool in enumerate(coordinator.data):
-        entities.extend(
-            [
-                OndiloICO(coordinator, poolidx, description)
-                for sensor in pool["sensors"]
-                for description in SENSOR_TYPES
-                if description.key == sensor["data_type"]
-            ]
-        )
-
-    async_add_entities(entities)
-
-
-class OndiloICO(
-    CoordinatorEntity[DataUpdateCoordinator[list[dict[str, Any]]]], SensorEntity
-):
+class OndiloICO(CoordinatorEntity[OndiloIcoCoordinator], SensorEntity):
     """Representation of a Sensor."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[list[dict[str, Any]]],
+        coordinator: OndiloIcoCoordinator,
         poolidx: int,
         description: SensorEntityDescription,
     ) -> None:

@@ -381,7 +381,6 @@ async def mock_custom_validator_integrations_with_docs(
 class ConfigTestClass(NodeDictClass):
     """Test class for config with wrapper."""
 
-    __dict__ = {"__config_file__": "configuration.yaml", "__line__": 140}
     __line__ = 140
     __config_file__ = "configuration.yaml"
 
@@ -858,6 +857,7 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
             "internal_url": "http://example.local",
             "media_dirs": {"mymedia": "/usr"},
             "legacy_templates": True,
+            "debug": True,
             "currency": "EUR",
             "country": "SE",
             "language": "sv",
@@ -878,6 +878,7 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
     assert hass.config.media_dirs == {"mymedia": "/usr"}
     assert hass.config.config_source is ConfigSource.YAML
     assert hass.config.legacy_templates is True
+    assert hass.config.debug is True
     assert hass.config.currency == "EUR"
     assert hass.config.country == "SE"
     assert hass.config.language == "sv"

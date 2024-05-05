@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from typing import Literal, TypedDict, cast
 
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.util.event_type import EventType
 from homeassistant.util.ulid import ulid_now
 
 from .registry import BaseRegistry
@@ -15,7 +16,9 @@ from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
 DATA_REGISTRY = "category_registry"
-EVENT_CATEGORY_REGISTRY_UPDATED = "category_registry_updated"
+EVENT_CATEGORY_REGISTRY_UPDATED: EventType[EventCategoryRegistryUpdatedData] = (
+    EventType("category_registry_updated")
+)
 STORAGE_KEY = "core.category_registry"
 STORAGE_VERSION_MAJOR = 1
 

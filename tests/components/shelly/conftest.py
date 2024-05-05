@@ -319,6 +319,11 @@ async def mock_block_device():
                 {}, BlockUpdateType.COAP_REPLY
             )
 
+        def online():
+            block_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, BlockUpdateType.ONLINE
+            )
+
         device = Mock(
             spec=BlockDevice,
             blocks=MOCK_BLOCKS,
@@ -337,6 +342,7 @@ async def mock_block_device():
         block_device_mock.return_value.mock_update_reply = Mock(
             side_effect=update_reply
         )
+        block_device_mock.return_value.mock_online = Mock(side_effect=online)
 
         yield block_device_mock.return_value
 
@@ -376,9 +382,19 @@ async def mock_rpc_device():
                 {}, RpcUpdateType.EVENT
             )
 
+        def online():
+            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, RpcUpdateType.ONLINE
+            )
+
         def disconnected():
             rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
                 {}, RpcUpdateType.DISCONNECTED
+            )
+
+        def initialized():
+            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, RpcUpdateType.INITIALIZED
             )
 
         device = _mock_rpc_device()
@@ -386,6 +402,8 @@ async def mock_rpc_device():
         rpc_device_mock.return_value.mock_disconnected = Mock(side_effect=disconnected)
         rpc_device_mock.return_value.mock_update = Mock(side_effect=update)
         rpc_device_mock.return_value.mock_event = Mock(side_effect=event)
+        rpc_device_mock.return_value.mock_online = Mock(side_effect=online)
+        rpc_device_mock.return_value.mock_initialized = Mock(side_effect=initialized)
 
         yield rpc_device_mock.return_value
 

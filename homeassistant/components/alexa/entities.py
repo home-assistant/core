@@ -259,11 +259,6 @@ class DisplayCategory:
     WEARABLE = "WEARABLE"
 
 
-def generate_alexa_id(entity_id: str) -> str:
-    """Return the alexa ID for an entity ID."""
-    return entity_id.replace(".", "#").translate(TRANSLATION_TABLE)
-
-
 class AlexaEntity:
     """An adaptation of an entity, expressed in Alexa's terms.
 
@@ -298,7 +293,7 @@ class AlexaEntity:
 
     def alexa_id(self) -> str:
         """Return the Alexa API entity id."""
-        return generate_alexa_id(self.entity.entity_id)
+        return self.config.generate_alexa_id(self.entity.entity_id)
 
     def display_categories(self) -> list[str] | None:
         """Return a list of display categories."""
