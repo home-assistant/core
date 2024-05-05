@@ -272,7 +272,7 @@ class AmcrestChecker(ApiWrapper):
         """Handle camera error status from a thread."""
         if self._handle_error_shared():
             _LOGGER.error("%s camera offline: Too many errors", self._wrap_name)
-            self._hass.loop.call_soon_threadsafe(self._async_handle_error)
+            self._hass.loop.call_soon_threadsafe(self._async_start_recovery)
 
     @callback
     def _async_handle_error(self) -> None:
