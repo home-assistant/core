@@ -32,8 +32,8 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
         super().__init__(coordinator=coordinator)
         self.entity_description = description
         self.controller = controller
-        self.zone = zone
-        self.sensor = sensor
+        self.zone_id = zone.id if zone else None
+        self.sensor_id = sensor.id if sensor else None
         self._device_id = str(zone.id) if zone is not None else str(controller.id)
         self._attr_unique_id = f"{self._device_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
@@ -46,6 +46,16 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
             self._attr_device_info["via_device"] = (DOMAIN, str(controller.id))
         self._update_attrs()
 
+    @property
+    def zone(self) -> Zone | None:
+        """Return the entity zone."""
+        return self.coordinator.data.zones[self.zone_id] if self.zone_id else None
+
+    @property
+    def sensor(self) -> Sensor | None:
+        """Return the entity sensor."""
+        return self.coordinator.data.sensors[self.sensor_id] if self.sensor_id else None
+
     def _update_attrs(self) -> None:
         """Update state attributes."""
         return  # pragma: no cover
@@ -54,9 +64,5 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
     def _handle_coordinator_update(self) -> None:
         """Get the latest data and updates the state."""
         self.controller = self.coordinator.data.controllers[self.controller.id]
-        if self.zone:
-            self.zone = self.coordinator.data.zones[self.zone.id]
-        if self.sensor:
-            self.sensor = self.coordinator.data.sensors[self.sensor.id]
         self._update_attrs()
         super()._handle_coordinator_update()

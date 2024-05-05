@@ -109,7 +109,10 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
     @property
     def icon(self) -> str | None:
         """Icon of the entity based on the value."""
-        if self.entity_description.key in FLOW_MEASUREMENT_KEYS and self.state < 0.01:
+        if (
+            self.entity_description.key in FLOW_MEASUREMENT_KEYS
+            and round(self.state, 2) < 0.0
+        ):
             return "mdi:water-outline"
         return None
 
