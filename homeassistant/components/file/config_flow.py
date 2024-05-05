@@ -112,7 +112,7 @@ class FileConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match(
                 {key: user_input[key] for key in (CONF_PLATFORM, CONF_FILE_PATH)}
             )
-            if not await self.validate_file_path(user_input[CONF_FILENAME]):
+            if not await self.validate_file_path(user_input[CONF_FILE_PATH]):
                 errors[CONF_FILE_PATH] = "not_allowed"
             else:
                 name: str = user_input.get(CONF_NAME, DEFAULT_NAME)
