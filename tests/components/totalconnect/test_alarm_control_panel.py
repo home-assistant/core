@@ -8,11 +8,12 @@ from syrupy import SnapshotAssertion
 from total_connect_client.exceptions import ServiceUnavailable, TotalConnectError
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
-from homeassistant.components.totalconnect import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.totalconnect.alarm_control_panel import (
     SERVICE_ALARM_ARM_AWAY_INSTANT,
     SERVICE_ALARM_ARM_HOME_INSTANT,
 )
+from homeassistant.components.totalconnect.const import DOMAIN
+from homeassistant.components.totalconnect.coordinator import SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_ALARM_ARM_AWAY,
