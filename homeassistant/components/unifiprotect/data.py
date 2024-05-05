@@ -226,7 +226,7 @@ class ProtectData:
                 self._async_update_device(obj, message.changed_data)
 
         # trigger updates for camera that the event references
-        elif isinstance(obj, Event):  # type: ignore[unreachable]
+        elif isinstance(obj, Event):
             if _LOGGER.isEnabledFor(logging.DEBUG):
                 log_event(obj)
             if obj.type is EventType.DEVICE_ADOPTED:

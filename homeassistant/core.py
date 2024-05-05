@@ -815,7 +815,7 @@ class HomeAssistant:
 
         This method is intended to only be used by core internally
         and should not be considered a stable API. We will make
-        breaking change to this function in the future and it
+        breaking changes to this function in the future and it
         should not be used in integrations.
 
         This method must be run in the event loop. If you are using this in your
@@ -1511,7 +1511,7 @@ class EventBus:
 
         This method is intended to only be used by core internally
         and should not be considered a stable API. We will make
-        breaking change to this function in the future and it
+        breaking changes to this function in the future and it
         should not be used in integrations.
 
         This method must be run in the event loop.
@@ -1790,6 +1790,12 @@ class State:
         self.context = context or Context()
         self.state_info = state_info
         self.domain, self.object_id = split_entity_id(self.entity_id)
+        # The recorder or the websocket_api will always call the timestamps,
+        # so we will set the timestamp values here to avoid the overhead of
+        # the function call in the property we know will always be called.
+        self.last_updated_timestamp = self.last_updated.timestamp()
+        if self.last_changed == self.last_updated:
+            self.__dict__["last_changed_timestamp"] = self.last_updated_timestamp
 
     @cached_property
     def name(self) -> str:
@@ -1801,8 +1807,6 @@ class State:
     @cached_property
     def last_changed_timestamp(self) -> float:
         """Timestamp of last change."""
-        if self.last_changed == self.last_updated:
-            return self.last_updated_timestamp
         return self.last_changed.timestamp()
 
     @cached_property
@@ -1811,11 +1815,6 @@ class State:
         if self.last_reported == self.last_updated:
             return self.last_updated_timestamp
         return self.last_reported.timestamp()
-
-    @cached_property
-    def last_updated_timestamp(self) -> float:
-        """Timestamp of last update."""
-        return self.last_updated.timestamp()
 
     @cached_property
     def _as_dict(self) -> dict[str, Any]:
