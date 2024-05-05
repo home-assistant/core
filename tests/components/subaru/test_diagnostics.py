@@ -4,6 +4,7 @@ import json
 from unittest.mock import patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.subaru.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -26,24 +27,26 @@ from tests.typing import ClientSessionGenerator
 
 
 async def test_config_entry_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, ev_entry
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
+    ev_entry,
 ) -> None:
     """Test config entry diagnostics."""
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    diagnostics_fixture = json.loads(
-        load_fixture("subaru/diagnostics_config_entry.json")
-    )
-
     assert (
         await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
-        == diagnostics_fixture
+        == snapshot
     )
 
 
 async def test_device_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, ev_entry
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
+    ev_entry,
 ) -> None:
     """Test device diagnostics."""
 
@@ -55,15 +58,13 @@ async def test_device_diagnostics(
     )
     assert reg_device is not None
 
-    diagnostics_fixture = json.loads(load_fixture("subaru/diagnostics_device.json"))
-
     raw_data = json.loads(load_fixture("subaru/raw_api_data.json"))
     with patch(MOCK_API_GET_RAW_DATA, return_value=raw_data) as mock_get_raw_data:
         assert (
             await get_diagnostics_for_device(
                 hass, hass_client, config_entry, reg_device
             )
-            == diagnostics_fixture
+            == snapshot
         )
         mock_get_raw_data.assert_called_once()
 
