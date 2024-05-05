@@ -352,7 +352,7 @@ async def test_rpc_sleeping_update(
 
     # Make device online
     mock_rpc_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -413,7 +413,7 @@ async def test_rpc_restored_sleeping_update(
     # Make device online
     monkeypatch.setattr(mock_rpc_device, "initialized", True)
     mock_rpc_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Mock update
     mock_rpc_device.mock_update()
@@ -462,7 +462,7 @@ async def test_rpc_restored_sleeping_update_no_last_state(
     # Make device online
     monkeypatch.setattr(mock_rpc_device, "initialized", True)
     mock_rpc_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Mock update
     mock_rpc_device.mock_update()

@@ -176,6 +176,14 @@ async def test_diagnostics(
                         "source": "00:00:00:00:00:01",
                         "start_time": ANY,
                         "type": "HaScanner",
+                        "current_mode": {
+                            "__type": "<enum 'BluetoothScanningMode'>",
+                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                        },
+                        "requested_mode": {
+                            "__type": "<enum 'BluetoothScanningMode'>",
+                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                        },
                     },
                     {
                         "adapter": "hci1",
@@ -203,6 +211,14 @@ async def test_diagnostics(
                         "source": "00:00:00:00:00:02",
                         "start_time": ANY,
                         "type": "FakeHaScanner",
+                        "current_mode": {
+                            "__type": "<enum 'BluetoothScanningMode'>",
+                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                        },
+                        "requested_mode": {
+                            "__type": "<enum 'BluetoothScanningMode'>",
+                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                        },
                     },
                 ],
                 "slot_manager": {
@@ -319,6 +335,7 @@ async def test_diagnostics_macos(
                         "service_uuids": [],
                         "source": "local",
                         "time": ANY,
+                        "tx_power": -127,
                     }
                 ],
                 "connectable_history": [
@@ -347,6 +364,7 @@ async def test_diagnostics_macos(
                         "service_uuids": [],
                         "source": "local",
                         "time": ANY,
+                        "tx_power": -127,
                     }
                 ],
                 "scanners": [
@@ -376,6 +394,14 @@ async def test_diagnostics_macos(
                         "source": "Core Bluetooth",
                         "start_time": ANY,
                         "type": "FakeHaScanner",
+                        "current_mode": {
+                            "__type": "<enum 'BluetoothScanningMode'>",
+                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                        },
+                        "requested_mode": {
+                            "__type": "<enum 'BluetoothScanningMode'>",
+                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                        },
                     }
                 ],
                 "slot_manager": {
@@ -502,6 +528,7 @@ async def test_diagnostics_remote_adapter(
                         "service_uuids": [],
                         "source": "esp32",
                         "time": ANY,
+                        "tx_power": -127,
                     }
                 ],
                 "connectable_history": [
@@ -530,6 +557,7 @@ async def test_diagnostics_remote_adapter(
                         "service_uuids": [],
                         "source": "esp32",
                         "time": ANY,
+                        "tx_power": -127,
                     }
                 ],
                 "scanners": [
@@ -543,6 +571,14 @@ async def test_diagnostics_remote_adapter(
                         "source": "00:00:00:00:00:01",
                         "start_time": ANY,
                         "type": "HaScanner",
+                        "current_mode": {
+                            "__type": "<enum 'BluetoothScanningMode'>",
+                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                        },
+                        "requested_mode": {
+                            "__type": "<enum 'BluetoothScanningMode'>",
+                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                        },
                     },
                     {
                         "connectable": True,
