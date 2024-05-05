@@ -12,6 +12,7 @@ from homeassistant.components.lock import (
     STATE_LOCKING,
     STATE_UNLOCKING,
     LockEntity,
+    LockEntityFeature,
 )
 from homeassistant.const import (
     CONF_NAME,
@@ -38,6 +39,7 @@ from .template_entity import (
 
 CONF_LOCK = "lock"
 CONF_UNLOCK = "unlock"
+CONF_OPEN = "open"
 
 DEFAULT_NAME = "Template Lock"
 DEFAULT_OPTIMISTIC = False
@@ -50,6 +52,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_OPEN): cv.SCRIPT_SCHEMA,
     }
 ).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema)
 
@@ -90,6 +93,9 @@ class TemplateLock(TemplateEntity, LockEntity):
         self._state_template = config.get(CONF_VALUE_TEMPLATE)
         self._command_lock = Script(hass, config[CONF_LOCK], name, DOMAIN)
         self._command_unlock = Script(hass, config[CONF_UNLOCK], name, DOMAIN)
+        if CONF_OPEN in config:
+            self._command_open = Script(hass, config[CONF_OPEN], name, DOMAIN)
+            self._attr_supported_features = LockEntityFeature.OPEN
         self._optimistic = config.get(CONF_OPTIMISTIC)
         self._attr_assumed_state = bool(self._optimistic)
 
@@ -151,3 +157,10 @@ class TemplateLock(TemplateEntity, LockEntity):
             self._state = False
             self.async_write_ha_state()
         await self.async_run_script(self._command_unlock, context=self._context)
+
+    async def async_open(self, **kwargs: Any) -> None:
+        """Open the device."""
+        if self._optimistic:
+            self._state = False
+            self.async_write_ha_state()
+        await self.async_run_script(self._command_open, context=self._context)
