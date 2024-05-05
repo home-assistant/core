@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta
+import logging
 from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
@@ -28,6 +29,8 @@ from .utils import async_call_shell_with_timeout, async_check_output_or_log
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -37,6 +40,9 @@ async def async_setup_platform(
 ) -> None:
     """Find and return switches controlled by shell commands."""
 
+    if not discovery_info:
+        _LOGGER.warning("Received empty discovery_info")
+        return
     switches = []
     discovery_info = cast(DiscoveryInfoType, discovery_info)
     entities: dict[str, dict[str, Any]] = {
