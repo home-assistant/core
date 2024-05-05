@@ -45,5 +45,13 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "exceptions": {
+    "dir_not_allowed": {
+      "message": "Access to {filename} is not allowed, make sure the [directory is allowed]({url})."
+    },
+    "write_access_failed": {
+      "message": "Write access to {filename} failed: {exc}."
+    }
   }
 }

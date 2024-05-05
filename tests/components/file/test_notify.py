@@ -11,6 +11,7 @@ from homeassistant.components import notify
 from homeassistant.components.file import DOMAIN
 from homeassistant.components.notify import ATTR_TITLE_DEFAULT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -122,6 +123,102 @@ async def test_notify_file(
 
 
 @pytest.mark.parametrize(
+    ("domain", "service", "params"),
+    [(notify.DOMAIN, "test", {"message": "one, two, testing, testing"})],
+    ids=["legacy"],
+)
+@pytest.mark.parametrize(
+    ("is_allowed", "config"),
+    [
+        (
+            False,
+            {
+                "notify": [
+                    {
+                        "name": "test",
+                        "platform": "file",
+                        "filename": "mock_file",
+                    }
+                ]
+            },
+        ),
+    ],
+    ids=["not_allowed"],
+)
+async def test_legacy_notify_file_not_allowed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_is_allowed_path: MagicMock,
+    config: ConfigType,
+    domain: str,
+    service: str,
+    params: dict[str, str],
+) -> None:
+    """Test legacy notify file output not allowed."""
+    assert await async_setup_component(hass, notify.DOMAIN, config)
+    await hass.async_block_till_done()
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    freezer.move_to(dt_util.utcnow())
+
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(domain, service, params, blocking=True)
+    assert f"{exc.value!r}" == "ServiceValidationError('dir_not_allowed')"
+
+
+@pytest.mark.parametrize(
+    ("domain", "service", "params"),
+    [(notify.DOMAIN, "test", {"message": "one, two, testing, testing"})],
+    ids=["legacy"],
+)
+@pytest.mark.parametrize(
+    ("is_allowed", "config"),
+    [
+        (
+            True,
+            {
+                "notify": [
+                    {
+                        "name": "test",
+                        "platform": "file",
+                        "filename": "mock_file",
+                    }
+                ]
+            },
+        ),
+    ],
+    ids=["allowed_but_access_failed"],
+)
+async def test_legacy_notify_file_exception(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_is_allowed_path: MagicMock,
+    config: ConfigType,
+    domain: str,
+    service: str,
+    params: dict[str, str],
+) -> None:
+    """Test legacy notify file output has exception."""
+    assert await async_setup_component(hass, notify.DOMAIN, config)
+    await hass.async_block_till_done()
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    freezer.move_to(dt_util.utcnow())
+
+    m_open = mock_open()
+    with (
+        patch("homeassistant.components.file.notify.open", m_open, create=True),
+        patch("homeassistant.components.file.notify.os.stat") as mock_st,
+    ):
+        mock_st.side_effect = OSError("Access Failed")
+        with pytest.raises(ServiceValidationError) as exc:
+            await hass.services.async_call(domain, service, params, blocking=True)
+        assert f"{exc.value!r}" == "ServiceValidationError('write_access_failed')"
+
+
+@pytest.mark.parametrize(
     ("timestamp", "data"),
     [
         (
@@ -206,32 +303,58 @@ async def test_notify_file_entry_only_setup(
                 "name": "test",
                 "platform": "notify",
                 "filename": "mock_file",
-                "timestamp": False,
             },
             False,
         ),
-        (
-            {
-                "name": "test",
-                "platform": "notify",
-                "filename": "mock_file",
-                "timestamp": True,
-            },
-            True,
-        ),
     ],
-    ids=["not_allowed", "allowed"],
+    ids=["not_allowed"],
 )
 async def test_notify_file_not_allowed_path(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_is_allowed_path: MagicMock,
-    is_allowed: bool,
     data: dict[str, Any],
 ) -> None:
-    """Test the notify file output."""
-    filename = "mock_file"
+    """Test the notify file output is not allowed."""
+    domain = notify.DOMAIN
+    service = "send_message"
+    params = {"entity_id": "notify.test", "message": "one, two, testing, testing"}
 
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=data, title=f"test [{data['filename']}]"
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    freezer.move_to(dt_util.utcnow())
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(domain, service, params, blocking=True)
+    assert f"{exc.value!r}" == "ServiceValidationError('dir_not_allowed')"
+
+
+@pytest.mark.parametrize(
+    ("data", "is_allowed"),
+    [
+        (
+            {
+                "name": "test",
+                "platform": "notify",
+                "filename": "mock_file",
+            },
+            True,
+        ),
+    ],
+    ids=["not_allowed"],
+)
+async def test_notify_file_write_access_failed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_is_allowed_path: MagicMock,
+    data: dict[str, Any],
+) -> None:
+    """Test the notify file fails."""
     domain = notify.DOMAIN
     service = "send_message"
     params = {"entity_id": "notify.test", "message": "one, two, testing, testing"}
@@ -251,8 +374,7 @@ async def test_notify_file_not_allowed_path(
         patch("homeassistant.components.file.notify.open", m_open, create=True),
         patch("homeassistant.components.file.notify.os.stat") as mock_st,
     ):
-        mock_st.return_value.st_size = 0
-        await hass.services.async_call(domain, service, params, blocking=True)
-        os.path.join(hass.config.path(), filename)
-        call_count = {False: 0, True: 1}
-        assert m_open.call_count == call_count[is_allowed]
+        mock_st.side_effect = OSError("Access Failed")
+        with pytest.raises(ServiceValidationError) as exc:
+            await hass.services.async_call(domain, service, params, blocking=True)
+        assert f"{exc.value!r}" == "ServiceValidationError('write_access_failed')"

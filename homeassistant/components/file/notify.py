@@ -19,12 +19,13 @@ from homeassistant.components.notify import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FILENAME, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from .const import CONF_TIMESTAMP, FILE_ICON
+from .const import CONF_TIMESTAMP, DOMAIN, FILE_ICON, URL_ALLOWLIST_EXT_DIRS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,10 +44,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the file sensor."""
     config: dict[str, Any] = dict(entry.data)
-    filepath: str = os.path.join(hass.config.config_dir, config[CONF_FILENAME])
-    if not await hass.async_add_executor_job(hass.config.is_allowed_path, filepath):
-        _LOGGER.error("'%s' is not an allowed directory", config[CONF_FILENAME])
-        return
     async_add_entities([FileNotifyEntity(config)])
 
 
@@ -68,21 +65,34 @@ class FileNotifyEntity(NotifyEntity):
         file: TextIO
         filepath: str = os.path.join(self.hass.config.config_dir, self.filename)
         if not self.hass.config.is_allowed_path(filepath):
-            _LOGGER.error("'%s' is not an allowed directory", filepath)
-            return
-        with open(filepath, "a", encoding="utf8") as file:
-            if os.stat(filepath).st_size == 0:
-                title = (
-                    f"{title or ATTR_TITLE_DEFAULT} notifications (Log"
-                    f" started: {dt_util.utcnow().isoformat()})\n{'-' * 80}\n"
-                )
-                file.write(title)
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="dir_not_allowed",
+                translation_placeholders={
+                    "filename": filepath,
+                    "url": URL_ALLOWLIST_EXT_DIRS,
+                },
+            )
+        try:
+            with open(filepath, "a", encoding="utf8") as file:
+                if os.stat(filepath).st_size == 0:
+                    title = (
+                        f"{title or ATTR_TITLE_DEFAULT} notifications (Log"
+                        f" started: {dt_util.utcnow().isoformat()})\n{'-' * 80}\n"
+                    )
+                    file.write(title)
 
-            if self.add_timestamp:
-                text = f"{dt_util.utcnow().isoformat()} {message}\n"
-            else:
-                text = f"{message}\n"
-            file.write(text)
+                if self.add_timestamp:
+                    text = f"{dt_util.utcnow().isoformat()} {message}\n"
+                else:
+                    text = f"{message}\n"
+                file.write(text)
+        except Exception as exc:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="write_access_failed",
+                translation_placeholders={"filename": filepath, "exc": f"{exc!r}"},
+            ) from exc
 
 
 def get_service(
@@ -109,19 +119,32 @@ class FileNotificationService(BaseNotificationService):
         """Send a message to a file."""
         file: TextIO
         filepath: str = os.path.join(self.hass.config.config_dir, self.filename)
-        if self.hass.config.is_allowed_path(filepath):
-            _LOGGER.error("'%s' is not an allowed directory", filepath)
-            return
-        with open(filepath, "a", encoding="utf8") as file:
-            if os.stat(filepath).st_size == 0:
-                title = (
-                    f"{kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)} notifications (Log"
-                    f" started: {dt_util.utcnow().isoformat()})\n{'-' * 80}\n"
-                )
-                file.write(title)
+        if not self.hass.config.is_allowed_path(filepath):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="dir_not_allowed",
+                translation_placeholders={
+                    "filename": filepath,
+                    "url": URL_ALLOWLIST_EXT_DIRS,
+                },
+            )
+        try:
+            with open(filepath, "a", encoding="utf8") as file:
+                if os.stat(filepath).st_size == 0:
+                    title = (
+                        f"{kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)} notifications (Log"
+                        f" started: {dt_util.utcnow().isoformat()})\n{'-' * 80}\n"
+                    )
+                    file.write(title)
 
-            if self.add_timestamp:
-                text = f"{dt_util.utcnow().isoformat()} {message}\n"
-            else:
-                text = f"{message}\n"
-            file.write(text)
+                if self.add_timestamp:
+                    text = f"{dt_util.utcnow().isoformat()} {message}\n"
+                else:
+                    text = f"{message}\n"
+                file.write(text)
+        except Exception as exc:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="write_access_failed",
+                translation_placeholders={"filename": filepath, "exc": f"{exc!r}"},
+            ) from exc
