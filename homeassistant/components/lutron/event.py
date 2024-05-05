@@ -81,7 +81,7 @@ class LutronEventEntity(LutronKeypad, EventEntity):
         """Unregister callbacks."""
         await super().async_will_remove_from_hass()
         # Temporary solution until https://github.com/thecynic/pylutron/pull/93 gets merged
-        self._lutron_device._subscribers.remove((self.handle_event, None))  # pylint: disable=protected-access
+        self._lutron_device._subscribers.remove((self.handle_event, None))  # noqa: SLF001
 
     @callback
     def handle_event(
