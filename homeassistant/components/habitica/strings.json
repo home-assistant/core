@@ -59,6 +59,11 @@
       }
     }
   },
+  "exceptions": {
+    "setup_rate_limit_exception": {
+      "message": "Currently rate limited, try again later"
+    }
+  },
   "services": {
     "api_call": {
       "name": "API name",
