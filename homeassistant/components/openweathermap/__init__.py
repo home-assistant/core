@@ -6,8 +6,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from pyowm import OWM
-from pyowm.utils.config import get_default_config
+from pyopenweathermap import OWMClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -24,8 +23,10 @@ from .const import (
     CONFIG_FLOW_VERSION,
     FORECAST_MODE_FREE_DAILY,
     FORECAST_MODE_ONECALL_DAILY,
+    OWM_MODE_V25,
     PLATFORMS,
 )
+from .repairs import create_issue
 from .weather_update_coordinator import WeatherUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,14 +50,15 @@ async def async_setup_entry(
     api_key = entry.data[CONF_API_KEY]
     latitude = entry.data.get(CONF_LATITUDE, hass.config.latitude)
     longitude = entry.data.get(CONF_LONGITUDE, hass.config.longitude)
-    forecast_mode = _get_config_value(entry, CONF_MODE)
     language = _get_config_value(entry, CONF_LANGUAGE)
+    mode = _get_config_value(entry, CONF_MODE)
 
-    config_dict = _get_owm_config(language)
+    if mode == OWM_MODE_V25:
+        create_issue(hass)
 
-    owm = OWM(api_key, config_dict).weather_manager()
+    owm_client = OWMClient(api_key, mode, lang=language)
     weather_coordinator = WeatherUpdateCoordinator(
-        owm, latitude, longitude, forecast_mode, hass
+        owm_client, latitude, longitude, hass
     )
 
     await weather_coordinator.async_config_entry_first_refresh()
@@ -87,6 +89,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, data=new_data, version=CONFIG_FLOW_VERSION
         )
 
+    if version == 2:
+        new_data = {**data, CONF_MODE: OWM_MODE_V25}
+        config_entries.async_update_entry(
+            entry, data=new_data, version=CONFIG_FLOW_VERSION
+        )
+
     _LOGGER.info("Migration to version %s successful", CONFIG_FLOW_VERSION)
 
     return True
@@ -108,10 +116,3 @@ def _get_config_value(config_entry: ConfigEntry, key: str) -> Any:
     if config_entry.options:
         return config_entry.options[key]
     return config_entry.data[key]
-
-
-def _get_owm_config(language: str) -> dict[str, Any]:
-    """Get OpenWeatherMap configuration and add language to it."""
-    config_dict = get_default_config()
-    config_dict["language"] = language
-    return config_dict

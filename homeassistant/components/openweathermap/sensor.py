@@ -30,12 +30,13 @@ from homeassistant.util import dt as dt_util
 
 from . import OpenweathermapConfigEntry
 from .const import (
+    ATTR_API_CLOUD_COVERAGE,
     ATTR_API_CLOUDS,
     ATTR_API_CONDITION,
+    ATTR_API_CURRENT,
+    ATTR_API_DAILY_FORECAST,
     ATTR_API_DEW_POINT,
     ATTR_API_FEELS_LIKE_TEMPERATURE,
-    ATTR_API_FORECAST,
-    ATTR_API_FORECAST_CONDITION,
     ATTR_API_FORECAST_PRECIPITATION,
     ATTR_API_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_API_FORECAST_PRESSURE,
@@ -162,7 +163,7 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 )
 FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        key=ATTR_API_FORECAST_CONDITION,
+        key=ATTR_API_CONDITION,
         name="Condition",
     ),
     SensorEntityDescription(
@@ -211,7 +212,7 @@ FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.WIND_SPEED,
     ),
     SensorEntityDescription(
-        key=ATTR_API_CLOUDS,
+        key=ATTR_API_CLOUD_COVERAGE,
         name="Cloud coverage",
         native_unit_of_measurement=PERCENTAGE,
     ),
@@ -313,7 +314,9 @@ class OpenWeatherMapSensor(AbstractOpenWeatherMapSensor):
     @property
     def native_value(self) -> StateType:
         """Return the state of the device."""
-        return self._weather_coordinator.data.get(self.entity_description.key, None)
+        return self._weather_coordinator.data[ATTR_API_CURRENT].get(
+            self.entity_description.key
+        )
 
 
 class OpenWeatherMapForecastSensor(AbstractOpenWeatherMapSensor):
@@ -333,11 +336,8 @@ class OpenWeatherMapForecastSensor(AbstractOpenWeatherMapSensor):
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the device."""
-        forecasts = self._weather_coordinator.data.get(ATTR_API_FORECAST)
-        if not forecasts:
-            return None
-
-        value = forecasts[0].get(self.entity_description.key, None)
+        forecasts = self._weather_coordinator.data[ATTR_API_DAILY_FORECAST]
+        value = forecasts[0].get(self.entity_description.key)
         if (
             value
             and self.entity_description.device_class is SensorDeviceClass.TIMESTAMP
