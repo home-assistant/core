@@ -262,7 +262,7 @@ def _attach_file(hass, atch_name, content_id=""):
         ):
             allow_list = "allowlist_external_dirs"
             file_name = os.path.basename(atch_name)
-            url = "https://www.home-assistant.io/docs/configuration/basic/"
+            url = "https://www.home-assistant.io/integrations/homeassistant/#allowlist_external_dirs"
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="remote_path_not_allowed",

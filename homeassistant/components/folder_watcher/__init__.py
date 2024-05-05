@@ -100,7 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "path": path,
                 "config_variable": "allowlist_external_dirs",
             },
-            learn_more_url="https://www.home-assistant.io/docs/configuration/basic/#allowlist_external_dirs",
+            learn_more_url="https://www.home-assistant.io/integrations/homeassistant/#allowlist_external_dirs",
         )
         return False
     await hass.async_add_executor_job(Watcher, path, patterns, hass)
