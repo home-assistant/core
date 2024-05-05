@@ -26,11 +26,10 @@ def async_create_html5_issue(hass: HomeAssistant, import_success: bool) -> None:
     """Create issues for HTML5."""
     _LOGGER.warning(SUCCESSFUL_IMPORT_LOG if import_success else FAILED_IMPORT_LOG)
 
-    translation_key = (
-        SUCCESSFUL_IMPORT_TRANSLATION_KEY
-        if import_success
-        else FAILED_IMPORT_TRANSLATION_KEY
-    )
+    translation_key = SUCCESSFUL_IMPORT_LOG
+    if not import_success:
+        translation_key = FAILED_IMPORT_TRANSLATION_KEY
+
     async_create_issue(
         hass,
         DOMAIN,
