@@ -996,7 +996,7 @@ class ZHADevice(LogMixin):
                     )
                 )
         res = await asyncio.gather(*(t[0] for t in tasks), return_exceptions=True)
-        for outcome, log_msg in zip(res, tasks):
+        for outcome, log_msg in zip(res, tasks, strict=False):
             if isinstance(outcome, Exception):
                 fmt = f"{log_msg[1]} failed: %s"
             else:

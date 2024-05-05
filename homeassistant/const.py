@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
-MINOR_VERSION: Final = 5
+MINOR_VERSION: Final = 6
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -296,6 +296,7 @@ CONF_WHILE: Final = "while"
 CONF_WHITELIST: Final = "whitelist"
 CONF_ALLOWLIST_EXTERNAL_DIRS: Final = "allowlist_external_dirs"
 LEGACY_CONF_WHITELIST_EXTERNAL_DIRS: Final = "whitelist_external_dirs"
+CONF_DEBUG: Final = "debug"
 CONF_XY: Final = "xy"
 CONF_ZONE: Final = "zone"
 

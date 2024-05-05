@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
-from . import AccuWeatherDataUpdateCoordinator
+from . import AccuWeatherData
 from .const import DOMAIN
 
 TO_REDACT = {CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE}
@@ -19,11 +19,9 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: AccuWeatherDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    accuweather_data: AccuWeatherData = hass.data[DOMAIN][config_entry.entry_id]
 
     return {
         "config_entry_data": async_redact_data(dict(config_entry.data), TO_REDACT),
-        "coordinator_data": coordinator.data,
+        "observation_data": accuweather_data.coordinator_observation.data,
     }

@@ -6,7 +6,6 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -16,12 +15,6 @@ from .test_issues import mock_resolution_info
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
-
-
-@pytest.fixture(autouse=True)
-async def setup_repairs(hass: HomeAssistant):
-    """Set up the repairs integration."""
-    assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
 
 
 @pytest.fixture(autouse=True)
