@@ -31,7 +31,7 @@ from tests.common import (
     async_get_persistent_notifications,
 )
 from tests.components.cloud import mock_cloud
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
+from tests.typing import WebSocketGenerator
 
 # Fake webhook thermostat mode change to "Max"
 FAKE_WEBHOOK = {
@@ -517,22 +517,6 @@ async def test_devices(
         assert device_entry == snapshot(name=f"{identifier[0]}-{identifier[1]}")
 
 
-async def remove_device(
-    ws_client: MockHAClientWebSocket, device_id: str, config_entry_id: str
-) -> bool:
-    """Remove config entry from a device."""
-    await ws_client.send_json(
-        {
-            "id": 1,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": config_entry_id,
-            "device_id": device_id,
-        }
-    )
-    response = await ws_client.receive_json()
-    return response["success"]
-
-
 async def test_device_remove_devices(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -554,20 +538,13 @@ async def test_device_remove_devices(
     entity = entity_registry.async_get(climate_entity_livingroom)
 
     device_entry = device_registry.async_get(entity.device_id)
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), device_entry.id, config_entry.entry_id
-        )
-        is False
-    )
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "remove-device-id")},
     )
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), dead_device_entry.id, config_entry.entry_id
-        )
-        is True
-    )
+    response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
+    assert response["success"]
