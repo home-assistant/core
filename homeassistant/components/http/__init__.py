@@ -21,7 +21,6 @@ from aiohttp.typedefs import JSONDecoder, StrOrURL
 from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
 from aiohttp.web_protocol import RequestHandler
 from aiohttp_fast_url_dispatcher import FastUrlDispatcher, attach_fast_url_dispatcher
-import aiohttp_fast_zlib
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -54,6 +53,7 @@ from homeassistant.helpers.http import (
     HomeAssistantView,
     current_request,
 )
+from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -201,7 +201,9 @@ class ApiConfig:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HTTP API and debug interface."""
-    aiohttp_fast_zlib.enable()
+    # Late import to ensure isal is updated before
+    # we import aiohttp_fast_zlib
+    (await async_import_module(hass, "aiohttp_fast_zlib")).enable()
 
     conf: ConfData | None = config.get(DOMAIN)
 
