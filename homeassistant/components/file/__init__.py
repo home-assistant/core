@@ -3,7 +3,7 @@
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
@@ -16,19 +16,24 @@ PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the file integration."""
 
-    # The legacy File notify.notify service is deprecated with HA Core 2024.5.0
-    # with HA Core 2024.5.0 and will be removed with HA core 2024.12.0
+    # The legacy File notify.notify service is deprecated with HA Core 2024.6.0
+    # with HA Core 2024.6.0 and will be removed with HA core 2024.12.0
     # The legacy service will coexist together with the new entity platform service
-    # hass.async_create_task(
-    #    discovery.async_load_platform(
-    #        hass,
-    #        Platform.NOTIFY,
-    #        DOMAIN,
-    #        None,
-    #        config,
-    #    )
-    # )
-
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml_notify_migration",
+        breaks_in_ha_version="2024.12",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        learn_more_url="https://www.home-assistant.io/integrations/file/",
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml_notify_migration",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "File",
+        },
+    )
     if hass.config_entries.async_entries(DOMAIN):
         # We skip import in case we already have config entries
         return True
