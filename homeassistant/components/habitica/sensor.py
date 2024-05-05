@@ -250,11 +250,10 @@ class HabitipyTaskSensor(
     @property
     def native_value(self):
         """Return the state of the device."""
-        return sum(
-            1
+        return len(list(
             for task in self.coordinator.data.tasks
             if task.get("type") in self._task_type.path
-        )
+        ))
 
     @property
     def extra_state_attributes(self):
