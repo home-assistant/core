@@ -260,6 +260,7 @@ class HabitipyTaskSensor(
                 task
                 for task in self.coordinator.data.tasks
                 if task.get("type") in self._task_type.path
+                and not task.get("completed")
             ]
         )
 
@@ -306,3 +307,4 @@ class HabitipyTaskSensor(
                 DOMAIN,
                 f"deprecated_task_entity_{self._task_name}",
             )
+        await super().async_added_to_hass()

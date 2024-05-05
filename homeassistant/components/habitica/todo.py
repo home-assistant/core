@@ -20,10 +20,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
+from . import HabiticaConfigEntry
 from .const import DOMAIN, MANUFACTURER, NAME
-from .sensor import HabitipyData
+from .coordinator import HabiticaDataUpdateCoordinator
 
 
 class HabiticaTodoList(StrEnum):
@@ -46,12 +48,11 @@ class HabiticaTaskType(StrEnum):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HabiticaConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor from a config entry created in the integrations UI."""
-    coordinator = HabitipyData(hass.data[DOMAIN][config_entry.entry_id])
-    await coordinator.update()
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         [
@@ -62,18 +63,23 @@ async def async_setup_entry(
     )
 
 
-class BaseHabiticaListEntity(TodoListEntity):
+class BaseHabiticaListEntity(
+    CoordinatorEntity[HabiticaDataUpdateCoordinator], TodoListEntity
+):
     """Representation of Habitica task lists."""
 
     _attr_has_entity_name = True
 
     def __init__(
-        self, coordinator: HabitipyData, key: HabiticaTodoList, entry: ConfigEntry
+        self,
+        coordinator: HabiticaDataUpdateCoordinator,
+        key: HabiticaTodoList,
+        entry: ConfigEntry,
     ) -> None:
         """Initialize HabiticaTodoListEntity."""
         if TYPE_CHECKING:
             assert entry.unique_id
-        self.coordinator = coordinator
+        super().__init__(coordinator)
         self._attr_unique_id = f"{entry.unique_id}_{key}"
         self._attr_translation_key = key
         self.idx = key
@@ -97,8 +103,7 @@ class BaseHabiticaListEntity(TodoListEntity):
                     translation_key=f"delete_{self.idx}_failed",
                 ) from e
 
-        await self.coordinator.update(no_throttle=True)
-        self.async_schedule_update_ha_state()
+        await self.coordinator.async_refresh()
 
     async def async_move_todo_item(
         self, uid: str, previous_uid: str | None = None
@@ -174,8 +179,7 @@ class BaseHabiticaListEntity(TodoListEntity):
                 translation_placeholders={"name": item.summary or ""},
             ) from e
 
-        await self.coordinator.update(no_throttle=True)
-        self.async_schedule_update_ha_state()
+        await self.coordinator.async_refresh()
 
 
 class HabiticaTodosListEntity(BaseHabiticaListEntity):
@@ -190,7 +194,9 @@ class HabiticaTodosListEntity(BaseHabiticaListEntity):
         | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
     )
 
-    def __init__(self, coordinator: HabitipyData, entry: ConfigEntry) -> None:
+    def __init__(
+        self, coordinator: HabiticaDataUpdateCoordinator, entry: ConfigEntry
+    ) -> None:
         """Initialize HabiticaTodosListEntity."""
         super().__init__(coordinator, HabiticaTodoList.TODOS, entry)
 
@@ -206,7 +212,7 @@ class HabiticaTodosListEntity(BaseHabiticaListEntity):
                     description=task["notes"],
                     due=(
                         dt_util.as_local(
-                            datetime.datetime.fromisoformat(task.get("date"))
+                            datetime.datetime.fromisoformat(task["date"])
                         ).date()
                         if task.get("date")
                         else None
@@ -215,7 +221,8 @@ class HabiticaTodosListEntity(BaseHabiticaListEntity):
                     if not task["completed"]
                     else TodoItemStatus.COMPLETED,
                 )
-                for task in self.coordinator.tasks.get(HabiticaTodoList.TODOS, [])
+                for task in self.coordinator.data.tasks
+                if task["type"] == HabiticaTaskType.TODO
             ),
         ]
 
@@ -236,8 +243,7 @@ class HabiticaTodosListEntity(BaseHabiticaListEntity):
                 translation_placeholders={"name": item.summary or ""},
             ) from e
 
-        await self.coordinator.update(no_throttle=True)
-        self.async_schedule_update_ha_state()
+        await self.coordinator.async_refresh()
 
 
 class HabiticaDailiesListEntity(BaseHabiticaListEntity):
@@ -250,7 +256,9 @@ class HabiticaDailiesListEntity(BaseHabiticaListEntity):
         | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
     )
 
-    def __init__(self, coordinator: HabitipyData, entry: ConfigEntry) -> None:
+    def __init__(
+        self, coordinator: HabiticaDataUpdateCoordinator, entry: ConfigEntry
+    ) -> None:
         """Initialize HabiticaDailiesListEntity."""
         super().__init__(coordinator, HabiticaTodoList.DAILIES, entry)
 
@@ -284,6 +292,7 @@ class HabiticaDailiesListEntity(BaseHabiticaListEntity):
                     if task["completed"]
                     else TodoItemStatus.NEEDS_ACTION,
                 )
-                for task in self.coordinator.tasks.get(HabiticaTodoList.DAILIES, [])
+                for task in self.coordinator.data.tasks
+                if task["type"] == HabiticaTaskType.DAILY
             )
         ]
