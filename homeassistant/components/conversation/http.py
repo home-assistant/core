@@ -142,6 +142,9 @@ async def websocket_list_agents(
         agent = manager.async_get_agent(agent_info.id)
         assert agent is not None
 
+        if isinstance(agent, ConversationEntity):
+            continue
+
         supported_languages = agent.supported_languages
         if language and supported_languages != MATCH_ALL:
             supported_languages = language_util.matches(
