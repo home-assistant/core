@@ -6,7 +6,7 @@ import mimetypes
 
 from radios import FilterBy, Order, RadioBrowser, Station
 
-from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
+from homeassistant.components.media_player import MediaClass, MediaType
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import (
     BrowseMediaSource,
@@ -47,18 +47,13 @@ class RadioMediaSource(MediaSource):
         self.entry = entry
 
     @property
-    def radios(self) -> RadioBrowser | None:
+    def radios(self) -> RadioBrowser:
         """Return the radio browser."""
-        if self.entry.runtime_data:
-            return self.entry.runtime_data
-        return None
+        return self.entry.runtime_data
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve selected Radio station to a streaming URL."""
         radios = self.radios
-
-        if radios is None:
-            raise Unresolvable("Radio Browser not initialized")
 
         station = await radios.station(uuid=item.identifier)
         if not station:
@@ -78,9 +73,6 @@ class RadioMediaSource(MediaSource):
     ) -> BrowseMediaSource:
         """Return media."""
         radios = self.radios
-
-        if radios is None:
-            raise BrowseError("Radio Browser not initialized")
 
         return BrowseMediaSource(
             domain=DOMAIN,
