@@ -7,7 +7,6 @@ from collections.abc import Callable, Iterable
 from concurrent.futures import CancelledError
 import contextlib
 from datetime import datetime, timedelta
-from functools import partial
 import logging
 import queue
 import sqlite3
@@ -1416,8 +1415,9 @@ class Recorder(threading.Thread):
             MutexPool.pool_lock = threading.RLock()
             kwargs["pool_reset_on_return"] = None
         elif self.db_url.startswith(SQLITE_URL_PREFIX):
-            kwargs["poolclass"] = partial(
-                RecorderPool, self.recorder_and_worker_thread_ids
+            kwargs["poolclass"] = RecorderPool
+            kwargs["recorder_and_worker_thread_ids"] = (
+                self.recorder_and_worker_thread_ids
             )
         elif self.db_url.startswith(
             (

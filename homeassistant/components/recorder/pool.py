@@ -37,12 +37,18 @@ class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
     """
 
     def __init__(  # pylint: disable=super-init-not-called
-        self, recorder_and_worker_thread_ids: set[int], *args: Any, **kw: Any
+        self,
+        creator: Any,
+        recorder_and_worker_thread_ids: set[int] | None = None,
+        **kw: Any,
     ) -> None:
         """Create the pool."""
         kw["pool_size"] = POOL_SIZE
+        assert (
+            recorder_and_worker_thread_ids is not None
+        ), "recorder_and_worker_thread_ids is required"
         self.recorder_and_worker_thread_ids = recorder_and_worker_thread_ids
-        SingletonThreadPool.__init__(self, *args, **kw)
+        SingletonThreadPool.__init__(self, creator, **kw)
 
     def _do_return_conn(self, record: ConnectionPoolEntry) -> None:
         if threading.get_ident() in self.recorder_and_worker_thread_ids:
