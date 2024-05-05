@@ -121,7 +121,7 @@ class FroniusCoordinatorBase(
             async_add_entities(new_entities)
 
         _add_entities_for_unregistered_descriptors()
-        self.solar_net.cleanup_callbacks.append(
+        self.solar_net.config_entry.async_on_unload(
             self.async_add_listener(_add_entities_for_unregistered_descriptors)
         )
 

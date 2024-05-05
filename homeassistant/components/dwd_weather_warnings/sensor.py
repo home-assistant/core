@@ -14,7 +14,6 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -39,7 +38,7 @@ from .const import (
     CURRENT_WARNING_SENSOR,
     DOMAIN,
 )
-from .coordinator import DwdWeatherWarningsCoordinator
+from .coordinator import DwdWeatherWarningsConfigEntry, DwdWeatherWarningsCoordinator
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -54,10 +53,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DwdWeatherWarningsConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entities from config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     unique_id = entry.unique_id
     assert unique_id

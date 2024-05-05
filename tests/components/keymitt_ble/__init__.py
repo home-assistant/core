@@ -46,6 +46,7 @@ SERVICE_INFO = BluetoothServiceInfoBleak(
     device=generate_ble_device("aa:bb:cc:dd:ee:ff", "mibp"),
     time=0,
     connectable=True,
+    tx_power=-127,
 )
 
 
