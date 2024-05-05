@@ -268,12 +268,19 @@ class HabiticaDailiesListEntity(BaseHabiticaListEntity):
 
         dailies don't have a date, but we still can show the next due date,
         which is a calculated value based on recurrence of the task.
-        Changes to the date in Home Assistant will be ignored.
+        If a task is due and has not been completed, the due date is the last time
+        a new day has been started. This allows to check off dailies from yesterday,
+        that have been completed but forgotten to mark as completed before resetting the dailies.
+        Changes of the date input field in Home Assistant will be ignored.
         """
 
         def next_due_date(task: dict[str, Any]) -> datetime.date | None:
             if task["isDue"] and not task["completed"]:
-                return datetime.date.today()
+                return dt_util.as_local(
+                    datetime.datetime.fromisoformat(
+                        self.coordinator.data.user["lastCron"]
+                    )
+                ).date()
             try:
                 return dt_util.as_local(
                     datetime.datetime.fromisoformat(task["nextDue"][0])
