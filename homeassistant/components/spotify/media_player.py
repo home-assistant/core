@@ -98,7 +98,6 @@ def spotify_exception_handler(
     def wrapper(
         self: _SpotifyMediaPlayerT, *args: _P.args, **kwargs: _P.kwargs
     ) -> _R | None:
-        # pylint: disable=protected-access
         try:
             result = func(self, *args, **kwargs)
         except requests.RequestException:

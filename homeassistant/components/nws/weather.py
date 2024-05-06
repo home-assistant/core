@@ -35,6 +35,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 from homeassistant.util.unit_conversion import SpeedConverter, TemperatureConverter
 
 from . import NWSData, base_unique_id, device_info
@@ -110,7 +111,7 @@ def _calculate_unique_id(entry_data: MappingProxyType[str, Any], mode: str) -> s
     return f"{base_unique_id(latitude, longitude)}_{mode}"
 
 
-class NWSWeather(CoordinatorWeatherEntity):
+class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]]):
     """Representation of a weather condition."""
 
     _attr_attribution = ATTRIBUTION

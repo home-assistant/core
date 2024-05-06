@@ -41,7 +41,6 @@ FLOWS = {
         "aladdin_connect",
         "alarmdecoder",
         "amberelectric",
-        "ambiclimate",
         "ambient_network",
         "ambient_station",
         "analytics_insights",
