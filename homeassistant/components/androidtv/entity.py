@@ -77,13 +77,15 @@ def adb_decorator(
                 )
                 return None
             except self.exceptions as err:
-                _LOGGER.error(
-                    (
-                        "Failed to execute an ADB command. ADB connection re-"
-                        "establishing attempt in the next update. Error: %s"
-                    ),
-                    err,
-                )
+                if self.available:
+                    _LOGGER.error(
+                        (
+                            "Failed to execute an ADB command. ADB connection re-"
+                            "establishing attempt in the next update. Error: %s"
+                        ),
+                        err,
+                    )
+
                 await self.aftv.adb_close()
                 # pylint: disable-next=protected-access
                 self._attr_available = False
