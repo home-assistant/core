@@ -93,13 +93,15 @@ def adb_decorator(
             except Exception as err:  # pylint: disable=broad-except
                 # An unforeseen exception occurred. Close the ADB connection so that
                 # it doesn't happen over and over again.
-                _LOGGER.error(
-                    (
-                        "Unexpected exception executing an ADB command. ADB connection"
-                        " re-establishing attempt in the next update. Error: %s"
-                    ),
-                    err,
-                )
+                if self.available:
+                    _LOGGER.error(
+                        (
+                            "Unexpected exception executing an ADB command. ADB connection"
+                            " re-establishing attempt in the next update. Error: %s"
+                        ),
+                        err,
+                    )
+
                 await self.aftv.adb_close()
                 # pylint: disable-next=protected-access
                 self._attr_available = False
