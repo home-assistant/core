@@ -58,7 +58,7 @@ def setup_recorder(recorder_mock: Recorder) -> None:
     """Set up recorder."""
 
 
-async def testsession_scope_not_setup(
+async def test_session_scope_not_setup(
     hass: HomeAssistant,
     setup_recorder: None,
 ) -> None:
@@ -71,7 +71,7 @@ async def testsession_scope_not_setup(
         pass
 
 
-async def testrecorder_bad_execute(hass: HomeAssistant, setup_recorder: None) -> None:
+async def test_recorder_bad_execute(hass: HomeAssistant, setup_recorder: None) -> None:
     """Bad execute, retry 3 times."""
     from sqlalchemy.exc import SQLAlchemyError
 
@@ -715,7 +715,7 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(
     assert database_engine.optimizer.slow_range_in_select is False
 
 
-async def testbasic_sanity_check(
+async def test_basic_sanity_check(
     hass: HomeAssistant, setup_recorder: None, recorder_db_url
 ) -> None:
     """Test the basic sanity checks with a missing table."""
@@ -733,7 +733,7 @@ async def testbasic_sanity_check(
         util.basic_sanity_check(cursor)
 
 
-async def testcombined_checks(
+async def test_combined_checks(
     hass: HomeAssistant,
     setup_recorder: None,
     caplog: pytest.LogCaptureFixture,
@@ -801,7 +801,7 @@ async def testcombined_checks(
         util.run_checks_on_open_db("fake_db_path", cursor)
 
 
-async def testend_incomplete_runs(
+async def test_end_incomplete_runs(
     hass: HomeAssistant, setup_recorder: None, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Ensure we can end incomplete runs."""
@@ -825,7 +825,7 @@ async def testend_incomplete_runs(
     assert "Ended unfinished session" in caplog.text
 
 
-async def testperiodic_db_cleanups(
+async def test_periodic_db_cleanups(
     hass: HomeAssistant, setup_recorder: None, recorder_db_url
 ) -> None:
     """Test periodic db cleanups."""
@@ -904,7 +904,7 @@ def test_build_mysqldb_conv() -> None:
 
 
 @patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
-async def testexecute_stmt_lambda_element(
+async def test_execute_stmt_lambda_element(
     hass: HomeAssistant,
     setup_recorder: None,
 ) -> None:
