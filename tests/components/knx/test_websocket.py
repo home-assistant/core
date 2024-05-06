@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 from homeassistant.components.knx import DOMAIN, KNX_ADDRESS, SwitchSchema
+from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 
@@ -87,6 +88,7 @@ async def test_knx_project_file_process(
 
     assert res["success"], res
     assert hass.data[DOMAIN].project.loaded
+    assert hass_storage[KNX_PROJECT_STORAGE_KEY]["data"] == _parse_result
 
 
 async def test_knx_project_file_process_error(
@@ -126,19 +128,20 @@ async def test_knx_project_file_remove(
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
     load_knxproj: None,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test knx/project_file_remove command."""
     await knx.setup_integration({})
+    assert hass_storage[KNX_PROJECT_STORAGE_KEY]
     client = await hass_ws_client(hass)
     assert hass.data[DOMAIN].project.loaded
 
     await client.send_json({"id": 6, "type": "knx/project_file_remove"})
-    with patch("homeassistant.helpers.storage.Store.async_remove") as remove_mock:
-        res = await client.receive_json()
-        remove_mock.assert_called_once_with()
+    res = await client.receive_json()
 
     assert res["success"], res
     assert not hass.data[DOMAIN].project.loaded
+    assert not hass_storage.get(KNX_PROJECT_STORAGE_KEY)
 
 
 async def test_knx_get_project(

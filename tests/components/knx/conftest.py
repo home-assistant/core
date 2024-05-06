@@ -30,6 +30,9 @@ from homeassistant.components.knx.const import (
     DOMAIN as KNX_DOMAIN,
 )
 from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
+from homeassistant.components.knx.storage.config_store import (
+    STORAGE_KEY as KNX_CONFIG_STORAGE_KEY,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
@@ -37,6 +40,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry, load_fixture
 
 FIXTURE_PROJECT_DATA = json.loads(load_fixture("project.json", KNX_DOMAIN))
+FIXTURE_CONFIG_STORAGE_DATA = json.loads(load_fixture("config_store.json", KNX_DOMAIN))
 
 
 class KNXTestKit:
@@ -166,9 +170,16 @@ class KNXTestKit:
                 telegram.payload.value.value == payload  # type: ignore[attr-defined]
             ), f"Payload mismatch in {telegram} - Expected: {payload}"
 
-    async def assert_read(self, group_address: str) -> None:
-        """Assert outgoing GroupValueRead telegram. One by one in timely order."""
+    async def assert_read(
+        self, group_address: str, response: int | tuple[int, ...] | None = None
+    ) -> None:
+        """Assert outgoing GroupValueRead telegram. One by one in timely order.
+
+        Optionally inject incoming GroupValueResponse telegram after reception.
+        """
         await self.assert_telegram(group_address, None, GroupValueRead)
+        if response is not None:
+            await self.receive_response(group_address, response)
 
     async def assert_response(
         self, group_address: str, payload: int | tuple[int, ...]
@@ -280,3 +291,9 @@ def load_knxproj(hass_storage: dict[str, Any]) -> None:
         "version": 1,
         "data": FIXTURE_PROJECT_DATA,
     }
+
+
+@pytest.fixture
+def load_config_store(hass_storage):
+    """Mock KNX config store data."""
+    hass_storage[KNX_CONFIG_STORAGE_KEY] = FIXTURE_CONFIG_STORAGE_DATA
