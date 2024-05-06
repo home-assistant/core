@@ -12,5 +12,5 @@
   "documentation": "https://www.home-assistant.io/integrations/mikrotik_bt5",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["mikrotik-bt5==0.0.2b4"]
+  "requirements": ["mikrotik-bt5==1.0.0"]
 }

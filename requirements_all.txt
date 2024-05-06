@@ -1314,7 +1314,7 @@ micloud==0.5
 microBeesPy==0.3.2
 
 # homeassistant.components.mikrotik_bt5
-mikrotik-bt5==0.0.2b4
+mikrotik-bt5==1.0.0
 
 # homeassistant.components.mill
 mill-local==0.3.0
