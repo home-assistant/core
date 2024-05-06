@@ -517,8 +517,8 @@
       "total_energy": {
         "name": "Total energy"
       },
-      "total_return_energy": {
-        "name": "Total return energy"
+      "total_production": {
+        "name": "Total production"
       },
       "phase_a_current": {
         "name": "Phase A current"
