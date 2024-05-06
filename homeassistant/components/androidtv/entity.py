@@ -143,7 +143,7 @@ class AndroidTVEntity(Entity):
             self._attr_device_info[ATTR_CONNECTIONS] = {(CONNECTION_NETWORK_MAC, mac)}
 
         # ADB exceptions to catch
-        if not aftv.adb_server_ip:
+        if not self.aftv.adb_server_ip:
             # Using "adb_shell" (Python ADB implementation)
             self.exceptions = ADB_PYTHON_EXCEPTIONS
         else:
