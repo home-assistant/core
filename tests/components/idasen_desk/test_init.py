@@ -77,7 +77,7 @@ async def test_reconnect_on_bluetooth_callback(
 async def test_duplicated_disconnect_is_no_op(
     hass: HomeAssistant, mock_desk_api: MagicMock
 ) -> None:
-    """Test that calling disconnect while disconnectig is a no-op."""
+    """Test that calling disconnect while disconnecting is a no-op."""
     await init_integration(hass)
 
     await hass.services.async_call(
@@ -86,7 +86,7 @@ async def test_duplicated_disconnect_is_no_op(
     await hass.async_block_till_done()
 
     async def mock_disconnect():
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0)
 
     mock_desk_api.disconnect.reset_mock()
     mock_desk_api.disconnect.side_effect = mock_disconnect
