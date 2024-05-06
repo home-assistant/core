@@ -64,8 +64,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator_observation.async_config_entry_first_refresh()
     await coordinator_daily_forecast.async_config_entry_first_refresh()
 
-    entry.async_on_unload(entry.add_update_listener(update_listener))
-
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = AccuWeatherData(
         coordinator_observation=coordinator_observation,
         coordinator_daily_forecast=coordinator_daily_forecast,
@@ -92,8 +90,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update listener."""
-    await hass.config_entries.async_reload(entry.entry_id)
