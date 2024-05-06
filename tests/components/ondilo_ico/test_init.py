@@ -28,7 +28,7 @@ async def test_devices(
         device_registry, config_entry.entry_id
     )
 
-    assert device_entries
+    assert len(device_entries) == 2
 
     for device_entry in device_entries:
         identifier = list(device_entry.identifiers)[0]
