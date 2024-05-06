@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2024.5.1"
+version     = "2024.5.2"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -28,7 +28,7 @@ dependencies    = [
     "aiohttp_cors==0.7.0",
     "aiohttp_session==2.12.0",
     "aiohttp-fast-url-dispatcher==0.3.0",
-    "aiohttp-isal==0.2.0",
+    "aiohttp-isal==0.3.1",
     "astral==2.2",
     "async-interrupt==1.1.1",
     "attrs==23.2.0",

@@ -386,7 +386,7 @@ aioymaps==1.2.2
 airly==1.1.0
 
 # homeassistant.components.airthings_ble
-airthings-ble==0.8.0
+airthings-ble==0.9.0
 
 # homeassistant.components.airthings
 airthings-cloud==0.2.0
@@ -404,7 +404,7 @@ amberelectric==1.1.0
 androidtv[async]==0.0.73
 
 # homeassistant.components.androidtv_remote
-androidtvremote2==0.0.14
+androidtvremote2==0.0.15
 
 # homeassistant.components.anova
 anova-wifi==0.10.0
@@ -494,7 +494,7 @@ bluecurrent-api==1.2.3
 bluemaestro-ble==0.2.3
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.19.1
+bluetooth-adapters==0.19.2
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.4.2
@@ -781,7 +781,7 @@ glances-api==0.6.0
 goalzero==0.2.2
 
 # homeassistant.components.goodwe
-goodwe==0.3.2
+goodwe==0.3.4
 
 # homeassistant.components.google_mail
 # homeassistant.components.google_tasks
@@ -880,7 +880,7 @@ hole==0.8.0
 holidays==0.47
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240501.0
+home-assistant-frontend==20240501.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.4.24
