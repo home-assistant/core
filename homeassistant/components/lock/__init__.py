@@ -278,10 +278,10 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the state."""
         if self.is_jammed:
             return STATE_JAMMED
-        if self.is_locking:
-            return STATE_LOCKING
         if self.is_opening:
             return STATE_OPENING
+        if self.is_locking:
+            return STATE_LOCKING
         if self.is_open:
             return STATE_OPEN
         if self.is_unlocking:
