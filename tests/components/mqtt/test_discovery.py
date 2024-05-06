@@ -1791,19 +1791,7 @@ async def test_update_with_bad_config_not_breaks_discovery(
 async def test_discovery_dispatcher_signal_type_messages(
     hass: HomeAssistant, signal_message: SignalTypeFormat[MQTTDiscoveryPayload]
 ) -> None:
-    """Test discovery dispatcher messages.
-
-    MQTT_DISCOVERY_UPDATED: SignalTypeFormat[MQTTDiscoveryPayload] = SignalTypeFormat(
-    "mqtt_discovery_updated_{}_{}"
-    )
-    MQTT_DISCOVERY_NEW: SignalTypeFormat[MQTTDiscoveryPayload] = SignalTypeFormat(
-        "mqtt_discovery_new_{}_{}"
-    )
-    MQTT_DISCOVERY_NEW_COMPONENT = "mqtt_discovery_new_component"
-    MQTT_DISCOVERY_DONE: SignalTypeFormat[Any] = SignalTypeFormat(
-        "mqtt_discovery_done_{}_{}"
-    )
-    """
+    """Test discovery dispatcher messages."""
 
     domain_id_tuple = ("sensor", "very_unique")
     test_data = {"name": "test", "state_topic": "test-topic"}
