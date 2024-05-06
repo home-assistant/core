@@ -83,11 +83,11 @@ async def test_availability(
 @pytest.mark.parametrize(
     "exception",
     [
-        ApiError,
+        ApiError("API Error"),
         ConnectionError,
         ClientConnectorError,
-        InvalidApiKeyError,
-        RequestsExceededError,
+        InvalidApiKeyError("Invalid API key"),
+        RequestsExceededError("Requests exceeded"),
     ],
 )
 async def test_availability_forecast(
