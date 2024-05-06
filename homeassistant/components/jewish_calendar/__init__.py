@@ -35,36 +35,34 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            cv.deprecated,
-            [
-                {
-                    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                    vol.Optional(CONF_DIASPORA, default=DEFAULT_DIASPORA): cv.boolean,
-                    vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(
-                        ["hebrew", "english"]
-                    ),
-                    vol.Optional(
-                        CONF_CANDLE_LIGHT_MINUTES, default=DEFAULT_CANDLE_LIGHT
-                    ): int,
-                    # Default of 0 means use 8.5 degrees / 'three_stars' time.
-                    vol.Optional(
-                        CONF_HAVDALAH_OFFSET_MINUTES,
-                        default=DEFAULT_HAVDALAH_OFFSET_MINUTES,
-                    ): int,
-                    vol.Inclusive(
-                        CONF_LATITUDE,
-                        "coordinates",
-                        "Latitude and longitude must exist together",
-                    ): cv.latitude,
-                    vol.Inclusive(
-                        CONF_LONGITUDE,
-                        "coordinates",
-                        "Latitude and longitude must exist together",
-                    ): cv.longitude,
-                    vol.Optional(CONF_ELEVATION): int,
-                    vol.Optional(CONF_TIME_ZONE): cv.time_zone,
-                }
-            ],
+            cv.deprecated(DOMAIN),
+            {
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(CONF_DIASPORA, default=DEFAULT_DIASPORA): cv.boolean,
+                vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(
+                    ["hebrew", "english"]
+                ),
+                vol.Optional(
+                    CONF_CANDLE_LIGHT_MINUTES, default=DEFAULT_CANDLE_LIGHT
+                ): int,
+                # Default of 0 means use 8.5 degrees / 'three_stars' time.
+                vol.Optional(
+                    CONF_HAVDALAH_OFFSET_MINUTES,
+                    default=DEFAULT_HAVDALAH_OFFSET_MINUTES,
+                ): int,
+                vol.Inclusive(
+                    CONF_LATITUDE,
+                    "coordinates",
+                    "Latitude and longitude must exist together",
+                ): cv.latitude,
+                vol.Inclusive(
+                    CONF_LONGITUDE,
+                    "coordinates",
+                    "Latitude and longitude must exist together",
+                ): cv.longitude,
+                vol.Optional(CONF_ELEVATION): int,
+                vol.Optional(CONF_TIME_ZONE): cv.time_zone,
+            },
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -76,12 +74,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in config:
         return True
 
-    for entry in config[DOMAIN]:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
-            )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
         )
+    )
 
     return True
 

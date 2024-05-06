@@ -10,7 +10,9 @@ from homeassistant.components.jewish_calendar import (
     CONF_DIASPORA,
     CONF_HAVDALAH_OFFSET_MINUTES,
     CONF_LANGUAGE,
+    DEFAULT_CANDLE_LIGHT,
     DEFAULT_DIASPORA,
+    DEFAULT_HAVDALAH_OFFSET_MINUTES,
     DEFAULT_LANGUAGE,
     DOMAIN,
     config_flow,
@@ -19,6 +21,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -73,15 +76,15 @@ async def test_import_no_options(hass: HomeAssistant, language, diaspora) -> Non
         DOMAIN: {CONF_NAME: "test", CONF_LANGUAGE: language, CONF_DIASPORA: diaspora}
     }
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=conf.copy(),
-    )
+    assert await async_setup_component(hass, DOMAIN, conf.copy())
+    await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == config_flow.DEFAULT_NAME
-    assert result["data"] == conf
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data == conf[DOMAIN] | {
+        CONF_CANDLE_LIGHT_MINUTES: DEFAULT_CANDLE_LIGHT,
+        CONF_HAVDALAH_OFFSET_MINUTES: DEFAULT_HAVDALAH_OFFSET_MINUTES,
+    }
 
 
 async def test_import_with_options(hass: HomeAssistant) -> None:
@@ -98,15 +101,12 @@ async def test_import_with_options(hass: HomeAssistant) -> None:
         }
     }
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=conf.copy(),
-    )
+    assert await async_setup_component(hass, DOMAIN, conf.copy())
+    await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == config_flow.DEFAULT_NAME
-    assert result["data"] == conf
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data == conf[DOMAIN]
 
 
 async def test_single_instance_allowed(
