@@ -6,7 +6,8 @@ from homeassistant.helpers import issue_registry as ir
 from .const import DOMAIN
 
 
-def create_issue(hass: HomeAssistant):
+@callback
+def async_create_issue(hass: HomeAssistant) -> None:
     """Create issue for V2.5 deprecation."""
     ir.async_create_issue(
         hass=hass,
