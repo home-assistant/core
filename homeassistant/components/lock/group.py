@@ -2,7 +2,14 @@
 
 from typing import TYPE_CHECKING
 
-from homeassistant.const import STATE_LOCKED, STATE_OPEN, STATE_UNLOCKED
+from homeassistant.const import (
+    STATE_LOCKED,
+    STATE_LOCKING,
+    STATE_OPEN,
+    STATE_OPENING,
+    STATE_UNLOCKED,
+    STATE_UNLOCKING,
+)
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
@@ -17,5 +24,14 @@ def async_describe_on_off_states(
 ) -> None:
     """Describe group on off states."""
     registry.on_off_states(
-        DOMAIN, {STATE_UNLOCKED, STATE_OPEN}, STATE_UNLOCKED, STATE_LOCKED
+        DOMAIN,
+        {
+            STATE_LOCKING,
+            STATE_OPEN,
+            STATE_OPENING,
+            STATE_UNLOCKED,
+            STATE_UNLOCKING,
+        },
+        STATE_UNLOCKED,
+        STATE_LOCKED,
     )
