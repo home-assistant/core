@@ -5,15 +5,17 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components.accuweather.const import DOMAIN
+
 from tests.common import load_json_array_fixture, load_json_object_fixture
 
 
 @pytest.fixture
 def mock_accuweather_client() -> Generator[AsyncMock, None, None]:
     """Mock a AccuWeather client."""
-    current = load_json_object_fixture("accuweather/current_conditions_data.json")
-    forecast = load_json_array_fixture("accuweather/forecast_data.json")
-    location = load_json_object_fixture("accuweather/location_data.json")
+    current = load_json_object_fixture("current_conditions_data.json", DOMAIN)
+    forecast = load_json_array_fixture("forecast_data.json", DOMAIN)
+    location = load_json_object_fixture("location_data.json", DOMAIN)
 
     with (
         patch(
