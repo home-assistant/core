@@ -26,7 +26,12 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_ondilo_client() -> Generator[MagicMock, None, None]:
+def mock_ondilo_client(
+    two_pools: JsonArrayType,
+    ico_details1: JsonObjectType,
+    ico_details2: JsonObjectType,
+    last_measures: JsonArrayType,
+) -> Generator[MagicMock, None, None]:
     """Mock a Homeassistant Ondilo client."""
     with (
         patch(
@@ -34,7 +39,11 @@ def mock_ondilo_client() -> Generator[MagicMock, None, None]:
             autospec=True,
         ) as mock_ondilo,
     ):
-        yield mock_ondilo.return_value
+        client = mock_ondilo.return_value
+        client.get_pools.return_value = two_pools
+        client.get_ICO_details.side_effect = [ico_details1, ico_details2]
+        client.get_last_pool_measures.return_value = last_measures
+        yield client
 
 
 @pytest.fixture
