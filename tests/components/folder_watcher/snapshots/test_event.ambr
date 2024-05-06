@@ -1,0 +1,311 @@
+# serializer version: 1
+# name: test_event_entity[event.folder_watcher_workspaces_core_tests_components_folder_watcher_test_folder_closed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'closed',
+        'created',
+        'deleted',
+        'modified',
+        'moved',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.folder_watcher_workspaces_core_tests_components_folder_watcher_test_folder_closed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Closed',
+    'platform': 'folder_watcher',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'closed',
+    'unique_id': '1-closed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_event_entity[event.folder_watcher_workspaces_core_tests_components_folder_watcher_test_folder_closed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'closed',
+        'created',
+        'deleted',
+        'modified',
+        'moved',
+      ]),
+      'friendly_name': 'Folder Watcher /workspaces/core/tests/components/folder_watcher/test_folder Closed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.folder_watcher_workspaces_core_tests_components_folder_watcher_test_folder_closed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_event_entity[event.folder_watcher_workspaces_core_tests_components_folder_watcher_test_folder_created-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'closed',
+        'created',
+        'deleted',
+        'modified',
+        'moved',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.folder_watcher_workspaces_core_tests_components_folder_watcher_test_folder_created',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Created',
+    'platform': 'folder_watcher',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'created',
+    'unique_id': '1-created',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_event_entity[event.folder_watcher_workspaces_core_tests_components_folder_watcher_test_folder_created-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'closed',
+        'created',
+        'deleted',
+        'modified',
+        'moved',
+      ]),
+      'friendly_name': 'Folder Watcher /workspaces/core/tests/components/folder_watcher/test_folder Created',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.folder_watcher_workspaces_core_tests_components_folder_watcher_test_folder_created',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_event_entity[event.folder_watcher_workspaces_core_tests_components_folder_watcher_test_folder_deleted-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'closed',
+        'created',
+        'deleted',
+        'modified',
+        'moved',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.folder_watcher_workspaces_core_tests_components_folder_watcher_test_folder_deleted',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Deleted',
+    'platform': 'folder_watcher',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'deleted',
+    'unique_id': '1-deleted',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_event_entity[event.folder_watcher_workspaces_core_tests_components_folder_watcher_test_folder_deleted-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'closed',
+        'created',
+        'deleted',
+        'modified',
+        'moved',
+      ]),
+      'friendly_name': 'Folder Watcher /workspaces/core/tests/components/folder_watcher/test_folder Deleted',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.folder_watcher_workspaces_core_tests_components_folder_watcher_test_folder_deleted',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_event_entity[event.folder_watcher_workspaces_core_tests_components_folder_watcher_test_folder_modified-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'closed',
+        'created',
+        'deleted',
+        'modified',
+        'moved',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.folder_watcher_workspaces_core_tests_components_folder_watcher_test_folder_modified',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Modified',
+    'platform': 'folder_watcher',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'modified',
+    'unique_id': '1-modified',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_event_entity[event.folder_watcher_workspaces_core_tests_components_folder_watcher_test_folder_modified-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'closed',
+        'created',
+        'deleted',
+        'modified',
+        'moved',
+      ]),
+      'friendly_name': 'Folder Watcher /workspaces/core/tests/components/folder_watcher/test_folder Modified',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.folder_watcher_workspaces_core_tests_components_folder_watcher_test_folder_modified',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_event_entity[event.folder_watcher_workspaces_core_tests_components_folder_watcher_test_folder_moved-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'closed',
+        'created',
+        'deleted',
+        'modified',
+        'moved',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.folder_watcher_workspaces_core_tests_components_folder_watcher_test_folder_moved',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Moved',
+    'platform': 'folder_watcher',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'moved',
+    'unique_id': '1-moved',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_event_entity[event.folder_watcher_workspaces_core_tests_components_folder_watcher_test_folder_moved-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'closed',
+        'created',
+        'deleted',
+        'modified',
+        'moved',
+      ]),
+      'friendly_name': 'Folder Watcher /workspaces/core/tests/components/folder_watcher/test_folder Moved',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.folder_watcher_workspaces_core_tests_components_folder_watcher_test_folder_moved',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
