@@ -1,20 +1,14 @@
 """Tests for the llm helpers."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 import voluptuous as vol
 from voluptuous_openapi import UNSUPPORTED
 
-from homeassistant.core import Context, HomeAssistant, State
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    area_registry as ar,
-    config_validation as cv,
-    floor_registry as fr,
-    intent,
-    llm,
-)
+from homeassistant.helpers import config_validation as cv, llm
 from homeassistant.util.color import color_name_to_rgb
 
 
@@ -296,144 +290,3 @@ def test_custom_serializer() -> None:
     }
     assert llm.default_custom_serializer(lambda x: x) == {}
     assert llm.default_custom_serializer("unsupported") == UNSUPPORTED
-
-
-async def test_intent_tool(hass: HomeAssistant) -> None:
-    """Test llm.IntentTool class."""
-    tool = llm.IntentTool("test_intent")
-    assert tool.name == "test_intent"
-    assert tool.description == "Execute Home Assistant test_intent intent"
-    assert tool.parameters == vol.Schema({})
-    assert str(tool) == "<IntentTool - test_intent>"
-
-    test_context = Context()
-    intent_response = intent.IntentResponse("*")
-    intent_response.matched_states = [State("light.matched", "on")]
-    intent_response.unmatched_states = [State("light.unmatched", "on")]
-    tool_input = llm.ToolInput(
-        tool_name="test_tool",
-        tool_args={"area": "kitchen", "floor": "ground_floor"},
-        platform="test_platform",
-        context=test_context,
-        user_prompt="test_text",
-        language="*",
-        agent_id="test_agent",
-        conversation_id="test_conversation_id",
-        device_id="test_device_id",
-        assistant="test_assistant",
-    )
-
-    with patch(
-        "homeassistant.helpers.intent.async_handle", return_value=intent_response
-    ) as mock_intent_handle:
-        response = await tool.async_call(hass, tool_input)
-
-    mock_intent_handle.assert_awaited_once_with(
-        hass,
-        "test_platform",
-        "test_intent",
-        {
-            "area": {"value": "kitchen", "text": "kitchen"},
-            "floor": {"value": "ground_floor", "text": "ground_floor"},
-        },
-        "test_text",
-        test_context,
-        "*",
-        "test_assistant",
-    )
-    assert response == {
-        "card": {},
-        "data": {
-            "failed": [],
-            "success": [],
-            "targets": [],
-        },
-        "language": "*",
-        "response_type": "action_done",
-        "speech": {},
-    }
-
-
-async def test_intent_tool_with_area_and_floor(
-    hass: HomeAssistant,
-    area_registry: ar.AreaRegistry,
-    floor_registry: fr.FloorRegistry,
-) -> None:
-    """Test llm.IntentTool call with area and floor."""
-    schema = vol.Schema(
-        {
-            vol.Optional("test_arg", description="test arg description"): cv.string,
-            vol.Optional("area"): cv.string,
-            vol.Optional("floor"): cv.string,
-        }
-    )
-    tool = llm.IntentTool("test_intent", schema)
-    assert tool.description == "Execute Home Assistant test_intent intent"
-    assert tool.parameters == schema
-    assert tool.as_dict() == {
-        "name": "test_intent",
-        "description": "Execute Home Assistant test_intent intent",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "test_arg": {"type": "string", "description": "test arg description"},
-                "area": {"type": "string"},
-                "floor": {"type": "string"},
-            },
-            "required": [],
-        },
-    }
-
-    area_kitchen = area_registry.async_get_or_create("kitchen")
-    floor_1 = floor_registry.async_create("first floor", aliases={"ground floor"})
-    area_kitchen = area_registry.async_update(
-        area_kitchen.id, aliases={"küche"}, floor_id=floor_1.floor_id
-    )
-    area_registry.async_get_or_create("bedroom")
-    floor_registry.async_create("second floor")
-
-    test_context = Context()
-
-    tool_input = llm.ToolInput(
-        tool_name="test_tool",
-        tool_args={"test_arg": "test_value", "area": "küche", "floor": "ground floor"},
-        platform="test_platform",
-        context=test_context,
-        user_prompt="test_text",
-        language="*",
-        agent_id="test_agent",
-        conversation_id="test_conversation_id",
-        device_id="test_device_id",
-        assistant="test_assistant",
-    )
-    with patch(
-        "homeassistant.helpers.intent.async_handle",
-        return_value=intent.IntentResponse("*"),
-    ) as mock_intent_handle:
-        response = await tool.async_call(hass, tool_input)
-
-    mock_intent_handle.assert_awaited_once_with(
-        hass,
-        "test_platform",
-        "test_intent",
-        {
-            "test_arg": {"value": "test_value"},
-            "area": {"value": "kitchen", "text": "kitchen"},
-            "floor": {"value": "first_floor", "text": "first floor"},
-        },
-        "test_text",
-        test_context,
-        "*",
-        "test_assistant",
-    )
-    assert response == {
-        "card": {},
-        "data": {
-            "failed": [],
-            "success": [],
-            "targets": [],
-        },
-        "language": "*",
-        "response_type": "action_done",
-        "speech": {},
-    }
