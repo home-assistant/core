@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 from homeassistant.components.device_tracker import ScannerEntity, SourceType
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_ASUSWRT, DOMAIN
+from . import AsusWrtConfigEntry
 from .router import AsusWrtDevInfo, AsusWrtRouter
 
 ATTR_LAST_TIME_REACHABLE = "last_time_reachable"
@@ -17,10 +16,12 @@ DEFAULT_DEVICE_NAME = "Unknown device"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AsusWrtConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up device tracker for AsusWrt component."""
-    router = hass.data[DOMAIN][entry.entry_id][DATA_ASUSWRT]
+    router = entry.runtime_data
     tracked: set = set()
 
     @callback
