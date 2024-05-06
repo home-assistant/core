@@ -127,7 +127,6 @@ class SupervisorIssueRepairFlow(RepairsFlow):
             self: SupervisorIssueRepairFlow, user_input: dict[str, str] | None = None
         ) -> FlowResult:
             """Handle a flow step for a suggestion."""
-            # pylint: disable-next=protected-access
             return await self._async_step_apply_suggestion(
                 suggestion, confirmed=user_input is not None
             )
