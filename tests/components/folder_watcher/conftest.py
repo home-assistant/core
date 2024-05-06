@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
@@ -49,9 +49,9 @@ async def load_int(hass: HomeAssistant) -> MockConfigEntry:
     return config_entry
 
 
-@pytest.fixture(autouse=True)
-async def cleanup(hass: HomeAssistant) -> AsyncGenerator[None, None]:
+@pytest.fixture(autouse=True, scope="package")
+def cleanup() -> Generator[None, None]:
     """Cleanup the test folder."""
-    await hass.async_add_executor_job(create_file)
+    create_file()
     yield
-    await hass.async_add_executor_job(remove_test_file)
+    remove_test_file()

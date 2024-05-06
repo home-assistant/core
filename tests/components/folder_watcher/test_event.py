@@ -5,7 +5,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry
 
 
 async def test_event_entity(
@@ -17,4 +17,19 @@ async def test_event_entity(
     """Test the event entity."""
     entry = load_int
     await hass.async_block_till_done()
-    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+
+    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    assert entity_entries
+
+    def limit_attrs(prop, path):
+        exclude_attrs = {"entity_id", "friendly_name"}
+        return prop in exclude_attrs
+
+    for entity_entry in entity_entries:
+        assert entity_entry == snapshot(
+            name=f"{entity_entry.unique_id}-entry", exclude=limit_attrs
+        )
+        assert (state := hass.states.get(entity_entry.entity_id))
+        assert state == snapshot(
+            name=f"{entity_entry.unique_id}-state", exclude=limit_attrs
+        )
