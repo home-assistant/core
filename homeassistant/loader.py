@@ -1328,10 +1328,8 @@ async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration
         return int_or_fut
     integrations_or_excs = await async_get_integrations(hass, [domain])
     int_or_exc = integrations_or_excs[domain]
-    if type(int_or_exc) is Integration:
+    if isinstance(int_or_exc, Integration):
         return int_or_exc
-    if TYPE_CHECKING:
-        assert isinstance(int_or_exc, Exception)
     raise int_or_exc
 
 
