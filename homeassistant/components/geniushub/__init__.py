@@ -7,7 +7,7 @@ import logging
 from typing import Any
 
 import aiohttp
-from geniushubclient import GeniusHub
+from geniushubclient import GeniusHub, GeniusService
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -32,6 +32,7 @@ from homeassistant.core import (
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -125,18 +126,30 @@ async def validate_input(
     Data has the keys with values provided by the user.
     """
     hass_data = dict(hass_data_in)
+    mac = hass_data.pop(CONF_MAC, "")
+
     if CONF_HOST in hass_data:
-        args = (hass_data.pop(CONF_HOST),)
+        source = "Local: "
+        URL = "auth/release"
+        service = GeniusService(
+            hass_data.pop(CONF_HOST), **hass_data, session=async_get_clientsession(hass)
+        )
     else:
-        args = (hass_data.pop(CONF_TOKEN),)
+        source = "Cloud: "
+        URL = "version"
+        service = GeniusService(
+            hass_data.pop(CONF_TOKEN),
+            **hass_data,
+            session=async_get_clientsession(hass),
+        )
 
-    client = GeniusHub(*args, **hass_data, session=async_get_clientsession(hass))
+    response = await service.request("GET", URL)
 
-    await client.update()
+    _LOGGER.debug("__init__.py:validate_input: ", extra=hass_data_in)
+    if source == "Local: ":
+        mac = response["data"]["UID"]
 
-    _LOGGER.debug("__init__.py:validate_input: ", extra=hass_data)
-
-    return {"title": args}
+    return {"title": source + mac}
 
 
 async def _async_import(hass: HomeAssistant, base_config: ConfigType) -> None:
@@ -197,6 +210,7 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
         args = (hass_data.pop(CONF_HOST),)
     else:
         args = (hass_data.pop(CONF_TOKEN),)
+
     hub_uid = hass_data.pop(CONF_MAC, None)
 
     client = GeniusHub(*args, **hass_data, session=async_get_clientsession(hass))
@@ -267,6 +281,16 @@ class GeniusBroker:
         self.client = client
         self._hub_uid = hub_uid
         self._connect_error = False
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device registry information for this entity."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.hub_uid)},
+            manufacturer="Genius",
+            model="self._device.type,",
+            name="self._device.name,",
+        )
 
     @property
     def hub_uid(self) -> str:

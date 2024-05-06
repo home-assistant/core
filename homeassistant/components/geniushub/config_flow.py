@@ -62,7 +62,8 @@ class GeniusHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except aiohttp.ClientConnectionError:
             errors["base"] = "cannot_connect"
 
-        except Exception:  # pylint: disable=broad-except
+        except Exception as e:  # pylint: disable=broad-except
+            _LOGGER.error("Error in genius hub client", exc_info=e)
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -111,7 +112,8 @@ class GeniusHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except aiohttp.ClientConnectionError:
             errors["base"] = "cannot_connect"
 
-        except Exception:  # pylint: disable=broad-except
+        except Exception as e:  # pylint: disable=broad-except
+            _LOGGER.error("Error in genius hub client", exc_info=e)
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -135,6 +137,7 @@ class GeniusHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Import the yaml config."""
         self._async_abort_entries_match(user_input)
         errors = {}
+        # return self.async_create_entry(title="title", data=user_input)
 
         try:
             info = await validate_input(self.hass, user_input)
@@ -154,7 +157,8 @@ class GeniusHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except aiohttp.ClientConnectionError:
             errors["base"] = "cannot_connect"
 
-        except Exception:  # pylint: disable=broad-except
+        except Exception as e:  # pylint: disable=broad-except
+            _LOGGER.error("Error in genius hub client", exc_info=e)
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
