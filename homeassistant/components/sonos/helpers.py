@@ -103,7 +103,7 @@ def _find_target_identifier(instance: Any, fallback_soco: SoCo | None) -> str | 
     if soco := getattr(instance, "soco", fallback_soco):
         # Holds a SoCo instance attribute
         # Only use attributes with no I/O
-        return soco._player_name or soco.ip_address  # pylint: disable=protected-access
+        return soco._player_name or soco.ip_address  # noqa: SLF001
     return None
 
 
