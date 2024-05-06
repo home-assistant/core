@@ -5,7 +5,7 @@ from homeassistant.components.accuweather.const import DOMAIN
 from tests.common import MockConfigEntry
 
 
-async def init_integration(hass, unsupported_icon=False) -> MockConfigEntry:
+async def init_integration(hass) -> MockConfigEntry:
     """Set up the AccuWeather integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
