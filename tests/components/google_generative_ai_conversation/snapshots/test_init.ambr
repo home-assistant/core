@@ -57,13 +57,6 @@
       dict({
       }),
     ),
-    tuple(
-      '().start_chat().send_message_async().parts.__bool__',
-      tuple(
-      ),
-      dict({
-      }),
-    ),
   ])
 # ---
 # name: test_generate_content_service_with_image
