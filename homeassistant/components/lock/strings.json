@@ -24,10 +24,10 @@
         "jammed": "Jammed",
         "locked": "[%key:common::state::locked%]",
         "locking": "Locking",
-        "unlocked": "[%key:common::state::unlocked%]",
-        "unlocking": "Unlocking",
+        "open": "[%key:common::state::open%]",
         "opening": "Opening",
-        "open": "[%key:common::state::open%]"
+        "unlocked": "[%key:common::state::unlocked%]",
+        "unlocking": "Unlocking"
       },
       "state_attributes": {
         "code_format": {

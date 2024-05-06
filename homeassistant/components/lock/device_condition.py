@@ -33,13 +33,13 @@ from . import DOMAIN
 # mypy: disallow-any-generics
 
 CONDITION_TYPES = {
-    "is_locked",
-    "is_unlocked",
-    "is_locking",
-    "is_unlocking",
     "is_jammed",
+    "is_locked",
+    "is_locking",
     "is_open",
     "is_opening",
+    "is_unlocked",
+    "is_unlocking",
 }
 
 CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
