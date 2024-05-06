@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -10,8 +11,6 @@ import pytest
 from homeassistant.components.folder_watcher.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
-
-from . import TEST_DIR, create_file, remove_test_file
 
 from tests.common import MockConfigEntry
 
@@ -26,15 +25,16 @@ def mock_setup_entry() -> Generator[None, None, None]:
 
 
 @pytest.fixture
-async def load_int(hass: HomeAssistant) -> MockConfigEntry:
+async def load_int(hass: HomeAssistant, tmp_path: Path) -> MockConfigEntry:
     """Set up the Sensibo integration in Home Assistant."""
-    hass.config.allowlist_external_dirs = {TEST_DIR}
+    path = tmp_path.as_posix()
+    hass.config.allowlist_external_dirs = {path}
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         source=SOURCE_USER,
-        title=f"Folder Watcher {str(TEST_DIR)}",
+        title=f"Folder Watcher {str(path)}",
         data={},
-        options={"folder": str(TEST_DIR), "patterns": ["*"]},
+        options={"folder": str(path), "patterns": ["*"]},
         entry_id="1",
     )
 
@@ -47,11 +47,3 @@ async def load_int(hass: HomeAssistant) -> MockConfigEntry:
         await hass.async_block_till_done()
 
     return config_entry
-
-
-@pytest.fixture(autouse=True, scope="package")
-def cleanup() -> Generator[None, None]:
-    """Cleanup the test folder."""
-    create_file()
-    yield
-    remove_test_file()
