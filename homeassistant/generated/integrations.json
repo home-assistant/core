@@ -3664,6 +3664,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "mikrotik_bt5": {
+      "name": "MikroTik BT5",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "mill": {
       "name": "Mill",
       "integration_type": "hub",

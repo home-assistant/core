@@ -847,6 +847,7 @@ build.json @home-assistant/supervisor
 /tests/components/microbees/ @microBeesTech
 /homeassistant/components/mikrotik/ @engrbm87
 /tests/components/mikrotik/ @engrbm87
+/homeassistant/components/mikrotik_bt5/ @anrijs
 /homeassistant/components/mill/ @danielhiversen
 /tests/components/mill/ @danielhiversen
 /homeassistant/components/min_max/ @gjohansson-ST

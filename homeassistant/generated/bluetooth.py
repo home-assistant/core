@@ -358,6 +358,10 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "manufacturer_id": 13,
     },
     {
+        "domain": "mikrotik_bt5",
+        "manufacturer_id": 2383,
+    },
+    {
         "connectable": False,
         "domain": "moat",
         "local_name": "Moat_S*",
