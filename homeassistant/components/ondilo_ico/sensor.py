@@ -101,15 +101,14 @@ class OndiloICO(CoordinatorEntity[OndiloIcoCoordinator], SensorEntity):
 
         self._pool_id = pool_id
 
-        self._attr_unique_id = (
-            f"{self.pool_data.ico['serial_number']}-{description.key}"
-        )
+        data = self.pool_data
+        self._attr_unique_id = f"{data.ico['serial_number']}-{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.pool_data.ico["serial_number"])},
+            identifiers={(DOMAIN, data.ico["serial_number"])},
             manufacturer="Ondilo",
             model="ICO",
-            name=self.pool_data.pool["name"],
-            sw_version=self.pool_data.ico["sw_version"],
+            name=data.pool["name"],
+            sw_version=data.ico["sw_version"],
         )
 
     @property
