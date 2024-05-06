@@ -228,6 +228,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         key="PoE port power sensor",
         device_class=SensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
         entity_registry_enabled_default=False,
         api_handler_fn=lambda api: api.ports,

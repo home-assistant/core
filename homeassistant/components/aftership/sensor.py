@@ -8,7 +8,6 @@ from typing import Any, Final
 from pyaftership import AfterShip, AfterShipException
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -18,6 +17,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
 
+from . import AfterShipConfigEntry
 from .const import (
     ADD_TRACKING_SERVICE_SCHEMA,
     ATTR_TRACKINGS,
@@ -41,11 +41,11 @@ PLATFORM_SCHEMA: Final = cv.removed(DOMAIN, raise_if_present=False)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AfterShipConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AfterShip sensor entities based on a config entry."""
-    aftership: AfterShip = hass.data[DOMAIN][config_entry.entry_id]
+    aftership = config_entry.runtime_data
 
     async_add_entities([AfterShipSensor(aftership, config_entry.title)], True)
 
