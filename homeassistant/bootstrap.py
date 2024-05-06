@@ -680,7 +680,7 @@ class _WatchPendingSetups:
 
         if remaining_with_setup_started:
             _LOGGER.debug("Integration remaining: %s", remaining_with_setup_started)
-        elif waiting_tasks := self._hass._active_tasks:  # pylint: disable=protected-access
+        elif waiting_tasks := self._hass._active_tasks:  # noqa: SLF001
             _LOGGER.debug("Waiting on tasks: %s", waiting_tasks)
         self._async_dispatch(remaining_with_setup_started)
         if (
@@ -984,7 +984,7 @@ async def _async_set_up_integrations(
         except TimeoutError:
             _LOGGER.warning(
                 "Setup timed out for stage 1 waiting on %s - moving forward",
-                hass._active_tasks,  # pylint: disable=protected-access
+                hass._active_tasks,  # noqa: SLF001
             )
 
     # Add after dependencies when setting up stage 2 domains
@@ -1000,7 +1000,7 @@ async def _async_set_up_integrations(
         except TimeoutError:
             _LOGGER.warning(
                 "Setup timed out for stage 2 waiting on %s - moving forward",
-                hass._active_tasks,  # pylint: disable=protected-access
+                hass._active_tasks,  # noqa: SLF001
             )
 
     # Wrap up startup
@@ -1011,7 +1011,7 @@ async def _async_set_up_integrations(
     except TimeoutError:
         _LOGGER.warning(
             "Setup timed out for bootstrap waiting on %s - moving forward",
-            hass._active_tasks,  # pylint: disable=protected-access
+            hass._active_tasks,  # noqa: SLF001
         )
 
     watcher.async_stop()
