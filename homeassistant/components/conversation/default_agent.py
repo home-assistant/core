@@ -126,10 +126,6 @@ async def async_setup_default_agent(
     await entity_component.async_add_entities([entity])
     hass.data[DATA_DEFAULT_ENTITY] = entity
 
-    entity_registry = er.async_get(hass)
-    for entity_id in entity_registry.entities:
-        async_should_expose(hass, DOMAIN, entity_id)
-
     @core.callback
     def async_entity_state_listener(
         event: core.Event[core.EventStateChangedData],

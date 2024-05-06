@@ -24,6 +24,7 @@ async def test_sensor(
     snapshot: SnapshotAssertion,
     mock_imgw_pib_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test states of the sensor."""
     with patch("homeassistant.components.imgw_pib.PLATFORMS", [Platform.SENSOR]):
