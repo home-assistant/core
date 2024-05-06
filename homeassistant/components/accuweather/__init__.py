@@ -33,7 +33,10 @@ class AccuWeatherData:
     coordinator_daily_forecast: AccuWeatherDailyForecastDataUpdateCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+AccuWeatherConfigEntry = ConfigEntry[AccuWeatherData]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: AccuWeatherConfigEntry) -> bool:
     """Set up AccuWeather as config entry."""
     api_key: str = entry.data[CONF_API_KEY]
     name: str = entry.data[CONF_NAME]
@@ -64,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator_observation.async_config_entry_first_refresh()
     await coordinator_daily_forecast.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = AccuWeatherData(
+    entry.runtime_data = AccuWeatherData(
         coordinator_observation=coordinator_observation,
         coordinator_daily_forecast=coordinator_daily_forecast,
     )
@@ -82,11 +85,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: AccuWeatherConfigEntry
+) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
