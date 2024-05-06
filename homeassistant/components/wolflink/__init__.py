@@ -25,6 +25,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+SCAN_INTERVAL = timedelta(seconds=60)
+
 PLATFORMS = [Platform.SENSOR]
 
 
@@ -100,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER,
         name=DOMAIN,
         update_method=async_update_data,
-        update_interval=timedelta(seconds=60),
+        update_interval=SCAN_INTERVAL,
     )
 
     await coordinator.async_refresh()
