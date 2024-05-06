@@ -90,5 +90,7 @@ def mock_automower_client() -> Generator[AsyncMock, None, None]:
             return ClientWebSocketResponse
 
         client.auth = AsyncMock(side_effect=websocket_connect)
+        client.commands = AsyncMock()
+        client.commands.set_cutting_height = AsyncMock()
 
         yield client

@@ -49,7 +49,7 @@ async def async_set_work_area_cutting_height(
     work_area_id: int,
 ) -> None:
     """Set cutting height for work area."""
-    await coordinator.api.set_cutting_height_workarea(
+    await coordinator.api.commands.set_cutting_height_workarea(
         mower_id, int(cheight), work_area_id
     )
     # As there are no updates from the websocket regarding work area changes,
@@ -77,9 +77,9 @@ NUMBER_TYPES: tuple[AutomowerNumberEntityDescription, ...] = (
         native_max_value=9,
         exists_fn=lambda data: data.cutting_height is not None,
         value_fn=_async_get_cutting_height,
-        set_value_fn=lambda session, mower_id, cheight: session.set_cutting_height(
-            mower_id, int(cheight)
-        ),
+        set_value_fn=lambda session,
+        mower_id,
+        cheight: session.commands.set_cutting_height(mower_id, int(cheight)),
     ),
 )
 

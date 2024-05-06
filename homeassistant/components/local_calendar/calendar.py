@@ -75,6 +75,7 @@ class LocalCalendarEntity(CalendarEntity):
         self._event: CalendarEvent | None = None
         self._attr_name = name
         self._attr_unique_id = unique_id
+        _LOGGER.debug(calendar)
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -85,6 +86,7 @@ class LocalCalendarEntity(CalendarEntity):
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
+        _LOGGER.debug("self._caledar: %s", self._calendar)
         events = self._calendar.timeline_tz(start_date.tzinfo).overlapping(
             start_date,
             end_date,
@@ -162,6 +164,7 @@ def _parse_event(event: dict[str, Any]) -> Event:
     """Parse an ical event from a home assistant event dictionary."""
     if rrule := event.get(EVENT_RRULE):
         event[EVENT_RRULE] = Recur.from_rrule(rrule)
+        _LOGGER.debug("Parsed RRULE: %s", event[EVENT_RRULE])
 
     # This function is called with new events created in the local timezone,
     # however ical library does not properly return recurrence_ids for
