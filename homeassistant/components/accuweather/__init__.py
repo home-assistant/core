@@ -88,18 +88,4 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: AccuWeatherConfigEntry
 ) -> bool:
     """Unload a config entry."""
-<<<<<<< HEAD
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
-=======
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def update_listener(hass: HomeAssistant, entry: AccuWeatherConfigEntry) -> None:
-    """Update listener."""
-    await hass.config_entries.async_reload(entry.entry_id)
->>>>>>> e0cb5f6801 (Use config_entry.runtime_data to store data)
