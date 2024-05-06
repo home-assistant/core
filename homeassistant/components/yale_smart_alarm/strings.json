@@ -70,7 +70,7 @@
     "could_not_change_lock": {
       "message": "Could not set lock, check system ready for lock"
     },
-    "trigger_panic": {
+    "could_not_trigger_panic": {
       "message": "Could not trigger panic button for entity id {entity_id}: {error}"
     }
   }

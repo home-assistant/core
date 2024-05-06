@@ -63,7 +63,7 @@ class YalePanicButton(YaleAlarmEntity, ButtonEntity):
         except YALE_ALL_ERRORS as error:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="trigger_panic",
+                translation_key="could_not_trigger_panic",
                 translation_placeholders={
                     "entity_id": self.entity_id,
                     "error": str(error),
