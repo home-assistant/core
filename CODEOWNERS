@@ -88,8 +88,6 @@ build.json @home-assistant/supervisor
 /tests/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
 /homeassistant/components/amberelectric/ @madpilot
 /tests/components/amberelectric/ @madpilot
-/homeassistant/components/ambiclimate/ @danielhiversen
-/tests/components/ambiclimate/ @danielhiversen
 /homeassistant/components/ambient_network/ @thomaskistler
 /tests/components/ambient_network/ @thomaskistler
 /homeassistant/components/ambient_station/ @bachya
