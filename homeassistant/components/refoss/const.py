@@ -2,7 +2,17 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass, field
 from logging import Logger, getLogger
+
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import (
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+)
 
 _LOGGER: Logger = getLogger(__package__)
 
@@ -19,3 +29,65 @@ DOMAIN = "refoss"
 COORDINATOR = "coordinator"
 
 MAX_ERRORS = 2
+
+ENERGY = "energy"
+ENERGY_RETURNED = "energy_returned"
+
+
+@dataclass
+class UnitOfMeasurement:
+    """Describes a unit of measurement."""
+
+    unit: str
+    device_classes: set[str]
+    aliases: set[str] = field(default_factory=set)
+    conversion_unit: str | None = None
+    conversion_fn: Callable[[float], float] | None = None
+
+
+UNITS = (
+    UnitOfMeasurement(
+        unit=UnitOfElectricPotential.VOLT,
+        aliases={"v"},
+        device_classes={SensorDeviceClass.VOLTAGE},
+        conversion_fn=lambda x: round(x / 1000, 2),
+    ),
+    UnitOfMeasurement(
+        unit=UnitOfElectricCurrent.AMPERE,
+        aliases={"a"},
+        device_classes={SensorDeviceClass.CURRENT},
+        conversion_fn=lambda x: round(x / 1000, 2),
+    ),
+    UnitOfMeasurement(
+        unit=UnitOfPower.WATT,
+        aliases={"w"},
+        device_classes={SensorDeviceClass.POWER},
+        conversion_fn=lambda x: round(x / 1000, 2),
+    ),
+    UnitOfMeasurement(
+        unit=UnitOfEnergy.KILO_WATT_HOUR,
+        aliases={"kwh"},
+        device_classes={SensorDeviceClass.ENERGY},
+        conversion_fn=lambda x: round(abs(x) / 1000, 3),
+    ),
+)
+
+
+DEVICE_CLASS_UNITS: dict[str, dict[str, UnitOfMeasurement]] = {}
+for uom in UNITS:
+    for device_class in uom.device_classes:
+        DEVICE_CLASS_UNITS.setdefault(device_class, {})[uom.unit] = uom
+        for unit_alias in uom.aliases:
+            DEVICE_CLASS_UNITS[device_class][unit_alias] = uom
+
+
+CHANNEL_DISPLAY_NAME: dict[str, dict[int, str]] = {
+    "em06": {
+        1: "A1",
+        2: "B1",
+        3: "C1",
+        4: "A2",
+        5: "B2",
+        6: "C2",
+    }
+}
