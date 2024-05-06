@@ -21,7 +21,6 @@ async def test_accuweather_system_health(
     mock_accuweather_client: AsyncMock,
 ) -> None:
     """Test AccuWeather system health."""
-    await init_integration(hass)
     aioclient_mock.get("https://dataservice.accuweather.com/", text="")
 
     await init_integration(hass)
@@ -46,7 +45,6 @@ async def test_accuweather_system_health_fail(
     mock_accuweather_client: AsyncMock,
 ) -> None:
     """Test AccuWeather system health."""
-    await init_integration(hass)
     aioclient_mock.get("https://dataservice.accuweather.com/", exc=ClientError)
 
     await init_integration(hass)
