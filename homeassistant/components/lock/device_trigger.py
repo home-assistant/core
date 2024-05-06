@@ -94,10 +94,10 @@ async def async_attach_trigger(
     """Attach a trigger."""
     if config[CONF_TYPE] == "jammed":
         to_state = STATE_JAMMED
-    elif config[CONF_TYPE] == "locking":
-        to_state = STATE_LOCKING
     elif config[CONF_TYPE] == "opening":
         to_state = STATE_OPENING
+    elif config[CONF_TYPE] == "locking":
+        to_state = STATE_LOCKING
     elif config[CONF_TYPE] == "open":
         to_state = STATE_OPEN
     elif config[CONF_TYPE] == "unlocking":

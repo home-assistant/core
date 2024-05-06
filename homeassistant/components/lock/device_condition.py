@@ -82,10 +82,10 @@ def async_condition_from_config(
     """Create a function to test a device condition."""
     if config[CONF_TYPE] == "is_jammed":
         state = STATE_JAMMED
-    elif config[CONF_TYPE] == "is_locking":
-        state = STATE_LOCKING
     elif config[CONF_TYPE] == "is_opening":
         state = STATE_OPENING
+    elif config[CONF_TYPE] == "is_locking":
+        state = STATE_LOCKING
     elif config[CONF_TYPE] == "is_open":
         state = STATE_OPEN
     elif config[CONF_TYPE] == "is_unlocking":
