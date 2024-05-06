@@ -48,7 +48,7 @@ INTEGRATION_METHODS = [
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ROUND_DIGITS, default=2): selector.NumberSelector(
+        vol.Optional(CONF_ROUND_DIGITS): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=0, max=6, mode=selector.NumberSelectorMode.BOX
             ),
@@ -69,7 +69,7 @@ CONFIG_SCHEMA = vol.Schema(
                 options=INTEGRATION_METHODS, translation_key=CONF_METHOD
             ),
         ),
-        vol.Required(CONF_ROUND_DIGITS, default=2): selector.NumberSelector(
+        vol.Optional(CONF_ROUND_DIGITS): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=0,
                 max=6,
