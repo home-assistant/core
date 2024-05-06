@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, setup
 from homeassistant.components.jewish_calendar import (
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
@@ -67,26 +67,24 @@ async def test_step_user(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize("diaspora", [True, False])
 @pytest.mark.parametrize("language", ["hebrew", "english"])
-async def test_step_import_no_options(hass: HomeAssistant, language, diaspora) -> None:
+async def test_import_no_options(hass: HomeAssistant, language, diaspora) -> None:
     """Test that the import step works."""
     conf = {
         DOMAIN: {CONF_NAME: "test", CONF_LANGUAGE: language, CONF_DIASPORA: diaspora}
     }
 
-    flow = config_flow.JewishCalendarConfigFlow()
-    flow.hass = hass
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data=conf.copy(),
+    )
 
-    result = await flow.async_step_import(import_config=conf[DOMAIN])
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == config_flow.DEFAULT_NAME
-    assert result["data"] == {
-        CONF_NAME: "test",
-        CONF_LANGUAGE: language,
-        CONF_DIASPORA: diaspora,
-    }
+    assert result["data"] == conf
 
 
-async def test_step_import_with_options(hass: HomeAssistant) -> None:
+async def test_import_with_options(hass: HomeAssistant) -> None:
     """Test that the import step works."""
     conf = {
         DOMAIN: {
@@ -100,21 +98,15 @@ async def test_step_import_with_options(hass: HomeAssistant) -> None:
         }
     }
 
-    flow = config_flow.JewishCalendarConfigFlow()
-    flow.hass = hass
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data=conf.copy(),
+    )
 
-    result = await flow.async_step_import(import_config=conf[DOMAIN])
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == config_flow.DEFAULT_NAME
-    assert result["data"] == {
-        CONF_NAME: "test",
-        CONF_DIASPORA: DEFAULT_DIASPORA,
-        CONF_LANGUAGE: DEFAULT_LANGUAGE,
-        CONF_CANDLE_LIGHT_MINUTES: 20,
-        CONF_HAVDALAH_OFFSET_MINUTES: 50,
-        CONF_LATITUDE: 31.76,
-        CONF_LONGITUDE: 35.235,
-    }
+    assert result["data"] == conf
 
 
 async def test_single_instance_allowed(
