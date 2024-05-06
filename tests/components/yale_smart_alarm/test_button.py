@@ -13,6 +13,7 @@ from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.button.const import SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -45,7 +46,7 @@ async def test_button(
     client.trigger_panic_button.assert_called_once()
     client.trigger_panic_button.reset_mock()
     client.trigger_panic_button = Mock(side_effect=UnknownError("test_side_effect"))
-    with pytest.raises(UnknownError):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
