@@ -885,6 +885,7 @@ class MQTT:
             qos=birth_message.qos,
             retain=birth_message.retain,
         )
+        _LOGGER.info("MQTT client initialized, birth message sent")
 
     @callback
     def _async_mqtt_on_connect(
@@ -944,6 +945,7 @@ class MQTT:
                 name="mqtt re-subscribe",
             )
             self._subscribe_debouncer.set_timeout(SUBSCRIBE_COOLDOWN)
+            _LOGGER.info("MQTT client initialized")
 
         self._async_connection_result(True)
 
