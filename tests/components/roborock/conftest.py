@@ -91,6 +91,10 @@ def bypass_api_fixture() -> None:
                 RoomMapping(18, "2362041"),
             ],
         ),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_map_v1",
+            return_value=b"123",
+        ),
     ):
         yield
 

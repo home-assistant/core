@@ -24,6 +24,8 @@ from homeassistant.loader import (
 )
 from homeassistant.util.json import load_json
 
+from . import singleton
+
 _LOGGER = logging.getLogger(__name__)
 
 TRANSLATION_FLATTEN_CACHE = "translation_flatten_cache"
@@ -370,11 +372,10 @@ def async_get_cached_translations(
     )
 
 
-@callback
+@singleton.singleton(TRANSLATION_FLATTEN_CACHE)
 def _async_get_translations_cache(hass: HomeAssistant) -> _TranslationCache:
     """Return the translation cache."""
-    cache: _TranslationCache = hass.data[TRANSLATION_FLATTEN_CACHE]
-    return cache
+    return _TranslationCache(hass)
 
 
 @callback
@@ -385,7 +386,7 @@ def async_setup(hass: HomeAssistant) -> None:
     """
     cache = _TranslationCache(hass)
     current_language = hass.config.language
-    hass.data[TRANSLATION_FLATTEN_CACHE] = cache
+    _async_get_translations_cache(hass)
 
     @callback
     def _async_load_translations_filter(event_data: Mapping[str, Any]) -> bool:

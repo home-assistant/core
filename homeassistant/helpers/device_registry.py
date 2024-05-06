@@ -904,6 +904,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if not new_values:
             return old
 
+        self.hass.verify_event_loop_thread("async_update_device")
         new = attr.evolve(old, **new_values)
         self.devices[device_id] = new
 
@@ -923,13 +924,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         else:
             data = {"action": "update", "device_id": new.id, "changes": old_values}
 
-        self.hass.bus.async_fire(EVENT_DEVICE_REGISTRY_UPDATED, data)
+        self.hass.bus.async_fire_internal(EVENT_DEVICE_REGISTRY_UPDATED, data)
 
         return new
 
     @callback
     def async_remove_device(self, device_id: str) -> None:
         """Remove a device from the device registry."""
+        self.hass.verify_event_loop_thread("async_remove_device")
         device = self.devices.pop(device_id)
         self.deleted_devices[device_id] = DeletedDeviceEntry(
             config_entries=device.config_entries,
@@ -941,7 +943,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         for other_device in list(self.devices.values()):
             if other_device.via_device_id == device_id:
                 self.async_update_device(other_device.id, via_device_id=None)
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_DEVICE_REGISTRY_UPDATED,
             _EventDeviceRegistryUpdatedData_CreateRemove(
                 action="remove", device_id=device_id
