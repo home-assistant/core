@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from functools import partial
+from typing import Any
 
 from watchdog.events import (
     EVENT_TYPE_CLOSED,
@@ -87,10 +88,9 @@ class FolderWatcherEventEntity(EventEntity):
         self._entry = entry
 
     @callback
-    def _async_handle_event(self, event: str) -> None:
+    def _async_handle_event(self, event: str, _extra: dict[str, Any]) -> None:
         """Handle the event."""
-        # Fix add additional attributes as with the bus event firing
-        self._trigger_event(event)
+        self._trigger_event(event, _extra)
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:

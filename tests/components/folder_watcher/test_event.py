@@ -1,5 +1,8 @@
 """The event entity tests for Folder Watcher."""
 
+from pathlib import Path
+from time import sleep
+
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
@@ -13,10 +16,19 @@ async def test_event_entity(
     load_int: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    tmp_path: Path,
 ) -> None:
     """Test the event entity."""
     entry = load_int
     await hass.async_block_till_done()
+
+    file = tmp_path.joinpath("hello.txt")
+    file.write_text("Hello, world!")
+
+    def _sleep():
+        sleep(0.1)
+
+    await hass.async_add_executor_job(_sleep)
 
     entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     assert entity_entries

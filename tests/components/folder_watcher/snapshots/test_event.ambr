@@ -42,7 +42,7 @@
 # name: test_event_entity[1-closed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
+      'event_type': 'closed',
       'event_types': list([
         'closed',
         'created',
@@ -55,7 +55,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2022-04-19T10:31:02.000+00:00',
   })
 # ---
 # name: test_event_entity[1-created-entry]
@@ -101,7 +101,7 @@
 # name: test_event_entity[1-created-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
+      'event_type': 'created',
       'event_types': list([
         'closed',
         'created',
@@ -114,7 +114,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2022-04-19T10:31:02.000+00:00',
   })
 # ---
 # name: test_event_entity[1-deleted-entry]
@@ -219,7 +219,7 @@
 # name: test_event_entity[1-modified-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
+      'event_type': 'modified',
       'event_types': list([
         'closed',
         'created',
@@ -232,7 +232,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2022-04-19T10:31:02.000+00:00',
   })
 # ---
 # name: test_event_entity[1-moved-entry]

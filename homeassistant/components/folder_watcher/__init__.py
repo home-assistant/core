@@ -113,7 +113,6 @@ def create_event_handler(
     patterns: list[str], hass: HomeAssistant, entry_id: str
 ) -> EventHandler:
     """Return the Watchdog EventHandler object."""
-
     return EventHandler(patterns, hass, entry_id)
 
 
@@ -138,22 +137,22 @@ class EventHandler(PatternMatchingEventHandler):
                 "folder": folder,
             }
 
+            _extra = {}
             if moved:
                 event = cast(FileSystemMovedEvent, event)
                 dest_folder, dest_file_name = os.path.split(event.dest_path)
-                fireable.update(
-                    {
-                        "dest_path": event.dest_path,
-                        "dest_file": dest_file_name,
-                        "dest_folder": dest_folder,
-                    }
-                )
+                _extra = {
+                    "dest_path": event.dest_path,
+                    "dest_file": dest_file_name,
+                    "dest_folder": dest_folder,
+                }
+                fireable.update(_extra)
             self.hass.bus.fire(
                 DOMAIN,
                 fireable,
             )
             signal = f"folder_watcher-{self.entry_id}-{event.event_type}"
-            dispatcher_send(self.hass, signal)
+            dispatcher_send(self.hass, signal, _extra)
 
     def on_modified(self, event: FileModifiedEvent) -> None:
         """File modified."""
@@ -187,14 +186,17 @@ class Watcher:
         self._observer.schedule(
             create_event_handler(patterns, hass, entry_id), path, recursive=True
         )
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, self.startup)
+        if not hass.is_running:
+            hass.bus.listen_once(EVENT_HOMEASSISTANT_START, self.startup)
+        else:
+            self.startup(None)
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self.shutdown)
 
-    def startup(self, event: Event) -> None:
+    def startup(self, event: Event | None) -> None:
         """Start the watcher."""
         self._observer.start()
 
-    def shutdown(self, event: Event) -> None:
+    def shutdown(self, event: Event | None) -> None:
         """Shutdown the watcher."""
         self._observer.stop()
         self._observer.join()
