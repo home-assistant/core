@@ -305,12 +305,12 @@ async def _async_discover(
     except vol.Invalid as err:
         discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
         clear_discovery_hash(hass, discovery_hash)
-        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
+        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None)
         async_handle_schema_error(discovery_payload, err)
     except Exception:
         discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
         clear_discovery_hash(hass, discovery_hash)
-        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
+        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None)
         raise
 
 
@@ -745,7 +745,7 @@ def get_discovery_hash(discovery_data: DiscoveryInfoType) -> tuple[str, str]:
 def send_discovery_done(hass: HomeAssistant, discovery_data: DiscoveryInfoType) -> None:
     """Acknowledge a discovery message has been handled."""
     discovery_hash = get_discovery_hash(discovery_data)
-    async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
+    async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None)
 
 
 def stop_discovery_updates(
