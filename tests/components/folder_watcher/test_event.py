@@ -25,10 +25,7 @@ async def test_event_entity(
     file = tmp_path.joinpath("hello.txt")
     file.write_text("Hello, world!")
 
-    def _sleep():
-        sleep(0.1)
-
-    await hass.async_add_executor_job(_sleep)
+    await hass.async_add_executor_job(sleep, 0.1)
 
     entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     assert entity_entries
