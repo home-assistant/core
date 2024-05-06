@@ -1245,10 +1245,10 @@ async def test_group_mixed_domains_off(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("states", "group_state"),
     [
-        (("locked", "locked", "unlocked"), "on"),
-        (("locked", "locked", "locked"), "off"),
-        (("locked", "locked", "open"), "on"),
-        (("locked", "unlocked", "open"), "on"),
+        (("locked", "locked", "unlocked"), "unlocked"),
+        (("locked", "locked", "locked"), "locked"),
+        (("locked", "locked", "open"), "unlocked"),
+        (("locked", "unlocked", "open"), "unlocked"),
     ],
 )
 async def test_group_locks(hass: HomeAssistant, states, group_state) -> None:
