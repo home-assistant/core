@@ -1,12 +1,12 @@
 """Provide basic Ondilo fixture."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant.components.ondilo_ico.const import DOMAIN
-from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from tests.common import (
     MockConfigEntry,
@@ -27,10 +27,10 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_ondilo_client(
-    two_pools: JsonArrayType,
-    ico_details1: JsonObjectType,
-    ico_details2: JsonObjectType,
-    last_measures: JsonArrayType,
+    two_pools: list[dict[str, Any]],
+    ico_details1: dict[str, Any],
+    ico_details2: dict[str, Any],
+    last_measures: list[dict[str, Any]],
 ) -> Generator[MagicMock, None, None]:
     """Mock a Homeassistant Ondilo client."""
     with (
@@ -46,39 +46,39 @@ def mock_ondilo_client(
         yield client
 
 
-@pytest.fixture
-def pool1() -> JsonArrayType:
+@pytest.fixture(scope="session")
+def pool1() -> list[dict[str, Any]]:
     """First pool description."""
-    return [load_json_object_fixture("pool1.json", "ondilo_ico")]
+    return [load_json_object_fixture("pool1.json", DOMAIN)]
 
 
-@pytest.fixture
-def pool2() -> JsonArrayType:
+@pytest.fixture(scope="session")
+def pool2() -> list[dict[str, Any]]:
     """Second pool description."""
-    return [load_json_object_fixture("pool2.json", "ondilo_ico")]
+    return [load_json_object_fixture("pool2.json", DOMAIN)]
 
 
-@pytest.fixture
-def ico_details1() -> JsonObjectType:
+@pytest.fixture(scope="session")
+def ico_details1() -> dict[str, Any]:
     """ICO details of first pool."""
-    return load_json_object_fixture("ico_details1.json", "ondilo_ico")
+    return load_json_object_fixture("ico_details1.json", DOMAIN)
 
 
-@pytest.fixture
-def ico_details2() -> JsonObjectType:
+@pytest.fixture(scope="session")
+def ico_details2() -> dict[str, Any]:
     """ICO details of second pool."""
-    return load_json_object_fixture("ico_details2.json", "ondilo_ico")
+    return load_json_object_fixture("ico_details2.json", DOMAIN)
 
 
-@pytest.fixture
-def last_measures() -> JsonArrayType:
+@pytest.fixture(scope="session")
+def last_measures() -> list[dict[str, Any]]:
     """Pool measurements."""
-    return load_json_array_fixture("last_measures.json", "ondilo_ico")
+    return load_json_array_fixture("last_measures.json", DOMAIN)
 
 
-@pytest.fixture
-def two_pools() -> JsonArrayType:
+@pytest.fixture(scope="session")
+def two_pools(
+    pool1: list[dict[str, Any]], pool2: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
     """Two pools description."""
-    pool1 = load_json_object_fixture("pool1.json", "ondilo_ico")
-    pool2 = load_json_object_fixture("pool2.json", "ondilo_ico")
-    return [pool1, pool2]
+    return [*pool1, *pool2]
