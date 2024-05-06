@@ -57,7 +57,7 @@ def async_get_client_by_device_entry(
     entry: SamsungTVConfigEntry | None
     for config_entry_id in device.config_entries:
         entry = hass.config_entries.async_get_entry(config_entry_id)
-        if entry and entry.domain == DOMAIN and entry.state == ConfigEntryState.LOADED:
+        if entry and entry.domain == DOMAIN and entry.state is ConfigEntryState.LOADED:
             return entry.runtime_data
 
     raise ValueError(
