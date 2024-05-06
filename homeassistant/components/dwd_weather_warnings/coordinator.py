@@ -19,11 +19,13 @@ from .const import (
 from .exceptions import EntityNotFoundError
 from .util import get_position_data
 
+DwdWeatherWarningsConfigEntry = ConfigEntry["DwdWeatherWarningsCoordinator"]
+
 
 class DwdWeatherWarningsCoordinator(DataUpdateCoordinator[None]):
     """Custom coordinator for the dwd_weather_warnings integration."""
 
-    config_entry: ConfigEntry
+    config_entry: DwdWeatherWarningsConfigEntry
     api: DwdWeatherWarningsAPI
 
     def __init__(self, hass: HomeAssistant) -> None:

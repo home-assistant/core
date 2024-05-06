@@ -519,6 +519,7 @@ omit =
     homeassistant/components/guardian/util.py
     homeassistant/components/guardian/valve.py
     homeassistant/components/habitica/__init__.py
+    homeassistant/components/habitica/coordinator.py
     homeassistant/components/habitica/sensor.py
     homeassistant/components/harman_kardon_avr/media_player.py
     homeassistant/components/harmony/data.py

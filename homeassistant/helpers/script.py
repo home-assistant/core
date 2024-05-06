@@ -85,7 +85,7 @@ from homeassistant.util.signal_type import SignalType, SignalTypeFormat
 
 from . import condition, config_validation as cv, service, template
 from .condition import ConditionCheckerType, trace_condition_function
-from .dispatcher import async_dispatcher_connect, async_dispatcher_send
+from .dispatcher import async_dispatcher_connect, async_dispatcher_send_internal
 from .event import async_call_later, async_track_template
 from .script_variables import ScriptVariables
 from .trace import (
@@ -208,7 +208,9 @@ async def trace_action(
                 )
             )
         ):
-            async_dispatcher_send(hass, SCRIPT_BREAKPOINT_HIT, key, run_id, path)
+            async_dispatcher_send_internal(
+                hass, SCRIPT_BREAKPOINT_HIT, key, run_id, path
+            )
 
             done = hass.loop.create_future()
 
@@ -1986,7 +1988,7 @@ def debug_continue(hass: HomeAssistant, key: str, run_id: str) -> None:
     breakpoint_clear(hass, key, run_id, NODE_ANY)
 
     signal = SCRIPT_DEBUG_CONTINUE_STOP.format(key, run_id)
-    async_dispatcher_send(hass, signal, "continue")
+    async_dispatcher_send_internal(hass, signal, "continue")
 
 
 @callback
@@ -1996,11 +1998,11 @@ def debug_step(hass: HomeAssistant, key: str, run_id: str) -> None:
     breakpoint_set(hass, key, run_id, NODE_ANY)
 
     signal = SCRIPT_DEBUG_CONTINUE_STOP.format(key, run_id)
-    async_dispatcher_send(hass, signal, "continue")
+    async_dispatcher_send_internal(hass, signal, "continue")
 
 
 @callback
 def debug_stop(hass: HomeAssistant, key: str, run_id: str) -> None:
     """Stop execution of a running or halted script."""
     signal = SCRIPT_DEBUG_CONTINUE_STOP.format(key, run_id)
-    async_dispatcher_send(hass, signal, "stop")
+    async_dispatcher_send_internal(hass, signal, "stop")

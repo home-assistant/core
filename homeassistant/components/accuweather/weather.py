@@ -31,7 +31,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 from homeassistant.util.dt import utc_from_timestamp
 
 from . import AccuWeatherData
@@ -65,8 +64,6 @@ class AccuWeatherEntity(
     CoordinatorWeatherEntity[
         AccuWeatherObservationDataUpdateCoordinator,
         AccuWeatherDailyForecastDataUpdateCoordinator,
-        TimestampDataUpdateCoordinator,
-        TimestampDataUpdateCoordinator,
     ]
 ):
     """Define an AccuWeather entity."""

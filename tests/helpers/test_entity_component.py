@@ -115,10 +115,7 @@ async def test_setup_does_discovery(
     assert ("platform_test", {}, {"msg": "discovery_info"}) == mock_setup.call_args[0]
 
 
-@patch("homeassistant.helpers.entity_platform.async_track_time_interval")
-async def test_set_scan_interval_via_config(
-    mock_track: Mock, hass: HomeAssistant
-) -> None:
+async def test_set_scan_interval_via_config(hass: HomeAssistant) -> None:
     """Test the setting of the scan interval via configuration."""
 
     def platform_setup(
@@ -134,13 +131,14 @@ async def test_set_scan_interval_via_config(
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    component.setup(
-        {DOMAIN: {"platform": "platform", "scan_interval": timedelta(seconds=30)}}
-    )
+    with patch.object(hass.loop, "call_later") as mock_track:
+        component.setup(
+            {DOMAIN: {"platform": "platform", "scan_interval": timedelta(seconds=30)}}
+        )
 
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
     assert mock_track.called
-    assert timedelta(seconds=30) == mock_track.call_args[0][2]
+    assert mock_track.call_args[0][0] == 30.0
 
 
 async def test_set_entity_namespace_via_config(hass: HomeAssistant) -> None:

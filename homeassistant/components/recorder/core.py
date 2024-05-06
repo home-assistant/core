@@ -187,6 +187,7 @@ class Recorder(threading.Thread):
 
         self.hass = hass
         self.thread_id: int | None = None
+        self.recorder_and_worker_thread_ids: set[int] = set()
         self.auto_purge = auto_purge
         self.auto_repack = auto_repack
         self.keep_days = keep_days
@@ -294,6 +295,7 @@ class Recorder(threading.Thread):
     def async_start_executor(self) -> None:
         """Start the executor."""
         self._db_executor = DBInterruptibleThreadPoolExecutor(
+            self.recorder_and_worker_thread_ids,
             thread_name_prefix=DB_WORKER_PREFIX,
             max_workers=MAX_DB_EXECUTOR_WORKERS,
             shutdown_hook=self._shutdown_pool,
@@ -717,7 +719,10 @@ class Recorder(threading.Thread):
 
     def _run(self) -> None:
         """Start processing events to save."""
-        self.thread_id = threading.get_ident()
+        thread_id = threading.get_ident()
+        self.thread_id = thread_id
+        self.recorder_and_worker_thread_ids.add(thread_id)
+
         setup_result = self._setup_recorder()
 
         if not setup_result:
@@ -1411,6 +1416,9 @@ class Recorder(threading.Thread):
             kwargs["pool_reset_on_return"] = None
         elif self.db_url.startswith(SQLITE_URL_PREFIX):
             kwargs["poolclass"] = RecorderPool
+            kwargs["recorder_and_worker_thread_ids"] = (
+                self.recorder_and_worker_thread_ids
+            )
         elif self.db_url.startswith(
             (
                 MARIADB_URL_PREFIX,
