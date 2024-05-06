@@ -82,7 +82,7 @@ SUPPORTED_COMPONENTS = {
 }
 
 MQTT_DISCOVERY_UPDATED: SignalTypeFormat[MQTTDiscoveryPayload] = SignalTypeFormat(
-    "mqtt_discovery_updated_{}"
+    "mqtt_discovery_updated_{}_{}"
 )
 MQTT_DISCOVERY_NEW: SignalTypeFormat[MQTTDiscoveryPayload] = SignalTypeFormat(
     "mqtt_discovery_new_{}_{}"
@@ -345,7 +345,7 @@ async def async_start(  # noqa: C901
             message = f"Component has already been discovered: {component} {discovery_id}, sending update"
             async_log_discovery_origin_info(message, payload)
             async_dispatcher_send(
-                hass, MQTT_DISCOVERY_UPDATED.format(discovery_hash), payload
+                hass, MQTT_DISCOVERY_UPDATED.format(*discovery_hash), payload
             )
         elif payload:
             # Add component

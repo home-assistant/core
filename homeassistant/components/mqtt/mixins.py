@@ -809,7 +809,7 @@ class MqttDiscoveryDeviceUpdate(ABC):
         discovery_hash = get_discovery_hash(discovery_data)
         self._remove_discovery_updated = async_dispatcher_connect(
             hass,
-            MQTT_DISCOVERY_UPDATED.format(discovery_hash),
+            MQTT_DISCOVERY_UPDATED.format(*discovery_hash),
             self.async_discovery_update,
         )
         config_entry.async_on_unload(self._entry_unload)
@@ -1044,7 +1044,7 @@ class MqttDiscoveryUpdate(Entity):
             set_discovery_hash(self.hass, discovery_hash)
             self._remove_discovery_updated = async_dispatcher_connect(
                 self.hass,
-                MQTT_DISCOVERY_UPDATED.format(discovery_hash),
+                MQTT_DISCOVERY_UPDATED.format(*discovery_hash),
                 discovery_callback,
             )
 
