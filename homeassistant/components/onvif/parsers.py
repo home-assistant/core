@@ -23,7 +23,7 @@ VIDEO_SOURCE_MAPPING = {
 
 def extract_message(msg: Any) -> tuple[str, Any]:
     """Extract the message content and the topic."""
-    return msg.Topic._value_1, msg.Message._value_1  # pylint: disable=protected-access
+    return msg.Topic._value_1, msg.Message._value_1  # noqa: SLF001
 
 
 def _normalize_video_source(source: str) -> str:
