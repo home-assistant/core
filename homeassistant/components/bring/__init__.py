@@ -38,7 +38,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BringConfigEntry) -> boo
 
     try:
         await bring.login()
-        await bring.load_lists()
     except BringRequestException as e:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -47,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BringConfigEntry) -> boo
     except BringParseException as e:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
-            translation_key="setup_request_exception",
+            translation_key="setup_parse_exception",
         ) from e
     except BringAuthException as e:
         raise ConfigEntryAuthFailed(
