@@ -20,7 +20,7 @@ def async_create_issue(hass: HomeAssistant, entry_id: str) -> None:
         is_fixable=False,
         is_persistent=True,
         severity=ir.IssueSeverity.WARNING,
-        learn_more_url="https://openweathermap.org/one-call-transfer",
+        learn_more_url="https://www.home-assistant.io/integrations/openweathermap/",
         translation_key="deprecated_v25",
     )
 
