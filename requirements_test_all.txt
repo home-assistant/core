@@ -15,9 +15,6 @@ AIOSomecomfort==0.0.25
 # homeassistant.components.adax
 Adax-local==0.1.5
 
-# homeassistant.components.ambiclimate
-Ambiclimate==0.2.1
-
 # homeassistant.components.doorbird
 DoorBirdPy==2.1.0
 

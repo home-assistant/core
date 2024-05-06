@@ -65,7 +65,6 @@ homeassistant.components.alexa.*
 homeassistant.components.alpha_vantage.*
 homeassistant.components.amazon_polly.*
 homeassistant.components.amberelectric.*
-homeassistant.components.ambiclimate.*
 homeassistant.components.ambient_network.*
 homeassistant.components.ambient_station.*
 homeassistant.components.amcrest.*
