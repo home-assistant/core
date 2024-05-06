@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import patch
 
 import pytest
@@ -11,7 +11,7 @@ from homeassistant.components.folder_watcher.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 
-from . import TEST_DIR, create_file, create_folder, remove_test_file
+from . import TEST_DIR, create_file, remove_test_file
 
 from tests.common import MockConfigEntry
 
@@ -28,7 +28,6 @@ def mock_setup_entry() -> Generator[None, None, None]:
 @pytest.fixture
 async def load_int(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the Sensibo integration in Home Assistant."""
-    await hass.async_add_executor_job(create_folder)
     hass.config.allowlist_external_dirs = {TEST_DIR}
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -51,8 +50,8 @@ async def load_int(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture(autouse=True)
-async def cleanup(hass: HomeAssistant) -> None:
+async def cleanup(hass: HomeAssistant) -> AsyncGenerator[None, None]:
     """Cleanup the test folder."""
-    create_file()
+    await hass.async_add_executor_job(create_file)
     yield
-    remove_test_file()
+    await hass.async_add_executor_job(remove_test_file)
