@@ -106,4 +106,4 @@ class LutronEventEntity(LutronKeypad, EventEntity):
             }
             self.hass.bus.fire("lutron_event", data)
             self._trigger_event(action)
-            self.async_write_ha_state()
+            self.schedule_update_ha_state()
