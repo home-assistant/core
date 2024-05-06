@@ -24,8 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
-AccuWeatherConfigEntry = ConfigEntry["AccuWeatherData"]
-
 
 @dataclass
 class AccuWeatherData:
@@ -33,6 +31,9 @@ class AccuWeatherData:
 
     coordinator_observation: AccuWeatherObservationDataUpdateCoordinator
     coordinator_daily_forecast: AccuWeatherDailyForecastDataUpdateCoordinator
+
+
+AccuWeatherConfigEntry = ConfigEntry[AccuWeatherData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AccuWeatherConfigEntry) -> bool:
