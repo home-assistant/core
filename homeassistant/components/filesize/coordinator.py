@@ -29,7 +29,7 @@ class FileSizeCoordinator(DataUpdateCoordinator[dict[str, int | float | datetime
             always_update=False,
         )
         self._unresolved_path = unresolved_path
-        self._path: pathlib.Path | None = None
+        self.path: pathlib.Path | None = None
 
     def _get_full_path(self) -> pathlib.Path:
         """Check if path is valid, allowed and return full path."""
@@ -45,11 +45,11 @@ class FileSizeCoordinator(DataUpdateCoordinator[dict[str, int | float | datetime
 
     def _update(self) -> os.stat_result:
         """Fetch file information."""
-        if not self._path:
-            self._path = self._get_full_path()
+        if not self.path:
+            self.path = self._get_full_path()
 
         try:
-            return self._path.stat()
+            return self.path.stat()
         except OSError as error:
             raise UpdateFailed(f"Can not retrieve file statistics {error}") from error
 
