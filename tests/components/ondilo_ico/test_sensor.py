@@ -1,31 +1,32 @@
 """Test Ondilo ICO integration sensors."""
 
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from ondilo import OndiloError
+from syrupy import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_can_get_pools_when_no_error(
+async def test_sensors(
     hass: HomeAssistant,
     mock_ondilo_client: MagicMock,
     config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test that I can get all pools data when no error."""
-    await setup_integration(hass, config_entry, mock_ondilo_client)
+    with patch("homeassistant.components.ondilo_ico.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry, mock_ondilo_client)
 
-    # All sensors were created
-    assert len(hass.states.async_all()) == 14
-
-    # Check 2 of the sensors.
-    assert hass.states.get("sensor.pool_1_temperature").state == "19"
-    assert hass.states.get("sensor.pool_2_rssi").state == "60"
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_no_ico_for_one_pool(
