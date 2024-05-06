@@ -176,6 +176,8 @@ class BaseHabiticaListEntity(
                 score_result = (
                     await self.coordinator.api.tasks[item.uid].score["down"].post()
                 )
+            else:
+                score_result = None
 
         except ClientResponseError as e:
             raise HomeAssistantError(
@@ -184,7 +186,7 @@ class BaseHabiticaListEntity(
                 translation_placeholders={"name": item.summary or ""},
             ) from e
 
-        if drop := score_result.get("_tmp", {}).get("drop", False):
+        if score_result and (drop := score_result.get("_tmp", {}).get("drop", False)):
             msg = (
                 f"![{drop["key"]}]({ASSETS_URL}Pet_{drop["type"]}_{drop["key"]}.png)\n"
                 f"{drop["dialog"]}"
