@@ -35,7 +35,7 @@ def icon_for_gauge_level(gauge_level: int | None = None, offset: int = 0) -> str
     return "mdi:gauge-low"
 
 
-@dataclass
+@dataclass(frozen=True)
 class RobotSensorEntityDescription(SensorEntityDescription, Generic[_RobotT]):
     """A class that describes robot sensor entities."""
 

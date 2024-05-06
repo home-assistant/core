@@ -1,0 +1,29 @@
+# serializer version: 1
+# name: test_bridge_device
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tedee',
+        '0000-0000',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Tedee',
+    'model': 'Bridge',
+    'name': 'Bridge-AB1C',
+    'name_by_user': None,
+    'serial_number': '0000-0000',
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---

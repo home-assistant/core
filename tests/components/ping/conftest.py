@@ -4,6 +4,7 @@ from unittest.mock import patch
 from icmplib import Host
 import pytest
 
+from homeassistant.components.device_tracker.const import CONF_CONSIDER_HOME
 from homeassistant.components.ping import DOMAIN
 from homeassistant.components.ping.const import CONF_PING_COUNT
 from homeassistant.const import CONF_HOST
@@ -39,7 +40,11 @@ async def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="10.10.10.10",
-        options={CONF_HOST: "10.10.10.10", CONF_PING_COUNT: 10.0},
+        options={
+            CONF_HOST: "10.10.10.10",
+            CONF_PING_COUNT: 10.0,
+            CONF_CONSIDER_HOME: 180,
+        },
     )
 
 

@@ -154,6 +154,7 @@ class SonosSpeaker:
         self.dialog_level: bool | None = None
         self.night_mode: bool | None = None
         self.sub_enabled: bool | None = None
+        self.sub_crossover: int | None = None
         self.sub_gain: int | None = None
         self.surround_enabled: bool | None = None
         self.surround_mode: bool | None = None
@@ -561,6 +562,7 @@ class SonosSpeaker:
             "audio_delay",
             "bass",
             "treble",
+            "sub_crossover",
             "sub_gain",
             "surround_level",
             "music_surround_level",

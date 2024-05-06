@@ -39,7 +39,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DEFAULT_TIMEOUT, DOMAIN, ERROR_STATES
+from .const import CONF_ENCRYPT_TOKEN, DEFAULT_TIMEOUT, DOMAIN, ERROR_STATES
 from .helpers import NukiWebhookException, parse_id
 
 _NukiDeviceT = TypeVar("_NukiDeviceT", bound=NukiDevice)
@@ -188,7 +188,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_HOST],
             entry.data[CONF_TOKEN],
             entry.data[CONF_PORT],
-            True,
+            entry.data.get(CONF_ENCRYPT_TOKEN, True),
             DEFAULT_TIMEOUT,
         )
 
@@ -279,7 +279,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class NukiCoordinator(DataUpdateCoordinator[None]):
+class NukiCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
     """Data Update Coordinator for the Nuki integration."""
 
     def __init__(self, hass, bridge, locks, openers):
@@ -332,6 +332,7 @@ class NukiCoordinator(DataUpdateCoordinator[None]):
 
         Returns:
             A dict with the events to be fired. The event type is the key and the device ids are the value
+
         """
 
         events: dict[str, set[str]] = defaultdict(set)

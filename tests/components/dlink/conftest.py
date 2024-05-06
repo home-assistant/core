@@ -43,9 +43,9 @@ CONF_DHCP_FLOW_NEW_IP = dhcp.DhcpServiceInfo(
 ComponentSetup = Callable[[], Awaitable[None]]
 
 
-def create_entry(hass: HomeAssistant) -> MockConfigEntry:
+def create_entry(hass: HomeAssistant, unique_id: str | None = None) -> MockConfigEntry:
     """Create fixture for adding config entry in Home Assistant."""
-    entry = MockConfigEntry(domain=DOMAIN, data=CONF_DATA)
+    entry = MockConfigEntry(domain=DOMAIN, data=CONF_DATA, unique_id=unique_id)
     entry.add_to_hass(hass)
     return entry
 
@@ -59,9 +59,7 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
 @pytest.fixture
 def config_entry_with_uid(hass: HomeAssistant) -> MockConfigEntry:
     """Add config entry with unique ID in Home Assistant."""
-    config_entry = create_entry(hass)
-    config_entry.unique_id = "aa:bb:cc:dd:ee:ff"
-    return config_entry
+    return create_entry(hass, unique_id="aa:bb:cc:dd:ee:ff")
 
 
 @pytest.fixture

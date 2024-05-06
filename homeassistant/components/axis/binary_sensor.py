@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from axis.models.event import Event, EventGroup, EventOperation, EventTopic
 
@@ -81,7 +81,7 @@ class AxisBinarySensor(AxisEventEntity, BinarySensorEntity):
         self._attr_is_on = event.is_tripped
 
         @callback
-        def scheduled_update(now):
+        def scheduled_update(now: datetime) -> None:
             """Timer callback for sensor update."""
             self.cancel_scheduled_update = None
             self.async_write_ha_state()

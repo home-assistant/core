@@ -56,6 +56,7 @@ class ZWaveMeClimate(ZWaveMeEntity, ClimateEntity):
     _attr_hvac_mode = HVACMode.HEAT
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _enable_turn_on_off_backwards_compatibility = False
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

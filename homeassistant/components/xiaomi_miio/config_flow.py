@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_TOKEN
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
@@ -23,10 +23,8 @@ from .const import (
     CONF_CLOUD_PASSWORD,
     CONF_CLOUD_SUBDEVICES,
     CONF_CLOUD_USERNAME,
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
-    CONF_MAC,
     CONF_MANUAL,
     DEFAULT_CLOUD_COUNTRY,
     DOMAIN,

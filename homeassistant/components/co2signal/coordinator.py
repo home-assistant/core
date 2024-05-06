@@ -4,13 +4,16 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from aioelectricitymaps import ElectricityMaps
-from aioelectricitymaps.exceptions import ElectricityMapsError, InvalidToken
-from aioelectricitymaps.models import CarbonIntensityResponse
+from aioelectricitymaps import (
+    CarbonIntensityResponse,
+    ElectricityMaps,
+    ElectricityMapsError,
+    ElectricityMapsInvalidTokenError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -43,7 +46,7 @@ class CO2SignalCoordinator(DataUpdateCoordinator[CarbonIntensityResponse]):
             return await fetch_latest_carbon_intensity(
                 self.hass, self.client, self.config_entry.data
             )
-        except InvalidToken as err:
-            raise ConfigEntryError from err
+        except ElectricityMapsInvalidTokenError as err:
+            raise ConfigEntryAuthFailed from err
         except ElectricityMapsError as err:
             raise UpdateFailed(str(err)) from err

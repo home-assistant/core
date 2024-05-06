@@ -19,7 +19,7 @@ from .coordinator import SystemBridgeDataUpdateCoordinator
 from .entity import SystemBridgeEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class SystemBridgeBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Class describing System Bridge binary sensor entities."""
 

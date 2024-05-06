@@ -9,6 +9,9 @@
           "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
           "web_port": "Web port (for visiting service)"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Deluge device."
         }
       }
     },

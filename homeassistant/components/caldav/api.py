@@ -11,7 +11,11 @@ async def async_get_calendars(
     hass: HomeAssistant, client: caldav.DAVClient, component: str
 ) -> list[caldav.Calendar]:
     """Get all calendars that support the specified component."""
-    calendars = await hass.async_add_executor_job(client.principal().calendars)
+
+    def _get_calendars() -> list[caldav.Calendar]:
+        return client.principal().calendars()
+
+    calendars = await hass.async_add_executor_job(_get_calendars)
     components_results = await asyncio.gather(
         *[
             hass.async_add_executor_job(calendar.get_supported_components)

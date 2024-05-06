@@ -90,6 +90,68 @@ async def test_setting_event_value_via_mqtt_message(
 
 @pytest.mark.freeze_time("2023-08-01 00:00:00+00:00")
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+async def test_multiple_events_are_all_updating_the_state(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test all events are respected and trigger a state write."""
+    await mqtt_mock_entry()
+    with patch(
+        "homeassistant.components.mqtt.mixins.MqttEntity.async_write_ha_state"
+    ) as mock_async_ha_write_state:
+        async_fire_mqtt_message(
+            hass, "test-topic", '{"event_type": "press", "duration": "short" }'
+        )
+        assert len(mock_async_ha_write_state.mock_calls) == 1
+        async_fire_mqtt_message(
+            hass, "test-topic", '{"event_type": "press", "duration": "short" }'
+        )
+        assert len(mock_async_ha_write_state.mock_calls) == 2
+
+
+@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+async def test_handling_retained_event_payloads(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test if event messages with a retained flag are ignored."""
+    await mqtt_mock_entry()
+    with patch(
+        "homeassistant.components.mqtt.mixins.MqttEntity.async_write_ha_state"
+    ) as mock_async_ha_write_state:
+        async_fire_mqtt_message(
+            hass,
+            "test-topic",
+            '{"event_type": "press", "duration": "short" }',
+            retain=True,
+        )
+        assert len(mock_async_ha_write_state.mock_calls) == 0
+
+        async_fire_mqtt_message(
+            hass,
+            "test-topic",
+            '{"event_type": "press", "duration": "short" }',
+            retain=False,
+        )
+        assert len(mock_async_ha_write_state.mock_calls) == 1
+
+        async_fire_mqtt_message(
+            hass,
+            "test-topic",
+            '{"event_type": "press", "duration": "short" }',
+            retain=True,
+        )
+        assert len(mock_async_ha_write_state.mock_calls) == 1
+
+        async_fire_mqtt_message(
+            hass,
+            "test-topic",
+            '{"event_type": "press", "duration": "short" }',
+            retain=False,
+        )
+        assert len(mock_async_ha_write_state.mock_calls) == 2
+
+
+@pytest.mark.freeze_time("2023-08-01 00:00:00+00:00")
+@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 @pytest.mark.parametrize(
     ("message", "log"),
     [

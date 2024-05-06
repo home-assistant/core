@@ -160,6 +160,7 @@ async def test_pairing(hass: HomeAssistant, mock_tv_pairable, mock_setup_entry) 
         "data": MOCK_CONFIG_PAIRED,
         "version": 1,
         "options": {},
+        "minor_version": 1,
     }
 
     await hass.async_block_till_done()

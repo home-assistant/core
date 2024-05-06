@@ -18,8 +18,24 @@ async def test_select_battery_charging_usage_available(
 
     mock_plenticore.client.get_settings.return_value = {
         "devices:local": [
-            SettingsData({"id": "Battery:SmartBatteryControl:Enable"}),
-            SettingsData({"id": "Battery:TimeControl:Enable"}),
+            SettingsData(
+                min=None,
+                max=None,
+                default=None,
+                access="readwrite",
+                unit=None,
+                id="Battery:SmartBatteryControl:Enable",
+                type="string",
+            ),
+            SettingsData(
+                min=None,
+                max=None,
+                default=None,
+                access="readwrite",
+                unit=None,
+                id="Battery:TimeControl:Enable",
+                type="string",
+            ),
         ]
     }
 

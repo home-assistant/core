@@ -24,9 +24,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] is None
 
-    with patch(
-        "aiotractive.api.API.user_id", return_value={"user_id": "user_id"}
-    ), patch(
+    with patch("aiotractive.api.API.user_id", return_value="user_id"), patch(
         "homeassistant.components.tractive.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:

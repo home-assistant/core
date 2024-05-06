@@ -197,7 +197,7 @@ async def _async_get_json_file_response(
     return web.Response(
         body=json_data,
         content_type="application/json",
-        headers={"Content-Disposition": f'attachment; filename="{filename}.json.txt"'},
+        headers={"Content-Disposition": f'attachment; filename="{filename}.json"'},
     )
 
 

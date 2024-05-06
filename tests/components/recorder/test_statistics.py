@@ -432,7 +432,7 @@ def test_rename_entity(hass_recorder: Callable[..., HomeAssistant]) -> None:
 
 
 def test_statistics_during_period_set_back_compat(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test statistics_during_period can handle a list instead of a set."""
     hass = hass_recorder()
@@ -785,9 +785,8 @@ async def test_import_statistics(
     }
 
     # Adjust the statistics in a different unit
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 1,
             "type": "recorder/adjust_sum_statistics",
             "statistic_id": statistic_id,
             "start_time": period2.isoformat(),

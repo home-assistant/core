@@ -33,6 +33,7 @@ from homeassistant.components.mqtt.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from .test_common import (
     help_custom_config,
@@ -120,6 +121,17 @@ async def test_setup_params(
     assert state.attributes.get("max_temp") == DEFAULT_MAX_TEMP
     assert state.attributes.get("min_humidity") == DEFAULT_MIN_HUMIDITY
     assert state.attributes.get("max_humidity") == DEFAULT_MAX_HUMIDITY
+    assert (
+        state.attributes.get("supported_features")
+        == ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        | ClimateEntityFeature.TARGET_HUMIDITY
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
 
 
 @pytest.mark.parametrize(
@@ -225,6 +237,8 @@ async def test_supported_features(
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_HUMIDITY
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
 
     assert state.attributes.get("supported_features") == support
@@ -1130,8 +1144,9 @@ async def test_set_preset_mode_optimistic(
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("preset_mode") == "comfort"
 
-    await common.async_set_preset_mode(hass, "invalid", ENTITY_CLIMATE)
-    assert "'invalid' is not a valid preset mode" in caplog.text
+    with pytest.raises(ServiceValidationError):
+        await common.async_set_preset_mode(hass, "invalid", ENTITY_CLIMATE)
+        assert "'invalid' is not a valid preset mode" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -1187,8 +1202,9 @@ async def test_set_preset_mode_explicit_optimistic(
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("preset_mode") == "comfort"
 
-    await common.async_set_preset_mode(hass, "invalid", ENTITY_CLIMATE)
-    assert "'invalid' is not a valid preset mode" in caplog.text
+    with pytest.raises(ServiceValidationError):
+        await common.async_set_preset_mode(hass, "invalid", ENTITY_CLIMATE)
+        assert "'invalid' is not a valid preset mode" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -1324,6 +1340,8 @@ async def test_set_aux(
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_HUMIDITY
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
 
     assert state.attributes.get("supported_features") == support

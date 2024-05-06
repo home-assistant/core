@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable
 import dataclasses
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, Protocol
 
 import aiohttp
 import voluptuous as vol
@@ -30,13 +30,22 @@ INFO_CALLBACK_TIMEOUT = 5
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
+class SystemHealthProtocol(Protocol):
+    """Define the format of system_health platforms."""
+
+    def async_register(
+        self, hass: HomeAssistant, register: SystemHealthRegistration
+    ) -> None:
+        """Register system health callbacks."""
+
+
 @bind_hass
 @callback
 def async_register_info(
     hass: HomeAssistant,
     domain: str,
     info_callback: Callable[[HomeAssistant], Awaitable[dict]],
-):
+) -> None:
     """Register an info callback.
 
     Deprecated.
@@ -61,7 +70,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _register_system_health_platform(hass, integration_domain, platform):
+async def _register_system_health_platform(
+    hass: HomeAssistant, integration_domain: str, platform: SystemHealthProtocol
+) -> None:
     """Register a system health platform."""
     platform.async_register(hass, SystemHealthRegistration(hass, integration_domain))
 
@@ -89,7 +100,7 @@ async def get_integration_info(
 
 
 @callback
-def _format_value(val):
+def _format_value(val: Any) -> Any:
     """Format a system health value."""
     if isinstance(val, datetime):
         return {"value": val.isoformat(), "type": "date"}
@@ -207,7 +218,7 @@ class SystemHealthRegistration:
         self,
         info_callback: Callable[[HomeAssistant], Awaitable[dict]],
         manage_url: str | None = None,
-    ):
+    ) -> None:
         """Register an info callback."""
         self.info_callback = info_callback
         self.manage_url = manage_url

@@ -36,7 +36,7 @@ def async_wlan_qr_code_image_fn(controller: UniFiController, wlan: Wlan) -> byte
     return controller.api.wlans.generate_wlan_qr_code(wlan)
 
 
-@dataclass
+@dataclass(frozen=True)
 class UnifiImageEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
     """Validate and load entities from different UniFi handlers."""
 
@@ -44,7 +44,7 @@ class UnifiImageEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
     value_fn: Callable[[ApiItemT], str | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class UnifiImageEntityDescription(
     ImageEntityDescription,
     UnifiEntityDescription[HandlerT, ApiItemT],

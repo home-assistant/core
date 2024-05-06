@@ -174,7 +174,7 @@ async def async_handle_webhook(
                 )
 
     try:
-        response = await webhook["handler"](hass, webhook_id, request)
+        response: Response | None = await webhook["handler"](hass, webhook_id, request)
         if response is None:
             response = Response(status=HTTPStatus.OK)
         return response

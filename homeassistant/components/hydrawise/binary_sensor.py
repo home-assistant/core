@@ -70,7 +70,7 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
     entities = []
-    for controller in coordinator.data.controllers:
+    for controller in coordinator.data.controllers.values():
         entities.append(
             HydrawiseBinarySensor(coordinator, BINARY_SENSOR_STATUS, controller)
         )

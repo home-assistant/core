@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from asyncio import Lock, TimeoutError as AsyncIOTimeoutError
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 
 from aiohttp import ClientError
@@ -27,8 +27,8 @@ from .utils import BondDevice, BondHub
 
 _LOGGER = logging.getLogger(__name__)
 
-_FALLBACK_SCAN_INTERVAL = timedelta(seconds=10)
-_BPUP_ALIVE_SCAN_INTERVAL = timedelta(seconds=60)
+_FALLBACK_SCAN_INTERVAL = 10
+_BPUP_ALIVE_SCAN_INTERVAL = 60
 
 
 class BondEntity(Entity):

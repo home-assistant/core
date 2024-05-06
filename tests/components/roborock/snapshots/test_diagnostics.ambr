@@ -208,7 +208,9 @@
               'squareMeterCleanArea': 1159.2,
             }),
             'consumable': dict({
+              'cleaningBrushTimeLeft': 1079935,
               'cleaningBrushWorkTimes': 65,
+              'dustCollectionTimeLeft': 80975,
               'dustCollectionWorkTimes': 25,
               'filterElementWorkTime': 0,
               'filterTimeLeft': 465618,
@@ -219,6 +221,7 @@
               'sensorTimeLeft': 33618,
               'sideBrushTimeLeft': 645618,
               'sideBrushWorkTime': 74382,
+              'strainerTimeLeft': 539935,
               'strainerWorkTimes': 65,
             }),
             'lastCleanRecord': dict({
@@ -482,7 +485,9 @@
               'squareMeterCleanArea': 1159.2,
             }),
             'consumable': dict({
+              'cleaningBrushTimeLeft': 1079935,
               'cleaningBrushWorkTimes': 65,
+              'dustCollectionTimeLeft': 80975,
               'dustCollectionWorkTimes': 25,
               'filterElementWorkTime': 0,
               'filterTimeLeft': 465618,
@@ -493,6 +498,7 @@
               'sensorTimeLeft': 33618,
               'sideBrushTimeLeft': 645618,
               'sideBrushWorkTime': 74382,
+              'strainerTimeLeft': 539935,
               'strainerWorkTimes': 65,
             }),
             'lastCleanRecord': dict({

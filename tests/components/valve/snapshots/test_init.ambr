@@ -1,0 +1,56 @@
+# serializer version: 1
+# name: test_valve_setup
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Valve',
+      'supported_features': <ValveEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'valve.valve',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_valve_setup.1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 50,
+      'friendly_name': 'Valve',
+      'supported_features': <ValveEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'valve.valve_2',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_valve_setup.2
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Valve',
+      'restored': True,
+      'supported_features': <ValveEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'valve.valve',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_valve_setup.3
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Valve',
+      'restored': True,
+      'supported_features': <ValveEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'valve.valve_2',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---

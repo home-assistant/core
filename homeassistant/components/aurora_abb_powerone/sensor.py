@@ -5,6 +5,8 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from aurorapy.mapping import Mapping as AuroraMapping
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -13,6 +15,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_SERIAL_NUMBER,
     EntityCategory,
     UnitOfEnergy,
     UnitOfPower,
@@ -29,15 +32,22 @@ from .const import (
     ATTR_DEVICE_NAME,
     ATTR_FIRMWARE,
     ATTR_MODEL,
-    ATTR_SERIAL_NUMBER,
     DEFAULT_DEVICE_NAME,
     DOMAIN,
     MANUFACTURER,
 )
 
 _LOGGER = logging.getLogger(__name__)
+ALARM_STATES = list(AuroraMapping.ALARM_STATES.values())
 
 SENSOR_TYPES = [
+    SensorEntityDescription(
+        key="alarm",
+        device_class=SensorDeviceClass.ENUM,
+        options=ALARM_STATES,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        translation_key="alarm",
+    ),
     SensorEntityDescription(
         key="instantaneouspower",
         device_class=SensorDeviceClass.POWER,

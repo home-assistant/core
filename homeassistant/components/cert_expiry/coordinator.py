@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import logging
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_PORT
@@ -16,11 +17,11 @@ _LOGGER = logging.getLogger(__name__)
 class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
     """Class to manage fetching Cert Expiry data from single endpoint."""
 
-    def __init__(self, hass, host, port):
+    def __init__(self, hass: HomeAssistant, host: str, port: int) -> None:
         """Initialize global Cert Expiry data updater."""
         self.host = host
         self.port = port
-        self.cert_error = None
+        self.cert_error: ValidationFailure | None = None
         self.is_cert_valid = False
 
         display_port = f":{port}" if port != DEFAULT_PORT else ""

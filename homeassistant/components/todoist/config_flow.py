@@ -16,7 +16,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SETTINGS_URL = "https://todoist.com/app/settings/integrations"
+SETTINGS_URL = "https://app.todoist.com/app/settings/integrations/developer"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {

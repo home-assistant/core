@@ -706,7 +706,7 @@ async def test_state_updates_zone(
     resp = await client.post(
         "/api/konnected/device/112233445566",
         headers={"Authorization": "Bearer abcdefgh"},
-        json={"zone": "5", "temp": 32, "addr": 1},
+        json={"zone": "5", "temp": 32.0, "addr": 1},
     )
     assert resp.status == HTTPStatus.OK
     result = await resp.json()
@@ -863,7 +863,7 @@ async def test_state_updates_pin(
     resp = await client.post(
         "/api/konnected/device/112233445566",
         headers={"Authorization": "Bearer abcdefgh"},
-        json={"pin": "7", "temp": 32, "addr": 1},
+        json={"pin": "7", "temp": 32.0, "addr": 1},
     )
     assert resp.status == HTTPStatus.OK
     result = await resp.json()

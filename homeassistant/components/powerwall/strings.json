@@ -23,10 +23,10 @@
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "wrong_version": "Your Powerwall uses a software version that is not supported. Please consider upgrading or reporting this issue so it can be resolved.",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "cannot_connect": "A connection error occurred while connecting to the Powerwall: {error}",
+      "wrong_version": "Your Powerwall uses a software version that is not supported. Please consider upgrading or reporting this issue so it can be resolved: {error}",
+      "unknown": "An unknown error occurred: {error}",
+      "invalid_auth": "Authentication failed with error: {error}"
     },
     "abort": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -145,6 +145,20 @@
       },
       "battery_export": {
         "name": "Battery export"
+      },
+      "battery_capacity": {
+        "name": "Battery capacity"
+      },
+      "battery_remaining": {
+        "name": "Battery remaining"
+      },
+      "grid_state": {
+        "name": "Grid state",
+        "state": {
+          "grid_compliant": "Compliant",
+          "grid_qualifying": "Qualifying",
+          "grid_uncompliant": "Uncompliant"
+        }
       },
       "load_import": {
         "name": "Load import"

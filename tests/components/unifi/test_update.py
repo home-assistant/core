@@ -117,7 +117,7 @@ async def test_device_updates(
 
     # Simulate update finished
 
-    device_1["state"] = "0"
+    device_1["state"] = 0
     device_1["version"] = "4.3.17.11279"
     device_1["upgradable"] = False
     del device_1["upgrade_to_firmware"]

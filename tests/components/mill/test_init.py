@@ -115,7 +115,8 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     ) as unload_entry, patch(
         "mill.Mill.fetch_heater_and_sensor_data", return_value={}
     ), patch(
-        "mill.Mill.connect", return_value=True
+        "mill.Mill.connect",
+        return_value=True,
     ):
         assert await async_setup_component(hass, "mill", {})
 

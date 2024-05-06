@@ -72,4 +72,4 @@ DEFAULT_AQI_STANDARD = "us"
 DEFAULT_PREFERRED_UNIT: list[str] = []
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
-PLATFORMS = [Platform.SENSOR, Platform.AIR_QUALITY]
+PLATFORMS = [Platform.AIR_QUALITY, Platform.SENSOR]

@@ -70,7 +70,7 @@ from .const import (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class TomorrowioSensorEntityDescription(SensorEntityDescription):
     """Describes a Tomorrow.io sensor entity."""
 
@@ -92,8 +92,9 @@ class TomorrowioSensorEntityDescription(SensorEntityDescription):
             )
 
         if self.value_map is not None:
-            self.device_class = SensorDeviceClass.ENUM
-            self.options = [item.name.lower() for item in self.value_map]
+            options = [item.name.lower() for item in self.value_map]
+            object.__setattr__(self, "device_class", SensorDeviceClass.ENUM)
+            object.__setattr__(self, "options", options)
 
 
 # From https://cfpub.epa.gov/ncer_abstracts/index.cfm/fuseaction/display.files/fileID/14285

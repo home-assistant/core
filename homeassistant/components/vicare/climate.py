@@ -20,7 +20,8 @@ import voluptuous as vol
 from homeassistant.components.climate import (
     PRESET_COMFORT,
     PRESET_ECO,
-    PRESET_NONE,
+    PRESET_HOME,
+    PRESET_SLEEP,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -34,6 +35,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -84,14 +86,32 @@ VICARE_TO_HA_HVAC_HEATING: dict[str, HVACMode] = {
 VICARE_TO_HA_PRESET_HEATING = {
     VICARE_PROGRAM_COMFORT: PRESET_COMFORT,
     VICARE_PROGRAM_ECO: PRESET_ECO,
-    VICARE_PROGRAM_NORMAL: PRESET_NONE,
+    VICARE_PROGRAM_NORMAL: PRESET_HOME,
+    VICARE_PROGRAM_REDUCED: PRESET_SLEEP,
 }
 
 HA_TO_VICARE_PRESET_HEATING = {
     PRESET_COMFORT: VICARE_PROGRAM_COMFORT,
     PRESET_ECO: VICARE_PROGRAM_ECO,
-    PRESET_NONE: VICARE_PROGRAM_NORMAL,
+    PRESET_HOME: VICARE_PROGRAM_NORMAL,
+    PRESET_SLEEP: VICARE_PROGRAM_REDUCED,
 }
+
+
+def _build_entities(
+    api: PyViCareDevice,
+    device_config: PyViCareDeviceConfig,
+) -> list[ViCareClimate]:
+    """Create ViCare climate entities for a device."""
+    return [
+        ViCareClimate(
+            api,
+            circuit,
+            device_config,
+            "heating",
+        )
+        for circuit in get_circuits(api)
+    ]
 
 
 async def async_setup_entry(
@@ -100,19 +120,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ViCare climate platform."""
-    entities = []
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
     device_config = hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG]
-    circuits = get_circuits(api)
-
-    for circuit in circuits:
-        entity = ViCareClimate(
-            api,
-            circuit,
-            device_config,
-            "heating",
-        )
-        entities.append(entity)
 
     platform = entity_platform.async_get_current_platform()
 
@@ -122,7 +131,13 @@ async def async_setup_entry(
         "set_vicare_mode",
     )
 
-    async_add_entities(entities)
+    async_add_entities(
+        await hass.async_add_executor_job(
+            _build_entities,
+            api,
+            device_config,
+        )
+    )
 
 
 class ViCareClimate(ViCareEntity, ClimateEntity):
@@ -130,7 +145,10 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
 
     _attr_precision = PRECISION_TENTHS
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = VICARE_TEMP_HEATING_MIN
@@ -288,22 +306,53 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode and deactivate any existing programs."""
-        vicare_program = HA_TO_VICARE_PRESET_HEATING.get(preset_mode)
-        if vicare_program is None:
-            raise ValueError(
-                f"Cannot set invalid vicare program: {preset_mode}/{vicare_program}"
+        target_program = HA_TO_VICARE_PRESET_HEATING.get(preset_mode)
+        if target_program is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="program_unknown",
+                translation_placeholders={
+                    "preset": preset_mode,
+                },
             )
 
-        _LOGGER.debug("Setting preset to %s / %s", preset_mode, vicare_program)
-        if self._current_program != VICARE_PROGRAM_NORMAL:
-            # We can't deactivate "normal"
+        _LOGGER.debug("Current preset %s", self._current_program)
+        if self._current_program and self._current_program not in [
+            VICARE_PROGRAM_NORMAL,
+            VICARE_PROGRAM_REDUCED,
+            VICARE_PROGRAM_STANDBY,
+        ]:
+            # We can't deactivate "normal", "reduced" or "standby"
+            _LOGGER.debug("deactivating %s", self._current_program)
             try:
                 self._circuit.deactivateProgram(self._current_program)
-            except PyViCareCommandError:
-                _LOGGER.debug("Unable to deactivate program %s", self._current_program)
-        if vicare_program != VICARE_PROGRAM_NORMAL:
-            # And we can't explicitly activate normal, either
-            self._circuit.activateProgram(vicare_program)
+            except PyViCareCommandError as err:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="program_not_deactivated",
+                    translation_placeholders={
+                        "program": self._current_program,
+                    },
+                ) from err
+
+        _LOGGER.debug("Setting preset to %s / %s", preset_mode, target_program)
+        if target_program not in [
+            VICARE_PROGRAM_NORMAL,
+            VICARE_PROGRAM_REDUCED,
+            VICARE_PROGRAM_STANDBY,
+        ]:
+            # And we can't explicitly activate "normal", "reduced" or "standby", either
+            _LOGGER.debug("activating %s", target_program)
+            try:
+                self._circuit.activateProgram(target_program)
+            except PyViCareCommandError as err:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="program_not_activated",
+                    translation_placeholders={
+                        "program": target_program,
+                    },
+                ) from err
 
     @property
     def extra_state_attributes(self):

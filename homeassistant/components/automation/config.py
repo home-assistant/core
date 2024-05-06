@@ -11,7 +11,7 @@ from voluptuous.humanize import humanize_error
 
 from homeassistant.components import blueprint
 from homeassistant.components.trace import TRACE_CONFIG_SCHEMA
-from homeassistant.config import config_without_domain
+from homeassistant.config import config_per_platform, config_without_domain
 from homeassistant.const import (
     CONF_ALIAS,
     CONF_CONDITION,
@@ -21,7 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform, config_validation as cv, script
+from homeassistant.helpers import config_validation as cv, script
 from homeassistant.helpers.condition import async_validate_conditions_config
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.helpers.typing import ConfigType

@@ -56,13 +56,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, config_entry=entry, gateway=gateway
     )
 
-    async_load_screenlogic_services(hass)
-
     await coordinator.async_config_entry_first_refresh()
 
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+
+    async_load_screenlogic_services(hass, entry)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

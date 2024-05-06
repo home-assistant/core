@@ -588,10 +588,6 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
         return_type=["dict[str, Any]", None],
     ),
     TypeHintMatch(
-        function_name="device_state_attributes",
-        return_type=["Mapping[str, Any]", None],
-    ),
-    TypeHintMatch(
         function_name="extra_state_attributes",
         return_type=["Mapping[str, Any]", None],
     ),
@@ -630,10 +626,6 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="supported_features",
         return_type=["int", None],
-    ),
-    TypeHintMatch(
-        function_name="context_recent_time",
-        return_type="timedelta",
     ),
     TypeHintMatch(
         function_name="entity_registry_enabled_default",

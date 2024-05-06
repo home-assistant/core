@@ -6,6 +6,7 @@ from collections import OrderedDict
 from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
+from enum import Enum
 import functools as ft
 from functools import lru_cache
 from io import StringIO
@@ -15,10 +16,12 @@ import os
 import pathlib
 import threading
 import time
+from types import ModuleType
 from typing import Any, NoReturn
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
+import pytest
 import voluptuous as vol
 
 from homeassistant import auth, bootstrap, config_entries, loader
@@ -71,7 +74,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder
+from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder, json_dumps
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.setup import setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -87,6 +90,10 @@ from homeassistant.util.json import (
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.uuid as uuid_util
 import homeassistant.util.yaml.loader as yaml_loader
+
+from tests.testing_config.custom_components.test_constant_deprecation import (
+    import_deprecated_constant,
+)
 
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
@@ -267,7 +274,7 @@ async def async_test_home_assistant(event_loop, load_registries=True):
             "homeassistant.helpers.restore_state.RestoreStateData.async_setup_dump",
             return_value=None,
         ), patch(
-            "homeassistant.helpers.restore_state.start.async_at_start"
+            "homeassistant.helpers.restore_state.start.async_at_start",
         ):
             await asyncio.gather(
                 ar.async_load(hass),
@@ -278,7 +285,7 @@ async def async_test_home_assistant(event_loop, load_registries=True):
             )
         hass.data[bootstrap.DATA_REGISTRIES_LOADED] = None
 
-    hass.state = CoreState.running
+    hass.set_state(CoreState.running)
 
     @callback
     def clear_instance(event):
@@ -297,6 +304,7 @@ def async_mock_service(
     schema: vol.Schema | None = None,
     response: ServiceResponse = None,
     supports_response: SupportsResponse | None = None,
+    raise_exception: Exception | None = None,
 ) -> list[ServiceCall]:
     """Set up a fake service & return a calls log list to this service."""
     calls = []
@@ -305,6 +313,8 @@ def async_mock_service(
     def mock_service_log(call):  # pylint: disable=unnecessary-lambda
         """Mock service call."""
         calls.append(call)
+        if raise_exception is not None:
+            raise raise_exception
         return response
 
     if supports_response is None:
@@ -497,6 +507,11 @@ def load_json_object_fixture(
     return json_loads_object(load_fixture(filename, integration))
 
 
+def json_round_trip(obj: Any) -> Any:
+    """Round trip an object to JSON."""
+    return json_loads(json_dumps(obj))
+
+
 def mock_state_change_event(
     hass: HomeAssistant, new_state: State, old_state: State | None = None
 ) -> None:
@@ -654,7 +669,7 @@ class MockUser(auth_models.User):
 
     def mock_policy(self, policy):
         """Mock a policy for a user."""
-        self._permissions = auth_permissions.PolicyPermissions(policy, self.perm_lookup)
+        self.permissions = auth_permissions.PolicyPermissions(policy, self.perm_lookup)
 
 
 async def register_auth_provider(
@@ -887,6 +902,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
         domain="test",
         data=None,
         version=1,
+        minor_version=1,
         entry_id=None,
         source=config_entries.SOURCE_USER,
         title="Mock Title",
@@ -907,6 +923,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
             "pref_disable_polling": pref_disable_polling,
             "options": options,
             "version": version,
+            "minor_version": minor_version,
             "title": title,
             "unique_id": unique_id,
             "disabled_by": disabled_by,
@@ -922,12 +939,10 @@ class MockConfigEntry(config_entries.ConfigEntry):
     def add_to_hass(self, hass: HomeAssistant) -> None:
         """Test helper to add entry to hass."""
         hass.config_entries._entries[self.entry_id] = self
-        hass.config_entries._domain_index.setdefault(self.domain, []).append(self)
 
     def add_to_manager(self, manager: config_entries.ConfigEntries) -> None:
         """Test helper to add entry to entry manager."""
         manager._entries[self.entry_id] = self
-        manager._domain_index.setdefault(self.domain, []).append(self)
 
 
 def patch_yaml_files(files_dict, endswith=True):
@@ -1213,7 +1228,7 @@ class MockEntity(entity.Entity):
 
 @contextmanager
 def mock_storage(
-    data: dict[str, Any] | None = None
+    data: dict[str, Any] | None = None,
 ) -> Generator[dict[str, Any], None, None]:
     """Mock storage.
 
@@ -1304,12 +1319,13 @@ async def get_system_health_info(hass: HomeAssistant, domain: str) -> dict[str, 
 @contextmanager
 def mock_config_flow(domain: str, config_flow: type[ConfigFlow]) -> None:
     """Mock a config flow handler."""
-    handler = config_entries.HANDLERS.get(domain)
+    original_handler = config_entries.HANDLERS.get(domain)
     config_entries.HANDLERS[domain] = config_flow
     _LOGGER.info("Adding mock config flow: %s", domain)
     yield
-    if handler:
-        config_entries.HANDLERS[domain] = handler
+    config_entries.HANDLERS.pop(domain)
+    if original_handler:
+        config_entries.HANDLERS[domain] = original_handler
 
 
 def mock_integration(
@@ -1424,7 +1440,7 @@ ANY = _HA_ANY()
 def raise_contains_mocks(val: Any) -> None:
     """Raise for mocks."""
     if isinstance(val, Mock):
-        raise TypeError
+        raise TypeError(val)
 
     if isinstance(val, dict):
         for dict_value in val.values():
@@ -1455,3 +1471,69 @@ def async_mock_cloud_connection_status(hass: HomeAssistant, connected: bool) -> 
     else:
         state = CloudConnectionState.CLOUD_DISCONNECTED
     async_dispatcher_send(hass, SIGNAL_CLOUD_CONNECTION_STATE, state)
+
+
+def import_and_test_deprecated_constant_enum(
+    caplog: pytest.LogCaptureFixture,
+    module: ModuleType,
+    replacement: Enum,
+    constant_prefix: str,
+    breaks_in_ha_version: str,
+) -> None:
+    """Import and test deprecated constant replaced by a enum.
+
+    - Import deprecated enum
+    - Assert value is the same as the replacement
+    - Assert a warning is logged
+    - Assert the deprecated constant is included in the modules.__dir__()
+    - Assert the deprecated constant is included in the modules.__all__()
+    """
+    import_and_test_deprecated_constant(
+        caplog,
+        module,
+        constant_prefix + replacement.name,
+        f"{replacement.__class__.__name__}.{replacement.name}",
+        replacement,
+        breaks_in_ha_version,
+    )
+
+
+def import_and_test_deprecated_constant(
+    caplog: pytest.LogCaptureFixture,
+    module: ModuleType,
+    constant_name: str,
+    replacement_name: str,
+    replacement: Any,
+    breaks_in_ha_version: str,
+) -> None:
+    """Import and test deprecated constant replaced by a value.
+
+    - Import deprecated constant
+    - Assert value is the same as the replacement
+    - Assert a warning is logged
+    - Assert the deprecated constant is included in the modules.__dir__()
+    - Assert the deprecated constant is included in the modules.__all__()
+    """
+    value = import_deprecated_constant(module, constant_name)
+    assert value == replacement
+    assert (
+        module.__name__,
+        logging.WARNING,
+        (
+            f"{constant_name} was used from test_constant_deprecation,"
+            f" this is a deprecated constant which will be removed in HA Core {breaks_in_ha_version}. "
+            f"Use {replacement_name} instead, please report "
+            "it to the author of the 'test_constant_deprecation' custom integration"
+        ),
+    ) in caplog.record_tuples
+
+    # verify deprecated constant is included in dir()
+    assert constant_name in dir(module)
+    assert constant_name in module.__all__
+
+
+def help_test_all(module: ModuleType) -> None:
+    """Test module.__all__ is correctly set."""
+    assert set(module.__all__) == {
+        itm for itm in module.__dir__() if not itm.startswith("_")
+    }

@@ -1,0 +1,73 @@
+# serializer version: 1
+# name: test_climate[climate.test_climate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 28.0,
+      'min_temp': 15.0,
+      'preset_modes': list([
+        'off',
+        'keep',
+        'dog',
+        'camp',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.test_climate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Climate',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': <TeslemetryClimateSide.DRIVER: 'driver_temp'>,
+    'unique_id': 'VINVINVIN-driver_temp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate[climate.test_climate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 30.0,
+      'friendly_name': 'Test Climate',
+      'hvac_modes': list([
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 28.0,
+      'min_temp': 15.0,
+      'preset_mode': 'off',
+      'preset_modes': list([
+        'off',
+        'keep',
+        'dog',
+        'camp',
+      ]),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 22.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test_climate',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

@@ -72,7 +72,7 @@ class HomeKitEventEntity(BaseCharacteristicEntity, EventEntity):
         )
 
     @callback
-    def _handle_event(self):
+    def _handle_event(self) -> None:
         if self._char.value is None:
             # For IP backed devices the characteristic is marked as
             # pollable, but always returns None when polled

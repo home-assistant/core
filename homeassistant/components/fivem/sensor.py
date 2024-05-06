@@ -24,7 +24,7 @@ from .const import (
 from .entity import FiveMEntity, FiveMEntityDescription
 
 
-@dataclass
+@dataclass(frozen=True)
 class FiveMSensorEntityDescription(SensorEntityDescription, FiveMEntityDescription):
     """Describes FiveM sensor entity."""
 

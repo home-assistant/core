@@ -575,7 +575,7 @@ async def test_restore_state(hass: HomeAssistant, monkeypatch) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     # setup mocking rflink module
     _, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)

@@ -318,7 +318,7 @@ async def test_webhook_handle_get_config(
         "unit_system": hass_config["unit_system"],
         "location_name": hass_config["location_name"],
         "time_zone": hass_config["time_zone"],
-        "components": hass_config["components"],
+        "components": set(hass_config["components"]),
         "version": hass_config["version"],
         "theme_color": "#03A9F4",  # Default frontend theme color
         "entities": {
@@ -962,7 +962,7 @@ async def test_reregister_sensor(
                 "state": 100,
                 "type": "sensor",
                 "unique_id": "abcd",
-                "state_class": "total",
+                "state_class": "measurement",
                 "device_class": "battery",
                 "entity_category": "diagnostic",
                 "icon": "mdi:new-icon",

@@ -42,7 +42,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
 
     async def async_setup(self, hass_config: ConfigType) -> None:
         """Set up the trigger and create entities."""
-        if self.hass.state == CoreState.running:
+        if self.hass.state is CoreState.running:
             await self._attach_triggers()
         else:
             self._unsub_start = self.hass.bus.async_listen_once(

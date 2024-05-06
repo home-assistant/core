@@ -134,6 +134,7 @@ class HomeAssistantSnapcast:
         ----------
         client : Snapclient
             Snapcast client to be added to HA.
+
         """
         if not self.hass_async_add_entities:
             return

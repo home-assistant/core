@@ -1,0 +1,163 @@
+# serializer version: 1
+# name: test_numbers[number.test_charge_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 32,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.test_charge_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Charge current',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_charge_current_request',
+    'unique_id': 'VINVINVIN-charge_state_charge_current_request',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_numbers[number.test_charge_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Test Charge current',
+      'max': 32,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.test_charge_current',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '32',
+  })
+# ---
+# name: test_numbers[number.test_charge_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 50,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.test_charge_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Charge limit',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_charge_limit_soc',
+    'unique_id': 'VINVINVIN-charge_state_charge_limit_soc',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_numbers[number.test_charge_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Test Charge limit',
+      'max': 100,
+      'min': 50,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.test_charge_limit',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80',
+  })
+# ---
+# name: test_numbers[number.test_speed_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 120,
+      'min': 50,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.test_speed_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.SPEED: 'speed'>,
+    'original_icon': None,
+    'original_name': 'Speed limit',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle_state_speed_limit_mode_current_limit_mph',
+    'unique_id': 'VINVINVIN-vehicle_state_speed_limit_mode_current_limit_mph',
+    'unit_of_measurement': <UnitOfSpeed.MILES_PER_HOUR: 'mph'>,
+  })
+# ---
+# name: test_numbers[number.test_speed_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speed',
+      'friendly_name': 'Test Speed limit',
+      'max': 120,
+      'min': 50,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfSpeed.MILES_PER_HOUR: 'mph'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.test_speed_limit',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '74.564543',
+  })
+# ---

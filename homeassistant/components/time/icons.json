@@ -1,0 +1,10 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:clock"
+    }
+  },
+  "services": {
+    "set_value": "mdi:clock-edit"
+  }
+}

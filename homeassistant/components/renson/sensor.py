@@ -17,13 +17,11 @@ from renson_endura_delta.field_enum import (
     CURRENT_AIRFLOW_INGOING_FIELD,
     CURRENT_LEVEL_FIELD,
     DAY_POLLUTION_FIELD,
-    DAYTIME_FIELD,
     FILTER_REMAIN_FIELD,
     HUMIDITY_FIELD,
     INDOOR_TEMP_FIELD,
     MANUAL_LEVEL_FIELD,
     NIGHT_POLLUTION_FIELD,
-    NIGHTTIME_FIELD,
     OUTDOOR_TEMP_FIELD,
     FieldEnum,
 )
@@ -52,7 +50,7 @@ from .coordinator import RensonCoordinator
 from .entity import RensonEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class RensonSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -60,7 +58,7 @@ class RensonSensorEntityDescriptionMixin:
     raw_format: bool
 
 
-@dataclass
+@dataclass(frozen=True)
 class RensonSensorEntityDescription(
     SensorEntityDescription, RensonSensorEntityDescriptionMixin
 ):
@@ -184,20 +182,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
         options=["off", "level1", "level2", "level3", "level4", "breeze"],
-    ),
-    RensonSensorEntityDescription(
-        key="DAYTIME_FIELD",
-        translation_key="start_day_time",
-        field=DAYTIME_FIELD,
-        raw_format=False,
-        entity_registry_enabled_default=False,
-    ),
-    RensonSensorEntityDescription(
-        key="NIGHTTIME_FIELD",
-        translation_key="start_night_time",
-        field=NIGHTTIME_FIELD,
-        raw_format=False,
-        entity_registry_enabled_default=False,
     ),
     RensonSensorEntityDescription(
         key="DAY_POLLUTION_FIELD",

@@ -66,7 +66,7 @@ def get_event_name(category: WorkoutCategory) -> str:
 
 
 class WithingsWorkoutCalendarEntity(
-    CalendarEntity, WithingsEntity[WithingsWorkoutDataUpdateCoordinator]
+    WithingsEntity[WithingsWorkoutDataUpdateCoordinator], CalendarEntity
 ):
     """A calendar entity."""
 

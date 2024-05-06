@@ -1,4 +1,15 @@
 """Consts for Cast integration."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from pychromecast.controllers.homeassistant import HomeAssistantController
+
+from homeassistant.helpers.dispatcher import SignalType
+
+if TYPE_CHECKING:
+    from .helpers import ChromecastInfo
+
 
 DOMAIN = "cast"
 
@@ -14,14 +25,16 @@ CAST_BROWSER_KEY = "cast_browser"
 
 # Dispatcher signal fired with a ChromecastInfo every time we discover a new
 # Chromecast or receive it through configuration
-SIGNAL_CAST_DISCOVERED = "cast_discovered"
+SIGNAL_CAST_DISCOVERED: SignalType[ChromecastInfo] = SignalType("cast_discovered")
 
 # Dispatcher signal fired with a ChromecastInfo every time a Chromecast is
 # removed
-SIGNAL_CAST_REMOVED = "cast_removed"
+SIGNAL_CAST_REMOVED: SignalType[ChromecastInfo] = SignalType("cast_removed")
 
 # Dispatcher signal fired when a Chromecast should show a Home Assistant Cast view.
-SIGNAL_HASS_CAST_SHOW_VIEW = "cast_show_view"
+SIGNAL_HASS_CAST_SHOW_VIEW: SignalType[
+    HomeAssistantController, str, str, str | None
+] = SignalType("cast_show_view")
 
 CONF_IGNORE_CEC = "ignore_cec"
 CONF_KNOWN_HOSTS = "known_hosts"

@@ -111,7 +111,7 @@ class Searcher:
         self._to_resolve: deque[tuple[str, str]] = deque()
 
     @callback
-    def async_search(self, item_type, item_id):
+    def async_search(self, item_type: str, item_id: str) -> dict[str, set[str]]:
         """Find results."""
         _LOGGER.debug("Searching for %s/%s", item_type, item_id)
         self.results[item_type].add(item_id)
@@ -140,7 +140,7 @@ class Searcher:
         return {key: val for key, val in self.results.items() if val}
 
     @callback
-    def _add_or_resolve(self, item_type, item_id):
+    def _add_or_resolve(self, item_type: str, item_id: str) -> None:
         """Add an item to explore."""
         if item_id in self.results[item_type]:
             return
@@ -151,7 +151,7 @@ class Searcher:
             self._to_resolve.append((item_type, item_id))
 
     @callback
-    def _resolve_area(self, area_id) -> None:
+    def _resolve_area(self, area_id: str) -> None:
         """Resolve an area."""
         for device in dr.async_entries_for_area(self._device_reg, area_id):
             self._add_or_resolve("device", device.id)
@@ -166,7 +166,7 @@ class Searcher:
             self._add_or_resolve("entity", entity_id)
 
     @callback
-    def _resolve_automation(self, automation_entity_id) -> None:
+    def _resolve_automation(self, automation_entity_id: str) -> None:
         """Resolve an automation.
 
         Will only be called if automation is an entry point.
@@ -188,7 +188,7 @@ class Searcher:
             self._add_or_resolve("automation_blueprint", blueprint)
 
     @callback
-    def _resolve_automation_blueprint(self, blueprint_path) -> None:
+    def _resolve_automation_blueprint(self, blueprint_path: str) -> None:
         """Resolve an automation blueprint.
 
         Will only be called if blueprint is an entry point.
@@ -199,7 +199,7 @@ class Searcher:
             self._add_or_resolve("automation", entity_id)
 
     @callback
-    def _resolve_config_entry(self, config_entry_id) -> None:
+    def _resolve_config_entry(self, config_entry_id: str) -> None:
         """Resolve a config entry.
 
         Will only be called if config entry is an entry point.
@@ -215,7 +215,7 @@ class Searcher:
             self._add_or_resolve("entity", entity_entry.entity_id)
 
     @callback
-    def _resolve_device(self, device_id) -> None:
+    def _resolve_device(self, device_id: str) -> None:
         """Resolve a device."""
         device_entry = self._device_reg.async_get(device_id)
         # Unlikely entry doesn't exist, but let's guard for bad data.
@@ -239,7 +239,7 @@ class Searcher:
             self._add_or_resolve("entity", entity_id)
 
     @callback
-    def _resolve_entity(self, entity_id) -> None:
+    def _resolve_entity(self, entity_id: str) -> None:
         """Resolve an entity."""
         # Extra: Find automations and scripts that reference this entity.
 
@@ -277,7 +277,7 @@ class Searcher:
             self._add_or_resolve(domain, entity_id)
 
     @callback
-    def _resolve_group(self, group_entity_id) -> None:
+    def _resolve_group(self, group_entity_id: str) -> None:
         """Resolve a group.
 
         Will only be called if group is an entry point.
@@ -286,7 +286,7 @@ class Searcher:
             self._add_or_resolve("entity", entity_id)
 
     @callback
-    def _resolve_person(self, person_entity_id) -> None:
+    def _resolve_person(self, person_entity_id: str) -> None:
         """Resolve a person.
 
         Will only be called if person is an entry point.
@@ -295,7 +295,7 @@ class Searcher:
             self._add_or_resolve("entity", entity)
 
     @callback
-    def _resolve_scene(self, scene_entity_id) -> None:
+    def _resolve_scene(self, scene_entity_id: str) -> None:
         """Resolve a scene.
 
         Will only be called if scene is an entry point.
@@ -304,7 +304,7 @@ class Searcher:
             self._add_or_resolve("entity", entity)
 
     @callback
-    def _resolve_script(self, script_entity_id) -> None:
+    def _resolve_script(self, script_entity_id: str) -> None:
         """Resolve a script.
 
         Will only be called if script is an entry point.
@@ -322,7 +322,7 @@ class Searcher:
             self._add_or_resolve("script_blueprint", blueprint)
 
     @callback
-    def _resolve_script_blueprint(self, blueprint_path) -> None:
+    def _resolve_script_blueprint(self, blueprint_path: str) -> None:
         """Resolve a script blueprint.
 
         Will only be called if blueprint is an entry point.

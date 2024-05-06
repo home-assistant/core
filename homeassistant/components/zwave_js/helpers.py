@@ -25,7 +25,6 @@ from zwave_js_server.model.value import (
     get_value_id_str,
 )
 
-from homeassistant.components.group import expand_entity_ids
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
@@ -39,6 +38,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.group import expand_entity_ids
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -456,7 +456,9 @@ def remove_keys_with_empty_values(config: ConfigType) -> ConfigType:
     return {key: value for key, value in config.items() if value not in ("", None)}
 
 
-def check_type_schema_map(schema_map: dict[str, vol.Schema]) -> Callable:
+def check_type_schema_map(
+    schema_map: dict[str, vol.Schema],
+) -> Callable[[ConfigType], ConfigType]:
     """Check type specific schema against config."""
 
     def _check_type_schema(config: ConfigType) -> ConfigType:

@@ -32,7 +32,6 @@ COMMENT_REQUIREMENTS = (
     "pybluez",
     "pycocotools",
     "pycups",
-    "python-eq3bt",
     "python-gammu",
     "python-lirc",
     "pyuserinput",
@@ -59,11 +58,6 @@ CONSTRAINT_BASE = """
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
 pycryptodome>=3.6.6
-
-# Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
-# Temporary setting an upper bound, to prevent compat issues with urllib3>=2
-# https://github.com/home-assistant/core/issues/97248
-urllib3>=1.26.5,<2
 
 # Constrain httplib2 to protect against GHSA-93xj-8mrv-444m
 # https://github.com/advisories/GHSA-93xj-8mrv-444m
@@ -104,9 +98,9 @@ regex==2021.8.28
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.0.0
+anyio==4.1.0
 h11==0.14.0
-httpcore==0.18.0
+httpcore==1.0.2
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -144,9 +138,9 @@ iso4217!=1.10.20220401
 # We need at least >=2.1.0 (tensorflow integration -> pycocotools)
 matplotlib==3.6.1
 
-# pyOpenSSL 23.1.0 or later required to avoid import errors when
-# cryptography 40.0.1 is installed with botocore
-pyOpenSSL>=23.1.0
+# pyOpenSSL 24.0.0 or later required to avoid import errors when
+# cryptography 42.0.0 is installed with botocore
+pyOpenSSL>=24.0.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
@@ -180,6 +174,13 @@ get-mac==1000000000.0.0
 # They are build with mypyc, but causes issues with our wheel builder.
 # In order to do so, we need to constrain the version.
 charset-normalizer==3.2.0
+
+# dacite: Ensure we have a version that is able to handle type unions for
+# Roborock, NAM, Brother, and GIOS.
+dacite>=1.7.0
+
+# Musle wheels for pandas 2.2.0 cannot be build for any architecture.
+pandas==2.1.4
 """
 
 GENERATED_MESSAGE = (
@@ -192,6 +193,7 @@ IGNORE_PRE_COMMIT_HOOK_ID = (
     "no-commit-to-branch",
     "prettier",
     "python-typing-update",
+    "ruff-format",  # it's just ruff
 )
 
 PACKAGE_REGEX = re.compile(r"^(?:--.+\s)?([-_\.\w\d]+).*==.+$")
@@ -394,7 +396,8 @@ def requirements_test_all_output(reqs: dict[str, list[str]]) -> str:
         for requirement, modules in reqs.items()
         if any(
             # Always install requirements that are not part of integrations
-            not mdl.startswith("homeassistant.components.") or
+            not mdl.startswith("homeassistant.components.")
+            or
             # Install tests for integrations that have tests
             has_tests(mdl)
             for mdl in modules

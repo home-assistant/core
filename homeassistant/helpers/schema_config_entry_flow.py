@@ -331,7 +331,12 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
         return cls.options_flow is not None
 
     @staticmethod
-    def _async_step(step_id: str) -> Callable:
+    def _async_step(
+        step_id: str,
+    ) -> Callable[
+        [SchemaConfigFlowHandler, dict[str, Any] | None],
+        Coroutine[Any, Any, FlowResult],
+    ]:
         """Generate a step handler."""
 
         async def _async_step(
@@ -421,7 +426,12 @@ class SchemaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
             setattr(self, "async_setup_preview", async_setup_preview)
 
     @staticmethod
-    def _async_step(step_id: str) -> Callable:
+    def _async_step(
+        step_id: str,
+    ) -> Callable[
+        [SchemaConfigFlowHandler, dict[str, Any] | None],
+        Coroutine[Any, Any, FlowResult],
+    ]:
         """Generate a step handler."""
 
         async def _async_step(

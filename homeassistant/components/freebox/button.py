@@ -18,14 +18,14 @@ from .const import DOMAIN
 from .router import FreeboxRouter
 
 
-@dataclass
+@dataclass(frozen=True)
 class FreeboxButtonRequiredKeysMixin:
     """Mixin for required keys."""
 
     async_press: Callable[[FreeboxRouter], Awaitable]
 
 
-@dataclass
+@dataclass(frozen=True)
 class FreeboxButtonEntityDescription(
     ButtonEntityDescription, FreeboxButtonRequiredKeysMixin
 ):

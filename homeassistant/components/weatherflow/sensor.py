@@ -46,7 +46,7 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 from .const import DOMAIN, LOGGER, format_dispatch_call
 
 
-@dataclass
+@dataclass(frozen=True)
 class WeatherFlowSensorRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -60,7 +60,7 @@ def precipitation_raw_conversion_fn(raw_data: Enum):
     return raw_data.name.lower()
 
 
-@dataclass
+@dataclass(frozen=True)
 class WeatherFlowSensorEntityDescription(
     SensorEntityDescription, WeatherFlowSensorRequiredKeysMixin
 ):

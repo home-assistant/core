@@ -84,7 +84,7 @@ def key_exists(data: dict[str, Any], search_key: str) -> bool:
     return False
 
 
-class RainMachineDataUpdateCoordinator(DataUpdateCoordinator[dict]):
+class RainMachineDataUpdateCoordinator(DataUpdateCoordinator[dict]):  # pylint: disable=hass-enforce-coordinator-module
     """Define an extended DataUpdateCoordinator."""
 
     config_entry: ConfigEntry

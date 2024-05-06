@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.directv.media_player import (
@@ -171,7 +172,8 @@ async def test_supported_features(
     # Features supported for main DVR
     state = hass.states.get(MAIN_ENTITY_ID)
     assert (
-        MediaPlayerEntityFeature.PAUSE
+        state.attributes.get("supported_features")
+        == MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.PLAY_MEDIA
@@ -179,19 +181,18 @@ async def test_supported_features(
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.PLAY
-        == state.attributes.get("supported_features")
     )
 
     # Feature supported for clients.
     state = hass.states.get(CLIENT_ENTITY_ID)
     assert (
-        MediaPlayerEntityFeature.PAUSE
+        state.attributes.get("supported_features")
+        == MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.PLAY
-        == state.attributes.get("supported_features")
     )
 
 
@@ -305,6 +306,7 @@ async def test_check_attributes(
 async def test_attributes_paused(
     hass: HomeAssistant,
     mock_now: dt_util.dt.datetime,
+    freezer: FrozenDateTimeFactory,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test attributes while paused."""
@@ -315,11 +317,9 @@ async def test_attributes_paused(
 
     # Test to make sure that ATTR_MEDIA_POSITION_UPDATED_AT is not
     # updated if TV is paused.
-    with patch(
-        "homeassistant.util.dt.utcnow", return_value=mock_now + timedelta(minutes=5)
-    ):
-        await async_media_pause(hass, CLIENT_ENTITY_ID)
-        await hass.async_block_till_done()
+    freezer.move_to(mock_now + timedelta(minutes=5))
+    await async_media_pause(hass, CLIENT_ENTITY_ID)
+    await hass.async_block_till_done()
 
     state = hass.states.get(CLIENT_ENTITY_ID)
     assert state.state == STATE_PAUSED

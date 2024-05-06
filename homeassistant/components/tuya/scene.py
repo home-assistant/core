@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from tuya_iot import TuyaHomeManager, TuyaScene
+from tuya_sharing import Manager, SharingScene
 
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
@@ -20,10 +20,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up Tuya scenes."""
     hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
-    scenes = await hass.async_add_executor_job(hass_data.home_manager.query_scenes)
-    async_add_entities(
-        TuyaSceneEntity(hass_data.home_manager, scene) for scene in scenes
-    )
+    scenes = await hass.async_add_executor_job(hass_data.manager.query_scenes)
+    async_add_entities(TuyaSceneEntity(hass_data.manager, scene) for scene in scenes)
 
 
 class TuyaSceneEntity(Scene):
@@ -33,7 +31,7 @@ class TuyaSceneEntity(Scene):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, home_manager: TuyaHomeManager, scene: TuyaScene) -> None:
+    def __init__(self, home_manager: Manager, scene: SharingScene) -> None:
         """Init Tuya Scene."""
         super().__init__()
         self._attr_unique_id = f"tys{scene.scene_id}"

@@ -81,5 +81,5 @@ class AppleTVRemote(AppleTVEntity, RemoteEntity):
                     raise ValueError("Command not found. Exiting sequence")
 
                 _LOGGER.info("Sending command %s", single_command)
-                await attr_value()
+                await attr_value()  # type: ignore[operator]
                 await asyncio.sleep(delay)

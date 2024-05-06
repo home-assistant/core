@@ -80,6 +80,7 @@ class SwitchBotCloudAirConditionner(SwitchBotCloudEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature = 21
     _attr_name = None
+    _enable_turn_on_off_backwards_compatibility = False
 
     async def _do_send_command(
         self,

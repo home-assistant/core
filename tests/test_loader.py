@@ -873,3 +873,14 @@ async def test_async_suggest_report_issue(
         )
         == report_issue
     )
+
+
+async def test_config_folder_not_in_path(hass):
+    """Test that config folder is not in path."""
+
+    # Verify that we are unable to import this file from top level
+    with pytest.raises(ImportError):
+        import check_config_not_in_path  # noqa: F401
+
+    # Verify that we are able to load the file with absolute path
+    import tests.testing_config.check_config_not_in_path  # noqa: F401

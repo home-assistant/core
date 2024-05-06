@@ -1,8 +1,19 @@
 """The tests for the humidifier component."""
+from enum import Enum
+from types import ModuleType
 from unittest.mock import MagicMock
 
-from homeassistant.components.humidifier import HumidifierEntity
+import pytest
+
+from homeassistant.components import humidifier
+from homeassistant.components.humidifier import (
+    ATTR_MODE,
+    HumidifierEntity,
+    HumidifierEntityFeature,
+)
 from homeassistant.core import HomeAssistant
+
+from tests.common import help_test_all, import_and_test_deprecated_constant_enum
 
 
 class MockHumidifierEntity(HumidifierEntity):
@@ -34,3 +45,61 @@ async def test_sync_turn_off(hass: HomeAssistant) -> None:
     await humidifier.async_turn_off()
 
     assert humidifier.turn_off.called
+
+
+def _create_tuples(enum: Enum, constant_prefix: str) -> list[tuple[Enum, str]]:
+    result = []
+    for enum in enum:
+        result.append((enum, constant_prefix))
+    return result
+
+
+@pytest.mark.parametrize(
+    "module",
+    [humidifier, humidifier.const],
+)
+def test_all(module: ModuleType) -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(module)
+
+
+@pytest.mark.parametrize(
+    ("enum", "constant_prefix"),
+    _create_tuples(humidifier.HumidifierEntityFeature, "SUPPORT_")
+    + _create_tuples(humidifier.HumidifierDeviceClass, "DEVICE_CLASS_"),
+)
+@pytest.mark.parametrize(("module"), [humidifier, humidifier.const])
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: Enum,
+    constant_prefix: str,
+    module: ModuleType,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, module, enum, constant_prefix, "2025.1"
+    )
+
+
+def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated supported features ints."""
+
+    class MockHumidifierEntity(HumidifierEntity):
+        _attr_mode = "mode1"
+
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return 1
+
+    entity = MockHumidifierEntity()
+    assert entity.supported_features_compat is HumidifierEntityFeature(1)
+    assert "MockHumidifierEntity" in caplog.text
+    assert "is using deprecated supported features values" in caplog.text
+    assert "Instead it should use" in caplog.text
+    assert "HumidifierEntityFeature.MODES" in caplog.text
+    caplog.clear()
+    assert entity.supported_features_compat is HumidifierEntityFeature(1)
+    assert "is using deprecated supported features values" not in caplog.text
+
+    assert entity.state_attributes[ATTR_MODE] == "mode1"

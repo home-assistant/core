@@ -38,21 +38,19 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .bridge import DeviceDataUpdateCoordinator
 from .const import (
     COORDINATORS,
     DISPATCH_DEVICE_DISCOVERED,
-    DISPATCHERS,
     DOMAIN,
     FAN_MEDIUM_HIGH,
     FAN_MEDIUM_LOW,
     TARGET_TEMPERATURE_STEP,
 )
+from .entity import GreeEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,7 +86,7 @@ SWING_MODES = [SWING_OFF, SWING_VERTICAL, SWING_HORIZONTAL, SWING_BOTH]
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Gree HVAC device from a config entry."""
@@ -101,12 +99,12 @@ async def async_setup_entry(
     for coordinator in hass.data[DOMAIN][COORDINATORS]:
         init_device(coordinator)
 
-    hass.data[DOMAIN][DISPATCHERS].append(
+    entry.async_on_unload(
         async_dispatcher_connect(hass, DISPATCH_DEVICE_DISCOVERED, init_device)
     )
 
 
-class GreeClimateEntity(CoordinatorEntity[DeviceDataUpdateCoordinator], ClimateEntity):
+class GreeClimateEntity(GreeEntity, ClimateEntity):
     """Representation of a Gree HVAC device."""
 
     _attr_precision = PRECISION_WHOLE
@@ -121,19 +119,12 @@ class GreeClimateEntity(CoordinatorEntity[DeviceDataUpdateCoordinator], ClimateE
     _attr_preset_modes = PRESET_MODES
     _attr_fan_modes = [*FAN_MODES_REVERSE]
     _attr_swing_modes = SWING_MODES
+    _attr_name = None
 
     def __init__(self, coordinator: DeviceDataUpdateCoordinator) -> None:
         """Initialize the Gree device."""
         super().__init__(coordinator)
-        self._attr_name = coordinator.device.device_info.name
-        mac = coordinator.device.device_info.mac
-        self._attr_unique_id = mac
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, mac)},
-            identifiers={(DOMAIN, mac)},
-            manufacturer="Gree",
-            name=self._attr_name,
-        )
+        self._attr_unique_id = coordinator.device.device_info.mac
         units = self.coordinator.device.temperature_units
         if units == TemperatureUnits.C:
             self._attr_temperature_unit = UnitOfTemperature.CELSIUS

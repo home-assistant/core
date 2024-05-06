@@ -22,7 +22,7 @@ from .entity import EzvizEntity
 PARALLEL_UPDATES = 1
 
 
-@dataclass
+@dataclass(frozen=True)
 class EzvizButtonEntityDescriptionMixin:
     """Mixin values for EZVIZ button entities."""
 
@@ -30,7 +30,7 @@ class EzvizButtonEntityDescriptionMixin:
     supported_ext: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class EzvizButtonEntityDescription(
     ButtonEntityDescription, EzvizButtonEntityDescriptionMixin
 ):

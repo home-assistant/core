@@ -30,13 +30,16 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Minecraft Server from a config entry."""
 
-    # Check and create API instance.
+    # Create API instance.
+    api = MinecraftServer(
+        hass,
+        entry.data.get(CONF_TYPE, MinecraftServerType.JAVA_EDITION),
+        entry.data[CONF_ADDRESS],
+    )
+
+    # Initialize API instance.
     try:
-        api = await hass.async_add_executor_job(
-            MinecraftServer,
-            entry.data.get(CONF_TYPE, MinecraftServerType.JAVA_EDITION),
-            entry.data[CONF_ADDRESS],
-        )
+        await api.async_initialize()
     except MinecraftServerAddressError as error:
         raise ConfigEntryError(
             f"Server address in configuration entry is invalid: {error}"
@@ -102,9 +105,11 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_data = config_entry.data
 
         # Migrate config entry.
+        address = config_data[CONF_HOST]
+        api = MinecraftServer(hass, MinecraftServerType.JAVA_EDITION, address)
+
         try:
-            address = config_data[CONF_HOST]
-            MinecraftServer(MinecraftServerType.JAVA_EDITION, address)
+            await api.async_initialize()
             host_only_lookup_success = True
         except MinecraftServerAddressError as error:
             host_only_lookup_success = False
@@ -114,9 +119,11 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             )
 
         if not host_only_lookup_success:
+            address = f"{config_data[CONF_HOST]}:{config_data[CONF_PORT]}"
+            api = MinecraftServer(hass, MinecraftServerType.JAVA_EDITION, address)
+
             try:
-                address = f"{config_data[CONF_HOST]}:{config_data[CONF_PORT]}"
-                MinecraftServer(MinecraftServerType.JAVA_EDITION, address)
+                await api.async_initialize()
             except MinecraftServerAddressError as error:
                 _LOGGER.exception(
                     "Can't migrate configuration entry due to error while parsing server address, try again later: %s",

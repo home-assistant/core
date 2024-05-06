@@ -5,10 +5,12 @@ import asyncio
 from collections import deque
 from collections.abc import AsyncIterable, MutableSequence, Sequence
 from functools import partial
+import io
 import logging
 from pathlib import Path
 import time
 from typing import TYPE_CHECKING
+import wave
 
 from voip_utils import (
     CallInfo,
@@ -111,11 +113,13 @@ class HassVoipDatagramProtocol(VoipDatagramProtocol):
             valid_protocol_factory=lambda call_info, rtcp_state: make_protocol(
                 hass, devices, call_info, rtcp_state
             ),
-            invalid_protocol_factory=lambda call_info, rtcp_state: PreRecordMessageProtocol(
-                hass,
-                "not_configured.pcm",
-                opus_payload_type=call_info.opus_payload_type,
-                rtcp_state=rtcp_state,
+            invalid_protocol_factory=(
+                lambda call_info, rtcp_state: PreRecordMessageProtocol(
+                    hass,
+                    "not_configured.pcm",
+                    opus_payload_type=call_info.opus_payload_type,
+                    rtcp_state=rtcp_state,
+                )
             ),
         )
         self.hass = hass
@@ -283,7 +287,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                     ),
                     conversation_id=self._conversation_id,
                     device_id=self.voip_device.device_id,
-                    tts_audio_output="raw",
+                    tts_audio_output="wav",
                 )
 
             if self._pipeline_error:
@@ -385,11 +389,16 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
             self._conversation_id = event.data["intent_output"]["conversation_id"]
         elif event.type == PipelineEventType.TTS_END:
             # Send TTS audio to caller over RTP
-            media_id = event.data["tts_output"]["media_id"]
-            self.hass.async_create_background_task(
-                self._send_tts(media_id),
-                "voip_pipeline_tts",
-            )
+            tts_output = event.data["tts_output"]
+            if tts_output:
+                media_id = tts_output["media_id"]
+                self.hass.async_create_background_task(
+                    self._send_tts(media_id),
+                    "voip_pipeline_tts",
+                )
+            else:
+                # Empty TTS response
+                self._tts_done.set()
         elif event.type == PipelineEventType.ERROR:
             # Play error tone instead of wait for TTS
             self._pipeline_error = True
@@ -400,10 +409,31 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
             if self.transport is None:
                 return
 
-            _extension, audio_bytes = await tts.async_get_media_source_audio(
+            extension, data = await tts.async_get_media_source_audio(
                 self.hass,
                 media_id,
             )
+
+            if extension != "wav":
+                raise ValueError(f"Only WAV audio can be streamed, got {extension}")
+
+            with io.BytesIO(data) as wav_io:
+                with wave.open(wav_io, "rb") as wav_file:
+                    sample_rate = wav_file.getframerate()
+                    sample_width = wav_file.getsampwidth()
+                    sample_channels = wav_file.getnchannels()
+
+                    if (
+                        (sample_rate != 16000)
+                        or (sample_width != 2)
+                        or (sample_channels != 1)
+                    ):
+                        raise ValueError(
+                            "Expected rate/width/channels as 16000/2/1,"
+                            " got {sample_rate}/{sample_width}/{sample_channels}}"
+                        )
+
+                audio_bytes = wav_file.readframes(wav_file.getnframes())
 
             _LOGGER.debug("Sending %s byte(s) of audio", len(audio_bytes))
 
@@ -412,7 +442,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
             tts_seconds = tts_samples / RATE
 
             async with asyncio.timeout(tts_seconds + self.tts_extra_timeout):
-                # Assume TTS audio is 16Khz 16-bit mono
+                # TTS audio is 16Khz 16-bit mono
                 await self._async_send_audio(audio_bytes)
         except asyncio.TimeoutError as err:
             _LOGGER.warning("TTS timeout")

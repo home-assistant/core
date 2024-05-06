@@ -290,16 +290,18 @@ class NotionEntity(CoordinatorEntity[DataUpdateCoordinator[NotionData]]):
         """Initialize the entity."""
         super().__init__(coordinator)
 
-        bridge = self.coordinator.data.bridges[bridge_id]
         sensor = self.coordinator.data.sensors[sensor_id]
+
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, sensor.hardware_id)},
             manufacturer="Silicon Labs",
             model=str(sensor.hardware_revision),
             name=str(sensor.name).capitalize(),
             sw_version=sensor.firmware_version,
-            via_device=(DOMAIN, bridge.hardware_id),
         )
+
+        if bridge := self._async_get_bridge(bridge_id):
+            self._attr_device_info["via_device"] = (DOMAIN, bridge.hardware_id)
 
         self._attr_extra_state_attributes = {}
         self._attr_unique_id = listener_id
@@ -323,6 +325,14 @@ class NotionEntity(CoordinatorEntity[DataUpdateCoordinator[NotionData]]):
         return self.coordinator.data.listeners[self._listener_id]
 
     @callback
+    def _async_get_bridge(self, bridge_id: int) -> Bridge | None:
+        """Get a bridge by ID (if it exists)."""
+        if (bridge := self.coordinator.data.bridges.get(bridge_id)) is None:
+            LOGGER.debug("Entity references a non-existent bridge ID: %s", bridge_id)
+            return None
+        return bridge
+
+    @callback
     def _async_update_bridge_id(self) -> None:
         """Update the entity's bridge ID if it has changed.
 
@@ -330,13 +340,12 @@ class NotionEntity(CoordinatorEntity[DataUpdateCoordinator[NotionData]]):
         """
         sensor = self.coordinator.data.sensors[self._sensor_id]
 
-        # If the sensor's bridge ID is the same as what we had before or if it points
-        # to a bridge that doesn't exist (which can happen due to a Notion API bug),
-        # return immediately:
-        if (
-            self._bridge_id == sensor.bridge.id
-            or sensor.bridge.id not in self.coordinator.data.bridges
-        ):
+        # If the bridge ID hasn't changed, return:
+        if self._bridge_id == sensor.bridge.id:
+            return
+
+        # If the bridge doesn't exist, return:
+        if (bridge := self._async_get_bridge(sensor.bridge.id)) is None:
             return
 
         self._bridge_id = sensor.bridge.id

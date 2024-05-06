@@ -1,6 +1,7 @@
 """Coordinator to handle Opower connections."""
 from datetime import datetime, timedelta
 import logging
+import socket
 from types import MappingProxyType
 from typing import Any, cast
 
@@ -51,7 +52,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             update_interval=timedelta(hours=12),
         )
         self.api = Opower(
-            aiohttp_client.async_get_clientsession(hass),
+            aiohttp_client.async_get_clientsession(hass, family=socket.AF_INET),
             entry_data[CONF_UTILITY],
             entry_data[CONF_USERNAME],
             entry_data[CONF_PASSWORD],
@@ -93,7 +94,9 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 (
                     self.api.utility.subdomain(),
                     account.meter_type.name.lower(),
-                    account.utility_account_id,
+                    # Some utilities like AEP have "-" in their account id.
+                    # Replace it with "_" to avoid "Invalid statistic_id"
+                    account.utility_account_id.replace("-", "_"),
                 )
             )
             cost_statistic_id = f"{DOMAIN}:{id_prefix}_energy_cost"

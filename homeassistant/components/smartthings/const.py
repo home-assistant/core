@@ -34,15 +34,15 @@ STORAGE_VERSION = 1
 # Ordered 'specific to least-specific platform' in order for capabilities
 # to be drawn-down and represented by the most appropriate platform.
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.CLIMATE,
+    Platform.COVER,
     Platform.FAN,
     Platform.LIGHT,
     Platform.LOCK,
-    Platform.COVER,
-    Platform.SWITCH,
-    Platform.BINARY_SENSOR,
-    Platform.SENSOR,
     Platform.SCENE,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 IGNORED_CAPABILITIES = [

@@ -238,6 +238,26 @@ DEMO_DEVICES = [
         "willReportState": False,
     },
     {
+        "id": "media_player.browse",
+        "name": {"name": "Browse"},
+        "traits": ["action.devices.traits.MediaState", "action.devices.traits.OnOff"],
+        "type": "action.devices.types.SETTOP",
+        "willReportState": False,
+    },
+    {
+        "id": "media_player.group",
+        "name": {"name": "Group"},
+        "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.Volume",
+            "action.devices.traits.Modes",
+            "action.devices.traits.TransportControl",
+            "action.devices.traits.MediaState",
+        ],
+        "type": "action.devices.types.SETTOP",
+        "willReportState": False,
+    },
+    {
         "id": "fan.living_room_fan",
         "name": {"name": "Living Room Fan"},
         "traits": [
@@ -285,6 +305,7 @@ DEMO_DEVICES = [
         "id": "climate.hvac",
         "name": {"name": "Hvac"},
         "traits": [
+            "action.devices.traits.OnOff",
             "action.devices.traits.TemperatureSetting",
             "action.devices.traits.FanSpeed",
         ],
@@ -306,7 +327,10 @@ DEMO_DEVICES = [
     {
         "id": "climate.heatpump",
         "name": {"name": "HeatPump"},
-        "traits": ["action.devices.traits.TemperatureSetting"],
+        "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.TemperatureSetting",
+        ],
         "type": "action.devices.types.THERMOSTAT",
         "willReportState": False,
     },
@@ -314,6 +338,7 @@ DEMO_DEVICES = [
         "id": "climate.ecobee",
         "name": {"name": "Ecobee"},
         "traits": [
+            "action.devices.traits.OnOff",
             "action.devices.traits.TemperatureSetting",
             "action.devices.traits.FanSpeed",
         ],

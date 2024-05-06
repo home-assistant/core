@@ -185,19 +185,23 @@ class BaseZwaveJSFlow(FlowHandler, ABC):
         """Install Z-Wave JS add-on."""
         if not self.install_task:
             self.install_task = self.hass.async_create_task(self._async_install_addon())
+
+        if not self.install_task.done():
             return self.async_show_progress(
-                step_id="install_addon", progress_action="install_addon"
+                step_id="install_addon",
+                progress_action="install_addon",
+                progress_task=self.install_task,
             )
 
         try:
             await self.install_task
         except AddonError as err:
-            self.install_task = None
             _LOGGER.error(err)
             return self.async_show_progress_done(next_step_id="install_failed")
+        finally:
+            self.install_task = None
 
         self.integration_created_addon = True
-        self.install_task = None
 
         return self.async_show_progress_done(next_step_id="configure_addon")
 
@@ -213,18 +217,22 @@ class BaseZwaveJSFlow(FlowHandler, ABC):
         """Start Z-Wave JS add-on."""
         if not self.start_task:
             self.start_task = self.hass.async_create_task(self._async_start_addon())
+
+        if not self.start_task.done():
             return self.async_show_progress(
-                step_id="start_addon", progress_action="start_addon"
+                step_id="start_addon",
+                progress_action="start_addon",
+                progress_task=self.start_task,
             )
 
         try:
             await self.start_task
         except (CannotConnect, AddonError, AbortFlow) as err:
-            self.start_task = None
             _LOGGER.error(err)
             return self.async_show_progress_done(next_step_id="start_failed")
+        finally:
+            self.start_task = None
 
-        self.start_task = None
         return self.async_show_progress_done(next_step_id="finish_addon_setup")
 
     async def async_step_start_failed(
@@ -237,38 +245,32 @@ class BaseZwaveJSFlow(FlowHandler, ABC):
         """Start the Z-Wave JS add-on."""
         addon_manager: AddonManager = get_addon_manager(self.hass)
         self.version_info = None
-        try:
-            if self.restart_addon:
-                await addon_manager.async_schedule_restart_addon()
-            else:
-                await addon_manager.async_schedule_start_addon()
-            # Sleep some seconds to let the add-on start properly before connecting.
-            for _ in range(ADDON_SETUP_TIMEOUT_ROUNDS):
-                await asyncio.sleep(ADDON_SETUP_TIMEOUT)
-                try:
-                    if not self.ws_address:
-                        discovery_info = await self._async_get_addon_discovery_info()
-                        self.ws_address = (
-                            f"ws://{discovery_info['host']}:{discovery_info['port']}"
-                        )
-                    self.version_info = await async_get_version_info(
-                        self.hass, self.ws_address
+        if self.restart_addon:
+            await addon_manager.async_schedule_restart_addon()
+        else:
+            await addon_manager.async_schedule_start_addon()
+        # Sleep some seconds to let the add-on start properly before connecting.
+        for _ in range(ADDON_SETUP_TIMEOUT_ROUNDS):
+            await asyncio.sleep(ADDON_SETUP_TIMEOUT)
+            try:
+                if not self.ws_address:
+                    discovery_info = await self._async_get_addon_discovery_info()
+                    self.ws_address = (
+                        f"ws://{discovery_info['host']}:{discovery_info['port']}"
                     )
-                except (AbortFlow, CannotConnect) as err:
-                    _LOGGER.debug(
-                        "Add-on not ready yet, waiting %s seconds: %s",
-                        ADDON_SETUP_TIMEOUT,
-                        err,
-                    )
-                else:
-                    break
+                self.version_info = await async_get_version_info(
+                    self.hass, self.ws_address
+                )
+            except (AbortFlow, CannotConnect) as err:
+                _LOGGER.debug(
+                    "Add-on not ready yet, waiting %s seconds: %s",
+                    ADDON_SETUP_TIMEOUT,
+                    err,
+                )
             else:
-                raise CannotConnect("Failed to start Z-Wave JS add-on: timeout")
-        finally:
-            # Continue the flow after show progress when the task is done.
-            self.hass.async_create_task(
-                self.flow_manager.async_configure(flow_id=self.flow_id)
-            )
+                break
+        else:
+            raise CannotConnect("Failed to start Z-Wave JS add-on: timeout")
 
     @abstractmethod
     async def async_step_configure_addon(
@@ -309,13 +311,7 @@ class BaseZwaveJSFlow(FlowHandler, ABC):
     async def _async_install_addon(self) -> None:
         """Install the Z-Wave JS add-on."""
         addon_manager: AddonManager = get_addon_manager(self.hass)
-        try:
-            await addon_manager.async_schedule_install_addon()
-        finally:
-            # Continue the flow after show progress when the task is done.
-            self.hass.async_create_task(
-                self.flow_manager.async_configure(flow_id=self.flow_id)
-            )
+        await addon_manager.async_schedule_install_addon()
 
     async def _async_get_addon_discovery_info(self) -> dict:
         """Return add-on discovery info."""

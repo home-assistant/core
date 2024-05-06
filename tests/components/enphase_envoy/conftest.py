@@ -9,6 +9,8 @@ from pyenphase import (
     EnvoySystemProduction,
     EnvoyTokenAuth,
 )
+from pyenphase.const import PhaseNames, SupportedFeatures
+from pyenphase.models.meters import CtType, EnvoyPhaseMode
 import pytest
 
 from homeassistant.components.enphase_envoy import DOMAIN
@@ -49,9 +51,22 @@ def mock_envoy_fixture(serial_number, mock_authenticate, mock_setup, mock_auth):
     """Define a mocked Envoy fixture."""
     mock_envoy = Mock(spec=Envoy)
     mock_envoy.serial_number = serial_number
+    mock_envoy.firmware = "7.1.2"
     mock_envoy.authenticate = mock_authenticate
     mock_envoy.setup = mock_setup
     mock_envoy.auth = mock_auth
+    mock_envoy.supported_features = SupportedFeatures(
+        SupportedFeatures.INVERTERS
+        | SupportedFeatures.PRODUCTION
+        | SupportedFeatures.PRODUCTION
+        | SupportedFeatures.METERING
+        | SupportedFeatures.THREEPHASE
+    )
+    mock_envoy.phase_mode = EnvoyPhaseMode.THREE
+    mock_envoy.phase_count = 3
+    mock_envoy.active_phase_count = 3
+    mock_envoy.ct_meter_count = 2
+    mock_envoy.consumption_meter_type = CtType.NET_CONSUMPTION
     mock_envoy.data = EnvoyData(
         system_consumption=EnvoySystemConsumption(
             watt_hours_last_7_days=1234,
@@ -65,6 +80,46 @@ def mock_envoy_fixture(serial_number, mock_authenticate, mock_setup, mock_auth):
             watt_hours_today=1234,
             watts_now=1234,
         ),
+        system_consumption_phases={
+            PhaseNames.PHASE_1: EnvoySystemConsumption(
+                watt_hours_last_7_days=1321,
+                watt_hours_lifetime=1322,
+                watt_hours_today=1323,
+                watts_now=1324,
+            ),
+            PhaseNames.PHASE_2: EnvoySystemConsumption(
+                watt_hours_last_7_days=2321,
+                watt_hours_lifetime=2322,
+                watt_hours_today=2323,
+                watts_now=2324,
+            ),
+            PhaseNames.PHASE_3: EnvoySystemConsumption(
+                watt_hours_last_7_days=3321,
+                watt_hours_lifetime=3322,
+                watt_hours_today=3323,
+                watts_now=3324,
+            ),
+        },
+        system_production_phases={
+            PhaseNames.PHASE_1: EnvoySystemProduction(
+                watt_hours_last_7_days=1231,
+                watt_hours_lifetime=1232,
+                watt_hours_today=1233,
+                watts_now=1234,
+            ),
+            PhaseNames.PHASE_2: EnvoySystemProduction(
+                watt_hours_last_7_days=2231,
+                watt_hours_lifetime=2232,
+                watt_hours_today=2233,
+                watts_now=2234,
+            ),
+            PhaseNames.PHASE_3: EnvoySystemProduction(
+                watt_hours_last_7_days=3231,
+                watt_hours_lifetime=3232,
+                watt_hours_today=3233,
+                watts_now=3234,
+            ),
+        },
         inverters={
             "1": EnvoyInverter(
                 serial_number="1",
@@ -89,7 +144,8 @@ async def setup_enphase_envoy_fixture(hass, config, mock_envoy):
         "homeassistant.components.enphase_envoy.Envoy",
         return_value=mock_envoy,
     ), patch(
-        "homeassistant.components.enphase_envoy.PLATFORMS", []
+        "homeassistant.components.enphase_envoy.PLATFORMS",
+        [],
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

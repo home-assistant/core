@@ -92,7 +92,7 @@ async def test_update_access_token(hass: HomeAssistant) -> None:
     ) as mock_get_token, patch(
         "homeassistant.components.google_assistant.http._get_homegraph_jwt"
     ) as mock_get_jwt, patch(
-        "homeassistant.core.dt_util.utcnow"
+        "homeassistant.core.dt_util.utcnow",
     ) as mock_utcnow:
         mock_utcnow.return_value = base_time
         mock_get_jwt.return_value = jwt
@@ -466,6 +466,6 @@ async def test_async_enable_local_sdk(
     )
     assert resp.status == HTTPStatus.OK
     assert (
-        "Cannot process request for webhook mock_webhook_id as no linked agent user is found:"
+        "Cannot process request for webhook **REDACTED** as no linked agent user is found:"
         in caplog.text
     )

@@ -173,6 +173,8 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         flags = (
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
         if self._device.get_capability(
             Capability.thermostat_fan_mode, Capability.thermostat
@@ -353,7 +355,10 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
 
     def _determine_supported_features(self) -> ClimateEntityFeature:
         features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
         if self._device.get_capability(Capability.fan_oscillation_mode):
             features |= ClimateEntityFeature.SWING_MODE
@@ -497,14 +502,16 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         """Return the unit of measurement."""
         return UNIT_MAP[self._device.status.attributes[Attribute.temperature].unit]
 
-    def _determine_swing_modes(self) -> list[str]:
+    def _determine_swing_modes(self) -> list[str] | None:
         """Return the list of available swing modes."""
+        supported_swings = None
         supported_modes = self._device.status.attributes[
             Attribute.supported_fan_oscillation_modes
         ][0]
-        supported_swings = [
-            FAN_OSCILLATION_TO_SWING.get(m, SWING_OFF) for m in supported_modes
-        ]
+        if supported_modes is not None:
+            supported_swings = [
+                FAN_OSCILLATION_TO_SWING.get(m, SWING_OFF) for m in supported_modes
+            ]
         return supported_swings
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
@@ -526,10 +533,10 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
 
     def _determine_preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
-        supported_modes = self._device.status.attributes[
+        supported_modes: list | None = self._device.status.attributes[
             "supportedAcOptionalMode"
         ].value
-        if WINDFREE in supported_modes:
+        if supported_modes and WINDFREE in supported_modes:
             return [WINDFREE]
         return None
 

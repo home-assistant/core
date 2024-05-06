@@ -2,6 +2,7 @@
 import asyncio
 from http import HTTPStatus
 import io
+from types import ModuleType
 from unittest.mock import AsyncMock, Mock, PropertyMock, mock_open, patch
 
 import pytest
@@ -26,6 +27,7 @@ from homeassistant.setup import async_setup_component
 
 from .common import EMPTY_8_6_JPEG, WEBRTC_ANSWER, mock_turbo_jpeg
 
+from tests.common import help_test_all, import_and_test_deprecated_constant_enum
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 STREAM_SOURCE = "rtsp://127.0.0.1/stream"
@@ -56,10 +58,7 @@ async def mock_stream_source_fixture():
     with patch(
         "homeassistant.components.camera.Camera.stream_source",
         return_value=STREAM_SOURCE,
-    ) as mock_stream_source, patch(
-        "homeassistant.components.camera.Camera.supported_features",
-        return_value=camera.CameraEntityFeature.STREAM,
-    ):
+    ) as mock_stream_source:
         yield mock_stream_source
 
 
@@ -69,10 +68,7 @@ async def mock_hls_stream_source_fixture():
     with patch(
         "homeassistant.components.camera.Camera.stream_source",
         return_value=HLS_STREAM_SOURCE,
-    ) as mock_hls_stream_source, patch(
-        "homeassistant.components.camera.Camera.supported_features",
-        return_value=camera.CameraEntityFeature.STREAM,
-    ):
+    ) as mock_hls_stream_source:
         yield mock_hls_stream_source
 
 
@@ -932,19 +928,15 @@ async def test_use_stream_for_stills(
         return_value=True,
     ):
         # First test when the integration does not support stream should fail
-        resp = await client.get("/api/camera_proxy/camera.demo_camera")
+        resp = await client.get("/api/camera_proxy/camera.demo_camera_without_stream")
         await hass.async_block_till_done()
         mock_stream_source.assert_not_called()
         assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
         # Test when the integration does not provide a stream_source should fail
-        with patch(
-            "homeassistant.components.demo.camera.DemoCamera.supported_features",
-            return_value=camera.SUPPORT_STREAM,
-        ):
-            resp = await client.get("/api/camera_proxy/camera.demo_camera")
-            await hass.async_block_till_done()
-            mock_stream_source.assert_called_once()
-            assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+        resp = await client.get("/api/camera_proxy/camera.demo_camera")
+        await hass.async_block_till_done()
+        mock_stream_source.assert_called_once()
+        assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
@@ -952,9 +944,6 @@ async def test_use_stream_for_stills(
     ) as mock_stream_source, patch(
         "homeassistant.components.camera.create_stream"
     ) as mock_create_stream, patch(
-        "homeassistant.components.demo.camera.DemoCamera.supported_features",
-        return_value=camera.SUPPORT_STREAM,
-    ), patch(
         "homeassistant.components.demo.camera.DemoCamera.use_stream_for_stills",
         return_value=True,
     ):
@@ -971,3 +960,65 @@ async def test_use_stream_for_stills(
         mock_stream.async_get_image.assert_called_once()
         assert resp.status == HTTPStatus.OK
         assert await resp.read() == b"stream_keyframe_image"
+
+
+@pytest.mark.parametrize(
+    "module",
+    [camera, camera.const],
+)
+def test_all(module: ModuleType) -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(module)
+
+
+@pytest.mark.parametrize(
+    "enum",
+    list(camera.const.StreamType),
+)
+@pytest.mark.parametrize(
+    "module",
+    [camera, camera.const],
+)
+def test_deprecated_stream_type_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: camera.const.StreamType,
+    module: ModuleType,
+) -> None:
+    """Test deprecated stream type constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, module, enum, "STREAM_TYPE_", "2025.1"
+    )
+
+
+@pytest.mark.parametrize(
+    "entity_feature",
+    list(camera.CameraEntityFeature),
+)
+def test_deprecated_support_constants(
+    caplog: pytest.LogCaptureFixture,
+    entity_feature: camera.CameraEntityFeature,
+) -> None:
+    """Test deprecated support constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, camera, entity_feature, "SUPPORT_", "2025.1"
+    )
+
+
+def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated supported features ints."""
+
+    class MockCamera(camera.Camera):
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return 1
+
+    entity = MockCamera()
+    assert entity.supported_features_compat is camera.CameraEntityFeature(1)
+    assert "MockCamera" in caplog.text
+    assert "is using deprecated supported features values" in caplog.text
+    assert "Instead it should use" in caplog.text
+    assert "CameraEntityFeature.ON_OFF" in caplog.text
+    caplog.clear()
+    assert entity.supported_features_compat is camera.CameraEntityFeature(1)
+    assert "is using deprecated supported features values" not in caplog.text

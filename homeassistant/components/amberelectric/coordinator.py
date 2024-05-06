@@ -30,19 +30,19 @@ def is_forecast(interval: ActualInterval | CurrentInterval | ForecastInterval) -
 
 def is_general(interval: ActualInterval | CurrentInterval | ForecastInterval) -> bool:
     """Return true if the supplied interval is on the general channel."""
-    return interval.channel_type == ChannelType.GENERAL
+    return interval.channel_type == ChannelType.GENERAL  # type: ignore[no-any-return]
 
 
 def is_controlled_load(
     interval: ActualInterval | CurrentInterval | ForecastInterval,
 ) -> bool:
     """Return true if the supplied interval is on the controlled load channel."""
-    return interval.channel_type == ChannelType.CONTROLLED_LOAD
+    return interval.channel_type == ChannelType.CONTROLLED_LOAD  # type: ignore[no-any-return]
 
 
 def is_feed_in(interval: ActualInterval | CurrentInterval | ForecastInterval) -> bool:
     """Return true if the supplied interval is on the feed in channel."""
-    return interval.channel_type == ChannelType.FEED_IN
+    return interval.channel_type == ChannelType.FEED_IN  # type: ignore[no-any-return]
 
 
 def normalize_descriptor(descriptor: Descriptor) -> str | None:

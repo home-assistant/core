@@ -7,10 +7,11 @@ from hassil.recognize import PUNCTUATION, RecognizeResult
 import voluptuous as vol
 
 from homeassistant.const import CONF_COMMAND, CONF_PLATFORM
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.script import ScriptRunResult
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType
 
 from . import HOME_ASSISTANT_AGENT, _get_agent_manager
 from .const import DOMAIN
@@ -60,7 +61,6 @@ async def async_attach_trigger(
 
     job = HassJob(action)
 
-    @callback
     async def call_action(sentence: str, result: RecognizeResult) -> str | None:
         """Call action with right context."""
 
@@ -91,9 +91,19 @@ async def async_attach_trigger(
             job,
             {"trigger": trigger_input},
         ):
-            await future
+            automation_result = await future
+            if isinstance(
+                automation_result, ScriptRunResult
+            ) and automation_result.conversation_response not in (None, UNDEFINED):
+                # mypy does not understand the type narrowing, unclear why
+                return automation_result.conversation_response  # type: ignore[return-value]
 
-        return "Done"
+        # It's important to return None here instead of a string.
+        #
+        # When editing in the UI, a copy of this trigger is registered.
+        # If we return a string from here, there is a race condition between the
+        # two trigger copies for who will provide a response.
+        return None
 
     default_agent = await _get_agent_manager(hass).async_get_agent(HOME_ASSISTANT_AGENT)
     assert isinstance(default_agent, DefaultAgent)

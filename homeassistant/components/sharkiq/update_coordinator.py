@@ -20,7 +20,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import API_TIMEOUT, DOMAIN, LOGGER, UPDATE_INTERVAL
 
 
-class SharkIqUpdateCoordinator(DataUpdateCoordinator[bool]):
+class SharkIqUpdateCoordinator(DataUpdateCoordinator[bool]):  # pylint: disable=hass-enforce-coordinator-module
     """Define a wrapper class to update Shark IQ data."""
 
     def __init__(

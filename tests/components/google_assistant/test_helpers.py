@@ -89,6 +89,7 @@ async def test_google_entity_sync_serialize_with_matter(
         manufacturer="Someone",
         model="Some model",
         sw_version="Some Version",
+        identifiers={("matter", "12345678")},
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     entity = entity_registry.async_get_or_create(

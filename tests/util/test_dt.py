@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-import time
 
 import pytest
 
@@ -146,6 +145,12 @@ def test_parse_datetime_converts_correctly() -> None:
 def test_parse_datetime_returns_none_for_incorrect_format() -> None:
     """Test parse_datetime returns None if incorrect format."""
     assert dt_util.parse_datetime("not a datetime string") is None
+
+
+def test_parse_datetime_raises_for_incorrect_format() -> None:
+    """Test parse_datetime raises ValueError if raise_on_error is set with an incorrect format."""
+    with pytest.raises(ValueError):
+        dt_util.parse_datetime("not a datetime string", raise_on_error=True)
 
 
 @pytest.mark.parametrize(
@@ -737,8 +742,3 @@ def test_find_next_time_expression_tenth_second_pattern_does_not_drift_entering_
         assert (next_target - prev_target).total_seconds() == 60
         assert next_target.second == 10
         prev_target = next_target
-
-
-def test_monotonic_time_coarse() -> None:
-    """Test monotonic time coarse."""
-    assert abs(time.monotonic() - dt_util.monotonic_time_coarse()) < 1

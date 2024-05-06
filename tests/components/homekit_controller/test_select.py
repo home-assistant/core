@@ -34,7 +34,7 @@ def create_service_with_temperature_units(accessory: Accessory):
 
 
 async def test_migrate_unique_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test we can migrate a select unique id."""
     aid = get_next_aid()
@@ -53,7 +53,7 @@ async def test_migrate_unique_id(
     )
 
 
-async def test_read_current_mode(hass: HomeAssistant, utcnow) -> None:
+async def test_read_current_mode(hass: HomeAssistant) -> None:
     """Test that Ecobee mode can be correctly read and show as human readable text."""
     helper = await setup_test_component(hass, create_service_with_ecobee_mode)
 
@@ -91,7 +91,7 @@ async def test_read_current_mode(hass: HomeAssistant, utcnow) -> None:
     assert state.state == "away"
 
 
-async def test_write_current_mode(hass: HomeAssistant, utcnow) -> None:
+async def test_write_current_mode(hass: HomeAssistant) -> None:
     """Test can set a specific mode."""
     helper = await setup_test_component(hass, create_service_with_ecobee_mode)
     helper.accessory.services.first(service_type=ServicesTypes.THERMOSTAT)
@@ -139,7 +139,7 @@ async def test_write_current_mode(hass: HomeAssistant, utcnow) -> None:
     )
 
 
-async def test_read_select(hass: HomeAssistant, utcnow) -> None:
+async def test_read_select(hass: HomeAssistant) -> None:
     """Test the generic select can read the current value."""
     helper = await setup_test_component(hass, create_service_with_temperature_units)
 
@@ -169,7 +169,7 @@ async def test_read_select(hass: HomeAssistant, utcnow) -> None:
     assert state.state == "fahrenheit"
 
 
-async def test_write_select(hass: HomeAssistant, utcnow) -> None:
+async def test_write_select(hass: HomeAssistant) -> None:
     """Test can set a value."""
     helper = await setup_test_component(hass, create_service_with_temperature_units)
     helper.accessory.services.first(service_type=ServicesTypes.THERMOSTAT)

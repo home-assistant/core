@@ -794,4 +794,6 @@ def purge_entity_data(
             _LOGGER.debug("Purging entity data hasn't fully completed yet")
             return False
 
+        _purge_old_entity_ids(instance, session)
+
     return True

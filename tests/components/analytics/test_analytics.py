@@ -180,9 +180,11 @@ async def test_send_base_with_supervisor(
         "homeassistant.components.hassio.is_hassio",
         side_effect=Mock(return_value=True),
     ), patch(
-        "uuid.UUID.hex", new_callable=PropertyMock
+        "uuid.UUID.hex",
+        new_callable=PropertyMock,
     ) as hex, patch(
-        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
+        "homeassistant.components.analytics.analytics.HA_VERSION",
+        MOCK_VERSION,
     ):
         hex.return_value = MOCK_UUID
         await analytics.load()
@@ -289,7 +291,8 @@ async def test_send_usage_with_supervisor(
         "homeassistant.components.hassio.is_hassio",
         side_effect=Mock(return_value=True),
     ), patch(
-        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
+        "homeassistant.components.analytics.analytics.HA_VERSION",
+        MOCK_VERSION,
     ):
         await analytics.send_analytics()
     assert (
@@ -492,7 +495,8 @@ async def test_send_statistics_with_supervisor(
         "homeassistant.components.hassio.is_hassio",
         side_effect=Mock(return_value=True),
     ), patch(
-        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
+        "homeassistant.components.analytics.analytics.HA_VERSION",
+        MOCK_VERSION,
     ):
         await analytics.send_analytics()
     assert "'addon_count': 1" in caplog.text

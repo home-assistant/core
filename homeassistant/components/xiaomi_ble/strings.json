@@ -40,8 +40,42 @@
     }
   },
   "device_automation": {
+    "trigger_subtype": {
+      "press": "Press",
+      "double_press": "Double Press",
+      "long_press": "Long Press",
+      "motion_detected": "Motion Detected"
+    },
     "trigger_type": {
-      "motion_detected": "Motion detected"
+      "button": "Button \"{subtype}\"",
+      "button_left": "Button Left \"{subtype}\"",
+      "button_middle": "Button Middle \"{subtype}\"",
+      "button_right": "Button Right \"{subtype}\"",
+      "motion": "{subtype}"
+    }
+  },
+  "entity": {
+    "event": {
+      "button": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press": "Press",
+              "double_press": "Double press",
+              "long_press": "Long press"
+            }
+          }
+        }
+      },
+      "motion": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion_detected": "Motion Detected"
+            }
+          }
+        }
+      }
     }
   }
 }

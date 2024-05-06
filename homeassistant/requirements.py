@@ -63,6 +63,13 @@ async def async_process_requirements(
     await _async_get_manager(hass).async_process_requirements(name, requirements)
 
 
+async def async_load_installed_versions(
+    hass: HomeAssistant, requirements: set[str]
+) -> None:
+    """Load the installed version of requirements."""
+    await _async_get_manager(hass).async_load_installed_versions(requirements)
+
+
 @callback
 def _async_get_manager(hass: HomeAssistant) -> RequirementsManager:
     """Get the requirements manager."""
@@ -284,3 +291,15 @@ class RequirementsManager:
         self.install_failure_history |= failures
         if failures:
             raise RequirementsNotFound(name, list(failures))
+
+    async def async_load_installed_versions(
+        self,
+        requirements: set[str],
+    ) -> None:
+        """Load the installed version of requirements."""
+        if not (requirements_to_check := requirements - self.is_installed_cache):
+            return
+
+        self.is_installed_cache |= await self.hass.async_add_executor_job(
+            pkg_util.get_installed_versions, requirements_to_check
+        )

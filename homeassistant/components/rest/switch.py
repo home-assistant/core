@@ -171,7 +171,7 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
         try:
             req = await self.set_device_state(body_on_t)
 
-            if req.status_code == HTTPStatus.OK:
+            if HTTPStatus.OK <= req.status_code < HTTPStatus.MULTIPLE_CHOICES:
                 self._attr_is_on = True
             else:
                 _LOGGER.error(
@@ -186,7 +186,7 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
 
         try:
             req = await self.set_device_state(body_off_t)
-            if req.status_code == HTTPStatus.OK:
+            if HTTPStatus.OK <= req.status_code < HTTPStatus.MULTIPLE_CHOICES:
                 self._attr_is_on = False
             else:
                 _LOGGER.error(
@@ -202,22 +202,22 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
         rendered_headers = template.render_complex(self._headers, parse_result=False)
         rendered_params = template.render_complex(self._params)
 
-        async with asyncio.timeout(self._timeout):
-            req: httpx.Response = await getattr(websession, self._method)(
-                self._resource,
-                auth=self._auth,
-                content=bytes(body, "utf-8"),
-                headers=rendered_headers,
-                params=rendered_params,
-            )
-            return req
+        req: httpx.Response = await getattr(websession, self._method)(
+            self._resource,
+            auth=self._auth,
+            content=bytes(body, "utf-8"),
+            headers=rendered_headers,
+            params=rendered_params,
+            timeout=self._timeout,
+        )
+        return req
 
     async def async_update(self) -> None:
         """Get the current state, catching errors."""
         req = None
         try:
             req = await self.get_device_state(self.hass)
-        except asyncio.TimeoutError:
+        except (asyncio.TimeoutError, httpx.TimeoutException):
             _LOGGER.exception("Timed out while fetching data")
         except httpx.RequestError as err:
             _LOGGER.exception("Error while fetching data: %s", err)
@@ -233,14 +233,14 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
         rendered_headers = template.render_complex(self._headers, parse_result=False)
         rendered_params = template.render_complex(self._params)
 
-        async with asyncio.timeout(self._timeout):
-            req = await websession.get(
-                self._state_resource,
-                auth=self._auth,
-                headers=rendered_headers,
-                params=rendered_params,
-            )
-            text = req.text
+        req = await websession.get(
+            self._state_resource,
+            auth=self._auth,
+            headers=rendered_headers,
+            params=rendered_params,
+            timeout=self._timeout,
+        )
+        text = req.text
 
         if self._is_on_template is not None:
             text = self._is_on_template.async_render_with_possible_json_value(

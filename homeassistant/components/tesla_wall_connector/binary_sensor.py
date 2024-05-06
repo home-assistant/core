@@ -22,7 +22,7 @@ from .const import DOMAIN, WALLCONNECTOR_DATA_VITALS
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class WallConnectorBinarySensorDescription(
     BinarySensorEntityDescription, WallConnectorLambdaValueGetterMixin
 ):

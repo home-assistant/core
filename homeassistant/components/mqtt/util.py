@@ -63,9 +63,8 @@ async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
 
     state_reached_future: asyncio.Future[bool]
     if DATA_MQTT_AVAILABLE not in hass.data:
-        hass.data[
-            DATA_MQTT_AVAILABLE
-        ] = state_reached_future = hass.loop.create_future()
+        state_reached_future = hass.loop.create_future()
+        hass.data[DATA_MQTT_AVAILABLE] = state_reached_future
     else:
         state_reached_future = hass.data[DATA_MQTT_AVAILABLE]
         if state_reached_future.done():

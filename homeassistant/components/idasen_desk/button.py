@@ -21,7 +21,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class IdasenDeskButtonDescriptionMixin:
     """Mixin to describe a IdasenDesk button entity."""
 
@@ -30,7 +30,7 @@ class IdasenDeskButtonDescriptionMixin:
     ]
 
 
-@dataclass
+@dataclass(frozen=True)
 class IdasenDeskButtonDescription(
     ButtonEntityDescription, IdasenDeskButtonDescriptionMixin
 ):

@@ -17,14 +17,14 @@ from .coordinator import RokuDataUpdateCoordinator
 from .entity import RokuEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class RokuSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[RokuDevice], str | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RokuSensorEntityDescription(
     SensorEntityDescription, RokuSensorEntityDescriptionMixin
 ):

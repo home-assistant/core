@@ -154,9 +154,9 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
             _LOGGER.exception("Failed to update app list")
         else:
             self._app_list = {
-                app.name: app.identifier
-                for app in sorted(apps, key=lambda app: app.name.lower())
-                if app.name is not None
+                app_name: app.identifier
+                for app in sorted(apps, key=lambda app: (app.name or "").lower())
+                if (app_name := app.name) is not None
             }
             self.async_write_ha_state()
 
@@ -214,15 +214,19 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
     @property
     def app_id(self) -> str | None:
         """ID of the current running app."""
-        if self._is_feature_available(FeatureName.App):
-            return self.atv.metadata.app.identifier
+        if self._is_feature_available(FeatureName.App) and (
+            app := self.atv.metadata.app
+        ):
+            return app.identifier
         return None
 
     @property
     def app_name(self) -> str | None:
         """Name of the current running app."""
-        if self._is_feature_available(FeatureName.App):
-            return self.atv.metadata.app.name
+        if self._is_feature_available(FeatureName.App) and (
+            app := self.atv.metadata.app
+        ):
+            return app.name
         return None
 
     @property
@@ -479,7 +483,7 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         if self.atv:
-            await self.atv.remote_control.set_position(position)
+            await self.atv.remote_control.set_position(round(position))
 
     async def async_volume_up(self) -> None:
         """Turn volume up for media player."""

@@ -1,0 +1,21 @@
+{
+  "id": 0,
+  "registration": true,
+  "readonly": true,
+  "deviceReadonly": true,
+  "limitCommands": true,
+  "map": null,
+  "bingKey": null,
+  "mapUrl": null,
+  "poiLayer": null,
+  "latitude": 0,
+  "longitude": 0,
+  "zoom": 0,
+  "twelveHourFormat": true,
+  "version": "99.99",
+  "forceSettings": true,
+  "coordinateFormat": null,
+  "openIdEnabled": true,
+  "openIdForce": true,
+  "attributes": {}
+}

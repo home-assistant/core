@@ -1,0 +1,11 @@
+{
+  "domain": "rabbitair",
+  "name": "Rabbit Air",
+  "after_dependencies": ["zeroconf"],
+  "codeowners": ["@rabbit-air"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/rabbitair",
+  "iot_class": "local_polling",
+  "requirements": ["python-rabbitair==0.0.8"],
+  "zeroconf": ["_rabbitair._udp.local."]
+}

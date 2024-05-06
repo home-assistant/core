@@ -33,7 +33,7 @@ from .const import (
 from .coordinator import SpeedTestDataCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class SpeedtestSensorEntityDescription(SensorEntityDescription):
     """Class describing Speedtest sensor entities."""
 

@@ -870,7 +870,7 @@ async def test_restore_states(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test restoring states."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     entity_registry.async_get_or_create(
         "light",
@@ -936,7 +936,7 @@ async def test_async_get_device_class_lookup(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test registry device class lookup."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     entity_registry.async_get_or_create(
         "binary_sensor",

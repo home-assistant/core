@@ -52,9 +52,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_MONITORED_CONDITIONS, default=SWITCH_KEYS): vol.All(
             cv.ensure_list, [vol.In(SWITCH_KEYS)]
         ),
-        vol.Optional(CONF_WATERING_TIME, default=DEFAULT_WATERING_TIME): vol.All(
-            vol.In(ALLOWED_WATERING_TIME)
-        ),
+        vol.Optional(
+            CONF_WATERING_TIME, default=DEFAULT_WATERING_TIME.total_seconds() // 60
+        ): vol.All(vol.In(ALLOWED_WATERING_TIME)),
     }
 )
 
@@ -81,7 +81,7 @@ async def async_setup_entry(
     ]
     async_add_entities(
         HydrawiseSwitch(coordinator, description, controller, zone)
-        for controller in coordinator.data.controllers
+        for controller in coordinator.data.controllers.values()
         for zone in controller.zones
         for description in SWITCH_TYPES
     )
@@ -96,7 +96,7 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
         """Turn the device on."""
         if self.entity_description.key == "manual_watering":
             await self.coordinator.api.start_zone(
-                self.zone, custom_run_duration=DEFAULT_WATERING_TIME
+                self.zone, custom_run_duration=DEFAULT_WATERING_TIME.total_seconds()
             )
         elif self.entity_description.key == "auto_watering":
             await self.coordinator.api.resume_zone(self.zone)

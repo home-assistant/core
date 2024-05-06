@@ -31,10 +31,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.percentage import (
-    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
+from homeassistant.util.scaling import int_states_in_range
 
 from . import subscription
 from .config import MQTT_RW_SCHEMA
@@ -553,8 +553,6 @@ class MqttFan(MqttEntity, FanEntity):
 
         This method is a coroutine.
         """
-        self._valid_preset_mode_or_raise(preset_mode)
-
         mqtt_payload = self._command_templates[ATTR_PRESET_MODE](preset_mode)
 
         await self.async_publish(

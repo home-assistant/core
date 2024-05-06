@@ -123,6 +123,12 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "connectable": False,
         "domain": "govee_ble",
+        "manufacturer_id": 1,
+        "service_uuid": "0000ec88-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "govee_ble",
         "manufacturer_id": 6966,
         "service_uuid": "00008451-0000-1000-8000-00805f9b34fb",
     },
@@ -344,6 +350,15 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
     },
     {
+        "connectable": False,
+        "domain": "mopeka",
+        "manufacturer_data_start": [
+            12,
+        ],
+        "manufacturer_id": 89,
+        "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
+    },
+    {
         "domain": "oralb",
         "manufacturer_id": 220,
     },
@@ -423,6 +438,12 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False,
         "domain": "sensorpush",
         "local_name": "SensorPush*",
+    },
+    {
+        "connectable": False,
+        "domain": "sensorpush",
+        "local_name": "s",
+        "service_uuid": "ef090000-11d6-42ba-93b8-9dd7ec090aa9",
     },
     {
         "domain": "snooz",
@@ -521,6 +542,11 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False,
         "domain": "thermopro",
         "local_name": "TP39*",
+    },
+    {
+        "connectable": False,
+        "domain": "thermopro",
+        "local_name": "TP96*",
     },
     {
         "domain": "tilt_ble",

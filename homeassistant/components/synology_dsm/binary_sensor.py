@@ -27,7 +27,7 @@ from .entity import (
 from .models import SynologyDSMData
 
 
-@dataclass
+@dataclass(frozen=True)
 class SynologyDSMBinarySensorEntityDescription(
     BinarySensorEntityDescription, SynologyDSMEntityDescription
 ):

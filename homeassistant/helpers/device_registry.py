@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections import UserDict
 from collections.abc import Coroutine, ValuesView
 from enum import StrEnum
+from functools import partial
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
@@ -21,8 +22,14 @@ import homeassistant.util.uuid as uuid_util
 
 from . import storage
 from .debounce import Debouncer
+from .deprecation import (
+    DeprecatedConstantEnum,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from .frame import report
-from .json import JSON_DUMP, find_paths_unserializable_data
+from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -61,9 +68,13 @@ class DeviceEntryDisabler(StrEnum):
 
 
 # DISABLED_* are deprecated, to be removed in 2022.3
-DISABLED_CONFIG_ENTRY = DeviceEntryDisabler.CONFIG_ENTRY.value
-DISABLED_INTEGRATION = DeviceEntryDisabler.INTEGRATION.value
-DISABLED_USER = DeviceEntryDisabler.USER.value
+_DEPRECATED_DISABLED_CONFIG_ENTRY = DeprecatedConstantEnum(
+    DeviceEntryDisabler.CONFIG_ENTRY, "2025.1"
+)
+_DEPRECATED_DISABLED_INTEGRATION = DeprecatedConstantEnum(
+    DeviceEntryDisabler.INTEGRATION, "2025.1"
+)
+_DEPRECATED_DISABLED_USER = DeprecatedConstantEnum(DeviceEntryDisabler.USER, "2025.1")
 
 
 class DeviceInfo(TypedDict, total=False):
@@ -266,11 +277,11 @@ class DeviceEntry:
         }
 
     @cached_property
-    def json_repr(self) -> str | None:
+    def json_repr(self) -> bytes | None:
         """Return a cached JSON representation of the entry."""
         try:
             dict_repr = self.dict_repr
-            return JSON_DUMP(dict_repr)
+            return json_bytes(dict_repr)
         except (ValueError, TypeError):
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
@@ -1099,3 +1110,11 @@ def _normalize_connections(connections: set[tuple[str, str]]) -> set[tuple[str, 
         (key, format_mac(value)) if key == CONNECTION_NETWORK_MAC else (key, value)
         for key, value in connections
     }
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

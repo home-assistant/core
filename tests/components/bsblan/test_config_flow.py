@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 
 async def test_full_user_flow_implementation(
     hass: HomeAssistant,
-    mock_bsblan_config_flow: MagicMock,
+    mock_bsblan: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test the full manual user flow from start to finish."""
@@ -52,7 +52,7 @@ async def test_full_user_flow_implementation(
     assert result2["result"].unique_id == format_mac("00:80:41:19:69:90")
 
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_bsblan_config_flow.device.mock_calls) == 1
+    assert len(mock_bsblan.device.mock_calls) == 1
 
 
 async def test_show_user_form(hass: HomeAssistant) -> None:
@@ -68,10 +68,10 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
 
 async def test_connection_error(
     hass: HomeAssistant,
-    mock_bsblan_config_flow: MagicMock,
+    mock_bsblan: MagicMock,
 ) -> None:
     """Test we show user form on BSBLan connection error."""
-    mock_bsblan_config_flow.device.side_effect = BSBLANConnectionError
+    mock_bsblan.device.side_effect = BSBLANConnectionError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -92,7 +92,7 @@ async def test_connection_error(
 
 async def test_user_device_exists_abort(
     hass: HomeAssistant,
-    mock_bsblan_config_flow: MagicMock,
+    mock_bsblan: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we abort flow if BSBLAN device already configured."""

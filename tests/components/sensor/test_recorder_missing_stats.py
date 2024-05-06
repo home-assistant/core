@@ -52,7 +52,7 @@ def test_compile_missing_statistics(
     start_time = three_days_ago + timedelta(days=3)
     freezer.move_to(three_days_ago)
     hass: HomeAssistant = get_test_home_assistant()
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, "sensor", {})
     setup_component(hass, "recorder", {"recorder": config})
@@ -90,7 +90,7 @@ def test_compile_missing_statistics(
     hass.stop()
     freezer.move_to(start_time)
     hass: HomeAssistant = get_test_home_assistant()
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, "sensor", {})
     hass.states.set("sensor.test1", "0", POWER_SENSOR_ATTRIBUTES)

@@ -55,6 +55,7 @@ DISCOVERY_INFO_WITH_MAC = zeroconf.ZeroconfServiceInfo(
     [
         (1, MODEL_1),
         (2, MODEL_PLUS_2PM),
+        (3, MODEL_PLUS_2PM),
     ],
 )
 async def test_form(
@@ -105,6 +106,12 @@ async def test_form(
         ),
         (
             2,
+            MODEL_PLUS_2PM,
+            {"password": "test2 password"},
+            "admin",
+        ),
+        (
+            3,
             MODEL_PLUS_2PM,
             {"password": "test2 password"},
             "admin",
@@ -465,6 +472,11 @@ async def test_form_auth_errors_test_connection_gen2(
             MODEL_PLUS_2PM,
             {"mac": "test-mac", "model": MODEL_PLUS_2PM, "auth": False, "gen": 2},
         ),
+        (
+            3,
+            MODEL_PLUS_2PM,
+            {"mac": "test-mac", "model": MODEL_PLUS_2PM, "auth": False, "gen": 3},
+        ),
     ],
 )
 async def test_zeroconf(
@@ -742,6 +754,7 @@ async def test_zeroconf_require_auth(hass: HomeAssistant, mock_block_device) -> 
     [
         (1, {"username": "test user", "password": "test1 password"}),
         (2, {"password": "test2 password"}),
+        (3, {"password": "test2 password"}),
     ],
 )
 async def test_reauth_successful(
@@ -780,6 +793,7 @@ async def test_reauth_successful(
     [
         (1, {"username": "test user", "password": "test1 password"}),
         (2, {"password": "test2 password"}),
+        (3, {"password": "test2 password"}),
     ],
 )
 async def test_reauth_unsuccessful(hass: HomeAssistant, gen, user_input) -> None:
@@ -963,62 +977,6 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device) -> None:
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BLE_SCANNER_MODE] == BLEScannerMode.PASSIVE
-
-    await hass.config_entries.async_unload(entry.entry_id)
-
-
-async def test_options_flow_pre_ble_device(
-    hass: HomeAssistant, mock_pre_ble_rpc_device
-) -> None:
-    """Test setting ble options for gen2 devices with pre ble firmware."""
-    entry = await init_integration(hass, 2)
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "init"
-    assert result["errors"] is None
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_BLE_SCANNER_MODE: BLEScannerMode.DISABLED,
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_BLE_SCANNER_MODE] == BLEScannerMode.DISABLED
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "init"
-    assert result["errors"] is None
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE,
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result["reason"] == "ble_unsupported"
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "init"
-    assert result["errors"] is None
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_BLE_SCANNER_MODE: BLEScannerMode.PASSIVE,
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result["reason"] == "ble_unsupported"
 
     await hass.config_entries.async_unload(entry.entry_id)
 

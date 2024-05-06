@@ -58,7 +58,7 @@ from .coordinator import (
 from .entity import WithingsEntity
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class WithingsMeasurementSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
@@ -107,7 +107,6 @@ MEASUREMENT_SENSORS: dict[
         key="bone_mass_kg",
         measurement_type=MeasurementType.BONE_MASS,
         translation_key="bone_mass",
-        icon="mdi:bone",
         native_unit_of_measurement=UnitOfMass.KILOGRAMS,
         suggested_display_precision=2,
         device_class=SensorDeviceClass.WEIGHT,
@@ -173,7 +172,6 @@ MEASUREMENT_SENSORS: dict[
         measurement_type=MeasurementType.HEART_RATE,
         translation_key="heart_pulse",
         native_unit_of_measurement=UOM_BEATS_PER_MINUTE,
-        icon="mdi:heart-pulse",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     MeasurementType.SP02: WithingsMeasurementSensorEntityDescription(
@@ -189,7 +187,6 @@ MEASUREMENT_SENSORS: dict[
         translation_key="hydration",
         native_unit_of_measurement=UnitOfMass.KILOGRAMS,
         device_class=SensorDeviceClass.WEIGHT,
-        icon="mdi:water",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
@@ -233,10 +230,37 @@ MEASUREMENT_SENSORS: dict[
         translation_key="vascular_age",
         entity_registry_enabled_default=False,
     ),
+    MeasurementType.VISCERAL_FAT: WithingsMeasurementSensorEntityDescription(
+        key="visceral_fat",
+        measurement_type=MeasurementType.VISCERAL_FAT,
+        translation_key="visceral_fat_index",
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.ELECTRODERMAL_ACTIVITY_FEET: WithingsMeasurementSensorEntityDescription(
+        key="electrodermal_activity_feet",
+        measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_FEET,
+        translation_key="electrodermal_activity_feet",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.ELECTRODERMAL_ACTIVITY_LEFT_FOOT: WithingsMeasurementSensorEntityDescription(
+        key="electrodermal_activity_left_foot",
+        measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_LEFT_FOOT,
+        translation_key="electrodermal_activity_left_foot",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.ELECTRODERMAL_ACTIVITY_RIGHT_FOOT: WithingsMeasurementSensorEntityDescription(
+        key="electrodermal_activity_right_foot",
+        measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_RIGHT_FOOT,
+        translation_key="electrodermal_activity_right_foot",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=False,
+    ),
 }
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class WithingsSleepSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
@@ -256,7 +280,6 @@ SLEEP_SENSORS = [
         value_fn=lambda sleep_summary: sleep_summary.deep_sleep_duration,
         translation_key="deep_sleep",
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        icon="mdi:sleep",
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -265,7 +288,6 @@ SLEEP_SENSORS = [
         value_fn=lambda sleep_summary: sleep_summary.sleep_latency,
         translation_key="time_to_sleep",
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        icon="mdi:sleep",
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -275,7 +297,6 @@ SLEEP_SENSORS = [
         value_fn=lambda sleep_summary: sleep_summary.wake_up_latency,
         translation_key="time_to_wakeup",
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        icon="mdi:sleep-off",
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -285,7 +306,6 @@ SLEEP_SENSORS = [
         value_fn=lambda sleep_summary: sleep_summary.average_heart_rate,
         translation_key="average_heart_rate",
         native_unit_of_measurement=UOM_BEATS_PER_MINUTE,
-        icon="mdi:heart-pulse",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
@@ -294,7 +314,6 @@ SLEEP_SENSORS = [
         value_fn=lambda sleep_summary: sleep_summary.max_heart_rate,
         translation_key="maximum_heart_rate",
         native_unit_of_measurement=UOM_BEATS_PER_MINUTE,
-        icon="mdi:heart-pulse",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
@@ -303,7 +322,6 @@ SLEEP_SENSORS = [
         value_fn=lambda sleep_summary: sleep_summary.min_heart_rate,
         translation_key="minimum_heart_rate",
         native_unit_of_measurement=UOM_BEATS_PER_MINUTE,
-        icon="mdi:heart-pulse",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
@@ -312,7 +330,6 @@ SLEEP_SENSORS = [
         value_fn=lambda sleep_summary: sleep_summary.light_sleep_duration,
         translation_key="light_sleep",
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        icon="mdi:sleep",
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -322,7 +339,6 @@ SLEEP_SENSORS = [
         value_fn=lambda sleep_summary: sleep_summary.rem_sleep_duration,
         translation_key="rem_sleep",
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        icon="mdi:sleep",
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -356,7 +372,6 @@ SLEEP_SENSORS = [
         value_fn=lambda sleep_summary: sleep_summary.sleep_score,
         translation_key="sleep_score",
         native_unit_of_measurement=SCORE_POINTS,
-        icon="mdi:medal",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
@@ -379,7 +394,6 @@ SLEEP_SENSORS = [
         value_fn=lambda sleep_summary: sleep_summary.wake_up_count,
         translation_key="wakeup_count",
         native_unit_of_measurement=UOM_FREQUENCY,
-        icon="mdi:sleep-off",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
@@ -388,7 +402,6 @@ SLEEP_SENSORS = [
         value_fn=lambda sleep_summary: sleep_summary.total_time_awake,
         translation_key="wakeup_time",
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        icon="mdi:sleep-off",
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -396,7 +409,7 @@ SLEEP_SENSORS = [
 ]
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class WithingsActivitySensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
@@ -408,7 +421,6 @@ ACTIVITY_SENSORS = [
         key="activity_steps_today",
         value_fn=lambda activity: activity.steps,
         translation_key="activity_steps_today",
-        icon="mdi:shoe-print",
         native_unit_of_measurement="steps",
         state_class=SensorStateClass.TOTAL,
     ),
@@ -417,17 +429,16 @@ ACTIVITY_SENSORS = [
         value_fn=lambda activity: activity.distance,
         translation_key="activity_distance_today",
         suggested_display_precision=0,
-        icon="mdi:map-marker-distance",
         native_unit_of_measurement=UnitOfLength.METERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.TOTAL,
     ),
     WithingsActivitySensorEntityDescription(
         key="activity_floors_climbed_today",
-        value_fn=lambda activity: activity.floors_climbed,
-        translation_key="activity_floors_climbed_today",
-        icon="mdi:stairs-up",
-        native_unit_of_measurement="floors",
+        value_fn=lambda activity: activity.elevation,
+        translation_key="activity_elevation_today",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.TOTAL,
     ),
     WithingsActivitySensorEntityDescription(
@@ -493,7 +504,7 @@ SLEEP_GOAL = "sleep"
 WEIGHT_GOAL = "weight"
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class WithingsGoalsSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
@@ -504,7 +515,6 @@ GOALS_SENSORS: dict[str, WithingsGoalsSensorEntityDescription] = {
     STEP_GOAL: WithingsGoalsSensorEntityDescription(
         key="step_goal",
         value_fn=lambda goals: goals.steps,
-        icon="mdi:shoe-print",
         translation_key="step_goal",
         native_unit_of_measurement="steps",
         state_class=SensorStateClass.MEASUREMENT,
@@ -512,7 +522,6 @@ GOALS_SENSORS: dict[str, WithingsGoalsSensorEntityDescription] = {
     SLEEP_GOAL: WithingsGoalsSensorEntityDescription(
         key="sleep_goal",
         value_fn=lambda goals: goals.sleep,
-        icon="mdi:bed-clock",
         translation_key="sleep_goal",
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
@@ -530,7 +539,7 @@ GOALS_SENSORS: dict[str, WithingsGoalsSensorEntityDescription] = {
 }
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class WithingsWorkoutSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
@@ -564,14 +573,13 @@ WORKOUT_SENSORS = [
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.METERS,
         suggested_display_precision=0,
-        icon="mdi:map-marker-distance",
     ),
     WithingsWorkoutSensorEntityDescription(
         key="workout_floors_climbed",
-        value_fn=lambda workout: workout.floors_climbed,
-        translation_key="workout_floors_climbed",
-        icon="mdi:stairs-up",
-        native_unit_of_measurement="floors",
+        value_fn=lambda workout: workout.elevation,
+        translation_key="workout_elevation",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        device_class=SensorDeviceClass.DISTANCE,
     ),
     WithingsWorkoutSensorEntityDescription(
         key="workout_intensity",
@@ -582,7 +590,6 @@ WORKOUT_SENSORS = [
         key="workout_pause_duration",
         value_fn=lambda workout: workout.pause_duration or 0,
         translation_key="workout_pause_duration",
-        icon="mdi:timer-pause",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.MINUTES,
@@ -593,7 +600,6 @@ WORKOUT_SENSORS = [
             workout.end_date - workout.start_date
         ).total_seconds(),
         translation_key="workout_duration",
-        icon="mdi:timer",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.MINUTES,

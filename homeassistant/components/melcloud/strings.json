@@ -8,6 +8,14 @@
           "username": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Melcloud integration needs to re-authenticate your connection details",
+        "data": {
+          "username": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {
@@ -16,6 +24,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "already_configured": "MELCloud integration already configured for this email. Access token has been refreshed."
     }
   },

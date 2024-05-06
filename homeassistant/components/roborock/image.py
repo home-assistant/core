@@ -109,7 +109,11 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         """Create an image using the map parser."""
         parsed_map = self.parser.parse(map_bytes)
         if parsed_map.image is None:
-            raise HomeAssistantError("Something went wrong creating the map.")
+            raise HomeAssistantError(
+                "Something went wrong creating the map",
+                translation_domain=DOMAIN,
+                translation_key="map_failure",
+            )
         img_byte_arr = io.BytesIO()
         parsed_map.image.data.save(img_byte_arr, format="PNG")
         return img_byte_arr.getvalue()

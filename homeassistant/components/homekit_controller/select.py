@@ -19,14 +19,14 @@ from .connection import HKDevice
 from .entity import CharacteristicEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class HomeKitSelectEntityDescriptionRequired:
     """Required fields for HomeKitSelectEntityDescription."""
 
     choices: dict[str, IntEnum]
 
 
-@dataclass
+@dataclass(frozen=True)
 class HomeKitSelectEntityDescription(
     SelectEntityDescription, HomeKitSelectEntityDescriptionRequired
 ):

@@ -131,7 +131,10 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
 
     zone_type = capabilities["type"]
     support_flags = (
-        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+        ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     supported_hvac_modes = [
         TADO_TO_HA_HVAC_MODE_MAP[CONST_MODE_OFF],
@@ -221,6 +224,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     _attr_name = None
     _attr_translation_key = DOMAIN
     _available = False
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

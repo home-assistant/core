@@ -57,10 +57,7 @@ async def test_single_instance_allowed(
 
 async def test_import_flow_success(hass: HomeAssistant) -> None:
     """Test import flow."""
-    with patch(
-        "homeassistant.components.fastdotcom.__init__.SpeedtestData",
-        return_value={"download": "50"},
-    ), patch("homeassistant.components.fastdotcom.sensor.SpeedtestSensor"):
+    with patch("homeassistant.components.fastdotcom.coordinator.fast_com"):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},

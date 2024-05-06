@@ -3,16 +3,13 @@ from __future__ import annotations
 
 from aioesphomeapi import APIClient, APIVersion, BluetoothProxyFeature, DeviceInfo
 from bleak.exc import BleakError
+from bleak_esphome.backend.cache import ESPHomeBluetoothCache
+from bleak_esphome.backend.client import ESPHomeClient, ESPHomeClientData
+from bleak_esphome.backend.device import ESPHomeBluetoothDevice
+from bleak_esphome.backend.scanner import ESPHomeScanner
 import pytest
 
 from homeassistant.components.bluetooth import HaBluetoothConnector
-from homeassistant.components.esphome.bluetooth.cache import ESPHomeBluetoothCache
-from homeassistant.components.esphome.bluetooth.client import (
-    ESPHomeClient,
-    ESPHomeClientData,
-)
-from homeassistant.components.esphome.bluetooth.device import ESPHomeBluetoothDevice
-from homeassistant.components.esphome.bluetooth.scanner import ESPHomeScanner
 from homeassistant.core import HomeAssistant
 
 from tests.components.bluetooth import generate_ble_device
@@ -35,17 +32,15 @@ async def client_data_fixture(
             mac_address=ESP_MAC_ADDRESS,
             name=ESP_NAME,
             bluetooth_proxy_feature_flags=BluetoothProxyFeature.PASSIVE_SCAN
-            & BluetoothProxyFeature.ACTIVE_CONNECTIONS
-            & BluetoothProxyFeature.REMOTE_CACHING
-            & BluetoothProxyFeature.PAIRING
-            & BluetoothProxyFeature.CACHE_CLEARING
-            & BluetoothProxyFeature.RAW_ADVERTISEMENTS,
+            | BluetoothProxyFeature.ACTIVE_CONNECTIONS
+            | BluetoothProxyFeature.REMOTE_CACHING
+            | BluetoothProxyFeature.PAIRING
+            | BluetoothProxyFeature.CACHE_CLEARING
+            | BluetoothProxyFeature.RAW_ADVERTISEMENTS,
         ),
         api_version=APIVersion(1, 9),
         title=ESP_NAME,
-        scanner=ESPHomeScanner(
-            hass, ESP_MAC_ADDRESS, ESP_NAME, lambda info: None, connector, True
-        ),
+        scanner=ESPHomeScanner(ESP_MAC_ADDRESS, ESP_NAME, connector, True),
     )
 
 

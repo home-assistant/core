@@ -413,7 +413,6 @@
             'servicePack': 'WAVE_01',
           }),
           'fetched_at': '2022-07-10T11:00:00+00:00',
-          'is_metric': True,
           'mappingInfo': dict({
             'isAssociated': False,
             'isLmmEnabled': False,
@@ -1288,7 +1287,6 @@
             'servicePack': 'WAVE_01',
           }),
           'fetched_at': '2022-07-10T11:00:00+00:00',
-          'is_metric': True,
           'mappingInfo': dict({
             'isAssociated': False,
             'isLmmEnabled': False,
@@ -1979,7 +1977,6 @@
           'charging_settings': dict({
           }),
           'fetched_at': '2022-07-10T11:00:00+00:00',
-          'is_metric': True,
           'mappingInfo': dict({
             'isAssociated': False,
             'isLmmEnabled': False,
@@ -2734,7 +2731,6 @@
             'servicePack': 'TCB1',
           }),
           'fetched_at': '2022-07-10T11:00:00+00:00',
-          'is_metric': True,
           'mappingInfo': dict({
             'isPrimaryUser': True,
             'mappingStatus': 'CONFIRMED',
@@ -5070,7 +5066,6 @@
           'servicePack': 'TCB1',
         }),
         'fetched_at': '2022-07-10T11:00:00+00:00',
-        'is_metric': True,
         'mappingInfo': dict({
           'isPrimaryUser': True,
           'mappingStatus': 'CONFIRMED',

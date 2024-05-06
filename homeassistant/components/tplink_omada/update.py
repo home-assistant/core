@@ -34,7 +34,7 @@ class FirmwareUpdateStatus(NamedTuple):
     firmware: OmadaFirmwareUpdate | None
 
 
-class OmadaFirmwareUpdateCoodinator(OmadaCoordinator[FirmwareUpdateStatus]):
+class OmadaFirmwareUpdateCoodinator(OmadaCoordinator[FirmwareUpdateStatus]):  # pylint: disable=hass-enforce-coordinator-module
     """Coordinator for getting details about ports on a switch."""
 
     def __init__(self, hass: HomeAssistant, omada_client: OmadaSiteClient) -> None:

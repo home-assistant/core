@@ -26,6 +26,7 @@ from . import api
 from .const import DOMAIN, YOLINK_EVENT
 from .coordinator import YoLinkCoordinator
 from .device_trigger import CONF_LONG_PRESS, CONF_SHORT_PRESS
+from .services import async_register_services
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -36,6 +37,7 @@ PLATFORMS = [
     Platform.COVER,
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
@@ -144,6 +146,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         yolink_home, device_coordinators
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    async_register_services(hass, entry)
 
     async def async_yolink_unload(event) -> None:
         """Unload yolink."""

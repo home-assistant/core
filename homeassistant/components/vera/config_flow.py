@@ -44,7 +44,7 @@ def new_options(lights: list[int], exclude: list[int]) -> dict[str, list[int]]:
 
 
 def options_schema(
-    options: Mapping[str, Any] | None = None
+    options: Mapping[str, Any] | None = None,
 ) -> dict[vol.Optional, type[str]]:
     """Return options schema."""
     options = options or {}

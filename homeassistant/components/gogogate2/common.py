@@ -47,7 +47,7 @@ class StateData(NamedTuple):
 
 class DeviceDataUpdateCoordinator(
     DataUpdateCoordinator[GogoGate2InfoResponse | ISmartGateInfoResponse]
-):
+):  # pylint: disable=hass-enforce-coordinator-module
     """Manages polling for state changes from the device."""
 
     def __init__(
