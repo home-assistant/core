@@ -29,10 +29,8 @@ from .const import (
     DEFAULT_OWM_MODE,
     DOMAIN,
     LANGUAGES,
-    OWM_MODE_V30,
     OWM_MODES,
 )
-from .repairs import async_delete_issue
 
 
 class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -112,10 +110,6 @@ class OpenWeatherMapOptionsFlow(OptionsFlow):
     async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            mode = user_input[CONF_MODE]
-            if mode == OWM_MODE_V30:
-                async_delete_issue(self.hass, self.config_entry.entry_id)
-
             return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(

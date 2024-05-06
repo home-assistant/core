@@ -19,14 +19,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .const import (
-    CONFIG_FLOW_VERSION,
-    FORECAST_MODE_FREE_DAILY,
-    FORECAST_MODE_ONECALL_DAILY,
-    OWM_MODE_V25,
-    PLATFORMS,
-)
-from .repairs import async_create_issue
+from .const import CONFIG_FLOW_VERSION, OWM_MODE_V25, PLATFORMS
+from .repairs import async_create_issue, async_delete_issue
 from .weather_update_coordinator import WeatherUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,6 +49,8 @@ async def async_setup_entry(
 
     if mode == OWM_MODE_V25:
         async_create_issue(hass, entry.entry_id)
+    else:
+        async_delete_issue(hass, entry.entry_id)
 
     owm_client = OWMClient(api_key, mode, lang=language)
     weather_coordinator = WeatherUpdateCoordinator(
@@ -80,16 +76,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.debug("Migrating OpenWeatherMap entry from version %s", version)
 
-    if version == 1:
-        if (mode := data[CONF_MODE]) == FORECAST_MODE_FREE_DAILY:
-            mode = FORECAST_MODE_ONECALL_DAILY
-
-        new_data = {**data, CONF_MODE: mode}
-        config_entries.async_update_entry(
-            entry, data=new_data, version=CONFIG_FLOW_VERSION
-        )
-
-    if version == 2:
+    if version < 3:
         new_data = {**data, CONF_MODE: OWM_MODE_V25}
         config_entries.async_update_entry(
             entry, data=new_data, version=CONFIG_FLOW_VERSION
