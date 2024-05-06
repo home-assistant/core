@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "acceleration": {
+        "default": "mdi:axis-arrow"
+      }
+    }
+  }
+}
