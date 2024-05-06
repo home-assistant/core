@@ -1,7 +1,7 @@
 """Test sensor of AccuWeather integration."""
 
 from datetime import timedelta
-from unittest.mock import PropertyMock, patch
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 from accuweather import ApiError, InvalidApiKeyError, RequestsExceededError
 from aiohttp.client_exceptions import ClientConnectorError
@@ -38,6 +38,7 @@ async def test_sensor(
     hass: HomeAssistant,
     entity_registry_enabled_by_default: None,
     entity_registry: er.EntityRegistry,
+    mock_accuweather_client: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test states of the sensor."""
