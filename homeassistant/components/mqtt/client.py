@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine, Iterable
 import contextlib
 from dataclasses import dataclass
-from functools import lru_cache, partial
+from functools import lru_cache, partial, wraps
 from itertools import chain, groupby
 import logging
 from operator import attrgetter
@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Any
 import uuid
 
 import certifi
+from typing_extensions import TypeVar
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -92,6 +93,55 @@ RECONNECT_INTERVAL_SECONDS = 10
 SocketType = socket.socket | ssl.SSLSocket | Any
 
 SubscribePayloadType = str | bytes  # Only bytes if encoding is None
+
+_CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
+
+
+def log_mqtt_callback_exception(func: _CallableT) -> Callable[..., _CallableT]:
+    """Log exception wrapper for MQTT callback."""
+
+    def _decorator(mqt_client_callback: Callable[..., None]) -> Any:
+        @wraps(mqt_client_callback)
+        def wrapper(*args: Any, **kwargs: Any) -> None:
+            """Execute callback and catch any errors."""
+            try:
+                mqt_client_callback(*args, **kwargs)
+            except Exception:  # noqa: BLE001
+                if (method := mqt_client_callback.__name__) == "_async_mqtt_on_message":
+                    msg: mqtt.MQTTMessage = args[3]
+                    _LOGGER.exception(
+                        "Unhandled exception while handling received%s message "
+                        "(%s bytes) on topic %s (qos=%s)",
+                        " retained" if msg.retain else "",
+                        len(msg.payload),
+                        msg.topic,
+                        msg.qos,
+                    )
+                elif method == "_async_mqtt_on_connect":
+                    result_code: int = args[3]
+                    _LOGGER.exception(
+                        "Unhandled exception while handling %s with result_code %s",
+                        method,
+                        result_code,
+                    )
+                elif method == "_async_mqtt_on_disconnect":
+                    result_code = args[2]
+                    _LOGGER.exception(
+                        "Unhandled exception while handling %s with result_code %s",
+                        method,
+                        result_code,
+                    )
+                else:  # _async_mqtt_on_callback
+                    mid: int = args[2]
+                    _LOGGER.exception(
+                        "Unhandled exception while handling %s with mid %s",
+                        method,
+                        mid,
+                    )
+
+        return wrapper
+
+    return _decorator(func)  # type: ignore[no-any-return]
 
 
 def publish(
@@ -890,6 +940,7 @@ class MQTT:
         _LOGGER.info("MQTT client initialized, birth message sent")
 
     @callback
+    @log_mqtt_callback_exception
     def _async_mqtt_on_connect(
         self,
         _mqttc: mqtt.Client,
@@ -986,13 +1037,23 @@ class MQTT:
         return subscriptions
 
     @callback
+    @log_mqtt_callback_exception
     def _async_mqtt_on_message(
         self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage
     ) -> None:
-        topic = msg.topic
-        # msg.topic is a property that decodes the topic to a string
-        # every time it is accessed. Save the result to avoid
-        # decoding the same topic multiple times.
+        try:
+            # msg.topic is a property that decodes the topic to a string
+            # every time it is accessed. Save the result to avoid
+            # decoding the same topic multiple times.
+            topic = msg.topic
+        except UnicodeDecodeError:
+            _LOGGER.warning(
+                "Received%s message on invalid topic %s (qos=%s): %s",
+                " retained" if msg.retain else "",
+                msg.topic,
+                msg.qos,
+                msg.payload[0:8192],
+            )
         _LOGGER.debug(
             "Received%s message on %s (qos=%s): %s",
             " retained" if msg.retain else "",
@@ -1074,6 +1135,7 @@ class MQTT:
         return future
 
     @callback
+    @log_mqtt_callback_exception
     def _async_mqtt_on_disconnect(
         self,
         _mqttc: mqtt.Client,
