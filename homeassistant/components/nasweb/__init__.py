@@ -72,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ir.async_create_issue(
             hass,
             DOMAIN,
-            ISSUE_INVALID_AUTHENTICATION,
+            f"{ISSUE_INVALID_AUTHENTICATION}_{entry.entry_id}",
             is_fixable=False,
             is_persistent=False,
             severity=ir.IssueSeverity.ERROR,
@@ -87,7 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ir.async_create_issue(
             hass,
             DOMAIN,
-            ISSUE_INTERNAL_ERROR,
+            f"{ISSUE_INTERNAL_ERROR}_{entry.entry_id}",
             is_fixable=False,
             is_persistent=False,
             severity=ir.IssueSeverity.ERROR,
@@ -98,13 +98,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             },
         )
         return False
-    ir.async_delete_issue(hass, DOMAIN, ISSUE_INVALID_AUTHENTICATION)
-    ir.async_delete_issue(hass, DOMAIN, ISSUE_INTERNAL_ERROR)
+    ir.async_delete_issue(
+        hass, DOMAIN, f"{ISSUE_INVALID_AUTHENTICATION}_{entry.entry_id}"
+    )
+    ir.async_delete_issue(hass, DOMAIN, f"{ISSUE_INTERNAL_ERROR}_{entry.entry_id}")
     if not await nasweb_data.notify_coordinator.check_connection(webio_serial):
         ir.async_create_issue(
             hass,
             DOMAIN,
-            ISSUE_NO_STATUS_UPDATE,
+            f"{ISSUE_NO_STATUS_UPDATE}_{entry.entry_id}",
             is_fixable=False,
             is_persistent=False,
             severity=ir.IssueSeverity.ERROR,
@@ -115,7 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             },
         )
         return False
-    ir.async_delete_issue(hass, DOMAIN, ISSUE_NO_STATUS_UPDATE)
+    ir.async_delete_issue(hass, DOMAIN, f"{ISSUE_NO_STATUS_UPDATE}_{entry.entry_id}")
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -131,9 +133,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        ir.async_delete_issue(hass, DOMAIN, ISSUE_INVALID_AUTHENTICATION)
-        ir.async_delete_issue(hass, DOMAIN, ISSUE_INTERNAL_ERROR)
-        ir.async_delete_issue(hass, DOMAIN, ISSUE_NO_STATUS_UPDATE)
+        ir.async_delete_issue(
+            hass, DOMAIN, f"{ISSUE_INVALID_AUTHENTICATION}_{entry.entry_id}"
+        )
+        ir.async_delete_issue(hass, DOMAIN, f"{ISSUE_INTERNAL_ERROR}_{entry.entry_id}")
+        ir.async_delete_issue(
+            hass, DOMAIN, f"{ISSUE_NO_STATUS_UPDATE}_{entry.entry_id}"
+        )
         nasweb_data: NASwebData = hass.data[DOMAIN]
         coordinator: NASwebCoordinator = nasweb_data.entries_coordinators.pop(
             entry.entry_id
