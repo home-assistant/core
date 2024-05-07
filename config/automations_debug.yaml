@@ -85,7 +85,7 @@
     - service: switch.turn_on
       data: {}
       target:
-        entity_id: switch.virtual_switch_15
+        entity_id: switch.virtual_switch_14
     - service: switch.turn_on
       data: {}
       target:
@@ -98,7 +98,7 @@
     - service: switch.turn_off
       data: {}
       target:
-        device_id: 3a640959dc5a26de9c7a04862d43679f
+        entity_id: switch.virtual_switch_17
   mode: single
 - id: "1711657899498"
   alias: New automation4

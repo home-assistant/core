@@ -1867,6 +1867,9 @@ class TimeLineScheduler(BaseScheduler):
             )
             group_slot_start_time[entity_id] = start_time
 
+        if not group_action_start_time:
+            raise ValueError("No entities to schedule on!")
+
         while not self.same_start_time(group_action_start_time):
             next_now = string_to_datetime(
                 max(group_action_start_time, key=lambda x: group_action_start_time[x])
@@ -2858,9 +2861,10 @@ class RascalScheduler(BaseScheduler):
 
     async def handle_event(self, event: Event) -> None:  # noqa: C901
         """Handle event."""
-        _LOGGER.debug("Handling event %s on the scheduler", event)
         if self._reschedule_handler is not None:
             await self._reschedule_handler(event)
+
+        _LOGGER.debug("Handling event %s", event)
 
         event_type: Optional[str] = event.data.get(CONF_TYPE)
         entity_id: Optional[str] = event.data.get(CONF_ENTITY_ID)
@@ -2885,7 +2889,7 @@ class RascalScheduler(BaseScheduler):
 
         if event_type == RASC_ACK:
             # Check if the action is acknowledged
-            if self._is_all_actions_ack(action):
+            if self._is_all_actions_ack(action) and not action.action_acked:
                 _LOGGER.info("Group action %s is acked", action_id)
 
                 self._set_action_acked(action_id)
@@ -2893,7 +2897,7 @@ class RascalScheduler(BaseScheduler):
         elif event_type == RASC_START:
             self._metrics.record_action_start(event.time_fired, entity_id, action_id)
             # Check if the action has started
-            if self._is_all_actions_start(action):
+            if self._is_all_actions_start(action) and not action.action_started:
                 _LOGGER.info("Group action %s is started", action_id)
 
                 self._set_action_started(action_id)
@@ -2924,7 +2928,7 @@ class RascalScheduler(BaseScheduler):
                     self._start_ready_routines_tl(action_id, entity_id)
 
             # Check if the action is completed
-            if self._is_all_actions_complete(action):
+            if self._is_all_actions_complete(action) and not action.action_completed:
                 _LOGGER.info("All commands in the action %s is completed", action_id)
 
                 self._set_action_completed(action_id)

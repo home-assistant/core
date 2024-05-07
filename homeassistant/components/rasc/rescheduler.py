@@ -303,6 +303,9 @@ class BaseRescheduler(TimeLineScheduler):
                             action_id, entity_id
                         )
                     )
+                LOGGER.info(
+                    "Move action %s to %s on %s", action_id, action_st, entity_id
+                )
                 action_lock.move_to(action_st, action_end)
 
                 next_action_lock = lock_queues[entity_id].next(action_id)
@@ -836,6 +839,12 @@ class BaseRescheduler(TimeLineScheduler):
             action_length = max(shortest_action.duration.values())
             action_st, _ = self._identify_first_common_idle_time_after(
                 target_entities, max_parent_end_time, action_length
+            )
+            LOGGER.info(
+                "Move action %s to %s on %s",
+                shortest_action.action_id,
+                action_st,
+                entity_id,
             )
             self.reschedule_all_action(
                 shortest_action,
@@ -2285,7 +2294,7 @@ class RascalRescheduler:
             if not affected_source_actions:
                 self._apply_schedule(old_lt, old_so)
                 return
-            LOGGER.debug(
+            LOGGER.info(
                 "Affected source actions after length difference: %s",
                 [action.action_id for action in affected_source_actions],
             )
@@ -2294,7 +2303,7 @@ class RascalRescheduler:
                 immutable_serialization_order = (
                     self._rescheduler.immutable_serialization_order(old_end_time_dt)
                 )
-                LOGGER.debug(
+                LOGGER.info(
                     "Immutable serialization order: %s", immutable_serialization_order
                 )
             (
@@ -2304,8 +2313,7 @@ class RascalRescheduler:
             ) = self._rescheduler.deschedule_affected_and_later_actions(
                 affected_source_actions
             )
-            # output_free_slots(self._rescheduler.lineage_table.free_slots)
-            LOGGER.debug("Descheduled actions: %s", list(descheduled_actions.keys()))
+            LOGGER.info("Descheduled actions: %s", list(descheduled_actions.keys()))
             LOGGER.debug("Affected entities: %s", affected_entities)
             if serializability:
                 descheduled_actions = (
@@ -2313,10 +2321,6 @@ class RascalRescheduler:
                         immutable_serialization_order, descheduled_actions
                     )
                 )
-                # LOGGER.debug(
-                #     "Descheduled actions after applying serialization order dependencies: %s",
-                #     descheduled_actions,
-                # )
             if self._resched_policy in (SJFWO, SJFW):
                 new_lt, new_so = self._rescheduler.sjf(
                     new_end_time_dt,
@@ -2436,8 +2440,6 @@ class RascalRescheduler:
         """Calculate the difference in action length."""
         entity_id = str(event.data.get(ATTR_ENTITY_ID))
         action_id = str(event.data.get(ATTR_ACTION_ID))
-        # output_lock_queues(self._scheduler.lineage_table.lock_queues)
-        # output_free_slots(self._scheduler.lineage_table.free_slots)
         if not entity_id:
             raise ValueError("Entity ID is missing.")
         if entity_id not in self._scheduler.lineage_table.lock_queues:
@@ -2445,8 +2447,8 @@ class RascalRescheduler:
         if not action_id:
             raise ValueError("Action ID is missing.")
         if action_id not in self._scheduler.lineage_table.lock_queues[entity_id]:
-            raise ValueError(
-                f"Action {action_id} is not scheduled on entity {entity_id}."
+            LOGGER.error(
+                "Action %s is not scheduled on entity %s", action_id, entity_id
             )
         action_lock = self._scheduler.lineage_table.lock_queues[entity_id][action_id]
         if not action_lock:
