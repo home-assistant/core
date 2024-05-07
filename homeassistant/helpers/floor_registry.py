@@ -5,11 +5,12 @@ from __future__ import annotations
 from collections.abc import Iterable
 import dataclasses
 from dataclasses import dataclass
-from typing import Literal, TypedDict, cast
+from typing import Literal, TypedDict
 
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.util import slugify
 from homeassistant.util.event_type import EventType
+from homeassistant.util.hass_dict import HassKey
 
 from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryEntry,
@@ -20,7 +21,7 @@ from .registry import BaseRegistry
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
-DATA_REGISTRY = "floor_registry"
+DATA_REGISTRY: HassKey[FloorRegistry] = HassKey("floor_registry")
 EVENT_FLOOR_REGISTRY_UPDATED: EventType[EventFloorRegistryUpdatedData] = EventType(
     "floor_registry_updated"
 )
@@ -240,7 +241,7 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
 @callback
 def async_get(hass: HomeAssistant) -> FloorRegistry:
     """Get floor registry."""
-    return cast(FloorRegistry, hass.data[DATA_REGISTRY])
+    return hass.data[DATA_REGISTRY]
 
 
 async def async_load(hass: HomeAssistant) -> None:
