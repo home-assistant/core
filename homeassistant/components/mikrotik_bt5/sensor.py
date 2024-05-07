@@ -69,6 +69,7 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement="m/s²",
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:axis-arrow"
     ),
     "battery": MikroTikSensorEntityDescription(
         key="battery",
