@@ -98,11 +98,16 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
+            if CONF_LOCATION in user_input:
+                user_input[CONF_LATITUDE] = user_input[CONF_LOCATION][CONF_LATITUDE]
+                user_input[CONF_LONGITUDE] = user_input[CONF_LOCATION][CONF_LONGITUDE]
             return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
         return self.async_show_form(
             step_id="user",
-            data_schema=_get_data_schema(self.hass),
+            data_schema=self.add_suggested_values_to_schema(
+                _get_data_schema(self.hass), user_input
+            ),
         )
 
     async def async_step_import(
