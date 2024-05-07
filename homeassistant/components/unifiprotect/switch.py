@@ -158,6 +158,17 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
+        key="smart_animal",
+        name="Detections: Animal",
+        icon="mdi:dog",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="can_detect_animal",
+        ufp_value="is_animal_detection_on",
+        ufp_enabled="is_recording_enabled",
+        ufp_set_method="set_animal_detection",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectSwitchEntityDescription(
         key="smart_person",
         name="Detections: Person",
         icon="mdi:walk",
