@@ -32,6 +32,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import json as json_util
 import homeassistant.util.dt as dt_util
 from homeassistant.util.file import WriteError
+from homeassistant.util.hass_dict import HassKey
 
 from . import json as json_helper
 
@@ -42,8 +43,8 @@ MAX_LOAD_CONCURRENTLY = 6
 STORAGE_DIR = ".storage"
 _LOGGER = logging.getLogger(__name__)
 
-STORAGE_SEMAPHORE = "storage_semaphore"
-STORAGE_MANAGER = "storage_manager"
+STORAGE_SEMAPHORE: HassKey[asyncio.Semaphore] = HassKey("storage_semaphore")
+STORAGE_MANAGER: HassKey[_StoreManager] = HassKey("storage_manager")
 
 MANAGER_CLEANUP_DELAY = 60
 
