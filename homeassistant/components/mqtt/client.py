@@ -495,6 +495,9 @@ class MQTT:
         mqttc.on_subscribe = self._async_mqtt_on_callback
         mqttc.on_unsubscribe = self._async_mqtt_on_callback
 
+        # suppress exceptions at callback
+        mqttc.suppress_exceptions = True
+
         if will := self.conf.get(CONF_WILL_MESSAGE, DEFAULT_WILL):
             will_message = PublishMessage(**will)
             mqttc.will_set(
@@ -989,10 +992,21 @@ class MQTT:
     def _async_mqtt_on_message(
         self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage
     ) -> None:
-        topic = msg.topic
-        # msg.topic is a property that decodes the topic to a string
-        # every time it is accessed. Save the result to avoid
-        # decoding the same topic multiple times.
+        try:
+            # msg.topic is a property that decodes the topic to a string
+            # every time it is accessed. Save the result to avoid
+            # decoding the same topic multiple times.
+            topic = msg.topic
+        except UnicodeDecodeError:
+            bare_topic: bytes = getattr(msg, "_topic")
+            _LOGGER.warning(
+                "Skipping received%s message on invalid topic %s (qos=%s): %s",
+                " retained" if msg.retain else "",
+                bare_topic,
+                msg.qos,
+                msg.payload[0:8192],
+            )
+            return
         _LOGGER.debug(
             "Received%s message on %s (qos=%s): %s",
             " retained" if msg.retain else "",
