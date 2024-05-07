@@ -10,8 +10,11 @@ from pysnmp.hlapi.asyncio.cmdgen import lcd
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import singleton
+from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN, SNMP
+from .const import DOMAIN
+
+SNMP_ENGINE: HassKey[hlapi.SnmpEngine] = HassKey(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,9 +27,9 @@ def get_snmp_engine(hass: HomeAssistant) -> hlapi.SnmpEngine:
 
     @callback
     def shutdown_listener(ev: Event) -> None:
-        if hass.data.get(DOMAIN):
+        if hass.data.get(SNMP_ENGINE):
             _LOGGER.debug("Unconfiguring SNMP engine")
-            lcd.unconfigure(hass.data[DOMAIN][SNMP], None)
+            lcd.unconfigure(hass.data[SNMP_ENGINE], None)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_listener)
 

@@ -9,9 +9,9 @@ from homeassistant.const import CONF_HOST, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN, SNMP
+from .const import DOMAIN
 from .coordinator import BrotherDataUpdateCoordinator
-from .utils import get_snmp_engine
+from .utils import SNMP_ENGINE, get_snmp_engine
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> b
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
-    hass.data.setdefault(DOMAIN, {SNMP: snmp_engine})
+    hass.data[SNMP_ENGINE] = snmp_engine
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -53,6 +53,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> 
     ]
     # We only want to remove the SNMP engine when unloading the last config entry
     if unload_ok and len(loaded_entries) == 1:
-        hass.data[DOMAIN].pop(SNMP)
+        hass.data.pop(SNMP_ENGINE)
 
     return unload_ok
