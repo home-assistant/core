@@ -74,7 +74,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up a configuration entry for Jewish calendar."""
-    name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
     language = config_entry.data.get(CONF_LANGUAGE, DEFAULT_LANGUAGE)
     diaspora = config_entry.data.get(CONF_DIASPORA, DEFAULT_DIASPORA)
     latitude = config_entry.data.get(CONF_LATITUDE, hass.config.latitude)
@@ -90,7 +89,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
 
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
-        "name": name,
         "language": language,
         "diaspora": diaspora,
         "location": location,
