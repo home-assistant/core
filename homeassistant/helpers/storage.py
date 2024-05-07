@@ -218,7 +218,7 @@ class _StoreManager:
             try:
                 if storage_file.is_file():
                     data_preload[key] = json_util.load_json(storage_file)
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception as ex:  # noqa: BLE001
                 _LOGGER.debug("Error loading %s: %s", key, ex)
 
     def _initialize_files(self) -> None:

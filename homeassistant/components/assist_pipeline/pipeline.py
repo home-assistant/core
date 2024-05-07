@@ -1295,7 +1295,7 @@ def _pipeline_debug_recording_thread_proc(
                     wav_writer.writeframes(message)
     except Empty:
         pass  # occurs when pipeline has unexpected error
-    except Exception:  # pylint: disable=broad-exception-caught
+    except Exception:
         _LOGGER.exception("Unexpected error in debug recording thread")
     finally:
         if wav_writer is not None:
