@@ -51,8 +51,9 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.issue_registry import async_delete_issue
 from homeassistant.loader import async_get_bluetooth
 
-from . import models, passive_update_processor
+from . import passive_update_processor
 from .api import (
+    _get_manager,
     async_address_present,
     async_ble_device_from_address,
     async_discovered_service_info,
@@ -76,7 +77,6 @@ from .const import (
     CONF_ADAPTER,
     CONF_DETAILS,
     CONF_PASSIVE,
-    DATA_MANAGER,
     DOMAIN,
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS,
@@ -86,6 +86,7 @@ from .manager import HomeAssistantBluetoothManager
 from .match import BluetoothCallbackMatcher, IntegrationMatcher
 from .models import BluetoothCallback, BluetoothChange
 from .storage import BluetoothStorage
+from .util import adapter_title
 
 if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
@@ -151,6 +152,7 @@ async def _async_start_adapter_discovery(
         cooldown=BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
         immediate=False,
         function=_async_rediscover_adapters,
+        background=True,
     )
 
     @hass_callback
@@ -228,10 +230,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, integration_matcher, bluetooth_adapters, bluetooth_storage, slot_manager
     )
     set_manager(manager)
-
     await storage_setup_task
     await manager.async_setup()
-    hass.data[DATA_MANAGER] = models.MANAGER = manager
 
     hass.async_create_background_task(
         _async_start_adapter_discovery(hass, manager, bluetooth_adapters),
@@ -312,7 +312,7 @@ async def async_update_device(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry for a bluetooth scanner."""
-    manager: HomeAssistantBluetoothManager = hass.data[DATA_MANAGER]
+    manager = _get_manager(hass)
     address = entry.unique_id
     assert address is not None
     adapter = await manager.async_get_adapter_from_address_or_recover(address)
@@ -332,6 +332,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from err
     adapters = await manager.async_get_bluetooth_adapters()
     details = adapters[adapter]
+    if entry.title == address:
+        hass.config_entries.async_update_entry(
+            entry, title=adapter_title(adapter, details)
+        )
     slots: int = details.get(ADAPTER_CONNECTION_SLOTS) or DEFAULT_CONNECTION_SLOTS
     entry.async_on_unload(async_register_scanner(hass, scanner, connection_slots=slots))
     await async_update_device(hass, entry, adapter, details)

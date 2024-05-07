@@ -13,16 +13,7 @@ import voluptuous as vol
 from homeassistant import config as conf_util
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_DISCOVERY,
-    CONF_PASSWORD,
-    CONF_PAYLOAD,
-    CONF_PORT,
-    CONF_PROTOCOL,
-    CONF_USERNAME,
-    SERVICE_RELOAD,
-)
+from homeassistant.const import CONF_DISCOVERY, CONF_PAYLOAD, SERVICE_RELOAD
 from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import (
     ConfigValidationError,
@@ -122,45 +113,6 @@ CONNECTION_SUCCESS = "connection_success"
 CONNECTION_FAILED = "connection_failed"
 CONNECTION_FAILED_RECOVERABLE = "connection_failed_recoverable"
 
-CONFIG_ENTRY_CONFIG_KEYS = [
-    CONF_BIRTH_MESSAGE,
-    CONF_BROKER,
-    CONF_CERTIFICATE,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_CERT,
-    CONF_CLIENT_KEY,
-    CONF_DISCOVERY,
-    CONF_DISCOVERY_PREFIX,
-    CONF_KEEPALIVE,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_PROTOCOL,
-    CONF_TLS_INSECURE,
-    CONF_TRANSPORT,
-    CONF_WS_PATH,
-    CONF_WS_HEADERS,
-    CONF_USERNAME,
-    CONF_WILL_MESSAGE,
-]
-
-REMOVED_OPTIONS = vol.All(
-    cv.removed(CONF_BIRTH_MESSAGE),  # Removed in HA Core 2023.4
-    cv.removed(CONF_BROKER),  # Removed in HA Core 2023.4
-    cv.removed(CONF_CERTIFICATE),  # Removed in HA Core 2023.4
-    cv.removed(CONF_CLIENT_ID),  # Removed in HA Core 2023.4
-    cv.removed(CONF_CLIENT_CERT),  # Removed in HA Core 2023.4
-    cv.removed(CONF_CLIENT_KEY),  # Removed in HA Core 2023.4
-    cv.removed(CONF_DISCOVERY),  # Removed in HA Core 2022.3
-    cv.removed(CONF_DISCOVERY_PREFIX),  # Removed in HA Core 2023.4
-    cv.removed(CONF_KEEPALIVE),  # Removed in HA Core 2023.4
-    cv.removed(CONF_PASSWORD),  # Removed in HA Core 2023.4
-    cv.removed(CONF_PORT),  # Removed in HA Core 2023.4
-    cv.removed(CONF_PROTOCOL),  # Removed in HA Core 2023.4
-    cv.removed(CONF_TLS_INSECURE),  # Removed in HA Core 2023.4
-    cv.removed(CONF_USERNAME),  # Removed in HA Core 2023.4
-    cv.removed(CONF_WILL_MESSAGE),  # Removed in HA Core 2023.4
-)
-
 # We accept 2 schemes for configuring manual MQTT items
 #
 # Preferred style:
@@ -187,7 +139,6 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.All(
             cv.ensure_list,
             cv.remove_falsy,
-            [REMOVED_OPTIONS],
             [CONFIG_SCHEMA_BASE],
         )
     },
@@ -265,7 +216,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     conf: dict[str, Any]
     mqtt_data: MqttData
 
-    async def _setup_client() -> tuple[MqttData, dict[str, Any]]:
+    async def _setup_client(
+        client_available: asyncio.Future[bool],
+    ) -> tuple[MqttData, dict[str, Any]]:
         """Set up the MQTT client."""
         # Fetch configuration
         conf = dict(entry.data)
@@ -294,7 +247,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.add_update_listener(_async_config_entry_updated)
         )
 
-        await mqtt_data.client.async_connect()
+        await mqtt_data.client.async_connect(client_available)
         return (mqtt_data, conf)
 
     client_available: asyncio.Future[bool]
@@ -303,13 +256,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         client_available = hass.data[DATA_MQTT_AVAILABLE]
 
-    setup_ok: bool = False
-    try:
-        mqtt_data, conf = await _setup_client()
-        setup_ok = True
-    finally:
-        if not client_available.done():
-            client_available.set_result(setup_ok)
+    mqtt_data, conf = await _setup_client(client_available)
 
     async def async_publish_service(call: ServiceCall) -> None:
         """Handle MQTT publish service calls."""

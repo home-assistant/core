@@ -55,7 +55,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the media extractor service."""
 
     async def extract_media_url(call: ServiceCall) -> ServiceResponse:
@@ -114,7 +114,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         supports_response=SupportsResponse.ONLY,
     )
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN,
         SERVICE_PLAY_MEDIA,
         play_media,
@@ -278,9 +278,9 @@ def get_best_stream_youtube(formats: list[dict[str, Any]]) -> str:
 
     return get_best_stream(
         [
-            format
-            for format in formats
-            if format.get("acodec", "none") != "none"
-            and format.get("vcodec", "none") != "none"
+            stream_format
+            for stream_format in formats
+            if stream_format.get("acodec", "none") != "none"
+            and stream_format.get("vcodec", "none") != "none"
         ]
     )

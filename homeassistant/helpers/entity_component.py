@@ -146,7 +146,7 @@ class EntityComponent(Generic[_EntityT]):
         # Look in config for Domain, Domain 2, Domain 3 etc and load them
         for p_type, p_config in conf_util.config_per_platform(config, self.domain):
             if p_type is not None:
-                self.hass.async_create_task(
+                self.hass.async_create_task_internal(
                     self.async_setup_platform(p_type, p_config),
                     f"EntityComponent setup platform {p_type} {self.domain}",
                     eager_start=True,

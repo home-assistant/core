@@ -707,7 +707,10 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
             @callback
             def started_action() -> None:
-                self.hass.bus.async_fire(
+                # This is always a callback from a coro so there is no
+                # risk of this running in a thread which allows us to use
+                # async_fire_internal
+                self.hass.bus.async_fire_internal(
                     EVENT_AUTOMATION_TRIGGERED, event_data, context=trigger_context
                 )
 
@@ -744,7 +747,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                     err,
                 )
                 automation_trace.set_error(err)
-            except Exception as err:  # pylint: disable=broad-except
+            except Exception as err:
                 self._logger.exception("While executing automation %s", self.entity_id)
                 automation_trace.set_error(err)
 
