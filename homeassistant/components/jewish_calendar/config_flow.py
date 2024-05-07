@@ -71,7 +71,7 @@ def _get_data_schema(hass: HomeAssistant) -> vol.Schema:
             vol.Required(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): SelectSelector(
                 SelectSelectorConfig(options=LANGUAGE)
             ),
-            vol.Required(CONF_LOCATION, default=default_location): LocationSelector(),
+            vol.Optional(CONF_LOCATION, default=default_location): LocationSelector(),
             vol.Optional(CONF_ELEVATION, default=hass.config.elevation): int,
             vol.Optional(CONF_TIME_ZONE, default=hass.config.time_zone): SelectSelector(
                 SelectSelectorConfig(
