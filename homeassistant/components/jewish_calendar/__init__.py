@@ -39,6 +39,8 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 vol.Optional(CONF_DIASPORA, default=DEFAULT_DIASPORA): cv.boolean,
+                vol.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
+                vol.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
                 vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(
                     ["hebrew", "english"]
                 ),
@@ -50,18 +52,6 @@ CONFIG_SCHEMA = vol.Schema(
                     CONF_HAVDALAH_OFFSET_MINUTES,
                     default=DEFAULT_HAVDALAH_OFFSET_MINUTES,
                 ): int,
-                vol.Inclusive(
-                    CONF_LATITUDE,
-                    "coordinates",
-                    "Latitude and longitude must exist together",
-                ): cv.latitude,
-                vol.Inclusive(
-                    CONF_LONGITUDE,
-                    "coordinates",
-                    "Latitude and longitude must exist together",
-                ): cv.longitude,
-                vol.Optional(CONF_ELEVATION): int,
-                vol.Optional(CONF_TIME_ZONE): cv.time_zone,
             },
         )
     },
