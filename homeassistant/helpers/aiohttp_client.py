@@ -155,8 +155,7 @@ def _async_create_clientsession(
     # It's important that we identify as Home Assistant
     # If a package requires a different user agent, override it by passing a headers
     # dictionary to the request method.
-    # pylint: disable-next=protected-access
-    clientsession._default_headers = MappingProxyType(  # type: ignore[assignment]
+    clientsession._default_headers = MappingProxyType(  # type: ignore[assignment]  # noqa: SLF001
         {USER_AGENT: SERVER_SOFTWARE},
     )
 

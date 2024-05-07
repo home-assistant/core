@@ -33,6 +33,7 @@ from .helpers import singleton, translation
 from .helpers.issue_registry import IssueSeverity, async_create_issue
 from .helpers.typing import ConfigType
 from .util.async_ import create_eager_task
+from .util.hass_dict import HassKey
 
 current_setup_group: contextvars.ContextVar[tuple[str, str | None] | None] = (
     contextvars.ContextVar("current_setup_group", default=None)
@@ -45,29 +46,32 @@ ATTR_COMPONENT: Final = "component"
 
 BASE_PLATFORMS = {platform.value for platform in Platform}
 
-# DATA_SETUP is a dict[str, asyncio.Future[bool]], indicating domains which are currently
+# DATA_SETUP is a dict, indicating domains which are currently
 # being setup or which failed to setup:
 # - Tasks are added to DATA_SETUP by `async_setup_component`, the key is the domain
 #   being setup and the Task is the `_async_setup_component` helper.
 # - Tasks are removed from DATA_SETUP if setup was successful, that is,
 #   the task returned True.
-DATA_SETUP = "setup_tasks"
+DATA_SETUP: HassKey[dict[str, asyncio.Future[bool]]] = HassKey("setup_tasks")
 
-# DATA_SETUP_DONE is a dict [str, asyncio.Future[bool]], indicating components which
-# will be setup:
+# DATA_SETUP_DONE is a dict, indicating components which will be setup:
 # - Events are added to DATA_SETUP_DONE during bootstrap by
 #   async_set_domains_to_be_loaded, the key is the domain which will be loaded.
 # - Events are set and removed from DATA_SETUP_DONE when async_setup_component
 #   is finished, regardless of if the setup was successful or not.
-DATA_SETUP_DONE = "setup_done"
+DATA_SETUP_DONE: HassKey[dict[str, asyncio.Future[bool]]] = HassKey("setup_done")
 
-# DATA_SETUP_STARTED is a dict [tuple[str, str | None], float], indicating when an attempt
+# DATA_SETUP_STARTED is a dict, indicating when an attempt
 # to setup a component started.
-DATA_SETUP_STARTED = "setup_started"
+DATA_SETUP_STARTED: HassKey[dict[tuple[str, str | None], float]] = HassKey(
+    "setup_started"
+)
 
-# DATA_SETUP_TIME is a defaultdict[str, defaultdict[str | None, defaultdict[SetupPhases, float]]]
-# indicating how time was spent setting up a component and each group (config entry).
-DATA_SETUP_TIME = "setup_time"
+# DATA_SETUP_TIME is a defaultdict, indicating how time was spent
+# setting up a component.
+DATA_SETUP_TIME: HassKey[
+    defaultdict[str, defaultdict[str | None, defaultdict[SetupPhases, float]]]
+] = HassKey("setup_time")
 
 DATA_DEPS_REQS = "deps_reqs_processed"
 
@@ -126,9 +130,7 @@ def async_set_domains_to_be_loaded(hass: core.HomeAssistant, domains: set[str]) 
      - Properly handle after_dependencies.
      - Keep track of domains which will load but have not yet finished loading
     """
-    setup_done_futures: dict[str, asyncio.Future[bool]] = hass.data.setdefault(
-        DATA_SETUP_DONE, {}
-    )
+    setup_done_futures = hass.data.setdefault(DATA_SETUP_DONE, {})
     setup_done_futures.update({domain: hass.loop.create_future() for domain in domains})
 
 
@@ -149,12 +151,8 @@ async def async_setup_component(
     if domain in hass.config.components:
         return True
 
-    setup_futures: dict[str, asyncio.Future[bool]] = hass.data.setdefault(
-        DATA_SETUP, {}
-    )
-    setup_done_futures: dict[str, asyncio.Future[bool]] = hass.data.setdefault(
-        DATA_SETUP_DONE, {}
-    )
+    setup_futures = hass.data.setdefault(DATA_SETUP, {})
+    setup_done_futures = hass.data.setdefault(DATA_SETUP_DONE, {})
 
     if existing_setup_future := setup_futures.get(domain):
         return await existing_setup_future
@@ -195,9 +193,7 @@ async def _async_process_dependencies(
 
     Returns a list of dependencies which failed to set up.
     """
-    setup_futures: dict[str, asyncio.Future[bool]] = hass.data.setdefault(
-        DATA_SETUP, {}
-    )
+    setup_futures = hass.data.setdefault(DATA_SETUP, {})
 
     dependencies_tasks = {
         dep: setup_futures.get(dep)
@@ -210,7 +206,7 @@ async def _async_process_dependencies(
     }
 
     after_dependencies_tasks: dict[str, asyncio.Future[bool]] = {}
-    to_be_loaded: dict[str, asyncio.Future[bool]] = hass.data.get(DATA_SETUP_DONE, {})
+    to_be_loaded = hass.data.get(DATA_SETUP_DONE, {})
     for dep in integration.after_dependencies:
         if (
             dep not in dependencies_tasks

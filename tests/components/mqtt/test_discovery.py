@@ -15,7 +15,14 @@ from homeassistant.components.mqtt.abbreviations import (
     ABBREVIATIONS,
     DEVICE_ABBREVIATIONS,
 )
-from homeassistant.components.mqtt.discovery import async_start
+from homeassistant.components.mqtt.discovery import (
+    MQTT_DISCOVERY_DONE,
+    MQTT_DISCOVERY_NEW,
+    MQTT_DISCOVERY_NEW_COMPONENT,
+    MQTT_DISCOVERY_UPDATED,
+    MQTTDiscoveryPayload,
+    async_start,
+)
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_ON,
@@ -26,8 +33,13 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.setup import async_setup_component
+from homeassistant.util.signal_type import SignalTypeFormat
 
 from .test_common import help_all_subscribe_calls, help_test_unload_config_entry
 
@@ -1765,3 +1777,34 @@ async def test_update_with_bad_config_not_breaks_discovery(
 
     state = hass.states.get("sensor.sbfspot_12345")
     assert state and state.state == "new_value"
+
+
+@pytest.mark.parametrize(
+    "signal_message",
+    [
+        MQTT_DISCOVERY_NEW,
+        MQTT_DISCOVERY_NEW_COMPONENT,
+        MQTT_DISCOVERY_UPDATED,
+        MQTT_DISCOVERY_DONE,
+    ],
+)
+async def test_discovery_dispatcher_signal_type_messages(
+    hass: HomeAssistant, signal_message: SignalTypeFormat[MQTTDiscoveryPayload]
+) -> None:
+    """Test discovery dispatcher messages."""
+
+    domain_id_tuple = ("sensor", "very_unique")
+    test_data = {"name": "test", "state_topic": "test-topic"}
+    calls = []
+
+    def _callback(*args) -> None:
+        calls.append(*args)
+
+    unsub = async_dispatcher_connect(
+        hass, signal_message.format(*domain_id_tuple), _callback
+    )
+    async_dispatcher_send(hass, signal_message.format(*domain_id_tuple), test_data)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0] == test_data
+    unsub()

@@ -1322,6 +1322,10 @@ def async_get_loaded_integration(hass: HomeAssistant, domain: str) -> Integratio
 
 async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration:
     """Get integration."""
+    cache: dict[str, Integration | asyncio.Future[None]]
+    cache = hass.data[DATA_INTEGRATIONS]
+    if type(int_or_fut := cache.get(domain, _UNDEF)) is Integration:
+        return int_or_fut
     integrations_or_excs = await async_get_integrations(hass, [domain])
     int_or_exc = integrations_or_excs[domain]
     if isinstance(int_or_exc, Integration):
@@ -1333,12 +1337,11 @@ async def async_get_integrations(
     hass: HomeAssistant, domains: Iterable[str]
 ) -> dict[str, Integration | Exception]:
     """Get integrations."""
+    cache: dict[str, Integration | asyncio.Future[None]]
     cache = hass.data[DATA_INTEGRATIONS]
     results: dict[str, Integration | Exception] = {}
     needed: dict[str, asyncio.Future[None]] = {}
     in_progress: dict[str, asyncio.Future[None]] = {}
-    if TYPE_CHECKING:
-        cache = cast(dict[str, Integration | asyncio.Future[None]], cache)
     for domain in domains:
         int_or_fut = cache.get(domain, _UNDEF)
         # Integration is never subclassed, so we can check for type
@@ -1352,7 +1355,7 @@ async def async_get_integrations(
             needed[domain] = cache[domain] = hass.loop.create_future()
 
     if in_progress:
-        await asyncio.gather(*in_progress.values())
+        await asyncio.wait(in_progress.values())
         for domain in in_progress:
             # When we have waited and it's _UNDEF, it doesn't exist
             # We don't cache that it doesn't exist, or else people can't fix it

@@ -414,16 +414,15 @@ class _ScriptRun:
 
     def _changed(self) -> None:
         if not self._stop.done():
-            self._script._changed()  # pylint: disable=protected-access
+            self._script._changed()  # noqa: SLF001
 
     async def _async_get_condition(self, config):
-        # pylint: disable-next=protected-access
-        return await self._script._async_get_condition(config)
+        return await self._script._async_get_condition(config)  # noqa: SLF001
 
     def _log(
         self, msg: str, *args: Any, level: int = logging.INFO, **kwargs: Any
     ) -> None:
-        self._script._log(  # pylint: disable=protected-access
+        self._script._log(  # noqa: SLF001
             msg, *args, level=level, **kwargs
         )
 
@@ -509,7 +508,7 @@ class _ScriptRun:
                     trace_element.update_variables(self._variables)
 
     def _finish(self) -> None:
-        self._script._runs.remove(self)  # pylint: disable=protected-access
+        self._script._runs.remove(self)  # noqa: SLF001
         if not self._script.is_running:
             self._script.last_action = None
         self._changed()
@@ -848,8 +847,7 @@ class _ScriptRun:
                 repeat_vars["item"] = item
             self._variables["repeat"] = repeat_vars
 
-        # pylint: disable-next=protected-access
-        script = self._script._get_repeat_script(self._step)
+        script = self._script._get_repeat_script(self._step)  # noqa: SLF001
         warned_too_many_loops = False
 
         async def async_run_sequence(iteration, extra_msg=""):
@@ -1005,8 +1003,7 @@ class _ScriptRun:
 
     async def _async_choose_step(self) -> None:
         """Choose a sequence."""
-        # pylint: disable-next=protected-access
-        choose_data = await self._script._async_get_choose_data(self._step)
+        choose_data = await self._script._async_get_choose_data(self._step)  # noqa: SLF001
 
         with trace_path("choose"):
             for idx, (conditions, script) in enumerate(choose_data["choices"]):
@@ -1027,8 +1024,7 @@ class _ScriptRun:
 
     async def _async_if_step(self) -> None:
         """If sequence."""
-        # pylint: disable-next=protected-access
-        if_data = await self._script._async_get_if_data(self._step)
+        if_data = await self._script._async_get_if_data(self._step)  # noqa: SLF001
 
         test_conditions = False
         try:
@@ -1190,8 +1186,7 @@ class _ScriptRun:
     @async_trace_path("parallel")
     async def _async_parallel_step(self) -> None:
         """Run a sequence in parallel."""
-        # pylint: disable-next=protected-access
-        scripts = await self._script._async_get_parallel_scripts(self._step)
+        scripts = await self._script._async_get_parallel_scripts(self._step)  # noqa: SLF001
 
         async def async_run_with_trace(idx: int, script: Script) -> None:
             """Run a script with a trace path."""
@@ -1229,7 +1224,7 @@ class _QueuedScriptRun(_ScriptRun):
         # shared lock. At the same time monitor if we've been told to stop.
         try:
             async with async_interrupt.interrupt(self._stop, ScriptStoppedError, None):
-                await self._script._queue_lck.acquire()  # pylint: disable=protected-access
+                await self._script._queue_lck.acquire()  # noqa: SLF001
         except ScriptStoppedError as ex:
             # If we've been told to stop, then just finish up.
             self._finish()
@@ -1241,7 +1236,7 @@ class _QueuedScriptRun(_ScriptRun):
 
     def _finish(self) -> None:
         if self.lock_acquired:
-            self._script._queue_lck.release()  # pylint: disable=protected-access
+            self._script._queue_lck.release()  # noqa: SLF001
             self.lock_acquired = False
         super()._finish()
 
