@@ -631,6 +631,7 @@ def mock_registry(
         registry.entities[key] = entry
 
     hass.data[er.DATA_REGISTRY] = registry
+    er.async_get.cache_clear()
     return registry
 
 
@@ -654,6 +655,7 @@ def mock_area_registry(
         registry.areas[key] = entry
 
     hass.data[ar.DATA_REGISTRY] = registry
+    ar.async_get.cache_clear()
     return registry
 
 
@@ -682,6 +684,7 @@ def mock_device_registry(
     registry.deleted_devices = dr.DeviceRegistryItems()
 
     hass.data[dr.DATA_REGISTRY] = registry
+    dr.async_get.cache_clear()
     return registry
 
 
