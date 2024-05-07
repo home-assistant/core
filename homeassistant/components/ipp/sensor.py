@@ -120,7 +120,10 @@ async def async_setup_entry(
                             ATTR_MARKER_TYPE: marker.marker_type,
                         },
                     ),
-                    value_fn=_get_marker_value_fn(index, lambda marker: marker.level),
+                    value_fn=_get_marker_value_fn(
+                        index,
+                        lambda marker: marker.level if marker.level >= 0 else None,
+                    ),
                 ),
             )
         )

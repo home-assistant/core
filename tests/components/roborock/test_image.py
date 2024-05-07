@@ -6,12 +6,15 @@ from http import HTTPStatus
 import io
 from unittest.mock import patch
 
+from roborock import RoborockException
 from PIL import Image
 import pytest
 from vacuum_map_parser_base.config.image_config import ImageConfig
 from vacuum_map_parser_base.map_data import ImageData
 
 from homeassistant.components.roborock import DOMAIN
+from homeassistant.components.roborock import DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -174,7 +177,6 @@ async def test_fail_to_load_image(
         assert parse_map.call_count == 4
     assert "Unable to read map file" in caplog.text
 
-
 async def test_fail_parse_on_startup(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -190,8 +192,10 @@ async def test_fail_parse_on_startup(
     ):
         await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
-    assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
-    assert not hass.states.async_available("image.roborock_s7_maxv_upstairs")
+    assert (
+        image_entity := hass.states.get("image.roborock_s7_maxv_upstairs")
+    ) is not None
+    assert image_entity.state == STATE_UNAVAILABLE
 
 
 async def test_fail_get_map_on_startup(
@@ -210,4 +214,40 @@ async def test_fail_get_map_on_startup(
         await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
     assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
-    assert not hass.states.async_available("image.roborock_s7_maxv_upstairs")
+    assert image_entity.state == STATE_UNAVAILABLE
+
+
+async def test_fail_updating_image(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test that we handle failing getting the image after it has already been setup.."""
+    client = await hass_client()
+    map_data = copy.deepcopy(MAP_DATA)
+    map_data.image = None
+    now = dt_util.utcnow() + timedelta(seconds=91)
+    # Copy the device prop so we don't override it
+    prop = copy.deepcopy(PROP)
+    prop.status.in_cleaning = 1
+    # Update image, but get none for parse image.
+    with (
+        patch(
+            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            return_value=map_data,
+        ),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
+            return_value=prop,
+        ),
+        patch(
+            "homeassistant.components.roborock.image.dt_util.utcnow", return_value=now
+        ),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_map_v1",
+            side_effect=RoborockException,
+        ),
+    ):
+        async_fire_time_changed(hass, now)
+        resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+    assert not resp.ok

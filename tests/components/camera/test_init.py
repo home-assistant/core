@@ -24,10 +24,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .common import EMPTY_8_6_JPEG, WEBRTC_ANSWER, mock_turbo_jpeg
 
-from tests.common import help_test_all, import_and_test_deprecated_constant_enum
+from tests.common import (
+    async_fire_time_changed,
+    help_test_all,
+    import_and_test_deprecated_constant_enum,
+)
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 STREAM_SOURCE = "rtsp://127.0.0.1/stream"
@@ -1073,3 +1078,23 @@ def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) ->
     caplog.clear()
     assert entity.supported_features_compat is camera.CameraEntityFeature(1)
     assert "is using deprecated supported features values" not in caplog.text
+
+
+async def test_entity_picture_url_changes_on_token_update(
+    hass: HomeAssistant, mock_camera
+) -> None:
+    """Test the token is rotated and entity entity picture cache is cleared."""
+    await async_setup_component(hass, "camera", {})
+    await hass.async_block_till_done()
+
+    camera_state = hass.states.get("camera.demo_camera")
+    original_picture = camera_state.attributes["entity_picture"]
+    assert "token=" in original_picture
+
+    async_fire_time_changed(hass, dt_util.utcnow() + camera.TOKEN_CHANGE_INTERVAL)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    camera_state = hass.states.get("camera.demo_camera")
+    new_entity_picture = camera_state.attributes["entity_picture"]
+    assert new_entity_picture != original_picture
+    assert "token=" in new_entity_picture

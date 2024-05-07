@@ -76,7 +76,9 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
             try:
                 self.cached_map = self._create_image(starting_map)
             except HomeAssistantError:
-                # If we failed to update the image on init, we set cached_map to None so that we are unavailable and can try again later.
+                # If we failed to update the image on init,
+                # we set cached_map to empty bytes
+                # so that we are unavailable and can try again later.
                 self.cached_map = b""
         else:
             # Map was cached - so we can load it directly.
@@ -90,12 +92,21 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         return self.cached_map == b""
 
     @property
+    def available(self):
+        """Determines if the entity is available."""
+        return self.cached_map != b""
+
+    @property
     def is_selected(self) -> bool:
         """Return if this map is the currently selected map."""
         return self.map_flag == self.coordinator.current_map
 
     def is_map_valid(self) -> bool:
-        """Update this map if it is the current active map, and the vacuum is cleaning."""
+        """Update the map if it is valid.
+
+        Update this map if it is the currently active map, and the
+        vacuum is cleaning, or if it has never been set at all.
+        """
         return self.cached_map == b"" or (
             self.is_selected
             and self.image_last_updated is not None
@@ -116,7 +127,16 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
     async def async_image(self) -> bytes | None:
         """Update the image if it is not cached."""
         if self.is_map_valid():
-            map_data: bytes = await self.cloud_api.get_map_v1()
+            response = await asyncio.gather(
+                *(self.cloud_api.get_map_v1(), self.coordinator.get_rooms()),
+                return_exceptions=True,
+            )
+            if not isinstance(response[0], bytes):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="map_failure",
+                )
+            map_data = response[0]
             old_data = self.cached_map
             self.cached_map = self._create_image(map_data)
             if old_data != self.cached_map:
@@ -144,8 +164,9 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
 async def create_coordinator_maps(
     coord: RoborockDataUpdateCoordinator, hass: HomeAssistant
 ) -> list[RoborockMap]:
-    """Get the starting map information for all maps for this device. The following steps must be done synchronously.
+    """Get the starting map information for all maps for this device.
 
+    The following steps must be done synchronously.
     Only one map can be loaded at a time per device.
     """
     entities = []
@@ -182,7 +203,11 @@ async def create_coordinator_maps(
                 await asyncio.sleep(MAP_SLEEP)
             # Get the map data
             map_update = await asyncio.gather(
-                *[coord.cloud_api.get_map_v1(), coord.get_rooms()]
+                *[coord.cloud_api.get_map_v1(), coord.get_rooms()], return_exceptions=True
+            )
+            # If we fail to get the map, we should set it to empty byte,
+            # still create it, and set it as unavailable.
+            api_data: bytes = map_update[0] if isinstance(map_update[0], bytes) else b""
             )
             api_data = map_update[0]
             if api_data is None:

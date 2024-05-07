@@ -215,7 +215,7 @@ def check(config_dir, secrets=False):
 
     def secrets_proxy(*args):
         secrets = Secrets(*args)
-        res["secret_cache"] = secrets._cache  # pylint: disable=protected-access
+        res["secret_cache"] = secrets._cache  # noqa: SLF001
         return secrets
 
     try:

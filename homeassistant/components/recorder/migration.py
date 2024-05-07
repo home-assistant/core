@@ -492,7 +492,7 @@ def _modify_columns(
     if engine.dialect.name == SupportedDialect.POSTGRESQL:
         columns_def = [
             "ALTER {column} TYPE {type}".format(
-                **dict(zip(["column", "type"], col_def.split(" ", 1)))
+                **dict(zip(["column", "type"], col_def.split(" ", 1), strict=False))
             )
             for col_def in columns_def
         ]
