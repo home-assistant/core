@@ -6,8 +6,9 @@ from datetime import datetime, timedelta
 import json
 import socket
 import ssl
+import time
 from typing import Any, TypedDict
-from unittest.mock import ANY, MagicMock, call, mock_open, patch
+from unittest.mock import ANY, MagicMock, Mock, call, mock_open, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import paho.mqtt.client as paho_mqtt
@@ -935,6 +936,42 @@ async def test_receiving_non_utf8_message_gets_logged(
     await hass.async_block_till_done()
     assert (
         "Can't decode payload b'\\x9a' on test-topic with encoding utf-8" in caplog.text
+    )
+
+
+async def test_receiving_message_with_non_utf8_topic_gets_logged(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    record_calls: MessageCallbackType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test receiving a non utf8 encoded topic."""
+    await mqtt_mock_entry()
+    await mqtt.async_subscribe(hass, "test-topic", record_calls)
+
+    # Local import to avoid processing MQTT modules when running a testcase
+    # which does not use MQTT.
+
+    # pylint: disable-next=import-outside-toplevel
+    from paho.mqtt.client import MQTTMessage
+
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.mqtt.models import MqttData
+
+    msg = MQTTMessage(topic=b"tasmota/discovery/18FE34E0B760\xcc\x02")
+    msg.payload = b"Payload"
+    msg.qos = 2
+    msg.retain = True
+    msg.timestamp = time.monotonic()
+
+    mqtt_data: MqttData = hass.data["mqtt"]
+    assert mqtt_data.client
+    mqtt_data.client._async_mqtt_on_message(Mock(), None, msg)
+
+    assert (
+        "Skipping received retained message on invalid "
+        "topic b'tasmota/discovery/18FE34E0B760\\xcc\\x02' "
+        "(qos=2): b'Payload'" in caplog.text
     )
 
 
