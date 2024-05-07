@@ -5,8 +5,12 @@
       "user": {
         "description": "Please choose a name for your new calendar",
         "data": {
-          "calendar_name": "Calendar Name"
+          "calendar_name": "Calendar Name",
+          "import_ics": "import events from an iCal file (.ics)?"
         }
+      },
+      "import": {
+        "description": "You can import events in iCal format (.ics file)."
       }
     }
   }
