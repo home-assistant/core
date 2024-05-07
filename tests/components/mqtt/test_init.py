@@ -4491,3 +4491,31 @@ async def test_loop_write_failure(
     await hass.async_block_till_done()
 
     assert "Disconnected from MQTT server mock-broker:1883 (7)" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "attr",
+    [
+        "EntitySubscription",
+        "MqttCommandTemplate",
+        "MqttValueTemplate",
+        "PayloadSentinel",
+        "PublishPayloadType",
+        "ReceiveMessage",
+        "ReceivePayloadType",
+        "async_prepare_subscribe_topics",
+        "async_publish",
+        "async_subscribe",
+        "async_subscribe_topics",
+        "async_unsubscribe_topics",
+        "async_wait_for_mqtt_client",
+        "publish",
+        "subscribe",
+        "valid_publish_topic",
+        "valid_qos_schema",
+        "valid_subscribe_topic",
+    ],
+)
+async def test_mqtt_integration_level_imports(hass: HomeAssistant, attr: str) -> None:
+    """Test mqtt integration level public published imports are available."""
+    assert hasattr(mqtt, attr)
