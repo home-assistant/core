@@ -1,0 +1,65 @@
+# serializer version: 1
+# name: test_all_entities
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Monzo',
+      'device_class': 'monetary',
+      'friendly_name': 'Current Account Balance',
+      'unit_of_measurement': 'GBP',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.current_account_balance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.23',
+  })
+# ---
+# name: test_all_entities.1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Monzo',
+      'device_class': 'monetary',
+      'friendly_name': 'Current Account Total balance',
+      'unit_of_measurement': 'GBP',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.current_account_total_balance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.21',
+  })
+# ---
+# name: test_all_entities.2
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Monzo',
+      'device_class': 'monetary',
+      'friendly_name': 'Flex Balance',
+      'unit_of_measurement': 'GBP',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.flex_balance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.23',
+  })
+# ---
+# name: test_all_entities.3
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Monzo',
+      'device_class': 'monetary',
+      'friendly_name': 'Flex Total balance',
+      'unit_of_measurement': 'GBP',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.flex_total_balance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.21',
+  })
+# ---

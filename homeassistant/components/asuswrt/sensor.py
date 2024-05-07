@@ -10,7 +10,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EntityCategory,
     UnitOfDataRate,
@@ -25,9 +24,8 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util import slugify
 
+from . import AsusWrtConfigEntry
 from .const import (
-    DATA_ASUSWRT,
-    DOMAIN,
     KEY_COORDINATOR,
     KEY_SENSORS,
     SENSORS_BYTES,
@@ -173,10 +171,12 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AsusWrtConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensors."""
-    router: AsusWrtRouter = hass.data[DOMAIN][entry.entry_id][DATA_ASUSWRT]
+    router = entry.runtime_data
     entities = []
 
     for sensor_data in router.sensors_coordinator.values():
