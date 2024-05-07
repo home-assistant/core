@@ -34,7 +34,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_SSL,
-    CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
@@ -392,12 +391,6 @@ class SynologyDSMOptionsFlowHandler(OptionsFlow):
                     CONF_SCAN_INTERVAL,
                     default=self.config_entry.options.get(
                         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                    ),
-                ): cv.positive_int,
-                vol.Required(
-                    CONF_TIMEOUT,
-                    default=self.config_entry.options.get(
-                        CONF_TIMEOUT, DEFAULT_TIMEOUT
                     ),
                 ): cv.positive_int,
                 vol.Required(

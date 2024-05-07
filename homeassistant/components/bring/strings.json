@@ -60,8 +60,8 @@
           "description": "Type of push notification to send to list members."
         },
         "item": {
-          "name": "Item (Required if message type `Breaking news` selected)",
-          "description": "Item name to include in a breaking news message e.g. `Breaking news - Please get cilantro!`"
+          "name": "Article (Required if message type `Urgent Message` selected)",
+          "description": "Article name to include in an urgent message e.g. `Urgent Message - Please buy Cilantro urgently`"
         }
       }
     }
@@ -69,10 +69,10 @@
   "selector": {
     "notification_type_selector": {
       "options": {
-        "going_shopping": "I'm going shopping! - Last chance for adjustments",
-        "changed_list": "List changed - Check it out",
-        "shopping_done": "Shopping done - you can relax",
-        "urgent_message": "Breaking news - Please get `item`!"
+        "going_shopping": "I'm going shopping! - Last chance to make changes",
+        "changed_list": "List updated - Take a look at the articles",
+        "shopping_done": "Shopping done - The fridge is well stocked",
+        "urgent_message": "Urgent Message - Please buy `Article name` urgently"
       }
     }
   }
