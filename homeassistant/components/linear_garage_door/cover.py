@@ -10,12 +10,11 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import LinearDevice, LinearUpdateCoordinator
+from .coordinator import LinearUpdateCoordinator
+from .entity import LinearEntity
 
 SUPPORTED_SUBDEVICES = ["GDO"]
 PARALLEL_UPDATES = 1
@@ -31,48 +30,19 @@ async def async_setup_entry(
     coordinator: LinearUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        LinearCoverEntity(coordinator, device_id, sub_device_id)
+        LinearCoverEntity(coordinator, device_id, device_data.name, sub_device_id)
         for device_id, device_data in coordinator.data.items()
         for sub_device_id in device_data.subdevices
         if sub_device_id in SUPPORTED_SUBDEVICES
     )
 
 
-class LinearCoverEntity(CoordinatorEntity[LinearUpdateCoordinator], CoverEntity):
+class LinearCoverEntity(LinearEntity, CoverEntity):
     """Representation of a Linear cover."""
 
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_device_class = CoverDeviceClass.GARAGE
-
-    def __init__(
-        self,
-        coordinator: LinearUpdateCoordinator,
-        device_id: str,
-        sub_device_id: str,
-    ) -> None:
-        """Init with device ID and name."""
-        super().__init__(coordinator)
-        self._device_id = device_id
-        self._sub_device_id = sub_device_id
-        self._attr_unique_id = f"{device_id}-{sub_device_id}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, sub_device_id)},
-            name=self.linear_device.name,
-            manufacturer="Linear",
-            model="Garage Door Opener",
-        )
-
-    @property
-    def linear_device(self) -> LinearDevice:
-        """Return the Linear device."""
-        return self.coordinator.data[self._device_id]
-
-    @property
-    def sub_device(self) -> dict[str, str]:
-        """Return the subdevice."""
-        return self.linear_device.subdevices[self._sub_device_id]
 
     @property
     def is_closed(self) -> bool:

@@ -88,8 +88,6 @@ build.json @home-assistant/supervisor
 /tests/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
 /homeassistant/components/amberelectric/ @madpilot
 /tests/components/amberelectric/ @madpilot
-/homeassistant/components/ambiclimate/ @danielhiversen
-/tests/components/ambiclimate/ @danielhiversen
 /homeassistant/components/ambient_network/ @thomaskistler
 /tests/components/ambient_network/ @thomaskistler
 /homeassistant/components/ambient_station/ @bachya
@@ -550,14 +548,14 @@ build.json @home-assistant/supervisor
 /tests/components/group/ @home-assistant/core
 /homeassistant/components/guardian/ @bachya
 /tests/components/guardian/ @bachya
-/homeassistant/components/habitica/ @ASMfreaK @leikoilja
-/tests/components/habitica/ @ASMfreaK @leikoilja
+/homeassistant/components/habitica/ @ASMfreaK @leikoilja @tr4nt0r
+/tests/components/habitica/ @ASMfreaK @leikoilja @tr4nt0r
 /homeassistant/components/hardkernel/ @home-assistant/core
 /tests/components/hardkernel/ @home-assistant/core
 /homeassistant/components/hardware/ @home-assistant/core
 /tests/components/hardware/ @home-assistant/core
-/homeassistant/components/harmony/ @ehendrix23 @bramkragten @bdraco @mkeesey @Aohzan
-/tests/components/harmony/ @ehendrix23 @bramkragten @bdraco @mkeesey @Aohzan
+/homeassistant/components/harmony/ @ehendrix23 @bdraco @mkeesey @Aohzan
+/tests/components/harmony/ @ehendrix23 @bdraco @mkeesey @Aohzan
 /homeassistant/components/hassio/ @home-assistant/supervisor
 /tests/components/hassio/ @home-assistant/supervisor
 /homeassistant/components/hdmi_cec/ @inytar
@@ -650,6 +648,8 @@ build.json @home-assistant/supervisor
 /tests/components/image_upload/ @home-assistant/core
 /homeassistant/components/imap/ @jbouwh
 /tests/components/imap/ @jbouwh
+/homeassistant/components/imgw_pib/ @bieniu
+/tests/components/imgw_pib/ @bieniu
 /homeassistant/components/improv_ble/ @emontnemery
 /tests/components/improv_ble/ @emontnemery
 /homeassistant/components/incomfort/ @zxdavb
@@ -690,6 +690,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/iqvia/ @bachya
 /tests/components/iqvia/ @bachya
 /homeassistant/components/irish_rail_transport/ @ttroy50
+/homeassistant/components/isal/ @bdraco
+/tests/components/isal/ @bdraco
 /homeassistant/components/islamic_prayer_times/ @engrbm87 @cpfair
 /tests/components/islamic_prayer_times/ @engrbm87 @cpfair
 /homeassistant/components/iss/ @DurgNomis-drol

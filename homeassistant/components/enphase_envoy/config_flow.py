@@ -169,7 +169,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
             except EnvoyError as e:
                 errors["base"] = "cannot_connect"
                 description_placeholders = {"reason": str(e)}
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

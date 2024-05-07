@@ -7,7 +7,7 @@ from enum import StrEnum
 from functools import cached_property, lru_cache, partial
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar
 
 import attr
 from yarl import URL
@@ -23,6 +23,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util.event_type import EventType
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import format_unserializable_data
 import homeassistant.util.uuid as uuid_util
 
@@ -46,7 +47,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_REGISTRY = "device_registry"
+DATA_REGISTRY: HassKey[DeviceRegistry] = HassKey("device_registry")
 EVENT_DEVICE_REGISTRY_UPDATED: EventType[EventDeviceRegistryUpdatedData] = EventType(
     "device_registry_updated"
 )
@@ -904,6 +905,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if not new_values:
             return old
 
+        self.hass.verify_event_loop_thread("async_update_device")
         new = attr.evolve(old, **new_values)
         self.devices[device_id] = new
 
@@ -923,13 +925,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         else:
             data = {"action": "update", "device_id": new.id, "changes": old_values}
 
-        self.hass.bus.async_fire(EVENT_DEVICE_REGISTRY_UPDATED, data)
+        self.hass.bus.async_fire_internal(EVENT_DEVICE_REGISTRY_UPDATED, data)
 
         return new
 
     @callback
     def async_remove_device(self, device_id: str) -> None:
         """Remove a device from the device registry."""
+        self.hass.verify_event_loop_thread("async_remove_device")
         device = self.devices.pop(device_id)
         self.deleted_devices[device_id] = DeletedDeviceEntry(
             config_entries=device.config_entries,
@@ -941,7 +944,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         for other_device in list(self.devices.values()):
             if other_device.via_device_id == device_id:
                 self.async_update_device(other_device.id, via_device_id=None)
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_DEVICE_REGISTRY_UPDATED,
             _EventDeviceRegistryUpdatedData_CreateRemove(
                 action="remove", device_id=device_id
@@ -1076,7 +1079,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 @callback
 def async_get(hass: HomeAssistant) -> DeviceRegistry:
     """Get device registry."""
-    return cast(DeviceRegistry, hass.data[DATA_REGISTRY])
+    return hass.data[DATA_REGISTRY]
 
 
 async def async_load(hass: HomeAssistant) -> None:

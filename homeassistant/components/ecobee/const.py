@@ -49,6 +49,7 @@ PLATFORMS = [
     Platform.NOTIFY,
     Platform.NUMBER,
     Platform.SENSOR,
+    Platform.SWITCH,
     Platform.WEATHER,
 ]
 

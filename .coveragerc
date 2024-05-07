@@ -64,7 +64,6 @@ omit =
     homeassistant/components/alarmdecoder/sensor.py
     homeassistant/components/alpha_vantage/sensor.py
     homeassistant/components/amazon_polly/*
-    homeassistant/components/ambiclimate/climate.py
     homeassistant/components/ambient_station/__init__.py
     homeassistant/components/ambient_station/binary_sensor.py
     homeassistant/components/ambient_station/entity.py
@@ -519,6 +518,7 @@ omit =
     homeassistant/components/guardian/util.py
     homeassistant/components/guardian/valve.py
     homeassistant/components/habitica/__init__.py
+    homeassistant/components/habitica/coordinator.py
     homeassistant/components/habitica/sensor.py
     homeassistant/components/harman_kardon_avr/media_player.py
     homeassistant/components/harmony/data.py
@@ -941,6 +941,7 @@ omit =
     homeassistant/components/omnilogic/switch.py
     homeassistant/components/ondilo_ico/__init__.py
     homeassistant/components/ondilo_ico/api.py
+    homeassistant/components/ondilo_ico/coordinator.py
     homeassistant/components/ondilo_ico/sensor.py
     homeassistant/components/onkyo/media_player.py
     homeassistant/components/onvif/__init__.py

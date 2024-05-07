@@ -32,6 +32,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import json as json_util
 import homeassistant.util.dt as dt_util
 from homeassistant.util.file import WriteError
+from homeassistant.util.hass_dict import HassKey
 
 from . import json as json_helper
 
@@ -42,8 +43,8 @@ MAX_LOAD_CONCURRENTLY = 6
 STORAGE_DIR = ".storage"
 _LOGGER = logging.getLogger(__name__)
 
-STORAGE_SEMAPHORE = "storage_semaphore"
-STORAGE_MANAGER = "storage_manager"
+STORAGE_SEMAPHORE: HassKey[asyncio.Semaphore] = HassKey("storage_semaphore")
+STORAGE_MANAGER: HassKey[_StoreManager] = HassKey("storage_manager")
 
 MANAGER_CLEANUP_DELAY = 60
 
@@ -218,7 +219,7 @@ class _StoreManager:
             try:
                 if storage_file.is_file():
                     data_preload[key] = json_util.load_json(storage_file)
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception as ex:  # noqa: BLE001
                 _LOGGER.debug("Error loading %s: %s", key, ex)
 
     def _initialize_files(self) -> None:
@@ -278,7 +279,7 @@ class Store(Generic[_T]):
         if self._load_task:
             return await self._load_task
 
-        load_task = self.hass.async_create_task(
+        load_task = self.hass.async_create_background_task(
             self._async_load(), f"Storage load {self.key}", eager_start=True
         )
         if not load_task.done():
@@ -468,7 +469,7 @@ class Store(Generic[_T]):
             # wrote. Reschedule the timer to the next write time.
             self._async_reschedule_delayed_write(self._next_write_time)
             return
-        self.hass.async_create_task(
+        self.hass.async_create_task_internal(
             self._async_callback_delayed_write(), eager_start=True
         )
 
