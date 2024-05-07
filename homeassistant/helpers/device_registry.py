@@ -7,7 +7,7 @@ from enum import StrEnum
 from functools import cached_property, lru_cache, partial
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar
 
 import attr
 from yarl import URL
@@ -23,6 +23,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util.event_type import EventType
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import format_unserializable_data
 import homeassistant.util.uuid as uuid_util
 
@@ -46,7 +47,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_REGISTRY = "device_registry"
+DATA_REGISTRY: HassKey[DeviceRegistry] = HassKey("device_registry")
 EVENT_DEVICE_REGISTRY_UPDATED: EventType[EventDeviceRegistryUpdatedData] = EventType(
     "device_registry_updated"
 )
@@ -1078,7 +1079,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 @callback
 def async_get(hass: HomeAssistant) -> DeviceRegistry:
     """Get device registry."""
-    return cast(DeviceRegistry, hass.data[DATA_REGISTRY])
+    return hass.data[DATA_REGISTRY]
 
 
 async def async_load(hass: HomeAssistant) -> None:

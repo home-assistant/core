@@ -14,11 +14,12 @@ from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 from .registry import BaseRegistry
 from .storage import Store
 
-DATA_REGISTRY = "issue_registry"
+DATA_REGISTRY: HassKey[IssueRegistry] = HassKey("issue_registry")
 EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED = "repairs_issue_registry_updated"
 STORAGE_KEY = "repairs.issue_registry"
 STORAGE_VERSION_MAJOR = 1
@@ -275,7 +276,7 @@ class IssueRegistry(BaseRegistry):
 @callback
 def async_get(hass: HomeAssistant) -> IssueRegistry:
     """Get issue registry."""
-    return cast(IssueRegistry, hass.data[DATA_REGISTRY])
+    return hass.data[DATA_REGISTRY]
 
 
 async def async_load(hass: HomeAssistant, *, read_only: bool = False) -> None:
