@@ -121,6 +121,7 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
         level: int | None = None,
     ) -> FloorEntry:
         """Create a new floor."""
+        self.hass.verify_event_loop_thread("async_create")
         if floor := self.async_get_floor_by_name(name):
             raise ValueError(
                 f"The name {name} ({floor.normalized_name}) is already in use"
@@ -139,7 +140,7 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
         floor_id = floor.floor_id
         self.floors[floor_id] = floor
         self.async_schedule_save()
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_FLOOR_REGISTRY_UPDATED,
             EventFloorRegistryUpdatedData(
                 action="create",
@@ -151,8 +152,9 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
     @callback
     def async_delete(self, floor_id: str) -> None:
         """Delete floor."""
+        self.hass.verify_event_loop_thread("async_delete")
         del self.floors[floor_id]
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_FLOOR_REGISTRY_UPDATED,
             EventFloorRegistryUpdatedData(
                 action="remove",
@@ -189,10 +191,11 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
         if not changes:
             return old
 
+        self.hass.verify_event_loop_thread("async_update")
         new = self.floors[floor_id] = dataclasses.replace(old, **changes)  # type: ignore[arg-type]
 
         self.async_schedule_save()
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_FLOOR_REGISTRY_UPDATED,
             EventFloorRegistryUpdatedData(
                 action="update",
