@@ -39,8 +39,8 @@ async def test_floorplan_image(
     assert resp.status == HTTPStatus.OK
     body = await resp.read()
     assert body is not None
-    # Call a third time - this time forcing it to update
-    now = dt_util.utcnow() + timedelta(seconds=91)
+    # Call a third time - this time forcing it to update - and save new image
+    now = dt_util.utcnow() + timedelta(minutes=61)
 
     # Copy the device prop so we don't override it
     prop = copy.deepcopy(PROP)
@@ -56,6 +56,10 @@ async def test_floorplan_image(
         ),
         patch(
             "homeassistant.components.roborock.image.dt_util.utcnow", return_value=now
+        ),
+        patch(
+            "homeassistant.components.roborock.roborock_storage.dt_util.utcnow",
+            return_value=now,
         ),
         patch(
             "homeassistant.components.roborock.image.RoborockMapDataParser.parse",

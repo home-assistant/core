@@ -3,9 +3,9 @@
 import dataclasses
 import logging
 import os
-import time
 
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -36,7 +36,10 @@ class RoborockStorage:
         self._entry_id = entry_id
 
     def _should_update(self, map_entry: RoborockMapEntry | None):
-        return map_entry is None or time.time() - map_entry.time > MAP_UPDATE_FREQUENCY
+        return (
+            map_entry is None
+            or dt_util.utcnow().timestamp() - map_entry.time > MAP_UPDATE_FREQUENCY
+        )
 
     def _get_map_filename(self, map_name: str):
         return self._hass.config.path(f"{MAP_PATH}/{self._entry_id}/{map_name}")
@@ -52,9 +55,10 @@ class RoborockStorage:
             try:
                 if not os.path.exists(filename):
                     map_data = None
-                _LOGGER.debug("Reading map from disk store: %s", filename)
-                with open(filename, "rb") as stored_map:
-                    map_data = stored_map.read()
+                else:
+                    _LOGGER.debug("Reading map from disk store: %s", filename)
+                    with open(filename, "rb") as stored_map:
+                        map_data = stored_map.read()
             except OSError as err:
                 _LOGGER.error("Unable to read map file: %s %s", filename, err)
                 results.append(None)
@@ -64,7 +68,7 @@ class RoborockStorage:
                 continue
             self._data[map_name] = RoborockMapEntry(
                 map_name,
-                time.time(),
+                dt_util.utcnow().timestamp(),
             )
             results.append(map_data)
         return results
@@ -82,13 +86,14 @@ class RoborockStorage:
         if not self._should_update(map_entry):
             return None
         filename = self._get_map_filename(map_name)
-        self._data[map_name] = RoborockMapEntry(map_name, time.time())
+        self._data[map_name] = RoborockMapEntry(map_name, dt_util.utcnow().timestamp())
 
         try:
             await self._hass.async_add_executor_job(self._save_map, filename, content)
         except OSError as err:
             _LOGGER.error("Unable to write map file: %s %s", filename, err)
-            # We don't want the _data dict to be updated with incorrect information.
+            # We don't want the _data dict to be updated with incorrect information
+            # Revert it if it previously existed.
             if map_entry is not None:
                 self._data[map_name] = map_entry
 
@@ -97,7 +102,9 @@ class RoborockStorage:
         for map_name, content in maps:
             map_entry = self._data.get(map_name)
             filename = self._get_map_filename(map_name)
-            self._data[map_name] = RoborockMapEntry(map_name, time.time())
+            self._data[map_name] = RoborockMapEntry(
+                map_name, dt_util.utcnow().timestamp()
+            )
             try:
                 self._save_map(filename, content)
             except OSError as err:
