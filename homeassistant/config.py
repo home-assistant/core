@@ -69,6 +69,7 @@ from .helpers.typing import ConfigType
 from .loader import ComponentProtocol, Integration, IntegrationNotFound
 from .requirements import RequirementsNotFound, async_get_integration_with_requirements
 from .util.async_ import create_eager_task
+from .util.hass_dict import HassKey
 from .util.package import is_docker_env
 from .util.unit_system import get_unit_system, validate_unit_system
 from .util.yaml import SECRET_YAML, Secrets, YamlTypeError, load_yaml_dict
@@ -81,7 +82,7 @@ RE_ASCII = re.compile(r"\033\[[^m]*m")
 YAML_CONFIG_FILE = "configuration.yaml"
 VERSION_FILE = ".HA_VERSION"
 CONFIG_DIR_NAME = ".homeassistant"
-DATA_CUSTOMIZE = "hass_customize"
+DATA_CUSTOMIZE: HassKey[EntityValues] = HassKey("hass_customize")
 
 AUTOMATION_CONFIG_PATH = "automations.yaml"
 SCRIPT_CONFIG_PATH = "scripts.yaml"

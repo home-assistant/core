@@ -101,6 +101,7 @@ from .setup import (
     async_setup_component,
 )
 from .util.async_ import create_eager_task
+from .util.hass_dict import HassKey
 from .util.logging import async_activate_log_queue_handler
 from .util.package import async_get_user_site, is_virtual_env
 
@@ -120,7 +121,7 @@ SETUP_ORDER_SORT_KEY = partial(contains, BASE_PLATFORMS)
 ERROR_LOG_FILENAME = "home-assistant.log"
 
 # hass.data key for logging information.
-DATA_REGISTRIES_LOADED = "bootstrap_registries_loaded"
+DATA_REGISTRIES_LOADED: HassKey[None] = HassKey("bootstrap_registries_loaded")
 
 LOG_SLOW_STARTUP_INTERVAL = 60
 SLOW_STARTUP_CHECK_INTERVAL = 1
