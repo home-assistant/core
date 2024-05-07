@@ -20,7 +20,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_BASE_URL, CONF_USER_DATA, DOMAIN, PLATFORMS
 from .coordinator import RoborockDataUpdateCoordinator
-from .roborock_storage import get_roborock_storage
+from .roborock_storage import RoborockStorage
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -180,5 +180,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle removal of an entry."""
-    roborock_storage = get_roborock_storage(hass, entry.entry_id)
+    roborock_storage = RoborockStorage(hass, entry.entry_id)
     await roborock_storage.async_remove_maps(entry.entry_id)

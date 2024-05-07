@@ -22,7 +22,7 @@ import homeassistant.util.dt as dt_util
 from .const import DOMAIN, IMAGE_CACHE_INTERVAL, IMAGE_DRAWABLES, MAP_SLEEP
 from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntity
-from .roborock_storage import RoborockStorage, get_roborock_storage
+from .roborock_storage import RoborockStorage
 
 
 async def async_setup_entry(
@@ -72,7 +72,7 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         )
         self._attr_image_last_updated = dt_util.utcnow()
         self.map_flag = map_flag
-        if create_map:
+        if create_map and starting_map != b"":
             try:
                 self.cached_map = self._create_image(starting_map)
             except HomeAssistantError:
@@ -82,14 +82,10 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
                 self.cached_map = b""
         else:
             # Map was cached - so we can load it directly.
+            # Or map failed - and we are setting to b"""
             self.cached_map = starting_map
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._roborock_storage = roborock_storage
-
-    @property
-    def available(self):
-        """Determines if the entity is available."""
-        return self.cached_map == b""
 
     @property
     def available(self):
@@ -170,7 +166,7 @@ async def create_coordinator_maps(
     Only one map can be loaded at a time per device.
     """
     entities = []
-    roborock_storage = get_roborock_storage(hass, coord.config_entry.entry_id)
+    roborock_storage = RoborockStorage(hass, coord.config_entry.entry_id)
     cur_map = coord.current_map
     # This won't be None at this point as the coordinator will have run first.
     assert cur_map is not None
@@ -180,18 +176,17 @@ async def create_coordinator_maps(
         coord.maps.items(), key=lambda data: data[0] == cur_map, reverse=True
     )
     maps = await hass.async_add_executor_job(
-        roborock_storage.async_load_maps,
+        roborock_storage.exec_load_maps,
         [roborock_map.name for roborock_map in coord.maps.values()],
     )
-    storage_updates = []
-    for (map_flag, map_info), storage_map in zip(maps_info, maps):
+    storage_updates: list[tuple[str, bytes]] = []
+    for (map_flag, map_info), storage_map in zip(maps_info, maps, strict=False):
         unique_id = (
             f"{slugify(coord.roborock_device_info.device.duid)}_map_{map_info.name}"
         )
         # Load the map - so we can access it with get_map_v1
-        api_data: bytes | None = storage_map
         create_map = False
-        if api_data is None:
+        if storage_map is None:
             # Only get the map data on startup if a) we haven't added the entity before
             # b) The entity does not have the needed restore data.
             if map_flag != cur_map:
@@ -203,18 +198,15 @@ async def create_coordinator_maps(
                 await asyncio.sleep(MAP_SLEEP)
             # Get the map data
             map_update = await asyncio.gather(
-                *[coord.cloud_api.get_map_v1(), coord.get_rooms()], return_exceptions=True
+                *[coord.cloud_api.get_map_v1(), coord.get_rooms()],
+                return_exceptions=True,
             )
             # If we fail to get the map, we should set it to empty byte,
             # still create it, and set it as unavailable.
-            api_data: bytes = map_update[0] if isinstance(map_update[0], bytes) else b""
-            )
-            api_data = map_update[0]
-            if api_data is None:
-                # If we fail to get the map data, we should set it to empty bytes,
-                # so it is setup, but set as unavailable
-                api_data = b""
+            api_data = map_update[0] if isinstance(map_update[0], bytes) else b""
             create_map = True
+        else:
+            api_data = storage_map
         roborock_map = RoborockMap(
             unique_id,
             coord,
@@ -226,10 +218,11 @@ async def create_coordinator_maps(
         )
         entities.append(roborock_map)
         if create_map and roborock_map.cached_map != b"":
-            storage_updates.append(
-                roborock_storage.async_save_map(map_info.name, roborock_map.cached_map)
-            )
-    await asyncio.gather(*storage_updates)
+            storage_updates.append((map_info.name, roborock_map.cached_map))
+    hass.async_create_background_task(
+        roborock_storage.async_save_maps(storage_updates),
+        f"init_map_save_{coord.roborock_device_info.device.duid}",
+    )
     if len(coord.maps) != 1:
         # Set the map back to the map the user previously had selected so that it
         # does not change the end user's app.
