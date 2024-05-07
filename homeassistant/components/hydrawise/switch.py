@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
-from pydrawise.schema import Zone
+from pydrawise import Hydrawise, Zone
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -28,9 +28,9 @@ from .entity import HydrawiseEntity
 class HydrawiseSwitchEntityDescription(SwitchEntityDescription):
     """Describes Hydrawise binary sensor."""
 
-    turn_on_fn: Callable[[HydrawiseSwitch], Coroutine[Any, Any, None]]
-    turn_off_fn: Callable[[HydrawiseSwitch], Coroutine[Any, Any, None]]
-    value_fn: Callable[[HydrawiseSwitch], bool]
+    turn_on_fn: Callable[[Hydrawise, Zone], Coroutine[Any, Any, None]]
+    turn_off_fn: Callable[[Hydrawise, Zone], Coroutine[Any, Any, None]]
+    value_fn: Callable[[Zone], bool]
 
 
 SWITCH_TYPES: tuple[HydrawiseSwitchEntityDescription, ...] = (
@@ -38,22 +38,22 @@ SWITCH_TYPES: tuple[HydrawiseSwitchEntityDescription, ...] = (
         key="auto_watering",
         translation_key="auto_watering",
         device_class=SwitchDeviceClass.SWITCH,
-        value_fn=lambda switch: switch.zone.status.suspended_until is None,
-        turn_on_fn=lambda switch: switch.coordinator.api.resume_zone(switch.zone),
-        turn_off_fn=lambda switch: switch.coordinator.api.suspend_zone(
-            switch.zone, dt_util.now() + timedelta(days=365)
+        value_fn=lambda zone: zone.status.suspended_until is None,
+        turn_on_fn=lambda api, zone: api.resume_zone(zone),
+        turn_off_fn=lambda api, zone: api.suspend_zone(
+            zone, dt_util.now() + timedelta(days=365)
         ),
     ),
     HydrawiseSwitchEntityDescription(
         key="manual_watering",
         translation_key="manual_watering",
         device_class=SwitchDeviceClass.SWITCH,
-        value_fn=lambda switch: switch.zone.scheduled_runs.current_run is not None,
-        turn_on_fn=lambda switch: switch.coordinator.api.start_zone(
-            switch.zone,
+        value_fn=lambda zone: zone.scheduled_runs.current_run is not None,
+        turn_on_fn=lambda api, zone: api.start_zone(
+            zone,
             custom_run_duration=int(DEFAULT_WATERING_TIME.total_seconds()),
         ),
-        turn_off_fn=lambda switch: switch.coordinator.api.stop_zone(switch.zone),
+        turn_off_fn=lambda api, zone: api.stop_zone(zone),
     ),
 )
 
@@ -85,16 +85,16 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        await self.entity_description.turn_on_fn(self)
+        await self.entity_description.turn_on_fn(self.coordinator.api, self.zone)
         self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self.entity_description.turn_off_fn(self)
+        await self.entity_description.turn_off_fn(self.coordinator.api, self.zone)
         self._attr_is_on = False
         self.async_write_ha_state()
 
     def _update_attrs(self) -> None:
         """Update state attributes."""
-        self._attr_is_on = self.entity_description.value_fn(self)
+        self._attr_is_on = self.entity_description.value_fn(self.zone)
