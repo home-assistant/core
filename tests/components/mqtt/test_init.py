@@ -2589,19 +2589,19 @@ async def test_subscription_done_when_birth_message_is_sent(
         mqtt_client_mock.on_connect(None, None, 0, 0)
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await mqtt.async_subscribe(hass, "topic/test", record_calls)
         # We wait until we receive a birth message
         await asyncio.wait_for(birth.wait(), 1)
-        # Assert we already have subscribed at the client
-        # for new config payloads at the time we the birth message is received
-        assert ("homeassistant/+/+/config", 0) in help_all_subscribe_calls(
-            mqtt_client_mock
-        )
-        assert ("homeassistant/+/+/+/config", 0) in help_all_subscribe_calls(
-            mqtt_client_mock
-        )
-        mqtt_client_mock.publish.assert_called_with(
-            "homeassistant/status", "online", 0, False
-        )
+
+    # Assert we already have subscribed at the client
+    # for new config payloads at the time we the birth message is received
+    subscribe_calls = help_all_subscribe_calls(mqtt_client_mock)
+    assert ("homeassistant/+/+/config", 0) in subscribe_calls
+    assert ("homeassistant/+/+/+/config", 0) in subscribe_calls
+    mqtt_client_mock.publish.assert_called_with(
+        "homeassistant/status", "online", 0, False
+    )
+    assert ("topic/test", 0) in subscribe_calls
 
 
 @pytest.mark.parametrize(
