@@ -17,6 +17,15 @@
         "data": {
           "type": "[%key:component::brother::config::step::user::data::type%]"
         }
+      },
+      "reconfigure_confirm": {
+        "description": "Update your configuration information.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::brother::config::step::user::data_description::host%]"
+        }
       }
     },
     "error": {

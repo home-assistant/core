@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from brother import Brother, SnmpError, UnsupportedModelError
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.components.snmp import async_get_snmp_engine
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.network import is_host_valid
@@ -33,6 +33,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self.brother: Brother
         self.host: str | None = None
+        self.entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -125,6 +126,71 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
                 "serial_number": self.brother.serial,
                 "model": self.brother.model,
             },
+        )
+
+    async def async_step_reconfigure(
+        self, _: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+
+        if TYPE_CHECKING:
+            assert entry is not None
+
+        self.host = entry.data[CONF_HOST]
+        self.entry = entry
+
+        return await self.async_step_reconfigure_confirm()
+
+    async def async_step_reconfigure_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        errors = {}
+
+        if TYPE_CHECKING:
+            assert self.entry is not None
+
+        if user_input is not None:
+            self.host = user_input[CONF_HOST]
+
+            try:
+                if not is_host_valid(user_input[CONF_HOST]):
+                    raise InvalidHost
+
+                snmp_engine = await async_get_snmp_engine(self.hass)
+
+                brother = await Brother.create(
+                    user_input[CONF_HOST], snmp_engine=snmp_engine
+                )
+                await brother.async_update()
+            except InvalidHost:
+                errors[CONF_HOST] = "wrong_host"
+            except (ConnectionError, TimeoutError):
+                errors["base"] = "cannot_connect"
+            except SnmpError:
+                errors["base"] = "snmp_error"
+            except UnsupportedModelError:
+                return self.async_abort(reason="unsupported_model")
+            else:
+                self.hass.config_entries.async_update_entry(
+                    self.entry,
+                    data={
+                        CONF_HOST: self.host,
+                        CONF_TYPE: self.entry.data[CONF_TYPE],
+                    },
+                )
+                await self.hass.config_entries.async_reload(self.entry.entry_id)
+                return self.async_abort(reason="reconfigure_successful")
+
+        return self.async_show_form(
+            step_id="reconfigure_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=self.host): str,
+                }
+            ),
+            errors=errors,
         )
 
 
