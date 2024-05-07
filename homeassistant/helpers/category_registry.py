@@ -5,17 +5,18 @@ from __future__ import annotations
 from collections.abc import Iterable
 import dataclasses
 from dataclasses import dataclass, field
-from typing import Literal, TypedDict, cast
+from typing import Literal, TypedDict
 
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.util.event_type import EventType
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.ulid import ulid_now
 
 from .registry import BaseRegistry
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
-DATA_REGISTRY = "category_registry"
+DATA_REGISTRY: HassKey[CategoryRegistry] = HassKey("category_registry")
 EVENT_CATEGORY_REGISTRY_UPDATED: EventType[EventCategoryRegistryUpdatedData] = (
     EventType("category_registry_updated")
 )
@@ -218,7 +219,7 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
 @callback
 def async_get(hass: HomeAssistant) -> CategoryRegistry:
     """Get category registry."""
-    return cast(CategoryRegistry, hass.data[DATA_REGISTRY])
+    return hass.data[DATA_REGISTRY]
 
 
 async def async_load(hass: HomeAssistant) -> None:

@@ -16,7 +16,7 @@ from enum import StrEnum
 from functools import cached_property
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict, TypeVar
 
 import attr
 import voluptuous as vol
@@ -48,6 +48,7 @@ from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import slugify, uuid as uuid_util
 from homeassistant.util.event_type import EventType
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import format_unserializable_data
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
@@ -65,7 +66,7 @@ if TYPE_CHECKING:
 
 T = TypeVar("T")
 
-DATA_REGISTRY = "entity_registry"
+DATA_REGISTRY: HassKey[EntityRegistry] = HassKey("entity_registry")
 EVENT_ENTITY_REGISTRY_UPDATED: EventType[EventEntityRegistryUpdatedData] = EventType(
     "entity_registry_updated"
 )
@@ -1375,7 +1376,7 @@ class EntityRegistry(BaseRegistry):
 @callback
 def async_get(hass: HomeAssistant) -> EntityRegistry:
     """Get entity registry."""
-    return cast(EntityRegistry, hass.data[DATA_REGISTRY])
+    return hass.data[DATA_REGISTRY]
 
 
 async def async_load(hass: HomeAssistant) -> None:
