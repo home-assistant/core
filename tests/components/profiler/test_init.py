@@ -18,6 +18,7 @@ from homeassistant.components.profiler import (
     CONF_ENABLED,
     CONF_SECONDS,
     SERVICE_DUMP_LOG_OBJECTS,
+    SERVICE_LOG_CURRENT_TASKS,
     SERVICE_LOG_EVENT_LOOP_SCHEDULED,
     SERVICE_LOG_THREAD_FRAMES,
     SERVICE_LRU_STATS,
@@ -215,6 +216,28 @@ async def test_log_thread_frames(
     await hass.services.async_call(DOMAIN, SERVICE_LOG_THREAD_FRAMES, {}, blocking=True)
 
     assert "SyncWorker_0" in caplog.text
+    caplog.clear()
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_log_current_tasks(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we can log current tasks."""
+
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(DOMAIN, SERVICE_LOG_CURRENT_TASKS)
+
+    await hass.services.async_call(DOMAIN, SERVICE_LOG_CURRENT_TASKS, {}, blocking=True)
+
+    assert "test_log_current_tasks" in caplog.text
     caplog.clear()
 
     assert await hass.config_entries.async_unload(entry.entry_id)

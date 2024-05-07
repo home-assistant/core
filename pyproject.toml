@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2024.5.0.dev0"
+version     = "2024.6.0.dev0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -28,7 +28,7 @@ dependencies    = [
     "aiohttp_cors==0.7.0",
     "aiohttp_session==2.12.0",
     "aiohttp-fast-url-dispatcher==0.3.0",
-    "aiohttp-isal==0.2.0",
+    "aiohttp-fast-zlib==0.1.0",
     "astral==2.2",
     "async-interrupt==1.1.1",
     "attrs==23.2.0",
@@ -53,7 +53,7 @@ dependencies    = [
     "cryptography==42.0.5",
     "Pillow==10.3.0",
     "pyOpenSSL==24.1.0",
-    "orjson==3.10.1",
+    "orjson==3.10.3",
     "packaging>=23.1",
     "pip>=21.3.1",
     "psutil-home-assistant==0.0.1",
@@ -310,6 +310,7 @@ disable = [
     "no-else-continue", # RET507
     "no-else-raise", # RET506
     "no-else-return", # RET505
+    "protected-access", # SLF001
     # "no-self-use", # PLR6301  # Optional plugin, not enabled
 
     # Handled by mypy
@@ -399,9 +400,8 @@ enable = [
 ]
 per-file-ignores = [
     # hass-component-root-import: Tests test non-public APIs
-    # protected-access: Tests do often test internals a lot
     # redefined-outer-name: Tests reference fixtures in the test function
-    "/tests/:hass-component-root-import,protected-access,redefined-outer-name",
+    "/tests/:hass-component-root-import,redefined-outer-name",
 ]
 
 [tool.pylint.REPORTS]
@@ -659,7 +659,7 @@ filterwarnings = [
 ]
 
 [tool.ruff]
-required-version = ">=0.4.1"
+required-version = ">=0.4.3"
 
 [tool.ruff.lint]
 select = [
@@ -705,6 +705,7 @@ select = [
     "RUF006", # Store a reference to the return value of asyncio.create_task
     "RUF013", # PEP 484 prohibits implicit Optional
     "RUF018", # Avoid assignment expressions in assert statements
+    "RUF019", # Unnecessary key check before dictionary access
     # "RUF100", # Unused `noqa` directive; temporarily every now and then to clean them up
     "S102", # Use of exec detected
     "S103", # bad-file-permissions
@@ -725,6 +726,7 @@ select = [
     "S608", # hardcoded-sql-expression
     "S609", # unix-command-wildcard-injection
     "SIM", # flake8-simplify
+    "SLF", # flake8-self
     "SLOT", # flake8-slots
     "T100", # Trace found: {name} used
     "T20", # flake8-print

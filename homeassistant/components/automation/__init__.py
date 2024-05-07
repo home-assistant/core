@@ -707,7 +707,10 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
             @callback
             def started_action() -> None:
-                self.hass.bus.async_fire(
+                # This is always a callback from a coro so there is no
+                # risk of this running in a thread which allows us to use
+                # async_fire_internal
+                self.hass.bus.async_fire_internal(
                     EVENT_AUTOMATION_TRIGGERED, event_data, context=trigger_context
                 )
 

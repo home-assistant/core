@@ -85,7 +85,7 @@ from homeassistant.util.signal_type import SignalType, SignalTypeFormat
 
 from . import condition, config_validation as cv, service, template
 from .condition import ConditionCheckerType, trace_condition_function
-from .dispatcher import async_dispatcher_connect, async_dispatcher_send
+from .dispatcher import async_dispatcher_connect, async_dispatcher_send_internal
 from .event import async_call_later, async_track_template
 from .script_variables import ScriptVariables
 from .trace import (
@@ -208,7 +208,9 @@ async def trace_action(
                 )
             )
         ):
-            async_dispatcher_send(hass, SCRIPT_BREAKPOINT_HIT, key, run_id, path)
+            async_dispatcher_send_internal(
+                hass, SCRIPT_BREAKPOINT_HIT, key, run_id, path
+            )
 
             done = hass.loop.create_future()
 
@@ -412,16 +414,15 @@ class _ScriptRun:
 
     def _changed(self) -> None:
         if not self._stop.done():
-            self._script._changed()  # pylint: disable=protected-access
+            self._script._changed()  # noqa: SLF001
 
     async def _async_get_condition(self, config):
-        # pylint: disable-next=protected-access
-        return await self._script._async_get_condition(config)
+        return await self._script._async_get_condition(config)  # noqa: SLF001
 
     def _log(
         self, msg: str, *args: Any, level: int = logging.INFO, **kwargs: Any
     ) -> None:
-        self._script._log(  # pylint: disable=protected-access
+        self._script._log(  # noqa: SLF001
             msg, *args, level=level, **kwargs
         )
 
@@ -507,7 +508,7 @@ class _ScriptRun:
                     trace_element.update_variables(self._variables)
 
     def _finish(self) -> None:
-        self._script._runs.remove(self)  # pylint: disable=protected-access
+        self._script._runs.remove(self)  # noqa: SLF001
         if not self._script.is_running:
             self._script.last_action = None
         self._changed()
@@ -734,7 +735,7 @@ class _ScriptRun:
         )
         trace_set_result(params=params, running_script=running_script)
         response_data = await self._async_run_long_action(
-            self._hass.async_create_task(
+            self._hass.async_create_task_internal(
                 self._hass.services.async_call(
                     **params,
                     blocking=True,
@@ -784,7 +785,7 @@ class _ScriptRun:
                 )
 
         trace_set_result(event=self._action[CONF_EVENT], event_data=event_data)
-        self._hass.bus.async_fire(
+        self._hass.bus.async_fire_internal(
             self._action[CONF_EVENT], event_data, context=self._context
         )
 
@@ -846,8 +847,7 @@ class _ScriptRun:
                 repeat_vars["item"] = item
             self._variables["repeat"] = repeat_vars
 
-        # pylint: disable-next=protected-access
-        script = self._script._get_repeat_script(self._step)
+        script = self._script._get_repeat_script(self._step)  # noqa: SLF001
         warned_too_many_loops = False
 
         async def async_run_sequence(iteration, extra_msg=""):
@@ -1003,8 +1003,7 @@ class _ScriptRun:
 
     async def _async_choose_step(self) -> None:
         """Choose a sequence."""
-        # pylint: disable-next=protected-access
-        choose_data = await self._script._async_get_choose_data(self._step)
+        choose_data = await self._script._async_get_choose_data(self._step)  # noqa: SLF001
 
         with trace_path("choose"):
             for idx, (conditions, script) in enumerate(choose_data["choices"]):
@@ -1025,8 +1024,7 @@ class _ScriptRun:
 
     async def _async_if_step(self) -> None:
         """If sequence."""
-        # pylint: disable-next=protected-access
-        if_data = await self._script._async_get_if_data(self._step)
+        if_data = await self._script._async_get_if_data(self._step)  # noqa: SLF001
 
         test_conditions = False
         try:
@@ -1188,8 +1186,7 @@ class _ScriptRun:
     @async_trace_path("parallel")
     async def _async_parallel_step(self) -> None:
         """Run a sequence in parallel."""
-        # pylint: disable-next=protected-access
-        scripts = await self._script._async_get_parallel_scripts(self._step)
+        scripts = await self._script._async_get_parallel_scripts(self._step)  # noqa: SLF001
 
         async def async_run_with_trace(idx: int, script: Script) -> None:
             """Run a script with a trace path."""
@@ -1208,7 +1205,7 @@ class _ScriptRun:
     async def _async_run_script(self, script: Script) -> None:
         """Execute a script."""
         result = await self._async_run_long_action(
-            self._hass.async_create_task(
+            self._hass.async_create_task_internal(
                 script.async_run(self._variables, self._context), eager_start=True
             )
         )
@@ -1227,7 +1224,7 @@ class _QueuedScriptRun(_ScriptRun):
         # shared lock. At the same time monitor if we've been told to stop.
         try:
             async with async_interrupt.interrupt(self._stop, ScriptStoppedError, None):
-                await self._script._queue_lck.acquire()  # pylint: disable=protected-access
+                await self._script._queue_lck.acquire()  # noqa: SLF001
         except ScriptStoppedError as ex:
             # If we've been told to stop, then just finish up.
             self._finish()
@@ -1239,7 +1236,7 @@ class _QueuedScriptRun(_ScriptRun):
 
     def _finish(self) -> None:
         if self.lock_acquired:
-            self._script._queue_lck.release()  # pylint: disable=protected-access
+            self._script._queue_lck.release()  # noqa: SLF001
             self.lock_acquired = False
         super()._finish()
 
@@ -1692,7 +1689,7 @@ class Script:
         script_stack = script_stack_cv.get()
         if (
             self.script_mode in (SCRIPT_MODE_RESTART, SCRIPT_MODE_QUEUED)
-            and (script_stack := script_stack_cv.get()) is not None
+            and script_stack is not None
             and id(self) in script_stack
         ):
             script_execution_set("disallowed_recursion_detected")
@@ -1706,15 +1703,19 @@ class Script:
         run = cls(
             self._hass, self, cast(dict, variables), context, self._log_exceptions
         )
+        has_existing_runs = bool(self._runs)
         self._runs.append(run)
-        if self.script_mode == SCRIPT_MODE_RESTART:
+        if self.script_mode == SCRIPT_MODE_RESTART and has_existing_runs:
             # When script mode is SCRIPT_MODE_RESTART, first add the new run and then
             # stop any other runs. If we stop other runs first, self.is_running will
             # return false after the other script runs were stopped until our task
-            # resumes running.
+            # resumes running. Its important that we check if there are existing
+            # runs before sleeping as otherwise if two runs are started at the exact
+            # same time they will cancel each other out.
             self._log("Restarting")
             # Important: yield to the event loop to allow the script to start in case
-            # the script is restarting itself.
+            # the script is restarting itself so it ends up in the script stack and
+            # the recursion check above will prevent the script from running.
             await asyncio.sleep(0)
             await self.async_stop(update_state=False, spare=run)
 
@@ -1730,9 +1731,7 @@ class Script:
             self._changed()
             raise
 
-    async def _async_stop(
-        self, aws: list[asyncio.Task], update_state: bool, spare: _ScriptRun | None
-    ) -> None:
+    async def _async_stop(self, aws: list[asyncio.Task], update_state: bool) -> None:
         await asyncio.wait(aws)
         if update_state:
             self._changed()
@@ -1749,9 +1748,7 @@ class Script:
         ]
         if not aws:
             return
-        await asyncio.shield(
-            create_eager_task(self._async_stop(aws, update_state, spare))
-        )
+        await asyncio.shield(create_eager_task(self._async_stop(aws, update_state)))
 
     async def _async_get_condition(self, config):
         if isinstance(config, template.Template):
@@ -1986,7 +1983,7 @@ def debug_continue(hass: HomeAssistant, key: str, run_id: str) -> None:
     breakpoint_clear(hass, key, run_id, NODE_ANY)
 
     signal = SCRIPT_DEBUG_CONTINUE_STOP.format(key, run_id)
-    async_dispatcher_send(hass, signal, "continue")
+    async_dispatcher_send_internal(hass, signal, "continue")
 
 
 @callback
@@ -1996,11 +1993,11 @@ def debug_step(hass: HomeAssistant, key: str, run_id: str) -> None:
     breakpoint_set(hass, key, run_id, NODE_ANY)
 
     signal = SCRIPT_DEBUG_CONTINUE_STOP.format(key, run_id)
-    async_dispatcher_send(hass, signal, "continue")
+    async_dispatcher_send_internal(hass, signal, "continue")
 
 
 @callback
 def debug_stop(hass: HomeAssistant, key: str, run_id: str) -> None:
     """Stop execution of a running or halted script."""
     signal = SCRIPT_DEBUG_CONTINUE_STOP.format(key, run_id)
-    async_dispatcher_send(hass, signal, "stop")
+    async_dispatcher_send_internal(hass, signal, "stop")

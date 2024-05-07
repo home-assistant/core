@@ -144,11 +144,10 @@ def websocket_command(
 
     def decorate(func: const.WebSocketCommandHandler) -> const.WebSocketCommandHandler:
         """Decorate ws command function."""
-        # pylint: disable=protected-access
         if is_dict and len(schema) == 1:  # type only empty schema
-            func._ws_schema = False  # type: ignore[attr-defined]
+            func._ws_schema = False  # type: ignore[attr-defined]  # noqa: SLF001
         elif is_dict:
-            func._ws_schema = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend(schema)  # type: ignore[attr-defined]
+            func._ws_schema = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend(schema)  # type: ignore[attr-defined]  # noqa: SLF001
         else:
             if TYPE_CHECKING:
                 assert not isinstance(schema, dict)
@@ -158,8 +157,8 @@ def websocket_command(
                 ),
                 *schema.validators[1:],
             )
-            func._ws_schema = extended_schema  # type: ignore[attr-defined]
-        func._ws_command = command  # type: ignore[attr-defined]
+            func._ws_schema = extended_schema  # type: ignore[attr-defined]  # noqa: SLF001
+        func._ws_command = command  # type: ignore[attr-defined]  # noqa: SLF001
         return func
 
     return decorate
