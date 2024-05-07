@@ -25,7 +25,7 @@ async def _handle_async_response(
     """Create a response and handle exception."""
     try:
         await func(hass, connection, msg)
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         connection.async_handle_exception(msg, err)
 
 
