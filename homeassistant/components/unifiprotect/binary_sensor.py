@@ -158,6 +158,15 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
+        key="smart_animal",
+        name="Detections: Animal",
+        icon="mdi:dog",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ufp_required_field="can_detect_animal",
+        ufp_value="is_animal_detection_on",
+        ufp_perm=PermRequired.NO_WRITE,
+    ),
+    ProtectBinaryEntityDescription(
         key="smart_person",
         name="Detections: Person",
         icon="mdi:walk",
@@ -434,6 +443,15 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_value="is_smart_currently_detected",
         ufp_required_field="feature_flags.has_smart_detect",
         ufp_event_obj="last_smart_detect_event",
+    ),
+    ProtectBinaryEventEntityDescription(
+        key="smart_obj_animal",
+        name="Animal Detected",
+        icon="mdi:dog",
+        ufp_value="is_animal_currently_detected",
+        ufp_required_field="can_detect_animal",
+        ufp_enabled="is_animal_detection_on",
+        ufp_event_obj="last_animal_detect_event",
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_obj_person",
