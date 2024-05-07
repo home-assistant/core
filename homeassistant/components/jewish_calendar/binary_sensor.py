@@ -85,7 +85,6 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
     ) -> None:
         """Initialize the binary sensor."""
         self.entity_description = description
-        self.entity_id = f"binary_sensor.{DOMAIN}_{description.key}"
         self._attr_unique_id = f"{DOMAIN}_{description.key}"
         self._location = data["location"]
         self._hebrew = data["language"] == "hebrew"

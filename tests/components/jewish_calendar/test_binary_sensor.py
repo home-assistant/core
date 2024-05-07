@@ -189,7 +189,6 @@ async def test_issur_melacha_sensor(
         entry = MockConfigEntry(
             domain=jewish_calendar.DOMAIN,
             data={
-                "name": "test",
                 "language": "english",
                 "diaspora": diaspora,
                 "candle_lighting_minutes_before_sunset": candle_lighting,
@@ -201,9 +200,7 @@ async def test_issur_melacha_sensor(
         await hass.async_block_till_done()
 
         assert (
-            hass.states.get(
-                "binary_sensor.jewish_calendar_issur_melacha_in_effect"
-            ).state
+            hass.states.get("binary_sensor.issur_melacha_in_effect").state
             == result["state"]
         )
 
@@ -211,9 +208,7 @@ async def test_issur_melacha_sensor(
             async_fire_time_changed(hass, result["update"])
             await hass.async_block_till_done()
             assert (
-                hass.states.get(
-                    "binary_sensor.jewish_calendar_issur_melacha_in_effect"
-                ).state
+                hass.states.get("binary_sensor.issur_melacha_in_effect").state
                 == result["new_state"]
             )
 
@@ -262,7 +257,6 @@ async def test_issur_melacha_sensor_update(
         entry = MockConfigEntry(
             domain=jewish_calendar.DOMAIN,
             data={
-                "name": "test",
                 "language": "english",
                 "diaspora": diaspora,
                 "candle_lighting_minutes_before_sunset": candle_lighting,
@@ -273,10 +267,7 @@ async def test_issur_melacha_sensor_update(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert (
-            hass.states.get(
-                "binary_sensor.jewish_calendar_issur_melacha_in_effect"
-            ).state
-            == result[0]
+            hass.states.get("binary_sensor.issur_melacha_in_effect").state == result[0]
         )
 
     test_time += timedelta(microseconds=1)
@@ -284,10 +275,7 @@ async def test_issur_melacha_sensor_update(
         async_fire_time_changed(hass, test_time)
         await hass.async_block_till_done()
         assert (
-            hass.states.get(
-                "binary_sensor.jewish_calendar_issur_melacha_in_effect"
-            ).state
-            == result[1]
+            hass.states.get("binary_sensor.issur_melacha_in_effect").state == result[1]
         )
 
 

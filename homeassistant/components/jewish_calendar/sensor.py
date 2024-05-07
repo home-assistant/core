@@ -167,7 +167,6 @@ class JewishCalendarSensor(SensorEntity):
     ) -> None:
         """Initialize the Jewish calendar sensor."""
         self.entity_description = description
-        self.entity_id = f"sensor.{DOMAIN}_{description.key}"
         self._attr_unique_id = f"{DOMAIN}_{description.key}"
         self._location = data["location"]
         self._hebrew = data["language"] == "hebrew"
