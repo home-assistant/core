@@ -20,7 +20,6 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LOCATION,
     CONF_LONGITUDE,
-    CONF_NAME,
     CONF_TIME_ZONE,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -68,7 +67,6 @@ def _get_data_schema(hass: HomeAssistant) -> vol.Schema:
     }
     return vol.Schema(
         {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
             vol.Required(CONF_DIASPORA, default=DEFAULT_DIASPORA): BooleanSelector(),
             vol.Required(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): SelectSelector(
                 SelectSelectorConfig(options=LANGUAGE)
