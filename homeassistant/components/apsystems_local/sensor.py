@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CONF_NAME, UnitOfEnergy, UnitOfPower
+from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -118,9 +118,10 @@ async def async_setup_entry(
     config = hass.data[DOMAIN][config_entry.entry_id]
     coordinator = config["COORDINATOR"]
     device_name = config[CONF_NAME]
+    device_id = config[CONF_DEVICE_ID]
 
     add_entities(
-        ApSystemsSensorWithDescription(coordinator, desc, device_name)
+        ApSystemsSensorWithDescription(coordinator, desc, device_name, device_id)
         for desc in SENSORS
     )
 
@@ -135,20 +136,23 @@ class ApSystemsSensorWithDescription(CoordinatorEntity, SensorEntity):
         coordinator: ApSystemsDataCoordinator,
         entity_description: ApsystemsLocalApiSensorDescription,
         device_name: str,
+        device_id: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._attr_native_value: int | float | None = None
         self.entity_description = entity_description
         self._device_name = device_name
-        self._attr_unique_id = f"apsystemsapi_{device_name}_{entity_description.key}"
+        self._device_id = device_id
+        self._attr_unique_id = f"apsystems_local_{device_id}_{entity_description.key}"
 
     @property
     def device_info(self) -> DeviceInfo:
         """Get the DeviceInfo."""
         return DeviceInfo(
-            identifiers={("apsystems_local", self._device_name)},
+            identifiers={("apsystems_local", self._device_id)},
             name=self._device_name,
+            serial_number=self._device_id,
             manufacturer="APsystems",
             model="EZ1-M",
         )
