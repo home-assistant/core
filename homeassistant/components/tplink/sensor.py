@@ -201,7 +201,10 @@ class Sensor(CoordinatedTPLinkEntity, SensorEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
-        self._attr_native_value = self._feature.value
+        value = self._feature.value
+        if value is not None and self._feature.precision_hint is not None:
+            value = round(cast(float, value), self._feature.precision_hint)
+        self._attr_native_value = value
 
 
 class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
