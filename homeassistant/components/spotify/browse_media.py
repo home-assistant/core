@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import StrEnum
 from functools import partial
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from spotipy import Spotify
 import yarl
@@ -21,6 +21,9 @@ from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 
 from .const import DOMAIN, MEDIA_PLAYER_PREFIX, MEDIA_TYPE_SHOW, PLAYABLE_MEDIA_TYPES
 from .util import fetch_image_url
+
+if TYPE_CHECKING:
+    from . import HomeAssistantSpotifyData
 
 BROWSE_LIMIT = 48
 
@@ -140,21 +143,21 @@ async def async_browse_media(
 
     # Check if caller is requesting the root nodes
     if media_content_type is None and media_content_id is None:
-        children = []
-        for config_entry_id in hass.data[DOMAIN]:
-            config_entry = hass.config_entries.async_get_entry(config_entry_id)
-            assert config_entry is not None
-            children.append(
-                BrowseMedia(
-                    title=config_entry.title,
-                    media_class=MediaClass.APP,
-                    media_content_id=f"{MEDIA_PLAYER_PREFIX}{config_entry_id}",
-                    media_content_type=f"{MEDIA_PLAYER_PREFIX}library",
-                    thumbnail="https://brands.home-assistant.io/_/spotify/logo.png",
-                    can_play=False,
-                    can_expand=True,
-                )
+        config_entries = hass.config_entries.async_entries(
+            DOMAIN, include_disabled=False, include_ignore=False
+        )
+        children = [
+            BrowseMedia(
+                title=config_entry.title,
+                media_class=MediaClass.APP,
+                media_content_id=f"{MEDIA_PLAYER_PREFIX}{config_entry.entry_id}",
+                media_content_type=f"{MEDIA_PLAYER_PREFIX}library",
+                thumbnail="https://brands.home-assistant.io/_/spotify/logo.png",
+                can_play=False,
+                can_expand=True,
             )
+            for config_entry in config_entries
+        ]
         return BrowseMedia(
             title="Spotify",
             media_class=MediaClass.APP,
@@ -171,9 +174,15 @@ async def async_browse_media(
 
     # Check for config entry specifier, and extract Spotify URI
     parsed_url = yarl.URL(media_content_id)
-    if (info := hass.data[DOMAIN].get(parsed_url.host)) is None:
+
+    if (
+        parsed_url.host is None
+        or (entry := hass.config_entries.async_get_entry(parsed_url.host)) is None
+        or not isinstance(entry.runtime_data, HomeAssistantSpotifyData)
+    ):
         raise BrowseError("Invalid Spotify account specified")
     media_content_id = parsed_url.name
+    info = entry.runtime_data
 
     result = await async_browse_media_internal(
         hass,
