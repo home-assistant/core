@@ -10,6 +10,7 @@ from typing import Literal, TypedDict
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.util import slugify
 from homeassistant.util.event_type import EventType
+from homeassistant.util.hass_dict import HassKey
 
 from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryEntry,
@@ -21,7 +22,7 @@ from .singleton import singleton
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
-DATA_REGISTRY = "floor_registry"
+DATA_REGISTRY: HassKey[FloorRegistry] = HassKey("floor_registry")
 EVENT_FLOOR_REGISTRY_UPDATED: EventType[EventFloorRegistryUpdatedData] = EventType(
     "floor_registry_updated"
 )

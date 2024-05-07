@@ -9,6 +9,7 @@ from typing import Literal, TypedDict
 
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.util.event_type import EventType
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.ulid import ulid_now
 
 from .registry import BaseRegistry
@@ -16,7 +17,7 @@ from .singleton import singleton
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
-DATA_REGISTRY = "category_registry"
+DATA_REGISTRY: HassKey[CategoryRegistry] = HassKey("category_registry")
 EVENT_CATEGORY_REGISTRY_UPDATED: EventType[EventCategoryRegistryUpdatedData] = (
     EventType("category_registry_updated")
 )

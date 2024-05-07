@@ -9,6 +9,7 @@ from typing import Any, Literal, TypedDict
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 from homeassistant.util.event_type import EventType
+from homeassistant.util.hass_dict import HassKey
 
 from . import device_registry as dr, entity_registry as er
 from .normalized_name_base_registry import (
@@ -21,7 +22,7 @@ from .singleton import singleton
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
-DATA_REGISTRY = "area_registry"
+DATA_REGISTRY: HassKey[AreaRegistry] = HassKey("area_registry")
 EVENT_AREA_REGISTRY_UPDATED: EventType[EventAreaRegistryUpdatedData] = EventType(
     "area_registry_updated"
 )

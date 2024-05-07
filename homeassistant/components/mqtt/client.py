@@ -844,8 +844,9 @@ class MQTT:
         subscription_list = list(subscriptions.items())
         result, mid = self._mqttc.subscribe(subscription_list)
 
-        for topic, qos in subscriptions.items():
-            _LOGGER.debug("Subscribing to %s, mid: %s, qos: %s", topic, mid, qos)
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            for topic, qos in subscriptions.items():
+                _LOGGER.debug("Subscribing to %s, mid: %s, qos: %s", topic, mid, qos)
         self._last_subscribe = time.monotonic()
 
         if result == 0:
@@ -863,8 +864,9 @@ class MQTT:
 
         result, mid = self._mqttc.unsubscribe(topics)
         _raise_on_error(result)
-        for topic in topics:
-            _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            for topic in topics:
+                _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
 
         await self._async_wait_for_mid(mid)
 
