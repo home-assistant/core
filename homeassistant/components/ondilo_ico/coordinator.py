@@ -24,7 +24,7 @@ class OndiloIcoCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
             hass,
             logger=_LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(minutes=5),
+            update_interval=timedelta(minutes=20),
         )
         self.api = api
 
