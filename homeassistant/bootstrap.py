@@ -84,13 +84,17 @@ from .helpers import (
     template,
     translation,
 )
-from .helpers.dispatcher import async_dispatcher_send
+from .helpers.dispatcher import async_dispatcher_send_internal
 from .helpers.storage import get_internal_store_manager
 from .helpers.system_info import async_get_system_info
 from .helpers.typing import ConfigType
 from .setup import (
     BASE_PLATFORMS,
-    DATA_SETUP_STARTED,
+    # _setup_started is marked as protected to make it clear
+    # that it is not part of the public API and should not be used
+    # by integrations. It is only used for internal tracking of
+    # which integrations are being set up.
+    _setup_started,
     async_get_setup_timings,
     async_notify_setup_error,
     async_set_domains_to_be_loaded,
@@ -676,7 +680,7 @@ class _WatchPendingSetups:
 
         if remaining_with_setup_started:
             _LOGGER.debug("Integration remaining: %s", remaining_with_setup_started)
-        elif waiting_tasks := self._hass._active_tasks:  # pylint: disable=protected-access
+        elif waiting_tasks := self._hass._active_tasks:  # noqa: SLF001
             _LOGGER.debug("Waiting on tasks: %s", waiting_tasks)
         self._async_dispatch(remaining_with_setup_started)
         if (
@@ -696,7 +700,7 @@ class _WatchPendingSetups:
     def _async_dispatch(self, remaining_with_setup_started: dict[str, float]) -> None:
         """Dispatch the signal."""
         if remaining_with_setup_started or not self._previous_was_empty:
-            async_dispatcher_send(
+            async_dispatcher_send_internal(
                 self._hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, remaining_with_setup_started
             )
         self._previous_was_empty = not remaining_with_setup_started
@@ -731,7 +735,7 @@ async def async_setup_multi_components(
     # to wait to be imported, and the sooner we can get the base platforms
     # loaded the sooner we can start loading the rest of the integrations.
     futures = {
-        domain: hass.async_create_task(
+        domain: hass.async_create_task_internal(
             async_setup_component(hass, domain, config),
             f"setup component {domain}",
             eager_start=True,
@@ -913,9 +917,7 @@ async def _async_set_up_integrations(
     hass: core.HomeAssistant, config: dict[str, Any]
 ) -> None:
     """Set up all the integrations."""
-    setup_started: dict[tuple[str, str | None], float] = {}
-    hass.data[DATA_SETUP_STARTED] = setup_started
-    watcher = _WatchPendingSetups(hass, setup_started)
+    watcher = _WatchPendingSetups(hass, _setup_started(hass))
     watcher.async_start()
 
     domains_to_setup, integration_cache = await _async_resolve_domains_to_setup(
@@ -982,7 +984,7 @@ async def _async_set_up_integrations(
         except TimeoutError:
             _LOGGER.warning(
                 "Setup timed out for stage 1 waiting on %s - moving forward",
-                hass._active_tasks,  # pylint: disable=protected-access
+                hass._active_tasks,  # noqa: SLF001
             )
 
     # Add after dependencies when setting up stage 2 domains
@@ -998,7 +1000,7 @@ async def _async_set_up_integrations(
         except TimeoutError:
             _LOGGER.warning(
                 "Setup timed out for stage 2 waiting on %s - moving forward",
-                hass._active_tasks,  # pylint: disable=protected-access
+                hass._active_tasks,  # noqa: SLF001
             )
 
     # Wrap up startup
@@ -1009,7 +1011,7 @@ async def _async_set_up_integrations(
     except TimeoutError:
         _LOGGER.warning(
             "Setup timed out for bootstrap waiting on %s - moving forward",
-            hass._active_tasks,  # pylint: disable=protected-access
+            hass._active_tasks,  # noqa: SLF001
         )
 
     watcher.async_stop()

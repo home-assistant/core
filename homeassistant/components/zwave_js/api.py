@@ -2210,7 +2210,7 @@ class FirmwareUploadView(HomeAssistantView):
         assert node.client.driver
 
         # Increase max payload
-        request._client_max_size = 1024 * 1024 * 10  # pylint: disable=protected-access
+        request._client_max_size = 1024 * 1024 * 10  # noqa: SLF001
 
         data = await request.post()
 
