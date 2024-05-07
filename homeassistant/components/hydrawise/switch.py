@@ -30,7 +30,7 @@ class HydrawiseSwitchEntityDescription(SwitchEntityDescription):
 
     turn_on_fn: Callable[[HydrawiseSwitch], Coroutine[Any, Any, None]]
     turn_off_fn: Callable[[HydrawiseSwitch], Coroutine[Any, Any, None]]
-    value_fn: Callable[[HydrawiseSwitch], Any]
+    value_fn: Callable[[HydrawiseSwitch], bool]
 
 
 SWITCH_TYPES: tuple[HydrawiseSwitchEntityDescription, ...] = (
