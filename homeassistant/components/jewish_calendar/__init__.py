@@ -10,7 +10,6 @@ from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LANGUAGE,
     CONF_LATITUDE,
-    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_TIME_ZONE,
@@ -78,34 +77,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
     language = config_entry.data.get(CONF_LANGUAGE, DEFAULT_LANGUAGE)
     diaspora = config_entry.data.get(CONF_DIASPORA, DEFAULT_DIASPORA)
-
-    if not config_entry.options:
-        # If options are not defined, update entry with optional values from the
-        # original configuration.
-        options = {
-            CONF_CANDLE_LIGHT_MINUTES: config_entry.data.get(
-                CONF_CANDLE_LIGHT_MINUTES, DEFAULT_CANDLE_LIGHT
-            ),
-            CONF_HAVDALAH_OFFSET_MINUTES: config_entry.data.get(
-                CONF_HAVDALAH_OFFSET_MINUTES, DEFAULT_HAVDALAH_OFFSET_MINUTES
-            ),
-        }
-
-        hass.config_entries.async_update_entry(config_entry, options=options)
-
-    # The current specification for config_entries of jewish_calendar allows to
-    # optionally specify latitude and longitude. So we can have a config_entry with
-    # CONF_LAT/LON specified, one with CONF_LOCATION or None in which case we'll
-    # take the Home location.
-    if CONF_LATITUDE in config_entry.data or CONF_LONGITUDE in config_entry.data:
-        latitude = config_entry.data.get(CONF_LATITUDE, hass.config.latitude)
-        longitude = config_entry.data.get(CONF_LONGITUDE, hass.config.longitude)
-    elif CONF_LOCATION in config_entry.data:
-        latitude = config_entry.data[CONF_LOCATION][CONF_LATITUDE]
-        longitude = config_entry.data[CONF_LOCATION][CONF_LONGITUDE]
-    else:
-        latitude = hass.config.latitude
-        longitude = hass.config.longitude
+    latitude = config_entry.data.get(CONF_LATITUDE, hass.config.latitude)
+    longitude = config_entry.data.get(CONF_LONGITUDE, hass.config.longitude)
 
     location = Location(
         name=hass.config.location_name,
@@ -121,10 +94,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         "language": language,
         "diaspora": diaspora,
         "location": location,
-        "candle_lighting_offset": config_entry.options.get(
+        "candle_lighting_offset": config_entry.data.get(
             CONF_CANDLE_LIGHT_MINUTES, DEFAULT_CANDLE_LIGHT
         ),
-        "havdalah_offset": config_entry.options.get(
+        "havdalah_offset": config_entry.data.get(
             CONF_HAVDALAH_OFFSET_MINUTES, DEFAULT_HAVDALAH_OFFSET_MINUTES
         ),
     }
