@@ -28,7 +28,6 @@ async def test_form_cannot_connect_and_recover(
             data={
                 CONF_IP_ADDRESS: "127.0.0.2",
                 CONF_NAME: "Solar",
-                "update_interval": 15,
             },
         )
 
@@ -48,7 +47,6 @@ async def test_form_cannot_connect_and_recover(
             {
                 CONF_IP_ADDRESS: "127.0.0.1",
                 CONF_NAME: "Solar",
-                "update_interval": 15,
             },
         )
         # AiohttpClientMockResponse does not have .ok
@@ -56,7 +54,6 @@ async def test_form_cannot_connect_and_recover(
         assert result2.get("type") == FlowResultType.CREATE_ENTRY
         assert result2["data"].get(CONF_IP_ADDRESS) == "127.0.0.1"
         assert result2["data"].get(CONF_NAME) == "Solar"
-        assert result2["data"].get("update_interval") == 15
 
 
 async def test_form_cannot_connect(hass: HomeAssistant, mock_setup_entry) -> None:
@@ -75,7 +72,6 @@ async def test_form_cannot_connect(hass: HomeAssistant, mock_setup_entry) -> Non
             data={
                 CONF_IP_ADDRESS: "127.0.0.2",
                 CONF_NAME: "Solar",
-                "update_interval": 15,
             },
         )
 
@@ -96,7 +92,6 @@ async def test_form_create_success(hass: HomeAssistant, mock_setup_entry) -> Non
             data={
                 CONF_IP_ADDRESS: "127.0.0.1",
                 CONF_NAME: "Solar",
-                "update_interval": 15,
             },
         )
         # AiohttpClientMockResponse does not have .ok
@@ -104,4 +99,3 @@ async def test_form_create_success(hass: HomeAssistant, mock_setup_entry) -> Non
         assert result.get("type") == FlowResultType.CREATE_ENTRY
         assert result["data"].get(CONF_IP_ADDRESS) == "127.0.0.1"
         assert result["data"].get(CONF_NAME) == "Solar"
-        assert result["data"].get("update_interval") == 15

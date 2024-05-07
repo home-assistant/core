@@ -8,13 +8,12 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_DEVICE_ID, CONF_IP_ADDRESS, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
+from .const import DOMAIN, LOGGER
 
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_IP_ADDRESS): str,
         vol.Required(CONF_NAME): str,
-        vol.Optional(UPDATE_INTERVAL, default=15): int,
     }
 )
 

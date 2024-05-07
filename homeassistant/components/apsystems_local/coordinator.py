@@ -22,19 +22,15 @@ class InverterNotAvailable(Exception):
 class ApSystemsDataCoordinator(DataUpdateCoordinator):
     """Coordinator used for all sensors."""
 
-    def __init__(
-        self, hass: HomeAssistant, api: APsystemsEZ1M, interval: int | None = 10
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, api: APsystemsEZ1M) -> None:
         """Initialize my coordinator."""
-        if interval is None:
-            interval = 10
         super().__init__(
             hass,
             _LOGGER,
             # Name of the data. For logging purposes.
             name="APSystems Data",
             # Polling interval. Will only be polled if there are subscribers.
-            update_interval=timedelta(seconds=interval),
+            update_interval=timedelta(seconds=12),
         )
         self.api = api
         self.always_update = True
