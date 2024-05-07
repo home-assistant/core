@@ -316,7 +316,7 @@ class EnsureJobAfterCooldown:
         self._loop = asyncio.get_running_loop()
         self._timeout = timeout
         self._callback = callback_job
-        self._task: asyncio.Future | None = None
+        self._task: asyncio.Task | None = None
         self._timer: asyncio.TimerHandle | None = None
 
     def set_timeout(self, timeout: float) -> None:
@@ -331,28 +331,23 @@ class EnsureJobAfterCooldown:
             _LOGGER.error("%s", ha_error)
 
     @callback
-    def _async_task_done(self, task: asyncio.Future) -> None:
+    def _async_task_done(self, task: asyncio.Task) -> None:
         """Handle task done."""
         self._task = None
 
     @callback
-    def _async_execute(self) -> None:
+    def async_execute(self) -> asyncio.Task:
         """Execute the job."""
         if self._task:
             # Task already running,
             # so we schedule another run
             self.async_schedule()
-            return
+            return self._task
 
         self._async_cancel_timer()
         self._task = create_eager_task(self._async_job())
         self._task.add_done_callback(self._async_task_done)
-
-    async def async_fire(self) -> None:
-        """Execute the job immediately."""
-        if self._task:
-            await self._task
-        self._async_execute()
+        return self._task
 
     @callback
     def _async_cancel_timer(self) -> None:
@@ -367,7 +362,7 @@ class EnsureJobAfterCooldown:
         # We want to reschedule the timer in the future
         # every time this is called.
         self._async_cancel_timer()
-        self._timer = self._loop.call_later(self._timeout, self._async_execute)
+        self._timer = self._loop.call_later(self._timeout, self.async_execute)
 
     async def async_cleanup(self) -> None:
         """Cleanup any pending task."""
@@ -877,7 +872,7 @@ class MQTT:
         await self._discovery_cooldown()  # Wait for MQTT discovery to cool down
         # Update subscribe cooldown period to a shorter time
         # and make sure we flush the debouncer
-        await self._subscribe_debouncer.async_fire()
+        await self._subscribe_debouncer.async_execute()
         self._subscribe_debouncer.set_timeout(SUBSCRIBE_COOLDOWN)
         await self.async_publish(
             topic=birth_message.topic,
