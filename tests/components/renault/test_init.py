@@ -57,7 +57,6 @@ async def test_setup_entry_bad_password(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert not hass.data.get(DOMAIN)
 
 
 @pytest.mark.parametrize("side_effect", [aiohttp.ClientConnectionError, GigyaException])
@@ -76,7 +75,6 @@ async def test_setup_entry_exception(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert not hass.data.get(DOMAIN)
 
 
 @pytest.mark.usefixtures("patch_renault_account")
@@ -95,7 +93,6 @@ async def test_setup_entry_kamereon_exception(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert not hass.data.get(DOMAIN)
 
 
 @pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
@@ -111,4 +108,3 @@ async def test_setup_entry_missing_vehicle_details(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert not hass.data.get(DOMAIN)

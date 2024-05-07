@@ -29,13 +29,19 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
-from homeassistant.components.honeywell.climate import PRESET_HOLD, RETRY, SCAN_INTERVAL
+from homeassistant.components.honeywell.climate import (
+    DOMAIN,
+    PRESET_HOLD,
+    RETRY,
+    SCAN_INTERVAL,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -1264,3 +1270,22 @@ async def test_aux_heat_off_service_call(
         blocking=True,
     )
     device.set_system_mode.assert_called_once_with("off")
+
+
+async def test_unique_id(
+    hass: HomeAssistant,
+    device: MagicMock,
+    config_entry: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test unique id convert to string."""
+    entity_registry.async_get_or_create(
+        Platform.CLIMATE,
+        DOMAIN,
+        device.deviceid,
+        config_entry=config_entry,
+        suggested_object_id=device.name,
+    )
+    await init_integration(hass, config_entry)
+    entity_entry = entity_registry.async_get(f"climate.{device.name}")
+    assert entity_entry.unique_id == str(device.deviceid)

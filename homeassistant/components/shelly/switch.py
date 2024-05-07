@@ -22,13 +22,12 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DOMAIN, GAS_VALVE_OPEN_STATES
-from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
+from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
     ShellyBlockAttributeEntity,
@@ -64,7 +63,7 @@ GAS_VALVE_SWITCH = BlockSwitchDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches for device."""
@@ -77,11 +76,11 @@ async def async_setup_entry(
 @callback
 def async_setup_block_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entities for block device."""
-    coordinator = get_entry_data(hass)[config_entry.entry_id].block
+    coordinator = config_entry.runtime_data.block
     assert coordinator
 
     # Add Shelly Gas Valve as a switch
@@ -127,11 +126,11 @@ def async_setup_block_entry(
 @callback
 def async_setup_rpc_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entities for RPC device."""
-    coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
+    coordinator = config_entry.runtime_data.rpc
     assert coordinator
     switch_key_ids = get_rpc_key_ids(coordinator.device.status, "switch")
 

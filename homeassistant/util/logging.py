@@ -106,7 +106,7 @@ async def _async_wrapper(
     """Catch and log exception."""
     try:
         await async_func(*args)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         log_exception(format_err, *args)
 
 
@@ -116,7 +116,7 @@ def _sync_wrapper(
     """Catch and log exception."""
     try:
         func(*args)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         log_exception(format_err, *args)
 
 
@@ -127,7 +127,7 @@ def _callback_wrapper(
     """Catch and log exception."""
     try:
         func(*args)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         log_exception(format_err, *args)
 
 
@@ -179,7 +179,7 @@ def catch_log_coro_exception(
         """Catch and log exception."""
         try:
             return await target
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             log_exception(format_err, *args)
             return None
 

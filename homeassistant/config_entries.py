@@ -48,7 +48,7 @@ from .exceptions import (
 )
 from .helpers import device_registry, entity_registry, issue_registry as ir, storage
 from .helpers.debounce import Debouncer
-from .helpers.dispatcher import SignalType, async_dispatcher_send
+from .helpers.dispatcher import SignalType, async_dispatcher_send_internal
 from .helpers.event import (
     RANDOM_MICROSECOND_MAX,
     RANDOM_MICROSECOND_MIN,
@@ -153,7 +153,7 @@ class ConfigEntryState(Enum):
         """Create new ConfigEntryState."""
         obj = object.__new__(cls)
         obj._value_ = value
-        obj._recoverable = recoverable
+        obj._recoverable = recoverable  # noqa: SLF001
         return obj
 
     @property
@@ -295,7 +295,7 @@ class ConfigEntry(Generic[_DataT]):
     update_listeners: list[UpdateListenerType]
     _async_cancel_retry_setup: Callable[[], Any] | None
     _on_unload: list[Callable[[], Coroutine[Any, Any, None] | None]] | None
-    reload_lock: asyncio.Lock
+    setup_lock: asyncio.Lock
     _reauth_lock: asyncio.Lock
     _reconfigure_lock: asyncio.Lock
     _tasks: set[asyncio.Future[Any]]
@@ -403,7 +403,7 @@ class ConfigEntry(Generic[_DataT]):
         _setter(self, "_on_unload", None)
 
         # Reload lock to prevent conflicting reloads
-        _setter(self, "reload_lock", asyncio.Lock())
+        _setter(self, "setup_lock", asyncio.Lock())
         # Reauth lock to prevent concurrent reauth flows
         _setter(self, "_reauth_lock", asyncio.Lock())
         # Reconfigure lock to prevent concurrent reconfigure flows
@@ -702,19 +702,17 @@ class ConfigEntry(Generic[_DataT]):
         # has started so we do not block shutdown
         if not hass.is_stopping:
             hass.async_create_background_task(
-                self._async_setup_retry(hass),
+                self.async_setup_locked(hass),
                 f"config entry retry {self.domain} {self.title}",
                 eager_start=True,
             )
 
-    async def _async_setup_retry(self, hass: HomeAssistant) -> None:
-        """Retry setup.
-
-        We hold the reload lock during setup retry to ensure
-        that nothing can reload the entry while we are retrying.
-        """
-        async with self.reload_lock:
-            await self.async_setup(hass)
+    async def async_setup_locked(
+        self, hass: HomeAssistant, integration: loader.Integration | None = None
+    ) -> None:
+        """Set up while holding the setup lock."""
+        async with self.setup_lock:
+            await self.async_setup(hass, integration=integration)
 
     @callback
     def async_shutdown(self) -> None:
@@ -783,7 +781,7 @@ class ConfigEntry(Generic[_DataT]):
                 self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
 
             await self._async_process_on_unload(hass)
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception as exc:
             _LOGGER.exception(
                 "Error unloading entry %s for %s", self.title, integration.domain
             )
@@ -814,7 +812,7 @@ class ConfigEntry(Generic[_DataT]):
             return
         try:
             await component.async_remove_entry(hass, self)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Error calling entry remove callback %s for %s",
                 self.title,
@@ -843,7 +841,7 @@ class ConfigEntry(Generic[_DataT]):
             error_reason_translation_placeholders,
         )
         self.clear_cache()
-        async_dispatcher_send(
+        async_dispatcher_send_internal(
             hass, SIGNAL_CONFIG_ENTRY_CHANGED, ConfigEntryChange.UPDATED, self
         )
 
@@ -889,9 +887,8 @@ class ConfigEntry(Generic[_DataT]):
                 )
                 return False
             if result:
-                # pylint: disable-next=protected-access
-                hass.config_entries._async_schedule_save()
-        except Exception:  # pylint: disable=broad-except
+                hass.config_entries._async_schedule_save()  # noqa: SLF001
+        except Exception:
             _LOGGER.exception(
                 "Error migrating entry %s for %s", self.title, self.domain
             )
@@ -1794,7 +1791,15 @@ class ConfigEntries:
         # attempts.
         entry.async_cancel_retry_setup()
 
-        async with entry.reload_lock:
+        if entry.domain not in self.hass.config.components:
+            # If the component is not loaded, just load it as
+            # the config entry will be loaded as well. We need
+            # to do this before holding the lock to avoid a
+            # deadlock.
+            await async_setup_component(self.hass, entry.domain, self._hass_config)
+            return entry.state is ConfigEntryState.LOADED
+
+        async with entry.setup_lock:
             unload_result = await self.async_unload(entry_id)
 
             if not unload_result or entry.disabled_by:
@@ -1874,6 +1879,7 @@ class ConfigEntries:
         if entry.entry_id not in self._entries:
             raise UnknownEntry(entry.entry_id)
 
+        self.hass.verify_event_loop_thread("async_update_entry")
         changed = False
         _setter = object.__setattr__
 
@@ -1922,7 +1928,7 @@ class ConfigEntries:
         self, change_type: ConfigEntryChange, entry: ConfigEntry
     ) -> None:
         """Dispatch a config entry change."""
-        async_dispatcher_send(
+        async_dispatcher_send_internal(
             self.hass, SIGNAL_CONFIG_ENTRY_CHANGED, change_type, entry
         )
 
@@ -2029,9 +2035,7 @@ class ConfigEntries:
         Config entries which are created after Home Assistant is started can't be waited
         for, the function will just return if the config entry is loaded or not.
         """
-        setup_done: dict[str, asyncio.Future[bool]] = self.hass.data.get(
-            DATA_SETUP_DONE, {}
-        )
+        setup_done = self.hass.data.get(DATA_SETUP_DONE, {})
         if setup_future := setup_done.get(entry.domain):
             await setup_future
         # The component was not loaded.
