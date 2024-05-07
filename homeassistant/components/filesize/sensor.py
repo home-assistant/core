@@ -79,9 +79,7 @@ class FilesizeEntity(CoordinatorEntity[FileSizeCoordinator], SensorEntity):
     ) -> None:
         """Initialize the Filesize sensor."""
         super().__init__(coordinator)
-        # Coordinator `path` can not be `None` as it's set on first refresh.
-        assert coordinator.path
-        base_name = str(coordinator.path.absolute()).rsplit("/", maxsplit=1)[-1]
+        base_name = str(coordinator.path.absolute()).rsplit("/", maxsplit=1)[-1]  # type: ignore[union-attr]
         self._attr_unique_id = (
             entry_id if description.key == "file" else f"{entry_id}-{description.key}"
         )
