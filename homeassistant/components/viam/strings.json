@@ -5,17 +5,17 @@
         "title": "Authenticate with Viam",
         "description": "Select which credential type to use.",
         "data": {
-          "credential_type": "Credential Type"
+          "credential_type": "Credential type"
         }
       },
       "auth": {
         "title": "[%key:component::viam::config::step::user::title%]",
         "description": "Provide the credentials for communicating with the Viam service.",
         "data": {
-          "api_id": "API Key ID",
-          "api_key": "API Key Value",
-          "address": "Robot Address",
-          "secret": "Robot Secret"
+          "api_id": "API key ID",
+          "api_key": "API key",
+          "address": "Robot address",
+          "secret": "Robot secret"
         },
         "data_description": {
           "address": "Find this under the Code Sample tab in the app.",
@@ -72,11 +72,11 @@
           "description": "List of tabular data to send to Viam."
         },
         "component_name": {
-          "name": "Component Name",
+          "name": "Component name",
           "description": "The name of the configured robot component to use."
         },
         "component_type": {
-          "name": "Component Type",
+          "name": "Component type",
           "description": "The type of the associated component."
         }
       }
@@ -90,25 +90,25 @@
           "description": "Local file path to the image you wish to reference."
         },
         "camera": {
-          "name": "Camera Entity",
+          "name": "Camera entity",
           "description": "The camera entity from which an image is captured."
         },
         "file_name": {
-          "name": "File Name",
+          "name": "File name",
           "description": "The name of the file that will be displayed in the metadata within Viam."
         },
         "component_name": {
-          "name": "Component Name",
+          "name": "Component name",
           "description": "The name of the configured robot component to use."
         }
       }
     },
     "get_classifications": {
-      "name": "Classify Images",
+      "name": "Classify images",
       "description": "Get a list of classifications from an image.",
       "fields": {
         "classifier_name": {
-          "name": "Classifier Name",
+          "name": "Classifier name",
           "description": "Name of classifier vision service configured in Viam"
         },
         "confidence": {
@@ -120,11 +120,11 @@
           "description": "Number of classifications to return from the service"
         },
         "robot_address": {
-          "name": "Robot Address",
+          "name": "Robot address",
           "description": "If authenticated using an Org API key, provide the robot address associated with the configured vision service."
         },
         "robot_secret": {
-          "name": "Robot Secret",
+          "name": "Robot secret",
           "description": "If authenticated using an Org API key, provide the robot location secret associated with the configured vision service."
         },
         "filepath": {
@@ -132,17 +132,17 @@
           "description": "Local file path to the image you wish to reference."
         },
         "camera": {
-          "name": "Camera Entity",
+          "name": "Camera entity",
           "description": "The camera entity from which an image is captured."
         }
       }
     },
     "get_detections": {
-      "name": "Detect Objects in Images",
+      "name": "Detect objects in images",
       "description": "Get a list of detected objects from an image.",
       "fields": {
         "detector_name": {
-          "name": "Detector Name",
+          "name": "Detector name",
           "description": "Name of detector vision service configured in Viam"
         },
         "confidence": {
@@ -150,11 +150,11 @@
           "description": "Threshold for filtering results returned by the service"
         },
         "robot_address": {
-          "name": "Robot Address",
+          "name": "Robot address",
           "description": "If authenticated using an Org API key, provide the robot address associated with the configured vision service."
         },
         "robot_secret": {
-          "name": "Robot Secret",
+          "name": "Robot secret",
           "description": "If authenticated using an Org API key, provide the robot location secret associated with the configured vision service."
         },
         "filepath": {
@@ -162,7 +162,7 @@
           "description": "Local file path to the image you wish to reference."
         },
         "camera": {
-          "name": "Camera Entity",
+          "name": "Camera entity",
           "description": "The camera entity from which an image is captured."
         }
       }
