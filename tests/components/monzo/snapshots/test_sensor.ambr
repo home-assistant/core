@@ -20,7 +20,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Monzo',
       'device_class': 'monetary',
-      'friendly_name': 'Current Account Total Balance',
+      'friendly_name': 'Current Account Total balance',
       'unit_of_measurement': 'GBP',
     }),
     'context': <ANY>,
@@ -52,7 +52,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Monzo',
       'device_class': 'monetary',
-      'friendly_name': 'Flex Total Balance',
+      'friendly_name': 'Flex Total balance',
       'unit_of_measurement': 'GBP',
     }),
     'context': <ANY>,
