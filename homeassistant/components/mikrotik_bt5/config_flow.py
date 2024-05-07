@@ -23,7 +23,7 @@ SUPPORTED_VERSIONS = [0,1]
 
 def _title(discovery_info: BluetoothServiceInfoBleak) -> str:
     return discovery_info.device.name or human_readable_name(
-        None, "MikroTIk BT5", discovery_info.address
+        None, "MikroTik BT5", discovery_info.address
     )
 
 
