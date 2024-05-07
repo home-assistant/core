@@ -12,9 +12,6 @@
         }
       }
     },
-    "error": {
-      "name_exists": "Name already exists"
-    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
@@ -28,7 +25,7 @@
           "havdalah_minutes_after_sunset": "Minutes after sunset for Havdalah"
         },
         "data_description": {
-          "candle_lighting_minutes_before_sunset": "Defaults to 18 minutes as this is the majority, Use 40 minutes if located in Jerusalem",
+          "candle_lighting_minutes_before_sunset": "Defaults to 18 minutes. In Israel you probavbly want to use 20/30/40 depending on your location. Outside of Israel you probably want to use 18/24.",
           "havdalah_minutes_after_sunset": "Setting this to 0 means 36 minutes as fixed degrees (8.5°) will be used instead"
         }
       }
