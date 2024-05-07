@@ -1,9 +1,11 @@
 """The tests for the MQTT component."""
 
 import asyncio
+from collections.abc import Generator
 from copy import deepcopy
 from datetime import datetime, timedelta
 import json
+import logging
 import socket
 import ssl
 from typing import Any, TypedDict
@@ -17,6 +19,7 @@ import voluptuous as vol
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.client import (
+    _LOGGER as CLIENT_LOGGER,
     RECONNECT_INTERVAL_SECONDS,
     EnsureJobAfterCooldown,
 )
@@ -110,6 +113,15 @@ def record_calls(calls: list[ReceiveMessage]) -> MessageCallbackType:
         calls.append(msg)
 
     return record_calls
+
+
+@pytest.fixture
+def client_debug_log(caplog: pytest.LogCaptureFixture) -> Generator[None, None]:
+    """Set the mqtt client log level to DEBUG."""
+    logger = logging.getLogger("mqtt_client_tests_debug")
+    logger.setLevel(logging.DEBUG)
+    with patch.object(CLIENT_LOGGER, "parent", logger):
+        yield
 
 
 def help_assert_message(
@@ -1000,6 +1012,7 @@ async def test_subscribe_topic_not_initialize(
 @patch("homeassistant.components.mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.2)
 async def test_subscribe_and_resubscribe(
     hass: HomeAssistant,
+    client_debug_log: None,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     mqtt_client_mock: MqttMockPahoClient,
     calls: list[ReceiveMessage],
