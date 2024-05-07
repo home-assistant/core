@@ -16,6 +16,7 @@ from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
     CoordinatedTPLinkEntity,
+    _description_for_feature,
     _entities_for_device_and_its_children,
     async_refresh_after,
 )
@@ -61,13 +62,8 @@ class Switch(CoordinatedTPLinkEntity, SwitchEntity):
         if feature.category is Feature.Category.Primary:
             self._attr_name = None
 
-        self.entity_description = SwitchEntityDescription(
-            key=feature.id,
-            translation_key=feature.id,
-            name=feature.name,
-            icon=feature.icon,
-            entity_registry_enabled_default=feature.category
-            is not Feature.Category.Debug,
+        self.entity_description = _description_for_feature(
+            SwitchEntityDescription, feature
         )
 
     @async_refresh_after

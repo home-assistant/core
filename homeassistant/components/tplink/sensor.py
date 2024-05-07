@@ -1,4 +1,4 @@
-"""Support for TPLink HS100/HS110/HS200 smart switch energy sensors."""
+"""Support for TPLink sensor entities."""
 
 from __future__ import annotations
 
@@ -33,7 +33,11 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import TPLinkDataUpdateCoordinator
-from .entity import CoordinatedTPLinkEntity, _entities_for_device
+from .entity import (
+    CoordinatedTPLinkEntity,
+    _description_for_feature,
+    _entities_for_device,
+)
 from .models import TPLinkData
 
 
@@ -186,15 +190,11 @@ class Sensor(CoordinatedTPLinkEntity, SensorEntity):
     ):
         """Initialize the sensor."""
         super().__init__(device, coordinator, feature=feature, parent=parent)
-        # TODO: generalize creation of entitydescription into CoordinatedTPLinkEntity?
-        self.entity_description = SensorEntityDescription(
-            key=feature.id,
-            translation_key=feature.id,
-            name=feature.name,
-            icon=feature.icon,
-            native_unit_of_measurement=feature.unit,
-            **feature.hass_compat.dict(),
+
+        self.entity_description = _description_for_feature(
+            SensorEntityDescription, feature, native_unit_of_measurement=feature.unit
         )
+
         # TODO: define `options` if type==Choice
         #  Requires the enum device class to be set. Cannot be combined with state_class or native_unit_of_measurement.
 

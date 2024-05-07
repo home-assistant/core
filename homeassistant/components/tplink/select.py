@@ -1,4 +1,4 @@
-"""Demo platform that offers a fake select entity."""
+"""Support for TPLink select entities."""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from . import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
     CoordinatedTPLinkEntity,
+    _description_for_feature,
     _entities_for_device_and_its_children,
     async_refresh_after,
 )
@@ -51,16 +52,9 @@ class Select(CoordinatedTPLinkEntity, SelectEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(device, coordinator, feature=feature, parent=parent)
-        # TODO: generalize creation of entitydescription into CoordinatedTPLinkEntity?
-        self.entity_description = SelectEntityDescription(
-            key=feature.id,
-            translation_key=feature.id,
-            name=feature.name,
-            icon=feature.icon,
-            options=feature.choices,
-            **feature.hass_compat.dict(),
+        self.entity_description = _description_for_feature(
+            SelectEntityDescription, feature, options=feature.choices
         )
-
         self._async_update_attrs()
 
     @async_refresh_after

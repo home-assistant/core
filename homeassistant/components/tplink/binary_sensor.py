@@ -14,7 +14,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
-from .entity import CoordinatedTPLinkEntity, _entities_for_device_and_its_children
+from .entity import (
+    CoordinatedTPLinkEntity,
+    _description_for_feature,
+    _entities_for_device_and_its_children,
+)
 from .models import TPLinkData
 
 
@@ -50,15 +54,9 @@ class BinarySensor(CoordinatedTPLinkEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(device, coordinator, feature=feature, parent=parent)
-        # TODO: generalize creation of entitydescription into CoordinatedTPLinkEntity?
-        self.entity_description = BinarySensorEntityDescription(
-            key=feature.id,
-            translation_key=feature.id,
-            name=feature.name,
-            icon=feature.icon,
-            **feature.hass_compat.dict(),
+        self.entity_description = _description_for_feature(
+            BinarySensorEntityDescription, feature
         )
-
         self._async_update_attrs()
 
     @callback

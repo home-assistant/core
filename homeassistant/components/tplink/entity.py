@@ -147,10 +147,15 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
             case Feature.Category.Primary:  # Main controls have no category
                 return None
             case Feature.Category.Info:
-                return None
+                return EntityCategory.DIAGNOSTIC
             case Feature.Category.Config:
                 return EntityCategory.CONFIG
             case Feature.Category.Debug:
+                return EntityCategory.DIAGNOSTIC
+            case _:
+                _LOGGER.error(
+                    "Unhandled category, fallback to DIAGNOSTIC: %s", feature.category
+                )
                 return EntityCategory.DIAGNOSTIC
 
     @abstractmethod
@@ -253,3 +258,26 @@ def _entities_for_device_and_its_children(
     )
 
     return entities
+
+
+def _description_for_feature(desc_cls, feature, **extras):
+    """Return description object for the given feature.
+
+    This is responsible for setting the common parameters & deciding based on feature id
+    which additional parameters are passed.
+
+    The *extras* can be used to pass extra parameters, like "options" for selects.
+    """
+
+    if "entity_registry_enabled_default" not in extras:
+        extras["entity_registry_enabled_default"] = (
+            feature.category is not Feature.Category.Debug
+        )
+
+    return desc_cls(
+        key=feature.id,
+        translation_key=feature.id,
+        name=feature.name,
+        icon=feature.icon,
+        **extras,
+    )

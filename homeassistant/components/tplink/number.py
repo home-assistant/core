@@ -16,6 +16,7 @@ from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
     CoordinatedTPLinkEntity,
+    _description_for_feature,
     _entities_for_device_and_its_children,
     async_refresh_after,
 )
@@ -56,16 +57,11 @@ class Number(CoordinatedTPLinkEntity, NumberEntity):
     ):
         """Initialize the number entity."""
         super().__init__(device, coordinator, feature=feature, parent=parent)
-        # TODO: generalize creation of entitydescription into CoordinatedTPLinkEntity?
-        self.entity_description = NumberEntityDescription(
-            key=feature.id,
-            translation_key=feature.id,
-            name=feature.name,
-            icon=feature.icon,
+        self.entity_description = _description_for_feature(
+            NumberEntityDescription,
+            feature,
             native_min_value=feature.minimum_value,
             native_max_value=feature.maximum_value,
-            entity_registry_enabled_default=feature.category
-            is not Feature.Category.Debug,
         )
 
     @async_refresh_after
