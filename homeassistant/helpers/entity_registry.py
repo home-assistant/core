@@ -59,6 +59,7 @@ from .device_registry import (
 )
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
 from .registry import BaseRegistry, BaseRegistryItems
+from .singleton import singleton
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -1374,16 +1375,16 @@ class EntityRegistry(BaseRegistry):
 
 
 @callback
+@singleton(DATA_REGISTRY)
 def async_get(hass: HomeAssistant) -> EntityRegistry:
     """Get entity registry."""
-    return hass.data[DATA_REGISTRY]
+    return EntityRegistry(hass)
 
 
 async def async_load(hass: HomeAssistant) -> None:
     """Load entity registry."""
     assert DATA_REGISTRY not in hass.data
-    hass.data[DATA_REGISTRY] = EntityRegistry(hass)
-    await hass.data[DATA_REGISTRY].async_load()
+    await async_get(hass).async_load()
 
 
 @callback
