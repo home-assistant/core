@@ -160,8 +160,6 @@ async def async_setup_entry(
 class JewishCalendarSensor(SensorEntity):
     """Representation of an Jewish calendar sensor."""
 
-    _attr_has_entity_name = True
-
     def __init__(
         self,
         data: dict[str, Any],

@@ -77,7 +77,6 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
 
     _attr_should_poll = False
     entity_description: JewishCalendarBinarySensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
