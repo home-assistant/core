@@ -6,7 +6,17 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.ondilo_ico.const import DOMAIN
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
+from homeassistant.components.ondilo_ico.const import (
+    DOMAIN,
+    OAUTH2_CLIENTID,
+    OAUTH2_CLIENTSECRET,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
@@ -22,6 +32,17 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="Ondilo ICO",
         data={"auth_implementation": DOMAIN, "token": {"access_token": "fake_token"}},
+    )
+
+
+@pytest.fixture
+async def setup_credentials(hass: HomeAssistant) -> None:
+    """Fixture to setup credentials."""
+    assert await async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential(OAUTH2_CLIENTID, OAUTH2_CLIENTSECRET),
     )
 
 

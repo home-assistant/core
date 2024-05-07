@@ -20,9 +20,10 @@ async def test_devices(
     device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
+    setup_credentials: None,
 ) -> None:
     """Test devices are registered."""
-    await setup_integration(hass, config_entry, mock_ondilo_client)
+    await setup_integration(hass, config_entry, mock_ondilo_client, setup_credentials)
 
     device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
@@ -40,13 +41,14 @@ async def test_init_with_no_ico_attached(
     mock_ondilo_client: MagicMock,
     config_entry: MockConfigEntry,
     pool1: dict[str, Any],
+    setup_credentials: None,
 ) -> None:
     """Test if an ICO is not attached to a pool, then no sensor is created."""
     # Only one pool, but no ICO attached
     mock_ondilo_client.get_pools.return_value = pool1
     mock_ondilo_client.get_ICO_details.side_effect = None
     mock_ondilo_client.get_ICO_details.return_value = None
-    await setup_integration(hass, config_entry, mock_ondilo_client)
+    await setup_integration(hass, config_entry, mock_ondilo_client, setup_credentials)
 
     # No sensor should be created
     assert len(hass.states.async_all()) == 0

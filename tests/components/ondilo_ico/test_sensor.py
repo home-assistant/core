@@ -21,10 +21,13 @@ async def test_sensors(
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    setup_credentials: None,
 ) -> None:
     """Test that I can get all pools data when no error."""
     with patch("homeassistant.components.ondilo_ico.PLATFORMS", [Platform.SENSOR]):
-        await setup_integration(hass, config_entry, mock_ondilo_client)
+        await setup_integration(
+            hass, config_entry, mock_ondilo_client, setup_credentials
+        )
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
@@ -36,12 +39,13 @@ async def test_no_ico_for_one_pool(
     two_pools: list[dict[str, Any]],
     ico_details2: dict[str, Any],
     last_measures: list[dict[str, Any]],
+    setup_credentials: None,
 ) -> None:
     """Test if an ICO is not attached to a pool, then no sensor for that pool is created."""
     mock_ondilo_client.get_pools.return_value = two_pools
     mock_ondilo_client.get_ICO_details.side_effect = [None, ico_details2]
 
-    await setup_integration(hass, config_entry, mock_ondilo_client)
+    await setup_integration(hass, config_entry, mock_ondilo_client, setup_credentials)
     # Only the second pool is created
     assert len(hass.states.async_all()) == 7
     assert hass.states.get("sensor.pool_1_temperature") is None
@@ -55,12 +59,13 @@ async def test_error_retrieving_ico(
     mock_ondilo_client: MagicMock,
     config_entry: MockConfigEntry,
     pool1: dict[str, Any],
+    setup_credentials: None,
 ) -> None:
     """Test if there's an error retrieving ICO data, then no sensor is created."""
     mock_ondilo_client.get_pools.return_value = pool1
     mock_ondilo_client.get_ICO_details.side_effect = OndiloError(400, "error")
 
-    await setup_integration(hass, config_entry, mock_ondilo_client)
+    await setup_integration(hass, config_entry, mock_ondilo_client, setup_credentials)
 
     # No sensor should be created
     assert len(hass.states.async_all()) == 0
@@ -72,13 +77,14 @@ async def test_error_retrieving_measures(
     config_entry: MockConfigEntry,
     pool1: dict[str, Any],
     ico_details1: dict[str, Any],
+    setup_credentials: None,
 ) -> None:
     """Test if there's an error retrieving measures of ICO, then no sensor is created."""
     mock_ondilo_client.get_pools.return_value = pool1
     mock_ondilo_client.get_ICO_details.return_value = ico_details1
     mock_ondilo_client.get_last_pool_measures.side_effect = OndiloError(400, "error")
 
-    await setup_integration(hass, config_entry, mock_ondilo_client)
+    await setup_integration(hass, config_entry, mock_ondilo_client, setup_credentials)
 
     # No sensor should be created
     assert len(hass.states.async_all()) == 0
