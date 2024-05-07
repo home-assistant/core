@@ -29,7 +29,7 @@ class FileSizeCoordinator(DataUpdateCoordinator[dict[str, int | float | datetime
             always_update=False,
         )
         self._unresolved_path = unresolved_path
-        self.path: pathlib.Path | None = None
+        self.path: pathlib.Path = None  # type: ignore[assignment]
 
     def _get_full_path(self) -> pathlib.Path:
         """Check if path is valid, allowed and return full path."""
