@@ -15,7 +15,10 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import EntityRegistry, async_get
 from homeassistant.helpers.typing import DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DOMAIN, OUTPUT_TRANSLATION_KEY, STATUS_UPDATE_MAX_TIME_INTERVAL
 from .nasweb_data import NASwebData
@@ -44,32 +47,21 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class RelaySwitch(SwitchEntity):
+class RelaySwitch(SwitchEntity, CoordinatorEntity):
     """Entity representing NASweb Output."""
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, nasweb_output: NASwebOutput
     ) -> None:
         """Initialize RelaySwitch."""
-        self.coordinator = coordinator
+        super().__init__(coordinator)
         self._output = nasweb_output
-        # self._attr_is_on = self._output.state
-        # self._attr_available = True  # self._output.available
         self._attr_icon = "mdi:export"
         self._attr_has_entity_name = True
-        self._attr_should_poll = False
         self._attr_translation_key = OUTPUT_TRANSLATION_KEY
         self._attr_unique_id = (
             f"{DOMAIN}.{self._output.webio_serial}.relay_switch.{self._output.index}"
         )
-
-    async def async_added_to_hass(self) -> None:
-        """Add coordinator update listener when entity is added to hass."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self._handle_coordinator_update, None)
-        )
-        self._handle_coordinator_update()
 
     @callback
     def _handle_coordinator_update(self) -> None:
