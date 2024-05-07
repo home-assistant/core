@@ -15,10 +15,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from . import MonzoCoordinator
 from .const import DOMAIN
-from .data import MonzoSensorData
+from .coordinator import MonzoData
 from .entity import MonzoBaseEntity
 
 
@@ -68,7 +68,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Defer sensor setup to the shared sensor module."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id].coordinator
+    coordinator: MonzoCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     accounts = [
         MonzoSensor(
@@ -100,11 +100,11 @@ class MonzoSensor(MonzoBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[MonzoSensorData],
+        coordinator: MonzoCoordinator,
         entity_description: MonzoSensorEntityDescription,
         index: int,
         device_model: str,
-        data_accessor: Callable[[MonzoSensorData], list[dict[str, Any]]],
+        data_accessor: Callable[[MonzoData], list[dict[str, Any]]],
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, index, device_model, data_accessor)
