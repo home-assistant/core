@@ -82,13 +82,15 @@ SUPPORTED_COMPONENTS = {
 }
 
 MQTT_DISCOVERY_UPDATED: SignalTypeFormat[MQTTDiscoveryPayload] = SignalTypeFormat(
-    "mqtt_discovery_updated_{}"
+    "mqtt_discovery_updated_{}_{}"
 )
 MQTT_DISCOVERY_NEW: SignalTypeFormat[MQTTDiscoveryPayload] = SignalTypeFormat(
     "mqtt_discovery_new_{}_{}"
 )
 MQTT_DISCOVERY_NEW_COMPONENT = "mqtt_discovery_new_component"
-MQTT_DISCOVERY_DONE: SignalTypeFormat[Any] = SignalTypeFormat("mqtt_discovery_done_{}")
+MQTT_DISCOVERY_DONE: SignalTypeFormat[Any] = SignalTypeFormat(
+    "mqtt_discovery_done_{}_{}"
+)
 
 TOPIC_BASE = "~"
 
@@ -230,7 +232,7 @@ async def async_start(  # noqa: C901
                     key = ORIGIN_ABBREVIATIONS.get(key, key)
                     origin_info[key] = origin_info.pop(abbreviated_key)
                 MQTT_ORIGIN_INFO_SCHEMA(discovery_payload[CONF_ORIGIN])
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 _LOGGER.warning(
                     "Unable to parse origin information "
                     "from discovery message, got %s",
@@ -329,7 +331,7 @@ async def async_start(  # noqa: C901
             discovery_pending_discovered[discovery_hash] = {
                 "unsub": async_dispatcher_connect(
                     hass,
-                    MQTT_DISCOVERY_DONE.format(discovery_hash),
+                    MQTT_DISCOVERY_DONE.format(*discovery_hash),
                     discovery_done,
                 ),
                 "pending": deque([]),
@@ -343,7 +345,7 @@ async def async_start(  # noqa: C901
             message = f"Component has already been discovered: {component} {discovery_id}, sending update"
             async_log_discovery_origin_info(message, payload)
             async_dispatcher_send(
-                hass, MQTT_DISCOVERY_UPDATED.format(discovery_hash), payload
+                hass, MQTT_DISCOVERY_UPDATED.format(*discovery_hash), payload
             )
         elif payload:
             # Add component
@@ -356,7 +358,7 @@ async def async_start(  # noqa: C901
         else:
             # Unhandled discovery message
             async_dispatcher_send(
-                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+                hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None
             )
 
     discovery_topics = [

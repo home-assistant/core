@@ -747,7 +747,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                     err,
                 )
                 automation_trace.set_error(err)
-            except Exception as err:  # pylint: disable=broad-except
+            except Exception as err:
                 self._logger.exception("While executing automation %s", self.entity_id)
                 automation_trace.set_error(err)
 

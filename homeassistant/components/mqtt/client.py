@@ -83,7 +83,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 DISCOVERY_COOLDOWN = 5
-INITIAL_SUBSCRIBE_COOLDOWN = 1.0
+INITIAL_SUBSCRIBE_COOLDOWN = 3.0
 SUBSCRIBE_COOLDOWN = 0.1
 UNSUBSCRIBE_COOLDOWN = 0.1
 TIMEOUT_ACK = 10
@@ -379,7 +379,7 @@ class EnsureJobAfterCooldown:
             await self._task
         except asyncio.CancelledError:
             pass
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error cleaning up task")
 
 
@@ -885,6 +885,7 @@ class MQTT:
             qos=birth_message.qos,
             retain=birth_message.retain,
         )
+        _LOGGER.info("MQTT client initialized, birth message sent")
 
     @callback
     def _async_mqtt_on_connect(
@@ -944,6 +945,7 @@ class MQTT:
                 name="mqtt re-subscribe",
             )
             self._subscribe_debouncer.set_timeout(SUBSCRIBE_COOLDOWN)
+            _LOGGER.info("MQTT client initialized")
 
         self._async_connection_result(True)
 
