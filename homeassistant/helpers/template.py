@@ -76,6 +76,7 @@ from homeassistant.util import (
     slugify as slugify_util,
 )
 from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.thread import ThreadWithException
@@ -99,9 +100,13 @@ _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
 DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
-_ENVIRONMENT = "template.environment"
-_ENVIRONMENT_LIMITED = "template.environment_limited"
-_ENVIRONMENT_STRICT = "template.environment_strict"
+_ENVIRONMENT: HassKey[TemplateEnvironment] = HassKey("template.environment")
+_ENVIRONMENT_LIMITED: HassKey[TemplateEnvironment] = HassKey(
+    "template.environment_limited"
+)
+_ENVIRONMENT_STRICT: HassKey[TemplateEnvironment] = HassKey(
+    "template.environment_strict"
+)
 _HASS_LOADER = "template.hass_loader"
 
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
@@ -511,8 +516,7 @@ class Template:
             wanted_env = _ENVIRONMENT_STRICT
         else:
             wanted_env = _ENVIRONMENT
-        ret: TemplateEnvironment | None = self.hass.data.get(wanted_env)
-        if ret is None:
+        if (ret := self.hass.data.get(wanted_env)) is None:
             ret = self.hass.data[wanted_env] = TemplateEnvironment(
                 self.hass, self._limited, self._strict, self._log_fn
             )
