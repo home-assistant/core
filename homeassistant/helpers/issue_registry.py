@@ -14,11 +14,12 @@ from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 from .registry import BaseRegistry
 from .storage import Store
 
-DATA_REGISTRY = "issue_registry"
+DATA_REGISTRY: HassKey[IssueRegistry] = HassKey("issue_registry")
 EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED = "repairs_issue_registry_updated"
 STORAGE_KEY = "repairs.issue_registry"
 STORAGE_VERSION_MAJOR = 1
@@ -132,7 +133,7 @@ class IssueRegistry(BaseRegistry):
         translation_placeholders: dict[str, str] | None = None,
     ) -> IssueEntry:
         """Get issue. Create if it doesn't exist."""
-
+        self.hass.verify_event_loop_thread("async_get_or_create")
         if (issue := self.async_get_issue(domain, issue_id)) is None:
             issue = IssueEntry(
                 active=True,
@@ -152,7 +153,7 @@ class IssueRegistry(BaseRegistry):
             )
             self.issues[(domain, issue_id)] = issue
             self.async_schedule_save()
-            self.hass.bus.async_fire(
+            self.hass.bus.async_fire_internal(
                 EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
                 {"action": "create", "domain": domain, "issue_id": issue_id},
             )
@@ -174,7 +175,7 @@ class IssueRegistry(BaseRegistry):
             if replacement != issue:
                 issue = self.issues[(domain, issue_id)] = replacement
                 self.async_schedule_save()
-                self.hass.bus.async_fire(
+                self.hass.bus.async_fire_internal(
                     EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
                     {"action": "update", "domain": domain, "issue_id": issue_id},
                 )
@@ -184,11 +185,12 @@ class IssueRegistry(BaseRegistry):
     @callback
     def async_delete(self, domain: str, issue_id: str) -> None:
         """Delete issue."""
+        self.hass.verify_event_loop_thread("async_delete")
         if self.issues.pop((domain, issue_id), None) is None:
             return
 
         self.async_schedule_save()
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
             {"action": "remove", "domain": domain, "issue_id": issue_id},
         )
@@ -196,6 +198,7 @@ class IssueRegistry(BaseRegistry):
     @callback
     def async_ignore(self, domain: str, issue_id: str, ignore: bool) -> IssueEntry:
         """Ignore issue."""
+        self.hass.verify_event_loop_thread("async_ignore")
         old = self.issues[(domain, issue_id)]
         dismissed_version = ha_version if ignore else None
         if old.dismissed_version == dismissed_version:
@@ -207,7 +210,7 @@ class IssueRegistry(BaseRegistry):
         )
 
         self.async_schedule_save()
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
             {"action": "update", "domain": domain, "issue_id": issue_id},
         )
@@ -273,7 +276,7 @@ class IssueRegistry(BaseRegistry):
 @callback
 def async_get(hass: HomeAssistant) -> IssueRegistry:
     """Get issue registry."""
-    return cast(IssueRegistry, hass.data[DATA_REGISTRY])
+    return hass.data[DATA_REGISTRY]
 
 
 async def async_load(hass: HomeAssistant, *, read_only: bool = False) -> None:
