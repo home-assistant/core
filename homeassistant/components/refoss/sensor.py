@@ -177,22 +177,19 @@ class RefossSensor(RefossEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the native value."""
-        self._channel_status = self.coordinator.device.status.get(self.channel_id)
-        if self._channel_status is None:
-            return None
-
-        value = self._channel_status.get(self.entity_description.subkey)
+        value = self.coordinator.device.get_value(
+            self.channel_id, self.entity_description.subkey
+        )
         if value is None:
             return None
-        if self.entity_description.key == ENERGY and value < 0:
-            return 0
-
-        if self.entity_description.key == ENERGY_RETURNED and value > 0:
-            return 0
+        if (self.entity_description.key == ENERGY and value < 0) or (
+            self.entity_description.key == ENERGY_RETURNED and value > 0
+        ):
+            value = 0
 
         if self._uom and self._uom.conversion_fn is not None:
             return self._uom.conversion_fn(value)
 
         if isinstance(value, float):
-            return round(value, 2)
+            return f"{value:.2f}"
         return value

@@ -42,7 +42,7 @@ class UnitOfMeasurement:
     device_classes: set[str]
     aliases: set[str] = field(default_factory=set)
     conversion_unit: str | None = None
-    conversion_fn: Callable[[float], float] | None = None
+    conversion_fn: Callable[[float], str] | None = None
 
 
 UNITS = (
@@ -50,25 +50,25 @@ UNITS = (
         unit=UnitOfElectricPotential.VOLT,
         aliases={"v"},
         device_classes={SensorDeviceClass.VOLTAGE},
-        conversion_fn=lambda x: round(x / 1000, 2),
+        conversion_fn=lambda x: f"{x / 1000:.2f}",
     ),
     UnitOfMeasurement(
         unit=UnitOfElectricCurrent.AMPERE,
         aliases={"a"},
         device_classes={SensorDeviceClass.CURRENT},
-        conversion_fn=lambda x: round(x / 1000, 2),
+        conversion_fn=lambda x: f"{x / 1000:.2f}",
     ),
     UnitOfMeasurement(
         unit=UnitOfPower.WATT,
         aliases={"w"},
         device_classes={SensorDeviceClass.POWER},
-        conversion_fn=lambda x: round(x / 1000, 2),
+        conversion_fn=lambda x: f"{x / 1000:.2f}",
     ),
     UnitOfMeasurement(
         unit=UnitOfEnergy.KILO_WATT_HOUR,
         aliases={"kwh"},
         device_classes={SensorDeviceClass.ENERGY},
-        conversion_fn=lambda x: round(abs(x) / 1000, 3),
+        conversion_fn=lambda x: f"{x / 1000:.2f}",
     ),
 )
 
