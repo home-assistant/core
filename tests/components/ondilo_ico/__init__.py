@@ -8,10 +8,7 @@ from tests.common import MockConfigEntry
 
 
 async def setup_integration(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_ondilo_client: MagicMock,
-    setup_credentials: None,
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_ondilo_client: MagicMock
 ) -> None:
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)

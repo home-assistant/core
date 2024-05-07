@@ -35,7 +35,7 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
     assert await async_setup_component(hass, "application_credentials", {})

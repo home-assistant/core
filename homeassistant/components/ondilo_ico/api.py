@@ -6,6 +6,7 @@ import logging
 from ondilo import Ondilo
 
 from homeassistant import core
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,4 +31,4 @@ class OndiloClient(Ondilo):
             self.session.async_ensure_token_valid(), self.hass.loop
         ).result()
 
-        return self.session.token["access_token"]
+        return self.session.token[CONF_ACCESS_TOKEN]

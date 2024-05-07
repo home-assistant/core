@@ -25,7 +25,6 @@ async def test_full_flow(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host: None,
-    setup_credentials,
 ) -> None:
     """Check full flow."""
 
