@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CONF_FILE_PATH, EntityCategory, UnitOfInformation
+from homeassistant.const import EntityCategory, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -56,12 +56,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the platform from config entry."""
-
-    coordinator = FileSizeCoordinator(hass, entry.data[CONF_FILE_PATH])
-    await coordinator.async_config_entry_first_refresh()
-
     async_add_entities(
-        FilesizeEntity(description, entry.entry_id, coordinator)
+        FilesizeEntity(description, entry.entry_id, entry.runtime_data)
         for description in SENSOR_TYPES
     )
 
