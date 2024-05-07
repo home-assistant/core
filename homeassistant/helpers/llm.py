@@ -24,30 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 DATA_KEY = "llm_tool"
 
 
-def default_custom_serializer(schema: Any) -> Any:
-    """Serialize additional types in OpenAPI-compatible format."""
-    from homeassistant.util.color import (  # pylint: disable=import-outside-toplevel
-        color_name_to_rgb,
-    )
-
-    if schema is cv.string:
-        return {"type": "string"}
-
-    if schema is cv.boolean:
-        return {"type": "boolean"}
-
-    if schema is color_name_to_rgb:
-        return {"type": "string"}
-
-    if isinstance(schema, cv.multi_select):
-        return {"enum": schema.options}
-
-    if isinstance(schema, FunctionType):
-        return {}
-
-    return UNSUPPORTED
-
-
 @dataclass(slots=True)
 class ToolInput:
     """Tool input to be processed."""
@@ -68,9 +44,8 @@ class Tool:
     """LLM Tool base class."""
 
     name: str
-    description: str | None
+    description: str | None = None
     parameters: vol.Schema = vol.Schema({})
-    custom_serializer: Callable[[Any], Any] = staticmethod(default_custom_serializer)
 
     @cached_property
     def specification(self) -> dict[str, Any]:
@@ -78,8 +53,13 @@ class Tool:
         result = {"name": self.name}
         if self.description:
             result["description"] = self.description
+
+        def custom_serializer(schema: Any) -> Any:
+            """Wrap self.custom_serializer."""
+            return self.custom_serializer(schema)
+
         result["parameters"] = convert(
-            self.parameters, custom_serializer=self.custom_serializer
+            self.parameters, custom_serializer=custom_serializer
         )
         return result
 
@@ -87,6 +67,29 @@ class Tool:
     async def async_call(self, hass: HomeAssistant, tool_input: ToolInput) -> Any:
         """Call the tool."""
         raise NotImplementedError
+
+    def custom_serializer(self, schema: Any) -> Any:
+        """Serialize additional types in OpenAPI-compatible format."""
+        from homeassistant.util.color import (  # pylint: disable=import-outside-toplevel
+            color_name_to_rgb,
+        )
+
+        if schema is cv.string:
+            return {"type": "string"}
+
+        if schema is cv.boolean:
+            return {"type": "boolean"}
+
+        if schema is color_name_to_rgb:
+            return {"type": "string"}
+
+        if isinstance(schema, cv.multi_select):
+            return {"enum": schema.options}
+
+        if isinstance(schema, FunctionType):
+            return {}
+
+        return UNSUPPORTED
 
     def as_dict(self) -> dict[str, Any]:
         """Get the tool specification in OpenAPI-compatible format."""

@@ -282,11 +282,12 @@ async def test_async_function_tool(hass: HomeAssistant) -> None:
 
 def test_custom_serializer() -> None:
     """Test custom serializer."""
-    assert llm.default_custom_serializer(cv.string) == {"type": "string"}
-    assert llm.default_custom_serializer(cv.boolean) == {"type": "boolean"}
-    assert llm.default_custom_serializer(color_name_to_rgb) == {"type": "string"}
-    assert llm.default_custom_serializer(cv.multi_select(["alpha", "beta"])) == {
+    tool = llm.Tool()
+    assert tool.custom_serializer(cv.string) == {"type": "string"}
+    assert tool.custom_serializer(cv.boolean) == {"type": "boolean"}
+    assert tool.custom_serializer(color_name_to_rgb) == {"type": "string"}
+    assert tool.custom_serializer(cv.multi_select(["alpha", "beta"])) == {
         "enum": ["alpha", "beta"]
     }
-    assert llm.default_custom_serializer(lambda x: x) == {}
-    assert llm.default_custom_serializer("unsupported") == UNSUPPORTED
+    assert tool.custom_serializer(lambda x: x) == {}
+    assert tool.custom_serializer("unsupported") == UNSUPPORTED
