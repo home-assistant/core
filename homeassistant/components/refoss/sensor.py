@@ -138,7 +138,6 @@ class RefossSensor(RefossEntity, SensorEntity):
 
     entity_description: RefossSensorEntityDescription
     _uom: UnitOfMeasurement | None = None
-    _channel_status: None
 
     def __init__(
         self,
