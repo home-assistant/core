@@ -15,9 +15,6 @@ AIOSomecomfort==0.0.25
 # homeassistant.components.adax
 Adax-local==0.1.5
 
-# homeassistant.components.ambiclimate
-Ambiclimate==0.2.1
-
 # homeassistant.components.blinksticklight
 BlinkStick==1.2.0
 
@@ -204,7 +201,7 @@ aioaseko==0.1.1
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.4.4
+aioautomower==2024.5.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.0.0
@@ -1075,7 +1072,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.47
+holidays==0.48
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240501.1
@@ -1125,7 +1122,7 @@ ical==8.0.0
 icmplib==3.0
 
 # homeassistant.components.idasen_desk
-idasen-ha==2.5.1
+idasen-ha==2.5.3
 
 # homeassistant.components.network
 ifaddr==0.2.0
