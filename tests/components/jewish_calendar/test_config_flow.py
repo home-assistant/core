@@ -15,10 +15,15 @@ from homeassistant.components.jewish_calendar import (
     DEFAULT_HAVDALAH_OFFSET_MINUTES,
     DEFAULT_LANGUAGE,
     DOMAIN,
-    config_flow,
 )
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import (
+    CONF_ELEVATION,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    CONF_TIME_ZONE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
@@ -32,7 +37,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
     with (
         patch(
@@ -46,26 +51,23 @@ async def test_step_user(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"name": "JCalendar", "diaspora": True, "language": "hebrew"},
+            {CONF_DIASPORA: DEFAULT_DIASPORA, CONF_LANGUAGE: DEFAULT_LANGUAGE},
         )
 
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == config_flow.DEFAULT_NAME
-    assert result2["data"] == {
-        "name": "JCalendar",
-        "diaspora": True,
-        "language": "hebrew",
-        "location": {
-            "latitude": hass.config.latitude,
-            "longitude": hass.config.longitude,
-        },
-        "elevation": hass.config.elevation,
-        "time_zone": hass.config.time_zone,
-    }
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data[CONF_DIASPORA] == DEFAULT_DIASPORA
+    assert entries[0].data[CONF_LANGUAGE] == DEFAULT_LANGUAGE
+    assert entries[0].data[CONF_LATITUDE] == hass.config.latitude
+    assert entries[0].data[CONF_LONGITUDE] == hass.config.longitude
+    assert entries[0].data[CONF_ELEVATION] == hass.config.elevation
+    assert entries[0].data[CONF_TIME_ZONE] == hass.config.time_zone
 
 
 @pytest.mark.parametrize("diaspora", [True, False])
