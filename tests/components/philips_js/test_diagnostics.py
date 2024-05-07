@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from haphilipsjs.typing import ChannelListType, ContextType, FavoriteListType
 from syrupy import SnapshotAssertion
 from syrupy.filters import props
 
@@ -11,27 +12,27 @@ from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
-TV_CONTEXT = {"level1": "NA", "level2": "NA", "level3": "NA", "data": "NA"}
+TV_CONTEXT = ContextType(level1="NA", level2="NA", level3="NA", data="NA")
 TV_CHANNEL_LISTS = {
-    "all": {
-        "version": 2,
-        "id": "all",
-        "listType": "MixedSources",
-        "medium": "mixed",
-        "operator": "None",
-        "installCountry": "Poland",
-        "Channel": [],
-    }
+    "all": ChannelListType(
+        version=2,
+        id="all",
+        listType="MixedSources",
+        medium="mixed",
+        operator="None",
+        installCountry="Poland",
+        Channel=[],
+    )
 }
 TV_FAVORITE_LISTS = {
-    "1": {
-        "version": "60",
-        "id": "1",
-        "type": "MixedSources",
-        "medium": "mixed",
-        "name": "Favourites 1",
-        "channels": [],
-    }
+    "1": FavoriteListType(
+        version="60",
+        id="1",
+        type="MixedSources",
+        medium="mixed",
+        name="Favourites 1",
+        channels=[],
+    )
 }
 
 
