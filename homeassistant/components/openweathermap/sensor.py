@@ -10,7 +10,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
@@ -29,6 +28,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
+from . import OpenweathermapConfigEntry
 from .const import (
     ATTR_API_CLOUDS,
     ATTR_API_CONDITION,
@@ -57,8 +57,6 @@ from .const import (
     ATTRIBUTION,
     DEFAULT_NAME,
     DOMAIN,
-    ENTRY_NAME,
-    ENTRY_WEATHER_COORDINATOR,
     MANUFACTURER,
 )
 from .weather_update_coordinator import WeatherUpdateCoordinator
@@ -222,13 +220,13 @@ FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: OpenweathermapConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up OpenWeatherMap sensor entities based on a config entry."""
-    domain_data = hass.data[DOMAIN][config_entry.entry_id]
-    name = domain_data[ENTRY_NAME]
-    weather_coordinator = domain_data[ENTRY_WEATHER_COORDINATOR]
+    domain_data = config_entry.runtime_data
+    name = domain_data.name
+    weather_coordinator = domain_data.coordinator
 
     entities: list[AbstractOpenWeatherMapSensor] = [
         OpenWeatherMapSensor(

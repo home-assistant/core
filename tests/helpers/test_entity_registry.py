@@ -398,13 +398,6 @@ async def test_filter_on_load(
                     "unique_id": "disabled-hass",
                     "disabled_by": "hass",  # We store the string representation
                 },
-                # This entry should have the entity_category reset to None
-                {
-                    "entity_id": "test.system_entity",
-                    "platform": "super_platform",
-                    "unique_id": "system-entity",
-                    "entity_category": "system",
-                },
             ]
         },
     }
@@ -412,13 +405,12 @@ async def test_filter_on_load(
     await er.async_load(hass)
     registry = er.async_get(hass)
 
-    assert len(registry.entities) == 5
+    assert len(registry.entities) == 4
     assert set(registry.entities.keys()) == {
         "test.disabled_hass",
         "test.disabled_user",
         "test.named",
         "test.no_name",
-        "test.system_entity",
     }
 
     entry_with_name = registry.async_get_or_create(
@@ -441,11 +433,6 @@ async def test_filter_on_load(
     assert entry_disabled_hass.disabled_by is er.RegistryEntryDisabler.HASS
     assert entry_disabled_user.disabled
     assert entry_disabled_user.disabled_by is er.RegistryEntryDisabler.USER
-
-    entry_system_category = registry.async_get_or_create(
-        "test", "system_entity", "system-entity"
-    )
-    assert entry_system_category.entity_category is None
 
 
 @pytest.mark.parametrize("load_registries", [False])

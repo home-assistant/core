@@ -526,6 +526,7 @@ async def hass(
     load_registries: bool,
     hass_storage: dict[str, Any],
     request: pytest.FixtureRequest,
+    mock_recorder_before_hass: None,
 ) -> AsyncGenerator[HomeAssistant, None]:
     """Create a test instance of Home Assistant."""
 
@@ -856,10 +857,21 @@ def hass_ws_client(
             data["id"] = next(id_generator)
             return websocket.send_json(data)
 
+        async def _remove_device(device_id: str, config_entry_id: str) -> Any:
+            await _send_json_auto_id(
+                {
+                    "type": "config/device_registry/remove_config_entry",
+                    "config_entry_id": config_entry_id,
+                    "device_id": device_id,
+                }
+            )
+            return await websocket.receive_json()
+
         # wrap in client
         wrapped_websocket = cast(MockHAClientWebSocket, websocket)
         wrapped_websocket.client = client
         wrapped_websocket.send_json_auto_id = _send_json_auto_id
+        wrapped_websocket.remove_device = _remove_device
         return wrapped_websocket
 
     return create_client
@@ -1564,6 +1576,15 @@ async def recorder_mock(
 ) -> recorder.Recorder:
     """Fixture with in-memory recorder."""
     return await async_setup_recorder_instance(hass, recorder_config)
+
+
+@pytest.fixture
+def mock_recorder_before_hass() -> None:
+    """Mock the recorder.
+
+    Override or parametrize this fixture with a fixture that mocks the recorder,
+    in the tests that need to test the recorder.
+    """
 
 
 @pytest.fixture(name="enable_bluetooth")
