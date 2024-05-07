@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from contextvars import ContextVar
-from datetime import datetime, timedelta
+from datetime import timedelta
 from functools import partial
 from logging import Logger, getLogger
 from typing import TYPE_CHECKING, Any, Protocol
@@ -43,7 +43,7 @@ from . import (
     translation,
 )
 from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
-from .event import async_call_later, async_track_time_interval
+from .event import async_call_later
 from .issue_registry import IssueSeverity, async_create_issue
 from .typing import UNDEFINED, ConfigType, DiscoveryInfoType
 
@@ -125,6 +125,7 @@ class EntityPlatform:
         self.platform_name = platform_name
         self.platform = platform
         self.scan_interval = scan_interval
+        self.scan_interval_seconds = scan_interval.total_seconds()
         self.entity_namespace = entity_namespace
         self.config_entry: config_entries.ConfigEntry | None = None
         # Storage for entities for this specific platform only
@@ -138,7 +139,7 @@ class EntityPlatform:
         # Stop tracking tasks after setup is completed
         self._setup_complete = False
         # Method to cancel the state change listener
-        self._async_unsub_polling: CALLBACK_TYPE | None = None
+        self._async_polling_timer: asyncio.TimerHandle | None = None
         # Method to cancel the retry of setup
         self._async_cancel_retry_setup: CALLBACK_TYPE | None = None
         self._process_updates: asyncio.Lock | None = None
@@ -477,7 +478,7 @@ class EntityPlatform:
         self, new_entities: Iterable[Entity], update_before_add: bool = False
     ) -> None:
         """Schedule adding entities for a single platform async."""
-        task = self.hass.async_create_task(
+        task = self.hass.async_create_task_internal(
             self.async_add_entities(new_entities, update_before_add=update_before_add),
             f"EntityPlatform async_add_entities {self.domain}.{self.platform_name}",
             eager_start=True,
@@ -630,7 +631,7 @@ class EntityPlatform:
 
         if (
             (self.config_entry and self.config_entry.pref_disable_polling)
-            or self._async_unsub_polling is not None
+            or self._async_polling_timer is not None
             or not any(
                 # Entity may have failed to add or called `add_to_platform_abort`
                 # so we check if the entity is in self.entities before
@@ -644,26 +645,28 @@ class EntityPlatform:
         ):
             return
 
-        self._async_unsub_polling = async_track_time_interval(
-            self.hass,
+        self._async_polling_timer = self.hass.loop.call_later(
+            self.scan_interval_seconds,
             self._async_handle_interval_callback,
-            self.scan_interval,
-            name=f"EntityPlatform poll {self.domain}.{self.platform_name}",
         )
 
     @callback
-    def _async_handle_interval_callback(self, now: datetime) -> None:
+    def _async_handle_interval_callback(self) -> None:
         """Update all the entity states in a single platform."""
+        self._async_polling_timer = self.hass.loop.call_later(
+            self.scan_interval_seconds,
+            self._async_handle_interval_callback,
+        )
         if self.config_entry:
             self.config_entry.async_create_background_task(
                 self.hass,
-                self._update_entity_states(now),
+                self._async_update_entity_states(),
                 name=f"EntityPlatform poll {self.domain}.{self.platform_name}",
                 eager_start=True,
             )
         else:
             self.hass.async_create_background_task(
-                self._update_entity_states(now),
+                self._async_update_entity_states(),
                 name=f"EntityPlatform poll {self.domain}.{self.platform_name}",
                 eager_start=True,
             )
@@ -801,7 +804,7 @@ class EntityPlatform:
                 get_initial_options=entity.get_initial_entity_options,
                 has_entity_name=entity.has_entity_name,
                 hidden_by=hidden_by,
-                known_object_ids=self.entities.keys(),
+                known_object_ids=self.entities,
                 original_device_class=entity.device_class,
                 original_icon=entity.icon,
                 original_name=entity_name,
@@ -839,11 +842,13 @@ class EntityPlatform:
             if self.entity_namespace is not None:
                 suggested_object_id = f"{self.entity_namespace} {suggested_object_id}"
             entity.entity_id = entity_registry.async_generate_entity_id(
-                self.domain, suggested_object_id, self.entities.keys()
+                self.domain, suggested_object_id, self.entities
             )
 
         # Make sure it is valid in case an entity set the value themselves
-        if not valid_entity_id(entity.entity_id):
+        # Avoid calling valid_entity_id if we already know it is valid
+        # since it already made it in the registry
+        if not entity.registry_entry and not valid_entity_id(entity.entity_id):
             entity.add_to_platform_abort()
             raise HomeAssistantError(f"Invalid entity ID: {entity.entity_id}")
 
@@ -917,9 +922,9 @@ class EntityPlatform:
     @callback
     def async_unsub_polling(self) -> None:
         """Stop polling."""
-        if self._async_unsub_polling is not None:
-            self._async_unsub_polling()
-            self._async_unsub_polling = None
+        if self._async_polling_timer is not None:
+            self._async_polling_timer.cancel()
+            self._async_polling_timer = None
 
     @callback
     def async_prepare(self) -> None:
@@ -941,11 +946,10 @@ class EntityPlatform:
         await self.entities[entity_id].async_remove()
 
         # Clean up polling job if no longer needed
-        if self._async_unsub_polling is not None and not any(
+        if self._async_polling_timer is not None and not any(
             entity.should_poll for entity in self.entities.values()
         ):
-            self._async_unsub_polling()
-            self._async_unsub_polling = None
+            self.async_unsub_polling()
 
     async def async_extract_from_service(
         self, service_call: ServiceCall, expand_group: bool = True
@@ -996,7 +1000,7 @@ class EntityPlatform:
             supports_response,
         )
 
-    async def _update_entity_states(self, now: datetime) -> None:
+    async def _async_update_entity_states(self) -> None:
         """Update the states of all the polling entities.
 
         To protect from flooding the executor, we will update async entities

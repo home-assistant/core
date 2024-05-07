@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from typing import Union
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from crownstone_cloud.cloud_models.spheres import Spheres
@@ -31,7 +30,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-MockFixture = Generator[Union[MagicMock, AsyncMock], None, None]
+MockFixture = Generator[MagicMock | AsyncMock, None, None]
 
 
 @pytest.fixture(name="crownstone_setup")

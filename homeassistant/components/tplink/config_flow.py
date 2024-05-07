@@ -174,7 +174,9 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 self._discovered_device = device
                 await set_credentials(self.hass, username, password)
-                self.hass.async_create_task(self._async_reload_requires_auth_entries())
+                self.hass.async_create_task(
+                    self._async_reload_requires_auth_entries(), eager_start=False
+                )
                 return self._async_create_entry_from_device(self._discovered_device)
 
         self.context["title_placeholders"] = placeholders
@@ -267,7 +269,9 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 placeholders["error"] = str(ex)
             else:
                 await set_credentials(self.hass, username, password)
-                self.hass.async_create_task(self._async_reload_requires_auth_entries())
+                self.hass.async_create_task(
+                    self._async_reload_requires_auth_entries(), eager_start=False
+                )
                 return self._async_create_entry_from_device(device)
 
         return self.async_show_form(
@@ -446,7 +450,9 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 placeholders["error"] = str(ex)
             else:
                 await set_credentials(self.hass, username, password)
-                self.hass.async_create_task(self._async_reload_requires_auth_entries())
+                self.hass.async_create_task(
+                    self._async_reload_requires_auth_entries(), eager_start=False
+                )
                 return self.async_abort(reason="reauth_successful")
 
         # Old config entries will not have these values.

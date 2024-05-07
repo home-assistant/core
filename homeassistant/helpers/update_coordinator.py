@@ -401,6 +401,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             if not auth_failed and self._listeners and not self.hass.is_stopping:
                 self._schedule_refresh()
 
+        self._async_refresh_finished()
+
         if not self.last_update_success and not previous_update_success:
             return
 
@@ -410,6 +412,15 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             or previous_data != self.data
         ):
             self.async_update_listeners()
+
+    @callback
+    def _async_refresh_finished(self) -> None:
+        """Handle when a refresh has finished.
+
+        Called when refresh is finished before listeners are updated.
+
+        To be overridden by subclasses.
+        """
 
     @callback
     def async_set_update_error(self, err: Exception) -> None:
@@ -444,20 +455,9 @@ class TimestampDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
 
     last_update_success_time: datetime | None = None
 
-    async def _async_refresh(
-        self,
-        log_failures: bool = True,
-        raise_on_auth_failed: bool = False,
-        scheduled: bool = False,
-        raise_on_entry_error: bool = False,
-    ) -> None:
-        """Refresh data."""
-        await super()._async_refresh(
-            log_failures,
-            raise_on_auth_failed,
-            scheduled,
-            raise_on_entry_error,
-        )
+    @callback
+    def _async_refresh_finished(self) -> None:
+        """Handle when a refresh has finished."""
         if self.last_update_success:
             self.last_update_success_time = utcnow()
 

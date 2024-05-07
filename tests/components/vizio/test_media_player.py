@@ -28,6 +28,8 @@ from homeassistant.components.media_player import (
     ATTR_SOUND_MODE,
     DOMAIN as MP_DOMAIN,
     SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
@@ -443,6 +445,8 @@ async def test_services(
         "eq",
         "Music",
     )
+    await _test_service(hass, MP_DOMAIN, "play", SERVICE_MEDIA_PLAY, None)
+    await _test_service(hass, MP_DOMAIN, "pause", SERVICE_MEDIA_PAUSE, None)
 
 
 async def test_options_update(

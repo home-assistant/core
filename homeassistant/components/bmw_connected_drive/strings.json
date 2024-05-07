@@ -122,6 +122,15 @@
       },
       "remaining_fuel_percent": {
         "name": "Remaining fuel percent"
+      },
+      "climate_status": {
+        "name": "Climate status",
+        "state": {
+          "cooling": "Cooling",
+          "heating": "Heating",
+          "inactive": "Inactive",
+          "standby": "Standby"
+        }
       }
     },
     "switch": {

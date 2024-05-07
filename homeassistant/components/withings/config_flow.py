@@ -34,14 +34,8 @@ class WithingsFlowHandler(
     def extra_authorize_data(self) -> dict[str, str]:
         """Extra data that needs to be appended to the authorize url."""
         return {
-            "scope": ",".join(
-                [
-                    AuthScope.USER_INFO,
-                    AuthScope.USER_METRICS,
-                    AuthScope.USER_ACTIVITY,
-                    AuthScope.USER_SLEEP_EVENTS,
-                ]
-            )
+            "scope": f"{AuthScope.USER_INFO},{AuthScope.USER_METRICS},"
+            f"{AuthScope.USER_ACTIVITY},{AuthScope.USER_SLEEP_EVENTS}"
         }
 
     async def async_step_reauth(

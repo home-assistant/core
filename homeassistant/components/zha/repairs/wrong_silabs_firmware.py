@@ -74,9 +74,14 @@ def _detect_radio_hardware(hass: HomeAssistant, device: str) -> HardwareType:
     return HardwareType.OTHER
 
 
-async def probe_silabs_firmware_type(device: str) -> ApplicationType | None:
+async def probe_silabs_firmware_type(
+    device: str, *, probe_methods: ApplicationType | None = None
+) -> ApplicationType | None:
     """Probe the running firmware on a Silabs device."""
-    flasher = Flasher(device=device)
+    flasher = Flasher(
+        device=device,
+        **({"probe_methods": probe_methods} if probe_methods else {}),
+    )
 
     try:
         await flasher.probe_app_type()
