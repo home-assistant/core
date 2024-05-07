@@ -70,6 +70,7 @@ from .scheduler import (
     RoutineInfo,
     TimeLineScheduler,
     get_target_entities,
+    output_all,
 )
 
 LOGGER = logging.getLogger("rascal_rescheduler")
@@ -96,16 +97,6 @@ class BaseRescheduler(TimeLineScheduler):
         super().__init__(hass, lineage_table, serialization_order, resched_policy)
         self._optimal_sched_metric = optimal_sched_metric
         self._routine_prioriy_policy = routine_priority_policy
-
-    @property
-    def lineage_table(self) -> LineageTable:
-        """Return the lineage table."""
-        return self._lineage_table
-
-    @lineage_table.setter
-    def lineage_table(self, lineage_table: LineageTable) -> None:
-        """Set the lineage table."""
-        self._lineage_table = lineage_table
 
     async def _move_device_schedule(
         self, entity_id: str, st_time: datetime, diff: timedelta
@@ -204,7 +195,7 @@ class BaseRescheduler(TimeLineScheduler):
     def RV(self, st_time: datetime, window: timedelta = timedelta(0)) -> LineageTable:
         """Reschedule actions using the RV resource reclamation algorithm.
 
-        go through the scheduled actions in the lineage table in total chronological
+        Go through the scheduled actions in the lineage table in total chronological
         order across entities and check if the current action can start earlier
         it can start earlier if its parents (if any) are all scheduled before it
         and there is a free slot for it to start earlier
@@ -216,7 +207,8 @@ class BaseRescheduler(TimeLineScheduler):
         # introduce a heap to keep track of the earliest action to be rescheduled
         # the heap will be ordered by the start time of the action
         # the heap will be a list of ActionLockInfo objects
-        next_action_heap = list[tuple[datetime, ActionInfo]]()
+        # next_action_heap = list[tuple[datetime, ActionInfo]]()
+        next_action_heap = list[ActionInfo]()
         for entity_id, lock_queue in lock_queues.items():
             for action_id, action_lock in lock_queue.items():
                 if not action_lock:
@@ -232,12 +224,12 @@ class BaseRescheduler(TimeLineScheduler):
 
                 # add the action to the heap, ordered by the current start time
                 action_st_dt = string_to_datetime(action_lock.start_time)
-                heapq.heappush(next_action_heap, (action_st_dt, action_lock))
+                heapq.heappush(next_action_heap, action_lock)
                 break
 
         visited = set[str]()
         while next_action_heap:
-            _, action_lock = heapq.heappop(next_action_heap)
+            action_lock = heapq.heappop(next_action_heap)
             action = action_lock.action
             action_id = action.action_id
             if action_id in visited:
@@ -316,8 +308,7 @@ class BaseRescheduler(TimeLineScheduler):
                 next_action_lock = lock_queues[entity_id].next(action_id)
                 if not next_action_lock:
                     continue
-                next_action_st_dt = string_to_datetime(next_action_lock.start_time)
-                heapq.heappush(next_action_heap, (next_action_st_dt, next_action_lock))
+                heapq.heappush(next_action_heap, next_action_lock)
 
             visited.add(action_id)
 
@@ -722,10 +713,10 @@ class BaseRescheduler(TimeLineScheduler):
         descheduled_source_action_ids: set[str],
         descheduled_actions: dict[str, ActionEntity],
         entities: set[str],
-        immutable_serialization_order: list[str],
         serializability_guarantee: bool,
+        immutable_serialization_order: Optional[list[str]],
         # window: timedelta
-    ) -> LineageTable:
+    ) -> tuple[LineageTable, Queue[str, RoutineInfo]]:
         """Shortest Job First rescheduling w/ and w/o routine serializability guarantee.
 
         Initially, initialize the serialization order,
@@ -762,6 +753,8 @@ class BaseRescheduler(TimeLineScheduler):
             for routine_id, routine_info in self._serialization_order.items():
                 old_serialization_order[routine_id] = routine_info
             self._serialization_order.clear()
+            if immutable_serialization_order is None:
+                raise ValueError("Immutable serialization order is missing.")
             for routine_id in immutable_serialization_order:
                 self._serialization_order[routine_id] = old_serialization_order[
                     routine_id
@@ -934,7 +927,7 @@ class BaseRescheduler(TimeLineScheduler):
 
         self._cleanup_serialization_order_dependencies(visited)
 
-        return self._lineage_table
+        return self._lineage_table, self._serialization_order
 
     def _cmp_metrics(self, metric1: ScheduleMetrics, metric2: ScheduleMetrics) -> bool:
         """Compare two metrics."""
@@ -964,21 +957,24 @@ class BaseRescheduler(TimeLineScheduler):
         self,
         prev_lineage_table: LineageTable,
         prev_serialization_order: Queue[str, RoutineInfo],
-        prev_next_slots: dict[str, str],
+        prev_next_slots: dict[str, datetime],
         prev_wait_queues: dict[str, set[ActionEntity]],
         prev_descheduled_actions: dict[str, ActionEntity],
         prev_metrics: ScheduleMetrics,
         chosen_entity_id: str,
         chosen_action: ActionEntity,
         serializability_guarantee: bool,
-        immutable_serialization_order: list[str],
         # window: timedelta
-    ) -> tuple[Optional[LineageTable], Optional[ScheduleMetrics]]:
+    ) -> tuple[
+        Optional[LineageTable],
+        Optional[Queue[str, RoutineInfo]],
+        Optional[ScheduleMetrics],
+    ]:
         """Brute-force go through all options for the optimal schedule."""
 
         # deep copy lineage table, serialization order, next slots, and wait queues
-        lineage_table = LineageTable(prev_lineage_table)
-        serialization_order = copy.deepcopy(prev_serialization_order)
+        lineage_table = prev_lineage_table.duplicate
+        serialization_order = Queue(prev_serialization_order)
         next_slots = copy.deepcopy(prev_next_slots)
         wait_queues = dict[str, set[ActionEntity]]()
         for entity_id, actions in prev_wait_queues.items():
@@ -992,8 +988,7 @@ class BaseRescheduler(TimeLineScheduler):
 
         # schedule the action on all entities it affects
         target_entities = get_target_entities(self._hass, chosen_action.action)
-        next_slot_st = next_slots[chosen_entity_id]
-        next_slot_st_dt = string_to_datetime(next_slot_st)
+        next_slot_st_dt = next_slots[chosen_entity_id]
         action_slot = self._identify_first_common_idle_time_after(
             target_entities, next_slot_st_dt, max(chosen_action.duration.values())
         )
@@ -1049,7 +1044,7 @@ class BaseRescheduler(TimeLineScheduler):
                     last_slot_start = self._lineage_table.free_slots[entity_id].end()[0]
                     if not last_slot_start:
                         continue
-                    next_slots[entity_id] = last_slot_start
+                    next_slots[entity_id] = string_to_datetime(last_slot_start)
 
         # update the next slot for each target entity
         # and remove the action from the wait queues
@@ -1060,37 +1055,33 @@ class BaseRescheduler(TimeLineScheduler):
             if not wait_queues[entity_id]:
                 to_remove.add(entity_id)
                 continue
-            action_end_dt = action_st_dt + chosen_action.duration[entity_id]
-            next_slots[entity_id] = datetime_to_string(action_end_dt)
-
-        for entity_id in to_remove:
-            wait_queues.pop(entity_id)
-
-        # update the schedule metrics
-        for entity_id in target_entities:
+            next_slots[entity_id] = action_st_dt + chosen_action.duration[entity_id]
+            # update the schedule metrics
             metrics.record_scheduled_action_start(
                 action_st_dt, entity_id, chosen_action.action_id
             )
             metrics.record_scheduled_action_end(
-                action_end_dt, entity_id, chosen_action.action_id
+                next_slots[entity_id], entity_id, chosen_action.action_id
             )
+
+        for entity_id in to_remove:
+            wait_queues.pop(entity_id)
 
         # filter out entities with no actions to schedule
         filtered_next_slots = {k: v for k, v in next_slots.items() if k in wait_queues}
 
         if not filtered_next_slots:
-            return lineage_table, metrics
+            return lineage_table, serialization_order, metrics
 
         # find the entity with the earliest next slot
-        next_entity_id, _ = min(
-            filtered_next_slots.items(), key=lambda x: string_to_datetime(x[1])
-        )
+        next_entity_id, _ = min(filtered_next_slots.items(), key=lambda x: x[1])
 
         # find the action with the shortest duration
         best_metric = None
         best_lt = None
+        best_so = None
         for next_action in wait_queues[next_entity_id]:
-            lt, new_metrics = self._optimal_helper(
+            lt, so, new_metrics = self._optimal_helper(
                 lineage_table,
                 serialization_order,
                 next_slots,
@@ -1100,41 +1091,42 @@ class BaseRescheduler(TimeLineScheduler):
                 next_entity_id,
                 next_action,
                 serializability_guarantee,
-                immutable_serialization_order,
             )
             if not best_metric or self._cmp_metrics(new_metrics, best_metric):
                 best_metric = new_metrics
                 best_lt = lt
+                best_so = so
 
-        return best_lt, best_metric
+        return best_lt, best_so, best_metric
 
     def optimal(
         self,
         descheduled_source_action_ids: set[str],
         descheduled_actions: dict[str, ActionEntity],
         entities: set[str],
-        immutable_serialization_order: list[str],
         serializability_guarantee: bool,
+        immutable_serialization_order: Optional[list[str]],
         metrics: ScheduleMetrics,
         # window: timedelta
-    ) -> LineageTable:
+    ) -> tuple[LineageTable, Queue[str, RoutineInfo]]:
         """Optimal rescheduling with and without routine serializability guarantee."""
 
         if serializability_guarantee:
             old_serialization_order = self._serialization_order
             serialization_order = Queue[str, RoutineInfo]()
+            if immutable_serialization_order is None:
+                raise ValueError("Immutable serialization order is missing.")
             for routine_id in immutable_serialization_order:
                 serialization_order[routine_id] = old_serialization_order[routine_id]
 
         # initialize the next slots and wait queues for each entity
-        next_slots = dict[str, str]()
+        next_slots = dict[str, datetime]()
         wait_queues = dict[str, set[ActionEntity]]()
         for entity_id in entities:
             last_slot_start = self._lineage_table.free_slots[entity_id].end()[0]
             if not last_slot_start:
                 continue
-            next_slots[entity_id] = last_slot_start
-            wait_queues[entity_id] = set[ActionEntity]()
+            next_slots[entity_id] = string_to_datetime(last_slot_start)
 
         for action_id, action in descheduled_actions.items():
             # skip the action if it is not a source action
@@ -1162,26 +1154,27 @@ class BaseRescheduler(TimeLineScheduler):
                     last_slot_start = self._lineage_table.free_slots[entity_id].end()[0]
                     if not last_slot_start:
                         continue
-                    next_slots[entity_id] = last_slot_start
+                    next_slots[entity_id] = string_to_datetime(last_slot_start)
 
+                if entity_id not in wait_queues:
+                    wait_queues[entity_id] = set[ActionEntity]()
                 wait_queues[entity_id].add(action)
 
         # filter out entities with no actions to schedule
         filtered_next_slots = {k: v for k, v in next_slots.items() if wait_queues[k]}
         if not filtered_next_slots:
-            return self._lineage_table
+            return self._lineage_table, self._serialization_order
 
         # find the entity with the earliest next slot
         # can generalize for any metric to be used here
-        next_entity_id, _ = min(
-            filtered_next_slots.items(), key=lambda x: string_to_datetime(x[1])
-        )
+        next_entity_id, _ = min(filtered_next_slots.items(), key=lambda x: x[1])
 
         best_metric = None
         best_lt = None
+        best_so = None
         # find the action with the shortest duration
         for chosen_action in wait_queues[next_entity_id]:
-            lt, new_metrics = self._optimal_helper(
+            lt, so, new_metrics = self._optimal_helper(
                 self._lineage_table,
                 serialization_order,
                 next_slots,
@@ -1191,15 +1184,15 @@ class BaseRescheduler(TimeLineScheduler):
                 next_entity_id,
                 chosen_action,
                 serializability_guarantee,
-                immutable_serialization_order,
             )
             if not best_metric or self._cmp_metrics(new_metrics, best_metric):
                 best_metric = new_metrics
                 best_lt = lt
+                best_so = so
 
-        if not best_lt:
-            return self._lineage_table
-        return best_lt
+        if not best_lt or not best_so:
+            return self._lineage_table, self._serialization_order
+        return best_lt, best_so
 
     def _identify_first_common_idle_time_after(
         self, entities: list[str], time: datetime, length: timedelta
@@ -1613,10 +1606,13 @@ class BaseRescheduler(TimeLineScheduler):
             if slot_end == old_action_start:
                 key = slot_start
                 break
-        entity_free_slots[key] = old_action_end
+        if key not in entity_free_slots:
+            entity_free_slots[key] = old_action_end
+        else:
+            entity_free_slots.updateitem(key, old_action_end)
         if old_action_end in entity_free_slots:
             new_val = entity_free_slots[old_action_end]
-            entity_free_slots[key] = new_val
+            entity_free_slots.updateitem(key, new_val)
             entity_free_slots.pop(old_action_end)
 
     def _remove_routine_from_serialization_order(self, routine_id: str) -> None:
@@ -2229,15 +2225,16 @@ class RascalRescheduler:
     ) -> None:
         """Reschedule the entities based on the rescheduling policy."""
         # Save the old schedule
-        old_sched = self._scheduler.lineage_table
+        old_lt = self._scheduler.lineage_table.duplicate
+        old_so = self._scheduler.duplicate_serialization_order
 
-        if entity_id not in old_sched.lock_queues:
+        if entity_id not in old_lt.lock_queues:
             raise ValueError("Entity %s has no schedule." % entity_id)
-        if action_id not in old_sched.lock_queues[entity_id]:
+        if action_id not in old_lt.lock_queues[entity_id]:
             raise ValueError(
                 f"Action {action_id} has not been scheduled on entity {entity_id}."
             )
-        action_lock = old_sched.lock_queues[entity_id][action_id]
+        action_lock = old_lt.lock_queues[entity_id][action_id]
         if not action_lock:
             raise ValueError(
                 "Action {}'s schedule information on entity {} is missing.".format(
@@ -2253,7 +2250,7 @@ class RascalRescheduler:
         action_lock.move_to(st_time, new_end_time)
         if diff.total_seconds() < 0:
             # return part of the free slots
-            free_slots = old_sched.free_slots[entity_id]
+            free_slots = old_lt.free_slots[entity_id]
             found = False
             for slot_st, slot_end in free_slots.items():
                 # if there is already a slot that starts at the old end time, merge the slots
@@ -2266,8 +2263,9 @@ class RascalRescheduler:
                 free_slots[new_end_time] = end_time
 
         # Update the rescheduler's schedule to the current one
-        self._rescheduler.lineage_table = old_sched
-        new_sched = None
+        self._rescheduler.lineage_table = old_lt
+        new_lt = None
+        new_so = old_so
 
         if self._resched_policy in (RV, EARLY_START) and diff.total_seconds() > 0:
             success = await self._move_device_schedules(old_end_time_dt, diff)
@@ -2275,9 +2273,9 @@ class RascalRescheduler:
                 raise ValueError("Failed to move device schedules.")
 
         if self._resched_policy in (RV):
-            new_sched = self._rescheduler.RV(new_end_time_dt)
+            new_lt = self._rescheduler.RV(new_end_time_dt)
         if self._resched_policy in (EARLY_START):
-            new_sched = self._rescheduler.early_start()
+            new_lt = self._rescheduler.early_start()
         if self._resched_policy in (SJFWO, SJFW, OPTIMAL):
             affected_source_actions = (
                 self._rescheduler.affected_src_actions_after_len_diff(
@@ -2285,7 +2283,7 @@ class RascalRescheduler:
                 )
             )
             if not affected_source_actions:
-                self._apply_schedule(old_sched)
+                self._apply_schedule(old_lt, old_so)
                 return
             LOGGER.debug(
                 "Affected source actions after length difference: %s",
@@ -2320,35 +2318,46 @@ class RascalRescheduler:
                 #     descheduled_actions,
                 # )
             if self._resched_policy in (SJFWO, SJFW):
-                new_sched = self._rescheduler.sjf(
+                new_lt, new_so = self._rescheduler.sjf(
                     new_end_time_dt,
                     descheduled_source_action_ids,
                     descheduled_actions,
                     affected_entities,
-                    immutable_serialization_order,
                     serializability,
+                    immutable_serialization_order if serializability else None,
                 )
             elif self._resched_policy in (OPTIMAL):
-                new_sched = self._rescheduler.optimal(
+                new_lt, new_so = self._rescheduler.optimal(
                     descheduled_source_action_ids,
                     descheduled_actions,
                     affected_entities,
-                    immutable_serialization_order,
                     serializability,
+                    immutable_serialization_order if serializability else None,
                     self._scheduler.metrics,
                 )
-        if not new_sched:
-            self._apply_schedule(old_sched)
+        if not new_lt:
+            self._apply_schedule(old_lt, old_so)
             return
         LOGGER.info("New schedule created at %s", datetime.now())
-        # output_lock_queues(new_sched.lock_queues)
-        # output_free_slots(new_sched.free_slots)
-        self._apply_schedule(new_sched)
+        output_all(
+            LOGGER,
+            lock_queues=new_lt.lock_queues,
+            free_slots=new_lt.free_slots,
+            serialization_order=new_so,
+        )
+        self._apply_schedule(new_lt, new_so)
 
-    def _apply_schedule(self, schedule: LineageTable) -> None:
+    def _apply_schedule(
+        self,
+        schedule: LineageTable,
+        serialization_order: Optional[Queue[str, RoutineInfo]] = None,
+    ) -> None:
         """Apply the new schedule."""
         self._rescheduler.lineage_table = schedule
         self._scheduler.lineage_table = schedule
+        if serialization_order:
+            self._rescheduler.serialization_order = serialization_order
+            self._scheduler.serialization_order = serialization_order
 
     def _setup_overtime_check(self, event: Event, timer_delay: timedelta) -> None:
         """Set up the timer for the rescheduler."""

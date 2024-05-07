@@ -614,10 +614,38 @@ class ActionInfo:
         """Get duration."""
         return string_to_datetime(self._end_time) - string_to_datetime(self._start_time)
 
+    @property
+    def duplicate(self) -> ActionInfo:
+        """Get a duplicate of the action info."""
+        return ActionInfo(
+            self._action_id,
+            self._action,
+            self.action_state,
+            self.lock_state,
+            self._start_time,
+            self._end_time,
+        )
+
     def move_to(self, new_start_time: str, new_end_time: str) -> None:
         """Move to new time range."""
         self._start_time = new_start_time
         self._end_time = new_end_time
+
+    def __lt__(self, other: ActionInfo) -> bool:
+        """Compare two action info."""
+        if string_to_datetime(self._start_time) < string_to_datetime(other.start_time):
+            return True
+        if string_to_datetime(self._start_time) == string_to_datetime(other.start_time):
+            return self.action_id < other.action_id
+        return False
+
+    def __repr__(self) -> str:
+        """Return the string representation of the action info."""
+        return (
+            f"ActionInfo(action_id={self._action_id}, "
+            f"action_state={self.action_state}, lock_state={self.lock_state}, "
+            f"start_time={self._start_time}, end_time={self._end_time})"
+        )
 
 
 class RoutineInfo:
@@ -668,7 +696,7 @@ class LineageTable:
 
     """
 
-    def __init__(self, lt: LineageTable | None = None) -> None:
+    def __init__(self) -> None:
         """Initialize linage table entity."""
 
         # locks: key is the entity_id and value is the routine id that is holding the
@@ -678,20 +706,10 @@ class LineageTable:
         # lock_queues: key is the entity_id and each element stored in the queue is the
         # (action id, action lock info) tuple that is holding or waiting for the lock
         self._lock_queues: dict[str, Queue[str, ActionInfo]] = {}
-        if lt:
-            for entity_id, lock_queue in lt.lock_queues.items():
-                self._lock_queues[entity_id] = Queue[str, ActionInfo](
-                    {
-                        action_id: copy.deepcopy(action_lock)
-                        for action_id, action_lock in lock_queue.items()
-                    }
-                )
 
         # free_slots: key is the entity_id and each element stored in the queue is a
         # slot where the start time is the key and the end time is the value
         self._free_slots: dict[str, Queue[str, str]] = {}
-        if lt:
-            self._free_slots = copy.deepcopy(lt.free_slots)
 
     @property
     def locks(self) -> dict[str, str | None]:
@@ -723,6 +741,25 @@ class LineageTable:
         """Set free slots."""
         self._free_slots = fs
 
+    @property
+    def duplicate(self) -> LineageTable:
+        """Get a duplicate of the lineage table."""
+        lt = LineageTable()
+
+        lt.locks = copy.deepcopy(self._locks)
+
+        for entity_id, lock_queue in self._lock_queues.items():
+            lt.lock_queues[entity_id] = Queue[str, ActionInfo](
+                {
+                    action_id: action_lock.duplicate
+                    for action_id, action_lock in lock_queue.items()
+                    if action_lock
+                }
+            )
+
+        lt.free_slots = copy.deepcopy(self._free_slots)
+        return lt
+
     def add_entity(self, entity_id: str) -> None:
         """Add the entity to the lineage table."""
         self._locks[entity_id] = None
@@ -748,6 +785,26 @@ class BaseScheduler:
     _serialization_order: Queue[str, RoutineInfo]
     _lineage_table: LineageTable
     _scheduling_policy: str
+
+    @property
+    def lineage_table(self) -> LineageTable:
+        """Get lineage table."""
+        return self._lineage_table
+
+    @lineage_table.setter
+    def lineage_table(self, lt: LineageTable) -> None:
+        """Set lineage table."""
+        self._lineage_table = lt
+
+    @property
+    def serialization_order(self) -> Queue[str, RoutineInfo]:
+        """Get serialization order."""
+        return self._serialization_order
+
+    @serialization_order.setter
+    def serialization_order(self, serialization_order: Queue[str, RoutineInfo]) -> None:
+        """Set serialization order."""
+        self._serialization_order = serialization_order
 
     def get_action(self, action_id: str) -> ActionEntity | None:
         """Get the active action."""
@@ -1776,7 +1833,6 @@ class TimeLineScheduler(BaseScheduler):
         lock_leasing_status: dict[str, str],
         preset: set[str],
         postset: set[str],
-        lock_queues: dict[str, Queue[str, ActionInfo]] | None = None,
     ) -> tuple[bool, datetime]:
         """Insert action to the free slots at now based on lock leasing approach."""
 
@@ -1857,7 +1913,7 @@ class TimeLineScheduler(BaseScheduler):
                 free_slots[entity_id],
             )
 
-            self.schedule_lock(action, (action_st, action_end), entity_id, lock_queues)
+            self.schedule_lock(action, (action_st, action_end), entity_id)
 
             max_end_time = max(max_end_time, dt_action_end)
 
@@ -2115,11 +2171,20 @@ class RascalScheduler(BaseScheduler):
     def lineage_table(self, lt: LineageTable) -> None:
         """Set lineage table."""
         self._lineage_table = lt
+        if self._scheduler:
+            self._scheduler.lineage_table = lt
 
     @property
     def serialization_order(self) -> Queue[str, RoutineInfo]:
         """Get serialization order."""
         return self._serialization_order
+
+    @serialization_order.setter
+    def serialization_order(self, so: Queue[str, RoutineInfo]) -> None:
+        """Set serialization order."""
+        self._serialization_order = so
+        if self._scheduler:
+            self._scheduler.serialization_order = so
 
     @property
     def wait_queue(self) -> Queue[str, WaitRoutineInfo]:
@@ -2142,24 +2207,24 @@ class RascalScheduler(BaseScheduler):
         """Duplicate lock queues."""
         lock_queues = dict[str, Queue[str, ActionInfo]]()
         for entity_id, queue in self._lineage_table.lock_queues.items():
+            lock_queues[entity_id] = Queue[str, ActionInfo]()
             for action_id, action_info in queue.items():
-                if entity_id not in lock_queues:
-                    lock_queues[entity_id] = Queue[str, ActionInfo]()
                 if not action_info:
                     raise ValueError(
                         "Action {}'s schedule information on entity {} is missing.".format(
                             action_id, entity_id
                         )
                     )
-                lock_queues[entity_id][action_id] = ActionInfo(
-                    action_id=action_info.action_id,
-                    action=action_info.action,
-                    action_state=action_info.action_state,
-                    lock_state=action_info.lock_state,
-                    start_time=action_info.start_time,
-                    end_time=action_info.end_time,
-                )
+                lock_queues[entity_id][action_id] = action_info.duplicate
         return lock_queues
+
+    @property
+    def duplicate_serialization_order(self) -> Queue[str, RoutineInfo]:
+        """Duplicate serialization order."""
+        serialization_order = Queue[str, RoutineInfo]()
+        for routine_id, routine_info in self._serialization_order.items():
+            serialization_order[routine_id] = routine_info
+        return serialization_order
 
     @property
     def metrics(self) -> ScheduleMetrics:

@@ -32,6 +32,7 @@ from homeassistant.const import (
     MIN_P95_RTN_LATENCY,
     MIN_P95_RTN_WAIT_TIME,
     MIN_RTN_EXEC_TIME_STD_DEV,
+    NONE,
     OPTIMAL,
     OPTIMAL_SCHEDULE_METRIC,
     PROACTIVE,
@@ -70,6 +71,7 @@ supported_rescheduling_policies = [
     GLOBAL_FIRST,
     GLOBAL_SHORTEST,
     GLOBAL_LONGEST,
+    NONE,
     OPTIMAL,
     SJFW,
     SJFWO,
@@ -132,10 +134,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     scheduler = hass.data[DOMAIN_RASCALSCHEDULER] = RascalScheduler(
         hass, config[DOMAIN]
     )
-    rescheduler = hass.data[DOMAIN_RASCALRESCHEDULER] = RascalRescheduler(
-        hass, scheduler, config[DOMAIN]
-    )
-    scheduler.reschedule_handler = rescheduler.handle_event
+    if config[DOMAIN][RESCHEDULING_POLICY] != NONE:
+        rescheduler = hass.data[DOMAIN_RASCALRESCHEDULER] = RascalRescheduler(
+            hass, scheduler, config[DOMAIN]
+        )
+        scheduler.reschedule_handler = rescheduler.handle_event
 
     await component.async_load()
 

@@ -1246,6 +1246,7 @@ RV: Final = "rv"
 EARLY_START: Final = "early_start"
 SJFWO: Final = "sjfwo"
 SJFW: Final = "sjfw"
+NONE: Final = "none"
 
 RESCHEDULING_TRIGGER: Final = "rescheduling_trigger"
 REACTIVE: Final = "reactive"
