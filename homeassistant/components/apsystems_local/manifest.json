@@ -1,10 +1,10 @@
 {
-  "domain": "apsystemsapi_local",
+  "domain": "apsystems_local",
   "name": "APsystems Local API",
   "codeowners": ["@mawoka-myblock", "@SonnenladenGmbH"],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://www.home-assistant.io/integrations/apsystemsapi_local",
+  "documentation": "https://www.home-assistant.io/integrations/apsystems_local",
   "homekit": {},
   "iot_class": "local_polling",
   "requirements": ["apsystems-ez1==1.3.1"],
