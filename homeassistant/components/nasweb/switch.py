@@ -53,8 +53,8 @@ class RelaySwitch(SwitchEntity):
         """Initialize RelaySwitch."""
         self.coordinator = coordinator
         self._output = nasweb_output
-        self._attr_is_on = self._output.state
-        self._attr_available = True  # self._output.available
+        # self._attr_is_on = self._output.state
+        # self._attr_available = True  # self._output.available
         self._attr_icon = "mdi:export"
         self._attr_has_entity_name = True
         self._attr_should_poll = False
