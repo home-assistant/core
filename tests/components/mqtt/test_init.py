@@ -116,7 +116,7 @@ def record_calls(calls: list[ReceiveMessage]) -> MessageCallbackType:
 
 
 @pytest.fixture
-def client_debug_log(caplog: pytest.LogCaptureFixture) -> Generator[None, None]:
+def client_debug_log() -> Generator[None, None]:
     """Set the mqtt client log level to DEBUG."""
     logger = logging.getLogger("mqtt_client_tests_debug")
     logger.setLevel(logging.DEBUG)
