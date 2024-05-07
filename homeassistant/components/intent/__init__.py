@@ -217,13 +217,10 @@ class GetStateIntentHandler(intent.IntentHandler):
             assistant=intent_obj.assistant,
         )
         match_result = intent.async_match_targets(hass, match_constraints)
-        if (not match_result.is_match) and (
-            match_result.no_match_reason
-            in (
-                intent.MatchFailedReason.DUPLICATE_NAME,
-                intent.MatchFailedReason.INVALID_AREA,
-                intent.MatchFailedReason.INVALID_FLOOR,
-            )
+        if (
+            (not match_result.is_match)
+            and (match_result.no_match_reason is not None)
+            and (not match_result.no_match_reason.is_no_entities_reason())
         ):
             # Don't try to answer questions for certain errors.
             # Other match failure reasons are OK.

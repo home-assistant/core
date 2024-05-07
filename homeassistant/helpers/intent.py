@@ -182,6 +182,14 @@ class MatchFailedReason(Enum):
     DUPLICATE_NAME = auto()
     """Two or more entities matched the same name constraint and could not be disambiguated."""
 
+    def is_no_entities_reason(self) -> bool:
+        """Return True if the match failed because no entities matched."""
+        return self not in (
+            MatchFailedReason.INVALID_AREA,
+            MatchFailedReason.INVALID_FLOOR,
+            MatchFailedReason.DUPLICATE_NAME,
+        )
+
 
 @dataclass
 class MatchTargetsConstraints:
@@ -267,7 +275,7 @@ class MatchFailedError(IntentError):
 
     def __str__(self) -> str:
         """Return string representation."""
-        return f"result={self.result}, constraints={self.constraints}, preferences={self.preferences}"
+        return f"<MatchFailedError result={self.result}, constraints={self.constraints}, preferences={self.preferences}>"
 
 
 class NoStatesMatchedError(MatchFailedError):
@@ -446,7 +454,6 @@ def _add_areas(
 
 
 @callback
-@bind_hass
 def async_match_targets(  # noqa: C901
     hass: HomeAssistant,
     constraints: MatchTargetsConstraints,
@@ -913,10 +920,6 @@ class DynamicServiceIntentHandler(IntentHandler):
         """Complete action on matched entity states."""
         states = match_result.states
         response = intent_obj.create_response()
-
-        if not states:
-            # Empty response
-            return response
 
         hass = intent_obj.hass
         success_results: list[IntentResponseTarget] = []

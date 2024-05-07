@@ -6,12 +6,12 @@ from unittest.mock import AsyncMock, patch
 from hassil.recognize import Intent, IntentData, MatchEntity, RecognizeResult
 import pytest
 
-from homeassistant.components import conversation
+from homeassistant.components import conversation, cover
 from homeassistant.components.conversation import default_agent
 from homeassistant.components.homeassistant.exposed_entities import (
     async_get_assistant_settings,
 )
-from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, STATE_CLOSED
 from homeassistant.core import DOMAIN as HASS_DOMAIN, Context, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -607,6 +607,14 @@ async def test_error_no_domain_in_floor(
 
 async def test_error_no_device_class(hass: HomeAssistant, init_components) -> None:
     """Test error message when no entities of a device class exist."""
+    # Create a cover entity that is not a window.
+    # This ensures that the filtering below won't exit early because there are
+    # no entities in the cover domain.
+    hass.states.async_set(
+        "cover.garage_door",
+        STATE_CLOSED,
+        attributes={ATTR_DEVICE_CLASS: cover.CoverDeviceClass.GARAGE},
+    )
 
     # We don't have a sentence for opening all windows
     cover_domain = MatchEntity(name="domain", value="cover", text="cover")

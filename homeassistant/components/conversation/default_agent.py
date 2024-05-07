@@ -791,7 +791,8 @@ class DefaultAgent(ConversationEntity):
                 continue
 
             for alias in area.aliases:
-                if not alias.strip():
+                alias = alias.strip()
+                if not alias:
                     continue
 
                 area_names.append((alias, alias))
@@ -805,7 +806,8 @@ class DefaultAgent(ConversationEntity):
                 continue
 
             for alias in floor.aliases:
-                if not alias.strip():
+                alias = alias.strip()
+                if not alias:
                     continue
 
                 floor_names.append((alias, floor.name))

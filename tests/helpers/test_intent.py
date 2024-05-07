@@ -24,7 +24,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_mock_service
 
 
 class MockIntentHandler(intent.IntentHandler):
@@ -721,4 +721,48 @@ async def test_invalid_area_floor_names(hass: HomeAssistant) -> None:
         )
         assert (
             err.value.result.no_match_reason == intent.MatchFailedReason.INVALID_FLOOR
+        )
+
+
+async def test_service_intent_handler_required_domains(hass: HomeAssistant) -> None:
+    """Test that required_domains restricts the domain of a ServiceIntentHandler."""
+    hass.states.async_set("light.kitchen", "off")
+    hass.states.async_set("switch.bedroom", "off")
+
+    calls = async_mock_service(hass, "homeassistant", "turn_on")
+    handler = intent.ServiceIntentHandler(
+        "TestType",
+        "homeassistant",
+        "turn_on",
+        "Turned {} on",
+        required_domains={"light"},
+    )
+    intent.async_register(hass, handler)
+
+    # Should work fine
+    result = await intent.async_handle(
+        hass,
+        "test",
+        "TestType",
+        slots={"name": {"value": "kitchen"}, "domain": {"value": "light"}},
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 1
+
+    # Fails because the intent handler is restricted to lights only
+    with pytest.raises(intent.MatchFailedError):
+        await intent.async_handle(
+            hass,
+            "test",
+            "TestType",
+            slots={"name": {"value": "bedroom"}},
+        )
+
+    # Still fails even if we provide the domain
+    with pytest.raises(intent.MatchFailedError):
+        await intent.async_handle(
+            hass,
+            "test",
+            "TestType",
+            slots={"name": {"value": "bedroom"}, "domain": {"value": "switch"}},
         )
