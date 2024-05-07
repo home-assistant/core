@@ -1,0 +1,13 @@
+{
+  "domain": "aladdin_genie",
+  "name": "Aladdin Connect Genie",
+  "codeowners": ["@ajohnston1219"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/aladdin_genie",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "requirements": ["genie-partner-sdk==1.0.2"],
+  "ssdp": [],
+  "zeroconf": []
+}
