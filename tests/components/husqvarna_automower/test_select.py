@@ -81,7 +81,7 @@ async def test_select_commands(
         },
         blocking=True,
     )
-    mocked_method = mock_automower_client.set_headlight_mode
+    mocked_method = mock_automower_client.commands.set_headlight_mode
     assert len(mocked_method.mock_calls) == 1
 
     mocked_method.side_effect = ApiException("Test error")
