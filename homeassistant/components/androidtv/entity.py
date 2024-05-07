@@ -89,7 +89,7 @@ def adb_decorator(
                 await self.aftv.adb_close()
                 self._attr_available = False
                 return None
-            except Exception as err:  # pylint: disable=broad-except
+            except Exception as err:  # noqa: BLE001
                 # An unforeseen exception occurred. Close the ADB connection so that
                 # it doesn't happen over and over again.
                 if self.available:
