@@ -1117,6 +1117,7 @@ omit =
     homeassistant/components/refoss/bridge.py
     homeassistant/components/refoss/coordinator.py
     homeassistant/components/refoss/entity.py
+    homeassistant/components/refoss/sensor.py
     homeassistant/components/refoss/switch.py
     homeassistant/components/refoss/util.py
     homeassistant/components/rejseplanen/sensor.py
