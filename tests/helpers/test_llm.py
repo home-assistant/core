@@ -135,7 +135,6 @@ async def test_function_tool(hass: HomeAssistant) -> None:
     @llm.llm_tool(hass)
     def test_async_function_tool(
         hass: HomeAssistant,
-        tool_input: llm.ToolInput,
         platform: str,
         context: Context,
         required_arg: int,
@@ -143,7 +142,6 @@ async def test_function_tool(hass: HomeAssistant) -> None:
     ):
         """Test tool description."""
         call["hass"] = hass
-        call["tool_input"] = tool_input
         call["platform"] = platform
         call["context"] = context
         call["required_arg"] = required_arg
@@ -199,7 +197,6 @@ async def test_function_tool(hass: HomeAssistant) -> None:
         "optional_arg": 9.6,
         "platform": "test_platform",
         "required_arg": 4,
-        "tool_input": tool_input,
     }
 
     llm.async_remove_tool(hass, "test_async_function_tool")
@@ -214,7 +211,6 @@ async def test_async_function_tool(hass: HomeAssistant) -> None:
     @llm.llm_tool(hass)
     async def async_test_async_function_tool(
         hass: HomeAssistant,
-        tool_input: llm.ToolInput,
         platform: str,
         context: Context,
         required_arg: int,
@@ -222,7 +218,6 @@ async def test_async_function_tool(hass: HomeAssistant) -> None:
     ):
         """Test tool description."""
         call["hass"] = hass
-        call["tool_input"] = tool_input
         call["platform"] = platform
         call["context"] = context
         call["required_arg"] = required_arg
@@ -272,7 +267,6 @@ async def test_async_function_tool(hass: HomeAssistant) -> None:
         "optional_arg": None,
         "platform": "test_platform",
         "required_arg": 4,
-        "tool_input": tool_input,
     }
 
     llm.async_remove_tool(hass, async_test_async_function_tool)

@@ -104,7 +104,7 @@ class FunctionTool(Tool):
     """LLM Tool representing an Python function.
 
     The function is recommended to have annotations for all parameters.
-    If a parameter name is "hass", "tool_input", or any of the ToolInput attributes,
+    If a parameter name is "hass" or any of the ToolInput attributes,
     then the value for that parameter will be provided by the conversation agent.
     All other arguments will be provided by the LLM.
     """
@@ -129,8 +129,6 @@ class FunctionTool(Tool):
         annotations = get_type_hints(function)
         for param in inspect.signature(function).parameters.values():
             if param.name == "hass":
-                continue
-            if param.name == "tool_input":
                 continue
             if hasattr(ToolInput, param.name):
                 continue
@@ -161,8 +159,6 @@ class FunctionTool(Tool):
         for parameter in inspect.signature(self.function).parameters.values():
             if parameter.name == "hass":
                 kwargs["hass"] = hass
-            elif parameter.name == "tool_input":
-                kwargs["tool_input"] = tool_input
             elif hasattr(ToolInput, parameter.name):
                 kwargs[parameter.name] = getattr(tool_input, parameter.name)
 
