@@ -19,7 +19,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN
@@ -88,7 +87,7 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
         """Initialize the binary sensor."""
         self.entity_description = description
         self.entity_id = f"binary_sensor.{DOMAIN}_{description.key}"
-        self._attr_unique_id = f"{slugify(data['name'])}_{DOMAIN}_{description.key}"
+        self._attr_unique_id = f"{DOMAIN}_{description.key}"
         self._location = data["location"]
         self._hebrew = data["language"] == "hebrew"
         self._candle_lighting_offset = data["candle_lighting_offset"]
