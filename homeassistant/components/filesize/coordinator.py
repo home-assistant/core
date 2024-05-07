@@ -19,7 +19,9 @@ _LOGGER = logging.getLogger(__name__)
 class FileSizeCoordinator(DataUpdateCoordinator[dict[str, int | float | datetime]]):
     """Filesize coordinator."""
 
-    def __init__(self, hass: HomeAssistant, path: pathlib.Path) -> None:
+    path: pathlib.Path
+
+    def __init__(self, hass: HomeAssistant, unresolved_path: str) -> None:
         """Initialize filesize coordinator."""
         super().__init__(
             hass,
@@ -28,10 +30,25 @@ class FileSizeCoordinator(DataUpdateCoordinator[dict[str, int | float | datetime
             update_interval=timedelta(seconds=60),
             always_update=False,
         )
-        self.path: pathlib.Path = path
+        self._unresolved_path = unresolved_path
+
+    def _get_full_path(self) -> pathlib.Path:
+        """Check if path is valid, allowed and return full path."""
+        path = self._unresolved_path
+        get_path = pathlib.Path(path)
+        if not self.hass.config.is_allowed_path(path):
+            raise UpdateFailed(f"Filepath {path} is not valid or allowed")
+
+        if not get_path.exists() or not get_path.is_file():
+            raise UpdateFailed(f"Can not access file {path}")
+
+        return get_path.absolute()
 
     def _update(self) -> os.stat_result:
         """Fetch file information."""
+        if not hasattr(self, "path"):
+            self.path = self._get_full_path()
+
         try:
             return self.path.stat()
         except OSError as error:
