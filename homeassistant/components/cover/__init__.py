@@ -46,10 +46,10 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from . import group as group_pre_import  # noqa: F401
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "cover"
 SCAN_INTERVAL = timedelta(seconds=15)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"

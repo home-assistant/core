@@ -23,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
+from homeassistant.util.hass_dict import HassKey
 
 from . import (
     area_registry,
@@ -44,7 +45,7 @@ INTENT_SET_POSITION = "HassSetPosition"
 
 SLOT_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
-DATA_KEY = "intent"
+DATA_KEY: HassKey[dict[str, IntentHandler]] = HassKey("intent")
 
 SPEECH_TYPE_PLAIN = "plain"
 SPEECH_TYPE_SSML = "ssml"
@@ -89,7 +90,7 @@ async def async_handle(
     assistant: str | None = None,
 ) -> IntentResponse:
     """Handle an intent."""
-    handler: IntentHandler = hass.data.get(DATA_KEY, {}).get(intent_type)
+    handler = hass.data.get(DATA_KEY, {}).get(intent_type)
 
     if handler is None:
         raise UnknownIntent(f"Unknown intent {intent_type}")
@@ -622,7 +623,7 @@ class DynamicServiceIntentHandler(IntentHandler):
             try:
                 await service_coro
                 success_results.append(target)
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 failed_results.append(target)
                 _LOGGER.exception("Service call failed for %s", state.entity_id)
 
@@ -659,7 +660,7 @@ class DynamicServiceIntentHandler(IntentHandler):
             )
 
         await self._run_then_background(
-            hass.async_create_task(
+            hass.async_create_task_internal(
                 hass.services.async_call(
                     domain,
                     service,

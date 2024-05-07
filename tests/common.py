@@ -234,7 +234,7 @@ async def async_test_home_assistant(
 
     orig_async_add_job = hass.async_add_job
     orig_async_add_executor_job = hass.async_add_executor_job
-    orig_async_create_task = hass.async_create_task
+    orig_async_create_task_internal = hass.async_create_task_internal
     orig_tz = dt_util.DEFAULT_TIME_ZONE
 
     def async_add_job(target, *args, eager_start: bool = False):
@@ -263,18 +263,18 @@ async def async_test_home_assistant(
 
         return orig_async_add_executor_job(target, *args)
 
-    def async_create_task(coroutine, name=None, eager_start=True):
+    def async_create_task_internal(coroutine, name=None, eager_start=True):
         """Create task."""
         if isinstance(coroutine, Mock) and not isinstance(coroutine, AsyncMock):
             fut = asyncio.Future()
             fut.set_result(None)
             return fut
 
-        return orig_async_create_task(coroutine, name, eager_start)
+        return orig_async_create_task_internal(coroutine, name, eager_start)
 
     hass.async_add_job = async_add_job
     hass.async_add_executor_job = async_add_executor_job
-    hass.async_create_task = async_create_task
+    hass.async_create_task_internal = async_create_task_internal
 
     hass.data[loader.DATA_CUSTOM_COMPONENTS] = {}
 
@@ -449,6 +449,7 @@ def async_fire_mqtt_message(
     msg.payload = payload
     msg.qos = qos
     msg.retain = retain
+    msg.timestamp = time.monotonic()
 
     mqtt_data: MqttData = hass.data["mqtt"]
     assert mqtt_data.client
@@ -630,6 +631,7 @@ def mock_registry(
         registry.entities[key] = entry
 
     hass.data[er.DATA_REGISTRY] = registry
+    er.async_get.cache_clear()
     return registry
 
 
@@ -653,6 +655,7 @@ def mock_area_registry(
         registry.areas[key] = entry
 
     hass.data[ar.DATA_REGISTRY] = registry
+    ar.async_get.cache_clear()
     return registry
 
 
@@ -681,6 +684,7 @@ def mock_device_registry(
     registry.deleted_devices = dr.DeviceRegistryItems()
 
     hass.data[dr.DATA_REGISTRY] = registry
+    dr.async_get.cache_clear()
     return registry
 
 
