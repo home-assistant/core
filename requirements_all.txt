@@ -122,7 +122,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.29
+SQLAlchemy==2.0.30
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==2.1
@@ -1044,7 +1044,7 @@ hass-splunk==0.1.1
 hassil==1.6.1
 
 # homeassistant.components.jewish_calendar
-hdate==0.10.4
+hdate==0.10.8
 
 # homeassistant.components.heatmiser
 heatmiserV3==1.1.18
@@ -2914,7 +2914,7 @@ yeelight==0.7.14
 yeelightsunflower==0.0.10
 
 # homeassistant.components.yolink
-yolink-api==0.4.3
+yolink-api==0.4.4
 
 # homeassistant.components.youless
 youless-api==1.0.1

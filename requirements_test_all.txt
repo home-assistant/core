@@ -107,7 +107,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.29
+SQLAlchemy==2.0.30
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==2.1
@@ -855,7 +855,7 @@ hass-nabucasa==0.78.0
 hassil==1.6.1
 
 # homeassistant.components.jewish_calendar
-hdate==0.10.4
+hdate==0.10.8
 
 # homeassistant.components.here_travel_time
 here-routing==0.2.0
@@ -2264,7 +2264,7 @@ yalexs==3.1.0
 yeelight==0.7.14
 
 # homeassistant.components.yolink
-yolink-api==0.4.3
+yolink-api==0.4.4
 
 # homeassistant.components.youless
 youless-api==1.0.1
