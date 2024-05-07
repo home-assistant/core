@@ -1,0 +1,14 @@
+{
+  "domain": "aidot",
+  "name": "AiDot Lights Local",
+  "codeowners": ["@aidotdev2024"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/aidot",
+  "homekit": {},
+  "iot_class": "local_polling",
+  "requirements": ["aidot==0.1.1"],
+  "ssdp": [],
+  "version": "0.1.1",
+  "zeroconf": []
+}

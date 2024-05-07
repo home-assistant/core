@@ -93,6 +93,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "aidot": {
+      "name": "AiDot Lights Local",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "airly": {
       "name": "Airly",
       "integration_type": "service",

@@ -160,6 +160,9 @@ afsapi==0.2.7
 # homeassistant.components.agent_dvr
 agent-py==0.0.23
 
+# homeassistant.components.aidot
+aidot==0.1.1
+
 # homeassistant.components.geo_json_events
 aio-geojson-generic-client==0.4
 
