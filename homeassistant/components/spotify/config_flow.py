@@ -40,7 +40,7 @@ class SpotifyFlowHandler(
 
         try:
             current_user = await self.hass.async_add_executor_job(spotify.current_user)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             return self.async_abort(reason="connection_error")
 
         name = data["id"] = current_user["id"]
