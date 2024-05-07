@@ -5,11 +5,12 @@ from __future__ import annotations
 from collections.abc import Iterable
 import dataclasses
 from dataclasses import dataclass
-from typing import Literal, TypedDict, cast
+from typing import Literal, TypedDict
 
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.util import slugify
 from homeassistant.util.event_type import EventType
+from homeassistant.util.hass_dict import HassKey
 
 from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryEntry,
@@ -20,7 +21,7 @@ from .registry import BaseRegistry
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
-DATA_REGISTRY = "label_registry"
+DATA_REGISTRY: HassKey[LabelRegistry] = HassKey("label_registry")
 EVENT_LABEL_REGISTRY_UPDATED: EventType[EventLabelRegistryUpdatedData] = EventType(
     "label_registry_updated"
 )
@@ -241,7 +242,7 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
 @callback
 def async_get(hass: HomeAssistant) -> LabelRegistry:
     """Get label registry."""
-    return cast(LabelRegistry, hass.data[DATA_REGISTRY])
+    return hass.data[DATA_REGISTRY]
 
 
 async def async_load(hass: HomeAssistant) -> None:

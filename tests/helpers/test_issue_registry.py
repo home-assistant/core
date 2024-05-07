@@ -161,7 +161,7 @@ async def test_load_save_issues(hass: HomeAssistant) -> None:
         "issue_id": "issue_3",
     }
 
-    registry: ir.IssueRegistry = hass.data[ir.DATA_REGISTRY]
+    registry = hass.data[ir.DATA_REGISTRY]
     assert len(registry.issues) == 3
     issue1 = registry.async_get_issue("test", "issue_1")
     issue2 = registry.async_get_issue("test", "issue_2")
@@ -327,7 +327,7 @@ async def test_loading_issues_from_storage(
 
     await ir.async_load(hass)
 
-    registry: ir.IssueRegistry = hass.data[ir.DATA_REGISTRY]
+    registry = hass.data[ir.DATA_REGISTRY]
     assert len(registry.issues) == 3
 
 
@@ -357,7 +357,7 @@ async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) 
 
     await ir.async_load(hass)
 
-    registry: ir.IssueRegistry = hass.data[ir.DATA_REGISTRY]
+    registry = hass.data[ir.DATA_REGISTRY]
     assert len(registry.issues) == 2
 
 
