@@ -1203,7 +1203,7 @@ class HomeAssistant:
                 _LOGGER.exception(
                     "Task %s could not be canceled during final shutdown stage", task
                 )
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Task %s error during final shutdown stage", task)
 
         # Prevent run_callback_threadsafe from scheduling any additional
@@ -1542,7 +1542,7 @@ class EventBus:
                 try:
                     if event_data is None or not event_filter(event_data):
                         continue
-                except Exception:  # pylint: disable=broad-except
+                except Exception:
                     _LOGGER.exception("Error in event filter")
                     continue
 
@@ -1557,7 +1557,7 @@ class EventBus:
 
             try:
                 self._hass.async_run_hass_job(job, event)
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Error running job: %s", job)
 
     def listen(
@@ -2751,7 +2751,7 @@ class ServiceRegistry:
             )
         except asyncio.CancelledError:
             _LOGGER.debug("Service was cancelled: %s", service_call)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error executing service: %s", service_call)
 
     async def _execute_service(
