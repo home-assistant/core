@@ -38,10 +38,8 @@ STEP_AUTH_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_CREDENTIAL_TYPE): SelectSelector(
             SelectSelectorConfig(
                 options=[
-                    SelectOptionDict(value=CRED_TYPE_API_KEY, label="Org API Key"),
-                    SelectOptionDict(
-                        value=CRED_TYPE_LOCATION_SECRET, label="Robot Location Secret"
-                    ),
+                    CRED_TYPE_API_KEY,
+                    CRED_TYPE_LOCATION_SECRET,
                 ],
                 translation_key=CONF_CREDENTIAL_TYPE,
             )
