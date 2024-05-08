@@ -3244,6 +3244,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "linknlink": {
+      "name": "LinknLink",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "linksys_smart": {
       "name": "Linksys Smart Wi-Fi",
       "integration_type": "hub",

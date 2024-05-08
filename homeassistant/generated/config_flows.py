@@ -294,6 +294,7 @@ FLOWS = {
         "lidarr",
         "lifx",
         "linear_garage_door",
+        "linknlink",
         "litejet",
         "litterrobot",
         "livisi",

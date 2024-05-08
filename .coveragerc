@@ -707,6 +707,8 @@ omit =
     homeassistant/components/lg_soundbar/media_player.py
     homeassistant/components/lightwave/*
     homeassistant/components/limitlessled/light.py
+    homeassistant/components/linknlink/binary_sensor.py
+    homeassistant/components/linknlink/coordinator.py
     homeassistant/components/linksys_smart/device_tracker.py
     homeassistant/components/linode/*
     homeassistant/components/linux_battery/sensor.py

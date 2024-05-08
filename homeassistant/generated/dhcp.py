@@ -291,6 +291,14 @@ DHCP: list[dict[str, str | bool]] = [
         "registered_devices": True,
     },
     {
+        "domain": "linknlink",
+        "registered_devices": True,
+    },
+    {
+        "domain": "linknlink",
+        "macaddress": "E04B41*",
+    },
+    {
         "domain": "litterrobot",
         "hostname": "litter-robot4",
     },
