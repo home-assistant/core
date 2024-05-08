@@ -300,12 +300,8 @@ class Store(Generic[_T]):
         """Load the data and ensure the task is removed."""
         if STORAGE_SEMAPHORE not in self.hass.data:
             self.hass.data[STORAGE_SEMAPHORE] = asyncio.Semaphore(MAX_LOAD_CONCURRENTLY)
-
-        try:
-            async with self.hass.data[STORAGE_SEMAPHORE]:
-                return await self._async_load_data()
-        finally:
-            self._load_future = None
+        async with self.hass.data[STORAGE_SEMAPHORE]:
+            return await self._async_load_data()
 
     async def _async_load_data(self):
         """Load the data."""
