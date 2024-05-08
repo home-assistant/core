@@ -367,7 +367,8 @@ async def test_setup_entry_fails_duplicate(hass: HomeAssistant) -> None:
     with pytest.raises(
         ValueError,
         match=re.escape(
-            f"Config entry Mock Title ({entry.entry_id}) for test_domain has already been setup!"
+            f"Config entry Mock Title ({entry.entry_id}) for "
+            "entry_domain.test_domain has already been setup!"
         ),
     ):
         await component.async_setup_entry(entry)
