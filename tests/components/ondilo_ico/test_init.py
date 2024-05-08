@@ -3,12 +3,36 @@
 from typing import Any
 from unittest.mock import MagicMock
 
+from syrupy import SnapshotAssertion
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 
 from tests.common import MockConfigEntry
+
+
+async def test_devices(
+    hass: HomeAssistant,
+    mock_ondilo_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test devices are registered."""
+    await setup_integration(hass, config_entry, mock_ondilo_client)
+
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+
+    assert len(device_entries) == 2
+
+    for device_entry in device_entries:
+        identifier = list(device_entry.identifiers)[0]
+        assert device_entry == snapshot(name=f"{identifier[0]}-{identifier[1]}")
 
 
 async def test_init_with_no_ico_attached(

@@ -1,5 +1,6 @@
 """Define an object to coordinate fetching Ondilo ICO data."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any
@@ -15,7 +16,16 @@ from .api import OndiloClient
 _LOGGER = logging.getLogger(__name__)
 
 
-class OndiloIcoCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
+@dataclass
+class OndiloIcoData:
+    """Class for storing the data."""
+
+    ico: dict[str, Any]
+    pool: dict[str, Any]
+    sensors: dict[str, Any]
+
+
+class OndiloIcoCoordinator(DataUpdateCoordinator[dict[str, OndiloIcoData]]):
     """Class to manage fetching Ondilo ICO data from API."""
 
     def __init__(self, hass: HomeAssistant, api: OndiloClient) -> None:
@@ -24,11 +34,11 @@ class OndiloIcoCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
             hass,
             logger=_LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(minutes=5),
+            update_interval=timedelta(minutes=20),
         )
         self.api = api
 
-    async def _async_update_data(self) -> list[dict[str, Any]]:
+    async def _async_update_data(self) -> dict[str, OndiloIcoData]:
         """Fetch data from API endpoint."""
         try:
             return await self.hass.async_add_executor_job(self._update_data)
@@ -37,9 +47,9 @@ class OndiloIcoCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
             _LOGGER.exception("Error getting pools")
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-    def _update_data(self) -> list[dict[str, Any]]:
+    def _update_data(self) -> dict[str, OndiloIcoData]:
         """Fetch data from API endpoint."""
-        res = []
+        res = {}
         pools = self.api.get_pools()
         _LOGGER.debug("Pools: %s", pools)
         for pool in pools:
@@ -54,12 +64,10 @@ class OndiloIcoCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
             except OndiloError:
                 _LOGGER.exception("Error communicating with API for %s", pool["id"])
                 continue
-            res.append(
-                {
-                    **pool,
-                    "ICO": ico,
-                    "sensors": sensors,
-                }
+            res[pool["id"]] = OndiloIcoData(
+                ico=ico,
+                pool=pool,
+                sensors={sensor["data_type"]: sensor["value"] for sensor in sensors},
             )
         if not res:
             raise UpdateFailed("No data available")
