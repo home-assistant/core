@@ -5812,7 +5812,7 @@ async def test_disabled_actions(
     )
 
 
-async def test_actions_enabled_template_limited(hass: HomeAssistant) -> None:
+async def test_enabled_error_non_limited_template(hass: HomeAssistant) -> None:
     """Test that a script aborts when an action enabled uses non-limited template."""
     await async_setup_component(hass, "homeassistant", {})
     event = "test_event"
