@@ -1778,7 +1778,7 @@ def test_ttsentity_subclass_properties() -> None:
 
     assert (
         str(exc_info.value)
-        == "You need to either set the '_attr_supported_languages' attribute or overwrite the 'supported_languages' property"
+        == "You need to either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
     )
 
     with pytest.raises(AttributeError) as exc_info:
@@ -1788,7 +1788,7 @@ def test_ttsentity_subclass_properties() -> None:
 
     assert (
         str(exc_info.value)
-        == "You need to either set the '_attr_default_language' attribute or overwrite the 'default_language' property"
+        == "You need to either set the '_attr_default_language' attribute or override the 'default_language' property"
     )
 
     with pytest.raises(AttributeError) as exc_info:
@@ -1800,7 +1800,7 @@ def test_ttsentity_subclass_properties() -> None:
 
     assert (
         str(exc_info.value)
-        == "You need to either set the '_attr_supported_languages' attribute or overwrite the 'supported_languages' property"
+        == "You need to either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
     )
 
     with pytest.raises(AttributeError) as exc_info:
@@ -1812,5 +1812,5 @@ def test_ttsentity_subclass_properties() -> None:
 
     assert (
         str(exc_info.value)
-        == "You need to either set the '_attr_default_language' attribute or overwrite the 'default_language' property"
+        == "You need to either set the '_attr_default_language' attribute or override the 'default_language' property"
     )
