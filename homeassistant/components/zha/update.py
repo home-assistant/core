@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import functools
-from functools import cached_property
 import logging
 from typing import Any
 
@@ -101,12 +100,12 @@ class ZHAFirmwareUpdateEntity(
         super().__init__(entity_data, coordinator=zha_data.update_coordinator, **kwargs)
         CoordinatorEntity.__init__(self, zha_data.update_coordinator)
 
-    @cached_property
+    @property
     def installed_version(self) -> str | None:
         """Version installed and in use."""
         return self.entity_data.entity._attr_installed_version
 
-    @cached_property
+    @property
     def in_progress(self) -> bool | int | None:
         """Update installation progress.
 
@@ -117,12 +116,12 @@ class ZHAFirmwareUpdateEntity(
         """
         return self.entity_data.entity.in_progress
 
-    @cached_property
+    @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         return self.entity_data.entity.latest_version
 
-    @cached_property
+    @property
     def release_summary(self) -> str | None:
         """Summary of the release notes or changelog.
 
@@ -131,7 +130,7 @@ class ZHAFirmwareUpdateEntity(
         """
         return self.entity_data.entity.release_summary
 
-    @cached_property
+    @property
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
         return self.entity_data.entity.release_url
