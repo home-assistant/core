@@ -24,7 +24,7 @@ async def test_user_form(hass: HomeAssistant, canary_config_flow) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -37,7 +37,7 @@ async def test_user_form(hass: HomeAssistant, canary_config_flow) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-username"
     assert result["data"] == {**USER_INPUT, CONF_TIMEOUT: DEFAULT_TIMEOUT}
 
@@ -60,7 +60,7 @@ async def test_user_form_cannot_connect(
         USER_INPUT,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
     canary_config_flow.side_effect = ConnectTimeout()
@@ -70,7 +70,7 @@ async def test_user_form_cannot_connect(
         USER_INPUT,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -89,7 +89,7 @@ async def test_user_form_unexpected_exception(
         USER_INPUT,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 
@@ -104,7 +104,7 @@ async def test_user_form_single_instance_allowed(
         context={"source": SOURCE_USER},
         data=USER_INPUT,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -117,7 +117,7 @@ async def test_options_flow(hass: HomeAssistant, canary) -> None:
     assert entry.options[CONF_TIMEOUT] == DEFAULT_TIMEOUT
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     with _patch_async_setup(), _patch_async_setup_entry():
@@ -127,6 +127,6 @@ async def test_options_flow(hass: HomeAssistant, canary) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_FFMPEG_ARGUMENTS] == "-v"
     assert result["data"][CONF_TIMEOUT] == 7

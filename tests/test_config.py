@@ -39,8 +39,11 @@ from homeassistant.core import (
     HomeAssistantError,
 )
 from homeassistant.exceptions import ConfigValidationError
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
-import homeassistant.helpers.check_config as check_config
+from homeassistant.helpers import (
+    check_config,
+    config_validation as cv,
+    issue_registry as ir,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
@@ -378,7 +381,6 @@ async def mock_custom_validator_integrations_with_docs(
 class ConfigTestClass(NodeDictClass):
     """Test class for config with wrapper."""
 
-    __dict__ = {"__config_file__": "configuration.yaml", "__line__": 140}
     __line__ = 140
     __config_file__ = "configuration.yaml"
 
@@ -855,6 +857,7 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
             "internal_url": "http://example.local",
             "media_dirs": {"mymedia": "/usr"},
             "legacy_templates": True,
+            "debug": True,
             "currency": "EUR",
             "country": "SE",
             "language": "sv",
@@ -875,6 +878,7 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
     assert hass.config.media_dirs == {"mymedia": "/usr"}
     assert hass.config.config_source is ConfigSource.YAML
     assert hass.config.legacy_templates is True
+    assert hass.config.debug is True
     assert hass.config.currency == "EUR"
     assert hass.config.country == "SE"
     assert hass.config.language == "sv"
@@ -2039,12 +2043,12 @@ async def test_core_config_schema_legacy_template(
     await config_util.async_process_ha_core_config(hass, config)
 
     issue_registry = ir.async_get(hass)
-    for issue_id in {"legacy_templates_true", "legacy_templates_false"}:
+    for issue_id in ("legacy_templates_true", "legacy_templates_false"):
         issue = issue_registry.async_get_issue("homeassistant", issue_id)
         assert issue if issue_id == expected_issue else not issue
 
     await config_util.async_process_ha_core_config(hass, {})
-    for issue_id in {"legacy_templates_true", "legacy_templates_false"}:
+    for issue_id in ("legacy_templates_true", "legacy_templates_false"):
         assert not issue_registry.async_get_issue("homeassistant", issue_id)
 
 

@@ -238,9 +238,9 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "ambiclimate": {
-      "name": "Ambiclimate",
-      "integration_type": "hub",
+    "ambient_network": {
+      "name": "Ambient Weather Network",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -271,7 +271,8 @@
       "name": "Home Assistant Analytics Insights",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "android_ip_webcam": {
       "name": "Android IP Webcam",
@@ -301,7 +302,7 @@
       "name": "Anova",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_push"
     },
     "anthemav": {
       "name": "Anthem A/V Receivers",
@@ -453,6 +454,12 @@
           "name": "Aruba ClearPass"
         }
       }
+    },
+    "arve": {
+      "name": "Arve",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "arwn": {
       "name": "Ambient Radio Weather Network",
@@ -950,7 +957,8 @@
     "color_extractor": {
       "name": "ColorExtractor",
       "integration_type": "hub",
-      "config_flow": true
+      "config_flow": true,
+      "single_config_entry": true
     },
     "comed": {
       "name": "Commonwealth Edison (ComEd)",
@@ -1298,7 +1306,8 @@
     "downloader": {
       "name": "Downloader",
       "integration_type": "hub",
-      "config_flow": true
+      "config_flow": true,
+      "single_config_entry": true
     },
     "dremel_3d_printer": {
       "name": "Dremel 3D Printer",
@@ -1589,8 +1598,8 @@
     },
     "enigma2": {
       "name": "Enigma2 (OpenWebif)",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "enmax": {
@@ -1634,6 +1643,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "epic_games_store": {
+      "name": "Epic Games Store",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "epion": {
       "name": "Epion",
       "integration_type": "hub",
@@ -1642,20 +1657,9 @@
     },
     "epson": {
       "name": "Epson",
-      "integrations": {
-        "epson": {
-          "integration_type": "hub",
-          "config_flow": true,
-          "iot_class": "local_polling",
-          "name": "Epson"
-        },
-        "epsonworkforce": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "local_polling",
-          "name": "Epson Workforce"
-        }
-      }
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "eq3": {
       "name": "eQ-3",
@@ -1759,7 +1763,8 @@
       "name": "Fast.com",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "feedreader": {
       "name": "Feedreader",
@@ -1945,7 +1950,7 @@
     "folder_watcher": {
       "name": "Folder Watcher",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "foobot": {
@@ -2771,6 +2776,12 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "imgw_pib": {
+      "name": "IMGW-PIB",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "improv_ble": {
       "name": "Improv via BLE",
       "integration_type": "device",
@@ -2880,7 +2891,7 @@
     "islamic_prayer_times": {
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "calculated"
     },
     "ismartwindow": {
       "name": "iSmartWindow",
@@ -3178,8 +3189,8 @@
       "name": "LG",
       "integrations": {
         "lg_netcast": {
-          "integration_type": "hub",
-          "config_flow": false,
+          "integration_type": "device",
+          "config_flow": true,
           "iot_class": "local_polling",
           "name": "LG Netcast"
         },
@@ -3728,6 +3739,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "monzo": {
+      "name": "Monzo",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "moon": {
       "integration_type": "service",
       "config_flow": true,
@@ -3753,7 +3770,7 @@
           "integration_type": "device",
           "config_flow": true,
           "iot_class": "assumed_state",
-          "name": "Motionblinds BLE"
+          "name": "Motionblinds Bluetooth"
         }
       }
     },
@@ -5175,6 +5192,12 @@
         }
       }
     },
+    "sanix": {
+      "name": "Sanix",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "satel_integra": {
       "name": "Satel Integra",
       "integration_type": "hub",
@@ -6471,7 +6494,8 @@
     "uptime": {
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "uptimerobot": {
       "name": "UptimeRobot",

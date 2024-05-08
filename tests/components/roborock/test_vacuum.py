@@ -7,8 +7,10 @@ from unittest.mock import patch
 import pytest
 from roborock import RoborockException
 from roborock.roborock_typing import RoborockCommand
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.roborock import DOMAIN
+from homeassistant.components.roborock.const import GET_MAPS_SERVICE_NAME
 from homeassistant.components.vacuum import (
     SERVICE_CLEAN_SPOT,
     SERVICE_LOCATE,
@@ -80,7 +82,7 @@ async def test_commands(
 
     data = {ATTR_ENTITY_ID: ENTITY_ID, **(service_params or {})}
     with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_command"
+        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_command"
     ) as mock_send_command:
         await hass.services.async_call(
             Platform.VACUUM,
@@ -113,7 +115,7 @@ async def test_resume_cleaning(
     prop = copy.deepcopy(PROP)
     prop.status.in_cleaning = in_cleaning_int
     with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
+        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
         return_value=prop,
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -122,7 +124,7 @@ async def test_resume_cleaning(
 
     data = {ATTR_ENTITY_ID: ENTITY_ID}
     with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_command"
+        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_command"
     ) as mock_send_command:
         await hass.services.async_call(
             Platform.VACUUM,
@@ -143,7 +145,7 @@ async def test_failed_user_command(
     data = {ATTR_ENTITY_ID: ENTITY_ID, "command": "fake_command"}
     with (
         patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_command",
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_command",
             side_effect=RoborockException(),
         ),
         pytest.raises(HomeAssistantError, match="Error while calling fake_command"),
@@ -154,3 +156,20 @@ async def test_failed_user_command(
             data,
             blocking=True,
         )
+
+
+async def test_get_maps(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that the service for maps correctly outputs rooms with the right name."""
+    response = await hass.services.async_call(
+        DOMAIN,
+        GET_MAPS_SERVICE_NAME,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot

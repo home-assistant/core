@@ -86,6 +86,6 @@ async def _run_client(hass: HomeAssistant, client: Client, interval: float) -> N
             await asyncio.sleep(interval)
         except TimeoutError:
             continue
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception, aborting arcam client")
             return

@@ -66,6 +66,7 @@ SUPPORTED_COMPONENTS = {
     "lawn_mower",
     "light",
     "lock",
+    "notify",
     "number",
     "scene",
     "siren",
@@ -81,13 +82,15 @@ SUPPORTED_COMPONENTS = {
 }
 
 MQTT_DISCOVERY_UPDATED: SignalTypeFormat[MQTTDiscoveryPayload] = SignalTypeFormat(
-    "mqtt_discovery_updated_{}"
+    "mqtt_discovery_updated_{}_{}"
 )
 MQTT_DISCOVERY_NEW: SignalTypeFormat[MQTTDiscoveryPayload] = SignalTypeFormat(
     "mqtt_discovery_new_{}_{}"
 )
 MQTT_DISCOVERY_NEW_COMPONENT = "mqtt_discovery_new_component"
-MQTT_DISCOVERY_DONE: SignalTypeFormat[Any] = SignalTypeFormat("mqtt_discovery_done_{}")
+MQTT_DISCOVERY_DONE: SignalTypeFormat[Any] = SignalTypeFormat(
+    "mqtt_discovery_done_{}_{}"
+)
 
 TOPIC_BASE = "~"
 
@@ -176,7 +179,7 @@ async def async_start(  # noqa: C901
     @callback
     def async_discovery_message_received(msg: ReceiveMessage) -> None:  # noqa: C901
         """Process the received message."""
-        mqtt_data.last_discovery = time.time()
+        mqtt_data.last_discovery = time.monotonic()
         payload = msg.payload
         topic = msg.topic
         topic_trimmed = topic.replace(f"{discovery_topic}/", "", 1)
@@ -229,7 +232,7 @@ async def async_start(  # noqa: C901
                     key = ORIGIN_ABBREVIATIONS.get(key, key)
                     origin_info[key] = origin_info.pop(abbreviated_key)
                 MQTT_ORIGIN_INFO_SCHEMA(discovery_payload[CONF_ORIGIN])
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 _LOGGER.warning(
                     "Unable to parse origin information "
                     "from discovery message, got %s",
@@ -268,7 +271,7 @@ async def async_start(  # noqa: C901
                             availability_conf[CONF_TOPIC] = f"{topic[:-1]}{base}"
 
         # If present, the node_id will be included in the discovered object id
-        discovery_id = " ".join((node_id, object_id)) if node_id else object_id
+        discovery_id = f"{node_id} {object_id}" if node_id else object_id
         discovery_hash = (component, discovery_id)
 
         if discovery_payload:
@@ -328,7 +331,7 @@ async def async_start(  # noqa: C901
             discovery_pending_discovered[discovery_hash] = {
                 "unsub": async_dispatcher_connect(
                     hass,
-                    MQTT_DISCOVERY_DONE.format(discovery_hash),
+                    MQTT_DISCOVERY_DONE.format(*discovery_hash),
                     discovery_done,
                 ),
                 "pending": deque([]),
@@ -342,7 +345,7 @@ async def async_start(  # noqa: C901
             message = f"Component has already been discovered: {component} {discovery_id}, sending update"
             async_log_discovery_origin_info(message, payload)
             async_dispatcher_send(
-                hass, MQTT_DISCOVERY_UPDATED.format(discovery_hash), payload
+                hass, MQTT_DISCOVERY_UPDATED.format(*discovery_hash), payload
             )
         elif payload:
             # Add component
@@ -355,7 +358,7 @@ async def async_start(  # noqa: C901
         else:
             # Unhandled discovery message
             async_dispatcher_send(
-                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+                hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None
             )
 
     discovery_topics = [
@@ -369,7 +372,7 @@ async def async_start(  # noqa: C901
         )
     )
 
-    mqtt_data.last_discovery = time.time()
+    mqtt_data.last_discovery = time.monotonic()
     mqtt_integrations = await async_get_mqtt(hass)
 
     for integration, topics in mqtt_integrations.items():

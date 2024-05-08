@@ -15,9 +15,8 @@ import zigpy.profiles.zha
 import zigpy.types
 from zigpy.types.named import EUI64
 import zigpy.util
-import zigpy.zcl.clusters.general as general
+from zigpy.zcl.clusters import general, security
 from zigpy.zcl.clusters.general import Groups
-import zigpy.zcl.clusters.security as security
 import zigpy.zdo.types as zdo_types
 
 from homeassistant.components.websocket_api import const

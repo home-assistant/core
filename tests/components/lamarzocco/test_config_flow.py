@@ -10,7 +10,7 @@ from homeassistant.components.lamarzocco.const import (
     CONF_USE_BLUETOOTH,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
@@ -30,7 +30,7 @@ async def __do_successful_user_step(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "machine_selection"
     return result2
 
@@ -48,7 +48,7 @@ async def __do_sucessful_machine_selection_step(
     )
     await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
     assert result3["title"] == mock_lamarzocco.serial_number
     assert result3["data"] == {
@@ -63,7 +63,7 @@ async def test_form(hass: HomeAssistant, mock_lamarzocco: MagicMock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "user"
 
@@ -82,7 +82,7 @@ async def test_form_abort_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -91,7 +91,7 @@ async def test_form_abort_already_configured(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "machine_selection"
 
     result3 = await hass.config_entries.flow.async_configure(
@@ -103,7 +103,7 @@ async def test_form_abort_already_configured(
     )
     await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.ABORT
+    assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "already_configured"
 
 
@@ -122,7 +122,7 @@ async def test_form_invalid_auth(
         USER_INPUT,
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
     assert len(mock_lamarzocco.get_all_machines.mock_calls) == 1
 
@@ -139,7 +139,7 @@ async def test_form_invalid_host(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -150,7 +150,7 @@ async def test_form_invalid_host(
 
     mock_lamarzocco.check_local_connection.return_value = False
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "machine_selection"
 
     result3 = await hass.config_entries.flow.async_configure(
@@ -162,7 +162,7 @@ async def test_form_invalid_host(
     )
     await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"host": "cannot_connect"}
     assert len(mock_lamarzocco.get_all_machines.mock_calls) == 1
 
@@ -187,7 +187,7 @@ async def test_form_cannot_connect(
         USER_INPUT,
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "no_machines"}
     assert len(mock_lamarzocco.get_all_machines.mock_calls) == 1
 
@@ -197,7 +197,7 @@ async def test_form_cannot_connect(
         USER_INPUT,
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
     assert len(mock_lamarzocco.get_all_machines.mock_calls) == 2
 
@@ -224,7 +224,7 @@ async def test_reauth_flow(
         data=mock_config_entry.data,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -232,7 +232,7 @@ async def test_reauth_flow(
         {CONF_PASSWORD: "new_password"},
     )
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     await hass.async_block_till_done()
     assert result2["reason"] == "reauth_successful"
     assert len(mock_lamarzocco.get_all_machines.mock_calls) == 1
@@ -250,14 +250,14 @@ async def test_bluetooth_discovery(
         DOMAIN, context={"source": config_entries.SOURCE_BLUETOOTH}, data=service_info
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         USER_INPUT,
     )
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "machine_selection"
 
     assert len(mock_lamarzocco.get_all_machines.mock_calls) == 1
@@ -269,7 +269,7 @@ async def test_bluetooth_discovery(
     )
     await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
     assert result3["title"] == mock_lamarzocco.serial_number
     assert result3["data"] == {
@@ -296,7 +296,7 @@ async def test_bluetooth_discovery_errors(
         data=service_info,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     mock_lamarzocco.get_all_machines.return_value = [("GS98765", "GS3 MP")]
@@ -304,7 +304,7 @@ async def test_bluetooth_discovery_errors(
         result["flow_id"],
         USER_INPUT,
     )
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "machine_not_found"}
     assert len(mock_lamarzocco.get_all_machines.mock_calls) == 1
 
@@ -315,7 +315,7 @@ async def test_bluetooth_discovery_errors(
         result["flow_id"],
         USER_INPUT,
     )
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "machine_selection"
     assert len(mock_lamarzocco.get_all_machines.mock_calls) == 2
 
@@ -327,7 +327,7 @@ async def test_bluetooth_discovery_errors(
     )
     await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
     assert result3["title"] == mock_lamarzocco.serial_number
     assert result3["data"] == {
@@ -346,11 +346,11 @@ async def test_options_flow(
 ) -> None:
     """Test options flow."""
     await async_init_integration(hass, mock_config_entry)
-    assert mock_config_entry.state is config_entries.ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result2 = await hass.config_entries.options.async_configure(
@@ -361,7 +361,7 @@ async def test_options_flow(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         CONF_USE_BLUETOOTH: False,
     }

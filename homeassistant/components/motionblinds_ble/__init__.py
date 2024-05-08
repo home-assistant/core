@@ -1,4 +1,4 @@
-"""Motionblinds BLE integration."""
+"""Motionblinds Bluetooth integration."""
 
 from __future__ import annotations
 
@@ -34,9 +34,9 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Motionblinds BLE integration."""
+    """Set up Motionblinds Bluetooth integration."""
 
-    _LOGGER.debug("Setting up Motionblinds BLE integration")
+    _LOGGER.debug("Setting up Motionblinds Bluetooth integration")
 
     # The correct time is needed for encryption
     _LOGGER.debug("Setting timezone for encryption: %s", hass.config.time_zone)
@@ -46,7 +46,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Motionblinds BLE device from a config entry."""
+    """Set up Motionblinds Bluetooth device from a config entry."""
 
     _LOGGER.debug("(%s) Setting up device", entry.data[CONF_MAC_CODE])
 
@@ -94,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload Motionblinds BLE device from a config entry."""
+    """Unload Motionblinds Bluetooth device from a config entry."""
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)

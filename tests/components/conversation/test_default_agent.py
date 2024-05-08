@@ -6,11 +6,12 @@ from unittest.mock import AsyncMock, patch
 from hassil.recognize import Intent, IntentData, MatchEntity, RecognizeResult
 import pytest
 
-from homeassistant.components import conversation
+from homeassistant.components import conversation, cover
+from homeassistant.components.conversation import default_agent
 from homeassistant.components.homeassistant.exposed_entities import (
     async_get_assistant_settings,
 )
-from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, STATE_CLOSED
 from homeassistant.core import DOMAIN as HASS_DOMAIN, Context, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -151,9 +152,7 @@ async def test_conversation_agent(
     init_components,
 ) -> None:
     """Test DefaultAgent."""
-    agent = await conversation._get_agent_manager(hass).async_get_agent(
-        conversation.HOME_ASSISTANT_AGENT
-    )
+    agent = default_agent.async_get_default_agent(hass)
     with patch(
         "homeassistant.components.conversation.default_agent.get_languages",
         return_value=["dwarvish", "elvish", "entish"],
@@ -180,6 +179,7 @@ async def test_expose_flag_automatically_set(
 
     # After setting up conversation, the expose flag should now be set on all entities
     assert async_get_assistant_settings(hass, conversation.DOMAIN) == {
+        "conversation.home_assistant": {"should_expose": False},
         light.entity_id: {"should_expose": True},
         test.entity_id: {"should_expose": False},
     }
@@ -189,6 +189,7 @@ async def test_expose_flag_automatically_set(
     hass.states.async_set(new_light, "test")
     await hass.async_block_till_done()
     assert async_get_assistant_settings(hass, conversation.DOMAIN) == {
+        "conversation.home_assistant": {"should_expose": False},
         light.entity_id: {"should_expose": True},
         new_light: {"should_expose": True},
         test.entity_id: {"should_expose": False},
@@ -253,10 +254,8 @@ async def test_trigger_sentences(hass: HomeAssistant, init_components) -> None:
     trigger_sentences = ["It's party time", "It is time to party"]
     trigger_response = "Cowabunga!"
 
-    agent = await conversation._get_agent_manager(hass).async_get_agent(
-        conversation.HOME_ASSISTANT_AGENT
-    )
-    assert isinstance(agent, conversation.DefaultAgent)
+    agent = default_agent.async_get_default_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
 
     callback = AsyncMock(return_value=trigger_response)
     unregister = agent.register_trigger(trigger_sentences, callback)
@@ -608,14 +607,23 @@ async def test_error_no_domain_in_floor(
 
 async def test_error_no_device_class(hass: HomeAssistant, init_components) -> None:
     """Test error message when no entities of a device class exist."""
+    # Create a cover entity that is not a window.
+    # This ensures that the filtering below won't exit early because there are
+    # no entities in the cover domain.
+    hass.states.async_set(
+        "cover.garage_door",
+        STATE_CLOSED,
+        attributes={ATTR_DEVICE_CLASS: cover.CoverDeviceClass.GARAGE},
+    )
 
     # We don't have a sentence for opening all windows
+    cover_domain = MatchEntity(name="domain", value="cover", text="cover")
     window_class = MatchEntity(name="device_class", value="window", text="windows")
     recognize_result = RecognizeResult(
         intent=Intent("HassTurnOn"),
         intent_data=IntentData([]),
-        entities={"device_class": window_class},
-        entities_list=[window_class],
+        entities={"domain": cover_domain, "device_class": window_class},
+        entities_list=[cover_domain, window_class],
     )
 
     with patch(
@@ -793,7 +801,9 @@ async def test_no_states_matched_default_error(
 
     with patch(
         "homeassistant.components.conversation.default_agent.intent.async_handle",
-        side_effect=intent.NoStatesMatchedError(),
+        side_effect=intent.MatchFailedError(
+            intent.MatchTargetsResult(False), intent.MatchTargetsConstraints()
+        ),
     ):
         result = await conversation.async_converse(
             hass, "turn on lights in the kitchen", None, Context(), None
@@ -824,7 +834,7 @@ async def test_empty_aliases(
     area_kitchen = area_registry.async_get_or_create("kitchen_id")
     area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
     area_kitchen = area_registry.async_update(
-        area_kitchen.id, aliases={" "}, floor_id=floor_1
+        area_kitchen.id, aliases={" "}, floor_id=floor_1.floor_id
     )
 
     entry = MockConfigEntry()
@@ -850,7 +860,7 @@ async def test_empty_aliases(
     )
 
     with patch(
-        "homeassistant.components.conversation.DefaultAgent._recognize",
+        "homeassistant.components.conversation.default_agent.DefaultAgent._recognize",
         return_value=None,
     ) as mock_recognize_all:
         await conversation.async_converse(
@@ -864,17 +874,14 @@ async def test_empty_aliases(
         assert slot_lists.keys() == {"area", "name", "floor"}
         areas = slot_lists["area"]
         assert len(areas.values) == 1
-        assert areas.values[0].value_out == area_kitchen.id
         assert areas.values[0].text_in.text == area_kitchen.normalized_name
 
         names = slot_lists["name"]
         assert len(names.values) == 1
-        assert names.values[0].value_out == kitchen_light.name
         assert names.values[0].text_in.text == kitchen_light.name
 
         floors = slot_lists["floor"]
         assert len(floors.values) == 1
-        assert floors.values[0].value_out == floor_1.floor_id
         assert floors.values[0].text_in.text == floor_1.name
 
 

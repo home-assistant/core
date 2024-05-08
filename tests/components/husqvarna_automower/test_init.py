@@ -31,12 +31,12 @@ async def test_load_unload_entry(
     await setup_integration(hass, mock_config_entry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize(
@@ -87,7 +87,7 @@ async def test_update_failed(
     await setup_integration(hass, mock_config_entry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_websocket_not_available(
@@ -105,13 +105,13 @@ async def test_websocket_not_available(
     assert "Failed to connect to websocket. Trying to reconnect: Boom" in caplog.text
     assert mock_automower_client.auth.websocket_connect.call_count == 1
     assert mock_automower_client.start_listening.call_count == 1
-    assert mock_config_entry.state == ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
     freezer.tick(timedelta(seconds=2))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert mock_automower_client.auth.websocket_connect.call_count == 2
     assert mock_automower_client.start_listening.call_count == 2
-    assert mock_config_entry.state == ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_device_info(

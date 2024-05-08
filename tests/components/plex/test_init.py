@@ -10,7 +10,7 @@ import plexapi
 import requests
 import requests_mock
 
-import homeassistant.components.plex.const as const
+from homeassistant.components.plex import const
 from homeassistant.components.plex.models import (
     LIVE_TV_SECTION,
     TRANSIENT_SECTION,
@@ -360,6 +360,7 @@ async def test_trigger_reauth(
     ):
         trigger_plex_update(mock_websocket)
         await wait_for_debouncer(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(hass.config_entries.async_entries(const.DOMAIN)) == 1
     assert entry.state is not ConfigEntryState.LOADED

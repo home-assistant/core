@@ -95,10 +95,9 @@ def deserialize_entity_description(
     descriptions_class: type[EntityDescription], data: dict[str, Any]
 ) -> EntityDescription:
     """Deserialize an entity description."""
-    # pylint: disable=protected-access
     result: dict[str, Any] = {}
     if hasattr(descriptions_class, "_dataclass"):
-        descriptions_class = descriptions_class._dataclass
+        descriptions_class = descriptions_class._dataclass  # noqa: SLF001
     for field in cached_fields(descriptions_class):
         field_name = field.name
         # It would be nice if field.type returned the actual
@@ -116,11 +115,10 @@ def deserialize_entity_description(
 
 def serialize_entity_description(description: EntityDescription) -> dict[str, Any]:
     """Serialize an entity description."""
-    as_dict = dataclasses.asdict(description)
     return {
-        field.name: as_dict[field.name]
+        field.name: value
         for field in cached_fields(type(description))
-        if field.default != as_dict.get(field.name)
+        if (value := getattr(description, field.name)) != field.default
     }
 
 
@@ -274,7 +272,6 @@ async def async_setup(hass: HomeAssistant) -> None:
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP,
         _async_save_processor_data_at_stop,
-        run_immediately=True,
     )
 
 
@@ -376,7 +373,7 @@ class PassiveBluetoothProcessorCoordinator(
 
         try:
             update = self._update_method(service_info)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             self.last_update_success = False
             self.logger.exception("Unexpected error updating %s data", self.name)
             return
@@ -586,7 +583,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
         """Handle a Bluetooth event."""
         try:
             new_data = self.update_method(update)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             self.last_update_success = False
             self.coordinator.logger.exception(
                 "Unexpected error updating %s data", self.coordinator.name

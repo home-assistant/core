@@ -8,6 +8,7 @@ from collections.abc import Awaitable, Callable, Generator, Mapping
 import contextlib
 import contextvars
 from enum import StrEnum
+from functools import partial
 import logging.handlers
 import time
 from types import ModuleType
@@ -28,10 +29,11 @@ from .core import (
     callback,
 )
 from .exceptions import DependencyError, HomeAssistantError
-from .helpers import translation
+from .helpers import singleton, translation
 from .helpers.issue_registry import IssueSeverity, async_create_issue
 from .helpers.typing import ConfigType
 from .util.async_ import create_eager_task
+from .util.hass_dict import HassKey
 
 current_setup_group: contextvars.ContextVar[tuple[str, str | None] | None] = (
     contextvars.ContextVar("current_setup_group", default=None)
@@ -44,33 +46,38 @@ ATTR_COMPONENT: Final = "component"
 
 BASE_PLATFORMS = {platform.value for platform in Platform}
 
-# DATA_SETUP is a dict[str, asyncio.Future[bool]], indicating domains which are currently
+# DATA_SETUP is a dict, indicating domains which are currently
 # being setup or which failed to setup:
 # - Tasks are added to DATA_SETUP by `async_setup_component`, the key is the domain
 #   being setup and the Task is the `_async_setup_component` helper.
 # - Tasks are removed from DATA_SETUP if setup was successful, that is,
 #   the task returned True.
-DATA_SETUP = "setup_tasks"
+DATA_SETUP: HassKey[dict[str, asyncio.Future[bool]]] = HassKey("setup_tasks")
 
-# DATA_SETUP_DONE is a dict [str, asyncio.Future[bool]], indicating components which
-# will be setup:
+# DATA_SETUP_DONE is a dict, indicating components which will be setup:
 # - Events are added to DATA_SETUP_DONE during bootstrap by
 #   async_set_domains_to_be_loaded, the key is the domain which will be loaded.
 # - Events are set and removed from DATA_SETUP_DONE when async_setup_component
 #   is finished, regardless of if the setup was successful or not.
-DATA_SETUP_DONE = "setup_done"
+DATA_SETUP_DONE: HassKey[dict[str, asyncio.Future[bool]]] = HassKey("setup_done")
 
-# DATA_SETUP_STARTED is a dict [tuple[str, str | None], float], indicating when an attempt
+# DATA_SETUP_STARTED is a dict, indicating when an attempt
 # to setup a component started.
-DATA_SETUP_STARTED = "setup_started"
+DATA_SETUP_STARTED: HassKey[dict[tuple[str, str | None], float]] = HassKey(
+    "setup_started"
+)
 
-# DATA_SETUP_TIME is a defaultdict[str, defaultdict[str | None, defaultdict[SetupPhases, float]]]
-# indicating how time was spent setting up a component and each group (config entry).
-DATA_SETUP_TIME = "setup_time"
+# DATA_SETUP_TIME is a defaultdict, indicating how time was spent
+# setting up a component.
+DATA_SETUP_TIME: HassKey[
+    defaultdict[str, defaultdict[str | None, defaultdict[SetupPhases, float]]]
+] = HassKey("setup_time")
 
-DATA_DEPS_REQS = "deps_reqs_processed"
+DATA_DEPS_REQS: HassKey[set[str]] = HassKey("deps_reqs_processed")
 
-DATA_PERSISTENT_ERRORS = "bootstrap_persistent_errors"
+DATA_PERSISTENT_ERRORS: HassKey[dict[str, str | None]] = HassKey(
+    "bootstrap_persistent_errors"
+)
 
 NOTIFY_FOR_TRANSLATION_KEYS = [
     "config_validation_err",
@@ -125,9 +132,7 @@ def async_set_domains_to_be_loaded(hass: core.HomeAssistant, domains: set[str]) 
      - Properly handle after_dependencies.
      - Keep track of domains which will load but have not yet finished loading
     """
-    setup_done_futures: dict[str, asyncio.Future[bool]] = hass.data.setdefault(
-        DATA_SETUP_DONE, {}
-    )
+    setup_done_futures = hass.data.setdefault(DATA_SETUP_DONE, {})
     setup_done_futures.update({domain: hass.loop.create_future() for domain in domains})
 
 
@@ -148,12 +153,8 @@ async def async_setup_component(
     if domain in hass.config.components:
         return True
 
-    setup_futures: dict[str, asyncio.Future[bool]] = hass.data.setdefault(
-        DATA_SETUP, {}
-    )
-    setup_done_futures: dict[str, asyncio.Future[bool]] = hass.data.setdefault(
-        DATA_SETUP_DONE, {}
-    )
+    setup_futures = hass.data.setdefault(DATA_SETUP, {})
+    setup_done_futures = hass.data.setdefault(DATA_SETUP_DONE, {})
 
     if existing_setup_future := setup_futures.get(domain):
         return await existing_setup_future
@@ -194,9 +195,7 @@ async def _async_process_dependencies(
 
     Returns a list of dependencies which failed to set up.
     """
-    setup_futures: dict[str, asyncio.Future[bool]] = hass.data.setdefault(
-        DATA_SETUP, {}
-    )
+    setup_futures = hass.data.setdefault(DATA_SETUP, {})
 
     dependencies_tasks = {
         dep: setup_futures.get(dep)
@@ -209,7 +208,7 @@ async def _async_process_dependencies(
     }
 
     after_dependencies_tasks: dict[str, asyncio.Future[bool]] = {}
-    to_be_loaded: dict[str, asyncio.Future[bool]] = hass.data.get(DATA_SETUP_DONE, {})
+    to_be_loaded = hass.data.get(DATA_SETUP_DONE, {})
     for dep in integration.after_dependencies:
         if (
             dep not in dependencies_tasks
@@ -253,33 +252,38 @@ async def _async_process_dependencies(
     return failed
 
 
-async def _async_setup_component(  # noqa: C901
+def _log_error_setup_error(
+    hass: HomeAssistant,
+    domain: str,
+    integration: loader.Integration | None,
+    msg: str,
+    exc_info: Exception | None = None,
+) -> None:
+    """Log helper."""
+    if integration is None:
+        custom = ""
+        link = None
+    else:
+        custom = "" if integration.is_built_in else "custom integration "
+        link = integration.documentation
+    _LOGGER.error("Setup failed for %s'%s': %s", custom, domain, msg, exc_info=exc_info)
+    async_notify_setup_error(hass, domain, link)
+
+
+async def _async_setup_component(
     hass: core.HomeAssistant, domain: str, config: ConfigType
 ) -> bool:
     """Set up a component for Home Assistant.
 
     This method is a coroutine.
     """
-    integration: loader.Integration | None = None
-
-    def log_error(msg: str, exc_info: Exception | None = None) -> None:
-        """Log helper."""
-        if integration is None:
-            custom = ""
-            link = None
-        else:
-            custom = "" if integration.is_built_in else "custom integration "
-            link = integration.documentation
-        _LOGGER.error(
-            "Setup failed for %s'%s': %s", custom, domain, msg, exc_info=exc_info
-        )
-        async_notify_setup_error(hass, domain, link)
-
     try:
         integration = await loader.async_get_integration(hass, domain)
     except loader.IntegrationNotFound:
-        log_error("Integration not found.")
+        _log_error_setup_error(hass, domain, None, "Integration not found.")
         return False
+
+    log_error = partial(_log_error_setup_error, hass, domain, integration)
 
     if integration.disabled:
         log_error(f"Dependency is disabled - {integration.disabled}")
@@ -428,10 +432,9 @@ async def _async_setup_component(  # noqa: C901
             await load_translations_task
 
     if integration.platforms_exists(("config_flow",)):
-        # If the integration has a config_flow, flush out async_setup calling create_task
-        # with an asyncio.sleep(0) so we can wait for import flows.
-        # Fragile but covered by test.
-        await asyncio.sleep(0)
+        # If the integration has a config_flow, wait for import flows.
+        # As these are all created with eager tasks, we do not sleep here,
+        # as the tasks will always be started before we reach this point.
         await hass.config_entries.flow.async_wait_import_flow_initialized(domain)
 
     # Add to components before the entry.async_setup
@@ -444,7 +447,7 @@ async def _async_setup_component(  # noqa: C901
         await asyncio.gather(
             *(
                 create_eager_task(
-                    entry.async_setup(hass, integration=integration),
+                    entry.async_setup_locked(hass, integration=integration),
                     name=f"config entry setup {entry.title} {entry.domain} {entry.entry_id}",
                 )
                 for entry in entries
@@ -452,10 +455,11 @@ async def _async_setup_component(  # noqa: C901
         )
 
     # Cleanup
-    if domain in hass.data[DATA_SETUP]:
-        hass.data[DATA_SETUP].pop(domain)
+    hass.data[DATA_SETUP].pop(domain, None)
 
-    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: domain})
+    hass.bus.async_fire_internal(
+        EVENT_COMPONENT_LOADED, EventComponentLoaded(component=domain)
+    )
 
     return True
 
@@ -483,14 +487,6 @@ async def async_prepare_setup_platform(
         log_error("Integration not found")
         return None
 
-    # Process deps and reqs as soon as possible, so that requirements are
-    # available when we import the platform.
-    try:
-        await async_process_deps_reqs(hass, hass_config, integration)
-    except HomeAssistantError as err:
-        log_error(str(err))
-        return None
-
     # Platforms cannot exist on their own, they are part of their integration.
     # If the integration is not set up yet, and can be set up, set it up.
     #
@@ -498,11 +494,27 @@ async def async_prepare_setup_platform(
     # where the top level component is.
     #
     if load_top_level_component := integration.domain not in hass.config.components:
+        # Process deps and reqs as soon as possible, so that requirements are
+        # available when we import the platform. We only do this if the integration
+        # is not in hass.config.components yet, as we already processed them in
+        # async_setup_component if it is.
+        try:
+            await async_process_deps_reqs(hass, hass_config, integration)
+        except HomeAssistantError as err:
+            log_error(str(err))
+            return None
+
         try:
             component = await integration.async_get_component()
         except ImportError as exc:
             log_error(f"Unable to import the component ({exc}).")
             return None
+
+    if not integration.platforms_exists((domain,)):
+        log_error(
+            f"Platform not found (No module named '{integration.pkg_path}.{domain}')"
+        )
+        return None
 
     try:
         platform = await integration.async_get_platform(domain)
@@ -582,11 +594,11 @@ def _async_when_setup(
         """Call the callback."""
         try:
             await when_setup_cb(hass, component)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error handling when_setup callback for %s", component)
 
     if component in hass.config.components:
-        hass.async_create_task(
+        hass.async_create_task_internal(
             when_setup(), f"when setup {component}", eager_start=True
         )
         return
@@ -609,14 +621,11 @@ def _async_when_setup(
             EVENT_COMPONENT_LOADED,
             _matched_event,
             event_filter=_async_is_component_filter,
-            run_immediately=True,
         )
     )
     if start_event:
         listeners.append(
-            hass.bus.async_listen(
-                EVENT_HOMEASSISTANT_START, _matched_event, run_immediately=True
-            )
+            hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _matched_event)
         )
 
 
@@ -660,13 +669,12 @@ class SetupPhases(StrEnum):
     """Wait time for the packages to import."""
 
 
+@singleton.singleton(DATA_SETUP_STARTED)
 def _setup_started(
     hass: core.HomeAssistant,
 ) -> dict[tuple[str, str | None], float]:
     """Return the setup started dict."""
-    if DATA_SETUP_STARTED not in hass.data:
-        hass.data[DATA_SETUP_STARTED] = {}
-    return hass.data[DATA_SETUP_STARTED]  # type: ignore[no-any-return]
+    return {}
 
 
 @contextlib.contextmanager
@@ -706,15 +714,12 @@ def async_pause_setup(
         )
 
 
+@singleton.singleton(DATA_SETUP_TIME)
 def _setup_times(
     hass: core.HomeAssistant,
 ) -> defaultdict[str, defaultdict[str | None, defaultdict[SetupPhases, float]]]:
     """Return the setup timings default dict."""
-    if DATA_SETUP_TIME not in hass.data:
-        hass.data[DATA_SETUP_TIME] = defaultdict(
-            lambda: defaultdict(lambda: defaultdict(float))
-        )
-    return hass.data[DATA_SETUP_TIME]  # type: ignore[no-any-return]
+    return defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
 
 
 @contextlib.contextmanager

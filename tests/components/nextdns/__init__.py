@@ -1,5 +1,6 @@
 """Tests for the NextDNS integration."""
 
+from contextlib import contextmanager
 from unittest.mock import patch
 
 from nextdns import (
@@ -113,16 +114,9 @@ SETTINGS = Settings(
 )
 
 
-async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
-    """Set up the NextDNS integration in Home Assistant."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Fake Profile",
-        unique_id="xyz12",
-        data={CONF_API_KEY: "fake_api_key", CONF_PROFILE_ID: "xyz12"},
-        entry_id="d9aa37407ddac7b964a99e86312288d6",
-    )
-
+@contextmanager
+def mock_nextdns():
+    """Mock the NextDNS class."""
     with (
         patch(
             "homeassistant.components.nextdns.NextDns.get_profiles",
@@ -157,7 +151,22 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
             return_value=CONNECTION_STATUS,
         ),
     ):
-        entry.add_to_hass(hass)
+        yield
+
+
+async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up the NextDNS integration in Home Assistant."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Fake Profile",
+        unique_id="xyz12",
+        data={CONF_API_KEY: "fake_api_key", CONF_PROFILE_ID: "xyz12"},
+        entry_id="d9aa37407ddac7b964a99e86312288d6",
+    )
+
+    entry.add_to_hass(hass)
+
+    with mock_nextdns():
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 

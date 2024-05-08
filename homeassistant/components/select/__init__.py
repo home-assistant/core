@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from functools import cached_property
 import logging
-from typing import TYPE_CHECKING, Any, final
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -31,11 +32,6 @@ from .const import (
     SERVICE_SELECT_OPTION,
     SERVICE_SELECT_PREVIOUS,
 )
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 SCAN_INTERVAL = timedelta(seconds=30)
 

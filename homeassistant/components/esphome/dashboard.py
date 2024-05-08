@@ -103,7 +103,7 @@ class ESPHomeDashboardManager:
             await dashboard.async_shutdown()
 
         self._cancel_shutdown = hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, on_hass_stop, run_immediately=True
+            EVENT_HOMEASSISTANT_STOP, on_hass_stop
         )
 
         new_data = {"info": {"addon_slug": addon_slug, "host": host, "port": port}}

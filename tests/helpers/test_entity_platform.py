@@ -5,7 +5,7 @@ from collections.abc import Iterable
 from datetime import timedelta
 import logging
 from typing import Any
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import pytest
 
@@ -78,6 +78,40 @@ async def test_polling_only_updates_entities_it_should_poll(
     assert poll_ent.async_update.called
 
 
+async def test_polling_check_works_if_entity_add_fails(
+    hass: HomeAssistant,
+) -> None:
+    """Test the polling check works if an entity add fails."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+    await component.async_setup({})
+
+    class MockEntityNeedsSelfHassInShouldPoll(MockEntity):
+        """Mock entity that needs self.hass in should_poll."""
+
+        @property
+        def should_poll(self) -> bool:
+            """Return True if entity has to be polled."""
+            return self.hass.data is not None
+
+    working_poll_ent = MockEntityNeedsSelfHassInShouldPoll(should_poll=True)
+    working_poll_ent.async_update = AsyncMock()
+    broken_poll_ent = MockEntityNeedsSelfHassInShouldPoll(should_poll=True)
+    broken_poll_ent.async_update = AsyncMock(side_effect=Exception("Broken"))
+
+    await component.async_add_entities(
+        [broken_poll_ent, working_poll_ent], update_before_add=True
+    )
+
+    working_poll_ent.async_update.reset_mock()
+    broken_poll_ent.async_update.reset_mock()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not broken_poll_ent.async_update.called
+    assert working_poll_ent.async_update.called
+
+
 async def test_polling_disabled_by_config_entry(hass: HomeAssistant) -> None:
     """Test the polling of only updated entities."""
     entity_platform = MockEntityPlatform(hass)
@@ -86,7 +120,7 @@ async def test_polling_disabled_by_config_entry(hass: HomeAssistant) -> None:
     poll_ent = MockEntity(should_poll=True)
 
     await entity_platform.async_add_entities([poll_ent])
-    assert entity_platform._async_unsub_polling is None
+    assert entity_platform._async_polling_timer is None
 
 
 async def test_polling_updates_entities_with_exception(hass: HomeAssistant) -> None:
@@ -179,10 +213,7 @@ async def test_update_state_adds_entities_with_update_before_add_false(
     assert not ent.update.called
 
 
-@patch("homeassistant.helpers.entity_platform.async_track_time_interval")
-async def test_set_scan_interval_via_platform(
-    mock_track: Mock, hass: HomeAssistant
-) -> None:
+async def test_set_scan_interval_via_platform(hass: HomeAssistant) -> None:
     """Test the setting of the scan interval via platform."""
 
     def platform_setup(
@@ -201,11 +232,12 @@ async def test_set_scan_interval_via_platform(
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    await component.async_setup({DOMAIN: {"platform": "platform"}})
+    with patch.object(hass.loop, "call_later") as mock_track:
+        await component.async_setup({DOMAIN: {"platform": "platform"}})
 
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
     assert mock_track.called
-    assert timedelta(seconds=30) == mock_track.call_args[0][2]
+    assert mock_track.call_args[0][0] == 30.0
 
 
 async def test_adding_entities_with_generator_and_thread_callback(
@@ -471,7 +503,7 @@ async def test_parallel_updates_async_platform_updates_in_parallel(
 
     assert handle._update_in_sequence is False
 
-    await handle._update_entity_states(dt_util.utcnow())
+    await handle._async_update_entity_states()
     assert peak_update_count > 1
 
 
@@ -521,7 +553,7 @@ async def test_parallel_updates_sync_platform_updates_in_sequence(
 
     assert handle._update_in_sequence is True
 
-    await handle._update_entity_states(dt_util.utcnow())
+    await handle._async_update_entity_states()
     assert peak_update_count == 1
 
 
@@ -983,7 +1015,7 @@ async def test_stop_shutdown_cancels_retry_setup_and_interval_listener(
     ent_platform.async_shutdown()
 
     assert len(mock_call_later.return_value.mock_calls) == 1
-    assert ent_platform._async_unsub_polling is None
+    assert ent_platform._async_polling_timer is None
     assert ent_platform._async_cancel_retry_setup is None
 
 
@@ -1076,6 +1108,19 @@ async def test_entity_registry_updates_invalid_entity_id(hass: HomeAssistant) ->
     assert hass.states.get("test_domain.world") is not None
     assert hass.states.get("invalid_entity_id") is None
     assert hass.states.get("diff_domain.world") is None
+
+
+async def test_add_entity_with_invalid_id(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test trying to add an entity with an invalid entity_id."""
+    platform = MockEntityPlatform(hass)
+    entity = MockEntity(entity_id="i.n.v.a.l.i.d")
+    await platform.async_add_entities([entity])
+    assert (
+        "Error adding entity i.n.v.a.l.i.d for domain "
+        "test_domain with platform test_platform" in caplog.text
+    )
 
 
 async def test_device_info_called(
