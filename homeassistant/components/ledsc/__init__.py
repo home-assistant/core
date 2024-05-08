@@ -6,14 +6,13 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.light import PLATFORM_SCHEMA
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.components.light import PLATFORM_SCHEMA
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.config_validation as cv
 
-from .exceptions import CannotConnect
-from .consts import DOMAIN, PLATFORMS
+from .consts import PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,8 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def options_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:

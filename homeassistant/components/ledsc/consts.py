@@ -1,3 +1,5 @@
+"""Constant variables."""
+
 from homeassistant.const import Platform
 
 DOMAIN = "ledsc"

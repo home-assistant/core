@@ -6,6 +6,6 @@
   "iot_class": "local_polling",
   "config_flow": true,
   "integration_type": "hub",
-  "requirements": ["requests"],
+  "requirements": ["requests==2.31.0"],
   "version": "1.0.0"
 }

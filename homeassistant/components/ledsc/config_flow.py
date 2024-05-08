@@ -8,12 +8,12 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 
-from .consts import DOMAIN, DEFAULT_HOST, DEFAULT_PORT
-from .light import LedSClient
+from .consts import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
 from .exceptions import CannotConnect
+from .light import LedSClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +26,8 @@ DATA_SCHEMA = vol.Schema(
 
 
 async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
+    """
+    Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """

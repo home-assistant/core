@@ -1,3 +1,5 @@
+"""LedSC exceptions."""
+
 from homeassistant.exceptions import HomeAssistantError
 
 
