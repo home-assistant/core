@@ -341,7 +341,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluetoothConfigEntry) ->
     slots: int = details.get(ADAPTER_CONNECTION_SLOTS) or DEFAULT_CONNECTION_SLOTS
     entry.async_on_unload(async_register_scanner(hass, scanner, connection_slots=slots))
     await async_update_device(hass, entry, adapter, details)
-    entry.runtime_data = scanner
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
     entry.async_on_unload(scanner.async_stop)
     return True
