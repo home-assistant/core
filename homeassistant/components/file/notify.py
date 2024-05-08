@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from typing import Any, TextIO
 
@@ -15,11 +16,14 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_FILENAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-CONF_TIMESTAMP = "timestamp"
+from .const import CONF_TIMESTAMP, DOMAIN, URL_ALLOWLIST_EXT_DIRS
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -53,16 +57,32 @@ class FileNotificationService(BaseNotificationService):
         """Send a message to a file."""
         file: TextIO
         filepath: str = os.path.join(self.hass.config.config_dir, self.filename)
-        with open(filepath, "a", encoding="utf8") as file:
-            if os.stat(filepath).st_size == 0:
-                title = (
-                    f"{kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)} notifications (Log"
-                    f" started: {dt_util.utcnow().isoformat()})\n{'-' * 80}\n"
-                )
-                file.write(title)
+        if not self.hass.config.is_allowed_path(filepath):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="dir_not_allowed",
+                translation_placeholders={
+                    "filename": filepath,
+                    "url": URL_ALLOWLIST_EXT_DIRS,
+                },
+            )
+        try:
+            with open(filepath, "a", encoding="utf8") as file:
+                if os.stat(filepath).st_size == 0:
+                    title = (
+                        f"{kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)} notifications (Log"
+                        f" started: {dt_util.utcnow().isoformat()})\n{'-' * 80}\n"
+                    )
+                    file.write(title)
 
-            if self.add_timestamp:
-                text = f"{dt_util.utcnow().isoformat()} {message}\n"
-            else:
-                text = f"{message}\n"
-            file.write(text)
+                if self.add_timestamp:
+                    text = f"{dt_util.utcnow().isoformat()} {message}\n"
+                else:
+                    text = f"{message}\n"
+                file.write(text)
+        except Exception as exc:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="write_access_failed",
+                translation_placeholders={"filename": filepath, "exc": f"{exc!r}"},
+            ) from exc

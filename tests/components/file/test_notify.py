@@ -1,7 +1,7 @@
 """The tests for the notify file platform."""
 
 import os
-from unittest.mock import call, mock_open, patch
+from unittest.mock import MagicMock, call, mock_open, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -9,6 +9,8 @@ import pytest
 from homeassistant.components import notify
 from homeassistant.components.notify import ATTR_TITLE_DEFAULT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -32,7 +34,10 @@ async def test_bad_config(hass: HomeAssistant) -> None:
     ],
 )
 async def test_notify_file(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, timestamp: bool
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_is_allowed_path: MagicMock,
+    timestamp: bool,
 ) -> None:
     """Test the notify file output."""
     filename = "mock_file"
@@ -85,3 +90,95 @@ async def test_notify_file(
                 call(title),
                 call(f"{dt_util.utcnow().isoformat()} {message}\n"),
             ]
+
+
+@pytest.mark.parametrize(
+    ("domain", "service", "params"),
+    [(notify.DOMAIN, "test", {"message": "one, two, testing, testing"})],
+    ids=["legacy"],
+)
+@pytest.mark.parametrize(
+    ("is_allowed", "config"),
+    [
+        (
+            False,
+            {
+                "notify": [
+                    {
+                        "name": "test",
+                        "platform": "file",
+                        "filename": "mock_file",
+                    }
+                ]
+            },
+        ),
+    ],
+    ids=["not_allowed"],
+)
+async def test_legacy_notify_file_not_allowed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_is_allowed_path: MagicMock,
+    config: ConfigType,
+    domain: str,
+    service: str,
+    params: dict[str, str],
+) -> None:
+    """Test legacy notify file output not allowed."""
+    assert await async_setup_component(hass, notify.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    freezer.move_to(dt_util.utcnow())
+
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(domain, service, params, blocking=True)
+    assert f"{exc.value!r}" == "ServiceValidationError('dir_not_allowed')"
+
+
+@pytest.mark.parametrize(
+    ("domain", "service", "params"),
+    [(notify.DOMAIN, "test", {"message": "one, two, testing, testing"})],
+    ids=["legacy"],
+)
+@pytest.mark.parametrize(
+    ("is_allowed", "config"),
+    [
+        (
+            True,
+            {
+                "notify": [
+                    {
+                        "name": "test",
+                        "platform": "file",
+                        "filename": "mock_file",
+                    }
+                ]
+            },
+        ),
+    ],
+    ids=["allowed_but_access_failed"],
+)
+async def test_legacy_notify_file_exception(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_is_allowed_path: MagicMock,
+    config: ConfigType,
+    domain: str,
+    service: str,
+    params: dict[str, str],
+) -> None:
+    """Test legacy notify file output has exception."""
+    assert await async_setup_component(hass, notify.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    freezer.move_to(dt_util.utcnow())
+
+    m_open = mock_open()
+    with (
+        patch("homeassistant.components.file.notify.open", m_open, create=True),
+        patch("homeassistant.components.file.notify.os.stat") as mock_st,
+    ):
+        mock_st.side_effect = OSError("Access Failed")
+        with pytest.raises(ServiceValidationError) as exc:
+            await hass.services.async_call(domain, service, params, blocking=True)
+        assert f"{exc.value!r}" == "ServiceValidationError('write_access_failed')"
