@@ -1145,14 +1145,18 @@ def mock_network() -> Generator[None, None, None]:
         yield
 
 
-@pytest.fixture(autouse=True)
-def mock_get_source_ip() -> Generator[None, None, None]:
+@pytest.fixture(autouse=True, scope="session")
+def mock_get_source_ip() -> Generator[patch, None, None]:
     """Mock network util's async_get_source_ip."""
-    with patch(
+    patcher = patch(
         "homeassistant.components.network.util.async_get_source_ip",
         return_value="10.10.10.10",
-    ):
-        yield
+    )
+    patcher.start()
+    try:
+        yield patcher
+    finally:
+        patcher.stop()
 
 
 @pytest.fixture
