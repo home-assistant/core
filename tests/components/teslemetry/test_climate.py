@@ -134,9 +134,8 @@ async def test_climate_offline(
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
 
-async def test_errors(
-    hass: HomeAssistant,
-) -> None:
+@pytest.mark.parametrize("response", COMMAND_ERRORS)
+async def test_errors(hass: HomeAssistant, response: str) -> None:
     """Tests service error is handled."""
 
     await setup_platform(hass, platforms=[Platform.CLIMATE])
@@ -158,21 +157,20 @@ async def test_errors(
         mock_on.assert_called_once()
         assert error.from_exception == InvalidCommand
 
-    for response in COMMAND_ERRORS:
-        with (
-            patch(
-                "homeassistant.components.teslemetry.VehicleSpecific.auto_conditioning_start",
-                return_value=response,
-            ) as mock_on,
-            pytest.raises(ServiceValidationError) as error,
-        ):
-            await hass.services.async_call(
-                CLIMATE_DOMAIN,
-                SERVICE_TURN_ON,
-                {ATTR_ENTITY_ID: [entity_id]},
-                blocking=True,
-            )
-            mock_on.assert_called_once()
+    with (
+        patch(
+            "homeassistant.components.teslemetry.VehicleSpecific.auto_conditioning_start",
+            return_value=response,
+        ) as mock_on,
+        pytest.raises(HomeAssistantError) as error,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: [entity_id]},
+            blocking=True,
+        )
+        mock_on.assert_called_once()
 
 
 async def test_asleep_or_offline(

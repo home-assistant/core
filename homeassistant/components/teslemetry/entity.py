@@ -73,9 +73,7 @@ class TeslemetryEntity(
             LOGGER.debug("Command result: %s", result)
         except TeslaFleetError as e:
             LOGGER.debug("Command error: %s", e.message)
-            raise ServiceValidationError(
-                f"Teslemetry command failed, {e.message}"
-            ) from e
+            raise HomeAssistantError(f"Teslemetry command failed, {e.message}") from e
         return result
 
     def _handle_coordinator_update(self) -> None:
@@ -138,18 +136,18 @@ class TeslemetryVehicleEntity(TeslemetryEntity):
             if message := result.get("error"):
                 # No response with error
                 LOGGER.info("Command failure: %s", message)
-                raise ServiceValidationError(message)
+                raise HomeAssistantError(message)
             # No response without error (unexpected)
             LOGGER.error("Unknown response: %s", response)
-            raise ServiceValidationError("Unknown response")
+            raise HomeAssistantError("Unknown response")
         if (message := response.get("result")) is not True:
             if message := response.get("reason"):
                 # Result of false with reason
                 LOGGER.info("Command failure: %s", message)
-                raise ServiceValidationError(message)
+                raise HomeAssistantError(message)
             # Result of false without reason (unexpected)
             LOGGER.error("Unknown response: %s", response)
-            raise ServiceValidationError("Unknown response")
+            raise HomeAssistantError("Unknown response")
         # Response with result of true
         return result
 
