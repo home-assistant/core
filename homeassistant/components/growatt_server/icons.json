@@ -1,0 +1,7 @@
+{
+    "services": {
+      "set_grid_first": "mdi:grid",
+      "set_battery_first": "mdi:battery"
+    }
+  }
+  
