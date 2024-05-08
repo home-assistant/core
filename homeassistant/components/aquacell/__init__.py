@@ -6,12 +6,12 @@ import logging
 from aioaquacell import AquacellApi
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DATA_AQUACELL, DOMAIN
-from .coordinator import Coordinator
+from .coordinator import AquacellCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -23,11 +23,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     session = async_get_clientsession(hass)
 
     aquacell_api = AquacellApi(session)
-    refresh_token = entry.data[CONF_ACCESS_TOKEN]
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {DATA_AQUACELL: aquacell_api}
 
-    coordinator = Coordinator(hass, aquacell_api, refresh_token)
+    coordinator = AquacellCoordinator(hass, aquacell_api, entry)
 
     await coordinator.async_config_entry_first_refresh()
     hass.data[DOMAIN][entry.entry_id] = coordinator

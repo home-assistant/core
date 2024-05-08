@@ -5,16 +5,16 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import Coordinator
+from .coordinator import AquacellCoordinator
 
 
-class AquacellEntity(CoordinatorEntity[Coordinator]):
+class AquacellEntity(CoordinatorEntity[AquacellCoordinator]):
     """Representation of an aquacell entity."""
 
     _attr_has_entity_name = True
     _attr_available = True
 
-    def __init__(self, softener: Softener, coordinator: Coordinator) -> None:
+    def __init__(self, softener: Softener, coordinator: AquacellCoordinator) -> None:
         """Initialize the aquacell entity."""
         super().__init__(coordinator)
 

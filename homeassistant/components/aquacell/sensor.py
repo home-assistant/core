@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import Coordinator
+from .coordinator import AquacellCoordinator
 from .entity import AquacellEntity
 
 PARALLEL_UPDATES = 1
@@ -119,7 +119,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensors."""
-    coordinator: Coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: AquacellCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
     for sensor in SENSORS:
         entities.append(SoftenerSensor(coordinator, sensor))
@@ -128,21 +128,13 @@ async def async_setup_entry(
 
 
 class SoftenerSensor(AquacellEntity, SensorEntity):
-    """An entity using CoordinatorEntity.
-
-    The CoordinatorEntity class provides:
-      should_poll
-      async_update
-      async_added_to_hass
-      available
-
-    """
+    """Softener sensor."""
 
     softener: Softener
 
     def __init__(
         self,
-        coordinator: Coordinator,
+        coordinator: AquacellCoordinator,
         description: SoftenerEntityDescription,
     ) -> None:
         """Pass coordinator to CoordinatorEntity."""
