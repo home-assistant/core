@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import functools
 import logging
+import math
 from typing import Any
 
 from zigpy.application import ControllerApplication
@@ -115,7 +116,11 @@ class ZHAFirmwareUpdateEntity(
         Can either return a boolean (True if in progress, False if not)
         or an integer to indicate the progress in from 0 to 100%.
         """
-        return self.entity_data.entity.in_progress
+        if not self.entity_data.entity.in_progress:
+            return self.entity_data.entity.in_progress
+
+        # Rescale 0-100% to 2-100% to avoid 0 and 1 colliding with None, False, and True
+        return int(math.ceil(2 + 98 * self.entity_data.entity.progress / 100))
 
     @property
     def latest_version(self) -> str | None:
