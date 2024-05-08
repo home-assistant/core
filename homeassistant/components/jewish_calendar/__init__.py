@@ -58,6 +58,27 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+def get_unique_prefix(
+    location: Location,
+    language: str,
+    candle_lighting_offset: int | None,
+    havdalah_offset: int | None,
+) -> str:
+    """Create a prefix for unique ids."""
+    config_properties = [
+        location.latitude,
+        location.longitude,
+        location.timezone,
+        location.altitude,
+        location.diaspora,
+        language,
+        candle_lighting_offset,
+        havdalah_offset,
+    ]
+    prefix = "_".join(map(str, config_properties))
+    return f"{prefix}"
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Jewish Calendar component."""
     if DOMAIN not in config:
@@ -76,6 +97,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     """Set up a configuration entry for Jewish calendar."""
     language = config_entry.data.get(CONF_LANGUAGE, DEFAULT_LANGUAGE)
     diaspora = config_entry.data.get(CONF_DIASPORA, DEFAULT_DIASPORA)
+    candle_lighting_offset = config_entry.data.get(
+        CONF_CANDLE_LIGHT_MINUTES, DEFAULT_CANDLE_LIGHT
+    )
+    havdalah_offset = config_entry.data.get(
+        CONF_HAVDALAH_OFFSET_MINUTES, DEFAULT_HAVDALAH_OFFSET_MINUTES
+    )
 
     location = Location(
         name=hass.config.location_name,
@@ -86,16 +113,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         timezone=config_entry.data.get(CONF_TIME_ZONE, hass.config.time_zone),
     )
 
+    prefix = get_unique_prefix(
+        location, language, candle_lighting_offset, havdalah_offset
+    )
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
         "language": language,
         "diaspora": diaspora,
         "location": location,
-        "candle_lighting_offset": config_entry.data.get(
-            CONF_CANDLE_LIGHT_MINUTES, DEFAULT_CANDLE_LIGHT
-        ),
-        "havdalah_offset": config_entry.data.get(
-            CONF_HAVDALAH_OFFSET_MINUTES, DEFAULT_HAVDALAH_OFFSET_MINUTES
-        ),
+        "candle_lighting_offset": candle_lighting_offset,
+        "havdalah_offset": havdalah_offset,
+        "prefix": prefix,
     }
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
