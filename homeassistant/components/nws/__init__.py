@@ -74,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         return update_observation
 
-    def setup_update_forecast(
+    def async_setup_update_forecast(
         retry_interval: datetime.timedelta | float,
         retry_stop: datetime.timedelta | float,
     ) -> Callable[[], Awaitable[None]]:
@@ -88,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         return update_forecast
 
-    def setup_update_forecast_hourly(
+    def async_setup_update_forecast_hourly(
         retry_interval: datetime.timedelta | float,
         retry_stop: datetime.timedelta | float,
     ) -> Callable[[], Awaitable[None]]:
@@ -107,7 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         _LOGGER,
         name=f"NWS observation station {station}",
-        update_method=setup_update_observation(0, 0),
+        update_method=async_setup_update_observation(0, 0),
         update_interval=DEFAULT_SCAN_INTERVAL,
         request_refresh_debouncer=debounce.Debouncer(
             hass, _LOGGER, cooldown=DEBOUNCE_TIME, immediate=True
@@ -118,7 +118,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         _LOGGER,
         name=f"NWS forecast station {station}",
-        update_method=setup_update_forecast(0, 0),
+        update_method=async_setup_update_forecast(0, 0),
         update_interval=DEFAULT_SCAN_INTERVAL,
         request_refresh_debouncer=debounce.Debouncer(
             hass, _LOGGER, cooldown=DEBOUNCE_TIME, immediate=True
@@ -129,7 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         _LOGGER,
         name=f"NWS forecast hourly station {station}",
-        update_method=setup_update_forecast_hourly(0, 0),
+        update_method=async_setup_update_forecast_hourly(0, 0),
         update_interval=DEFAULT_SCAN_INTERVAL,
         request_refresh_debouncer=debounce.Debouncer(
             hass, _LOGGER, cooldown=DEBOUNCE_TIME, immediate=True
@@ -149,13 +149,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator_forecast_hourly.async_refresh()
 
     # Use retries
-    coordinator_observation.update_method = setup_update_observation(
+    coordinator_observation.update_method = async_setup_update_observation(
         RETRY_INTERVAL, RETRY_STOP
     )
-    coordinator_forecast.update_method = setup_update_forecast(
+    coordinator_forecast.update_method = async_setup_update_forecast(
         RETRY_INTERVAL, RETRY_STOP
     )
-    coordinator_forecast_hourly.update_method = setup_update_forecast_hourly(
+    coordinator_forecast_hourly.update_method = async_setup_update_forecast_hourly(
         RETRY_INTERVAL, RETRY_STOP
     )
 
