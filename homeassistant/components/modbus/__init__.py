@@ -110,6 +110,7 @@ from .const import (
     CONF_STATUS_REGISTER_TYPE,
     CONF_STEP,
     CONF_STOPBITS,
+    CONF_SUM_SCALE,
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_WORD,
@@ -199,6 +200,7 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float),
         vol.Optional(CONF_PRECISION): cv.positive_int,
         vol.Optional(CONF_MAP): {cv.string: cv.string},
+        vol.Optional(CONF_SUM_SCALE): vol.All(cv.ensure_list, [vol.Coerce(float)]),
         vol.Optional(
             CONF_SWAP,
         ): vol.In(

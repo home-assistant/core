@@ -54,6 +54,7 @@ from .const import (
     CONF_SLAVE_COUNT,
     CONF_STATE_OFF,
     CONF_STATE_ON,
+    CONF_SUM_SCALE,
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_WORD,
@@ -162,11 +163,15 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         self._structure: str = config[CONF_STRUCTURE]
         self._scale = config[CONF_SCALE]
         self._offset = config[CONF_OFFSET]
+        self._sum_scale = config.get(CONF_SUM_SCALE)
         self._map = config.get(CONF_MAP)
         self._slave_count = config.get(CONF_SLAVE_COUNT) or config.get(
             CONF_VIRTUAL_COUNT, 0
         )
-        self._slave_size = self._count = config[CONF_COUNT]
+        if self._sum_scale is not None:
+            self._slave_size = self._count = len(self._sum_scale) - 1
+        else:
+            self._slave_size = self._count = config[CONF_COUNT]
         self._value_is_int: bool = self._data_type in (
             DataType.INT16,
             DataType.INT32,
@@ -234,6 +239,11 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
 
         if self._swap:
             registers = self._swap_registers(registers, self._slave_count)
+        if self._sum_scale is not None:
+            sum_of_products = sum(
+                a * b for a, b in zip(self._sum_scale, registers, strict=False)
+            )
+            return self.__process_raw_value(sum_of_products)
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
         if self._data_type == DataType.STRING:
             return byte_string.decode()
