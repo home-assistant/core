@@ -3174,6 +3174,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "ledsc": {
+      "name": "LedSC",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "legrand": {
       "name": "Legrand",
       "integration_type": "virtual",

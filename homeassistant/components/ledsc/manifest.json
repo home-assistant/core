@@ -1,11 +1,10 @@
 {
   "domain": "ledsc",
   "name": "LedSC",
-  "codeowners": [],
-  "documentation": "https://ledsc.eu/",
-  "iot_class": "local_polling",
+  "codeowners": ["@PatrikKr010"],
   "config_flow": true,
+  "documentation": "https://ledsc.eu/",
   "integration_type": "hub",
-  "requirements": ["requests==2.31.0"],
-  "version": "1.0.0"
+  "iot_class": "local_polling",
+  "requirements": ["requests==2.31.0"]
 }
