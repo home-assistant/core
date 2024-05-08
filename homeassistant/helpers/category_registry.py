@@ -98,6 +98,7 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
         icon: str | None = None,
     ) -> CategoryEntry:
         """Create a new category."""
+        self.hass.verify_event_loop_thread("async_create")
         self._async_ensure_name_is_available(scope, name)
         category = CategoryEntry(
             icon=icon,
@@ -110,7 +111,7 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
         self.categories[scope][category.category_id] = category
 
         self.async_schedule_save()
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_CATEGORY_REGISTRY_UPDATED,
             EventCategoryRegistryUpdatedData(
                 action="create", scope=scope, category_id=category.category_id
@@ -121,8 +122,9 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
     @callback
     def async_delete(self, *, scope: str, category_id: str) -> None:
         """Delete category."""
+        self.hass.verify_event_loop_thread("async_delete")
         del self.categories[scope][category_id]
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_CATEGORY_REGISTRY_UPDATED,
             EventCategoryRegistryUpdatedData(
                 action="remove",
@@ -155,10 +157,11 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
         if not changes:
             return old
 
+        self.hass.verify_event_loop_thread("async_update")
         new = self.categories[scope][category_id] = dataclasses.replace(old, **changes)  # type: ignore[arg-type]
 
         self.async_schedule_save()
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_CATEGORY_REGISTRY_UPDATED,
             EventCategoryRegistryUpdatedData(
                 action="update", scope=scope, category_id=category_id
