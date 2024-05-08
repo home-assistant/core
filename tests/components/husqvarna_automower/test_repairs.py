@@ -1,4 +1,4 @@
-"""Test repairs for unifiprotect."""
+"""Test repairs for Husqvarna Automower."""
 
 from http import HTTPStatus
 from unittest.mock import AsyncMock
