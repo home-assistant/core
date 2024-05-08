@@ -7,6 +7,7 @@ import logging
 import math
 from typing import Any
 
+from zha.exceptions import ZHAException
 from zigpy.application import ControllerApplication
 
 from homeassistant.components.update import (
@@ -17,6 +18,7 @@ from homeassistant.components.update import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -145,8 +147,12 @@ class ZHAFirmwareUpdateEntity(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        await self.entity_data.entity.async_install(version, backup, **kwargs)
-        self.async_write_ha_state()
+        try:
+            await self.entity_data.entity.async_install(version, backup, **kwargs)
+        except ZHAException as exc:
+            raise HomeAssistantError(str(exc)) from exc
+        finally:
+            self.async_write_ha_state()
 
     async def async_update(self) -> None:
         """Update the entity."""
