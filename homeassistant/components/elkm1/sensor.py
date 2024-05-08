@@ -15,14 +15,13 @@ from elkm1_lib.zones import Zone
 import voluptuous as vol
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfElectricPotential
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ElkAttachedEntity, ElkEntity, create_elk_entities
+from . import ElkAttachedEntity, ElkEntity, ElkM1ConfigEntry, create_elk_entities
 from .const import ATTR_VALUE, ELK_USER_CODE_SERVICE_SCHEMA
 
 SERVICE_SENSOR_COUNTER_REFRESH = "sensor_counter_refresh"
@@ -38,7 +37,7 @@ ELK_SET_COUNTER_SERVICE_SCHEMA = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ElkM1ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the Elk-M1 sensor platform."""

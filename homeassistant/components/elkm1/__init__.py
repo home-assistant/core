@@ -183,7 +183,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up the Elk M1 platform."""
-    hass.data.setdefault(DOMAIN, {})
     _create_elk_services(hass)
 
     async def _async_discovery(*_: Any) -> None:
@@ -333,8 +332,10 @@ def _included(ranges: list[tuple[int, int]], set_to: bool, values: list[bool]) -
 
 def _find_elk_by_prefix(hass: HomeAssistant, prefix: str) -> Elk | None:
     """Search all config entries for a given prefix."""
-    all_elk: dict[str, ELKM1Data] = hass.data[DOMAIN]
-    for elk_data in all_elk.values():
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if not entry.runtime_data:
+            continue
+        elk_data: ELKM1Data = entry.runtime_data
         if elk_data.prefix == prefix:
             return elk_data.elk
     return None
