@@ -1782,7 +1782,7 @@ python-qbittorrent==0.4.3
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.0.0
+python-roborock==2.1.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
