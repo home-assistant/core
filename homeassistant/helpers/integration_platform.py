@@ -20,10 +20,13 @@ from homeassistant.loader import (
     bind_hass,
 )
 from homeassistant.setup import ATTR_COMPONENT, EventComponentLoaded
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.logging import catch_log_exception
 
 _LOGGER = logging.getLogger(__name__)
-DATA_INTEGRATION_PLATFORMS = "integration_platforms"
+DATA_INTEGRATION_PLATFORMS: HassKey[list[IntegrationPlatform]] = HassKey(
+    "integration_platforms"
+)
 
 
 @dataclass(slots=True, frozen=True)
@@ -160,8 +163,7 @@ async def async_process_integration_platforms(
 ) -> None:
     """Process a specific platform for all current and future loaded integrations."""
     if DATA_INTEGRATION_PLATFORMS not in hass.data:
-        integration_platforms: list[IntegrationPlatform] = []
-        hass.data[DATA_INTEGRATION_PLATFORMS] = integration_platforms
+        integration_platforms = hass.data[DATA_INTEGRATION_PLATFORMS] = []
         hass.bus.async_listen(
             EVENT_COMPONENT_LOADED,
             partial(

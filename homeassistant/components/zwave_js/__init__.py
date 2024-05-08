@@ -921,7 +921,7 @@ async def client_listen(
         should_reload = False
     except BaseZwaveJSServerError as err:
         LOGGER.error("Failed to listen: %s", err)
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         # We need to guard against unknown exceptions to not crash this task.
         LOGGER.exception("Unexpected exception: %s", err)
 

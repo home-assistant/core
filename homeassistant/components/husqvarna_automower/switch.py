@@ -78,7 +78,7 @@ class AutomowerSwitchEntity(AutomowerControlEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         try:
-            await self.coordinator.api.park_until_further_notice(self.mower_id)
+            await self.coordinator.api.commands.park_until_further_notice(self.mower_id)
         except ApiException as exception:
             raise HomeAssistantError(
                 f"Command couldn't be sent to the command queue: {exception}"
@@ -87,7 +87,7 @@ class AutomowerSwitchEntity(AutomowerControlEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         try:
-            await self.coordinator.api.resume_schedule(self.mower_id)
+            await self.coordinator.api.commands.resume_schedule(self.mower_id)
         except ApiException as exception:
             raise HomeAssistantError(
                 f"Command couldn't be sent to the command queue: {exception}"

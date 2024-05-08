@@ -296,7 +296,7 @@ class ZHAGateway:
     @property
     def radio_concurrency(self) -> int:
         """Maximum configured radio concurrency."""
-        return self.application_controller._concurrent_requests_semaphore.max_value  # pylint: disable=protected-access
+        return self.application_controller._concurrent_requests_semaphore.max_value  # noqa: SLF001
 
     async def async_fetch_updated_state_mains(self) -> None:
         """Fetch updated state for mains powered devices."""
