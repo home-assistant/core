@@ -59,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     nws_data = SimpleNWS(latitude, longitude, api_key, client_session)
     await nws_data.set_station(station)
 
-    def setup_update_observation(
+    def async_setup_update_observation(
         retry_interval: datetime.timedelta | float,
         retry_stop: datetime.timedelta | float,
     ) -> Callable[[], Awaitable[None]]:
