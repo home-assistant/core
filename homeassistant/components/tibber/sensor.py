@@ -130,7 +130,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         translation_key="accumulated_consumption",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="accumulatedConsumptionLastHour",
@@ -150,7 +150,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         translation_key="accumulated_production",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="accumulatedProductionLastHour",
@@ -496,7 +496,7 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._tibber_home.rt_subscription_running
+        return bool(self._tibber_home.rt_subscription_running)
 
     @callback
     def _handle_coordinator_update(self) -> None:
