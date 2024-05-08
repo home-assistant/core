@@ -76,14 +76,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     """Set up a configuration entry for Jewish calendar."""
     language = config_entry.data.get(CONF_LANGUAGE, DEFAULT_LANGUAGE)
     diaspora = config_entry.data.get(CONF_DIASPORA, DEFAULT_DIASPORA)
-    latitude = config_entry.data.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config_entry.data.get(CONF_LONGITUDE, hass.config.longitude)
 
     location = Location(
         name=hass.config.location_name,
         diaspora=diaspora,
-        latitude=latitude,
-        longitude=longitude,
+        latitude=config_entry.data.get(CONF_LATITUDE, hass.config.latitude),
+        longitude=config_entry.data.get(CONF_LONGITUDE, hass.config.longitude),
         altitude=config_entry.data.get(CONF_ELEVATION, hass.config.elevation),
         timezone=config_entry.data.get(CONF_TIME_ZONE, hass.config.time_zone),
     )
