@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aioaquacell import AquacellApi
+from aioaquacell import ApiException, AquacellApi, AutenticationFailed
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -26,13 +26,12 @@ async def validate_input(
 
     session = async_get_clientsession(hass)
     api = AquacellApi(session)
-
-    authenticated = await api.authenticate(email, password)
-    if not authenticated:
+    try:
+        await api.authenticate(email, password)
+    except AutenticationFailed:
         raise InvalidAuth
-
-    # If you cannot connect:
-    # throw CannotConnect
+    except ApiException:
+        raise CannotConnect
 
     # Return info that you want to store in the config entry.
     return {"refresh_token": api.refresh_token}

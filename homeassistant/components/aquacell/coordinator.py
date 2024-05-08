@@ -14,7 +14,9 @@ _LOGGER = logging.getLogger(__name__)
 class Coordinator(DataUpdateCoordinator[list[Softener]]):
     """My custom coordinator."""
 
-    def __init__(self, hass: HomeAssistant, aquacell_api: AquacellApi) -> None:
+    def __init__(
+        self, hass: HomeAssistant, aquacell_api: AquacellApi, refresh_token: str
+    ) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass,
@@ -22,9 +24,10 @@ class Coordinator(DataUpdateCoordinator[list[Softener]]):
             # Name of the data. For logging purposes.
             name="My sensor",
             # Polling interval. Will only be polled if there are subscribers.
-            update_interval=timedelta(seconds=30),
+            update_interval=timedelta(seconds=3600),
         )
         self.aquacell_api = aquacell_api
+        self.refresh_token = refresh_token
 
     async def _async_update_data(self) -> list[Softener]:
         """Fetch data from API endpoint.
@@ -36,6 +39,9 @@ class Coordinator(DataUpdateCoordinator[list[Softener]]):
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with async_timeout.timeout(10):
+                _LOGGER.debug("Logging in using: %s", self.refresh_token)
+                await self.aquacell_api.authenticate_refresh(self.refresh_token)
+                _LOGGER.debug("Logged in")
                 return await self.aquacell_api.get_all_softeners()
         # except  as err:
         # Raising ConfigEntryAuthFailed will cancel future updates

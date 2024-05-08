@@ -1,6 +1,8 @@
 """The Aquacell integration."""
 from __future__ import annotations
 
+import logging
+
 from aioaquacell import AquacellApi
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,6 +15,8 @@ from .coordinator import Coordinator
 
 PLATFORMS = [Platform.SENSOR]
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Aquacell from a config entry."""
@@ -20,14 +24,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     aquacell_api = AquacellApi(session)
     refresh_token = entry.data[CONF_ACCESS_TOKEN]
-    authenticated = await aquacell_api.authenticate_refresh(refresh_token)
-
-    if not authenticated:
-        return False
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {DATA_AQUACELL: aquacell_api}
 
-    coordinator = Coordinator(hass, aquacell_api)
+    coordinator = Coordinator(hass, aquacell_api, refresh_token)
 
     await coordinator.async_config_entry_first_refresh()
     hass.data[DOMAIN][entry.entry_id] = coordinator

@@ -3,13 +3,19 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
+from typing import cast
 
 from aioaquacell import Softener
-from sensor import SensorDeviceClass
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -25,7 +31,7 @@ PARALLEL_UPDATES = 1
 class AquacellEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[Softener], int | float | str]
+    value_fn: Callable[[Softener], str | int | float | None]
 
 
 @dataclass
@@ -39,65 +45,63 @@ SENSORS: tuple[SoftenerEntityDescription, ...] = (
     SoftenerEntityDescription(
         key="salt_leftpercentage",
         translation_key="salt_leftpercentage",
-        icon="mdi:magnify",
-        native_unit_of_measurement="%",
-        value_fn=lambda softener: softener.salt.leftPercent,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:basket-fill",
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda softener: cast(int, softener.salt.leftPercent),
     ),
     SoftenerEntityDescription(
         key="salt_rightpercentage",
         translation_key="salt_rightpercentage",
-        icon="mdi:magnify",
-        native_unit_of_measurement="%",
-        value_fn=lambda softener: softener.salt.rightPercent,
+        icon="mdi:basket-fill",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda softener: cast(int, softener.salt.rightPercent),
     ),
     SoftenerEntityDescription(
         key="salt_leftdays",
         translation_key="salt_leftdays",
-        icon="mdi:magnify",
-        native_unit_of_measurement="days",
+        icon="mdi:calendar-today",
+        native_unit_of_measurement=UnitOfTime.DAYS,
         value_fn=lambda softener: softener.salt.leftDays,
     ),
     SoftenerEntityDescription(
         key="salt_rightdays",
         translation_key="salt_rightdays",
-        icon="mdi:magnify",
-        native_unit_of_measurement="days",
+        icon="mdi:calendar-today",
+        native_unit_of_measurement=UnitOfTime.DAYS,
         value_fn=lambda softener: softener.salt.rightDays,
     ),
     SoftenerEntityDescription(
         key="fw_version",
         translation_key="fw_version",
-        icon="mdi:magnify",
-        native_unit_of_measurement="",
+        icon="mdi:chip",
         value_fn=lambda softener: softener.fwVersion,
     ),
     SoftenerEntityDescription(
         key="name",
         translation_key="name",
-        icon="mdi:magnify",
-        native_unit_of_measurement="",
         value_fn=lambda softener: softener.name,
     ),
     SoftenerEntityDescription(
         key="battery",
         translation_key="battery",
-        icon="mdi:battery",
         device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda softener: softener.battery,
     ),
     SoftenerEntityDescription(
         key="last_update",
         translation_key="last_update",
         icon="mdi:update",
-        native_unit_of_measurement="",
-        value_fn=lambda softener: softener.lastUpdate,
+        value_fn=lambda softener: datetime.fromtimestamp(
+            cast(float, softener.lastUpdate) / 1000
+        ).isoformat(),
     ),
     SoftenerEntityDescription(
         key="wifi_level",
         translation_key="wifi_level",
         icon="mdi:wifi",
-        native_unit_of_measurement="",
         value_fn=lambda softener: softener.wifiLevel,
     ),
     SoftenerEntityDescription(
@@ -150,11 +154,15 @@ class SoftenerSensor(AquacellEntity, SensorEntity):
         self._attr_translation_key = description.translation_key
 
         self._attr_unique_id = description.key
-        self._attr_native_unit_of_measurement = description.unit_of_measurement
+        self._attr_native_unit_of_measurement = description.native_unit_of_measurement
 
         self._attr_icon = description.icon
 
+        self._attr_state_class = description.state_class
+
+        self._attr_device_class = description.device_class
+
     @property
-    def native_value(self) -> int | float | str:
+    def native_value(self) -> str | int | float | None:
         """Return the state of the sensor."""
         return self.description.value_fn(self.softener)
