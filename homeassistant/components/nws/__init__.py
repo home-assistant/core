@@ -64,13 +64,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         retry_interval: datetime.timedelta | float,
         retry_stop: datetime.timedelta | float,
     ) -> Callable[[], Awaitable[None]]:
-        return partial(
-            call_with_retry,
-            nws_data.update_observation,
-            retry_interval,
-            retry_stop,
-            start_time=utcnow() - UPDATE_TIME_PERIOD,
-        )
+        async def update_observation() -> None:
+            """Retrieve recent observations."""
+            await call_with_retry(
+                nws_data.update_observation,
+                retry_interval,
+                retry_stop,
+                start_time=utcnow() - UPDATE_TIME_PERIOD,
+            )
+
+        return update_observation
 
     def async_setup_update_forecast(
         retry_interval: datetime.timedelta | float,
