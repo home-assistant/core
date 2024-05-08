@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import datetime
+from functools import partial
 import logging
 
 from pynws import SimpleNWS, call_with_retry
@@ -63,44 +64,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         retry_interval: datetime.timedelta | float,
         retry_stop: datetime.timedelta | float,
     ) -> Callable[[], Awaitable[None]]:
-        async def update_observation() -> None:
-            """Retrieve recent observations."""
-            await call_with_retry(
-                nws_data.update_observation,
-                retry_interval,
-                retry_stop,
-                start_time=utcnow() - UPDATE_TIME_PERIOD,
-            )
-
-        return update_observation
+        return partial(
+            call_with_retry,
+            nws_data.update_observation,
+            retry_interval,
+            retry_stop,
+            start_time=utcnow() - UPDATE_TIME_PERIOD,
+        )
 
     def async_setup_update_forecast(
         retry_interval: datetime.timedelta | float,
         retry_stop: datetime.timedelta | float,
     ) -> Callable[[], Awaitable[None]]:
-        async def update_forecast() -> None:
-            """Retrieve twice-daily forecsat."""
-            await call_with_retry(
-                nws_data.update_forecast,
-                retry_interval,
-                retry_stop,
-            )
-
-        return update_forecast
+        return partial(
+            call_with_retry,
+            nws_data.update_forecast,
+            retry_interval,
+            retry_stop,
+        )
 
     def async_setup_update_forecast_hourly(
         retry_interval: datetime.timedelta | float,
         retry_stop: datetime.timedelta | float,
     ) -> Callable[[], Awaitable[None]]:
-        async def update_forecast_hourly() -> None:
-            """Retrieve hourly forecast."""
-            await call_with_retry(
-                nws_data.update_forecast_hourly,
-                retry_interval,
-                retry_stop,
-            )
-
-        return update_forecast_hourly
+        return partial(
+            call_with_retry,
+            nws_data.update_forecast_hourly,
+            retry_interval,
+            retry_stop,
+        )
 
     # Don't use retries in setup
     coordinator_observation = TimestampDataUpdateCoordinator(
