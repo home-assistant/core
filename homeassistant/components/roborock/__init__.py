@@ -108,7 +108,6 @@ def build_setup_functions(
             hass, user_data, device, product_info[device.product_id], home_data_rooms
         )
         for device in device_map.values()
-        if product_info[device.product_id].category == RoborockCategory.VACUUM
     ]
 
 
