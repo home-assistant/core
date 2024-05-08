@@ -60,7 +60,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await nws_data.set_station(station)
 
     def setup_update_observation(
-        retry_interval, retry_stop
+        retry_interval: datetime.timedelta | float,
+        retry_stop: datetime.timedelta | float,
     ) -> Callable[[], Awaitable[None]]:
         async def update_observation() -> None:
             """Retrieve recent observations."""
@@ -74,7 +75,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return update_observation
 
     def setup_update_forecast(
-        retry_interval, retry_stop
+        retry_interval: datetime.timedelta | float,
+        retry_stop: datetime.timedelta | float,
     ) -> Callable[[], Awaitable[None]]:
         async def update_forecast() -> None:
             """Retrieve twice-daily forecsat."""
@@ -87,7 +89,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return update_forecast
 
     def setup_update_forecast_hourly(
-        retry_interval, retry_stop
+        retry_interval: datetime.timedelta | float,
+        retry_stop: datetime.timedelta | float,
     ) -> Callable[[], Awaitable[None]]:
         async def update_forecast_hourly() -> None:
             """Retrieve hourly forecast."""
