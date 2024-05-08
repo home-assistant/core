@@ -50,6 +50,7 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
         | MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
     def __init__(
@@ -65,7 +66,7 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
     def _update_current_app(self, current_app: str) -> None:
         """Update current app info."""
         self._attr_app_id = current_app
-        self._attr_app_name = current_app
+        self._attr_app_name = self._app_id_to_name.get(current_app, current_app)
 
     def _update_volume_info(self, volume_info: dict[str, str | bool]) -> None:
         """Update volume info."""
@@ -94,6 +95,7 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
         """Register callbacks."""
         await super().async_added_to_hass()
 
+        self._attr_source_list = list(self._app_name_to_id.keys())
         self._update_current_app(self._api.current_app)
         self._update_volume_info(self._api.volume_info)
 
@@ -181,6 +183,10 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
             return
 
         raise ValueError(f"Invalid media type: {media_type}")
+
+    async def async_select_source(self, source: str) -> None:
+        """Select input source."""
+        self._send_launch_app_command(self._app_name_to_id.get(source, source))
 
     async def _send_key_commands(
         self, key_codes: list[str], delay_secs: float = 0.1

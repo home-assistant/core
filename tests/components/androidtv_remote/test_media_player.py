@@ -19,6 +19,7 @@ async def test_media_player_receives_push_updates(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:
     """Test the Android TV Remote media player receives push updates and state is updated."""
+    mock_config_entry.options = {"apps": {"com.google.android.youtube.tv": "YouTube"}}
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
@@ -38,6 +39,13 @@ async def test_media_player_receives_push_updates(
         hass.states.get(MEDIA_PLAYER_ENTITY).attributes.get("app_name")
         == "com.google.android.tvlauncher"
     )
+
+    mock_api._on_current_app_updated("com.google.android.youtube.tv")
+    assert (
+        hass.states.get(MEDIA_PLAYER_ENTITY).attributes.get("app_id")
+        == "com.google.android.youtube.tv"
+    )
+    assert hass.states.get(MEDIA_PLAYER_ENTITY).attributes.get("app_name") == "YouTube"
 
     mock_api._on_volume_info_updated({"level": 35, "muted": False, "max": 100})
     assert hass.states.get(MEDIA_PLAYER_ENTITY).attributes.get("volume_level") == 0.35
@@ -290,6 +298,27 @@ async def test_media_player_play_media(
             },
             blocking=True,
         )
+
+
+async def test_media_player_select_source(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
+) -> None:
+    """Test the Android TV Remote media player select_source."""
+    mock_config_entry.options = {"apps": {"com.google.android.youtube.tv": "YouTube"}}
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        "media_player",
+        "select_source",
+        {
+            "entity_id": MEDIA_PLAYER_ENTITY,
+            "source": "YouTube",
+        },
+        blocking=True,
+    )
+    mock_api.send_launch_app_command.assert_called_with("com.google.android.youtube.tv")
 
 
 async def test_media_player_connection_closed(
