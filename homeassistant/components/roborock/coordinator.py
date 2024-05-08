@@ -124,8 +124,14 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         maps = await self.api.get_multi_maps_list()
         if maps and maps.map_info:
             for roborock_map in maps.map_info:
+                # To prevent weirdness - if there is a map without a name
+                # - set its name to its flag
+                map_name = str(roborock_map.mapFlag)
+                if roborock_map.name != "":
+                    map_name = roborock_map.name
+
                 self.maps[roborock_map.mapFlag] = RoborockMapInfo(
-                    flag=roborock_map.mapFlag, name=roborock_map.name, rooms={}
+                    flag=roborock_map.mapFlag, name=map_name, rooms={}
                 )
 
     async def get_rooms(self) -> None:
