@@ -1145,7 +1145,7 @@ def mock_network() -> Generator[None, None, None]:
         yield
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope="session")
 def mock_get_source_ip() -> Generator[None, None, None]:
     """Mock network util's async_get_source_ip."""
     with patch(
