@@ -23,6 +23,7 @@ from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     load_json_value_fixture,
+    snapshot_platform,
 )
 
 
@@ -75,7 +76,7 @@ async def test_switch_commands(
         service_data={"entity_id": "switch.test_mower_1_enable_schedule"},
         blocking=True,
     )
-    mocked_method = getattr(mock_automower_client, aioautomower_command)
+    mocked_method = getattr(mock_automower_client.commands, aioautomower_command)
     assert len(mocked_method.mock_calls) == 1
 
     mocked_method.side_effect = ApiException("Test error")
@@ -106,13 +107,6 @@ async def test_switch(
         [Platform.SWITCH],
     ):
         await setup_integration(hass, mock_config_entry)
-        entity_entries = er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
+        await snapshot_platform(
+            hass, entity_registry, snapshot, mock_config_entry.entry_id
         )
-
-        assert entity_entries
-        for entity_entry in entity_entries:
-            assert hass.states.get(entity_entry.entity_id) == snapshot(
-                name=f"{entity_entry.entity_id}-state"
-            )
-            assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
