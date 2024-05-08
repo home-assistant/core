@@ -61,9 +61,10 @@ class TeslemetryEntity(
         """Return if the value is a literal None."""
         return self.get(self.key, False) is None
 
-    def has(self, key: str | None = None) -> bool:
+    @property
+    def has(self) -> bool:
         """Return True if a specific value is in coordinator data."""
-        return (key or self.key) in self.coordinator.data
+        return self.key in self.coordinator.data
 
     async def handle_command(self, command) -> dict[str, Any]:
         """Handle a command."""
