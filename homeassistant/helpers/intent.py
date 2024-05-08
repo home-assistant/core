@@ -43,6 +43,10 @@ INTENT_TOGGLE = "HassToggle"
 INTENT_GET_STATE = "HassGetState"
 INTENT_NEVERMIND = "HassNevermind"
 INTENT_SET_POSITION = "HassSetPosition"
+INTENT_SET_TIMER = "HassSetTimer"
+INTENT_CANCEL_TIMER = "HassCancelTimer"
+INTENT_INCREASE_TIMER = "HassIncreaseTimer"
+INTENT_DECREASE_TIMER = "HassDecreaseTimer"
 
 SLOT_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
@@ -57,7 +61,8 @@ SPEECH_TYPE_SSML = "ssml"
 def async_register(hass: HomeAssistant, handler: IntentHandler) -> None:
     """Register an intent with Home Assistant."""
     if (intents := hass.data.get(DATA_KEY)) is None:
-        intents = hass.data[DATA_KEY] = {}
+        intents = {}
+        hass.data[DATA_KEY] = intents
 
     assert handler.intent_type is not None, "intent_type cannot be None"
 
