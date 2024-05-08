@@ -1,4 +1,5 @@
 """Coordinator to update data from Aquacell API."""
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -11,7 +12,7 @@ from aioaquacell import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -37,7 +38,7 @@ class AquacellCoordinator(DataUpdateCoordinator[list[Softener]]):
 
         self.config_entry: ConfigEntry = entry
         self.refresh_token = entry.data[CONF_REFRESH_TOKEN]
-        self.username = entry.data[CONF_USERNAME]
+        self.email = entry.data[CONF_EMAIL]
         self.password = entry.data[CONF_PASSWORD]
         self.aquacell_api = aquacell_api
 
@@ -62,7 +63,7 @@ class AquacellCoordinator(DataUpdateCoordinator[list[Softener]]):
                     )
                     _LOGGER.debug("Attempting to renew refresh token")
                     refresh_token = await self.aquacell_api.authenticate(
-                        self.username, self.password
+                        self.email, self.password
                     )
                     self.refresh_token = refresh_token
                     self._update_config_entry_refresh_token()

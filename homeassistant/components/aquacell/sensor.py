@@ -1,4 +1,5 @@
 """Sensors exposing properties of the softener device."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -26,18 +27,11 @@ from .entity import AquacellEntity
 PARALLEL_UPDATES = 1
 
 
-@dataclass
-class AquacellEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class SoftenerEntityDescription(SensorEntityDescription):
+    """Describes Softener sensor entity."""
 
     value_fn: Callable[[Softener], str | int | float | None]
-
-
-@dataclass
-class SoftenerEntityDescription(
-    SensorEntityDescription, AquacellEntityDescriptionMixin
-):
-    """Describes Softener sensor entity."""
 
 
 SENSORS: tuple[SoftenerEntityDescription, ...] = (
@@ -120,9 +114,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensors."""
     coordinator: AquacellCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    entities = []
-    for sensor in SENSORS:
-        entities.append(SoftenerSensor(coordinator, sensor))
+    entities = [SoftenerSensor(coordinator, sensor) for sensor in SENSORS]
 
     async_add_entities(entities)
 
