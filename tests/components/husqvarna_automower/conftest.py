@@ -58,6 +58,31 @@ def mock_config_entry(jwt, expires_at: int) -> MockConfigEntry:
     )
 
 
+@pytest.fixture
+def mock_wrong_scope_config_entry(jwt, expires_at: int) -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        title="Husqvarna Automower of Erika Mustermann",
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": jwt,
+                "scope": "iam:read",
+                "expires_in": 86399,
+                "refresh_token": "3012bc9f-7a65-4240-b817-9154ffdcc30f",
+                "provider": "husqvarna",
+                "user_id": USER_ID,
+                "token_type": "Bearer",
+                "expires_at": expires_at,
+            },
+        },
+        unique_id=USER_ID,
+        entry_id="automower_test",
+    )
+
+
 @pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""

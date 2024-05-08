@@ -31,6 +31,10 @@ class HusqvarnaConfigFlowHandler(
         token = data[CONF_TOKEN]
         user_id = token[CONF_USER_ID]
         if self.reauth_entry:
+            if "amc:api" not in token["scope"]:
+                return self.async_update_reload_and_abort(
+                    self.reauth_entry, data=data, reason="missing_amc_scope"
+                )
             if self.reauth_entry.unique_id != user_id:
                 return self.async_abort(reason="wrong_account")
             return self.async_update_reload_and_abort(self.reauth_entry, data=data)

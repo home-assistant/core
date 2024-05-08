@@ -9,7 +9,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_entry_oauth2_flow,
+    issue_registry as ir,
+)
 
 from . import api
 from .const import DOMAIN
@@ -56,6 +60,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+
+    if "amc:api" not in entry.data["token"]["scope"]:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "wrong_scope",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="wrong_scope",
+            data={"entry_id": entry.entry_id},
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
