@@ -1,0 +1,55 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "salt_leftpercentage": {
+        "name": "Salt left percentage"
+      },
+      "salt_rightpercentage": {
+        "name": "Salt right percentage"
+      },
+      "salt_leftdays": {
+        "name": "Salt left days until empty"
+      },
+      "salt_rightdays": {
+        "name": "Salt right days until empty"
+      },
+      "fw_version": {
+        "name": "Firmware version"
+      },
+      "name": {
+        "name": "Name"
+      },
+      "battery": {
+        "name": "Battery percentage"
+      },
+      "last_update": {
+        "name": "Last update"
+      },
+      "wifi_level": {
+        "name": "WiFi level"
+      },
+      "lid_in_place": {
+        "name": "Lid in place"
+      }
+    }
+  }
+}
