@@ -1,4 +1,5 @@
 """The Aquacell integration."""
+
 from __future__ import annotations
 
 from aioaquacell import AquacellApi

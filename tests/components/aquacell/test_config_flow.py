@@ -1,4 +1,5 @@
 """Test the Aquacell config flow."""
+
 import string
 from unittest.mock import AsyncMock, patch
 

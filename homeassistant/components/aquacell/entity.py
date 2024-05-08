@@ -1,4 +1,5 @@
 """Aquacell entity."""
+
 from aioaquacell import Softener
 
 from homeassistant.helpers.device_registry import DeviceInfo
