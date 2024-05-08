@@ -9,6 +9,9 @@
           "location": "[%key:common::config_flow::data::location%]",
           "elevation": "[%key:common::config_flow::data::elevation%]",
           "time_zone": "Time Zone"
+        },
+        "data_description": {
+          "time_zone": "If you specify a location, make sure to specify the time zone for correct calendar times calculations"
         }
       }
     },
