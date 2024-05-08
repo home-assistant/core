@@ -69,8 +69,6 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
                 current_measures = await air_gradient.get_current_measures()
             except AirGradientError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(current_measures.serial_number)
                 self._abort_if_unique_id_configured()

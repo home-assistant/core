@@ -6,6 +6,9 @@
       },
       "nitrogen_index": {
         "default": "mdi:molecule"
+      },
+      "pm003_count": {
+        "default": "mdi:blur"
       }
     }
   }
