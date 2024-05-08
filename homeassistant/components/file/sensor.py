@@ -86,7 +86,7 @@ class FileSensor(SensorEntity):
         self._file_path = file_path
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._val_tpl = value_template
-        self._attr_unique_id = slugify(f"sensor_{file_path}")
+        self._attr_unique_id = slugify(f"{name}_{file_path}")
 
     def update(self) -> None:
         """Get the latest entry from a file and updates the state."""
