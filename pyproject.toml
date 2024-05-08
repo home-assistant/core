@@ -705,6 +705,7 @@ select = [
     "RSE", # flake8-raise
     "RUF005", # Consider iterable unpacking instead of concatenation
     "RUF006", # Store a reference to the return value of asyncio.create_task
+    "RUF010", # Use explicit conversion flag
     "RUF013", # PEP 484 prohibits implicit Optional
     "RUF018", # Avoid assignment expressions in assert statements
     "RUF019", # Unnecessary key check before dictionary access
@@ -762,6 +763,7 @@ ignore = [
     "RUF003", # Comment contains ambiguous unicode character.
     "RUF015", # Prefer next(...) over single element slice
     "SIM102", # Use a single if statement instead of nested if statements
+    "SIM103", # Return the condition {condition} directly
     "SIM108", # Use ternary operator {contents} instead of if-else-block
     "SIM115", # Use context handler for opening files
     "TRY003", # Avoid specifying long messages outside the exception class

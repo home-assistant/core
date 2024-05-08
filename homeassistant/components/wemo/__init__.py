@@ -144,6 +144,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     dispatcher = wemo_data.config_entry_data.dispatcher
     if unload_ok := await dispatcher.async_unload_platforms(hass):
+        for coordinator in list(
+            wemo_data.config_entry_data.device_coordinators.values()
+        ):
+            await coordinator.async_shutdown()
         assert not wemo_data.config_entry_data.device_coordinators
         wemo_data.config_entry_data = None  # type: ignore[assignment]
     return unload_ok
