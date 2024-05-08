@@ -33,6 +33,7 @@ TEXT_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
 
 FILE_SENSOR_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_NAME): TEXT_SELECTOR,
         vol.Required(CONF_FILE_PATH): TEXT_SELECTOR,
         vol.Optional(CONF_VALUE_TEMPLATE): TEMPLATE_SELECTOR,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): TEXT_SELECTOR,

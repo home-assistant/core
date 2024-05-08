@@ -21,6 +21,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import slugify
 
 from .const import DEFAULT_NAME, FILE_ICON
 
@@ -85,7 +86,7 @@ class FileSensor(SensorEntity):
         self._file_path = file_path
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._val_tpl = value_template
-        self._attr_unique_id = f"sensor_{file_path}"
+        self._attr_unique_id = slugify(f"sensor_{file_path}")
 
     def update(self) -> None:
         """Get the latest entry from a file and updates the state."""
