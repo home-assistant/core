@@ -476,7 +476,7 @@ bleak-esphome==1.0.0
 bleak-retry-connector==3.5.0
 
 # homeassistant.components.bluetooth
-bleak==0.21.1
+bleak==0.22.0
 
 # homeassistant.components.blebox
 blebox-uniapi==2.2.2
