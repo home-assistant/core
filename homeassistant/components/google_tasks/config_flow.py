@@ -66,7 +66,7 @@ class OAuth2FlowHandler(
                 reason="access_not_configured",
                 description_placeholders={"message": error},
             )
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             self.logger.exception("Unknown error occurred")
             return self.async_abort(reason="unknown")
         user_id = user_resource_info["id"]

@@ -47,6 +47,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.loader import Integration, async_get_integrations, bind_hass
 from homeassistant.util.async_ import create_eager_task
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.yaml import load_yaml_dict
 from homeassistant.util.yaml.loader import JSON_TYPE
 
@@ -74,8 +75,12 @@ CONF_SERVICE_ENTITY_ID = "entity_id"
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_DESCRIPTION_CACHE = "service_description_cache"
-ALL_SERVICE_DESCRIPTIONS_CACHE = "all_service_descriptions_cache"
+SERVICE_DESCRIPTION_CACHE: HassKey[dict[tuple[str, str], dict[str, Any] | None]] = (
+    HassKey("service_description_cache")
+)
+ALL_SERVICE_DESCRIPTIONS_CACHE: HassKey[
+    tuple[set[tuple[str, str]], dict[str, dict[str, Any]]]
+] = HassKey("all_service_descriptions_cache")
 
 _T = TypeVar("_T")
 
@@ -660,9 +665,7 @@ async def async_get_all_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, dict[str, Any]]:
     """Return descriptions (i.e. user documentation) for all service calls."""
-    descriptions_cache: dict[tuple[str, str], dict[str, Any] | None] = (
-        hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
-    )
+    descriptions_cache = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
 
     # We don't mutate services here so we avoid calling
     # async_services which makes a copy of every services
@@ -686,7 +689,7 @@ async def async_get_all_descriptions(
         previous_all_services, previous_descriptions_cache = all_cache
         # If the services are the same, we can return the cache
         if previous_all_services == all_services:
-            return previous_descriptions_cache  # type: ignore[no-any-return]
+            return previous_descriptions_cache
 
     # Files we loaded for missing descriptions
     loaded: dict[str, JSON_TYPE] = {}
@@ -812,9 +815,7 @@ def async_set_service_schema(
     domain = domain.lower()
     service = service.lower()
 
-    descriptions_cache: dict[tuple[str, str], dict[str, Any] | None] = (
-        hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
-    )
+    descriptions_cache = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
 
     description = {
         "name": schema.get("name", ""),
