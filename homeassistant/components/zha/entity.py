@@ -38,27 +38,15 @@ class ZHAEntity(LogMixin, entity.Entity):
         super().__init__(*args, **kwargs)
         self.entity_data: EntityData = entity_data
         self._unsubs: list[Callable[[], None]] = []
-        if (
-            hasattr(self.entity_data.entity, "_attr_translation_key")
-            and self.entity_data.entity._attr_translation_key is not None
-        ):
-            self._attr_translation_key = self.entity_data.entity._attr_translation_key
-        if (
-            hasattr(self.entity_data.entity, "_attr_entity_category")
-            and self.entity_data.entity._attr_entity_category is not None
-        ):
-            if (
-                self.entity_data.entity._attr_entity_category
-                == ZHAEntityCategory.CONFIG
-            ):
-                self._attr_entity_category = EntityCategory.CONFIG
-            elif (
-                self.entity_data.entity._attr_entity_category
-                == ZHAEntityCategory.DIAGNOSTIC
-            ):
-                self._attr_entity_category = EntityCategory.DIAGNOSTIC
-        if hasattr(self.entity_data.entity, "_attr_name"):
-            self._attr_name = self.entity_data.entity._attr_name
+
+        self._attr_name = self.entity_data.entity.name
+        self._attr_icon = self.entity_data.entity.icon
+        self._attr_translation_key = self.entity_data.entity.translation_key
+
+        if self.entity_data.entity.entity_category == ZHAEntityCategory.CONFIG:
+            self._attr_entity_category = EntityCategory.CONFIG
+        elif self.entity_data.entity.entity_category == ZHAEntityCategory.DIAGNOSTIC:
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def unique_id(self) -> str:

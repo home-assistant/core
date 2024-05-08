@@ -11,7 +11,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UndefinedType
 
 from .entity import ZHAEntity
 from .helpers import (
@@ -64,16 +63,6 @@ class ZhaNumber(ZHAEntity, NumberEntity):
     def native_step(self) -> float | None:
         """Return the value step."""
         return self.entity_data.entity.native_step
-
-    @property
-    def name(self) -> str | UndefinedType | None:
-        """Return the name of the number entity."""
-        return self.entity_data.entity.name
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon to be used for this entity."""
-        return self.entity_data.entity.icon
 
     @property
     def native_unit_of_measurement(self) -> str | None:
