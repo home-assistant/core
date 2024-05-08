@@ -5,10 +5,12 @@ import asyncio
 from collections.abc import Callable, Hashable
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import TypeVarTuple
 
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.util.dt as dt_util
+
+_Ts = TypeVarTuple("_Ts")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,9 +30,7 @@ class KeyedRateLimit:
     @callback
     def async_has_timer(self, key: Hashable) -> bool:
         """Check if a rate limit timer is running."""
-        if not self._rate_limit_timers:
-            return False
-        return key in self._rate_limit_timers
+        return bool(self._rate_limit_timers and key in self._rate_limit_timers)
 
     @callback
     def async_triggered(self, key: Hashable, now: datetime | None = None) -> None:
@@ -41,7 +41,7 @@ class KeyedRateLimit:
     @callback
     def async_cancel_timer(self, key: Hashable) -> None:
         """Cancel a rate limit time that will call the action."""
-        if not self._rate_limit_timers or not self.async_has_timer(key):
+        if not self._rate_limit_timers or key not in self._rate_limit_timers:
             return
 
         self._rate_limit_timers.pop(key).cancel()
@@ -59,8 +59,8 @@ class KeyedRateLimit:
         key: Hashable,
         rate_limit: timedelta | None,
         now: datetime,
-        action: Callable,
-        *args: Any,
+        action: Callable[[*_Ts], None],
+        *args: *_Ts,
     ) -> datetime | None:
         """Check rate limits and schedule an action if we hit the limit.
 

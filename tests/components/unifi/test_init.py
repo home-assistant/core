@@ -8,14 +8,14 @@ from homeassistant.components.unifi.errors import AuthenticationRequired, Cannot
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .test_controller import DEFAULT_CONFIG_ENTRY_ID, setup_unifi_integration
+from .test_hub import DEFAULT_CONFIG_ENTRY_ID, setup_unifi_integration
 
 from tests.common import flush_store
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_setup_with_no_config(hass: HomeAssistant) -> None:
-    """Test that we do not discover anything or try to set up a controller."""
+    """Test that we do not discover anything or try to set up a hub."""
     assert await async_setup_component(hass, UNIFI_DOMAIN, {}) is True
     assert UNIFI_DOMAIN not in hass.data
 
@@ -31,7 +31,7 @@ async def test_successful_config_entry(
 async def test_setup_entry_fails_config_entry_not_ready(hass: HomeAssistant) -> None:
     """Failed authentication trigger a reauthentication flow."""
     with patch(
-        "homeassistant.components.unifi.get_unifi_controller",
+        "homeassistant.components.unifi.get_unifi_api",
         side_effect=CannotConnect,
     ):
         await setup_unifi_integration(hass)
@@ -42,7 +42,7 @@ async def test_setup_entry_fails_config_entry_not_ready(hass: HomeAssistant) -> 
 async def test_setup_entry_fails_trigger_reauth_flow(hass: HomeAssistant) -> None:
     """Failed authentication trigger a reauthentication flow."""
     with patch(
-        "homeassistant.components.unifi.get_unifi_controller",
+        "homeassistant.components.unifi.get_unifi_api",
         side_effect=AuthenticationRequired,
     ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
         await setup_unifi_integration(hass)

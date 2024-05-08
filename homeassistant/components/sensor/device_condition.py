@@ -77,6 +77,7 @@ CONF_IS_VOLATILE_ORGANIC_COMPOUNDS = "is_volatile_organic_compounds"
 CONF_IS_VOLATILE_ORGANIC_COMPOUNDS_PARTS = "is_volatile_organic_compounds_parts"
 CONF_IS_VOLTAGE = "is_voltage"
 CONF_IS_VOLUME = "is_volume"
+CONF_IS_VOLUME_FLOW_RATE = "is_volume_flow_rate"
 CONF_IS_WATER = "is_water"
 CONF_IS_WEIGHT = "is_weight"
 CONF_IS_WIND_SPEED = "is_wind_speed"
@@ -132,6 +133,7 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.VOLTAGE: [{CONF_TYPE: CONF_IS_VOLTAGE}],
     SensorDeviceClass.VOLUME: [{CONF_TYPE: CONF_IS_VOLUME}],
     SensorDeviceClass.VOLUME_STORAGE: [{CONF_TYPE: CONF_IS_VOLUME}],
+    SensorDeviceClass.VOLUME_FLOW_RATE: [{CONF_TYPE: CONF_IS_VOLUME_FLOW_RATE}],
     SensorDeviceClass.WATER: [{CONF_TYPE: CONF_IS_WATER}],
     SensorDeviceClass.WEIGHT: [{CONF_TYPE: CONF_IS_WEIGHT}],
     SensorDeviceClass.WIND_SPEED: [{CONF_TYPE: CONF_IS_WIND_SPEED}],
@@ -186,6 +188,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_VOLATILE_ORGANIC_COMPOUNDS_PARTS,
                     CONF_IS_VOLTAGE,
                     CONF_IS_VOLUME,
+                    CONF_IS_VOLUME_FLOW_RATE,
                     CONF_IS_WATER,
                     CONF_IS_WEIGHT,
                     CONF_IS_WIND_SPEED,

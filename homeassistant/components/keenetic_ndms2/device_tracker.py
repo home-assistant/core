@@ -43,11 +43,10 @@ async def async_setup_entry(
     registry = er.async_get(hass)
     # Restore devices that are not a part of active clients list.
     restored = []
-    for entity_entry in registry.entities.values():
-        if (
-            entity_entry.config_entry_id == config_entry.entry_id
-            and entity_entry.domain == DEVICE_TRACKER_DOMAIN
-        ):
+    for entity_entry in registry.entities.get_entries_for_config_entry_id(
+        config_entry.entry_id
+    ):
+        if entity_entry.domain == DEVICE_TRACKER_DOMAIN:
             mac = entity_entry.unique_id.partition("_")[0]
             if mac not in tracked:
                 tracked.add(mac)

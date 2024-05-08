@@ -18,14 +18,11 @@ from .const import DOMAIN
 from .entity import PhilipsJsEntity
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class PhilipsTVBinarySensorEntityDescription(BinarySensorEntityDescription):
     """A entity description for Philips TV binary sensor."""
 
-    def __init__(self, recording_value, *args, **kwargs) -> None:
-        """Set up a binary sensor entity description and add additional attributes."""
-        super().__init__(*args, **kwargs)
-        self.recording_value: str = recording_value
+    recording_value: str
 
 
 DESCRIPTIONS = (

@@ -26,7 +26,7 @@ from . import SolarlogData
 from .const import DOMAIN
 
 
-@dataclass
+@dataclass(frozen=True)
 class SolarLogSensorEntityDescription(SensorEntityDescription):
     """Describes Solarlog sensor entity."""
 

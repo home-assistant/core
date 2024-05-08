@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/rflink",
   "iot_class": "assumed_state",
   "loggers": ["rflink"],
-  "requirements": ["rflink==0.0.65"]
+  "requirements": ["rflink==0.0.66"]
 }

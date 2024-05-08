@@ -11,10 +11,11 @@ from xknx.telegram import Telegram
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, SIGNAL_KNX_TELEGRAM_DICT
 from .project import KNXProject
 
 STORAGE_VERSION: Final = 1
@@ -87,6 +88,7 @@ class Telegrams:
         """Handle incoming and outgoing telegrams from xknx."""
         telegram_dict = self.telegram_to_dict(telegram)
         self.recent_telegrams.append(telegram_dict)
+        async_dispatcher_send(self.hass, SIGNAL_KNX_TELEGRAM_DICT, telegram_dict)
         for job in self._jobs:
             self.hass.async_run_hass_job(job, telegram_dict)
 

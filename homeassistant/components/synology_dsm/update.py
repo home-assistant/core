@@ -19,7 +19,7 @@ from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
 from .models import SynologyDSMData
 
 
-@dataclass
+@dataclass(frozen=True)
 class SynologyDSMUpdateEntityEntityDescription(
     UpdateEntityDescription, SynologyDSMEntityDescription
 ):

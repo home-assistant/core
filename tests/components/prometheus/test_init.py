@@ -1352,7 +1352,7 @@ async def cover_fixture(
         suggested_object_id="position_shade",
         original_name="Position Shade",
     )
-    cover_position_attributes = {cover.ATTR_POSITION: 50}
+    cover_position_attributes = {cover.ATTR_CURRENT_POSITION: 50}
     set_state_with_entry(hass, cover_position, STATE_OPEN, cover_position_attributes)
     data["cover_position"] = cover_position
 
@@ -1363,7 +1363,7 @@ async def cover_fixture(
         suggested_object_id="tilt_position_shade",
         original_name="Tilt Position Shade",
     )
-    cover_tilt_position_attributes = {cover.ATTR_TILT_POSITION: 50}
+    cover_tilt_position_attributes = {cover.ATTR_CURRENT_TILT_POSITION: 50}
     set_state_with_entry(
         hass, cover_tilt_position, STATE_OPEN, cover_tilt_position_attributes
     )

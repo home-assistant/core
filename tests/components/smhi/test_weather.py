@@ -1,5 +1,4 @@
 """Test for the smhi weather entity."""
-import asyncio
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
@@ -187,7 +186,7 @@ async def test_properties_unknown_symbol(hass: HomeAssistant) -> None:
     )
 
 
-@pytest.mark.parametrize("error", [SmhiForecastException(), asyncio.TimeoutError()])
+@pytest.mark.parametrize("error", [SmhiForecastException(), TimeoutError()])
 async def test_refresh_weather_forecast_retry(
     hass: HomeAssistant, error: Exception
 ) -> None:

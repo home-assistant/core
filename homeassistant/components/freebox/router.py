@@ -1,7 +1,7 @@
 """Represent the Freebox router and its devices and sensors."""
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from contextlib import suppress
 from datetime import datetime
 import json
@@ -38,7 +38,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def is_json(json_str):
+def is_json(json_str: str) -> bool:
     """Validate if a String is a JSON value or not."""
     try:
         json.loads(json_str)
@@ -62,6 +62,33 @@ async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
     token_file = Path(f"{freebox_path}/{slugify(host)}.conf")
 
     return Freepybox(APP_DESC, token_file, API_VERSION)
+
+
+async def get_hosts_list_if_supported(
+    fbx_api: Freepybox,
+) -> tuple[bool, list[dict[str, Any]]]:
+    """Hosts list is not supported when freebox is configured in bridge mode."""
+    supports_hosts: bool = True
+    fbx_devices: list[dict[str, Any]] = []
+    try:
+        fbx_devices = await fbx_api.lan.get_hosts_list() or []
+    except HttpRequestError as err:
+        if (
+            (matcher := re.search(r"Request failed \(APIResponse: (.+)\)", str(err)))
+            and is_json(json_str := matcher.group(1))
+            and (json_resp := json.loads(json_str)).get("error_code") == "nodev"
+        ):
+            # No need to retry, Host list not available
+            supports_hosts = False
+            _LOGGER.debug(
+                "Host list is not available using bridge mode (%s)",
+                json_resp.get("msg"),
+            )
+
+        else:
+            raise err
+
+    return supports_hosts, fbx_devices
 
 
 class FreeboxRouter:
@@ -95,7 +122,7 @@ class FreeboxRouter:
         self.call_list: list[dict[str, Any]] = []
         self.home_granted = True
         self.home_devices: dict[str, Any] = {}
-        self.listeners: list[dict[str, Any]] = []
+        self.listeners: list[Callable[[], None]] = []
 
     async def update_all(self, now: datetime | None = None) -> None:
         """Update all Freebox platforms."""
@@ -111,27 +138,9 @@ class FreeboxRouter:
 
         # Access to Host list not available in bridge mode, API return error_code 'nodev'
         if self.supports_hosts:
-            try:
-                fbx_devices = await self._api.lan.get_hosts_list()
-            except HttpRequestError as err:
-                if (
-                    (
-                        matcher := re.search(
-                            r"Request failed \(APIResponse: (.+)\)", str(err)
-                        )
-                    )
-                    and is_json(json_str := matcher.group(1))
-                    and (json_resp := json.loads(json_str)).get("error_code") == "nodev"
-                ):
-                    # No need to retry, Host list not available
-                    self.supports_hosts = False
-                    _LOGGER.debug(
-                        "Host list is not available using bridge mode (%s)",
-                        json_resp.get("msg"),
-                    )
-
-                else:
-                    raise err
+            self.supports_hosts, fbx_devices = await get_hosts_list_if_supported(
+                self._api
+            )
 
         # Adds the Freebox itself
         fbx_devices.append(

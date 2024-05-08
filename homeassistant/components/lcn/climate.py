@@ -69,7 +69,7 @@ async def async_setup_entry(
 class LcnClimate(LcnEntity, ClimateEntity):
     """Representation of a LCN climate device."""
 
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, config: ConfigType, entry_id: str, device_connection: DeviceConnectionType
@@ -95,6 +95,11 @@ class LcnClimate(LcnEntity, ClimateEntity):
         self._attr_hvac_modes = [HVACMode.HEAT]
         if self.is_lockable:
             self._attr_hvac_modes.append(HVACMode.OFF)
+        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        if len(self.hvac_modes) > 1:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+            )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""

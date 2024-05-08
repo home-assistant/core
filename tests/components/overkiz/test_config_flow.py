@@ -757,7 +757,7 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         data=dhcp.DhcpServiceInfo(
             hostname="gateway-1234-5678-9123",
             ip="192.168.1.4",
-            macaddress="F8811A000000",
+            macaddress="f8811a000000",
         ),
         context={"source": config_entries.SOURCE_DHCP},
     )
@@ -815,7 +815,7 @@ async def test_dhcp_flow_already_configured(hass: HomeAssistant) -> None:
         data=dhcp.DhcpServiceInfo(
             hostname="gateway-1234-5678-9123",
             ip="192.168.1.4",
-            macaddress="F8811A000000",
+            macaddress="f8811a000000",
         ),
         context={"source": config_entries.SOURCE_DHCP},
     )

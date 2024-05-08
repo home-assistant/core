@@ -1,6 +1,5 @@
 """Support for Ebusd daemon for communication with eBUS heating systems."""
 import logging
-import socket
 
 import ebusdpy
 import voluptuous as vol
@@ -80,7 +79,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         _LOGGER.debug("Ebusd integration setup completed")
         return True
-    except (socket.timeout, OSError):
+    except (TimeoutError, OSError):
         return False
 
 

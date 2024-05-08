@@ -22,7 +22,7 @@ DISCOVERY_DEVICES = [
         config_entries.SOURCE_DHCP,
         dhcp.DhcpServiceInfo(
             ip=MOCK_IP,
-            macaddress="50:14:79:DD:EE:FF",
+            macaddress="501479ddeeff",
             hostname="irobot-blid",
         ),
     ),
@@ -30,7 +30,7 @@ DISCOVERY_DEVICES = [
         config_entries.SOURCE_DHCP,
         dhcp.DhcpServiceInfo(
             ip=MOCK_IP,
-            macaddress="80:A5:89:DD:EE:FF",
+            macaddress="80a589ddeeff",
             hostname="roomba-blid",
         ),
     ),
@@ -98,12 +98,12 @@ def _mocked_discovery(*_):
 
     roomba = RoombaInfo(
         hostname="irobot-BLID",
-        robot_name="robot_name",
+        robotname="robot_name",
         ip=MOCK_IP,
         mac="mac",
-        firmware="firmware",
+        sw="firmware",
         sku="sku",
-        capabilities="capabilities",
+        cap={"cap": 1},
     )
 
     roomba_discovery.get_all = MagicMock(return_value=[roomba])
@@ -869,7 +869,7 @@ async def test_dhcp_discovery_with_ignored(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip=MOCK_IP,
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbccddeeff",
                 hostname="irobot-blid",
             ),
         )
@@ -892,7 +892,7 @@ async def test_dhcp_discovery_already_configured_host(hass: HomeAssistant) -> No
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip=MOCK_IP,
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbccddeeff",
                 hostname="irobot-blid",
             ),
         )
@@ -918,7 +918,7 @@ async def test_dhcp_discovery_already_configured_blid(hass: HomeAssistant) -> No
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip=MOCK_IP,
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbccddeeff",
                 hostname="irobot-blid",
             ),
         )
@@ -944,7 +944,7 @@ async def test_dhcp_discovery_not_irobot(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip=MOCK_IP,
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbccddeeff",
                 hostname="Notirobot-blid",
             ),
         )
@@ -965,7 +965,7 @@ async def test_dhcp_discovery_partial_hostname(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip=MOCK_IP,
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbccddeeff",
                 hostname="irobot-blid",
             ),
         )
@@ -982,7 +982,7 @@ async def test_dhcp_discovery_partial_hostname(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip=MOCK_IP,
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbccddeeff",
                 hostname="irobot-blidthatislonger",
             ),
         )
@@ -1003,7 +1003,7 @@ async def test_dhcp_discovery_partial_hostname(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip=MOCK_IP,
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbccddeeff",
                 hostname="irobot-bl",
             ),
         )

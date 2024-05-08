@@ -25,7 +25,7 @@ from .entity import (
 )
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ReolinkSwitchEntityDescription(
     SwitchEntityDescription,
     ReolinkChannelEntityDescription,
@@ -36,7 +36,7 @@ class ReolinkSwitchEntityDescription(
     value: Callable[[Host, int], bool]
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ReolinkNVRSwitchEntityDescription(
     SwitchEntityDescription,
     ReolinkHostEntityDescription,
@@ -48,6 +48,16 @@ class ReolinkNVRSwitchEntityDescription(
 
 
 SWITCH_ENTITIES = (
+    ReolinkSwitchEntityDescription(
+        key="ir_lights",
+        cmd_key="GetIrLights",
+        translation_key="ir_lights",
+        icon="mdi:led-off",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api, ch: api.supported(ch, "ir_lights"),
+        value=lambda api, ch: api.ir_enabled(ch),
+        method=lambda api, ch, value: api.set_ir_lights(ch, value),
+    ),
     ReolinkSwitchEntityDescription(
         key="record_audio",
         cmd_key="GetEnc",

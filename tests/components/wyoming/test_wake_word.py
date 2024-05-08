@@ -188,6 +188,7 @@ async def test_dynamic_wake_word_info(
                         installed=True,
                         attribution=TEST_ATTR,
                         languages=[],
+                        version=None,
                     ),
                     WakeModel(
                         name="ww2",
@@ -195,8 +196,10 @@ async def test_dynamic_wake_word_info(
                         installed=True,
                         attribution=TEST_ATTR,
                         languages=[],
+                        version=None,
                     ),
                 ],
+                version=None,
             )
         ]
     )

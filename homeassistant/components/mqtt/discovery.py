@@ -74,6 +74,7 @@ SUPPORTED_COMPONENTS = {
     "text",
     "update",
     "vacuum",
+    "valve",
     "water_heater",
 }
 

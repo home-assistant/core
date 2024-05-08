@@ -111,7 +111,7 @@ async def test_dhcp_can_confirm(hass: HomeAssistant) -> None:
             data=dhcp.DhcpServiceInfo(
                 hostname="radiotherm",
                 ip="1.2.3.4",
-                macaddress="aa:bb:cc:dd:ee:ff",
+                macaddress="aabbccddeeff",
             ),
         )
         await hass.async_block_till_done()
@@ -155,7 +155,7 @@ async def test_dhcp_fails_to_connect(hass: HomeAssistant) -> None:
             data=dhcp.DhcpServiceInfo(
                 hostname="radiotherm",
                 ip="1.2.3.4",
-                macaddress="aa:bb:cc:dd:ee:ff",
+                macaddress="aabbccddeeff",
             ),
         )
         await hass.async_block_till_done()
@@ -184,7 +184,7 @@ async def test_dhcp_already_exists(hass: HomeAssistant) -> None:
             data=dhcp.DhcpServiceInfo(
                 hostname="radiotherm",
                 ip="1.2.3.4",
-                macaddress="aa:bb:cc:dd:ee:ff",
+                macaddress="aabbccddeeff",
             ),
         )
         await hass.async_block_till_done()

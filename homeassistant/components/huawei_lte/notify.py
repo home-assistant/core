@@ -1,7 +1,6 @@
 """Support for Huawei LTE router notifications."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 import time
 from typing import Any
@@ -34,12 +33,13 @@ async def async_get_service(
     return HuaweiLteSmsNotificationService(router, default_targets)
 
 
-@dataclass
 class HuaweiLteSmsNotificationService(BaseNotificationService):
     """Huawei LTE router SMS notification service."""
 
-    router: Router
-    default_targets: list[str]
+    def __init__(self, router: Router, default_targets: list[str]) -> None:
+        """Initialize."""
+        self.router = router
+        self.default_targets = default_targets
 
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send message to target numbers."""

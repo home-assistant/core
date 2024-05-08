@@ -49,8 +49,6 @@ from .common import (
 from tests.common import mock_registry
 from tests.typing import WebSocketGenerator
 
-ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
-
 
 def test_converters_align_with_sensor() -> None:
     """Ensure STATISTIC_UNIT_TO_UNIT_CONVERTER is aligned with UNIT_CONVERTERS."""
@@ -432,7 +430,7 @@ def test_rename_entity(hass_recorder: Callable[..., HomeAssistant]) -> None:
 
 
 def test_statistics_during_period_set_back_compat(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test statistics_during_period can handle a list instead of a set."""
     hass = hass_recorder()
@@ -785,9 +783,8 @@ async def test_import_statistics(
     }
 
     # Adjust the statistics in a different unit
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 1,
             "type": "recorder/adjust_sum_statistics",
             "statistic_id": statistic_id,
             "start_time": period2.isoformat(),

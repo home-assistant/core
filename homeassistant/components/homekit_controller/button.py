@@ -28,7 +28,7 @@ from .entity import CharacteristicEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class HomeKitButtonEntityDescription(ButtonEntityDescription):
     """Describes Homekit button."""
 
@@ -53,6 +53,7 @@ BUTTON_ENTITIES: dict[str, HomeKitButtonEntityDescription] = {
     CharacteristicsTypes.IDENTIFY: HomeKitButtonEntityDescription(
         key=CharacteristicsTypes.IDENTIFY,
         name="Identify",
+        device_class=ButtonDeviceClass.IDENTIFY,
         entity_category=EntityCategory.DIAGNOSTIC,
         write_value=True,
     ),

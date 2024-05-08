@@ -89,6 +89,7 @@ CLUSTER_HANDLER_LEVEL = ATTR_LEVEL
 CLUSTER_HANDLER_MULTISTATE_INPUT = "multistate_input"
 CLUSTER_HANDLER_OCCUPANCY = "occupancy"
 CLUSTER_HANDLER_ON_OFF = "on_off"
+CLUSTER_HANDLER_OTA = "ota"
 CLUSTER_HANDLER_POWER_CONFIGURATION = "power"
 CLUSTER_HANDLER_PRESSURE = "pressure"
 CLUSTER_HANDLER_SHADE = "shade"
@@ -120,6 +121,7 @@ PLATFORMS = (
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.UPDATE,
 )
 
 CONF_ALARM_MASTER_CODE = "alarm_master_code"
@@ -408,9 +410,6 @@ class Strobe(t.enum8):
     No_Strobe = 0x00
     Strobe = 0x01
 
-
-STARTUP_FAILURE_DELAY_S = 3
-STARTUP_RETRIES = 3
 
 EZSP_OVERWRITE_EUI64 = (
     "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it"

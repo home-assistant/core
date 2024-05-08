@@ -8,7 +8,7 @@ from types import MappingProxyType
 from typing import Any
 
 from google.api_core.exceptions import ClientError
-import google.generativeai as palm
+import google.generativeai as genai
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -23,11 +23,13 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_CHAT_MODEL,
+    CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
     DEFAULT_CHAT_MODEL,
+    DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
@@ -50,6 +52,7 @@ DEFAULT_OPTIONS = types.MappingProxyType(
         CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
         CONF_TOP_P: DEFAULT_TOP_P,
         CONF_TOP_K: DEFAULT_TOP_K,
+        CONF_MAX_TOKENS: DEFAULT_MAX_TOKENS,
     }
 )
 
@@ -59,8 +62,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    palm.configure(api_key=data[CONF_API_KEY])
-    await hass.async_add_executor_job(partial(palm.list_models))
+    genai.configure(api_key=data[CONF_API_KEY])
+    await hass.async_add_executor_job(partial(genai.list_models))
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -129,7 +132,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
 
 def google_generative_ai_config_option_schema(
-    options: MappingProxyType[str, Any]
+    options: MappingProxyType[str, Any],
 ) -> dict:
     """Return a schema for Google Generative AI completion options."""
     if not options:
@@ -161,5 +164,10 @@ def google_generative_ai_config_option_schema(
             CONF_TOP_K,
             description={"suggested_value": options[CONF_TOP_K]},
             default=DEFAULT_TOP_K,
+        ): int,
+        vol.Optional(
+            CONF_MAX_TOKENS,
+            description={"suggested_value": options[CONF_MAX_TOKENS]},
+            default=DEFAULT_MAX_TOKENS,
         ): int,
     }

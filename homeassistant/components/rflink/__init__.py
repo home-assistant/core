@@ -254,7 +254,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_dispatcher_send(hass, SIGNAL_AVAILABILITY, False)
 
         # If HA is not stopping, initiate new connection
-        if hass.state != CoreState.stopping:
+        if hass.state is not CoreState.stopping:
             _LOGGER.warning("Disconnected from Rflink, reconnecting")
             hass.async_create_task(connect())
 
@@ -285,7 +285,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         except (
             SerialException,
             OSError,
-            asyncio.TimeoutError,
+            TimeoutError,
         ):
             reconnect_interval = config[DOMAIN][CONF_RECONNECT_INTERVAL]
             _LOGGER.exception(

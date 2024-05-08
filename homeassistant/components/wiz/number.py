@@ -22,7 +22,7 @@ from .entity import WizEntity
 from .models import WizData
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class WizNumberEntityDescription(NumberEntityDescription):
     """Class to describe a WiZ number entity."""
 

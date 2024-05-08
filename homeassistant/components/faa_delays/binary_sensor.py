@@ -21,7 +21,7 @@ from . import FAADataUpdateCoordinator
 from .const import DOMAIN
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class FaaDelaysBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Mixin for required keys."""
 
@@ -118,7 +118,6 @@ class FAABinarySensor(CoordinatorEntity[FAADataUpdateCoordinator], BinarySensorE
         super().__init__(coordinator)
         self.entity_description = description
         _id = coordinator.data.code
-        self._attr_name = f"{_id} {description.name}"
         self._attr_unique_id = f"{_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, _id)},

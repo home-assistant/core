@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Any
 
 from amberelectric.model.channel import ChannelType
@@ -86,7 +85,7 @@ class AmberPriceSensor(AmberSensor):
         return format_cents_to_dollars(interval.per_kwh)
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return additional pieces of information about the price."""
         interval = self.coordinator.data[self.entity_description.key][self.channel_type]
 
@@ -133,7 +132,7 @@ class AmberForecastSensor(AmberSensor):
         return format_cents_to_dollars(interval.per_kwh)
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return additional pieces of information about the price."""
         intervals = self.coordinator.data[self.entity_description.key].get(
             self.channel_type
@@ -177,7 +176,7 @@ class AmberPriceDescriptorSensor(AmberSensor):
     @property
     def native_value(self) -> str | None:
         """Return the current price descriptor."""
-        return self.coordinator.data[self.entity_description.key][self.channel_type]
+        return self.coordinator.data[self.entity_description.key][self.channel_type]  # type: ignore[no-any-return]
 
 
 class AmberGridSensor(CoordinatorEntity[AmberUpdateCoordinator], SensorEntity):
@@ -199,7 +198,7 @@ class AmberGridSensor(CoordinatorEntity[AmberUpdateCoordinator], SensorEntity):
     @property
     def native_value(self) -> str | None:
         """Return the value of the sensor."""
-        return self.coordinator.data["grid"][self.entity_description.key]
+        return self.coordinator.data["grid"][self.entity_description.key]  # type: ignore[no-any-return]
 
 
 async def async_setup_entry(
@@ -213,7 +212,7 @@ async def async_setup_entry(
     current: dict[str, CurrentInterval] = coordinator.data["current"]
     forecasts: dict[str, list[ForecastInterval]] = coordinator.data["forecasts"]
 
-    entities: list = []
+    entities: list[SensorEntity] = []
     for channel_type in current:
         description = SensorEntityDescription(
             key="current",

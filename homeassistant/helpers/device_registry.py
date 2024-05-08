@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 from collections import UserDict
-from collections.abc import Coroutine, ValuesView
+from collections.abc import ValuesView
 from enum import StrEnum
+from functools import lru_cache, partial
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
@@ -21,8 +22,14 @@ import homeassistant.util.uuid as uuid_util
 
 from . import storage
 from .debounce import Debouncer
+from .deprecation import (
+    DeprecatedConstantEnum,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from .frame import report
-from .json import JSON_DUMP, find_paths_unserializable_data
+from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -36,7 +43,7 @@ DATA_REGISTRY = "device_registry"
 EVENT_DEVICE_REGISTRY_UPDATED = "device_registry_updated"
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 4
+STORAGE_VERSION_MINOR = 5
 SAVE_DELAY = 10
 CLEANUP_DELAY = 10
 
@@ -61,9 +68,13 @@ class DeviceEntryDisabler(StrEnum):
 
 
 # DISABLED_* are deprecated, to be removed in 2022.3
-DISABLED_CONFIG_ENTRY = DeviceEntryDisabler.CONFIG_ENTRY.value
-DISABLED_INTEGRATION = DeviceEntryDisabler.INTEGRATION.value
-DISABLED_USER = DeviceEntryDisabler.USER.value
+_DEPRECATED_DISABLED_CONFIG_ENTRY = DeprecatedConstantEnum(
+    DeviceEntryDisabler.CONFIG_ENTRY, "2025.1"
+)
+_DEPRECATED_DISABLED_INTEGRATION = DeprecatedConstantEnum(
+    DeviceEntryDisabler.INTEGRATION, "2025.1"
+)
+_DEPRECATED_DISABLED_USER = DeprecatedConstantEnum(DeviceEntryDisabler.USER, "2025.1")
 
 
 class DeviceInfo(TypedDict, total=False):
@@ -227,6 +238,7 @@ class DeviceEntry:
     hw_version: str | None = attr.ib(default=None)
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
     identifiers: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
+    labels: set[str] = attr.ib(converter=set, factory=set)
     manufacturer: str | None = attr.ib(default=None)
     model: str | None = attr.ib(default=None)
     name_by_user: str | None = attr.ib(default=None)
@@ -266,11 +278,11 @@ class DeviceEntry:
         }
 
     @cached_property
-    def json_repr(self) -> str | None:
+    def json_repr(self) -> bytes | None:
         """Return a cached JSON representation of the entry."""
         try:
             dict_repr = self.dict_repr
-            return JSON_DUMP(dict_repr)
+            return json_bytes(dict_repr)
         except (ValueError, TypeError):
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
@@ -309,6 +321,7 @@ class DeletedDeviceEntry:
         )
 
 
+@lru_cache(maxsize=512)
 def format_mac(mac: str) -> str:
     """Format the mac address string for entry into dev reg."""
     to_test = mac
@@ -367,6 +380,10 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 # Introduced in 2023.11
                 for device in old_data["devices"]:
                     device["serial_number"] = None
+            if old_minor_version < 5:
+                # Introduced in 2024.3
+                for device in old_data["devices"]:
+                    device["labels"] = device.get("labels", [])
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -623,6 +640,7 @@ class DeviceRegistry:
         disabled_by: DeviceEntryDisabler | None | UndefinedType = UNDEFINED,
         entry_type: DeviceEntryType | None | UndefinedType = UNDEFINED,
         hw_version: str | None | UndefinedType = UNDEFINED,
+        labels: set[str] | UndefinedType = UNDEFINED,
         manufacturer: str | None | UndefinedType = UNDEFINED,
         merge_connections: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         merge_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
@@ -637,10 +655,6 @@ class DeviceRegistry:
         via_device_id: str | None | UndefinedType = UNDEFINED,
     ) -> DeviceEntry | None:
         """Update device attributes."""
-        # Circular dep
-        # pylint: disable-next=import-outside-toplevel
-        from . import area_registry as ar
-
         old = self.devices[device_id]
 
         new_values: dict[str, Any] = {}  # Dict with new key/value pairs
@@ -671,6 +685,10 @@ class DeviceRegistry:
             and area_id is UNDEFINED
             and old.area_id is None
         ):
+            # Circular dep
+            # pylint: disable-next=import-outside-toplevel
+            from . import area_registry as ar
+
             area = ar.async_get(self.hass).async_get_or_create(suggested_area)
             area_id = area.id
 
@@ -717,6 +735,7 @@ class DeviceRegistry:
             ("disabled_by", disabled_by),
             ("entry_type", entry_type),
             ("hw_version", hw_version),
+            ("labels", labels),
             ("manufacturer", manufacturer),
             ("model", model),
             ("name", name),
@@ -811,6 +830,7 @@ class DeviceRegistry:
                         tuple(iden)  # type: ignore[misc]
                         for iden in device["identifiers"]
                     },
+                    labels=set(device["labels"]),
                     manufacturer=device["manufacturer"],
                     model=device["model"],
                     name_by_user=device["name_by_user"],
@@ -854,6 +874,7 @@ class DeviceRegistry:
                 "hw_version": entry.hw_version,
                 "id": entry.id,
                 "identifiers": list(entry.identifiers),
+                "labels": list(entry.labels),
                 "manufacturer": entry.manufacturer,
                 "model": entry.model,
                 "name_by_user": entry.name_by_user,
@@ -926,6 +947,15 @@ class DeviceRegistry:
             if area_id == device.area_id:
                 self.async_update_device(dev_id, area_id=None)
 
+    @callback
+    def async_clear_label_id(self, label_id: str) -> None:
+        """Clear label from registry entries."""
+        for device_id, entry in self.devices.items():
+            if label_id in entry.labels:
+                labels = entry.labels.copy()
+                labels.remove(label_id)
+                self.async_update_device(device_id, labels=labels)
+
 
 @callback
 def async_get(hass: HomeAssistant) -> DeviceRegistry:
@@ -944,6 +974,14 @@ async def async_load(hass: HomeAssistant) -> None:
 def async_entries_for_area(registry: DeviceRegistry, area_id: str) -> list[DeviceEntry]:
     """Return entries that match an area."""
     return [device for device in registry.devices.values() if device.area_id == area_id]
+
+
+@callback
+def async_entries_for_label(
+    registry: DeviceRegistry, label_id: str
+) -> list[DeviceEntry]:
+    """Return entries that match a label."""
+    return [device for device in registry.devices.values() if label_id in device.labels]
 
 
 @callback
@@ -1040,20 +1078,41 @@ def async_cleanup(
 @callback
 def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
     """Clean up device registry when entities removed."""
-    from . import entity_registry  # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
+    from . import entity_registry, label_registry as lr
 
-    async def cleanup() -> None:
+    @callback
+    def _label_removed_from_registry_filter(
+        event: lr.EventLabelRegistryUpdated,
+    ) -> bool:
+        """Filter all except for the remove action from label registry events."""
+        return event.data["action"] == "remove"
+
+    @callback
+    def _handle_label_registry_update(event: lr.EventLabelRegistryUpdated) -> None:
+        """Update devices that have a label that has been removed."""
+        dev_reg.async_clear_label_id(event.data["label_id"])
+
+    hass.bus.async_listen(
+        event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
+        event_filter=_label_removed_from_registry_filter,  # type: ignore[arg-type]
+        listener=_handle_label_registry_update,  # type: ignore[arg-type]
+    )
+
+    @callback
+    def _async_cleanup() -> None:
         """Cleanup."""
         ent_reg = entity_registry.async_get(hass)
         async_cleanup(hass, dev_reg, ent_reg)
 
-    debounced_cleanup: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
-        hass, _LOGGER, cooldown=CLEANUP_DELAY, immediate=False, function=cleanup
+    debounced_cleanup: Debouncer[None] = Debouncer(
+        hass, _LOGGER, cooldown=CLEANUP_DELAY, immediate=False, function=_async_cleanup
     )
 
-    async def entity_registry_changed(event: Event) -> None:
+    @callback
+    def _async_entity_registry_changed(event: Event) -> None:
         """Handle entity updated or removed dispatch."""
-        await debounced_cleanup.async_call()
+        debounced_cleanup.async_schedule_call()
 
     @callback
     def entity_registry_changed_filter(event: Event) -> bool:
@@ -1069,7 +1128,7 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
     if hass.is_running:
         hass.bus.async_listen(
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
-            entity_registry_changed,
+            _async_entity_registry_changed,
             event_filter=entity_registry_changed_filter,
         )
         return
@@ -1078,7 +1137,7 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
         """Clean up on startup."""
         hass.bus.async_listen(
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
-            entity_registry_changed,
+            _async_entity_registry_changed,
             event_filter=entity_registry_changed_filter,
         )
         await debounced_cleanup.async_call()
@@ -1099,3 +1158,11 @@ def _normalize_connections(connections: set[tuple[str, str]]) -> set[tuple[str, 
         (key, format_mac(value)) if key == CONNECTION_NETWORK_MAC else (key, value)
         for key, value in connections
     }
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

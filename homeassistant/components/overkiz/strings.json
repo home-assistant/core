@@ -9,7 +9,7 @@
         }
       },
       "local_or_cloud": {
-        "description": "Choose between local or cloud API. Local API supports TaHoma Connexoon, TaHoma v2, and TaHoma Switch. Climate devices are not supported in local API.",
+        "description": "Choose between local or cloud API. Local API supports TaHoma Connexoon, TaHoma v2, and TaHoma Switch. Climate devices and scenarios are not supported in local API.",
         "data": {
           "api_type": "API type"
         }

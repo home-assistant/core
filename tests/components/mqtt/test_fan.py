@@ -2317,3 +2317,50 @@ async def test_skipped_async_ha_write_state(
     """Test a write state command is only called when there is change."""
     await mqtt_mock_entry()
     await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
+
+
+VALUE_TEMPLATES = {
+    "state_value_template": "state_topic",
+    "direction_value_template": "direction_state_topic",
+    "oscillation_value_template": "oscillation_state_topic",
+    "percentage_value_template": "percentage_state_topic",
+    "preset_mode_value_template": "preset_mode_state_topic",
+}
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            fan.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "direction_command_topic": "direction-command-topic",
+                    "oscillation_command_topic": "oscillation-command-topic",
+                    "percentage_command_topic": "percentage-command-topic",
+                    "preset_mode_command_topic": "preset-mode-command-topic",
+                    "preset_modes": [
+                        "auto",
+                    ],
+                    topic: "test-topic",
+                    value_template: "{{ value_json.some_var * 1 }}",
+                },
+            ),
+        )
+        for value_template, topic in VALUE_TEMPLATES.items()
+    ],
+    ids=VALUE_TEMPLATES,
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
+    )

@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
+    CONF_COUNTRY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_SHOW_ON_MAP,
@@ -25,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import AirVisualEntity
-from .const import CONF_CITY, CONF_COUNTRY, DOMAIN
+from .const import CONF_CITY, DOMAIN
 
 ATTR_CITY = "city"
 ATTR_COUNTRY = "country"

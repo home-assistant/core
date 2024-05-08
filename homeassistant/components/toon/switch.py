@@ -94,14 +94,14 @@ class ToonHolidayModeSwitch(ToonSwitch, ToonDisplayDeviceEntity):
         )
 
 
-@dataclass
+@dataclass(frozen=True)
 class ToonSwitchRequiredKeysMixin(ToonRequiredKeysMixin):
     """Mixin for switch required keys."""
 
     cls: type[ToonSwitch]
 
 
-@dataclass
+@dataclass(frozen=True)
 class ToonSwitchEntityDescription(SwitchEntityDescription, ToonSwitchRequiredKeysMixin):
     """Describes Toon switch entity."""
 

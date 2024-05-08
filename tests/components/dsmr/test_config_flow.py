@@ -1,5 +1,4 @@
 """Test the DSMR config flow."""
-import asyncio
 from itertools import chain, repeat
 import os
 from typing import Any
@@ -388,13 +387,13 @@ async def test_setup_serial_timeout(
 
     first_timeout_wait_closed = AsyncMock(
         return_value=True,
-        side_effect=chain([asyncio.TimeoutError], repeat(DEFAULT)),
+        side_effect=chain([TimeoutError], repeat(DEFAULT)),
     )
     protocol.wait_closed = first_timeout_wait_closed
 
     first_timeout_wait_closed = AsyncMock(
         return_value=True,
-        side_effect=chain([asyncio.TimeoutError], repeat(DEFAULT)),
+        side_effect=chain([TimeoutError], repeat(DEFAULT)),
     )
     rfxtrx_protocol.wait_closed = first_timeout_wait_closed
 

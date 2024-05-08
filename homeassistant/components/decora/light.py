@@ -60,7 +60,7 @@ PLATFORM_SCHEMA = vol.Schema(
 
 
 def retry(
-    method: Callable[Concatenate[_DecoraLightT, _P], _R]
+    method: Callable[Concatenate[_DecoraLightT, _P], _R],
 ) -> Callable[Concatenate[_DecoraLightT, _P], _R | None]:
     """Retry bluetooth commands."""
 

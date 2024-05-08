@@ -1,0 +1,47 @@
+# serializer version: 1
+# name: test_state
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'away_mode': 'off',
+      'current_temperature': None,
+      'friendly_name': 'My water heater',
+      'max_temp': 130,
+      'min_temp': 95,
+      'operation_list': list([
+        'electric',
+        'eco',
+        'heat_pump',
+      ]),
+      'operation_mode': 'heat_pump',
+      'supported_features': <WaterHeaterEntityFeature: 7>,
+      'target_temp_high': None,
+      'target_temp_low': None,
+      'temperature': 130,
+    }),
+    'context': <ANY>,
+    'entity_id': 'water_heater.my_water_heater',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_pump',
+  })
+# ---
+# name: test_state_non_heat_pump[False]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'away_mode': 'off',
+      'current_temperature': None,
+      'friendly_name': 'My water heater',
+      'max_temp': 130,
+      'min_temp': 95,
+      'supported_features': <WaterHeaterEntityFeature: 5>,
+      'target_temp_high': None,
+      'target_temp_low': None,
+      'temperature': 130,
+    }),
+    'context': <ANY>,
+    'entity_id': 'water_heater.my_water_heater',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'electric',
+  })
+# ---

@@ -1,7 +1,6 @@
 """Config flow for Control4 integration."""
 from __future__ import annotations
 
-from asyncio import TimeoutError as asyncioTimeoutError
 import logging
 
 from aiohttp.client_exceptions import ClientError
@@ -82,7 +81,7 @@ class Control4Validator:
             )
             await director.getAllItemInfo()
             return True
-        except (Unauthorized, ClientError, asyncioTimeoutError):
+        except (Unauthorized, ClientError, TimeoutError):
             _LOGGER.error("Failed to connect to the Control4 controller")
             return False
 

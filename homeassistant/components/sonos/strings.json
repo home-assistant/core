@@ -36,6 +36,9 @@
       "treble": {
         "name": "Treble"
       },
+      "sub_crossover": {
+        "name": "Sub crossover frequency"
+      },
       "sub_gain": {
         "name": "Sub gain"
       },

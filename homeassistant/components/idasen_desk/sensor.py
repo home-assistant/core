@@ -22,14 +22,14 @@ from . import DeskData, IdasenDeskCoordinator
 from .const import DOMAIN
 
 
-@dataclass
+@dataclass(frozen=True)
 class IdasenDeskSensorDescriptionMixin:
     """Required values for IdasenDesk sensors."""
 
     value_fn: Callable[[IdasenDeskCoordinator], float | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class IdasenDeskSensorDescription(
     SensorEntityDescription,
     IdasenDeskSensorDescriptionMixin,

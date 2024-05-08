@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_TOKEN
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
@@ -23,10 +23,8 @@ from .const import (
     CONF_CLOUD_PASSWORD,
     CONF_CLOUD_SUBDEVICES,
     CONF_CLOUD_USERNAME,
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
-    CONF_MAC,
     CONF_MANUAL,
     DEFAULT_CLOUD_COUNTRY,
     DOMAIN,
@@ -384,9 +382,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 data[CONF_CLOUD_USERNAME] = self.cloud_username
                 data[CONF_CLOUD_PASSWORD] = self.cloud_password
                 data[CONF_CLOUD_COUNTRY] = self.cloud_country
-            if self.hass.config_entries.async_update_entry(existing_entry, data=data):
-                await self.hass.config_entries.async_reload(existing_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
+            return self.async_update_reload_and_abort(existing_entry, data=data)
 
         if self.name is None:
             self.name = self.model

@@ -1,0 +1,10 @@
+{
+  "domain": "romy",
+  "name": "ROMY Vacuum Cleaner",
+  "codeowners": ["@xeniter"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/romy",
+  "iot_class": "local_polling",
+  "requirements": ["romy==0.0.7"],
+  "zeroconf": ["_aicu-http._tcp.local."]
+}

@@ -104,7 +104,7 @@ async def async_setup_entry(
     )
 
 
-@dataclass
+@dataclass(frozen=True)
 class FroniusSensorEntityDescription(SensorEntityDescription):
     """Describes Fronius sensor entity."""
 

@@ -1,0 +1,51 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "password": {
+        "title": "Password required",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "(8 characters, see QR Code under the dustbin)."
+        }
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to add ROMY Vacuum Cleaner {name} to Home Assistant?"
+      }
+    }
+  },
+  "entity": {
+    "vacuum": {
+      "romy": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "default": "Default",
+              "normal": "Normal",
+              "silent": "Silent",
+              "intensive": "Intensive",
+              "super_silent": "Super silent",
+              "high": "High",
+              "auto": "Auto"
+            }
+          }
+        }
+      }
+    }
+  }
+}

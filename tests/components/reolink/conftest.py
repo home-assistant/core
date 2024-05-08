@@ -6,7 +6,13 @@ import pytest
 
 from homeassistant.components.reolink import const
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_PROTOCOL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
@@ -18,8 +24,9 @@ TEST_USERNAME = "admin"
 TEST_USERNAME2 = "username"
 TEST_PASSWORD = "password"
 TEST_PASSWORD2 = "new_password"
-TEST_MAC = "ab:cd:ef:gh:ij:kl"
-TEST_MAC2 = "12:34:56:78:9a:bc"
+TEST_MAC = "aa:bb:cc:dd:ee:ff"
+TEST_MAC2 = "ff:ee:dd:cc:bb:aa"
+DHCP_FORMATTED_MAC = "aabbccddeeff"
 TEST_UID = "ABC1234567D89EFG"
 TEST_PORT = 1234
 TEST_NVR_NAME = "test_reolink_name"
@@ -121,7 +128,7 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
             const.CONF_USE_HTTPS: TEST_USE_HTTPS,
         },
         options={
-            const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
         },
         title=TEST_NVR_NAME,
     )

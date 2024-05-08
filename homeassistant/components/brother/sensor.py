@@ -35,14 +35,14 @@ UNIT_PAGES = "p"
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class BrotherSensorRequiredKeysMixin:
     """Class for Brother entity required keys."""
 
     value: Callable[[BrotherSensors], StateType | datetime]
 
 
-@dataclass
+@dataclass(frozen=True)
 class BrotherSensorEntityDescription(
     SensorEntityDescription, BrotherSensorRequiredKeysMixin
 ):
@@ -52,14 +52,12 @@ class BrotherSensorEntityDescription(
 SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key="status",
-        icon="mdi:printer",
         translation_key="status",
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.status,
     ),
     BrotherSensorEntityDescription(
         key="page_counter",
-        icon="mdi:file-document-outline",
         translation_key="page_counter",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
@@ -68,7 +66,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="bw_counter",
-        icon="mdi:file-document-outline",
         translation_key="bw_pages",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
@@ -77,7 +74,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="color_counter",
-        icon="mdi:file-document-outline",
         translation_key="color_pages",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
@@ -86,7 +82,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="duplex_unit_pages_counter",
-        icon="mdi:file-document-outline",
         translation_key="duplex_unit_page_counter",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
@@ -95,7 +90,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="drum_remaining_life",
-        icon="mdi:chart-donut",
         translation_key="drum_remaining_life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -104,7 +98,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="drum_remaining_pages",
-        icon="mdi:chart-donut",
         translation_key="drum_remaining_pages",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
@@ -113,7 +106,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="drum_counter",
-        icon="mdi:chart-donut",
         translation_key="drum_page_counter",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
@@ -122,7 +114,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="black_drum_remaining_life",
-        icon="mdi:chart-donut",
         translation_key="black_drum_remaining_life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -131,7 +122,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="black_drum_remaining_pages",
-        icon="mdi:chart-donut",
         translation_key="black_drum_remaining_pages",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
@@ -140,7 +130,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="black_drum_counter",
-        icon="mdi:chart-donut",
         translation_key="black_drum_page_counter",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
@@ -149,7 +138,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="cyan_drum_remaining_life",
-        icon="mdi:chart-donut",
         translation_key="cyan_drum_remaining_life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -158,7 +146,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="cyan_drum_remaining_pages",
-        icon="mdi:chart-donut",
         translation_key="cyan_drum_remaining_pages",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
@@ -167,7 +154,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="cyan_drum_counter",
-        icon="mdi:chart-donut",
         translation_key="cyan_drum_page_counter",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
@@ -176,7 +162,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="magenta_drum_remaining_life",
-        icon="mdi:chart-donut",
         translation_key="magenta_drum_remaining_life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -185,7 +170,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="magenta_drum_remaining_pages",
-        icon="mdi:chart-donut",
         translation_key="magenta_drum_remaining_pages",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
@@ -194,7 +178,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="magenta_drum_counter",
-        icon="mdi:chart-donut",
         translation_key="magenta_drum_page_counter",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
@@ -203,7 +186,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="yellow_drum_remaining_life",
-        icon="mdi:chart-donut",
         translation_key="yellow_drum_remaining_life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -212,7 +194,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="yellow_drum_remaining_pages",
-        icon="mdi:chart-donut",
         translation_key="yellow_drum_remaining_pages",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
@@ -221,7 +202,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="yellow_drum_counter",
-        icon="mdi:chart-donut",
         translation_key="yellow_drum_page_counter",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
@@ -230,7 +210,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="belt_unit_remaining_life",
-        icon="mdi:current-ac",
         translation_key="belt_unit_remaining_life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -239,7 +218,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="fuser_remaining_life",
-        icon="mdi:water-outline",
         translation_key="fuser_remaining_life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -248,7 +226,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="laser_remaining_life",
-        icon="mdi:spotlight-beam",
         translation_key="laser_remaining_life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -257,7 +234,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="pf_kit_1_remaining_life",
-        icon="mdi:printer-3d",
         translation_key="pf_kit_1_remaining_life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -266,7 +242,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="pf_kit_mp_remaining_life",
-        icon="mdi:printer-3d",
         translation_key="pf_kit_mp_remaining_life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -275,7 +250,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="black_toner_remaining",
-        icon="mdi:printer-3d-nozzle",
         translation_key="black_toner_remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -284,7 +258,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="cyan_toner_remaining",
-        icon="mdi:printer-3d-nozzle",
         translation_key="cyan_toner_remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -293,7 +266,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="magenta_toner_remaining",
-        icon="mdi:printer-3d-nozzle",
         translation_key="magenta_toner_remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -302,7 +274,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="yellow_toner_remaining",
-        icon="mdi:printer-3d-nozzle",
         translation_key="yellow_toner_remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -311,7 +282,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="black_ink_remaining",
-        icon="mdi:printer-3d-nozzle",
         translation_key="black_ink_remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -320,7 +290,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="cyan_ink_remaining",
-        icon="mdi:printer-3d-nozzle",
         translation_key="cyan_ink_remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -329,7 +298,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="magenta_ink_remaining",
-        icon="mdi:printer-3d-nozzle",
         translation_key="magenta_ink_remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -338,7 +306,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="yellow_ink_remaining",
-        icon="mdi:printer-3d-nozzle",
         translation_key="yellow_ink_remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,

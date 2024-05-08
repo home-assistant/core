@@ -141,7 +141,7 @@ class PingDataSubProcess(PingData):
                 assert match is not None
             rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
             return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": rtt_mdev}
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.exception(
                 "Timed out running command: `%s`, after: %ss",
                 self._ping_cmd,

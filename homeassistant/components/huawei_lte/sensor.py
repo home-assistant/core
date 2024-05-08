@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from bisect import bisect
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 import re
@@ -29,7 +29,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import HuaweiLteBaseEntityWithDevice
+from . import HuaweiLteBaseEntityWithDevice, Router
 from .const import (
     DOMAIN,
     KEY_DEVICE_INFORMATION,
@@ -111,7 +111,7 @@ class HuaweiSensorGroup:
     exclude: re.Pattern[str] | None = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class HuaweiSensorEntityDescription(SensorEntityDescription):
     """Class describing Huawei LTE sensor entities."""
 
@@ -688,17 +688,26 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-@dataclass
 class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
     """Huawei LTE sensor entity."""
 
-    key: str
-    item: str
     entity_description: HuaweiSensorEntityDescription
+    _state: StateType = None
+    _unit: str | None = None
+    _last_reset: datetime | None = None
 
-    _state: StateType = field(default=None, init=False)
-    _unit: str | None = field(default=None, init=False)
-    _last_reset: datetime | None = field(default=None, init=False)
+    def __init__(
+        self,
+        router: Router,
+        key: str,
+        item: str,
+        entity_description: HuaweiSensorEntityDescription,
+    ) -> None:
+        """Initialize."""
+        super().__init__(router)
+        self.key = key
+        self.item = item
+        self.entity_description = entity_description
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to needed data on add."""

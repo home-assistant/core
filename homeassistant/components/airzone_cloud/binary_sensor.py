@@ -34,7 +34,7 @@ from .entity import (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class AirzoneBinarySensorEntityDescription(BinarySensorEntityDescription):
     """A class that describes Airzone Cloud binary sensor entities."""
 

@@ -1,5 +1,4 @@
 """Test the Whirlpool Sixth Sense config flow."""
-import asyncio
 from unittest.mock import patch
 
 import aiohttp
@@ -110,7 +109,7 @@ async def test_form_auth_timeout(hass: HomeAssistant, region) -> None:
     )
     with patch(
         "homeassistant.components.whirlpool.config_flow.Auth.do_auth",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

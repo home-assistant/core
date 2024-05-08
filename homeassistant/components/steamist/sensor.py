@@ -30,14 +30,14 @@ UNIT_MAPPINGS = {
 }
 
 
-@dataclass
+@dataclass(frozen=True)
 class SteamistSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[SteamistStatus], int | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class SteamistSensorEntityDescription(
     SensorEntityDescription, SteamistSensorEntityDescriptionMixin
 ):
@@ -47,13 +47,13 @@ class SteamistSensorEntityDescription(
 SENSORS: tuple[SteamistSensorEntityDescription, ...] = (
     SteamistSensorEntityDescription(
         key=_KEY_MINUTES_REMAIN,
-        name="Steam Minutes Remain",
+        translation_key="steam_minutes_remain",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         value_fn=lambda status: status.minutes_remain,
     ),
     SteamistSensorEntityDescription(
         key=_KEY_TEMP,
-        name="Steam Temperature",
+        translation_key="steam_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.temp,
@@ -79,7 +79,7 @@ async def async_setup_entry(
 
 
 class SteamistSensorEntity(SteamistEntity, SensorEntity):
-    """Representation of an Steamist steam switch."""
+    """Representation of a Steamist steam switch."""
 
     entity_description: SteamistSensorEntityDescription
 

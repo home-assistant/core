@@ -1,7 +1,7 @@
 """The Wolf SmartSet sensors."""
 from __future__ import annotations
 
-from wolf_smartset.models import (
+from wolf_comm.models import (
     HoursParameter,
     ListItemParameter,
     Parameter,

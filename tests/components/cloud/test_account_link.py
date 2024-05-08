@@ -160,7 +160,7 @@ async def test_get_services_error(hass: HomeAssistant) -> None:
 
     with patch.object(account_link, "CACHE_TIMEOUT", 0), patch(
         "hass_nabucasa.account_link.async_fetch_available_services",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         assert await account_link._get_services(hass) == []
         assert account_link.DATA_SERVICES not in hass.data

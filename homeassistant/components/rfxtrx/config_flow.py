@@ -372,7 +372,7 @@ class OptionsFlow(config_entries.OptionsFlow):
             entity_registry.async_remove(entry.entity_id)
 
         # Wait for entities to finish cleanup
-        with suppress(asyncio.TimeoutError):
+        with suppress(TimeoutError):
             async with asyncio.timeout(10):
                 await wait_for_entities.wait()
         remove_track_state_changes()
@@ -407,7 +407,7 @@ class OptionsFlow(config_entries.OptionsFlow):
             )
 
         # Wait for entities to finish renaming
-        with suppress(asyncio.TimeoutError):
+        with suppress(TimeoutError):
             async with asyncio.timeout(10):
                 await wait_for_entities.wait()
         remove_track_state_changes()

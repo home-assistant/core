@@ -14,7 +14,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_SHOW_ON_MAP,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import (
@@ -35,7 +40,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.typing import EventType
 
-from .const import CONF_SENSOR_INDICES, CONF_SHOW_ON_MAP, DOMAIN, LOGGER
+from .const import CONF_SENSOR_INDICES, DOMAIN, LOGGER
 
 CONF_DISTANCE = "distance"
 CONF_NEARBY_SENSOR_OPTIONS = "nearby_sensor_options"

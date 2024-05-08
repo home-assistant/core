@@ -24,19 +24,21 @@ async def async_setup_entry(
     coordinator = get_coordinator(hass, entry.entry_id)
 
     @callback
-    def _add_entities() -> None:
+    def _add_entities(devices: set[str] | None = None) -> None:
         """Add devices."""
-        if not coordinator.new_devices:
+        if devices is None:
+            devices = coordinator.new_devices
+        if not devices:
             return
         async_add_entities(
             FritzboxCover(coordinator, ain)
-            for ain in coordinator.new_devices
+            for ain in devices
             if coordinator.data.devices[ain].has_blind
         )
 
     entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 
-    _add_entities()
+    _add_entities(set(coordinator.data.devices))
 
 
 class FritzboxCover(FritzBoxDeviceEntity, CoverEntity):

@@ -111,8 +111,8 @@ def async_get_light_motion_current(obj: Light) -> str:
     """Get light motion mode for Flood Light."""
 
     if (
-        obj.light_mode_settings.mode == LightModeType.MOTION
-        and obj.light_mode_settings.enable_at == LightModeEnableType.DARK
+        obj.light_mode_settings.mode is LightModeType.MOTION
+        and obj.light_mode_settings.enable_at is LightModeEnableType.DARK
     ):
         return f"{LightModeType.MOTION.value}Dark"
     return obj.light_mode_settings.mode.value

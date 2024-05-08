@@ -52,6 +52,7 @@ async def test_reauth_triggered(hass: HomeAssistant) -> None:
         "homeassistant.components.synology_dsm.config_flow.SynologyDSMFlowHandler.async_step_reauth",
         return_value={
             "type": data_entry_flow.FlowResultType.FORM,
+            "flow_id": "mock_flow",
             "step_id": "reauth_confirm",
         },
     ) as mock_async_step_reauth:

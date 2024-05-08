@@ -103,7 +103,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
             async with asyncio.timeout(10):
                 self.bridges = await deconz_discovery(session)
 
-        except (asyncio.TimeoutError, ResponseError):
+        except (TimeoutError, ResponseError):
             self.bridges = []
 
         if LOGGER.isEnabledFor(logging.DEBUG):
@@ -164,7 +164,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
             except LinkButtonNotPressed:
                 errors["base"] = "linking_not_possible"
 
-            except (ResponseError, RequestError, asyncio.TimeoutError):
+            except (ResponseError, RequestError, TimeoutError):
                 errors["base"] = "no_key"
 
             else:
@@ -193,7 +193,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
                         }
                     )
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 return self.async_abort(reason="no_bridges")
 
         return self.async_create_entry(

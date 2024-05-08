@@ -30,7 +30,7 @@ class AdvantageAirEntity(CoordinatorEntity):
         async def update_handle(*values):
             try:
                 if await func(*keys, *values):
-                    await self.coordinator.async_refresh()
+                    await self.coordinator.async_request_refresh()
             except ApiError as err:
                 raise HomeAssistantError(err) from err
 

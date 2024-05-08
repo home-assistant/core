@@ -84,6 +84,9 @@
       },
       "scrubs_count": {
         "name": "Scrubs"
+      },
+      "total_cleaned_area": {
+        "name": "Total cleaned area"
       }
     }
   }

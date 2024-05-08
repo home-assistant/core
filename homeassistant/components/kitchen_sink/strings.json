@@ -1,4 +1,11 @@
 {
+  "config": {
+    "step": {
+      "reauth_confirm": {
+        "description": "Press SUBMIT to reauthenticate"
+      }
+    }
+  },
   "issues": {
     "bad_psu": {
       "title": "The power supply is not stable",

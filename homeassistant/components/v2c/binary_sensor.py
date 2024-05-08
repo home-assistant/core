@@ -20,14 +20,14 @@ from .coordinator import V2CUpdateCoordinator
 from .entity import V2CBaseEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class V2CRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[Trydan], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class V2CBinarySensorEntityDescription(
     BinarySensorEntityDescription, V2CRequiredKeysMixin
 ):

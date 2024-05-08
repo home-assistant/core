@@ -9,7 +9,11 @@ import pytest
 
 from homeassistant.components.electric_kiwi.const import ATTRIBUTION
 from homeassistant.components.electric_kiwi.sensor import _check_and_move_time
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
@@ -63,6 +67,58 @@ async def test_hop_sensors(
     assert state.state == value.isoformat(timespec="seconds")
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
+
+
+@pytest.mark.parametrize(
+    ("sensor", "sensor_state", "device_class", "state_class"),
+    [
+        (
+            "sensor.total_running_balance",
+            "184.09",
+            SensorDeviceClass.MONETARY,
+            SensorStateClass.TOTAL,
+        ),
+        (
+            "sensor.total_current_balance",
+            "-102.22",
+            SensorDeviceClass.MONETARY,
+            SensorStateClass.TOTAL,
+        ),
+        (
+            "sensor.next_billing_date",
+            "2020-11-03T00:00:00",
+            SensorDeviceClass.DATE,
+            None,
+        ),
+        ("sensor.hour_of_power_savings", "3.5", None, SensorStateClass.MEASUREMENT),
+    ],
+)
+async def test_account_sensors(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    ek_api: YieldFixture,
+    ek_auth: YieldFixture,
+    entity_registry: EntityRegistry,
+    component_setup: ComponentSetup,
+    sensor: str,
+    sensor_state: str,
+    device_class: str,
+    state_class: str,
+) -> None:
+    """Test Account sensors for the Electric Kiwi integration."""
+
+    assert await component_setup()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity = entity_registry.async_get(sensor)
+    assert entity
+
+    state = hass.states.get(sensor)
+    assert state
+    assert state.state == sensor_state
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == device_class
+    assert state.attributes.get(ATTR_STATE_CLASS) == state_class
 
 
 async def test_check_and_move_time(ek_api: AsyncMock) -> None:

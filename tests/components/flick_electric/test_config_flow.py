@@ -1,5 +1,4 @@
 """Test the Flick Electric config flow."""
-import asyncio
 from unittest.mock import patch
 
 from pyflick.authentication import AuthException
@@ -86,7 +85,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     with patch(
         "homeassistant.components.flick_electric.config_flow.SimpleFlickAuth.async_get_access_token",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result = await _flow_submit(hass)
 

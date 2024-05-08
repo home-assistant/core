@@ -58,4 +58,4 @@ async def test_static_path_blocks_anchors(
     # it gets here but we want to make sure if aiohttp ever
     # changes we still block it.
     with pytest.raises(HTTPForbidden):
-        _get_file_path(canonical_url, tmp_path, False)
+        _get_file_path(canonical_url, tmp_path)

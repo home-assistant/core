@@ -47,12 +47,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except (AuthenticationError, ConnectionError, NoDevicesError, NoUsernameError):
             return False
 
-        entry.version = 2
-
         LOGGER.debug("Migrate Sensibo config entry unique id to %s", new_unique_id)
         hass.config_entries.async_update_entry(
             entry,
             unique_id=new_unique_id,
+            version=2,
         )
 
     return True

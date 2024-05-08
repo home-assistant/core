@@ -9,7 +9,7 @@ import inspect
 from json import JSONDecodeError, JSONEncoder
 import logging
 import os
-from typing import Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
 from homeassistant.core import (
@@ -27,6 +27,12 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.file import WriteError
 
 from . import json as json_helper
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from ..backports.functools import cached_property
+
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-warn-return-any
 # mypy: no-check-untyped-defs
@@ -102,7 +108,7 @@ class Store(Generic[_T]):
         self.hass = hass
         self._private = private
         self._data: dict[str, Any] | None = None
-        self._unsub_delay_listener: CALLBACK_TYPE | None = None
+        self._unsub_delay_listener: asyncio.TimerHandle | None = None
         self._unsub_final_write_listener: CALLBACK_TYPE | None = None
         self._write_lock = asyncio.Lock()
         self._load_task: asyncio.Future[_T | None] | None = None
@@ -110,7 +116,7 @@ class Store(Generic[_T]):
         self._atomic_writes = atomic_writes
         self._read_only = read_only
 
-    @property
+    @cached_property
     def path(self):
         """Return the config path."""
         return self.hass.config.path(STORAGE_DIR, self.key)
@@ -260,7 +266,7 @@ class Store(Generic[_T]):
             "data": data,
         }
 
-        if self.hass.state == CoreState.stopping:
+        if self.hass.state is CoreState.stopping:
             self._async_ensure_final_write_listener()
             return
 
@@ -273,9 +279,6 @@ class Store(Generic[_T]):
         delay: float = 0,
     ) -> None:
         """Save data with an optional delay."""
-        # pylint: disable-next=import-outside-toplevel
-        from .event import async_call_later
-
         self._data = {
             "version": self.version,
             "minor_version": self.minor_version,
@@ -286,12 +289,18 @@ class Store(Generic[_T]):
         self._async_cleanup_delay_listener()
         self._async_ensure_final_write_listener()
 
-        if self.hass.state == CoreState.stopping:
+        if self.hass.state is CoreState.stopping:
             return
 
-        self._unsub_delay_listener = async_call_later(
-            self.hass, delay, self._async_callback_delayed_write
+        # We use call_later directly here to avoid a circular import
+        self._unsub_delay_listener = self.hass.loop.call_later(
+            delay, self._async_schedule_callback_delayed_write
         )
+
+    @callback
+    def _async_schedule_callback_delayed_write(self) -> None:
+        """Schedule the delayed write in a task."""
+        self.hass.async_create_task(self._async_callback_delayed_write())
 
     @callback
     def _async_ensure_final_write_listener(self) -> None:
@@ -312,13 +321,13 @@ class Store(Generic[_T]):
     def _async_cleanup_delay_listener(self) -> None:
         """Clean up a delay listener."""
         if self._unsub_delay_listener is not None:
-            self._unsub_delay_listener()
+            self._unsub_delay_listener.cancel()
             self._unsub_delay_listener = None
 
-    async def _async_callback_delayed_write(self, _now):
+    async def _async_callback_delayed_write(self) -> None:
         """Handle a delayed write callback."""
         # catch the case where a call is scheduled and then we stop Home Assistant
-        if self.hass.state == CoreState.stopping:
+        if self.hass.state is CoreState.stopping:
             self._async_ensure_final_write_listener()
             return
         await self._async_handle_write_data()

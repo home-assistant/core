@@ -3,8 +3,8 @@ from datetime import timedelta
 import logging
 
 from httpx import RequestError
-from wolf_smartset.token_auth import InvalidAuth
-from wolf_smartset.wolf_client import FetchFailed, ParameterReadError, WolfClient
+from wolf_comm.token_auth import InvalidAuth
+from wolf_comm.wolf_client import FetchFailed, ParameterReadError, WolfClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -50,7 +50,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             nonlocal refetch_parameters
             nonlocal parameters
-            await wolf_client.update_session()
             if not await wolf_client.fetch_system_state_list(device_id, gateway_id):
                 refetch_parameters = True
                 raise UpdateFailed(

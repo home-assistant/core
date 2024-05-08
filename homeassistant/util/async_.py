@@ -10,7 +10,7 @@ import functools
 import logging
 import threading
 from traceback import extract_stack
-from typing import Any, ParamSpec, TypeVar
+from typing import Any, ParamSpec, TypeVar, TypeVarTuple
 
 from homeassistant.exceptions import HomeAssistantError
 
@@ -21,6 +21,7 @@ _SHUTDOWN_RUN_CALLBACK_THREADSAFE = "_shutdown_run_callback_threadsafe"
 _T = TypeVar("_T")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
+_Ts = TypeVarTuple("_Ts")
 
 
 def cancelling(task: Future[Any]) -> bool:
@@ -29,7 +30,7 @@ def cancelling(task: Future[Any]) -> bool:
 
 
 def run_callback_threadsafe(
-    loop: AbstractEventLoop, callback: Callable[..., _T], *args: Any
+    loop: AbstractEventLoop, callback: Callable[[*_Ts], _T], *args: *_Ts
 ) -> concurrent.futures.Future[_T]:
     """Submit a callback object to a given event loop.
 

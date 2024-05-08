@@ -53,7 +53,6 @@ class VerisureSmartplug(CoordinatorEntity[VerisureDataUpdateCoordinator], Switch
         ]
         return DeviceInfo(
             name=area,
-            suggested_area=area,
             manufacturer="Verisure",
             model="SmartPlug",
             identifiers={(DOMAIN, self.serial_number)},

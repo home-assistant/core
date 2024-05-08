@@ -1,7 +1,6 @@
 """Test the Snooz config flow."""
 from __future__ import annotations
 
-import asyncio
 from asyncio import Event
 from unittest.mock import patch
 
@@ -300,7 +299,7 @@ async def _test_pairs_timeout(
 ) -> str:
     with patch(
         "homeassistant.components.snooz.config_flow.async_process_advertisements",
-        side_effect=asyncio.TimeoutError(),
+        side_effect=TimeoutError(),
     ):
         result = await hass.config_entries.flow.async_configure(
             flow_id, user_input=user_input or {}

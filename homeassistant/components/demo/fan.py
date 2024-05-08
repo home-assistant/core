@@ -90,6 +90,7 @@ class BaseDemoFan(FanEntity):
     """A demonstration fan component that uses legacy fan speeds."""
 
     _attr_should_poll = False
+    _attr_translation_key = "demo"
 
     def __init__(
         self,

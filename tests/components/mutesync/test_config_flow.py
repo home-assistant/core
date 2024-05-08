@@ -1,5 +1,4 @@
 """Test the mütesync config flow."""
-import asyncio
 from unittest.mock import patch
 
 import aiohttp
@@ -49,7 +48,7 @@ async def test_form(hass: HomeAssistant) -> None:
         (Exception, "unknown"),
         (aiohttp.ClientResponseError(None, None, status=403), "invalid_auth"),
         (aiohttp.ClientResponseError(None, None, status=500), "cannot_connect"),
-        (asyncio.TimeoutError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
     ],
 )
 async def test_form_error(

@@ -139,7 +139,7 @@ class YandexSpeechKitProvider(Provider):
                     return (None, None)
                 data = await request.read()
 
-        except (asyncio.TimeoutError, aiohttp.ClientError):
+        except (TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Timeout for yandex speech kit API")
             return (None, None)
 

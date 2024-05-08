@@ -24,14 +24,14 @@ from .models import SynologyDSMData
 LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class SynologyDSMbuttonDescriptionMixin:
     """Mixin to describe a Synology DSM button entity."""
 
     press_action: Callable[[SynoApi], Callable[[], Coroutine[Any, Any, None]]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class SynologyDSMbuttonDescription(
     ButtonEntityDescription, SynologyDSMbuttonDescriptionMixin
 ):

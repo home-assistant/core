@@ -61,7 +61,8 @@ async def async_get_energy_platforms(
     """Get energy platforms."""
     platforms: dict[str, GetSolarForecastType] = {}
 
-    async def _process_energy_platform(
+    @callback
+    def _process_energy_platform(
         hass: HomeAssistant, domain: str, platform: ModuleType
     ) -> None:
         """Process energy platforms."""

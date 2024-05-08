@@ -1,0 +1,42 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "counter_id": "Counter id"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "water_usage_yesterday": {
+        "name": "Water usage yesterday"
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "title": "The Suez water YAML configuration import failed",
+      "description": "Configuring Suez water using YAML is being removed but there was an authentication error importing your YAML configuration.\n\nCorrect the YAML configuration and restart Home Assistant to try again or remove the Suez water YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    },
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "title": "The Suez water YAML configuration import failed",
+      "description": "Configuring Suez water using YAML is being removed but there was an connection error importing your YAML configuration.\n\nEnsure connection to Suez water works and restart Home Assistant to try again or remove the Suez water YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "title": "The Suez water YAML configuration import failed",
+      "description": "Configuring Suez water using YAML is being removed but there was an unknown error when trying to import the YAML configuration.\n\nEnsure the imported configuration is correct and remove the Suez water YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    }
+  }
+}

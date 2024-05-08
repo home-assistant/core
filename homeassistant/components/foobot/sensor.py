@@ -1,7 +1,6 @@
 """Support for the Foobot indoor air quality monitor."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
@@ -118,7 +117,7 @@ async def async_setup_platform(
             )
     except (
         aiohttp.client_exceptions.ClientConnectorError,
-        asyncio.TimeoutError,
+        TimeoutError,
         FoobotClient.TooManyRequests,
         FoobotClient.InternalError,
     ) as err:
@@ -175,7 +174,7 @@ class FoobotData:
             )
         except (
             aiohttp.client_exceptions.ClientConnectorError,
-            asyncio.TimeoutError,
+            TimeoutError,
             self._client.TooManyRequests,
             self._client.InternalError,
         ):

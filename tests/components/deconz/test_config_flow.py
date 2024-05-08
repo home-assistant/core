@@ -1,5 +1,4 @@
 """Tests for deCONZ config flow."""
-import asyncio
 import logging
 from unittest.mock import patch
 
@@ -195,7 +194,7 @@ async def test_manual_configuration_after_discovery_timeout(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test failed discovery fallbacks to manual configuration."""
-    aioclient_mock.get(pydeconz.utils.URL_DISCOVER, exc=asyncio.TimeoutError)
+    aioclient_mock.get(pydeconz.utils.URL_DISCOVER, exc=TimeoutError)
 
     result = await hass.config_entries.flow.async_init(
         DECONZ_DOMAIN, context={"source": SOURCE_USER}
@@ -347,9 +346,7 @@ async def test_manual_configuration_timeout_get_bridge(
         headers={"content-type": CONTENT_TYPE_JSON},
     )
 
-    aioclient_mock.get(
-        f"http://1.2.3.4:80/api/{API_KEY}/config", exc=asyncio.TimeoutError
-    )
+    aioclient_mock.get(f"http://1.2.3.4:80/api/{API_KEY}/config", exc=TimeoutError)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
@@ -363,7 +360,7 @@ async def test_manual_configuration_timeout_get_bridge(
     ("raised_error", "error_string"),
     [
         (pydeconz.errors.LinkButtonNotPressed, "linking_not_possible"),
-        (asyncio.TimeoutError, "no_key"),
+        (TimeoutError, "no_key"),
         (pydeconz.errors.ResponseError, "no_key"),
         (pydeconz.errors.RequestError, "no_key"),
     ],

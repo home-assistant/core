@@ -39,6 +39,7 @@ async def async_get_config_entry_diagnostics(
     return async_redact_data(
         {
             "entry": entry.as_dict(),
+            "envoy_firmware": coordinator.envoy.firmware,
             "data": coordinator.data,
         },
         TO_REDACT,

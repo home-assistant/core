@@ -66,6 +66,7 @@ BOARD_MAP: Final[dict[str, str]] = {
     "RaspberryPi 3 64bit": "rpi3-64",
     "RaspberryPi 4": "rpi4",
     "RaspberryPi 4 64bit": "rpi4-64",
+    "RaspberryPi 5": "rpi5-64",
     "ASUS Tinkerboard": "tinker",
     "ODROID C2": "odroid-c2",
     "ODROID C4": "odroid-c4",
@@ -112,6 +113,7 @@ VALID_IMAGES: Final = [
     "raspberrypi3",
     "raspberrypi4-64",
     "raspberrypi4",
+    "raspberrypi5-64",
     "tinker",
 ]
 

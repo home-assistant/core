@@ -66,6 +66,7 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
 
     _attr_should_poll = True
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, thermostat):
         """Initialize."""
@@ -79,12 +80,13 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
                 ha_mode = ECONET_STATE_TO_HA[mode]
                 self._attr_hvac_modes.append(ha_mode)
 
-    @property
-    def supported_features(self) -> ClimateEntityFeature:
-        """Return the list of supported features."""
-        if self._econet.supports_humidifier:
-            return SUPPORT_FLAGS_THERMOSTAT | ClimateEntityFeature.TARGET_HUMIDITY
-        return SUPPORT_FLAGS_THERMOSTAT
+        self._attr_supported_features |= SUPPORT_FLAGS_THERMOSTAT
+        if thermostat.supports_humidifier:
+            self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
+        if len(self.hvac_modes) > 1 and HVACMode.OFF in self.hvac_modes:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+            )
 
     @property
     def current_temperature(self):

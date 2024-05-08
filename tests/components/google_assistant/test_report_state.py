@@ -1,7 +1,6 @@
 """Test Google report state."""
 from datetime import datetime, timedelta
 from http import HTTPStatus
-from time import mktime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -136,7 +135,7 @@ async def test_report_state(
     assert len(mock_report.mock_calls) == 0
 
 
-@pytest.mark.freeze_time("2023-08-01 00:00:00")
+@pytest.mark.freeze_time("2023-08-01 00:00:00+00:00")
 async def test_report_notifications(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -172,7 +171,7 @@ async def test_report_notifications(
         config, "async_report_state", return_value=HTTPStatus(200)
     ) as mock_report_state:
         event_time = datetime.fromisoformat("2023-08-01T00:02:57+00:00")
-        epoc_event_time = int(mktime(event_time.timetuple()))
+        epoc_event_time = event_time.timestamp()
         hass.states.async_set(
             "event.doorbell",
             "2023-08-01T00:02:57+00:00",
@@ -211,7 +210,7 @@ async def test_report_notifications(
         config, "async_report_state", return_value=HTTPStatus(500)
     ) as mock_report_state:
         event_time = datetime.fromisoformat("2023-08-01T01:02:57+00:00")
-        epoc_event_time = int(mktime(event_time.timetuple()))
+        epoc_event_time = event_time.timestamp()
         hass.states.async_set(
             "event.doorbell",
             "2023-08-01T01:02:57+00:00",
@@ -247,7 +246,7 @@ async def test_report_notifications(
         config, "async_report_state", return_value=HTTPStatus.NOT_FOUND
     ) as mock_report_state, patch.object(config, "async_disconnect_agent_user"):
         event_time = datetime.fromisoformat("2023-08-01T01:03:57+00:00")
-        epoc_event_time = int(mktime(event_time.timetuple()))
+        epoc_event_time = event_time.timestamp()
         hass.states.async_set(
             "event.doorbell",
             "2023-08-01T01:03:57+00:00",

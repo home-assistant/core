@@ -58,7 +58,6 @@ class VerisureDoorWindowSensor(
         area = self.coordinator.data["door_window"][self.serial_number]["area"]
         return DeviceInfo(
             name=area,
-            suggested_area=area,
             manufacturer="Verisure",
             model="Shock Sensor Detector",
             identifiers={(DOMAIN, self.serial_number)},

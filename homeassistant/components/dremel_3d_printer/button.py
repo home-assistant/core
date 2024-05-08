@@ -16,14 +16,14 @@ from .const import DOMAIN
 from .entity import Dremel3DPrinterEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class Dremel3DPrinterButtonEntityMixin:
     """Mixin for required keys."""
 
     press_fn: Callable[[Dremel3DPrinter], None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class Dremel3DPrinterButtonEntityDescription(
     ButtonEntityDescription, Dremel3DPrinterButtonEntityMixin
 ):

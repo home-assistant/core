@@ -27,6 +27,7 @@ def fake_zones():
 
     Returns:
         list: List of fake zones
+
     """
     return [
         {"name": "front", "number": 1},
@@ -44,6 +45,7 @@ def client(fake_zones):
 
     Yields:
         MagicMock: Client Mock
+
     """
     with mock.patch.object(nx584_client, "Client") as _mock_client:
         client = nx584_client.Client.return_value

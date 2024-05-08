@@ -1,5 +1,4 @@
 """Support for PlayStation 4 consoles."""
-import asyncio
 from contextlib import suppress
 import logging
 from typing import Any, cast
@@ -257,7 +256,7 @@ class PS4Device(MediaPlayerEntity):
 
         except PSDataIncomplete:
             title = None
-        except asyncio.TimeoutError:
+        except TimeoutError:
             title = None
             _LOGGER.error("PS Store Search Timed out")
 
@@ -345,11 +344,13 @@ class PS4Device(MediaPlayerEntity):
             _LOGGER.info("Assuming status from registry")
             e_registry = er.async_get(self.hass)
             d_registry = dr.async_get(self.hass)
-            for entity_id, entry in e_registry.entities.items():
-                if entry.config_entry_id == self._entry_id:
-                    self._attr_unique_id = entry.unique_id
-                    self.entity_id = entity_id
-                    break
+
+            for entry in e_registry.entities.get_entries_for_config_entry_id(
+                self._entry_id
+            ):
+                self._attr_unique_id = entry.unique_id
+                self.entity_id = entry.entity_id
+                break
             for device in d_registry.devices.values():
                 if self._entry_id in device.config_entries:
                     self._attr_device_info = DeviceInfo(

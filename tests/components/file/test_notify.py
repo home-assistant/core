@@ -2,6 +2,7 @@
 import os
 from unittest.mock import call, mock_open, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import notify
@@ -28,7 +29,9 @@ async def test_bad_config(hass: HomeAssistant) -> None:
         True,
     ],
 )
-async def test_notify_file(hass: HomeAssistant, timestamp: bool) -> None:
+async def test_notify_file(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, timestamp: bool
+) -> None:
     """Test the notify file output."""
     filename = "mock_file"
     message = "one, two, testing, testing"
@@ -47,10 +50,12 @@ async def test_notify_file(hass: HomeAssistant, timestamp: bool) -> None:
         )
     assert handle_config[notify.DOMAIN]
 
+    freezer.move_to(dt_util.utcnow())
+
     m_open = mock_open()
     with patch("homeassistant.components.file.notify.open", m_open, create=True), patch(
         "homeassistant.components.file.notify.os.stat"
-    ) as mock_st, patch("homeassistant.util.dt.utcnow", return_value=dt_util.utcnow()):
+    ) as mock_st:
         mock_st.return_value.st_size = 0
         title = (
             f"{ATTR_TITLE_DEFAULT} notifications "

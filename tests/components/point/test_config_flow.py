@@ -1,5 +1,4 @@
 """Tests for the Point config flow."""
-import asyncio
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -126,7 +125,7 @@ async def test_not_pick_implementation_if_only_one(hass: HomeAssistant) -> None:
 
 async def test_abort_if_timeout_generating_auth_url(hass: HomeAssistant) -> None:
     """Test we abort if generating authorize url fails."""
-    flow = init_config_flow(hass, side_effect=asyncio.TimeoutError)
+    flow = init_config_flow(hass, side_effect=TimeoutError)
 
     result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.FlowResultType.ABORT

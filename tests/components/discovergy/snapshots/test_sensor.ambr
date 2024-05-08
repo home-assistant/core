@@ -16,6 +16,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -52,6 +54,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -103,6 +107,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -132,7 +138,7 @@
     'entity_id': 'sensor.electricity_teststrasse_1_total_power',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '531.75',
+    'state': '0.0',
   })
 # ---
 # name: test_sensor[gas last transmitted]
@@ -152,6 +158,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -188,6 +196,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({

@@ -6,7 +6,6 @@ MOCK_USER_INPUT: dict[str, Any] = {
     "host": "0.0.0.0",
     "username": "username",
     "password": "password",
-    "version": 3,
     "port": 61208,
     "ssl": False,
     "verify_ssl": True,
@@ -181,8 +180,8 @@ HA_SENSOR_DATA: dict[str, Any] = {
     },
     "sensors": {
         "cpu_thermal 1": {"temperature_core": 59},
-        "err_temp": {"temperature_hdd": "Unavailable"},
-        "na_temp": {"temperature_hdd": "Unavailable"},
+        "err_temp": {"temperature_hdd": "unavailable"},
+        "na_temp": {"temperature_hdd": "unavailable"},
     },
     "mem": {
         "memory_use_percent": 27.6,

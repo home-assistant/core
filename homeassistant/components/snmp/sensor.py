@@ -3,8 +3,20 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-import sys
 
+from pysnmp.error import PySnmpError
+import pysnmp.hlapi.asyncio as hlapi
+from pysnmp.hlapi.asyncio import (
+    CommunityData,
+    ContextData,
+    ObjectIdentity,
+    ObjectType,
+    SnmpEngine,
+    Udp6TransportTarget,
+    UdpTransportTarget,
+    UsmUserData,
+    getCmd,
+)
 import voluptuous as vol
 
 from homeassistant.components.sensor import CONF_STATE_CLASS, PLATFORM_SCHEMA
@@ -21,7 +33,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
@@ -55,21 +66,6 @@ from .const import (
     MAP_PRIV_PROTOCOLS,
     SNMP_VERSIONS,
 )
-
-if sys.version_info < (3, 12):
-    from pysnmp.error import PySnmpError
-    import pysnmp.hlapi.asyncio as hlapi
-    from pysnmp.hlapi.asyncio import (
-        CommunityData,
-        ContextData,
-        ObjectIdentity,
-        ObjectType,
-        SnmpEngine,
-        Udp6TransportTarget,
-        UdpTransportTarget,
-        UsmUserData,
-        getCmd,
-    )
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -115,10 +111,6 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the SNMP sensor."""
-    if sys.version_info >= (3, 12):
-        raise HomeAssistantError(
-            "SNMP is not supported on Python 3.12. Please use Python 3.11."
-        )
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     community = config.get(CONF_COMMUNITY)

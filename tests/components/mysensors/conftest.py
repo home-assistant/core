@@ -16,12 +16,12 @@ from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.components.mysensors.config_flow import DEFAULT_BAUD_RATE
 from homeassistant.components.mysensors.const import (
     CONF_BAUD_RATE,
-    CONF_DEVICE,
     CONF_GATEWAY_TYPE,
     CONF_GATEWAY_TYPE_SERIAL,
     CONF_VERSION,
     DOMAIN,
 )
+from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 

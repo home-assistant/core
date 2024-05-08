@@ -9,6 +9,7 @@ from pyhap.const import (
     CATEGORY_WINDOW_COVERING,
 )
 from pyhap.service import Service
+from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -125,7 +126,9 @@ class GarageDoorOpener(HomeAccessory):
 
         self.async_update_state(state)
 
-    async def run(self) -> None:
+    @callback
+    @pyhap_callback  # type: ignore[misc]
+    def run(self) -> None:
         """Handle accessory driver started event.
 
         Run inside the Home Assistant event loop.
@@ -139,7 +142,7 @@ class GarageDoorOpener(HomeAccessory):
                 )
             )
 
-        await super().run()
+        super().run()
 
     @callback
     def _async_update_obstruction_event(

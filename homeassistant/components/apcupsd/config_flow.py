@@ -1,7 +1,6 @@
 """Config flow for APCUPSd integration."""
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 import voluptuous as vol
@@ -52,10 +51,9 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Test the connection to the host and get the current status for serial number.
         coordinator = APCUPSdCoordinator(self.hass, host, port)
-
         await coordinator.async_request_refresh()
-        await self.hass.async_block_till_done()
-        if isinstance(coordinator.last_exception, (UpdateFailed, asyncio.TimeoutError)):
+
+        if isinstance(coordinator.last_exception, (UpdateFailed, TimeoutError)):
             errors = {"base": "cannot_connect"}
             return self.async_show_form(
                 step_id="user", data_schema=_SCHEMA, errors=errors

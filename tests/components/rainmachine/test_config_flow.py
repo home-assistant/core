@@ -8,6 +8,7 @@ from regenmaschine.errors import RainMachineError
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components import zeroconf
 from homeassistant.components.rainmachine import (
+    CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
     CONF_DEFAULT_ZONE_RUN_TIME,
     CONF_USE_APP_RUN_TIMES,
     DOMAIN,
@@ -106,12 +107,17 @@ async def test_options_flow(hass: HomeAssistant, config, config_entry) -> None:
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            user_input={CONF_DEFAULT_ZONE_RUN_TIME: 600, CONF_USE_APP_RUN_TIMES: False},
+            user_input={
+                CONF_DEFAULT_ZONE_RUN_TIME: 600,
+                CONF_USE_APP_RUN_TIMES: False,
+                CONF_ALLOW_INACTIVE_ZONES_TO_RUN: False,
+            },
         )
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert config_entry.options == {
             CONF_DEFAULT_ZONE_RUN_TIME: 600,
             CONF_USE_APP_RUN_TIMES: False,
+            CONF_ALLOW_INACTIVE_ZONES_TO_RUN: False,
         }
 
 

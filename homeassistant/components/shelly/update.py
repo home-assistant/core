@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Final, cast
 
+from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 
 from homeassistant.components.update import (
@@ -39,7 +40,7 @@ from .utils import get_device_entry_gen, get_release_url
 LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class RpcUpdateRequiredKeysMixin:
     """Class for RPC update required keys."""
 
@@ -47,7 +48,7 @@ class RpcUpdateRequiredKeysMixin:
     beta: bool
 
 
-@dataclass
+@dataclass(frozen=True)
 class RestUpdateRequiredKeysMixin:
     """Class for REST update required keys."""
 
@@ -55,14 +56,14 @@ class RestUpdateRequiredKeysMixin:
     beta: bool
 
 
-@dataclass
+@dataclass(frozen=True)
 class RpcUpdateDescription(
     RpcEntityDescription, UpdateEntityDescription, RpcUpdateRequiredKeysMixin
 ):
     """Class to describe a RPC update."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class RestUpdateDescription(
     RestEntityDescription, UpdateEntityDescription, RestUpdateRequiredKeysMixin
 ):
@@ -119,7 +120,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up update entities for Shelly component."""
-    if get_device_entry_gen(config_entry) == 2:
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
         if config_entry.data[CONF_SLEEP_PERIOD]:
             async_setup_entry_rpc(
                 hass,

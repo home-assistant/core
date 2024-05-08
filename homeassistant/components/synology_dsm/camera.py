@@ -35,7 +35,7 @@ from .models import SynologyDSMData
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class SynologyDSMCameraEntityDescription(
     CameraEntityDescription, SynologyDSMEntityDescription
 ):

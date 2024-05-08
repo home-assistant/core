@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import ValuesView
+from collections.abc import Callable, Coroutine, Iterable, ValuesView
 from datetime import datetime
 from itertools import chain
 import logging
-from typing import Any
+from typing import Any, ParamSpec, TypeVar
 
 from aiohttp import ClientError, ClientResponseError
+from yalexs.activity import ActivityTypes
 from yalexs.const import DEFAULT_BRAND
 from yalexs.doorbell import Doorbell, DoorbellDetail
 from yalexs.exceptions import AugustApiAIOHTTPError
@@ -34,6 +35,9 @@ from .gateway import AugustGateway
 from .subscriber import AugustSubscriberMixin
 from .util import async_create_august_clientsession
 
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
+
 _LOGGER = logging.getLogger(__name__)
 
 API_CACHED_ATTRS = {
@@ -55,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return await async_setup_august(hass, entry, august_gateway)
     except (RequireValidation, InvalidAuth) as err:
         raise ConfigEntryAuthFailed from err
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         raise ConfigEntryNotReady("Timed out connecting to august api") from err
     except (AugustApiAIOHTTPError, ClientResponseError, CannotConnect) as err:
         raise ConfigEntryNotReady from err
@@ -104,7 +108,7 @@ async def async_setup_august(
 @callback
 def _async_trigger_ble_lock_discovery(
     hass: HomeAssistant, locks_with_offline_keys: list[LockDetail]
-):
+) -> None:
     """Update keys for the yalexs-ble integration if available."""
     for lock_detail in locks_with_offline_keys:
         discovery_flow.async_create_flow(
@@ -137,7 +141,7 @@ class AugustData(AugustSubscriberMixin):
         self._config_entry = config_entry
         self._hass = hass
         self._august_gateway = august_gateway
-        self.activity_stream: ActivityStream | None = None
+        self.activity_stream: ActivityStream = None  # type: ignore[assignment]
         self._api = august_gateway.api
         self._device_detail_by_id: dict[str, LockDetail | DoorbellDetail] = {}
         self._doorbells_by_id: dict[str, Doorbell] = {}
@@ -150,7 +154,7 @@ class AugustData(AugustSubscriberMixin):
         """Brand of the device."""
         return self._config_entry.data.get(CONF_BRAND, DEFAULT_BRAND)
 
-    async def async_setup(self):
+    async def async_setup(self) -> None:
         """Async setup of august device data and activities."""
         token = self._august_gateway.access_token
         # This used to be a gather but it was less reliable with august's recent api changes.
@@ -213,7 +217,7 @@ class AugustData(AugustSubscriberMixin):
                 self._hass, self._async_initial_sync(), "august-initial-sync"
             )
 
-    async def _async_initial_sync(self):
+    async def _async_initial_sync(self) -> None:
         """Attempt to request an initial sync."""
         # We don't care if this fails because we only want to wake
         # locks that are actually online anyways and they will be
@@ -229,7 +233,7 @@ class AugustData(AugustSubscriberMixin):
             return_exceptions=True,
         ):
             if isinstance(result, Exception) and not isinstance(
-                result, (asyncio.TimeoutError, ClientResponseError, CannotConnect)
+                result, (TimeoutError, ClientResponseError, CannotConnect)
             ):
                 _LOGGER.warning(
                     "Unexpected exception during initial sync: %s",
@@ -245,16 +249,17 @@ class AugustData(AugustSubscriberMixin):
         device = self.get_device_detail(device_id)
         activities = activities_from_pubnub_message(device, date_time, message)
         activity_stream = self.activity_stream
-        assert activity_stream is not None
-        if activities:
-            activity_stream.async_process_newer_device_activities(activities)
+        if activities and activity_stream.async_process_newer_device_activities(
+            activities
+        ):
             self.async_signal_device_id_update(device.device_id)
-        activity_stream.async_schedule_house_id_refresh(device.house_id)
+            activity_stream.async_schedule_house_id_refresh(device.house_id)
 
     @callback
-    def async_stop(self):
+    def async_stop(self) -> None:
         """Stop the subscriptions."""
-        self._pubnub_unsub()
+        if self._pubnub_unsub:
+            self._pubnub_unsub()
         self.activity_stream.async_stop()
 
     @property
@@ -271,10 +276,12 @@ class AugustData(AugustSubscriberMixin):
         """Return the py-august LockDetail or DoorbellDetail object for a device."""
         return self._device_detail_by_id[device_id]
 
-    async def _async_refresh(self, time):
+    async def _async_refresh(self, time: datetime) -> None:
         await self._async_refresh_device_detail_by_ids(self._subscriptions.keys())
 
-    async def _async_refresh_device_detail_by_ids(self, device_ids_list):
+    async def _async_refresh_device_detail_by_ids(
+        self, device_ids_list: Iterable[str]
+    ) -> None:
         """Refresh each device in sequence.
 
         This used to be a gather but it was less reliable with august's
@@ -286,7 +293,7 @@ class AugustData(AugustSubscriberMixin):
         for device_id in device_ids_list:
             try:
                 await self._async_refresh_device_detail_by_id(device_id)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 _LOGGER.warning(
                     "Timed out calling august api during refresh of device: %s",
                     device_id,
@@ -298,7 +305,7 @@ class AugustData(AugustSubscriberMixin):
                     exc_info=err,
                 )
 
-    async def _async_refresh_device_detail_by_id(self, device_id):
+    async def _async_refresh_device_detail_by_id(self, device_id: str) -> None:
         if device_id in self._locks_by_id:
             if self.activity_stream and self.activity_stream.pubnub.connected:
                 saved_attrs = _save_live_attrs(self._device_detail_by_id[device_id])
@@ -324,7 +331,13 @@ class AugustData(AugustSubscriberMixin):
         )
         self.async_signal_device_id_update(device_id)
 
-    async def _async_update_device_detail(self, device, api_call):
+    async def _async_update_device_detail(
+        self,
+        device: Doorbell | Lock,
+        api_call: Callable[
+            [str, str], Coroutine[Any, Any, DoorbellDetail | LockDetail]
+        ],
+    ) -> None:
         _LOGGER.debug(
             "Started retrieving detail for %s (%s)",
             device.device_name,
@@ -358,7 +371,7 @@ class AugustData(AugustSubscriberMixin):
             return device.device_name
         return None
 
-    async def async_lock(self, device_id):
+    async def async_lock(self, device_id: str) -> list[ActivityTypes]:
         """Lock the device."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
@@ -367,7 +380,7 @@ class AugustData(AugustSubscriberMixin):
             device_id,
         )
 
-    async def async_status_async(self, device_id, hyper_bridge):
+    async def async_status_async(self, device_id: str, hyper_bridge: bool) -> str:
         """Request status of the device but do not wait for a response since it will come via pubnub."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
@@ -377,7 +390,7 @@ class AugustData(AugustSubscriberMixin):
             hyper_bridge,
         )
 
-    async def async_lock_async(self, device_id, hyper_bridge):
+    async def async_lock_async(self, device_id: str, hyper_bridge: bool) -> str:
         """Lock the device but do not wait for a response since it will come via pubnub."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
@@ -387,7 +400,7 @@ class AugustData(AugustSubscriberMixin):
             hyper_bridge,
         )
 
-    async def async_unlock(self, device_id):
+    async def async_unlock(self, device_id: str) -> list[ActivityTypes]:
         """Unlock the device."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
@@ -396,7 +409,7 @@ class AugustData(AugustSubscriberMixin):
             device_id,
         )
 
-    async def async_unlock_async(self, device_id, hyper_bridge):
+    async def async_unlock_async(self, device_id: str, hyper_bridge: bool) -> str:
         """Unlock the device but do not wait for a response since it will come via pubnub."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
@@ -407,10 +420,13 @@ class AugustData(AugustSubscriberMixin):
         )
 
     async def _async_call_api_op_requires_bridge(
-        self, device_id, func, *args, **kwargs
-    ):
+        self,
+        device_id: str,
+        func: Callable[_P, Coroutine[Any, Any, _R]],
+        *args: _P.args,
+        **kwargs: _P.kwargs,
+    ) -> _R:
         """Call an API that requires the bridge to be online and will change the device state."""
-        ret = None
         try:
             ret = await func(*args, **kwargs)
         except AugustApiAIOHTTPError as err:
@@ -421,7 +437,7 @@ class AugustData(AugustSubscriberMixin):
 
         return ret
 
-    def _remove_inoperative_doorbells(self):
+    def _remove_inoperative_doorbells(self) -> None:
         for doorbell in list(self.doorbells):
             device_id = doorbell.device_id
             if self._device_detail_by_id.get(device_id):
@@ -435,7 +451,7 @@ class AugustData(AugustSubscriberMixin):
             )
             del self._doorbells_by_id[device_id]
 
-    def _remove_inoperative_locks(self):
+    def _remove_inoperative_locks(self) -> None:
         # Remove non-operative locks as there must
         # be a bridge (August Connect) for them to
         # be usable
@@ -466,7 +482,7 @@ class AugustData(AugustSubscriberMixin):
             del self._locks_by_id[device_id]
 
 
-def _save_live_attrs(lock_detail):
+def _save_live_attrs(lock_detail: DoorbellDetail | LockDetail) -> dict[str, Any]:
     """Store the attributes that the lock detail api may have an invalid cache for.
 
     Since we are connected to pubnub we may have more current data
@@ -476,7 +492,9 @@ def _save_live_attrs(lock_detail):
     return {attr: getattr(lock_detail, attr) for attr in API_CACHED_ATTRS}
 
 
-def _restore_live_attrs(lock_detail, attrs):
+def _restore_live_attrs(
+    lock_detail: DoorbellDetail | LockDetail, attrs: dict[str, Any]
+) -> None:
     """Restore the non-cache attributes after a cached update."""
     for attr, value in attrs.items():
         setattr(lock_detail, attr, value)

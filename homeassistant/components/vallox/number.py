@@ -44,9 +44,7 @@ class ValloxNumberEntity(ValloxEntity, NumberEntity):
     def native_value(self) -> float | None:
         """Return the value reported by the sensor."""
         if (
-            value := self.coordinator.data.get_metric(
-                self.entity_description.metric_key
-            )
+            value := self.coordinator.data.get(self.entity_description.metric_key)
         ) is None:
             return None
 
@@ -60,14 +58,14 @@ class ValloxNumberEntity(ValloxEntity, NumberEntity):
         await self.coordinator.async_request_refresh()
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValloxMetricMixin:
     """Holds Vallox metric key."""
 
     metric_key: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValloxNumberEntityDescription(NumberEntityDescription, ValloxMetricMixin):
     """Describes Vallox number entity."""
 

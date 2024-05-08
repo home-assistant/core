@@ -1,7 +1,7 @@
 """The Home Assistant Yellow integration."""
 from __future__ import annotations
 
-from homeassistant.components.hassio import get_os_info
+from homeassistant.components.hassio import get_os_info, is_hassio
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     check_multi_pan_addon,
     get_zigbee_socket,
@@ -16,6 +16,11 @@ from .const import RADIO_DEVICE, ZHA_HW_DISCOVERY_DATA
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Home Assistant Yellow config entry."""
+    if not is_hassio(hass):
+        # Not running under supervisor, Home Assistant may have been migrated
+        hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
+        return False
+
     if (os_info := get_os_info(hass)) is None:
         # The hassio integration has not yet fetched data from the supervisor
         raise ConfigEntryNotReady

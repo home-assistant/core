@@ -238,7 +238,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
         hass, (State("input_number.b1", "70"), State("input_number.b2", "200"))
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -261,7 +261,7 @@ async def test_restore_invalid_state(hass: HomeAssistant) -> None:
         hass, (State("input_number.b1", "="), State("input_number.b2", "200"))
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -284,7 +284,7 @@ async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> Non
         hass, (State("input_number.b1", "70"), State("input_number.b2", "200"))
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -308,7 +308,7 @@ async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> Non
 
 async def test_no_initial_state_and_no_restore_state(hass: HomeAssistant) -> None:
     """Ensure that entity is create without initial and restore feature."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"b1": {"min": 0, "max": 100}}})
 

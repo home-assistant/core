@@ -60,4 +60,4 @@ class EsphomeText(EsphomeEntity[TextInfo, TextState], TextEntity):
 
     async def async_set_value(self, value: str) -> None:
         """Update the current value."""
-        await self._client.text_command(self._key, value)
+        self._client.text_command(self._key, value)

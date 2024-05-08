@@ -38,7 +38,7 @@ ATTR_SPEED = "speed"
 SUPPORT_PTZ_SPEED = CameraEntityFeature.STREAM
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ReolinkButtonEntityDescription(
     ButtonEntityDescription,
     ReolinkChannelEntityDescription,
@@ -50,7 +50,7 @@ class ReolinkButtonEntityDescription(
     ptz_cmd: str | None = None
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ReolinkHostButtonEntityDescription(
     ButtonEntityDescription,
     ReolinkHostEntityDescription,

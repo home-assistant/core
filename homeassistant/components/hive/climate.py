@@ -92,8 +92,12 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
     _attr_hvac_modes = [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF]
     _attr_preset_modes = [PRESET_BOOST, PRESET_NONE]
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, hive_session, hive_device):
         """Initialize the Climate device."""
