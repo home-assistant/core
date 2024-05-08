@@ -22,7 +22,7 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
-from homeassistant.const import STATE_ON
+from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
@@ -68,6 +68,7 @@ GAS_VALVE_SWITCH = BlockSwitchDescription(
 MOTION_SWITCH = BlockSwitchDescription(
     key="sensor|motionActive",
     name="Motion active",
+    entity_category=EntityCategory.CONFIG,
 )
 
 
