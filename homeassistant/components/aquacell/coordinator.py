@@ -1,4 +1,5 @@
 """Coordinator to update data from Aquacell API."""
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -8,7 +9,6 @@ from aioaquacell import (
     AuthenticationFailed,
     Softener,
 )
-import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -51,7 +51,7 @@ class AquacellCoordinator(DataUpdateCoordinator[list[Softener]]):
             if self.refresh_token is None:
                 raise ConfigEntryError("No token available.")
 
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 _LOGGER.debug("Logging in using: %s", self.refresh_token)
 
                 try:
@@ -61,8 +61,10 @@ class AquacellCoordinator(DataUpdateCoordinator[list[Softener]]):
                         "Authentication using refresh token failed due to: %s", err
                     )
                     _LOGGER.debug("Attempting to renew refresh token")
-                    await self.aquacell_api.authenticate(self.username, self.password)
-                    self.refresh_token = self.aquacell_api.refresh_token
+                    refresh_token = await self.aquacell_api.authenticate(
+                        self.username, self.password
+                    )
+                    self.refresh_token = refresh_token
                     self._update_config_entry_refresh_token()
 
                 _LOGGER.debug("Logged in, new token: %s", self.aquacell_api.id_token)

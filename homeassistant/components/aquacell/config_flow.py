@@ -8,7 +8,7 @@ from aioaquacell import ApiException, AquacellApi, AuthenticationFailed
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -33,16 +33,17 @@ async def validate_input(
 
     session = async_get_clientsession(hass)
     api = AquacellApi(session)
+    refresh_token = None
     try:
-        await api.authenticate(email, password)
-    except AuthenticationFailed:
-        raise InvalidAuth
-    except ApiException:
-        raise CannotConnect
+        refresh_token = await api.authenticate(email, password)
+    except AuthenticationFailed as err:
+        raise InvalidAuth from err
+    except ApiException as err:
+        raise CannotConnect from err
 
     return {
-        CONF_REFRESH_TOKEN: api.refresh_token,
-        CONF_USERNAME: email,
+        CONF_REFRESH_TOKEN: refresh_token,
+        CONF_EMAIL: email,
         CONF_PASSWORD: password,
     }
 
@@ -106,7 +107,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     await self.hass.config_entries.async_reload(entry.entry_id)
                     return self.async_abort(reason="reauth_successful")
 
-                return self.async_create_entry(title=self._reauth_username, data=info)
+                return self.async_create_entry(title=user_input[CONF_EMAIL], data=info)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
