@@ -418,13 +418,13 @@ class LeafDataStore:
             server_info = await self.hass.async_add_executor_job(
                 self.leaf.get_latest_battery_status
             )
-            return server_info
         except CarwingsError:
             _LOGGER.error("An error occurred getting battery status")
             return None
         except (KeyError, TypeError):
             _LOGGER.error("An error occurred parsing response from server")
             return None
+        return server_info
 
     async def async_get_climate(
         self,

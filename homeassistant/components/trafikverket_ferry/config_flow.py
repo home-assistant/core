@@ -85,7 +85,7 @@ class TVFerryConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except NoFerryFound:
                 errors["base"] = "invalid_route"
-            except Exception:  # pylint: disable=broad-exception-caught
+            except Exception:  # noqa: BLE001
                 errors["base"] = "cannot_connect"
             else:
                 self.hass.config_entries.async_update_entry(
@@ -129,7 +129,7 @@ class TVFerryConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except NoFerryFound:
                 errors["base"] = "invalid_route"
-            except Exception:  # pylint: disable=broad-exception-caught
+            except Exception:  # noqa: BLE001
                 errors["base"] = "cannot_connect"
             else:
                 if not errors:

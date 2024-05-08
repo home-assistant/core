@@ -6,11 +6,11 @@ from unittest.mock import patch
 from nettigo_air_monitor import ApiError, AuthFailedError, CannotGetMacError
 import pytest
 
-from homeassistant import data_entry_flow
 from homeassistant.components import zeroconf
 from homeassistant.components.nam.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -34,7 +34,7 @@ async def test_form_create_entry_without_auth(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -57,7 +57,7 @@ async def test_form_create_entry_without_auth(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.2.3"
     assert result["data"]["host"] == "10.10.2.3"
     assert len(mock_setup_entry.mock_calls) == 1
@@ -68,7 +68,7 @@ async def test_form_create_entry_with_auth(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -90,7 +90,7 @@ async def test_form_create_entry_with_auth(hass: HomeAssistant) -> None:
             VALID_CONFIG,
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "credentials"
 
         result = await hass.config_entries.flow.async_configure(
@@ -99,7 +99,7 @@ async def test_form_create_entry_with_auth(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.2.3"
     assert result["data"]["host"] == "10.10.2.3"
     assert result["data"]["username"] == "fake_username"
@@ -133,7 +133,7 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
             data=entry.data,
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
 
         result = await hass.config_entries.flow.async_configure(
@@ -141,7 +141,7 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
             user_input=VALID_AUTH,
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
 
 
@@ -165,7 +165,7 @@ async def test_reauth_unsuccessful(hass: HomeAssistant) -> None:
             data=entry.data,
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
 
         result = await hass.config_entries.flow.async_configure(
@@ -173,7 +173,7 @@ async def test_reauth_unsuccessful(hass: HomeAssistant) -> None:
             user_input=VALID_AUTH,
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reauth_unsuccessful"
 
 
@@ -205,7 +205,7 @@ async def test_form_with_auth_errors(hass: HomeAssistant, error) -> None:
             data=VALID_CONFIG,
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "credentials"
 
     with patch(
@@ -262,7 +262,7 @@ async def test_form_abort(hass: HomeAssistant) -> None:
             data=VALID_CONFIG,
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "device_unsupported"
 
 
@@ -292,7 +292,7 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
             {"host": "1.1.1.1"},
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     # Test config entry got updated with latest IP
@@ -322,7 +322,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
             if flow["flow_id"] == result["flow_id"]
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert context["title_placeholders"]["host"] == "10.10.2.3"
     assert context["confirm_only"] is True
@@ -337,7 +337,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.2.3"
     assert result["data"] == {"host": "10.10.2.3"}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -366,7 +366,7 @@ async def test_zeroconf_with_auth(hass: HomeAssistant) -> None:
             if flow["flow_id"] == result["flow_id"]
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "credentials"
     assert result["errors"] == {}
     assert context["title_placeholders"]["host"] == "10.10.2.3"
@@ -390,7 +390,7 @@ async def test_zeroconf_with_auth(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.2.3"
     assert result["data"]["host"] == "10.10.2.3"
     assert result["data"]["username"] == "fake_username"
@@ -411,7 +411,7 @@ async def test_zeroconf_host_already_configured(hass: HomeAssistant) -> None:
         context={"source": SOURCE_ZEROCONF},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -435,5 +435,5 @@ async def test_zeroconf_errors(hass: HomeAssistant, error) -> None:
             context={"source": SOURCE_ZEROCONF},
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason

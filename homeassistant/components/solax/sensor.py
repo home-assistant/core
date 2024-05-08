@@ -6,7 +6,7 @@ import asyncio
 from datetime import timedelta
 
 from solax import RealTimeAPI
-from solax.discovery import InverterError
+from solax.inverter import InverterError
 from solax.units import Units
 
 from homeassistant.components.sensor import (

@@ -296,7 +296,7 @@ class ZHAGateway:
     @property
     def radio_concurrency(self) -> int:
         """Maximum configured radio concurrency."""
-        return self.application_controller._concurrent_requests_semaphore.max_value  # pylint: disable=protected-access
+        return self.application_controller._concurrent_requests_semaphore.max_value  # noqa: SLF001
 
     async def async_fetch_updated_state_mains(self) -> None:
         """Fetch updated state for mains powered devices."""
@@ -870,7 +870,10 @@ class LogRelayHandler(logging.Handler):
     def emit(self, record: LogRecord) -> None:
         """Relay log message via dispatcher."""
         entry = LogEntry(
-            record, self.paths_re, figure_out_source=record.levelno >= logging.WARNING
+            record,
+            self.paths_re,
+            formatter=self.formatter,
+            figure_out_source=record.levelno >= logging.WARNING,
         )
         async_dispatcher_send(
             self.hass,

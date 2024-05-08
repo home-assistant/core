@@ -42,9 +42,7 @@ async def test_list_user(hass: HomeAssistant, provider, capsys) -> None:
 
     captured = capsys.readouterr()
 
-    assert captured.out == "\n".join(
-        ["test-user", "second-user", "", "Total users: 2", ""]
-    )
+    assert captured.out == "test-user\nsecond-user\n\nTotal users: 2\n"
 
 
 async def test_add_user(

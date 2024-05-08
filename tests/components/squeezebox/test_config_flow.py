@@ -55,7 +55,7 @@ async def test_user_form(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "edit"
         assert CONF_HOST in result["data_schema"].schema
         for key in result["data_schema"].schema:
@@ -73,7 +73,7 @@ async def test_user_form(hass: HomeAssistant) -> None:
                 CONF_HTTPS: False,
             },
         )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == HOST
         assert result["data"] == {
             CONF_HOST: HOST,
@@ -99,14 +99,14 @@ async def test_user_form_timeout(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "no_server_found"}
 
         # simulate manual input of host
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: HOST2}
         )
-        assert result2["type"] == FlowResultType.FORM
+        assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "edit"
         assert CONF_HOST in result2["data_schema"].schema
         for key in result2["data_schema"].schema:
@@ -137,7 +137,7 @@ async def test_user_form_duplicate(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "no_server_found"}
 
 
@@ -162,7 +162,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -186,7 +186,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -201,7 +201,7 @@ async def test_discovery(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={CONF_HOST: HOST, CONF_PORT: PORT, "uuid": UUID},
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "edit"
 
 
@@ -213,7 +213,7 @@ async def test_discovery_no_uuid(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={CONF_HOST: HOST, CONF_PORT: PORT, CONF_HTTPS: False},
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "edit"
 
 
@@ -238,7 +238,7 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
                 hostname="any",
             ),
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "edit"
 
 
@@ -260,7 +260,7 @@ async def test_dhcp_discovery_no_server_found(hass: HomeAssistant) -> None:
                 hostname="any",
             ),
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
 
 
@@ -279,4 +279,4 @@ async def test_dhcp_discovery_existing_player(hass: HomeAssistant) -> None:
                 hostname="any",
             ),
         )
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT

@@ -45,6 +45,7 @@ from homeassistant.core import (
     DOMAIN as HA_DOMAIN,
     CoreState,
     Event,
+    EventStateChangedData,
     HomeAssistant,
     State,
     callback,
@@ -54,7 +55,6 @@ from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     async_track_state_change_event,
     async_track_time_interval,
 )

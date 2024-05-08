@@ -8,6 +8,11 @@
         }
       }
     },
+    "select": {
+      "input": {
+        "default": "mdi:hdmi-port"
+      }
+    },
     "sensor": {
       "jvc_power_status": {
         "default": "mdi:power-plug-off",
