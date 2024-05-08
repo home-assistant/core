@@ -38,6 +38,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.event_type import EventType
+from homeassistant.util.hass_dict import HassKey
 
 from . import frame
 from .device_registry import (
@@ -54,19 +55,29 @@ from .template import RenderInfo, Template, result_as_boolean
 from .typing import TemplateVarsType
 
 TRACK_STATE_CHANGE_CALLBACKS = "track_state_change_callbacks"
-TRACK_STATE_CHANGE_LISTENER = "track_state_change_listener"
+TRACK_STATE_CHANGE_LISTENER: HassKey[Callable[[], None]] = HassKey(
+    "track_state_change_listener"
+)
 
 TRACK_STATE_ADDED_DOMAIN_CALLBACKS = "track_state_added_domain_callbacks"
-TRACK_STATE_ADDED_DOMAIN_LISTENER = "track_state_added_domain_listener"
+TRACK_STATE_ADDED_DOMAIN_LISTENER: HassKey[Callable[[], None]] = HassKey(
+    "track_state_added_domain_listener"
+)
 
 TRACK_STATE_REMOVED_DOMAIN_CALLBACKS = "track_state_removed_domain_callbacks"
-TRACK_STATE_REMOVED_DOMAIN_LISTENER = "track_state_removed_domain_listener"
+TRACK_STATE_REMOVED_DOMAIN_LISTENER: HassKey[Callable[[], None]] = HassKey(
+    "track_state_removed_domain_listener"
+)
 
 TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS = "track_entity_registry_updated_callbacks"
-TRACK_ENTITY_REGISTRY_UPDATED_LISTENER = "track_entity_registry_updated_listener"
+TRACK_ENTITY_REGISTRY_UPDATED_LISTENER: HassKey[Callable[[], None]] = HassKey(
+    "track_entity_registry_updated_listener"
+)
 
 TRACK_DEVICE_REGISTRY_UPDATED_CALLBACKS = "track_device_registry_updated_callbacks"
-TRACK_DEVICE_REGISTRY_UPDATED_LISTENER = "track_device_registry_updated_listener"
+TRACK_DEVICE_REGISTRY_UPDATED_LISTENER: HassKey[Callable[[], None]] = HassKey(
+    "track_device_registry_updated_listener"
+)
 
 _ALL_LISTENER = "all"
 _DOMAINS_LISTENER = "domains"
@@ -89,7 +100,7 @@ _P = ParamSpec("_P")
 class _KeyedEventTracker(Generic[_TypedDictT]):
     """Class to track events by key."""
 
-    listeners_key: str
+    listeners_key: HassKey[Callable[[], None]]
     callbacks_key: str
     event_type: EventType[_TypedDictT] | str
     dispatcher_callable: Callable[
@@ -325,7 +336,7 @@ def _async_dispatch_entity_id_event(
     for job in callbacks_list.copy():
         try:
             hass.async_run_hass_job(job, event)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Error while dispatching event for %s to %s",
                 event.data["entity_id"],
@@ -373,7 +384,7 @@ def _remove_empty_listener() -> None:
 @callback  # type: ignore[arg-type]  # mypy bug?
 def _remove_listener(
     hass: HomeAssistant,
-    listeners_key: str,
+    listeners_key: HassKey[Callable[[], None]],
     keys: Iterable[str],
     job: HassJob[[Event[_TypedDictT]], Any],
     callbacks: dict[str, list[HassJob[[Event[_TypedDictT]], Any]]],
@@ -455,7 +466,7 @@ def _async_dispatch_old_entity_id_or_entity_id_event(
     for job in callbacks_list.copy():
         try:
             hass.async_run_hass_job(job, event)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Error while dispatching event for %s to %s",
                 event.data.get("old_entity_id", event.data["entity_id"]),
@@ -523,7 +534,7 @@ def _async_dispatch_device_id_event(
     for job in callbacks_list.copy():
         try:
             hass.async_run_hass_job(job, event)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Error while dispatching event for %s to %s",
                 event.data["device_id"],
@@ -567,7 +578,7 @@ def _async_dispatch_domain_event(
     for job in callbacks.get(domain, []) + callbacks.get(MATCH_ALL, []):
         try:
             hass.async_run_hass_job(job, event)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Error while processing event %s for domain %s", event, domain
             )
