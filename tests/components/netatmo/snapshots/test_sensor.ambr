@@ -118,7 +118,15 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'healthy',
+        'fine',
+        'fair',
+        'poor',
+        'unhealthy',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -135,7 +143,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Health index',
     'platform': 'netatmo',
@@ -150,16 +158,24 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
+      'device_class': 'enum',
       'friendly_name': 'Baby Bedroom Health index',
       'latitude': 13.377726,
       'longitude': 52.516263,
+      'options': list([
+        'healthy',
+        'fine',
+        'fair',
+        'poor',
+        'unhealthy',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.baby_bedroom_health_index',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Fine',
+    'state': 'fine',
   })
 # ---
 # name: test_entity[sensor.baby_bedroom_humidity-entry]
@@ -638,7 +654,15 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'healthy',
+        'fine',
+        'fair',
+        'poor',
+        'unhealthy',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -655,7 +679,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Health index',
     'platform': 'netatmo',
@@ -670,7 +694,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
+      'device_class': 'enum',
       'friendly_name': 'Bedroom Health index',
+      'options': list([
+        'healthy',
+        'fine',
+        'fair',
+        'poor',
+        'unhealthy',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bedroom_health_index',
@@ -869,13 +901,15 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'friendly_name': 'Bedroom Reachability',
+      'latitude': 13.377726,
+      'longitude': 52.516263,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bedroom_reachability',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'False',
   })
 # ---
 # name: test_entity[sensor.bedroom_temperature-entry]
@@ -1018,13 +1052,15 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'friendly_name': 'Bedroom Wi-Fi',
+      'latitude': 13.377726,
+      'longitude': 52.516263,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bedroom_wi_fi',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'High',
   })
 # ---
 # name: test_entity[sensor.bureau_modulate_battery-entry]
@@ -2845,7 +2881,15 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'healthy',
+        'fine',
+        'fair',
+        'poor',
+        'unhealthy',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -2862,7 +2906,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Health index',
     'platform': 'netatmo',
@@ -2877,9 +2921,17 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
+      'device_class': 'enum',
       'friendly_name': 'Kitchen Health index',
       'latitude': 13.377726,
       'longitude': 52.516263,
+      'options': list([
+        'healthy',
+        'fine',
+        'fair',
+        'poor',
+        'unhealthy',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kitchen_health_index',
@@ -3916,7 +3968,15 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'healthy',
+        'fine',
+        'fair',
+        'poor',
+        'unhealthy',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -3933,7 +3993,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Health index',
     'platform': 'netatmo',
@@ -3948,9 +4008,17 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
+      'device_class': 'enum',
       'friendly_name': 'Livingroom Health index',
       'latitude': 13.377726,
       'longitude': 52.516263,
+      'options': list([
+        'healthy',
+        'fine',
+        'fair',
+        'poor',
+        'unhealthy',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.livingroom_health_index',
@@ -4440,7 +4508,15 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'healthy',
+        'fine',
+        'fair',
+        'poor',
+        'unhealthy',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -4457,7 +4533,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Health index',
     'platform': 'netatmo',
@@ -4472,16 +4548,24 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
+      'device_class': 'enum',
       'friendly_name': 'Parents Bedroom Health index',
       'latitude': 13.377726,
       'longitude': 52.516263,
+      'options': list([
+        'healthy',
+        'fine',
+        'fair',
+        'poor',
+        'unhealthy',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.parents_bedroom_health_index',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Fine',
+    'state': 'fine',
   })
 # ---
 # name: test_entity[sensor.parents_bedroom_humidity-entry]
@@ -6073,7 +6157,18 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'n',
+        'ne',
+        'e',
+        'se',
+        's',
+        'sw',
+        'w',
+        'nw',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -6090,7 +6185,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Gust direction',
     'platform': 'netatmo',
@@ -6105,14 +6200,25 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
+      'device_class': 'enum',
       'friendly_name': 'Villa Garden Gust direction',
+      'options': list([
+        'n',
+        'ne',
+        'e',
+        'se',
+        's',
+        'sw',
+        'w',
+        'nw',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.villa_garden_gust_direction',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'S',
+    'state': 's',
   })
 # ---
 # name: test_entity[sensor.villa_garden_gust_strength-entry]
@@ -6317,7 +6423,18 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'n',
+        'ne',
+        'e',
+        'se',
+        's',
+        'sw',
+        'w',
+        'nw',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -6334,7 +6451,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Wind direction',
     'platform': 'netatmo',
@@ -6349,14 +6466,25 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
+      'device_class': 'enum',
       'friendly_name': 'Villa Garden Wind direction',
+      'options': list([
+        'n',
+        'ne',
+        'e',
+        'se',
+        's',
+        'sw',
+        'w',
+        'nw',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.villa_garden_wind_direction',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'SW',
+    'state': 'sw',
   })
 # ---
 # name: test_entity[sensor.villa_garden_wind_speed-entry]
@@ -6568,7 +6696,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '27',
   })
 # ---
 # name: test_entity[sensor.villa_outdoor_humidity-entry]
@@ -6667,7 +6795,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'High',
   })
 # ---
 # name: test_entity[sensor.villa_outdoor_reachability-entry]
@@ -6714,7 +6842,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'False',
   })
 # ---
 # name: test_entity[sensor.villa_outdoor_temperature-entry]

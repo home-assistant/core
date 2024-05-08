@@ -157,6 +157,7 @@ RELOADABLE_PLATFORMS = [
     Platform.LIGHT,
     Platform.LAWN_MOWER,
     Platform.LOCK,
+    Platform.NOTIFY,
     Platform.NUMBER,
     Platform.SCENE,
     Platform.SELECT,

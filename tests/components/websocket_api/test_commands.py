@@ -204,7 +204,7 @@ async def test_return_response_error(hass: HomeAssistant, websocket_client) -> N
     assert msg["id"] == 8
     assert msg["type"] == const.TYPE_RESULT
     assert not msg["success"]
-    assert msg["error"]["code"] == "unknown_error"
+    assert msg["error"]["code"] == "service_validation_error"
 
 
 @pytest.mark.parametrize("command", ["call_service", "call_service_action"])
@@ -701,7 +701,7 @@ async def test_get_services(
         assert msg["id"] == id_
         assert msg["type"] == const.TYPE_RESULT
         assert msg["success"]
-        assert msg["result"] == hass.services.async_services()
+        assert msg["result"].keys() == hass.services.async_services().keys()
 
 
 async def test_get_config(

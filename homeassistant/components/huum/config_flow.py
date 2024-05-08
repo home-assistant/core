@@ -47,7 +47,7 @@ class HuumConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Most likely Forbidden as that is what is returned from `.status()` with bad creds
                 _LOGGER.error("Could not log in to Huum with given credentials")
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unknown error")
                 errors["base"] = "unknown"
             else:

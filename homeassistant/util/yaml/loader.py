@@ -423,7 +423,7 @@ def _handle_mapping_tag(
     nodes = loader.construct_pairs(node)
 
     seen: dict = {}
-    for (key, _), (child_node, _) in zip(nodes, node.value):
+    for (key, _), (child_node, _) in zip(nodes, node.value, strict=False):
         line = child_node.start_mark.line
 
         try:
