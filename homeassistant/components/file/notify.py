@@ -21,7 +21,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from .const import CONF_TIMESTAMP, DOMAIN, URL_ALLOWLIST_EXT_DIRS
+from .const import CONF_TIMESTAMP, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,15 +60,6 @@ class FileNotificationService(BaseNotificationService):
         """Send a message to a file."""
         file: TextIO
         filepath: str = os.path.join(self.hass.config.config_dir, self.filename)
-        if not self.hass.config.is_allowed_path(filepath):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="dir_not_allowed",
-                translation_placeholders={
-                    "filename": filepath,
-                    "url": URL_ALLOWLIST_EXT_DIRS,
-                },
-            )
         try:
             with open(filepath, "a", encoding="utf8") as file:
                 if os.stat(filepath).st_size == 0:

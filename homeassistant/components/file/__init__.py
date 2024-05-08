@@ -1,8 +1,11 @@
 """The file component."""
 
+import os
+
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_PLATFORM, Platform
+from homeassistant.const import CONF_FILE_PATH, CONF_FILENAME, CONF_PLATFORM, Platform
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     discovery,
@@ -66,6 +69,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a file component entry."""
+    config = dict(entry.data)
+    filepath: str = ""
+    if (platform := config[CONF_PLATFORM]) == Platform.NOTIFY:
+        filepath = os.path.join(hass.config.config_dir, config[CONF_FILENAME])
+    elif platform == Platform.SENSOR:
+        filepath = config[CONF_FILE_PATH]
+    if filepath and not await hass.async_add_executor_job(
+        hass.config.is_allowed_path, filepath
+    ):
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="dir_not_allowed",
+            translation_placeholders={"filename": filepath},
+        )
+
     if entry.data[CONF_PLATFORM] in PLATFORMS:
         await hass.config_entries.async_forward_entry_setups(
             entry, [Platform(entry.data[CONF_PLATFORM])]
@@ -79,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 hass,
                 Platform.NOTIFY,
                 DOMAIN,
-                dict(entry.data),
+                config,
                 {},
             )
         )

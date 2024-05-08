@@ -126,51 +126,6 @@ async def test_notify_file(
     ("is_allowed", "config"),
     [
         (
-            False,
-            {
-                "notify": [
-                    {
-                        "name": "test",
-                        "platform": "file",
-                        "filename": "mock_file",
-                    }
-                ]
-            },
-        ),
-    ],
-    ids=["not_allowed"],
-)
-async def test_legacy_notify_file_not_allowed(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_is_allowed_path: MagicMock,
-    config: ConfigType,
-    domain: str,
-    service: str,
-    params: dict[str, str],
-) -> None:
-    """Test legacy notify file output not allowed."""
-    assert await async_setup_component(hass, notify.DOMAIN, config)
-    await hass.async_block_till_done()
-    assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    freezer.move_to(dt_util.utcnow())
-
-    with pytest.raises(ServiceValidationError) as exc:
-        await hass.services.async_call(domain, service, params, blocking=True)
-    assert f"{exc.value!r}" == "ServiceValidationError('dir_not_allowed')"
-
-
-@pytest.mark.parametrize(
-    ("domain", "service", "params"),
-    [(notify.DOMAIN, "test", {"message": "one, two, testing, testing"})],
-    ids=["legacy"],
-)
-@pytest.mark.parametrize(
-    ("is_allowed", "config"),
-    [
-        (
             True,
             {
                 "notify": [
@@ -293,42 +248,33 @@ async def test_legacy_notify_file_entry_only_setup(
 
 
 @pytest.mark.parametrize(
-    ("data", "is_allowed"),
+    ("is_allowed", "config"),
     [
         (
+            False,
             {
                 "name": "test",
                 "platform": "notify",
                 "filename": "mock_file",
             },
-            False,
         ),
     ],
     ids=["not_allowed"],
 )
-async def test_legacy_notify_file_not_allowed_path(
+async def test_legacy_notify_file_not_allowed(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
     mock_is_allowed_path: MagicMock,
-    data: dict[str, Any],
+    config: dict[str, Any],
 ) -> None:
-    """Test the legacy notify file output is not allowed."""
-    domain = notify.DOMAIN
-    service = "test"
-    params = {"message": "one, two, testing, testing"}
-
+    """Test legacy notify file output not allowed."""
     entry = MockConfigEntry(
-        domain=DOMAIN, data=data, title=f"test [{data['filename']}]"
+        domain=DOMAIN, data=config, title=f"test [{config['filename']}]"
     )
     entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    assert not await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
-
-    freezer.move_to(dt_util.utcnow())
-    with pytest.raises(ServiceValidationError) as exc:
-        await hass.services.async_call(domain, service, params, blocking=True)
-    assert f"{exc.value!r}" == "ServiceValidationError('dir_not_allowed')"
+    assert "is not allowed" in caplog.text
 
 
 @pytest.mark.parametrize(

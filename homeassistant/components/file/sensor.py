@@ -65,10 +65,6 @@ async def async_setup_entry(
     if CONF_VALUE_TEMPLATE in config:
         value_template = Template(config[CONF_VALUE_TEMPLATE], hass)
 
-    if not await hass.async_add_executor_job(hass.config.is_allowed_path, file_path):
-        _LOGGER.error("'%s' is not an allowed directory", file_path)
-        return
-
     async_add_entities([FileSensor(name, file_path, unit, value_template)], True)
 
 

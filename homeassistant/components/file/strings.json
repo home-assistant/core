@@ -13,13 +13,11 @@
         "description": "Set up a file based sensor",
         "data": {
           "file_path": "File path",
-          "name": "Name",
           "value_template": "Value template",
           "unit_of_measurement": "Unit of measurement"
         },
         "data_description": {
-          "file_path": "The local file path to rereive the sensor value from",
-          "name": "Name of the file based sensor",
+          "file_path": "The local file path to retrieve the sensor value from",
           "value_template": "A template to render the the sensors value based on the file content",
           "unit_of_measurement": "Unit of measurement for the sensor"
         }
@@ -48,7 +46,7 @@
   },
   "exceptions": {
     "dir_not_allowed": {
-      "message": "Access to {filename} is not allowed, make sure the [directory is allowed]({url})."
+      "message": "Access to {filename} is not allowed."
     },
     "write_access_failed": {
       "message": "Write access to {filename} failed: {exc}."
