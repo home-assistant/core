@@ -66,6 +66,16 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
         return self._lock.state == TedeeLockState.UNLOCKING
 
     @property
+    def is_open(self) -> bool:
+        """Return true if lock is open."""
+        return self._lock.state == TedeeLockState.PULLED
+
+    @property
+    def is_opening(self) -> bool:
+        """Return true if lock is opening."""
+        return self._lock.state == TedeeLockState.PULLING
+
+    @property
     def is_locking(self) -> bool:
         """Return true if lock is locking."""
         return self._lock.state == TedeeLockState.LOCKING
