@@ -311,9 +311,9 @@ async def async_start(  # noqa: C901
         _LOGGER.debug("Process discovery payload %s", payload)
         discovery_hash = (component, discovery_id)
 
-        is_already_discovered = discovery_hash in mqtt_data.discovery_already_discovered
+        already_discovered = discovery_hash in mqtt_data.discovery_already_discovered
         if (
-            is_already_discovered or payload
+            already_discovered or payload
         ) and discovery_hash not in mqtt_data.discovery_pending_discovered:
             discovery_pending_discovered = mqtt_data.discovery_pending_discovered
 
@@ -340,7 +340,7 @@ async def async_start(  # noqa: C901
         if component not in mqtt_data.platforms_loaded and payload:
             # Load component first
             async_dispatcher_send(hass, MQTT_DISCOVERY_NEW_COMPONENT, payload)
-        elif is_already_discovered:
+        elif already_discovered:
             # Dispatch update
             message = f"Component has already been discovered: {component} {discovery_id}, sending update"
             async_log_discovery_origin_info(message, payload)
