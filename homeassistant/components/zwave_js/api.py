@@ -2210,7 +2210,7 @@ class FirmwareUploadView(HomeAssistantView):
         assert node.client.driver
 
         # Increase max payload
-        request._client_max_size = 1024 * 1024 * 10  # pylint: disable=protected-access
+        request._client_max_size = 1024 * 1024 * 10  # noqa: SLF001
 
         data = await request.post()
 
@@ -2339,7 +2339,7 @@ async def websocket_subscribe_controller_statistics(
     client: Client,
     driver: Driver,
 ) -> None:
-    """Subsribe to the statistics updates for a controller."""
+    """Subscribe to the statistics updates for a controller."""
 
     @callback
     def async_cleanup() -> None:
@@ -2434,7 +2434,7 @@ async def websocket_subscribe_node_statistics(
     msg: dict[str, Any],
     node: Node,
 ) -> None:
-    """Subsribe to the statistics updates for a node."""
+    """Subscribe to the statistics updates for a node."""
 
     @callback
     def async_cleanup() -> None:

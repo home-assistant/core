@@ -108,10 +108,6 @@
         }
       }
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
-    },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_backbone_key": "Invalid backbone key. 32 hexadecimal numbers expected.",
@@ -387,6 +383,19 @@
     "reload": {
       "name": "[%key:common::action::reload%]",
       "description": "Reloads the KNX integration."
+    }
+  },
+  "issues": {
+    "migrate_notify": {
+      "title": "Migration of KNX notify service",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The KNX `notify` service has been migrated. New `notify` entities are available now.\n\nUpdate any automations to use the new `notify.send_message` exposed by these new entities. When this is done, fix this issue and restart Home Assistant.",
+            "title": "Disable legacy KNX notify service"
+          }
+        }
+      }
     }
   }
 }

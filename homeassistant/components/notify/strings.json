@@ -1,5 +1,10 @@
 {
   "title": "Notifications",
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::notify::title%]"
+    }
+  },
   "services": {
     "notify": {
       "name": "Send a notification",
@@ -20,6 +25,20 @@
         "data": {
           "name": "Data",
           "description": "Some integrations provide extended functionality. For information on how to use _data_, refer to the integration documentation."
+        }
+      }
+    },
+    "send_message": {
+      "name": "Send a notification message",
+      "description": "Sends a notification message.",
+      "fields": {
+        "message": {
+          "name": "Message",
+          "description": "Your notification message."
+        },
+        "title": {
+          "name": "Title",
+          "description": "Title for your notification message."
         }
       }
     },

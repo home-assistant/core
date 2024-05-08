@@ -75,8 +75,8 @@ class SonosHouseholdCoordinator:
         self, soco: SoCo, update_id: int | None = None
     ) -> None:
         """Update the cache and update entities."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def update_cache(self, soco: SoCo, update_id: int | None = None) -> bool:
         """Update the cache of the household-level feature and return if cache has changed."""
-        raise NotImplementedError()
+        raise NotImplementedError

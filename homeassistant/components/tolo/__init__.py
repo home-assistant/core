@@ -6,9 +6,7 @@ from datetime import timedelta
 import logging
 from typing import NamedTuple
 
-from tololib import ToloClient
-from tololib.errors import ResponseTimedOutError
-from tololib.message_info import SettingsInfo, StatusInfo
+from tololib import ToloClient, ToloSettings, ToloStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
@@ -31,6 +29,7 @@ PLATFORMS = [
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,8 +58,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class ToloSaunaData(NamedTuple):
     """Compound class for reflecting full state (status and info) of a TOLO Sauna."""
 
-    status: StatusInfo
-    settings: SettingsInfo
+    status: ToloStatus
+    settings: ToloSettings
 
 
 class ToloSaunaUpdateCoordinator(DataUpdateCoordinator[ToloSaunaData]):  # pylint: disable=hass-enforce-coordinator-module
@@ -68,7 +67,11 @@ class ToloSaunaUpdateCoordinator(DataUpdateCoordinator[ToloSaunaData]):  # pylin
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize ToloSaunaUpdateCoordinator."""
-        self.client = ToloClient(entry.data[CONF_HOST])
+        self.client = ToloClient(
+            address=entry.data[CONF_HOST],
+            retry_timeout=DEFAULT_RETRY_TIMEOUT,
+            retry_count=DEFAULT_RETRY_COUNT,
+        )
         super().__init__(
             hass=hass,
             logger=_LOGGER,
@@ -81,13 +84,9 @@ class ToloSaunaUpdateCoordinator(DataUpdateCoordinator[ToloSaunaData]):  # pylin
 
     def _get_tolo_sauna_data(self) -> ToloSaunaData:
         try:
-            status = self.client.get_status_info(
-                resend_timeout=DEFAULT_RETRY_TIMEOUT, retries=DEFAULT_RETRY_COUNT
-            )
-            settings = self.client.get_settings_info(
-                resend_timeout=DEFAULT_RETRY_TIMEOUT, retries=DEFAULT_RETRY_COUNT
-            )
-        except ResponseTimedOutError as error:
+            status = self.client.get_status()
+            settings = self.client.get_settings()
+        except TimeoutError as error:
             raise UpdateFailed("communication timeout") from error
         return ToloSaunaData(status, settings)
 

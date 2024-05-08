@@ -49,7 +49,9 @@ def dsm_with_photos() -> MagicMock:
 
     dsm.photos.get_albums = AsyncMock(return_value=[SynoPhotosAlbum(1, "Album 1", 10)])
     dsm.photos.get_items_from_album = AsyncMock(
-        return_value=[SynoPhotosItem(10, "", "filename.jpg", 12345, "10_1298753", "sm")]
+        return_value=[
+            SynoPhotosItem(10, "", "filename.jpg", 12345, "10_1298753", "sm", False)
+        ]
     )
     dsm.photos.get_item_thumbnail_url = AsyncMock(
         return_value="http://my.thumbnail.url"
@@ -130,10 +132,13 @@ async def test_browse_media_album_error(
     hass: HomeAssistant, dsm_with_photos: MagicMock
 ) -> None:
     """Test browse_media with unknown album."""
-    with patch(
-        "homeassistant.components.synology_dsm.common.SynologyDSM",
-        return_value=dsm_with_photos,
-    ), patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]):
+    with (
+        patch(
+            "homeassistant.components.synology_dsm.common.SynologyDSM",
+            return_value=dsm_with_photos,
+        ),
+        patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]),
+    ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={
@@ -169,10 +174,13 @@ async def test_browse_media_get_root(
     hass: HomeAssistant, dsm_with_photos: MagicMock
 ) -> None:
     """Test browse_media returning root media sources."""
-    with patch(
-        "homeassistant.components.synology_dsm.common.SynologyDSM",
-        return_value=dsm_with_photos,
-    ), patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]):
+    with (
+        patch(
+            "homeassistant.components.synology_dsm.common.SynologyDSM",
+            return_value=dsm_with_photos,
+        ),
+        patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]),
+    ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={
@@ -203,10 +211,13 @@ async def test_browse_media_get_albums(
     hass: HomeAssistant, dsm_with_photos: MagicMock
 ) -> None:
     """Test browse_media returning albums."""
-    with patch(
-        "homeassistant.components.synology_dsm.common.SynologyDSM",
-        return_value=dsm_with_photos,
-    ), patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]):
+    with (
+        patch(
+            "homeassistant.components.synology_dsm.common.SynologyDSM",
+            return_value=dsm_with_photos,
+        ),
+        patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]),
+    ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={
@@ -241,10 +252,13 @@ async def test_browse_media_get_items_error(
     hass: HomeAssistant, dsm_with_photos: MagicMock
 ) -> None:
     """Test browse_media returning albums."""
-    with patch(
-        "homeassistant.components.synology_dsm.common.SynologyDSM",
-        return_value=dsm_with_photos,
-    ), patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]):
+    with (
+        patch(
+            "homeassistant.components.synology_dsm.common.SynologyDSM",
+            return_value=dsm_with_photos,
+        ),
+        patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]),
+    ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={
@@ -288,10 +302,13 @@ async def test_browse_media_get_items_thumbnail_error(
     hass: HomeAssistant, dsm_with_photos: MagicMock
 ) -> None:
     """Test browse_media returning albums."""
-    with patch(
-        "homeassistant.components.synology_dsm.common.SynologyDSM",
-        return_value=dsm_with_photos,
-    ), patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]):
+    with (
+        patch(
+            "homeassistant.components.synology_dsm.common.SynologyDSM",
+            return_value=dsm_with_photos,
+        ),
+        patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]),
+    ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={
@@ -327,10 +344,13 @@ async def test_browse_media_get_items(
     hass: HomeAssistant, dsm_with_photos: MagicMock
 ) -> None:
     """Test browse_media returning albums."""
-    with patch(
-        "homeassistant.components.synology_dsm.common.SynologyDSM",
-        return_value=dsm_with_photos,
-    ), patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]):
+    with (
+        patch(
+            "homeassistant.components.synology_dsm.common.SynologyDSM",
+            return_value=dsm_with_photos,
+        ),
+        patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]),
+    ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={
@@ -376,10 +396,13 @@ async def test_media_view(
     with pytest.raises(web.HTTPNotFound):
         await view.get(request, "", "")
 
-    with patch(
-        "homeassistant.components.synology_dsm.common.SynologyDSM",
-        return_value=dsm_with_photos,
-    ), patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]):
+    with (
+        patch(
+            "homeassistant.components.synology_dsm.common.SynologyDSM",
+            return_value=dsm_with_photos,
+        ),
+        patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]),
+    ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={
@@ -407,6 +430,8 @@ async def test_media_view(
 
     # success
     dsm_with_photos.photos.download_item = AsyncMock(return_value=b"xxxx")
-    tempfile.tempdir = tmp_path
-    result = await view.get(request, "mocked_syno_dsm_entry", "10_1298753/filename.jpg")
-    assert isinstance(result, web.Response)
+    with patch.object(tempfile, "tempdir", tmp_path):
+        result = await view.get(
+            request, "mocked_syno_dsm_entry", "10_1298753/filename.jpg"
+        )
+        assert isinstance(result, web.Response)

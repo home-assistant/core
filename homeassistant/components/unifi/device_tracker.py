@@ -240,7 +240,7 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
         self._ignore_events = False
         self._is_connected = description.is_connected_fn(self.hub, self._obj_id)
         if self.is_connected:
-            self.hub.async_heartbeat(
+            self.hub.update_heartbeat(
                 self.unique_id,
                 dt_util.utcnow()
                 + description.heartbeat_timedelta_fn(self.hub, self._obj_id),
@@ -301,12 +301,12 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
             # From unifi.entity.async_signal_reachable_callback
             # Controller connection state has changed and entity is unavailable
             # Cancel heartbeat
-            self.hub.async_heartbeat(self.unique_id)
+            self.hub.remove_heartbeat(self.unique_id)
             return
 
         if is_connected := description.is_connected_fn(self.hub, self._obj_id):
             self._is_connected = is_connected
-            self.hub.async_heartbeat(
+            self.hub.update_heartbeat(
                 self.unique_id,
                 dt_util.utcnow()
                 + description.heartbeat_timedelta_fn(self.hub, self._obj_id),
@@ -319,12 +319,12 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
             return
 
         if event.key in self._event_is_on:
-            self.hub.async_heartbeat(self.unique_id)
+            self.hub.remove_heartbeat(self.unique_id)
             self._is_connected = True
             self.async_write_ha_state()
             return
 
-        self.hub.async_heartbeat(
+        self.hub.update_heartbeat(
             self.unique_id,
             dt_util.utcnow()
             + self.entity_description.heartbeat_timedelta_fn(self.hub, self._obj_id),
@@ -344,7 +344,7 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
         await super().async_will_remove_from_hass()
-        self.hub.async_heartbeat(self.unique_id)
+        self.hub.remove_heartbeat(self.unique_id)
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
@@ -359,6 +359,4 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
         if self.is_connected:
             attributes_to_check = CLIENT_CONNECTED_ALL_ATTRIBUTES
 
-        attributes = {k: raw[k] for k in attributes_to_check if k in raw}
-
-        return attributes
+        return {k: raw[k] for k in attributes_to_check if k in raw}

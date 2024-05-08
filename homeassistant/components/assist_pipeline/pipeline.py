@@ -13,7 +13,7 @@ from pathlib import Path
 from queue import Empty, Queue
 from threading import Thread
 import time
-from typing import TYPE_CHECKING, Any, Final, cast
+from typing import TYPE_CHECKING, Any, Final, Literal, cast
 import wave
 
 import voluptuous as vol
@@ -56,6 +56,7 @@ from .const import (
     CONF_DEBUG_RECORDING_DIR,
     DATA_CONFIG,
     DATA_LAST_WAKE_UP,
+    DATA_MIGRATIONS,
     DOMAIN,
     WAKE_WORD_COOLDOWN,
 )
@@ -583,7 +584,7 @@ class PipelineRun:
                 self.audio_settings.noise_suppression_level,
             )
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Compare pipeline runs by id."""
         if isinstance(other, PipelineRun):
             return self.id == other.id
@@ -754,9 +755,9 @@ class PipelineRun:
                     raise DuplicateWakeUpDetectedError(result.wake_word_phrase)
 
             # Record last wake up time to block duplicate detections
-            self.hass.data[DATA_LAST_WAKE_UP][
-                result.wake_word_phrase
-            ] = time.monotonic()
+            self.hass.data[DATA_LAST_WAKE_UP][result.wake_word_phrase] = (
+                time.monotonic()
+            )
 
             if result.queued_audio:
                 # Add audio that was pending at detection.
@@ -1294,7 +1295,7 @@ def _pipeline_debug_recording_thread_proc(
                     wav_writer.writeframes(message)
     except Empty:
         pass  # occurs when pipeline has unexpected error
-    except Exception:  # pylint: disable=broad-exception-caught
+    except Exception:
         _LOGGER.exception("Unexpected error in debug recording thread")
     finally:
         if wav_writer is not None:
@@ -1375,9 +1376,9 @@ class PipelineInput:
                             raise DuplicateWakeUpDetectedError(self.wake_word_phrase)
 
                     # Record last wake up time to block duplicate detections
-                    self.run.hass.data[DATA_LAST_WAKE_UP][
-                        self.wake_word_phrase
-                    ] = time.monotonic()
+                    self.run.hass.data[DATA_LAST_WAKE_UP][self.wake_word_phrase] = (
+                        time.monotonic()
+                    )
 
                 stt_input_stream = stt_processed_stream
 
@@ -1814,3 +1815,47 @@ async def async_setup_pipeline_store(hass: HomeAssistant) -> PipelineData:
         PIPELINE_FIELDS,
     ).async_setup(hass)
     return PipelineData(pipeline_store)
+
+
+@callback
+def async_migrate_engine(
+    hass: HomeAssistant,
+    engine_type: Literal["conversation", "stt", "tts", "wake_word"],
+    old_value: str,
+    new_value: str,
+) -> None:
+    """Register a migration of an engine used in pipelines."""
+    hass.data.setdefault(DATA_MIGRATIONS, {})[engine_type] = (old_value, new_value)
+
+    # Run migrations when config is already loaded
+    if DATA_CONFIG in hass.data:
+        hass.async_create_background_task(
+            async_run_migrations(hass), "assist_pipeline_migration", eager_start=True
+        )
+
+
+async def async_run_migrations(hass: HomeAssistant) -> None:
+    """Run pipeline migrations."""
+    if not (migrations := hass.data.get(DATA_MIGRATIONS)):
+        return
+
+    engine_attr = {
+        "conversation": "conversation_engine",
+        "stt": "stt_engine",
+        "tts": "tts_engine",
+        "wake_word": "wake_word_entity",
+    }
+
+    updates = []
+
+    for pipeline in async_get_pipelines(hass):
+        attr_updates = {}
+        for engine_type, (old_value, new_value) in migrations.items():
+            if getattr(pipeline, engine_attr[engine_type]) == old_value:
+                attr_updates[engine_attr[engine_type]] = new_value
+
+        if attr_updates:
+            updates.append((pipeline, attr_updates))
+
+    for pipeline, attr_updates in updates:
+        await async_update_pipeline(hass, pipeline, **attr_updates)

@@ -270,4 +270,4 @@ class UnifiEntity(Entity, Generic[HandlerT, ApiItemT]):
 
         Perform additional action updating platform entity child class state.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
