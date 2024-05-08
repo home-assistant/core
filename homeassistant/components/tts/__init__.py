@@ -385,19 +385,20 @@ class TextToSpeechEntity(RestoreEntity):
 
     @classmethod
     def __init_subclass__(cls) -> None:
+        super().__init_subclass__()
         if not (
             hasattr(cls, "_attr_default_language")
-            or type(cls.default_language) is property  # type: ignore[comparison-overlap]
+            or cls.default_language != TextToSpeechEntity.default_language
         ):
             raise AttributeError(
-                "You need to either set the '_attr_default_language' variable or overwrite the 'default_language' property"
+                "You need to either set the '_attr_default_language' attribute or overwrite the 'default_language' property"
             )
         if not (
             hasattr(cls, "_attr_supported_languages")
-            or type(cls.supported_languages) is property  # type: ignore[comparison-overlap]
+            or cls.supported_languages != TextToSpeechEntity.supported_languages
         ):
             raise AttributeError(
-                "You need to either set the '_attr_supported_languages' variable or overwrite the 'supported_languages' property"
+                "You need to either set the '_attr_supported_languages' attribute or overwrite the 'supported_languages' property"
             )
 
     @property
