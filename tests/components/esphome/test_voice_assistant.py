@@ -554,7 +554,8 @@ async def test_send_tts_wrong_sample_rate(
         )
 
         assert voice_assistant_api_pipeline._tts_task is not None
-        await voice_assistant_api_pipeline._tts_task  # raises ValueError
+        with pytest.raises(ValueError):
+            await voice_assistant_api_pipeline._tts_task
 
 
 async def test_send_tts_wrong_format(
@@ -581,7 +582,8 @@ async def test_send_tts_wrong_format(
         )
 
         assert voice_assistant_api_pipeline._tts_task is not None
-        await voice_assistant_api_pipeline._tts_task  # raises ValueError
+        with pytest.raises(ValueError):
+            await voice_assistant_api_pipeline._tts_task
 
 
 async def test_send_tts_not_started(
