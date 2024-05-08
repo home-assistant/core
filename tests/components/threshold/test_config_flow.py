@@ -22,7 +22,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -40,7 +40,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "My threshold sensor"
     assert result["data"] == {}
     assert result["options"] == {
@@ -64,7 +64,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     assert config_entry.title == "My threshold sensor"
 
 
-@pytest.mark.parametrize(("extra_input_data", "error"), (({}, "need_lower_upper"),))
+@pytest.mark.parametrize(("extra_input_data", "error"), [({}, "need_lower_upper")])
 async def test_fail(hass: HomeAssistant, extra_input_data, error) -> None:
     """Test not providing lower or upper limit fails."""
     input_sensor = "sensor.input"
@@ -72,7 +72,7 @@ async def test_fail(hass: HomeAssistant, extra_input_data, error) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
@@ -84,7 +84,7 @@ async def test_fail(hass: HomeAssistant, extra_input_data, error) -> None:
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
 
@@ -122,7 +122,7 @@ async def test_options(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     schema = result["data_schema"].schema
     assert get_suggested(schema, "hysteresis") == 0.0
@@ -136,7 +136,7 @@ async def test_options(hass: HomeAssistant) -> None:
             "upper": 20.0,
         },
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "entity_id": input_sensor,
         "hysteresis": 0.0,

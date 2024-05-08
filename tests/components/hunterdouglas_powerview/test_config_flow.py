@@ -28,7 +28,7 @@ async def test_user_form(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -37,7 +37,7 @@ async def test_user_form(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == f"Powerview Generation {api_version}"
     assert result2["data"] == {CONF_HOST: "1.2.3.4", CONF_API_VERSION: api_version}
     assert result2["result"].unique_id == "A1B2C3D4E5G6H7"
@@ -47,14 +47,14 @@ async def test_user_form(
     result3 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result3["type"] == FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {}
 
     result4 = await hass.config_entries.flow.async_configure(
         result3["flow_id"],
         {CONF_HOST: "1.2.3.4"},
     )
-    assert result4["type"] == FlowResultType.ABORT
+    assert result4["type"] is FlowResultType.ABORT
     assert result4["reason"] == "already_configured"
 
 
@@ -84,7 +84,7 @@ async def test_form_homekit_and_dhcp_cannot_connect(
             data=discovery_info,
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
     # test we can recover from the failed entry
@@ -97,7 +97,7 @@ async def test_form_homekit_and_dhcp_cannot_connect(
     result3 = await hass.config_entries.flow.async_configure(result2["flow_id"], {})
     await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == f"Powerview Generation {api_version}"
     assert result3["data"] == {CONF_HOST: "1.2.3.4", CONF_API_VERSION: api_version}
     assert result3["result"].unique_id == "A1B2C3D4E5G6H7"
@@ -127,7 +127,7 @@ async def test_form_homekit_and_dhcp(
         data=discovery_info,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
     assert result["errors"] is None
     assert result["description_placeholders"] == {
@@ -139,7 +139,7 @@ async def test_form_homekit_and_dhcp(
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == f"Powerview Generation {api_version}"
     assert result2["data"] == {CONF_HOST: "1.2.3.4", CONF_API_VERSION: api_version}
     assert result2["result"].unique_id == "A1B2C3D4E5G6H7"
@@ -151,7 +151,7 @@ async def test_form_homekit_and_dhcp(
         context={"source": source},
         data=discovery_info,
     )
-    assert result3["type"] == FlowResultType.ABORT
+    assert result3["type"] is FlowResultType.ABORT
 
 
 @pytest.mark.usefixtures("mock_hunterdouglas_hub")
@@ -178,7 +178,7 @@ async def test_discovered_by_homekit_and_dhcp(
         data=homekit_discovery,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
 
     result2 = await hass.config_entries.flow.async_init(
@@ -187,7 +187,7 @@ async def test_discovered_by_homekit_and_dhcp(
         data=dhcp_discovery,
     )
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_in_progress"
 
 
@@ -213,7 +213,7 @@ async def test_form_cannot_connect(
             {CONF_HOST: "1.2.3.4"},
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
     # Now try again without the patch in place to make sure we can recover
@@ -222,7 +222,7 @@ async def test_form_cannot_connect(
         {CONF_HOST: "1.2.3.4"},
     )
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == f"Powerview Generation {api_version}"
     assert result3["data"] == {CONF_HOST: "1.2.3.4", CONF_API_VERSION: api_version}
     assert result3["result"].unique_id == "A1B2C3D4E5G6H7"
@@ -242,19 +242,22 @@ async def test_form_no_data(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_data",
-        return_value={},
-    ), patch(
-        "homeassistant.components.hunterdouglas_powerview.Hub.request_home_data",
-        return_value={},
+    with (
+        patch(
+            "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_data",
+            return_value={},
+        ),
+        patch(
+            "homeassistant.components.hunterdouglas_powerview.Hub.request_home_data",
+            return_value={},
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "1.2.3.4"},
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
     # Now try again without the patch in place to make sure we can recover
@@ -263,7 +266,7 @@ async def test_form_no_data(
         {CONF_HOST: "1.2.3.4"},
     )
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == f"Powerview Generation {api_version}"
     assert result3["data"] == {CONF_HOST: "1.2.3.4", CONF_API_VERSION: api_version}
     assert result3["result"].unique_id == "A1B2C3D4E5G6H7"
@@ -293,7 +296,7 @@ async def test_form_unknown_exception(
             {CONF_HOST: "1.2.3.4"},
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
     # Now try again without the patch in place to make sure we can recover
@@ -302,7 +305,7 @@ async def test_form_unknown_exception(
         {CONF_HOST: "1.2.3.4"},
     )
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == f"Powerview Generation {api_version}"
     assert result2["data"] == {CONF_HOST: "1.2.3.4", CONF_API_VERSION: api_version}
     assert result2["result"].unique_id == "A1B2C3D4E5G6H7"
@@ -332,7 +335,7 @@ async def test_form_unsupported_device(
             {CONF_HOST: "1.2.3.4"},
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unsupported_device"}
 
     # Now try again without the patch in place to make sure we can recover
@@ -341,7 +344,7 @@ async def test_form_unsupported_device(
         {CONF_HOST: "1.2.3.4"},
     )
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == f"Powerview Generation {api_version}"
     assert result3["data"] == {CONF_HOST: "1.2.3.4", CONF_API_VERSION: api_version}
     assert result3["result"].unique_id == "A1B2C3D4E5G6H7"

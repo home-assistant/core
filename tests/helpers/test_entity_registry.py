@@ -1,6 +1,7 @@
 """Tests for the Entity Registry."""
 
 from datetime import timedelta
+from functools import partial
 from typing import Any
 from unittest.mock import patch
 
@@ -397,13 +398,6 @@ async def test_filter_on_load(
                     "unique_id": "disabled-hass",
                     "disabled_by": "hass",  # We store the string representation
                 },
-                # This entry should have the entity_category reset to None
-                {
-                    "entity_id": "test.system_entity",
-                    "platform": "super_platform",
-                    "unique_id": "system-entity",
-                    "entity_category": "system",
-                },
             ]
         },
     }
@@ -411,13 +405,12 @@ async def test_filter_on_load(
     await er.async_load(hass)
     registry = er.async_get(hass)
 
-    assert len(registry.entities) == 5
+    assert len(registry.entities) == 4
     assert set(registry.entities.keys()) == {
         "test.disabled_hass",
         "test.disabled_user",
         "test.named",
         "test.no_name",
-        "test.system_entity",
     }
 
     entry_with_name = registry.async_get_or_create(
@@ -441,10 +434,115 @@ async def test_filter_on_load(
     assert entry_disabled_user.disabled
     assert entry_disabled_user.disabled_by is er.RegistryEntryDisabler.USER
 
-    entry_system_category = registry.async_get_or_create(
-        "test", "system_entity", "system-entity"
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_load_bad_data(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test loading invalid data."""
+    hass_storage[er.STORAGE_KEY] = {
+        "version": er.STORAGE_VERSION_MAJOR,
+        "minor_version": er.STORAGE_VERSION_MINOR,
+        "data": {
+            "entities": [
+                {
+                    "aliases": [],
+                    "area_id": None,
+                    "capabilities": None,
+                    "categories": {},
+                    "config_entry_id": None,
+                    "device_class": None,
+                    "device_id": None,
+                    "disabled_by": None,
+                    "entity_category": None,
+                    "entity_id": "test.test1",
+                    "has_entity_name": False,
+                    "hidden_by": None,
+                    "icon": None,
+                    "id": "00001",
+                    "labels": [],
+                    "name": None,
+                    "options": None,
+                    "original_device_class": None,
+                    "original_icon": None,
+                    "original_name": None,
+                    "platform": "super_platform",
+                    "previous_unique_id": None,
+                    "supported_features": 0,
+                    "translation_key": None,
+                    "unique_id": 123,  # Should trigger warning
+                    "unit_of_measurement": None,
+                },
+                {
+                    "aliases": [],
+                    "area_id": None,
+                    "capabilities": None,
+                    "categories": {},
+                    "config_entry_id": None,
+                    "device_class": None,
+                    "device_id": None,
+                    "disabled_by": None,
+                    "entity_category": None,
+                    "entity_id": "test.test2",
+                    "has_entity_name": False,
+                    "hidden_by": None,
+                    "icon": None,
+                    "id": "00002",
+                    "labels": [],
+                    "name": None,
+                    "options": None,
+                    "original_device_class": None,
+                    "original_icon": None,
+                    "original_name": None,
+                    "platform": "super_platform",
+                    "previous_unique_id": None,
+                    "supported_features": 0,
+                    "translation_key": None,
+                    "unique_id": ["not", "valid"],  # Should not load
+                    "unit_of_measurement": None,
+                },
+            ],
+            "deleted_entities": [
+                {
+                    "config_entry_id": None,
+                    "entity_id": "test.test3",
+                    "id": "00003",
+                    "orphaned_timestamp": None,
+                    "platform": "super_platform",
+                    "unique_id": 234,  # Should trigger warning
+                },
+                {
+                    "config_entry_id": None,
+                    "entity_id": "test.test4",
+                    "id": "00004",
+                    "orphaned_timestamp": None,
+                    "platform": "super_platform",
+                    "unique_id": ["also", "not", "valid"],  # Should not load
+                },
+            ],
+        },
+    }
+
+    await er.async_load(hass)
+    registry = er.async_get(hass)
+
+    assert len(registry.entities) == 1
+    assert set(registry.entities.keys()) == {"test.test1"}
+
+    assert len(registry.deleted_entities) == 1
+    assert set(registry.deleted_entities.keys()) == {("test", "super_platform", 234)}
+
+    assert (
+        "'test' from integration super_platform has a non string unique_id '123', "
+        "please create a bug report" in caplog.text
     )
-    assert entry_system_category.entity_category is None
+    assert (
+        "Entity registry entry 'test.test2' from integration super_platform could not "
+        "be loaded: 'unique_id must be a string, got ['not', 'valid']', please create "
+        "a bug report" in caplog.text
+    )
 
 
 def test_async_get_entity_id(entity_registry: er.EntityRegistry) -> None:
@@ -704,9 +802,10 @@ async def test_update_entity_unique_id_conflict(
     entry2 = entity_registry.async_get_or_create(
         "light", "hue", "1234", config_entry=mock_config
     )
-    with patch.object(
-        entity_registry, "async_schedule_save"
-    ) as mock_schedule_save, pytest.raises(ValueError):
+    with (
+        patch.object(entity_registry, "async_schedule_save") as mock_schedule_save,
+        pytest.raises(ValueError),
+    ):
         entity_registry.async_update_entity(
             entry.entity_id, new_unique_id=entry2.unique_id
         )
@@ -752,9 +851,10 @@ async def test_update_entity_entity_id_entity_id(
     assert entry2.entity_id != state_entity_id
 
     # Try updating to a registered entity_id
-    with patch.object(
-        entity_registry, "async_schedule_save"
-    ) as mock_schedule_save, pytest.raises(ValueError):
+    with (
+        patch.object(entity_registry, "async_schedule_save") as mock_schedule_save,
+        pytest.raises(ValueError),
+    ):
         entity_registry.async_update_entity(
             entry.entity_id, new_entity_id=entry2.entity_id
         )
@@ -769,9 +869,10 @@ async def test_update_entity_entity_id_entity_id(
     assert entity_registry.async_get(entry2.entity_id) is entry2
 
     # Try updating to an entity_id which is in the state machine
-    with patch.object(
-        entity_registry, "async_schedule_save"
-    ) as mock_schedule_save, pytest.raises(ValueError):
+    with (
+        patch.object(entity_registry, "async_schedule_save") as mock_schedule_save,
+        pytest.raises(ValueError),
+    ):
         entity_registry.async_update_entity(
             entry.entity_id, new_entity_id=state_entity_id
         )
@@ -949,85 +1050,6 @@ async def test_restore_states(
     assert hass.states.get("light.simple") is None
     assert hass.states.get("light.disabled") is None
     assert hass.states.get("light.all_info_set") is None
-
-
-async def test_async_get_device_class_lookup(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test registry device class lookup."""
-    hass.set_state(CoreState.not_running)
-
-    entity_registry.async_get_or_create(
-        "binary_sensor",
-        "light",
-        "battery_charging",
-        device_id="light_device_entry_id",
-        original_device_class="battery_charging",
-    )
-    entity_registry.async_get_or_create(
-        "sensor",
-        "light",
-        "battery",
-        device_id="light_device_entry_id",
-        original_device_class="battery",
-    )
-    entity_registry.async_get_or_create(
-        "light", "light", "demo", device_id="light_device_entry_id"
-    )
-    entity_registry.async_get_or_create(
-        "binary_sensor",
-        "vacuum",
-        "battery_charging",
-        device_id="vacuum_device_entry_id",
-        original_device_class="battery_charging",
-    )
-    entity_registry.async_get_or_create(
-        "sensor",
-        "vacuum",
-        "battery",
-        device_id="vacuum_device_entry_id",
-        original_device_class="battery",
-    )
-    entity_registry.async_get_or_create(
-        "vacuum", "vacuum", "demo", device_id="vacuum_device_entry_id"
-    )
-    entity_registry.async_get_or_create(
-        "binary_sensor",
-        "remote",
-        "battery_charging",
-        device_id="remote_device_entry_id",
-        original_device_class="battery_charging",
-    )
-    entity_registry.async_get_or_create(
-        "remote", "remote", "demo", device_id="remote_device_entry_id"
-    )
-
-    device_lookup = entity_registry.async_get_device_class_lookup(
-        {("binary_sensor", "battery_charging"), ("sensor", "battery")}
-    )
-
-    assert device_lookup == {
-        "remote_device_entry_id": {
-            (
-                "binary_sensor",
-                "battery_charging",
-            ): "binary_sensor.remote_battery_charging"
-        },
-        "light_device_entry_id": {
-            (
-                "binary_sensor",
-                "battery_charging",
-            ): "binary_sensor.light_battery_charging",
-            ("sensor", "battery"): "sensor.light_battery",
-        },
-        "vacuum_device_entry_id": {
-            (
-                "binary_sensor",
-                "battery_charging",
-            ): "binary_sensor.vacuum_battery_charging",
-            ("sensor", "battery"): "sensor.vacuum_battery",
-        },
-    }
 
 
 async def test_remove_device_removes_entities(
@@ -1548,6 +1570,38 @@ async def test_hidden_by_str_not_allowed(entity_registry: er.EntityRegistry) -> 
         )
 
 
+async def test_unique_id_non_hashable(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test unique_id which is not hashable."""
+    with pytest.raises(TypeError):
+        entity_registry.async_get_or_create("light", "hue", ["not", "valid"])
+
+    entity_id = entity_registry.async_get_or_create("light", "hue", "1234").entity_id
+    with pytest.raises(TypeError):
+        entity_registry.async_update_entity(entity_id, new_unique_id=["not", "valid"])
+
+
+async def test_unique_id_non_string(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test unique_id which is not a string."""
+    entity_registry.async_get_or_create("light", "hue", 1234)
+    assert (
+        "'light' from integration hue has a non string unique_id '1234', "
+        "please create a bug report" in caplog.text
+    )
+
+    entity_id = entity_registry.async_get_or_create("light", "hue", "1234").entity_id
+    entity_registry.async_update_entity(entity_id, new_unique_id=2345)
+    assert (
+        "'light' from integration hue has a non string unique_id '2345', "
+        "please create a bug report" in caplog.text
+    )
+
+
 def test_migrate_entity_to_new_platform(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
@@ -1775,8 +1829,7 @@ async def test_async_migrate_entry_delete_other(
             entity_registry.async_remove(entry2.entity_id)
             return None
         if entity_entry == entry2:
-            # We should not get here
-            pytest.fail()
+            pytest.fail("We should not get here")
         return None
 
     entries = set()
@@ -1923,3 +1976,46 @@ async def test_entries_for_category(entity_registry: er.EntityRegistry) -> None:
     assert not er.async_entries_for_category(entity_registry, "", "id")
     assert not er.async_entries_for_category(entity_registry, "scope1", "unknown")
     assert not er.async_entries_for_category(entity_registry, "scope1", "")
+
+
+async def test_get_or_create_thread_safety(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test call async_get_or_create_from a thread."""
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls async_get_or_create from a thread. Please report this issue.",
+    ):
+        await hass.async_add_executor_job(
+            entity_registry.async_get_or_create, "light", "hue", "1234"
+        )
+
+
+async def test_async_update_entity_thread_safety(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test call async_get_or_create from a thread."""
+    entry = entity_registry.async_get_or_create("light", "hue", "1234")
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls _async_update_entity from a thread. Please report this issue.",
+    ):
+        await hass.async_add_executor_job(
+            partial(
+                entity_registry.async_update_entity,
+                entry.entity_id,
+                new_unique_id="5678",
+            )
+        )
+
+
+async def test_async_remove_thread_safety(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test call async_remove from a thread."""
+    entry = entity_registry.async_get_or_create("light", "hue", "1234")
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls async_remove from a thread. Please report this issue.",
+    ):
+        await hass.async_add_executor_job(entity_registry.async_remove, entry.entity_id)

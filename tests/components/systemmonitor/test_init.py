@@ -21,7 +21,7 @@ async def test_load_unload_entry(
 ) -> None:
     """Test load and unload an entry."""
 
-    assert mock_added_config_entry.state == ConfigEntryState.LOADED
+    assert mock_added_config_entry.state is ConfigEntryState.LOADED
     assert await hass.config_entries.async_unload(mock_added_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_added_config_entry.state is ConfigEntryState.NOT_LOADED
@@ -38,7 +38,7 @@ async def test_adding_processor_to_options(
         mock_added_config_entry.entry_id
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -49,7 +49,7 @@ async def test_adding_processor_to_options(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "binary_sensor": {
             CONF_PROCESS: ["python3", "pip", "systemd"],

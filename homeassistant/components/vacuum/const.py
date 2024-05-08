@@ -1,5 +1,7 @@
 """Support for vacuum cleaner robots (botvacs)."""
 
+DOMAIN = "vacuum"
+
 STATE_CLEANING = "cleaning"
 STATE_DOCKED = "docked"
 STATE_RETURNING = "returning"

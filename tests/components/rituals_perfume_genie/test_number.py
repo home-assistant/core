@@ -14,6 +14,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -86,7 +87,7 @@ async def test_set_number_value_out_of_range(hass: HomeAssistant) -> None:
     assert state
     assert state.state == "2"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
@@ -105,7 +106,7 @@ async def test_set_number_value_out_of_range(hass: HomeAssistant) -> None:
     assert state
     assert state.state == "2"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,

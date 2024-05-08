@@ -236,7 +236,7 @@ async def test_warning_if_color_mode_flags_are_used(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
-    color_modes: tuple[str,],
+    color_modes: tuple[str, ...],
 ) -> None:
     """Test warnings deprecated config keys without supported color modes defined."""
     with patch(
@@ -278,7 +278,7 @@ async def test_warning_on_discovery_if_color_mode_flags_are_used(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
     config: dict[str, Any],
-    color_modes: tuple[str,],
+    color_modes: tuple[str, ...],
 ) -> None:
     """Test warnings deprecated config keys with discovery."""
     with patch(
@@ -983,7 +983,7 @@ async def test_controlling_the_state_with_legacy_color_handling(
     assert state.attributes.get("xy_color") is None
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
-    for _ in range(0, 2):
+    for _ in range(2):
         # Returned state after the light was turned on
         # Receiving legacy color mode: rgb.
         async_fire_mqtt_message(

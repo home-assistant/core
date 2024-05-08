@@ -165,6 +165,7 @@ def websocket_get_entities(
         vol.Optional("categories"): cv.schema_with_slug_keys(vol.Any(str, None)),
         vol.Optional("device_class"): vol.Any(str, None),
         vol.Optional("icon"): vol.Any(str, None),
+        vol.Optional("labels"): [str],
         vol.Optional("name"): vol.Any(str, None),
         vol.Optional("new_entity_id"): str,
         # We only allow setting disabled_by user via API.
@@ -223,6 +224,10 @@ def websocket_update_entity(
     if "aliases" in msg:
         # Convert aliases to a set
         changes["aliases"] = set(msg["aliases"])
+
+    if "labels" in msg:
+        # Convert labels to a set
+        changes["labels"] = set(msg["labels"])
 
     if "disabled_by" in msg and msg["disabled_by"] is None:
         # Don't allow enabling an entity of a disabled device

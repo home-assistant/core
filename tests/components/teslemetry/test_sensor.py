@@ -1,4 +1,5 @@
 """Test the Teslemetry sensor platform."""
+
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory

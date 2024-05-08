@@ -186,9 +186,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Create a task to allow the config entry to be unloaded before the driver is ready.
     # Unloading the config entry is needed if the client listen task errors.
     start_client_task = hass.async_create_task(start_client(hass, entry, client))
-    hass.data[DOMAIN].setdefault(entry.entry_id, {})[
-        DATA_START_CLIENT_TASK
-    ] = start_client_task
+    hass.data[DOMAIN].setdefault(entry.entry_id, {})[DATA_START_CLIENT_TASK] = (
+        start_client_task
+    )
 
     return True
 
@@ -307,7 +307,8 @@ class DriverEvents:
             controller.on(
                 "node added",
                 lambda event: self.hass.async_create_task(
-                    self.controller_events.async_on_node_added(event["node"])
+                    self.controller_events.async_on_node_added(event["node"]),
+                    eager_start=False,
                 ),
             )
         )
@@ -415,7 +416,8 @@ class ControllerEvents:
             node.on(
                 "ready",
                 lambda event: self.hass.async_create_task(
-                    self.node_events.async_on_node_ready(event["node"])
+                    self.node_events.async_on_node_ready(event["node"]),
+                    eager_start=False,
                 ),
             )
         )
@@ -919,7 +921,7 @@ async def client_listen(
         should_reload = False
     except BaseZwaveJSServerError as err:
         LOGGER.error("Failed to listen: %s", err)
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         # We need to guard against unknown exceptions to not crash this task.
         LOGGER.exception("Unexpected exception: %s", err)
 

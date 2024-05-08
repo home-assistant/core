@@ -17,21 +17,26 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.linear_garage_door.config_flow.Linear.login",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.linear_garage_door.config_flow.Linear.get_sites",
-        return_value=[{"id": "test-site-id", "name": "test-site-name"}],
-    ), patch(
-        "homeassistant.components.linear_garage_door.config_flow.Linear.close",
-        return_value=None,
-    ), patch(
-        "uuid.uuid4",
-        return_value="test-uuid",
+    with (
+        patch(
+            "homeassistant.components.linear_garage_door.config_flow.Linear.login",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.linear_garage_door.config_flow.Linear.get_sites",
+            return_value=[{"id": "test-site-id", "name": "test-site-name"}],
+        ),
+        patch(
+            "homeassistant.components.linear_garage_door.config_flow.Linear.close",
+            return_value=None,
+        ),
+        patch(
+            "uuid.uuid4",
+            return_value="test-uuid",
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -51,7 +56,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "test-site-name"
     assert result3["data"] == {
         "email": "test-email",
@@ -81,21 +86,26 @@ async def test_reauth(hass: HomeAssistant) -> None:
             },
             data=entry.data,
         )
-        assert result1["type"] == FlowResultType.FORM
+        assert result1["type"] is FlowResultType.FORM
         assert result1["step_id"] == "user"
 
-        with patch(
-            "homeassistant.components.linear_garage_door.config_flow.Linear.login",
-            return_value=True,
-        ), patch(
-            "homeassistant.components.linear_garage_door.config_flow.Linear.get_sites",
-            return_value=[{"id": "test-site-id", "name": "test-site-name"}],
-        ), patch(
-            "homeassistant.components.linear_garage_door.config_flow.Linear.close",
-            return_value=None,
-        ), patch(
-            "uuid.uuid4",
-            return_value="test-uuid",
+        with (
+            patch(
+                "homeassistant.components.linear_garage_door.config_flow.Linear.login",
+                return_value=True,
+            ),
+            patch(
+                "homeassistant.components.linear_garage_door.config_flow.Linear.get_sites",
+                return_value=[{"id": "test-site-id", "name": "test-site-name"}],
+            ),
+            patch(
+                "homeassistant.components.linear_garage_door.config_flow.Linear.close",
+                return_value=None,
+            ),
+            patch(
+                "uuid.uuid4",
+                return_value="test-uuid",
+            ),
         ):
             result2 = await hass.config_entries.flow.async_configure(
                 result1["flow_id"],
@@ -106,7 +116,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
             )
             await hass.async_block_till_done()
 
-        assert result2["type"] == FlowResultType.ABORT
+        assert result2["type"] is FlowResultType.ABORT
         assert result2["reason"] == "reauth_successful"
 
         entries = hass.config_entries.async_entries()
@@ -125,12 +135,15 @@ async def test_form_invalid_login(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.linear_garage_door.config_flow.Linear.login",
-        side_effect=InvalidLoginError,
-    ), patch(
-        "homeassistant.components.linear_garage_door.config_flow.Linear.close",
-        return_value=None,
+    with (
+        patch(
+            "homeassistant.components.linear_garage_door.config_flow.Linear.login",
+            side_effect=InvalidLoginError,
+        ),
+        patch(
+            "homeassistant.components.linear_garage_door.config_flow.Linear.close",
+            return_value=None,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -140,7 +153,7 @@ async def test_form_invalid_login(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -163,5 +176,5 @@ async def test_form_exception(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}

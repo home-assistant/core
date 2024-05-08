@@ -77,7 +77,6 @@ class TailwindNumberEntity(TailwindEntity, NumberEntity):
             await self.entity_description.set_value_fn(self.coordinator.tailwind, value)
         except TailwindError as exc:
             raise HomeAssistantError(
-                str(exc),
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
             ) from exc

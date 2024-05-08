@@ -6,7 +6,10 @@ DOMAIN = "google_tasks"
 
 OAUTH2_AUTHORIZE = "https://accounts.google.com/o/oauth2/v2/auth"
 OAUTH2_TOKEN = "https://oauth2.googleapis.com/token"
-OAUTH2_SCOPES = ["https://www.googleapis.com/auth/tasks"]
+OAUTH2_SCOPES = [
+    "https://www.googleapis.com/auth/tasks",
+    "https://www.googleapis.com/auth/userinfo.profile",
+]
 
 
 class TaskStatus(StrEnum):

@@ -2,8 +2,8 @@
 
 from unittest.mock import MagicMock
 
+from homeassistant.components import number
 from homeassistant.components.fully_kiosk.const import DOMAIN, UPDATE_INTERVAL
-import homeassistant.components.number as number
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er

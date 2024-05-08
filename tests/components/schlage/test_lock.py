@@ -59,7 +59,7 @@ async def test_changed_by(
 
     # Make the coordinator refresh data.
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=31))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     mock_lock.last_changed_by.assert_called_once_with()
 
     lock_device = hass.states.get("lock.vault_door")

@@ -38,7 +38,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import TemplateError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_loaded_integration
 
@@ -122,6 +122,7 @@ EVENT_TELEGRAM_SENT = "telegram_sent"
 PARSER_HTML = "html"
 PARSER_MD = "markdown"
 PARSER_MD2 = "markdownv2"
+PARSER_PLAIN_TEXT = "plain_text"
 
 DEFAULT_TRUSTED_NETWORKS = [ip_network("149.154.160.0/20"), ip_network("91.108.4.0/22")]
 
@@ -366,7 +367,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     for p_config in domain_config:
         # Each platform config gets its own bot
-        bot = initialize_bot(p_config)
+        bot = initialize_bot(hass, p_config)
         p_type: str = p_config[CONF_PLATFORM]
 
         platform = platforms[p_type]
@@ -378,7 +379,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 _LOGGER.error("Failed to initialize Telegram bot %s", p_type)
                 return False
 
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error setting up platform %s", p_type)
             return False
 
@@ -456,16 +457,55 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def initialize_bot(p_config):
+def initialize_bot(hass: HomeAssistant, p_config: dict) -> Bot:
     """Initialize telegram bot with proxy support."""
-    api_key = p_config.get(CONF_API_KEY)
-    proxy_url = p_config.get(CONF_PROXY_URL)
-    proxy_params = p_config.get(CONF_PROXY_PARAMS)
+    api_key: str = p_config[CONF_API_KEY]
+    proxy_url: str | None = p_config.get(CONF_PROXY_URL)
+    proxy_params: dict | None = p_config.get(CONF_PROXY_PARAMS)
 
     if proxy_url is not None:
-        # These have been kept for backwards compatibility, they can actually be stuffed into the URL.
-        # Side note: In the future we should deprecate these and raise a repair issue if we find them here.
-        auth = proxy_params.pop("username"), proxy_params.pop("password")
+        auth = None
+        if proxy_params is None:
+            # CONF_PROXY_PARAMS has been kept for backwards compatibility.
+            proxy_params = {}
+        elif "username" in proxy_params and "password" in proxy_params:
+            # Auth can actually be stuffed into the URL, but the docs have previously
+            # indicated to put them here.
+            auth = proxy_params.pop("username"), proxy_params.pop("password")
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "proxy_params_auth_deprecation",
+                breaks_in_ha_version="2024.10.0",
+                is_persistent=False,
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_placeholders={
+                    "proxy_params": CONF_PROXY_PARAMS,
+                    "proxy_url": CONF_PROXY_URL,
+                    "telegram_bot": "Telegram bot",
+                },
+                translation_key="proxy_params_auth_deprecation",
+                learn_more_url="https://github.com/home-assistant/core/pull/112778",
+            )
+        else:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "proxy_params_deprecation",
+                breaks_in_ha_version="2024.10.0",
+                is_persistent=False,
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_placeholders={
+                    "proxy_params": CONF_PROXY_PARAMS,
+                    "proxy_url": CONF_PROXY_URL,
+                    "httpx": "httpx",
+                    "telegram_bot": "Telegram bot",
+                },
+                translation_key="proxy_params_deprecation",
+                learn_more_url="https://github.com/home-assistant/core/pull/112778",
+            )
         proxy = httpx.Proxy(proxy_url, auth=auth, **proxy_params)
         request = HTTPXRequest(connection_pool_size=8, proxy=proxy)
     else:
@@ -485,6 +525,7 @@ class TelegramNotificationService:
             PARSER_HTML: ParseMode.HTML,
             PARSER_MD: ParseMode.MARKDOWN,
             PARSER_MD2: ParseMode.MARKDOWN_V2,
+            PARSER_PLAIN_TEXT: None,
         }
         self._parse_mode = self._parsers.get(parser)
         self.bot = bot
@@ -648,11 +689,12 @@ class TelegramNotificationService:
                 _LOGGER.warning(
                     "Update last message: out_type:%s, out=%s", type(out), out
                 )
-            return out
         except TelegramError as exc:
             _LOGGER.error(
                 "%s: %s. Args: %s, kwargs: %s", msg_error, exc, args_msg, kwargs_msg
             )
+            return None
+        return out
 
     async def send_message(self, message="", target=None, **kwargs):
         """Send a message to one or multiple pre-allowed chat IDs."""
@@ -943,10 +985,9 @@ class TelegramNotificationService:
         """Remove bot from chat."""
         chat_id = self._get_target_chat_ids(chat_id)[0]
         _LOGGER.debug("Leave from chat ID %s", chat_id)
-        leaved = await self._send_msg(
+        return await self._send_msg(
             self.bot.leave_chat, "Error leaving chat", None, chat_id
         )
-        return leaved
 
 
 class BaseTelegramBotEntity:

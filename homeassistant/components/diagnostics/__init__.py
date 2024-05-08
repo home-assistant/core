@@ -41,13 +41,17 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 class DiagnosticsPlatformData:
     """Diagnostic platform data."""
 
-    config_entry_diagnostics: Callable[
-        [HomeAssistant, ConfigEntry], Coroutine[Any, Any, Mapping[str, Any]]
-    ] | None
-    device_diagnostics: Callable[
-        [HomeAssistant, ConfigEntry, DeviceEntry],
-        Coroutine[Any, Any, Mapping[str, Any]],
-    ] | None
+    config_entry_diagnostics: (
+        Callable[[HomeAssistant, ConfigEntry], Coroutine[Any, Any, Mapping[str, Any]]]
+        | None
+    )
+    device_diagnostics: (
+        Callable[
+            [HomeAssistant, ConfigEntry, DeviceEntry],
+            Coroutine[Any, Any, Mapping[str, Any]],
+        ]
+        | None
+    )
 
 
 @dataclass(slots=True)
@@ -170,6 +174,7 @@ async def _async_get_json_file_response(
     all_custom_components = await async_get_custom_components(hass)
     for cc_domain, cc_obj in all_custom_components.items():
         custom_components[cc_domain] = {
+            "documentation": cc_obj.documentation,
             "version": cc_obj.version,
             "requirements": cc_obj.requirements,
         }

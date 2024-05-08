@@ -56,10 +56,7 @@ def setup_platform(
     py_touchline = PyTouchline()
     number_of_devices = int(py_touchline.get_number_of_devices(host))
     add_entities(
-        (
-            Touchline(PyTouchline(device_id))
-            for device_id in range(0, number_of_devices)
-        ),
+        (Touchline(PyTouchline(device_id)) for device_id in range(number_of_devices)),
         True,
     )
 
