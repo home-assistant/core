@@ -37,8 +37,8 @@
   "selector": {
     "credential_type": {
       "options": {
-        "api-key": "Org API Key",
-        "robot-location-secret": "Robot Location Secret"
+        "api-key": "Org API key",
+        "robot-location-secret": "Robot location secret"
       }
     }
   },

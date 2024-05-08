@@ -1,7 +1,6 @@
 """Test the viam config flow."""
 
-import asyncio
-from dataclasses import dataclass
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -23,40 +22,15 @@ from homeassistant.const import CONF_ADDRESS, CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .conftest import MockRobot
+
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-@dataclass
-class MockLocation:
-    """Fake location for testing."""
-
-    id: str = "13"
-    name: str = "home"
-
-
-@dataclass
-class MockRobot:
-    """Fake robot for testing."""
-
-    id: str = "1234"
-    name: str = "test"
-
-
-def async_return(result):
-    """Allow async return value with MagicMock."""
-
-    future = asyncio.Future()
-    future.set_result(result)
-    return future
-
-
-@patch("viam.app.viam_client.ViamClient")
-@patch.object(ViamClient, "create_from_dial_options")
 async def test_user_form(
-    mock_create_client: AsyncMock,
-    MockClient: MagicMock,
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
+    mock_viam_client: Generator[tuple[MagicMock, MockRobot], None, None],
 ) -> None:
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
@@ -77,12 +51,7 @@ async def test_user_form(
     assert result["step_id"] == "auth_api_key"
     assert result["errors"] == {}
 
-    mock_robot = MockRobot()
-    instance = MockClient.return_value
-    mock_create_client.return_value = instance
-    instance.app_client.list_locations.return_value = async_return([MockLocation()])
-    instance.app_client.get_location.return_value = async_return(MockLocation())
-    instance.app_client.list_robots.return_value = async_return([mock_robot])
+    _client, mock_robot = mock_viam_client
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -115,13 +84,10 @@ async def test_user_form(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@patch("viam.app.viam_client.ViamClient")
-@patch.object(ViamClient, "create_from_dial_options")
 async def test_user_form_with_location_secret(
-    mock_create_client: AsyncMock,
-    MockClient: MagicMock,
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
+    mock_viam_client: Generator[tuple[MagicMock, MockRobot], None, None],
 ) -> None:
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
@@ -142,13 +108,6 @@ async def test_user_form_with_location_secret(
     assert result["step_id"] == "auth_robot_location"
     assert result["errors"] == {}
 
-    mock_robot = MockRobot()
-    instance = MockClient.return_value
-    mock_create_client.return_value = instance
-    instance.app_client.list_locations.return_value = async_return([MockLocation()])
-    instance.app_client.get_location.return_value = async_return(MockLocation())
-    instance.app_client.list_robots.return_value = async_return([mock_robot])
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -159,6 +118,8 @@ async def test_user_form_with_location_secret(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "robot"
+
+    _client, mock_robot = mock_viam_client
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -213,9 +174,9 @@ async def test_form_missing_secret(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-@patch.object(ViamClient, "create_from_dial_options")
+@patch.object(ViamClient, "create_from_dial_options", return_value=None)
 async def test_form_cannot_connect(
-    mock_create_client: AsyncMock,
+    _mock_create_client: AsyncMock,
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
 ) -> None:
@@ -232,8 +193,6 @@ async def test_form_cannot_connect(
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "auth_api_key"
-
-    mock_create_client.return_value = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
