@@ -311,7 +311,7 @@ class PassiveBluetoothProcessorCoordinator(
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return super().available and self.last_update_success
+        return self._available and self.last_update_success
 
     @callback
     def async_get_restore_data(
