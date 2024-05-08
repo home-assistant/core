@@ -955,6 +955,10 @@ class ConfigEntry(Generic[_DataT]):
                 task,
             )
 
+        # Clear the runtime_data after unload to avoid
+        # holding onto references that are no longer needed
+        object.__setattr__(self, "runtime_data", None)
+
     @callback
     def async_start_reauth(
         self,
