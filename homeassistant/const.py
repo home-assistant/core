@@ -14,6 +14,7 @@ from .helpers.deprecation import (
     dir_with_deprecated_constants,
 )
 from .util.event_type import EventType
+from .util.hass_dict import HassKey
 from .util.signal_type import SignalType
 
 if TYPE_CHECKING:
@@ -1625,7 +1626,7 @@ SIGNAL_BOOTSTRAP_INTEGRATIONS: SignalType[dict[str, float]] = SignalType(
 
 
 # hass.data key for logging information.
-KEY_DATA_LOGGING = "logging"
+KEY_DATA_LOGGING: HassKey[str] = HassKey("logging")
 
 
 # Date/Time formats
