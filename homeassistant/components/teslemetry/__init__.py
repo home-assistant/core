@@ -69,6 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
     # Update unique_id if not set
     if entry.unique_id is None:
+        LOGGER.debug("Setting unique_id to %s", uid)
         hass.config_entries.async_update_entry(entry, unique_id=uid)
 
     # Create array of classes
