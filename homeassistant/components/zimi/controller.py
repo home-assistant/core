@@ -26,7 +26,7 @@ class ZimiController:
         """Initialize."""
         self.controller: ControlPoint = None
         self.hass = hass
-        self.config = config
+        self.config_entry = config
 
         if self.config.data.get(VERBOSITY, 0) > 1:
             _LOGGER.setLevel(logging.DEBUG)
