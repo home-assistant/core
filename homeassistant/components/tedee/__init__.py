@@ -58,8 +58,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
 
     async def register_webhook() -> None:
-        # first make sure we don't have leftover callbacks to the same instance
         instance_url = get_url(hass, allow_ip=True, allow_external=False)
+        # first make sure we don't have leftover callbacks to the same instance
         try:
             await coordinator.tedee_client.cleanup_webhooks_by_host(instance_url)
         except (TedeeDataUpdateException, TedeeWebhookException) as ex:
@@ -143,8 +143,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     )
 
     if version == 1 and minor_version == 1:
-        config_entry.minor_version = 2
         data = {**config_entry.data, CONF_WEBHOOK_ID: webhook_generate_id()}
-        hass.config_entries.async_update_entry(config_entry, data=data)
+        hass.config_entries.async_update_entry(config_entry, data=data, minor_version=2)
         _LOGGER.debug("Migration to version 1.1 successful")
     return True
