@@ -106,11 +106,6 @@ class TeslemetryVehicleEntity(TeslemetryEntity):
         self._attr_device_info = data.device
         super().__init__(data.coordinator, data.api, key)
 
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._async_update_attrs()
-        self.async_write_ha_state()
-
     @property
     def _value(self) -> Any | None:
         """Return a specific value from coordinator data."""
