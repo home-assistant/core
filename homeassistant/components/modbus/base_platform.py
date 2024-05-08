@@ -45,6 +45,7 @@ from .const import (
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
+    CONF_MAP,
     CONF_MAX_VALUE,
     CONF_MIN_VALUE,
     CONF_NAN_VALUE,
@@ -161,6 +162,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         self._structure: str = config[CONF_STRUCTURE]
         self._scale = config[CONF_SCALE]
         self._offset = config[CONF_OFFSET]
+        self._map = config.get(CONF_MAP)
         self._slave_count = config.get(CONF_SLAVE_COUNT) or config.get(
             CONF_VIRTUAL_COUNT, 0
         )
@@ -216,11 +218,16 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             val = self._min_value
         if self._max_value is not None and val > self._max_value:
             val = self._max_value
+        strval: str
         if self._zero_suppress is not None and abs(val) <= self._zero_suppress:
-            return "0"
-        if self._precision == 0:
-            return str(round(val))
-        return f"{float(val):.{self._precision}f}"
+            strval = "0"
+        elif self._precision == 0:
+            strval = str(round(val))
+        else:
+            strval = f"{float(val):.{self._precision}f}"
+        if self._map is not None:
+            return self._map.get(strval, strval)
+        return strval
 
     def unpack_structure_result(self, registers: list[int]) -> str | None:
         """Convert registers to proper result."""

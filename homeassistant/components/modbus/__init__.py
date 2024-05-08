@@ -88,6 +88,7 @@ from .const import (
     CONF_HVAC_ONOFF_REGISTER,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
+    CONF_MAP,
     CONF_MAX_TEMP,
     CONF_MAX_VALUE,
     CONF_MIN_TEMP,
@@ -197,6 +198,7 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
         vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float),
         vol.Optional(CONF_PRECISION): cv.positive_int,
+        vol.Optional(CONF_MAP): {cv.string: cv.string},
         vol.Optional(
             CONF_SWAP,
         ): vol.In(
