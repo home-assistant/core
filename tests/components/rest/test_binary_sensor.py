@@ -423,7 +423,6 @@ async def test_setup_get_bad_xml(
     state = hass.states.get("binary_sensor.foo")
 
     assert state.state == STATE_OFF
-    assert "REST xml result could not be parsed" in caplog.text
 
 
 @respx.mock

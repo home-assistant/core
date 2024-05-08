@@ -81,10 +81,11 @@ class RestData:
         ):
             try:
                 value = json_dumps(xmltodict.parse(value))
-            except ExpatError:
+            except ExpatError as err:
                 _LOGGER.warning(
-                    "REST xml result could not be parsed and converted to JSON"
+                    "REST xml result could not be parsed and converted to JSON: %s", err
                 )
+                raise
             else:
                 _LOGGER.debug("JSON converted from XML: %s", value)
         return value

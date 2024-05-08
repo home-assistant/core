@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import ssl
+from xml.parsers.expat import ExpatError
 
 import voluptuous as vol
 
@@ -149,7 +150,11 @@ class RestBinarySensor(ManualTriggerEntity, RestEntity, BinarySensorEntity):
             self._attr_is_on = False
             return
 
-        response = self.rest.data_without_xml()
+        try:
+            response = self.rest.data_without_xml()
+        except ExpatError:
+            self._attr_is_on = False
+            return
 
         raw_value = response
 
@@ -159,11 +164,7 @@ class RestBinarySensor(ManualTriggerEntity, RestEntity, BinarySensorEntity):
             )
 
         try:
-            if raw_value != self.rest.data:
-                self._attr_is_on = bool(int(str(response)))
-            else:
-                self._attr_is_on = False
-                return
+            self._attr_is_on = bool(int(str(response)))
         except ValueError:
             self._attr_is_on = {
                 "true": True,

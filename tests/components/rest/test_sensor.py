@@ -876,7 +876,7 @@ async def test_update_with_xml_convert_bad_xml(
     respx.get("http://localhost").respond(
         status_code=HTTPStatus.OK,
         headers={"content-type": "text/xml"},
-        content="",
+        content="<open></close>",
     )
     assert await async_setup_component(
         hass,
@@ -901,7 +901,7 @@ async def test_update_with_xml_convert_bad_xml(
 
     assert state.state == STATE_UNKNOWN
     assert "REST xml result could not be parsed" in caplog.text
-    assert "Empty reply" in caplog.text
+    assert "Erroneous JSON" in caplog.text
 
 
 @respx.mock
