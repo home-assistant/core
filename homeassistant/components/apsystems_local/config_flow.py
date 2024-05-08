@@ -13,13 +13,12 @@ from .const import DOMAIN, LOGGER
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_IP_ADDRESS): str,
-        vol.Required(CONF_NAME): str,
     }
 )
 
 
 class APsystemsLocalAPIFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Config flow for Blueprint."""
+    """Config flow for Apsystems local."""
 
     VERSION = 1
 
@@ -37,6 +36,10 @@ class APsystemsLocalAPIFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 api = APsystemsEZ1M(user_input[CONF_IP_ADDRESS], session=session)
                 device_info = await api.get_device_info()
                 user_input[CONF_DEVICE_ID] = device_info.deviceId
+                user_input[CONF_NAME] = (
+                    "Solar"  # Set default name, can be changed later if desired easily
+                )
+                await self.async_set_unique_id(user_input[CONF_DEVICE_ID])
             except (TimeoutError, client_exceptions.ClientConnectionError) as exception:
                 LOGGER.warning(exception)
                 _errors["base"] = "connection_refused"
