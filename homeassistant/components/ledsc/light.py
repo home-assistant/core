@@ -14,17 +14,21 @@ from .exceptions import CannotConnect
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass: HomeAssistant, config, add_entities: AddEntitiesCallback, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant, config, add_entities: AddEntitiesCallback, discovery_info=None
+):
     __setup(hass, dict(config), add_entities)
 
 
-async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry, add_entities: AddEntitiesCallback):
+async def async_setup_entry(
+    hass: HomeAssistant, config: ConfigEntry, add_entities: AddEntitiesCallback
+):
     await __setup(hass, dict(config.data), add_entities)
 
 
 async def __setup(hass: HomeAssistant, config: dict, add_entities: AddEntitiesCallback):
     client = LedSClient(hass)
-    await client.connect(host=config['host'], port=config['port'])
+    await client.connect(host=config["host"], port=config["port"])
     add_entities(client.devices.values(), True)
 
 
@@ -45,19 +49,26 @@ class LedSClient:
         try:
             self.client = await websocket.connect(f"ws://{host}:{port}", open_timeout=2)
         except OSError:
-            raise CannotConnect(f"LedSClient: Could not connect to websocket at {host}:{port}")
+            raise CannotConnect(
+                f"LedSClient: Could not connect to websocket at {host}:{port}"
+            )
         _LOGGER.info(f"LedSClient: Connected to {host}:{port}")
         initial_message = json.loads(await self.client.recv())
 
-        if 'dev' in initial_message:
-            for name, data in initial_message['dev'].items():
+        if "dev" in initial_message:
+            for name, data in initial_message["dev"].items():
                 if name in self.devices:
                     device = self.devices[name]
                     await device.data(value=data)
                     device._client = self.client
                 else:
-                    self.devices[name] = LedSC(name=name, data=data, client_id=f"{host}:{port}", client=self.client,
-                                               hass=self.hass)
+                    self.devices[name] = LedSC(
+                        name=name,
+                        data=data,
+                        client_id=f"{host}:{port}",
+                        client=self.client,
+                        hass=self.hass,
+                    )
 
         _LOGGER.info(f"LedSClient: devices: {self.devices.keys()}")
 
@@ -72,8 +83,8 @@ class LedSClient:
             while True:
                 try:
                     _data = json.loads(await self.client.recv())
-                    if 'dev' in _data:
-                        for name, data in _data['dev'].items():
+                    if "dev" in _data:
+                        for name, data in _data["dev"].items():
                             if name in self.devices:
                                 await self.devices[name].data(data)
                 except ConnectionClosedOK:
