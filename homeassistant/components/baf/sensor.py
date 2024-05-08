@@ -96,7 +96,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up BAF fan sensors."""
-    device = entry.runtime_data.device
+    device = entry.runtime_data
     sensors_descriptions: list[BAFSensorDescription] = [
         description
         for description in DEFINED_ONLY_SENSORS

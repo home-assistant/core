@@ -106,7 +106,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up BAF fan switches."""
-    device = entry.runtime_data.device
+    device = entry.runtime_data
     descriptions: list[BAFSwitchDescription] = []
     descriptions.extend(BASE_SWITCHES)
     if device.has_fan:

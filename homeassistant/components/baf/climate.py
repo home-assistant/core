@@ -24,7 +24,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up BAF fan auto comfort."""
-    device = entry.runtime_data.device
+    device = entry.runtime_data
     if device.has_fan and device.has_auto_comfort:
         async_add_entities([BAFAutoComfort(device)])
 

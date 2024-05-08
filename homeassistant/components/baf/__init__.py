@@ -14,9 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import QUERY_INTERVAL, RUN_TIMEOUT
-from .models import BAFData
 
-BAFConfigEntry = ConfigEntry[BAFData]
+BAFConfigEntry = ConfigEntry[Device]
 
 
 PLATFORMS: list[Platform] = [
@@ -49,7 +48,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BAFConfigEntry) -> bool:
         run_future.cancel()
         raise ConfigEntryNotReady(f"Timed out connecting to {ip_address}") from ex
 
-    entry.runtime_data = BAFData(device, run_future)
+    entry.runtime_data = device
+    entry.async_on_unload(run_future.cancel)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -57,7 +57,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: BAFConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: BAFConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        entry.runtime_data.run_future.cancel()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

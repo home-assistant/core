@@ -31,7 +31,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up SenseME fans."""
-    device = entry.runtime_data.device
+    device = entry.runtime_data
     if device.has_fan:
         async_add_entities([BAFFan(device)])
 

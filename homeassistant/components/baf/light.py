@@ -29,7 +29,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up BAF lights."""
-    device = entry.runtime_data.device
+    device = entry.runtime_data
     if device.has_light:
         klass = BAFFanLight if device.has_fan else BAFStandaloneLight
         async_add_entities([klass(device)])

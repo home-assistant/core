@@ -119,7 +119,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up BAF numbers."""
-    device = entry.runtime_data.device
+    device = entry.runtime_data
     descriptions: list[BAFNumberDescription] = []
     if device.has_fan:
         descriptions.extend(FAN_NUMBER_DESCRIPTIONS)
