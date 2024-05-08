@@ -180,7 +180,7 @@ async def test_shutdown_on_entry_unload(
     assert crd._unsub_refresh is not None
     assert not crd._shutdown_requested
 
-    await entry._async_process_on_unload(hass)
+    await entry._async_process_unload(hass)
 
     assert crd._shutdown_requested
     assert crd._unsub_refresh is None
