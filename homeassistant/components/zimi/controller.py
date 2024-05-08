@@ -28,9 +28,6 @@ class ZimiController:
         self.hass = hass
         self.config = config
 
-        if self.config.data.get(VERBOSITY, 0) > 1:
-            _LOGGER.setLevel(logging.DEBUG)
-
         _LOGGER.debug("Initialising:\n%s", pprint.pformat(self.config.data))
 
         # store (this) bridge object in hass data
@@ -90,6 +87,16 @@ class ZimiController:
             )
 
         return True
+    
+    async def disconnect(self) -> bool:
+        """Disconnect Zimi Controller."""
+
+        if self.controller:
+            self.controller.disconnect()
+        else:
+            return False
+
+        return True    
 
     @property
     def verbosity(self) -> int:
