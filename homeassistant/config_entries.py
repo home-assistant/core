@@ -930,30 +930,33 @@ class ConfigEntry(Generic[_DataT]):
         self._on_unload.append(func)
 
     async def _async_process_on_unload(self, hass: HomeAssistant) -> None:
-        """Process the on_unload callbacks and wait for pending tasks."""
+        """Process the on_unload callbacks and wait for pending tasks.
+
+        The entry runtime_data is cleared to avoid holding onto
+        references that are no longer needed to ensure that the
+        entry runtime_data can be garbage collected.
+        """
         if self._on_unload is not None:
             while self._on_unload:
                 if job := self._on_unload.pop()():
                     self.async_create_task(hass, job, eager_start=True)
 
-        if not self._tasks and not self._background_tasks:
-            return
+        if self._tasks or self._background_tasks:
+            cancel_message = f"Config entry {self.title} with {self.domain} unloading"
+            for task in self._background_tasks:
+                task.cancel(cancel_message)
 
-        cancel_message = f"Config entry {self.title} with {self.domain} unloading"
-        for task in self._background_tasks:
-            task.cancel(cancel_message)
-
-        _, pending = await asyncio.wait(
-            [*self._tasks, *self._background_tasks], timeout=10
-        )
-
-        for task in pending:
-            _LOGGER.warning(
-                "Unloading %s (%s) config entry. Task %s did not complete in time",
-                self.title,
-                self.domain,
-                task,
+            _, pending = await asyncio.wait(
+                [*self._tasks, *self._background_tasks], timeout=10
             )
+
+            for task in pending:
+                _LOGGER.warning(
+                    "Unloading %s (%s) config entry. Task %s did not complete in time",
+                    self.title,
+                    self.domain,
+                    task,
+                )
 
         # Clear the runtime_data after unload to avoid
         # holding onto references that are no longer needed

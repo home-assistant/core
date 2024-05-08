@@ -3418,6 +3418,38 @@ async def test_entry_reload_calls_on_unload_listeners(
     assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
+async def test_entry_unload_clears_runtime_data(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Ensure runtime_data is released and can be garbage collected."""
+    entry = MockConfigEntry(domain="comp", state=config_entries.ConfigEntryState.LOADED)
+    entry.add_to_hass(hass)
+
+    async_setup = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=True)
+    async_unload_entry = AsyncMock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=async_setup,
+            async_setup_entry=mock_setup_entry,
+            async_unload_entry=async_unload_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+    hass.config.components.add("comp")
+
+    entry.runtime_data = {"hello": "world"}
+
+    assert await manager.async_unload(entry.entry_id)
+    assert len(async_unload_entry.mock_calls) == 1
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+
+    assert entry.runtime_data is None
+
+
 async def test_setup_raise_entry_error(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
