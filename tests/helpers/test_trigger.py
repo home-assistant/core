@@ -131,7 +131,7 @@ async def test_trigger_enabled_templates(
                         "event_type": "falsy_template_trigger_event",
                     },
                     {
-                        "enabled": None,  # eg. from a blueprints input defaulting to null
+                        "enabled": False,  # eg. from a blueprints input defaulting to `false`
                         "platform": "event",
                         "event_type": "falsy_trigger_event",
                     },
