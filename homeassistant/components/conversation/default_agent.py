@@ -351,25 +351,11 @@ class DefaultAgent(ConversationEntity):
                 language,
                 assistant=DOMAIN,
             )
-        except intent.NoStatesMatchedError as no_states_error:
+        except intent.MatchFailedError as match_error:
             # Intent was valid, but no entities matched the constraints.
-            error_response_type, error_response_args = _get_no_states_matched_response(
-                no_states_error
+            error_response_type, error_response_args = _get_match_error_response(
+                match_error
             )
-            return _make_error_result(
-                language,
-                intent.IntentResponseErrorCode.NO_VALID_TARGETS,
-                self._get_error_text(
-                    error_response_type, lang_intents, **error_response_args
-                ),
-                conversation_id,
-            )
-        except intent.DuplicateNamesMatchedError as duplicate_names_error:
-            # Intent was valid, but two or more entities with the same name matched.
-            (
-                error_response_type,
-                error_response_args,
-            ) = _get_duplicate_names_matched_response(duplicate_names_error)
             return _make_error_result(
                 language,
                 intent.IntentResponseErrorCode.NO_VALID_TARGETS,
@@ -804,34 +790,34 @@ class DefaultAgent(ConversationEntity):
         _LOGGER.debug("Exposed entities: %s", entity_names)
 
         # Expose all areas.
-        #
-        # We pass in area id here with the expectation that no two areas will
-        # share the same name or alias.
         areas = ar.async_get(self.hass)
         area_names = []
         for area in areas.async_list_areas():
-            area_names.append((area.name, area.id))
-            if area.aliases:
-                for alias in area.aliases:
-                    if not alias.strip():
-                        continue
+            area_names.append((area.name, area.name))
+            if not area.aliases:
+                continue
 
-                    area_names.append((alias, area.id))
+            for alias in area.aliases:
+                alias = alias.strip()
+                if not alias:
+                    continue
+
+                area_names.append((alias, alias))
 
         # Expose all floors.
-        #
-        # We pass in floor id here with the expectation that no two floors will
-        # share the same name or alias.
         floors = fr.async_get(self.hass)
         floor_names = []
         for floor in floors.async_list_floors():
-            floor_names.append((floor.name, floor.floor_id))
-            if floor.aliases:
-                for alias in floor.aliases:
-                    if not alias.strip():
-                        continue
+            floor_names.append((floor.name, floor.name))
+            if not floor.aliases:
+                continue
 
-                    floor_names.append((alias, floor.floor_id))
+            for alias in floor.aliases:
+                alias = alias.strip()
+                if not alias:
+                    continue
+
+                floor_names.append((alias, floor.name))
 
         self._slot_lists = {
             "area": TextSlotList.from_tuples(area_names, allow_template=False),
@@ -1021,59 +1007,75 @@ def _get_unmatched_response(result: RecognizeResult) -> tuple[ErrorKey, dict[str
     return ErrorKey.NO_INTENT, {}
 
 
-def _get_no_states_matched_response(
-    no_states_error: intent.NoStatesMatchedError,
+def _get_match_error_response(
+    match_error: intent.MatchFailedError,
 ) -> tuple[ErrorKey, dict[str, Any]]:
-    """Return key and template arguments for error when intent returns no matching states."""
+    """Return key and template arguments for error when target matching fails."""
 
-    # Device classes should be checked before domains
-    if no_states_error.device_classes:
-        device_class = next(iter(no_states_error.device_classes))  # first device class
-        if no_states_error.area:
+    constraints, result = match_error.constraints, match_error.result
+    reason = result.no_match_reason
+
+    if (
+        reason
+        in (intent.MatchFailedReason.DEVICE_CLASS, intent.MatchFailedReason.DOMAIN)
+    ) and constraints.device_classes:
+        device_class = next(iter(constraints.device_classes))  # first device class
+        if constraints.area_name:
             # device_class in area
             return ErrorKey.NO_DEVICE_CLASS_IN_AREA, {
                 "device_class": device_class,
-                "area": no_states_error.area,
+                "area": constraints.area_name,
             }
 
         # device_class only
         return ErrorKey.NO_DEVICE_CLASS, {"device_class": device_class}
 
-    if no_states_error.domains:
-        domain = next(iter(no_states_error.domains))  # first domain
-        if no_states_error.area:
+    if (reason == intent.MatchFailedReason.DOMAIN) and constraints.domains:
+        domain = next(iter(constraints.domains))  # first domain
+        if constraints.area_name:
             # domain in area
             return ErrorKey.NO_DOMAIN_IN_AREA, {
                 "domain": domain,
-                "area": no_states_error.area,
+                "area": constraints.area_name,
             }
 
-        if no_states_error.floor:
+        if constraints.floor_name:
             # domain in floor
             return ErrorKey.NO_DOMAIN_IN_FLOOR, {
                 "domain": domain,
-                "floor": no_states_error.floor,
+                "floor": constraints.floor_name,
             }
 
         # domain only
         return ErrorKey.NO_DOMAIN, {"domain": domain}
 
+    if reason == intent.MatchFailedReason.DUPLICATE_NAME:
+        if constraints.floor_name:
+            # duplicate on floor
+            return ErrorKey.DUPLICATE_ENTITIES_IN_FLOOR, {
+                "entity": result.no_match_name,
+                "floor": constraints.floor_name,
+            }
+
+        if constraints.area_name:
+            # duplicate on area
+            return ErrorKey.DUPLICATE_ENTITIES_IN_AREA, {
+                "entity": result.no_match_name,
+                "area": constraints.area_name,
+            }
+
+        return ErrorKey.DUPLICATE_ENTITIES, {"entity": result.no_match_name}
+
+    if reason == intent.MatchFailedReason.INVALID_AREA:
+        # Invalid area name
+        return ErrorKey.NO_AREA, {"area": result.no_match_name}
+
+    if reason == intent.MatchFailedReason.INVALID_FLOOR:
+        # Invalid floor name
+        return ErrorKey.NO_FLOOR, {"floor": result.no_match_name}
+
     # Default error
     return ErrorKey.NO_INTENT, {}
-
-
-def _get_duplicate_names_matched_response(
-    duplicate_names_error: intent.DuplicateNamesMatchedError,
-) -> tuple[ErrorKey, dict[str, Any]]:
-    """Return key and template arguments for error when intent returns duplicate matches."""
-
-    if duplicate_names_error.area:
-        return ErrorKey.DUPLICATE_ENTITIES_IN_AREA, {
-            "entity": duplicate_names_error.name,
-            "area": duplicate_names_error.area,
-        }
-
-    return ErrorKey.DUPLICATE_ENTITIES, {"entity": duplicate_names_error.name}
 
 
 def _collect_list_references(expression: Expression, list_names: set[str]) -> None:
