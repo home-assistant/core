@@ -65,7 +65,7 @@ class Trackables:
     pos_report: dict
 
 
-@dataclass
+@dataclass(slots=True)
 class TractiveData:
     """Class for Tractive data."""
 
