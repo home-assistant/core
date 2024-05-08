@@ -12,10 +12,9 @@ from .const import (
     LIVE_STATUS,
     METADATA,
     PRODUCTS,
+    SITE_INFO,
     VEHICLE_DATA,
     WAKE_UP_ONLINE,
-    COMMAND_OK,
-    SITE_INFO,
 )
 
 
@@ -26,7 +25,6 @@ def mock_metadata():
         "homeassistant.components.teslemetry.Teslemetry.metadata", return_value=METADATA
     ) as mock_products:
         yield mock_products
-)
 
 
 @pytest.fixture(autouse=True)
