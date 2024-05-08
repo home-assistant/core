@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import cast
 
 from aioaquacell import Softener
@@ -16,14 +16,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTime
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import Coordinator
 from .entity import AquacellEntity
 
-SCAN_INTERVAL = timedelta(seconds=3600)
 PARALLEL_UPDATES = 1
 
 
@@ -166,3 +165,9 @@ class SoftenerSensor(AquacellEntity, SensorEntity):
     def native_value(self) -> str | int | float | None:
         """Return the state of the sensor."""
         return self.description.value_fn(self.softener)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.softener = self.coordinator.data[0]
+        self.async_write_ha_state()
