@@ -97,13 +97,14 @@ class ZHAFirmwareUpdateEntity(
     def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
         """Initialize the ZHA siren."""
         zha_data = get_zha_data(entity_data.device_proxy.gateway_proxy.hass)
+
         super().__init__(entity_data, coordinator=zha_data.update_coordinator, **kwargs)
         CoordinatorEntity.__init__(self, zha_data.update_coordinator)
 
     @property
     def installed_version(self) -> str | None:
         """Version installed and in use."""
-        return self.entity_data.entity._attr_installed_version
+        return self.entity_data.entity.installed_version
 
     @property
     def in_progress(self) -> bool | int | None:
