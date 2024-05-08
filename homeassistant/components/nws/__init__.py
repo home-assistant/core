@@ -5,10 +5,9 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import datetime
-from functools import partial
 import logging
 
-from pynws import SimpleNWS, call_with_retry
+from pynws import NwsNoDataError, SimpleNWS, call_with_retry
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, Platform
@@ -16,7 +15,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import debounce
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    TimestampDataUpdateCoordinator,
+    UpdateFailed,
+)
 from homeassistant.util.dt import utcnow
 
 from .const import CONF_STATION, DOMAIN, UPDATE_TIME_PERIOD
@@ -66,13 +68,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ) -> Callable[[], Awaitable[None]]:
         async def update_observation() -> None:
             """Retrieve recent observations."""
-            await call_with_retry(
-                nws_data.update_observation,
-                retry_interval,
-                retry_stop,
-                retry_no_data=True,
-                start_time=utcnow() - UPDATE_TIME_PERIOD,
-            )
+            try:
+                await call_with_retry(
+                    nws_data.update_observation,
+                    retry_interval,
+                    retry_stop,
+                    retry_no_data=True,
+                    start_time=utcnow() - UPDATE_TIME_PERIOD,
+                )
+            except NwsNoDataError as err:
+                raise UpdateFailed("No data returned.") from err
 
         return update_observation
 
@@ -80,25 +85,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         retry_interval: datetime.timedelta | float,
         retry_stop: datetime.timedelta | float,
     ) -> Callable[[], Awaitable[None]]:
-        return partial(
-            call_with_retry,
-            nws_data.update_forecast,
-            retry_interval,
-            retry_stop,
-            retry_no_data=True,
-        )
+        async def update_forecast() -> None:
+            """Retrieve forecast."""
+            try:
+                await call_with_retry(
+                    nws_data.update_forecast,
+                    retry_interval,
+                    retry_stop,
+                    retry_no_data=True,
+                )
+            except NwsNoDataError as err:
+                raise UpdateFailed("No data returned.") from err
+
+        return update_forecast
 
     def async_setup_update_forecast_hourly(
         retry_interval: datetime.timedelta | float,
         retry_stop: datetime.timedelta | float,
     ) -> Callable[[], Awaitable[None]]:
-        return partial(
-            call_with_retry,
-            nws_data.update_forecast_hourly,
-            retry_interval,
-            retry_stop,
-            retry_no_data=True,
-        )
+        async def update_forecast_hourly() -> None:
+            """Retrieve forecast hourly."""
+            try:
+                await call_with_retry(
+                    nws_data.update_forecast_hourly,
+                    retry_interval,
+                    retry_stop,
+                    retry_no_data=True,
+                )
+            except NwsNoDataError as err:
+                raise UpdateFailed("No data returned.") from err
+
+        return update_forecast_hourly
 
     # Don't use retries in setup
     coordinator_observation = TimestampDataUpdateCoordinator(
