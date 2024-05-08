@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from govee_ble import GoveeBluetoothDeviceData
+from govee_ble import GoveeBluetoothDeviceData, SensorUpdate
 
 from homeassistant.components.bluetooth import BluetoothScanningMode
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -18,7 +18,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
-GoveeBLEConfigEntry = ConfigEntry[PassiveBluetoothProcessorCoordinator]
+GoveeBLEConfigEntry = ConfigEntry[PassiveBluetoothProcessorCoordinator[SensorUpdate]]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GoveeBLEConfigEntry) -> bool:
