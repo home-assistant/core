@@ -1,4 +1,4 @@
-"""The zcc integration."""
+"""The Zimi integration."""
 from __future__ import annotations
 
 import logging
@@ -15,9 +15,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Connect to Zimi Controller and register device."""
-
-    if entry.data.get(VERBOSITY, 0) > 1:
-        _LOGGER.setLevel(logging.DEBUG)
 
     _LOGGER.debug("Zimi setup starting")
 
@@ -39,5 +36,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     _LOGGER.debug("Zimi setup complete")
+
+    return True
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload Zimi entry and clean up opened connections."""
+
+    _LOGGER.info("Unloading Zimi Controller")
+
+    _LOGGER.debug("async_unload_entry()")
+    _LOGGER.debug("entry_id: %s", entry.entry_id)
+
+    controller = ZimiController(hass, entry)
+    controller.disconnect()
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_remove_device(entry.entry_id)
 
     return True

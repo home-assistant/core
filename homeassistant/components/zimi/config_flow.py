@@ -9,6 +9,7 @@ import voluptuous as vol
 from zcc import ControlPointDiscoveryService, ControlPointError
 
 from homeassistant import config_entries
+from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -20,10 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_HOST, default=""): str,
-        vol.Optional(CONF_PORT, default=5003): int,
-        vol.Optional(TIMEOUT, default=3): int,
-        vol.Optional(WATCHDOG, default=1800): int,
-        vol.Optional(VERBOSITY, default=1): int,
     }
 )
 
@@ -69,7 +66,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def validate_input(self, data: dict[str, Any]) -> dict[str, Any]:
+    async def validate_input(self, hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
         """Validate the user input."""
 
         if data[TIMEOUT] is None:
@@ -96,7 +93,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.settimeout(10)
-                s.connect((data[CONF_HOST], int(data[CONF_PORT])))
+                await hass.async_add_executor_job(s.connect((data[CONF_HOST], int(data[CONF_PORT]))))
             except ConnectionRefusedError as e:
                 raise ConnectionRefused() from e
             except TimeoutError as e:
