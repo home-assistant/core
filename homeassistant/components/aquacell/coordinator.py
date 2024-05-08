@@ -16,23 +16,23 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_REFRESH_TOKEN
+from .const import CONF_REFRESH_TOKEN, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class AquacellCoordinator(DataUpdateCoordinator[list[Softener]]):
-    """My custom coordinator."""
+    """My aquacell coordinator."""
 
     def __init__(
         self, hass: HomeAssistant, aquacell_api: AquacellApi, entry: ConfigEntry
     ) -> None:
-        """Initialize my coordinator."""
+        """Initialize coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             name="Aquacell Coordinator",
-            update_interval=timedelta(seconds=3600),
+            update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
 
         self.config_entry: ConfigEntry = entry
