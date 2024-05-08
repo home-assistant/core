@@ -59,6 +59,8 @@ from .const import (
     CONF_SWAP_BYTE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
+    CONF_TARGET_TEMP_OFFSET,
+    CONF_TARGET_TEMP_SCALE,
     CONF_VERIFY,
     CONF_VIRTUAL_COUNT,
     CONF_WRITE_TYPE,
@@ -163,6 +165,10 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         self._structure: str = config[CONF_STRUCTURE]
         self._scale = config[CONF_SCALE]
         self._offset = config[CONF_OFFSET]
+        # Use specific scale if provided, otherwise common scale
+        self._target_temp_scale = config.get(CONF_TARGET_TEMP_SCALE, self._scale)
+        # Use specific offset if provided, otherwise common offset
+        self._target_temp_offset = config.get(CONF_TARGET_TEMP_OFFSET, self._offset)
         self._sum_scale = config.get(CONF_SUM_SCALE)
         self._map = config.get(CONF_MAP)
         self._slave_count = config.get(CONF_SLAVE_COUNT) or config.get(
@@ -209,7 +215,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             registers.reverse()
         return registers
 
-    def __process_raw_value(self, entry: float | str | bytes) -> str | None:
+    def __process_raw_value(self, entry: float | str | bytes, scale_offset_target: bool = False) -> str | None:
         """Process value from sensor with NaN handling, scaling, offset, min/max etc."""
         if self._nan_value and entry in (self._nan_value, -self._nan_value):
             return None
@@ -218,7 +224,11 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         if entry != entry:  # noqa: PLR0124
             # NaN float detection replace with None
             return None
-        val: float | int = self._scale * entry + self._offset
+        val: float | int
+        if scale_offset_target:
+            val = self._target_temp_scale * entry + self._target_temp_offset
+        else:
+            val = self._scale * entry + self._offset
         if self._min_value is not None and val < self._min_value:
             val = self._min_value
         if self._max_value is not None and val > self._max_value:
@@ -234,7 +244,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             return self._map.get(strval, strval)
         return strval
 
-    def unpack_structure_result(self, registers: list[int]) -> str | None:
+    def unpack_structure_result(self, registers: list[int], scale_offset_target: bool = False) -> str | None:
         """Convert registers to proper result."""
 
         if self._swap:
@@ -243,7 +253,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             sum_of_products = sum(
                 a * b for a, b in zip(self._sum_scale, registers, strict=False)
             )
-            return self.__process_raw_value(sum_of_products)
+            return self.__process_raw_value(sum_of_products, scale_offset_target)
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
         if self._data_type == DataType.STRING:
             return byte_string.decode()
@@ -261,7 +271,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             # Apply scale, precision, limits to floats and ints
             v_result = []
             for entry in val:
-                v_temp = self.__process_raw_value(entry)
+                v_temp = self.__process_raw_value(entry, scale_offset_target)
                 if v_temp is None:
                     v_result.append("0")
                 else:
@@ -269,7 +279,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             return ",".join(map(str, v_result))
 
         # Apply scale, precision, limits to floats and ints
-        return self.__process_raw_value(val[0])
+        return self.__process_raw_value(val[0], scale_offset_target)
 
 
 class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):

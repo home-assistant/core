@@ -415,6 +415,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._target_temperature_register[
                 HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY[self._attr_hvac_mode]
             ],
+            scale_offset_target=True,
         )
 
         self._attr_current_temperature = await self._async_read_register(
@@ -483,7 +484,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         self.async_write_ha_state()
 
     async def _async_read_register(
-        self, register_type: str, register: int, raw: bool | None = False
+        self, register_type: str, register: int, raw: bool | None = False, scale_offset_target: bool = False
     ) -> float | None:
         """Read register using the Modbus hub slave."""
         result = await self._hub.async_pb_call(
@@ -500,7 +501,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             return int(result.registers[0])
 
         # The regular handling of the value
-        self._value = self.unpack_structure_result(result.registers)
+        self._value = self.unpack_structure_result(result.registers, scale_offset_target)
         if not self._value:
             self._attr_available = False
             return None
