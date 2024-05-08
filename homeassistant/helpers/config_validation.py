@@ -1311,7 +1311,7 @@ SCRIPT_SCHEMA = vol.All(ensure_list, [script_action])
 SCRIPT_ACTION_BASE_SCHEMA = {
     vol.Optional(CONF_ALIAS): string,
     vol.Optional(CONF_CONTINUE_ON_ERROR): boolean,
-    vol.Optional(CONF_ENABLED): vol.Any(boolean, template_complex),
+    vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
 }
 
 EVENT_SCHEMA = vol.Schema(
