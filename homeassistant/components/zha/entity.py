@@ -39,9 +39,12 @@ class ZHAEntity(LogMixin, entity.Entity):
         self.entity_data: EntityData = entity_data
         self._unsubs: list[Callable[[], None]] = []
 
-        self._attr_name = self.entity_data.entity.name
         self._attr_icon = self.entity_data.entity.icon
-        self._attr_translation_key = self.entity_data.entity.translation_key
+
+        if self.entity_data.entity.translation_key is not None:
+            self._attr_translation_key = self.entity_data.entity.translation_key
+        else:
+            self._attr_name = self.entity_data.entity.name
 
         if self.entity_data.entity.entity_category == ZHAEntityCategory.CONFIG:
             self._attr_entity_category = EntityCategory.CONFIG
