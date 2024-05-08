@@ -121,6 +121,10 @@ class ZHAFirmwareUpdateEntity(
         if not self.entity_data.entity.in_progress:
             return self.entity_data.entity.in_progress
 
+        # Stay in an indeterminate state until we actually send something
+        if self.entity_data.entity.progress == 0:
+            return True
+
         # Rescale 0-100% to 2-100% to avoid 0 and 1 colliding with None, False, and True
         return int(math.ceil(2 + 98 * self.entity_data.entity.progress / 100))
 
