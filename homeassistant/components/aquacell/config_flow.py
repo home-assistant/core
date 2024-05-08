@@ -40,7 +40,6 @@ async def validate_input(
     except ApiException:
         raise CannotConnect
 
-    # Return info that you want to store in the config entry.
     return {
         CONF_REFRESH_TOKEN: api.refresh_token,
         CONF_USERNAME: email,

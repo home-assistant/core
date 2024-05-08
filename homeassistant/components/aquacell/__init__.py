@@ -1,8 +1,6 @@
 """The Aquacell integration."""
 from __future__ import annotations
 
-import logging
-
 from aioaquacell import AquacellApi
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,8 +12,6 @@ from .const import DATA_AQUACELL, DOMAIN
 from .coordinator import AquacellCoordinator
 
 PLATFORMS = [Platform.SENSOR]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

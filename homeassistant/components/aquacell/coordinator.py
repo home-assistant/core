@@ -31,9 +31,7 @@ class AquacellCoordinator(DataUpdateCoordinator[list[Softener]]):
         super().__init__(
             hass,
             _LOGGER,
-            # Name of the data. For logging purposes.
             name="Aquacell Coordinator",
-            # Polling interval. Will only be polled if there are subscribers.
             update_interval=timedelta(seconds=3600),
         )
 

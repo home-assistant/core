@@ -1,11 +1,12 @@
 """Test the Aquacell config flow."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
+from aioaquacell import ApiException, AuthenticationFailed
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.aquacell.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.aquacell.const import DOMAIN
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -21,25 +22,27 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.aquacell.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ):
+        "homeassistant.components.aquacell.config_flow.AquacellApi.authenticate",
+        return_value=None,
+    ), patch(
+        "homeassistant.components.aquacell.config_flow.AquacellApi", return_value=Mock()
+    ) as api_mock:
+        api = api_mock.return_value
+        api.access_token = "access_token"
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
+                "email": "test@test.com",
                 "password": "test-password",
             },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == "test@test.com"
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
+        CONF_EMAIL: "test@test.com",
+        CONF_PASSWORD: "test-password",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -51,15 +54,14 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.aquacell.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidAuth,
+        "homeassistant.components.aquacell.config_flow.AquacellApi.authenticate",
+        side_effect=AuthenticationFailed,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_EMAIL: "test@test.com",
+                CONF_PASSWORD: "test-password",
             },
         )
 
@@ -74,15 +76,14 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.aquacell.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
+        "homeassistant.components.aquacell.config_flow.AquacellApi.authenticate",
+        side_effect=ApiException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_EMAIL: "test@test.com",
+                CONF_PASSWORD: "test-password",
             },
         )
 
