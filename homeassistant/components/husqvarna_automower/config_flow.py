@@ -29,6 +29,8 @@ class HusqvarnaConfigFlowHandler(
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow."""
         token = data[CONF_TOKEN]
+        if "amc:api" not in token["scope"] and not self.reauth_entry:
+            return self.async_abort(reason="missing_amc_scope")
         user_id = token[CONF_USER_ID]
         if self.reauth_entry:
             if "amc:api" not in token["scope"]:

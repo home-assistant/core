@@ -23,12 +23,21 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.parametrize(
+    ("scope", "amount"),
+    [
+        ("iam:read amc:api", 1),
+        ("iam:read", 0),
+    ],
+)
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth,
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host,
-    jwt,
+    jwt: str,
+    scope: str,
+    amount: int,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -58,7 +67,7 @@ async def test_full_flow(
         OAUTH2_TOKEN,
         json={
             "access_token": jwt,
-            "scope": "iam:read amc:api",
+            "scope": scope,
             "expires_in": 86399,
             "refresh_token": "mock-refresh-token",
             "provider": "husqvarna",
@@ -74,8 +83,8 @@ async def test_full_flow(
     ) as mock_setup:
         await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(mock_setup.mock_calls) == 1
+    assert len(hass.config_entries.async_entries(DOMAIN)) == amount
+    assert len(mock_setup.mock_calls) == amount
 
 
 async def test_config_non_unique_profile(
