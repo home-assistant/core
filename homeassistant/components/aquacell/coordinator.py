@@ -2,7 +2,12 @@
 from datetime import timedelta
 import logging
 
-from aioaquacell import AquacellApi, AquacellApiException, AutenticationFailed, Softener
+from aioaquacell import (
+    AquacellApi,
+    AquacellApiException,
+    AuthenticationFailed,
+    Softener,
+)
 import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
@@ -53,7 +58,7 @@ class AquacellCoordinator(DataUpdateCoordinator[list[Softener]]):
 
                 try:
                     await self.aquacell_api.authenticate_refresh(self.refresh_token)
-                except AutenticationFailed as err:
+                except AuthenticationFailed as err:
                     _LOGGER.debug(
                         "Authentication using refresh token failed due to: %s", err
                     )
@@ -64,7 +69,7 @@ class AquacellCoordinator(DataUpdateCoordinator[list[Softener]]):
 
                 _LOGGER.debug("Logged in, new token: %s", self.aquacell_api.id_token)
                 return await self.aquacell_api.get_all_softeners()
-        except AutenticationFailed as err:
+        except AuthenticationFailed as err:
             raise ConfigEntryAuthFailed from err
         except AquacellApiException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err

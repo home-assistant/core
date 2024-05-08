@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aioaquacell import ApiException, AquacellApi, AutenticationFailed
+from aioaquacell import ApiException, AquacellApi, AuthenticationFailed
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -35,7 +35,7 @@ async def validate_input(
     api = AquacellApi(session)
     try:
         await api.authenticate(email, password)
-    except AutenticationFailed:
+    except AuthenticationFailed:
         raise InvalidAuth
     except ApiException:
         raise CannotConnect
