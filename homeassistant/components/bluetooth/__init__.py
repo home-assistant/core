@@ -129,8 +129,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
-BluetoothConfigEntry = ConfigEntry[HaScanner]
-
 
 async def _async_start_adapter_discovery(
     hass: HomeAssistant,
@@ -312,7 +310,7 @@ async def async_update_device(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: BluetoothConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry for a bluetooth scanner."""
     manager = _get_manager(hass)
     address = entry.unique_id
@@ -346,13 +344,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluetoothConfigEntry) ->
     return True
 
 
-async def async_update_listener(
-    hass: HomeAssistant, entry: BluetoothConfigEntry
-) -> None:
+async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: BluetoothConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return True
