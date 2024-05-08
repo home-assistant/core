@@ -32,13 +32,8 @@ async def test_bad_config(hass: HomeAssistant) -> None:
     ("domain", "service", "params"),
     [
         (notify.DOMAIN, "test", {"message": "one, two, testing, testing"}),
-        (
-            notify.DOMAIN,
-            "send_message",
-            {"entity_id": "notify.test", "message": "one, two, testing, testing"},
-        ),
     ],
-    ids=["legacy", "entity"],
+    ids=["legacy"],
 )
 @pytest.mark.parametrize(
     ("timestamp", "config"),
@@ -242,19 +237,19 @@ async def test_legacy_notify_file_exception(
     ],
     ids=["no_timestamp", "timestamp"],
 )
-async def test_notify_file_entry_only_setup(
+async def test_legacy_notify_file_entry_only_setup(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     timestamp: bool,
     mock_is_allowed_path: MagicMock,
     data: dict[str, Any],
 ) -> None:
-    """Test the notify file output."""
+    """Test the legacy notify file output in entry only setup."""
     filename = "mock_file"
 
     domain = notify.DOMAIN
-    service = "send_message"
-    params = {"entity_id": "notify.test", "message": "one, two, testing, testing"}
+    service = "test"
+    params = {"message": "one, two, testing, testing"}
     message = params["message"]
 
     entry = MockConfigEntry(
@@ -262,6 +257,8 @@ async def test_notify_file_entry_only_setup(
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     freezer.move_to(dt_util.utcnow())
 
@@ -309,16 +306,16 @@ async def test_notify_file_entry_only_setup(
     ],
     ids=["not_allowed"],
 )
-async def test_notify_file_not_allowed_path(
+async def test_legacy_notify_file_not_allowed_path(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_is_allowed_path: MagicMock,
     data: dict[str, Any],
 ) -> None:
-    """Test the notify file output is not allowed."""
+    """Test the legacy notify file output is not allowed."""
     domain = notify.DOMAIN
-    service = "send_message"
-    params = {"entity_id": "notify.test", "message": "one, two, testing, testing"}
+    service = "test"
+    params = {"message": "one, two, testing, testing"}
 
     entry = MockConfigEntry(
         domain=DOMAIN, data=data, title=f"test [{data['filename']}]"
@@ -356,8 +353,8 @@ async def test_notify_file_write_access_failed(
 ) -> None:
     """Test the notify file fails."""
     domain = notify.DOMAIN
-    service = "send_message"
-    params = {"entity_id": "notify.test", "message": "one, two, testing, testing"}
+    service = "test"
+    params = {"message": "one, two, testing, testing"}
 
     entry = MockConfigEntry(
         domain=DOMAIN, data=data, title=f"test [{data['filename']}]"

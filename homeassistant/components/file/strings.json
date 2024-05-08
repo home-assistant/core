@@ -53,11 +53,5 @@
     "write_access_failed": {
       "message": "Write access to {filename} failed: {exc}."
     }
-  },
-  "issues": {
-    "deprecated_yaml_notify_migration": {
-      "title": "The {integration_title} YAML configuration is being removed",
-      "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nNotification services are migrated to be used with the `notify.send_message` entity service. Please adjust your automations to use the new service, as the leagcy services will stop working as soon as the `{domain}` configuration is removed from your configuration.yaml file.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-    }
   }
 }
