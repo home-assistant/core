@@ -1212,7 +1212,6 @@ async def test_exception(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) 
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_UNAVAILABLE
-
         assert len(caplog.record_tuples) == 1
         assert caplog.record_tuples[0][1] == logging.ERROR
         assert caplog.record_tuples[0][2].startswith(
