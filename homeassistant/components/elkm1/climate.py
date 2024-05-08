@@ -61,7 +61,7 @@ async def async_setup_entry(
 ) -> None:
     """Create the Elk-M1 thermostat platform."""
     elk_data = config_entry.runtime_data
-    elk = config_entry.runtime_data.elk
+    elk = elk_data.elk
     entities: list[ElkEntity] = []
     create_elk_entities(
         elk_data, elk.thermostats, "thermostat", ElkThermostat, entities
