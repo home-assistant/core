@@ -7,11 +7,7 @@ from homeassistant.components.mikrotik_bt5.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import (
-    NOT_MT_DATA,
-    UNSUPPORTED_VERSION_DATA,
-    VALID_DATA,
-)
+from . import NOT_MT_DATA, UNSUPPORTED_VERSION_DATA, VALID_DATA
 
 from tests.common import MockConfigEntry
 

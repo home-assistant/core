@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from mikrotik_bt5 import MikrotikBeacon
-from bleak.backends.device import BLEDevice
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -27,7 +26,6 @@ from homeassistant.const import (
     ATTR_NAME,
     PERCENTAGE,
     EntityCategory,
-    UnitOfElectricPotential,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -36,7 +34,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import MIKROTIK_MANUFACTURER_NAME, DOMAIN
+from .const import DOMAIN, MIKROTIK_MANUFACTURER_NAME
 
 
 @dataclass(frozen=True)
@@ -123,7 +121,7 @@ def sensor_update_to_bluetooth_data_update(
     for key, desc in SENSOR_DESCRIPTIONS.items():
         tag = _device_key_to_bluetooth_entity_key(adv.address, key)
         v = desc.value(adv)
-        if v == None:
+        if v is None:
             continue
         data[tag] = v
         names[tag] = desc.name

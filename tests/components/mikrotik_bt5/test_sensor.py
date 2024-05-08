@@ -5,15 +5,11 @@ from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 
-from . import (
-    NOT_MT_DATA,
-    UNSUPPORTED_VERSION_DATA,
-    VALID_DATA,
-    VALID_NO_TEMPERATURE_DATA,
-)
+from . import UNSUPPORTED_VERSION_DATA, VALID_DATA, VALID_NO_TEMPERATURE_DATA
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
+
 
 async def test_sensors_bt5_v1(
     hass: HomeAssistant, entity_registry_enabled_by_default: None
@@ -83,7 +79,7 @@ async def test_sensors_bt5_v1_no_temperature(
     await hass.async_block_till_done()
     assert len(hass.states.async_all("sensor")) == 3
 
-    assert hass.states.get("sensor.bt5_aa_bb_cc_dd_ee_ff_temperature") == None
+    assert hass.states.get("sensor.bt5_aa_bb_cc_dd_ee_ff_temperature") is None
 
     batt_sensor = hass.states.get("sensor.bt5_aa_bb_cc_dd_ee_ff_battery")
     batt_sensor_attrs = batt_sensor.attributes

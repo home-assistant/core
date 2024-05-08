@@ -1,4 +1,4 @@
-"""MikroTik BT5 tag integration"""
+"""MikroTik BT5 tag integration."""
 
 from __future__ import annotations
 
@@ -25,8 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 def _service_info_to_adv(
     service_info: BluetoothServiceInfoBleak,
 ) -> MikrotikBeacon:
-    b = MikrotikBeacon(service_info.device, service_info.advertisement)
-    return b
+    return MikrotikBeacon(service_info.device, service_info.advertisement)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

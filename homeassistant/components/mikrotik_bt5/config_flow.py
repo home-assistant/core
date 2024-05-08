@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from mikrotik_bt5 import MikrotikBeacon
 from bluetooth_data_tools import human_readable_name
+from mikrotik_bt5 import MikrotikBeacon
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
@@ -40,7 +40,7 @@ class MikrotikBt5ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def _raise_for_advertisement_errors(self, adv: MikrotikBeacon) -> None:
         """Raise any configuration errors that apply to an advertisement."""
-        if not adv.version in SUPPORTED_VERSIONS:
+        if adv.version not in SUPPORTED_VERSIONS:
             raise AbortFlow("unsupported_version")
 
     async def async_step_bluetooth(
