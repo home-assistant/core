@@ -507,7 +507,7 @@ async def test_sending_none_message(hass: HomeAssistant, tmp_path: Path) -> None
         await hass.services.async_call(
             notify.DOMAIN, notify.SERVICE_NOTIFY, {notify.ATTR_MESSAGE: None}
         )
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert (
         str(exc.value)
         == "template value is None for dictionary value @ data['message']"

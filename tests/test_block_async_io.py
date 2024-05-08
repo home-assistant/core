@@ -109,7 +109,6 @@ async def test_protect_loop_importlib_import_module_non_integration(
         ]
     )
     with (
-        pytest.raises(ImportError),
         patch.object(block_async_io, "_IN_TESTS", False),
         patch(
             "homeassistant.block_async_io.get_current_frame",
@@ -121,7 +120,8 @@ async def test_protect_loop_importlib_import_module_non_integration(
         ),
     ):
         block_async_io.enable()
-        importlib.import_module("not_loaded_module")
+        with pytest.raises(ImportError):
+            importlib.import_module("not_loaded_module")
 
     assert "Detected blocking call to import_module" in caplog.text
 
@@ -180,7 +180,6 @@ async def test_protect_loop_importlib_import_module_in_integration(
         ]
     )
     with (
-        pytest.raises(ImportError),
         patch.object(block_async_io, "_IN_TESTS", False),
         patch(
             "homeassistant.block_async_io.get_current_frame",
@@ -192,7 +191,8 @@ async def test_protect_loop_importlib_import_module_in_integration(
         ),
     ):
         block_async_io.enable()
-        importlib.import_module("not_loaded_module")
+        with pytest.raises(ImportError):
+            importlib.import_module("not_loaded_module")
 
     assert (
         "Detected blocking call to import_module inside the event loop by "

@@ -710,7 +710,7 @@ async def test_invalid_area_floor_names(hass: HomeAssistant) -> None:
             "TestType",
             slots={"area": {"value": "invalid area"}},
         )
-        assert err.value.result.no_match_reason == intent.MatchFailedReason.INVALID_AREA
+    assert err.value.result.no_match_reason == intent.MatchFailedReason.INVALID_AREA
 
     with pytest.raises(intent.MatchFailedError) as err:
         await intent.async_handle(
@@ -719,9 +719,7 @@ async def test_invalid_area_floor_names(hass: HomeAssistant) -> None:
             "TestType",
             slots={"floor": {"value": "invalid floor"}},
         )
-        assert (
-            err.value.result.no_match_reason == intent.MatchFailedReason.INVALID_FLOOR
-        )
+    assert err.value.result.no_match_reason == intent.MatchFailedReason.INVALID_FLOOR
 
 
 async def test_service_intent_handler_required_domains(hass: HomeAssistant) -> None:

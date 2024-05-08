@@ -65,7 +65,7 @@ async def test_pause_media_player_intent(hass: HomeAssistant) -> None:
             "test",
             media_player_intent.INTENT_MEDIA_PAUSE,
         )
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     # Test feature not supported
     hass.states.async_set(
@@ -80,7 +80,7 @@ async def test_pause_media_player_intent(hass: HomeAssistant) -> None:
             "test",
             media_player_intent.INTENT_MEDIA_PAUSE,
         )
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
 
 async def test_unpause_media_player_intent(hass: HomeAssistant) -> None:
@@ -117,7 +117,7 @@ async def test_unpause_media_player_intent(hass: HomeAssistant) -> None:
             "test",
             media_player_intent.INTENT_MEDIA_UNPAUSE,
         )
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
 
 async def test_next_media_player_intent(hass: HomeAssistant) -> None:
@@ -154,7 +154,7 @@ async def test_next_media_player_intent(hass: HomeAssistant) -> None:
             "test",
             media_player_intent.INTENT_MEDIA_NEXT,
         )
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     # Test feature not supported
     hass.states.async_set(
@@ -170,7 +170,7 @@ async def test_next_media_player_intent(hass: HomeAssistant) -> None:
             media_player_intent.INTENT_MEDIA_NEXT,
             {"name": {"value": "test media player"}},
         )
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
 
 async def test_volume_media_player_intent(hass: HomeAssistant) -> None:
@@ -208,7 +208,7 @@ async def test_volume_media_player_intent(hass: HomeAssistant) -> None:
             media_player_intent.INTENT_SET_VOLUME,
             {"volume_level": {"value": 50}},
         )
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     # Test feature not supported
     hass.states.async_set(
@@ -224,7 +224,7 @@ async def test_volume_media_player_intent(hass: HomeAssistant) -> None:
             media_player_intent.INTENT_SET_VOLUME,
             {"volume_level": {"value": 50}},
         )
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
 
 async def test_multiple_media_players(
@@ -348,7 +348,7 @@ async def test_multiple_media_players(
             media_player_intent.INTENT_MEDIA_PAUSE,
             {"name": {"value": "TV"}},
         )
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     # Pause the upstairs TV
     calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_PAUSE)
