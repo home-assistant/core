@@ -62,6 +62,9 @@ class RelaySwitch(SwitchEntity, CoordinatorEntity):
         self._attr_unique_id = (
             f"{DOMAIN}.{self._output.webio_serial}.relay_switch.{self._output.index}"
         )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._output.webio_serial)},
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -83,13 +86,6 @@ class RelaySwitch(SwitchEntity, CoordinatorEntity):
             er.async_remove(self.entity_id)
             return
         self.async_write_ha_state()
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return DeviceInfo linking this RelaySwitch with NASweb device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._output.webio_serial)},
-        )
 
     @property
     def name(self) -> str:
