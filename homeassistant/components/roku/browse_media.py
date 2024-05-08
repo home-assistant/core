@@ -1,4 +1,5 @@
 """Support for media browsing."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

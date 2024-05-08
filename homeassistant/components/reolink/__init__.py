@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -84,6 +84,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
             try:
                 await host.update_states()
+            except CredentialsInvalidError as err:
+                raise ConfigEntryAuthFailed(err) from err
             except ReolinkError as err:
                 raise UpdateFailed(str(err)) from err
 
@@ -100,10 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
             try:
                 return await host.api.check_new_firmware()
-            except (ReolinkError, asyncio.exceptions.CancelledError) as err:
-                task = asyncio.current_task()
-                if task is not None:
-                    task.uncancel()
+            except ReolinkError as err:
                 if starting:
                     _LOGGER.debug(
                         "Error checking Reolink firmware update at startup "
@@ -133,15 +132,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         update_interval=FIRMWARE_UPDATE_INTERVAL,
     )
     # Fetch initial data so we have data when entities subscribe
-    try:
-        # If camera WAN blocked, firmware check fails, do not prevent setup
-        await asyncio.gather(
-            device_coordinator.async_config_entry_first_refresh(),
-            firmware_coordinator.async_config_entry_first_refresh(),
-        )
-    except ConfigEntryNotReady:
+    results = await asyncio.gather(
+        device_coordinator.async_config_entry_first_refresh(),
+        firmware_coordinator.async_config_entry_first_refresh(),
+        return_exceptions=True,
+    )
+    # If camera WAN blocked, firmware check fails, do not prevent setup
+    # so don't check firmware_coordinator exceptions
+    if isinstance(results[0], BaseException):
         await host.stop()
-        raise
+        raise results[0]
 
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = ReolinkData(
         host=host,
@@ -150,6 +150,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
 
     cleanup_disconnected_cams(hass, config_entry.entry_id, host)
+
+    # Can be remove in HA 2024.6.0
+    entity_reg = er.async_get(hass)
+    entities = er.async_entries_for_config_entry(entity_reg, config_entry.entry_id)
+    for entity in entities:
+        if entity.domain == "light" and entity.unique_id.endswith("ir_lights"):
+            entity_reg.async_remove(entity.entity_id)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 

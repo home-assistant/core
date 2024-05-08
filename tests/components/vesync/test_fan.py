@@ -1,4 +1,5 @@
 """Tests for the fan module."""
+
 import pytest
 import requests_mock
 from syrupy import SnapshotAssertion

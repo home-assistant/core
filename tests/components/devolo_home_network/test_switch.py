@@ -1,4 +1,5 @@
 """Tests for the devolo Home Network switch."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
@@ -40,7 +41,7 @@ async def test_switch_setup(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(f"{PLATFORM}.{device_name}_enable_guest_wifi") is not None
+    assert hass.states.get(f"{PLATFORM}.{device_name}_enable_guest_wi_fi") is not None
     assert hass.states.get(f"{PLATFORM}.{device_name}_enable_leds") is not None
 
     await hass.config_entries.async_unload(entry.entry_id)
@@ -81,7 +82,7 @@ async def test_update_enable_guest_wifi(
     """Test state change of a enable_guest_wifi switch device."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    state_key = f"{PLATFORM}.{device_name}_enable_guest_wifi"
+    state_key = f"{PLATFORM}.{device_name}_enable_guest_wi_fi"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -246,8 +247,8 @@ async def test_update_enable_leds(
 @pytest.mark.parametrize(
     ("name", "get_method", "update_interval"),
     [
-        ["enable_guest_wifi", "async_get_wifi_guest_access", SHORT_UPDATE_INTERVAL],
-        ["enable_leds", "async_get_led_setting", SHORT_UPDATE_INTERVAL],
+        ("enable_guest_wi_fi", "async_get_wifi_guest_access", SHORT_UPDATE_INTERVAL),
+        ("enable_leds", "async_get_led_setting", SHORT_UPDATE_INTERVAL),
     ],
 )
 async def test_device_failure(
@@ -283,8 +284,8 @@ async def test_device_failure(
 @pytest.mark.parametrize(
     ("name", "set_method"),
     [
-        ["enable_guest_wifi", "async_set_wifi_guest_access"],
-        ["enable_leds", "async_set_led_setting"],
+        ("enable_guest_wi_fi", "async_set_wifi_guest_access"),
+        ("enable_leds", "async_set_led_setting"),
     ],
 )
 async def test_auth_failed(

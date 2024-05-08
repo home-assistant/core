@@ -1,9 +1,10 @@
 """ZHA logbook describe events tests."""
+
 from unittest.mock import patch
 
 import pytest
 import zigpy.profiles.zha
-import zigpy.zcl.clusters.general as general
+from zigpy.zcl.clusters import general
 
 from homeassistant.components.zha.core.const import ZHA_EVENT
 from homeassistant.const import CONF_DEVICE_ID, CONF_UNIQUE_ID, Platform
@@ -84,6 +85,7 @@ async def test_zha_logbook_event_device_with_triggers(
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     events = mock_humanify(
         hass,
@@ -162,6 +164,7 @@ async def test_zha_logbook_event_device_no_triggers(
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     events = mock_humanify(
         hass,
@@ -246,6 +249,7 @@ async def test_zha_logbook_event_device_no_device(
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     events = mock_humanify(
         hass,

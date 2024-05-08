@@ -1,4 +1,5 @@
 """Support for Ambient Weather Station Service."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -38,6 +39,8 @@ DEFAULT_SOCKET_MIN_RETRY = 15
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
+AmbientStationConfigEntry = ConfigEntry["AmbientStation"]
+
 
 @callback
 def async_wm2_to_lx(value: float) -> int:
@@ -54,7 +57,9 @@ def async_hydrate_station_data(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: AmbientStationConfigEntry
+) -> bool:
     """Set up the Ambient PWS as config entry."""
     if not entry.unique_id:
         hass.config_entries.async_update_entry(
@@ -73,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = ambient
+    entry.runtime_data = ambient
 
     async def _async_disconnect_websocket(_: Event) -> None:
         await ambient.websocket.disconnect()
@@ -87,12 +92,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: AmbientStationConfigEntry
+) -> bool:
     """Unload an Ambient PWS config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        ambient = hass.data[DOMAIN].pop(entry.entry_id)
-        hass.async_create_task(ambient.ws_disconnect())
+        hass.async_create_task(entry.runtime_data.ws_disconnect(), eager_start=True)
 
     return unload_ok
 
@@ -111,7 +117,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         en_reg = er.async_get(hass)
         en_reg.async_clear_config_entry(entry.entry_id)
 
-        version = entry.version = 2
+        version = 2
+        hass.config_entries.async_update_entry(entry, version=version)
 
     LOGGER.info("Migration to version %s successful", version)
 
@@ -177,7 +184,8 @@ class AmbientStation:
                 self._hass.async_create_task(
                     self._hass.config_entries.async_forward_entry_setups(
                         self._entry, PLATFORMS
-                    )
+                    ),
+                    eager_start=True,
                 )
                 self._entry_setup_complete = True
             self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY

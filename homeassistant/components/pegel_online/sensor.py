@@ -1,4 +1,5 @@
 """PEGELONLINE sensor entities."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -11,28 +12,20 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import PegelOnlineConfigEntry
 from .coordinator import PegelOnlineDataUpdateCoordinator
 from .entity import PegelOnlineEntity
 
 
-@dataclass
-class PegelOnlineRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class PegelOnlineSensorEntityDescription(SensorEntityDescription):
+    """PEGELONLINE sensor entity description."""
 
     measurement_key: str
-
-
-@dataclass
-class PegelOnlineSensorEntityDescription(
-    SensorEntityDescription, PegelOnlineRequiredKeysMixin
-):
-    """PEGELONLINE sensor entity description."""
 
 
 SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
@@ -42,7 +35,6 @@ SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
         measurement_key="air_temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
-        icon="mdi:thermometer-lines",
         entity_registry_enabled_default=False,
     ),
     PegelOnlineSensorEntityDescription(
@@ -51,14 +43,12 @@ SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
         measurement_key="clearance_height",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DISTANCE,
-        icon="mdi:bridge",
     ),
     PegelOnlineSensorEntityDescription(
         key="oxygen_level",
         translation_key="oxygen_level",
         measurement_key="oxygen_level",
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:water-opacity",
         entity_registry_enabled_default=False,
     ),
     PegelOnlineSensorEntityDescription(
@@ -74,7 +64,6 @@ SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
         measurement_key="water_speed",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.SPEED,
-        icon="mdi:waves-arrow-right",
         entity_registry_enabled_default=False,
     ),
     PegelOnlineSensorEntityDescription(
@@ -82,7 +71,6 @@ SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
         translation_key="water_flow",
         measurement_key="water_flow",
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:waves",
         entity_registry_enabled_default=False,
     ),
     PegelOnlineSensorEntityDescription(
@@ -90,7 +78,6 @@ SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
         translation_key="water_level",
         measurement_key="water_level",
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:waves-arrow-up",
     ),
     PegelOnlineSensorEntityDescription(
         key="water_temperature",
@@ -98,17 +85,18 @@ SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
         measurement_key="water_temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
-        icon="mdi:thermometer-water",
         entity_registry_enabled_default=False,
     ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: PegelOnlineConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the PEGELONLINE sensor."""
-    coordinator: PegelOnlineDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         [

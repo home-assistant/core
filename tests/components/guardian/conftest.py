@@ -1,4 +1,5 @@
 """Define fixtures for Elexa Guardian tests."""
+
 from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, patch
@@ -106,35 +107,47 @@ async def setup_guardian_fixture(
     data_wifi_status,
 ):
     """Define a fixture to set up Guardian."""
-    with patch("aioguardian.client.Client.connect"), patch(
-        "aioguardian.commands.sensor.SensorCommands.pair_dump",
-        return_value=data_sensor_pair_dump,
-    ), patch(
-        "aioguardian.commands.sensor.SensorCommands.pair_sensor",
-        return_value=data_sensor_pair_sensor,
-    ), patch(
-        "aioguardian.commands.sensor.SensorCommands.paired_sensor_status",
-        return_value=data_sensor_paired_sensor_status,
-    ), patch(
-        "aioguardian.commands.system.SystemCommands.diagnostics",
-        return_value=data_system_diagnostics,
-    ), patch(
-        "aioguardian.commands.system.SystemCommands.onboard_sensor_status",
-        return_value=data_system_onboard_sensor_status,
-    ), patch(
-        "aioguardian.commands.system.SystemCommands.ping",
-        return_value=data_system_ping,
-    ), patch(
-        "aioguardian.commands.valve.ValveCommands.status",
-        return_value=data_valve_status,
-    ), patch(
-        "aioguardian.commands.wifi.WiFiCommands.status",
-        return_value=data_wifi_status,
-    ), patch(
-        "aioguardian.client.Client.disconnect",
-    ), patch(
-        "homeassistant.components.guardian.PLATFORMS",
-        [],
+    with (
+        patch("aioguardian.client.Client.connect"),
+        patch(
+            "aioguardian.commands.sensor.SensorCommands.pair_dump",
+            return_value=data_sensor_pair_dump,
+        ),
+        patch(
+            "aioguardian.commands.sensor.SensorCommands.pair_sensor",
+            return_value=data_sensor_pair_sensor,
+        ),
+        patch(
+            "aioguardian.commands.sensor.SensorCommands.paired_sensor_status",
+            return_value=data_sensor_paired_sensor_status,
+        ),
+        patch(
+            "aioguardian.commands.system.SystemCommands.diagnostics",
+            return_value=data_system_diagnostics,
+        ),
+        patch(
+            "aioguardian.commands.system.SystemCommands.onboard_sensor_status",
+            return_value=data_system_onboard_sensor_status,
+        ),
+        patch(
+            "aioguardian.commands.system.SystemCommands.ping",
+            return_value=data_system_ping,
+        ),
+        patch(
+            "aioguardian.commands.valve.ValveCommands.status",
+            return_value=data_valve_status,
+        ),
+        patch(
+            "aioguardian.commands.wifi.WiFiCommands.status",
+            return_value=data_wifi_status,
+        ),
+        patch(
+            "aioguardian.client.Client.disconnect",
+        ),
+        patch(
+            "homeassistant.components.guardian.PLATFORMS",
+            [],
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

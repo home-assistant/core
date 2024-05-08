@@ -157,6 +157,20 @@
         "kind": "build",
         "isDefault": true
       }
+    },
+    {
+      "label": "Install integration requirements",
+      "detail": "Install all requirements of a given integration.",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} -m script.install_integration_requirements ${input:integrationName}",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
     }
   ],
   "inputs": [

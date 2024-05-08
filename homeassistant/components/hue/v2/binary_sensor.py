@@ -1,6 +1,8 @@
 """Support for Hue binary sensors."""
+
 from __future__ import annotations
 
+from functools import partial
 from typing import TypeAlias
 
 from aiohue.v2 import HueBridgeV2
@@ -58,14 +60,15 @@ async def async_setup_entry(
 
     @callback
     def register_items(controller: ControllerType, sensor_class: SensorType):
+        make_binary_sensor_entity = partial(sensor_class, bridge, controller)
+
         @callback
         def async_add_sensor(event_type: EventType, resource: SensorType) -> None:
             """Add Hue Binary Sensor."""
-            async_add_entities([sensor_class(bridge, controller, resource)])
+            async_add_entities([make_binary_sensor_entity(resource)])
 
         # add all current items in controller
-        for sensor in controller:
-            async_add_sensor(EventType.RESOURCE_ADDED, sensor)
+        async_add_entities(make_binary_sensor_entity(sensor) for sensor in controller)
 
         # register listener for new sensors
         config_entry.async_on_unload(

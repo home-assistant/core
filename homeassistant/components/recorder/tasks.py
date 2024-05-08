@@ -1,4 +1,5 @@
 """Support for recording details."""
+
 from __future__ import annotations
 
 import abc
@@ -10,8 +11,8 @@ import logging
 import threading
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.core import Event
 from homeassistant.helpers.typing import UndefinedType
+from homeassistant.util.event_type import EventType
 
 from . import entity_registry, purge, statistics
 from .const import DOMAIN
@@ -241,7 +242,7 @@ class WaitTask(RecorderTask):
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
-        instance._queue_watch.set()  # pylint: disable=[protected-access]
+        instance._queue_watch.set()  # noqa: SLF001
 
 
 @dataclass(slots=True)
@@ -254,7 +255,7 @@ class DatabaseLockTask(RecorderTask):
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
-        instance._lock_database(self)  # pylint: disable=[protected-access]
+        instance._lock_database(self)  # noqa: SLF001
 
 
 @dataclass(slots=True)
@@ -269,19 +270,6 @@ class StopTask(RecorderTask):
 
 
 @dataclass(slots=True)
-class EventTask(RecorderTask):
-    """An event to be processed."""
-
-    event: Event
-    commit_before = False
-
-    def run(self, instance: Recorder) -> None:
-        """Handle the task."""
-        # pylint: disable-next=[protected-access]
-        instance._process_one_event(self.event)
-
-
-@dataclass(slots=True)
 class KeepAliveTask(RecorderTask):
     """A keep alive to be sent."""
 
@@ -289,8 +277,7 @@ class KeepAliveTask(RecorderTask):
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
-        # pylint: disable-next=[protected-access]
-        instance._send_keep_alive()
+        instance._send_keep_alive()  # noqa: SLF001
 
 
 @dataclass(slots=True)
@@ -301,8 +288,7 @@ class CommitTask(RecorderTask):
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
-        # pylint: disable-next=[protected-access]
-        instance._commit_event_session_or_retry()
+        instance._commit_event_session_or_retry()  # noqa: SLF001
 
 
 @dataclass(slots=True)
@@ -345,7 +331,7 @@ class PostSchemaMigrationTask(RecorderTask):
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
-        instance._post_schema_migration(  # pylint: disable=[protected-access]
+        instance._post_schema_migration(  # noqa: SLF001
             self.old_version, self.new_version
         )
 
@@ -369,7 +355,7 @@ class AdjustLRUSizeTask(RecorderTask):
 
     def run(self, instance: Recorder) -> None:
         """Handle the task to adjust the size."""
-        instance._adjust_lru_size()  # pylint: disable=[protected-access]
+        instance._adjust_lru_size()  # noqa: SLF001
 
 
 @dataclass(slots=True)
@@ -381,7 +367,7 @@ class StatesContextIDMigrationTask(RecorderTask):
     def run(self, instance: Recorder) -> None:
         """Run context id migration task."""
         if (
-            not instance._migrate_states_context_ids()  # pylint: disable=[protected-access]
+            not instance._migrate_states_context_ids()  # noqa: SLF001
         ):
             # Schedule a new migration task if this one didn't finish
             instance.queue_task(StatesContextIDMigrationTask())
@@ -396,7 +382,7 @@ class EventsContextIDMigrationTask(RecorderTask):
     def run(self, instance: Recorder) -> None:
         """Run context id migration task."""
         if (
-            not instance._migrate_events_context_ids()  # pylint: disable=[protected-access]
+            not instance._migrate_events_context_ids()  # noqa: SLF001
         ):
             # Schedule a new migration task if this one didn't finish
             instance.queue_task(EventsContextIDMigrationTask())
@@ -413,7 +399,7 @@ class EventTypeIDMigrationTask(RecorderTask):
 
     def run(self, instance: Recorder) -> None:
         """Run event type id migration task."""
-        if not instance._migrate_event_type_ids():  # pylint: disable=[protected-access]
+        if not instance._migrate_event_type_ids():  # noqa: SLF001
             # Schedule a new migration task if this one didn't finish
             instance.queue_task(EventTypeIDMigrationTask())
 
@@ -429,7 +415,7 @@ class EntityIDMigrationTask(RecorderTask):
 
     def run(self, instance: Recorder) -> None:
         """Run entity_id migration task."""
-        if not instance._migrate_entity_ids():  # pylint: disable=[protected-access]
+        if not instance._migrate_entity_ids():  # noqa: SLF001
             # Schedule a new migration task if this one didn't finish
             instance.queue_task(EntityIDMigrationTask())
         else:
@@ -448,7 +434,7 @@ class EntityIDPostMigrationTask(RecorderTask):
     def run(self, instance: Recorder) -> None:
         """Run entity_id post migration task."""
         if (
-            not instance._post_migrate_entity_ids()  # pylint: disable=[protected-access]
+            not instance._post_migrate_entity_ids()  # noqa: SLF001
         ):
             # Schedule a new migration task if this one didn't finish
             instance.queue_task(EntityIDPostMigrationTask())
@@ -465,14 +451,14 @@ class EventIdMigrationTask(RecorderTask):
 
     def run(self, instance: Recorder) -> None:
         """Clean up the legacy event_id index on states."""
-        instance._cleanup_legacy_states_event_ids()  # pylint: disable=[protected-access]
+        instance._cleanup_legacy_states_event_ids()  # noqa: SLF001
 
 
 @dataclass(slots=True)
 class RefreshEventTypesTask(RecorderTask):
     """An object to insert into the recorder queue to refresh event types."""
 
-    event_types: list[str]
+    event_types: list[EventType[Any] | str]
 
     def run(self, instance: Recorder) -> None:
         """Refresh event types."""

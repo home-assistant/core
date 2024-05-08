@@ -1,4 +1,5 @@
 """Helper methods to handle the time in Home Assistant."""
+
 from __future__ import annotations
 
 import bisect
@@ -6,7 +7,7 @@ from contextlib import suppress
 import datetime as dt
 from functools import partial
 import re
-from typing import Any
+from typing import Any, Literal, overload
 import zoneinfo
 
 import ciso8601
@@ -99,7 +100,7 @@ def get_time_zone(time_zone_str: str) -> dt.tzinfo | None:
 
 # We use a partial here since it is implemented in native code
 # and avoids the global lookup of UTC
-utcnow: partial[dt.datetime] = partial(dt.datetime.now, UTC)
+utcnow = partial(dt.datetime.now, UTC)
 utcnow.__doc__ = "Get now in UTC time."
 
 
@@ -177,18 +178,38 @@ def start_of_local_day(dt_or_d: dt.date | dt.datetime | None = None) -> dt.datet
 # Copyright (c) Django Software Foundation and individual contributors.
 # All rights reserved.
 # https://github.com/django/django/blob/main/LICENSE
-def parse_datetime(dt_str: str) -> dt.datetime | None:
+@overload
+def parse_datetime(dt_str: str) -> dt.datetime | None: ...
+
+
+@overload
+def parse_datetime(dt_str: str, *, raise_on_error: Literal[True]) -> dt.datetime: ...
+
+
+@overload
+def parse_datetime(
+    dt_str: str, *, raise_on_error: Literal[False]
+) -> dt.datetime | None: ...
+
+
+def parse_datetime(dt_str: str, *, raise_on_error: bool = False) -> dt.datetime | None:
     """Parse a string and return a datetime.datetime.
 
     This function supports time zone offsets. When the input contains one,
     the output uses a timezone with a fixed offset from UTC.
     Raises ValueError if the input is well formatted but not a valid datetime.
-    Returns None if the input isn't well formatted.
+
+    If the input isn't well formatted, returns None if raise_on_error is False
+    or raises ValueError if it's True.
     """
+    # First try if the string can be parsed by the fast ciso8601 library
     with suppress(ValueError, IndexError):
         return ciso8601.parse_datetime(dt_str)
 
+    # ciso8601 failed to parse the string, fall back to regex
     if not (match := DATETIME_RE.match(dt_str)):
+        if raise_on_error:
+            raise ValueError
         return None
     kws: dict[str, Any] = match.groupdict()
     if kws["microsecond"]:
@@ -265,36 +286,78 @@ def parse_time(time_str: str) -> dt.time | None:
         return None
 
 
-def get_age(date: dt.datetime) -> str:
-    """Take a datetime and return its "age" as a string.
-
-    The age can be in second, minute, hour, day, month or year. Only the
-    biggest unit is considered, e.g. if it's 2 days and 3 hours, "2 days" will
-    be returned.
-    Make sure date is not in the future, or else it won't work.
-    """
+def _get_timestring(timediff: float, precision: int = 1) -> str:
+    """Return a string representation of a time diff."""
 
     def formatn(number: int, unit: str) -> str:
         """Add "unit" if it's plural."""
         if number == 1:
-            return f"1 {unit}"
-        return f"{number:d} {unit}s"
+            return f"1 {unit} "
+        return f"{number:d} {unit}s "
+
+    if timediff == 0.0:
+        return "0 seconds"
+
+    units = ("year", "month", "day", "hour", "minute", "second")
+
+    factors = (365 * 24 * 60 * 60, 30 * 24 * 60 * 60, 24 * 60 * 60, 60 * 60, 60, 1)
+
+    result_string: str = ""
+    current_precision = 0
+
+    for i, current_factor in enumerate(factors):
+        selected_unit = units[i]
+        if timediff < current_factor:
+            continue
+        current_precision = current_precision + 1
+        if current_precision == precision:
+            return (
+                result_string + formatn(round(timediff / current_factor), selected_unit)
+            ).rstrip()
+        curr_diff = int(timediff // current_factor)
+        result_string += formatn(curr_diff, selected_unit)
+        timediff -= (curr_diff) * current_factor
+
+    return result_string.rstrip()
+
+
+def get_age(date: dt.datetime, precision: int = 1) -> str:
+    """Take a datetime and return its "age" as a string.
+
+    The age can be in second, minute, hour, day, month and year.
+
+    depth number of units will be returned, with the last unit rounded
+
+    The date must be in the past or a ValueException will be raised.
+    """
 
     delta = (now() - date).total_seconds()
+
     rounded_delta = round(delta)
 
-    units = ["second", "minute", "hour", "day", "month"]
-    factors = [60, 60, 24, 30, 12]
-    selected_unit = "year"
+    if rounded_delta < 0:
+        raise ValueError("Time value is in the future")
+    return _get_timestring(rounded_delta, precision)
 
-    for i, next_factor in enumerate(factors):
-        if rounded_delta < next_factor:
-            selected_unit = units[i]
-            break
-        delta /= next_factor
-        rounded_delta = round(delta)
 
-    return formatn(rounded_delta, selected_unit)
+def get_time_remaining(date: dt.datetime, precision: int = 1) -> str:
+    """Take a datetime and return its "age" as a string.
+
+    The age can be in second, minute, hour, day, month and year.
+
+    depth number of units will be returned, with the last unit rounded
+
+    The date must be in the future or a ValueException will be raised.
+    """
+
+    delta = (date - now()).total_seconds()
+
+    rounded_delta = round(delta)
+
+    if rounded_delta < 0:
+        raise ValueError("Time value is in the past")
+
+    return _get_timestring(rounded_delta, precision)
 
 
 def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> list[int]:
@@ -370,7 +433,8 @@ def find_next_time_expression_time(
             next_second = seconds[0]
             result += dt.timedelta(minutes=1)
 
-        result = result.replace(second=next_second)
+        if result.second != next_second:
+            result = result.replace(second=next_second)
 
         # Match next minute
         next_minute = _lower_bound(minutes, result.minute)
@@ -383,7 +447,8 @@ def find_next_time_expression_time(
             next_minute = minutes[0]
             result += dt.timedelta(hours=1)
 
-        result = result.replace(minute=next_minute)
+        if result.minute != next_minute:
+            result = result.replace(minute=next_minute)
 
         # Match next hour
         next_hour = _lower_bound(hours, result.hour)
@@ -396,7 +461,8 @@ def find_next_time_expression_time(
             next_hour = hours[0]
             result += dt.timedelta(days=1)
 
-        result = result.replace(hour=next_hour)
+        if result.hour != next_hour:
+            result = result.replace(hour=next_hour)
 
         if result.tzinfo in (None, UTC):
             # Using UTC, no DST checking needed

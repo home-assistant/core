@@ -1,4 +1,5 @@
 """Tests for the Bluetooth base scanner models."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -14,8 +15,8 @@ import pytest
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
+    BaseHaRemoteScanner,
     HaBluetoothConnector,
-    HomeAssistantRemoteScanner,
     storage,
 )
 from homeassistant.components.bluetooth.const import (
@@ -41,7 +42,7 @@ from . import (
 from tests.common import async_fire_time_changed, load_fixture
 
 
-class FakeScanner(HomeAssistantRemoteScanner):
+class FakeScanner(BaseHaRemoteScanner):
     """Fake scanner."""
 
     def inject_advertisement(
@@ -111,13 +112,12 @@ async def test_remote_scanner(
         rssi=-100,
     )
 
-    new_info_callback = manager.scanner_adv_received
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
-    scanner = FakeScanner(hass, "esp32", "esp32", new_info_callback, connector, True)
+    scanner = FakeScanner("esp32", "esp32", connector, True)
     unsetup = scanner.async_setup()
-    cancel = manager.async_register_scanner(scanner, True)
+    cancel = manager.async_register_scanner(scanner)
 
     scanner.inject_advertisement(switchbot_device, switchbot_device_adv)
 
@@ -178,13 +178,12 @@ async def test_remote_scanner_expires_connectable(
         rssi=-100,
     )
 
-    new_info_callback = manager.scanner_adv_received
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
-    scanner = FakeScanner(hass, "esp32", "esp32", new_info_callback, connector, True)
+    scanner = FakeScanner("esp32", "esp32", connector, True)
     unsetup = scanner.async_setup()
-    cancel = manager.async_register_scanner(scanner, True)
+    cancel = manager.async_register_scanner(scanner)
 
     start_time_monotonic = time.monotonic()
     scanner.inject_advertisement(switchbot_device, switchbot_device_adv)
@@ -233,13 +232,12 @@ async def test_remote_scanner_expires_non_connectable(
         rssi=-100,
     )
 
-    new_info_callback = manager.scanner_adv_received
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
-    scanner = FakeScanner(hass, "esp32", "esp32", new_info_callback, connector, False)
+    scanner = FakeScanner("esp32", "esp32", connector, True)
     unsetup = scanner.async_setup()
-    cancel = manager.async_register_scanner(scanner, True)
+    cancel = manager.async_register_scanner(scanner)
 
     start_time_monotonic = time.monotonic()
     scanner.inject_advertisement(switchbot_device, switchbot_device_adv)
@@ -308,13 +306,12 @@ async def test_base_scanner_connecting_behavior(
         rssi=-100,
     )
 
-    new_info_callback = manager.scanner_adv_received
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
-    scanner = FakeScanner(hass, "esp32", "esp32", new_info_callback, connector, False)
+    scanner = FakeScanner("esp32", "esp32", connector, True)
     unsetup = scanner.async_setup()
-    cancel = manager.async_register_scanner(scanner, True)
+    cancel = manager.async_register_scanner(scanner)
 
     with scanner.connecting():
         assert scanner.scanning is False
@@ -351,11 +348,14 @@ async def test_restore_history_remote_adapter(
         if address != "E3:A5:63:3E:5E:23":
             timestamps[address] = now
 
-    with patch(
-        "bluetooth_adapters.systems.linux.LinuxAdapters.history",
-        {},
-    ), patch(
-        "bluetooth_adapters.systems.linux.LinuxAdapters.refresh",
+    with (
+        patch(
+            "bluetooth_adapters.systems.linux.LinuxAdapters.history",
+            {},
+        ),
+        patch(
+            "bluetooth_adapters.systems.linux.LinuxAdapters.refresh",
+        ),
     ):
         assert await async_setup_component(hass, bluetooth.DOMAIN, {})
         await hass.async_block_till_done()
@@ -363,32 +363,28 @@ async def test_restore_history_remote_adapter(
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
-    scanner = HomeAssistantRemoteScanner(
-        hass,
+    scanner = BaseHaRemoteScanner(
         "atom-bluetooth-proxy-ceaac4",
         "atom-bluetooth-proxy-ceaac4",
-        lambda adv: None,
         connector,
         True,
     )
     unsetup = scanner.async_setup()
-    cancel = _get_manager().async_register_scanner(scanner, True)
+    cancel = _get_manager().async_register_scanner(scanner)
 
     assert "EB:0B:36:35:6F:A4" in scanner.discovered_devices_and_advertisement_data
     assert "E3:A5:63:3E:5E:23" not in scanner.discovered_devices_and_advertisement_data
     cancel()
     unsetup()
 
-    scanner = HomeAssistantRemoteScanner(
-        hass,
+    scanner = BaseHaRemoteScanner(
         "atom-bluetooth-proxy-ceaac4",
         "atom-bluetooth-proxy-ceaac4",
-        lambda adv: None,
         connector,
         True,
     )
     unsetup = scanner.async_setup()
-    cancel = _get_manager().async_register_scanner(scanner, True)
+    cancel = _get_manager().async_register_scanner(scanner)
     assert "EB:0B:36:35:6F:A4" in scanner.discovered_devices_and_advertisement_data
     assert "E3:A5:63:3E:5E:23" not in scanner.discovered_devices_and_advertisement_data
 
@@ -415,13 +411,12 @@ async def test_device_with_ten_minute_advertising_interval(
         rssi=-100,
     )
 
-    new_info_callback = manager.scanner_adv_received
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
-    scanner = FakeScanner(hass, "esp32", "esp32", new_info_callback, connector, False)
+    scanner = FakeScanner("esp32", "esp32", connector, True)
     unsetup = scanner.async_setup()
-    cancel = manager.async_register_scanner(scanner, True)
+    cancel = manager.async_register_scanner(scanner)
 
     monotonic_now = time.monotonic()
     new_time = monotonic_now
@@ -507,13 +502,12 @@ async def test_scanner_stops_responding(
     """Test we mark a scanner are not scanning when it stops responding."""
     manager = _get_manager()
 
-    new_info_callback = manager.scanner_adv_received
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
-    scanner = FakeScanner(hass, "esp32", "esp32", new_info_callback, connector, False)
+    scanner = FakeScanner("esp32", "esp32", connector, True)
     unsetup = scanner.async_setup()
-    cancel = manager.async_register_scanner(scanner, True)
+    cancel = manager.async_register_scanner(scanner)
 
     start_time_monotonic = time.monotonic()
 

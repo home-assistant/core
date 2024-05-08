@@ -45,15 +45,15 @@ async def mock_camera(hass) -> AsyncGenerator[None, None]:
         hass, "camera", {camera.DOMAIN: {"platform": "demo"}}
     )
     await hass.async_block_till_done()
-    with patch(
-        "homeassistant.components.demo.camera.Path.read_bytes",
-        return_value=b"Test",
-    ), patch(
-        "homeassistant.components.camera.Camera.stream_source",
-        return_value=STREAM_SOURCE,
-    ), patch(
-        "homeassistant.components.camera.Camera.supported_features",
-        return_value=camera.SUPPORT_STREAM,
+    with (
+        patch(
+            "homeassistant.components.demo.camera.Path.read_bytes",
+            return_value=b"Test",
+        ),
+        patch(
+            "homeassistant.components.camera.Camera.stream_source",
+            return_value=STREAM_SOURCE,
+        ),
     ):
         yield
 

@@ -110,9 +110,6 @@
       }
     },
     "weather": {
-      "hourly_forecast": {
-        "name": "Hourly forecast"
-      },
       "forecast": {
         "name": "Forecast"
       }

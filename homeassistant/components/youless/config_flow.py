@@ -1,4 +1,5 @@
 """Config flow for youless integration."""
+
 from __future__ import annotations
 
 import logging
@@ -8,9 +9,8 @@ from urllib.error import HTTPError, URLError
 import voluptuous as vol
 from youless_api import YoulessAPI
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -26,7 +26,7 @@ class YoulessConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:

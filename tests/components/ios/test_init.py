@@ -1,4 +1,5 @@
 """Tests for the iOS init file."""
+
 from unittest.mock import patch
 
 import pytest

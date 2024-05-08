@@ -1,4 +1,5 @@
 """A wrapper 'hub' for the Litter-Robot API."""
+
 from __future__ import annotations
 
 from collections.abc import Generator, Mapping
@@ -54,7 +55,6 @@ class LitterRobotHub:
                 load_robots=load_robots,
                 subscribe_for_updates=subscribe_for_updates,
             )
-            return
         except LitterRobotLoginException as ex:
             raise ConfigEntryAuthFailed("Invalid credentials") from ex
         except LitterRobotException as ex:

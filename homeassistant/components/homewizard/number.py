@@ -1,4 +1,5 @@
 """Creates HomeWizard Number entities."""
+
 from __future__ import annotations
 
 from homeassistant.components.number import NumberEntity
@@ -29,7 +30,6 @@ class HWEnergyNumberEntity(HomeWizardEntity, NumberEntity):
     """Representation of status light number."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon = "mdi:lightbulb-on"
     _attr_translation_key = "status_light_brightness"
     _attr_native_unit_of_measurement = PERCENTAGE
 

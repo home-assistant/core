@@ -1,4 +1,5 @@
 """Helper script to update language list from the frontend source."""
+
 import json
 from pathlib import Path
 import sys

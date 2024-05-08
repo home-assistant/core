@@ -1,4 +1,5 @@
 """Offer template automation rules."""
+
 from datetime import timedelta
 import logging
 from typing import Any
@@ -7,10 +8,16 @@ import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.const import CONF_FOR, CONF_PLATFORM, CONF_VALUE_TEMPLATE
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HassJob,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     TrackTemplate,
     TrackTemplateResult,
     async_call_later,
@@ -18,7 +25,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.template import Template, result_as_boolean
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +71,7 @@ async def async_attach_trigger(
 
     @callback
     def template_listener(
-        event: EventType[EventStateChangedData] | None,
+        event: Event[EventStateChangedData] | None,
         updates: list[TrackTemplateResult],
     ) -> None:
         """Listen for state changes and calls action."""

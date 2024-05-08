@@ -1,14 +1,15 @@
 """Define tests for the Acmeda config flow."""
+
 from unittest.mock import patch
 
 import aiopulse
 import pytest
 
-from homeassistant import data_entry_flow
 from homeassistant.components.acmeda.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -48,7 +49,7 @@ async def test_show_form_no_hubs(hass: HomeAssistant, mock_hub_discover) -> None
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
     # Check we performed the discovery
@@ -69,7 +70,7 @@ async def test_show_form_one_hub(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == dummy_hub_1.id
     assert result["result"].data == {
         CONF_HOST: DUMMY_HOST1,
@@ -94,7 +95,7 @@ async def test_show_form_two_hubs(hass: HomeAssistant, mock_hub_discover) -> Non
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     # Check we performed the discovery
@@ -122,7 +123,7 @@ async def test_create_second_entry(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == dummy_hub_2.id
     assert result["result"].data == {
         CONF_HOST: DUMMY_HOST2,
@@ -145,5 +146,5 @@ async def test_already_configured(hass: HomeAssistant, mock_hub_discover) -> Non
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"

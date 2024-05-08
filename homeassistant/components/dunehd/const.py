@@ -1,4 +1,5 @@
 """Constants for Dune HD integration."""
+
 from __future__ import annotations
 
 from typing import Final

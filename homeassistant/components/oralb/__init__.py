@@ -1,9 +1,10 @@
 """The OralB integration."""
+
 from __future__ import annotations
 
 import logging
 
-from oralb_ble import OralBBluetoothDeviceData
+from oralb_ble import OralBBluetoothDeviceData, SensorUpdate
 
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
@@ -36,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Only poll if hass is running, we need to poll,
         # and we actually have a way to connect to the device
         return (
-            hass.state == CoreState.running
+            hass.state is CoreState.running
             and data.poll_needed(service_info, last_poll)
             and bool(
                 async_ble_device_from_address(
@@ -45,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         )
 
-    async def _async_poll(service_info: BluetoothServiceInfoBleak):
+    async def _async_poll(service_info: BluetoothServiceInfoBleak) -> SensorUpdate:
         # BluetoothServiceInfoBleak is defined in HA, otherwise would just pass it
         # directly to the oralb code
         # Make sure the device we have is one that we can connect with
@@ -64,20 +65,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         return await data.async_poll(connectable_device)
 
-    coordinator = hass.data.setdefault(DOMAIN, {})[
-        entry.entry_id
-    ] = ActiveBluetoothProcessorCoordinator(
-        hass,
-        _LOGGER,
-        address=address,
-        mode=BluetoothScanningMode.PASSIVE,
-        update_method=data.update,
-        needs_poll_method=_needs_poll,
-        poll_method=_async_poll,
-        # We will take advertisements from non-connectable devices
-        # since we will trade the BLEDevice for a connectable one
-        # if we need to poll it
-        connectable=False,
+    coordinator = hass.data.setdefault(DOMAIN, {})[entry.entry_id] = (
+        ActiveBluetoothProcessorCoordinator(
+            hass,
+            _LOGGER,
+            address=address,
+            mode=BluetoothScanningMode.PASSIVE,
+            update_method=data.update,
+            needs_poll_method=_needs_poll,
+            poll_method=_async_poll,
+            # We will take advertisements from non-connectable devices
+            # since we will trade the BLEDevice for a connectable one
+            # if we need to poll it
+            connectable=False,
+        )
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(

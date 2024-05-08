@@ -1,4 +1,5 @@
 """Config flow for PurpleAir integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -12,30 +13,34 @@ from aiopurpleair.endpoints.sensors import NearbySensorResult
 from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_SHOW_ON_MAP,
+)
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
 )
-from homeassistant.helpers.typing import EventType
 
-from .const import CONF_SENSOR_INDICES, CONF_SHOW_ON_MAP, DOMAIN, LOGGER
+from .const import CONF_SENSOR_INDICES, DOMAIN, LOGGER
 
 CONF_DISTANCE = "distance"
 CONF_NEARBY_SENSOR_OPTIONS = "nearby_sensor_options"
@@ -107,8 +112,9 @@ def async_get_remove_sensor_options(
     device_registry = dr.async_get(hass)
     return [
         SelectOptionDict(value=device_entry.id, label=cast(str, device_entry.name))
-        for device_entry in device_registry.devices.values()
-        if config_entry.entry_id in device_entry.config_entries
+        for device_entry in device_registry.devices.get_devices_for_config_entry_id(
+            config_entry.entry_id
+        )
     ]
 
 
@@ -147,7 +153,7 @@ async def async_validate_api_key(hass: HomeAssistant, api_key: str) -> Validatio
     except PurpleAirError as err:
         LOGGER.error("PurpleAir error while checking API key: %s", err)
         errors["base"] = "unknown"
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         LOGGER.exception("Unexpected exception while checking API key: %s", err)
         errors["base"] = "unknown"
 
@@ -175,7 +181,7 @@ async def async_validate_coordinates(
     except PurpleAirError as err:
         LOGGER.error("PurpleAir error while getting nearby sensors: %s", err)
         errors["base"] = "unknown"
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         LOGGER.exception("Unexpected exception while getting nearby sensors: %s", err)
         errors["base"] = "unknown"
     else:
@@ -188,7 +194,7 @@ async def async_validate_coordinates(
     return ValidationResult(data=nearby_sensor_results)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for PurpleAir."""
 
     VERSION = 1
@@ -208,7 +214,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_by_coordinates(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the discovery of sensors near a latitude/longitude."""
         if user_input is None:
             return self.async_show_form(
@@ -238,7 +244,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_choose_sensor(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the selection of a sensor."""
         if user_input is None:
             options = self._flow_data.pop(CONF_NEARBY_SENSOR_OPTIONS)
@@ -255,7 +261,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             options={CONF_SENSOR_INDICES: [int(user_input[CONF_SENSOR_INDEX])]},
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -264,7 +272,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the re-auth step."""
         if user_input is None:
             return self.async_show_form(
@@ -293,7 +301,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=API_KEY_SCHEMA)
@@ -314,7 +322,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_by_coordinates()
 
 
-class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
+class PurpleAirOptionsFlowHandler(OptionsFlow):
     """Handle a PurpleAir options flow."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
@@ -340,7 +348,7 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_add_sensor(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Add a sensor."""
         if user_input is None:
             return self.async_show_form(
@@ -371,7 +379,7 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_choose_sensor(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Choose a sensor."""
         if user_input is None:
             options = self._flow_data.pop(CONF_NEARBY_SENSOR_OPTIONS)
@@ -391,7 +399,7 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         return self.async_show_menu(
             step_id="init",
@@ -400,7 +408,7 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_remove_sensor(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Remove a sensor."""
         if user_input is None:
             return self.async_show_form(
@@ -425,7 +433,7 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
 
         @callback
         def async_device_entity_state_changed(
-            _: EventType[EventStateChangedData],
+            _: Event[EventStateChangedData],
         ) -> None:
             """Listen and respond when all device entities are removed."""
             if all(
@@ -462,7 +470,7 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_settings(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage settings."""
         if user_input is None:
             return self.async_show_form(

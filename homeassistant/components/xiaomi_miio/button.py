@@ -1,4 +1,5 @@
 """Support for Xiaomi buttons."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -37,7 +38,7 @@ ATTR_RESET_VACUUM_FILTER = "reset_vacuum_filter"
 ATTR_RESET_VACUUM_SENSOR_DIRTY = "reset_vacuum_sensor_dirty"
 
 
-@dataclass
+@dataclass(frozen=True)
 class XiaomiMiioButtonDescription(ButtonEntityDescription):
     """A class that describes button entities."""
 

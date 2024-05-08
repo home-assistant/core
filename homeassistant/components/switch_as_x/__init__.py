@@ -1,4 +1,5 @@
 """Component to wrap switch entities in entities of other domains."""
+
 from __future__ import annotations
 
 import logging
@@ -8,12 +9,11 @@ import voluptuous as vol
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
-from homeassistant.helpers.typing import EventType
 
-from .const import CONF_TARGET_DOMAIN
+from .const import CONF_INVERT, CONF_TARGET_DOMAIN
 from .light import LightSwitch
 
 __all__ = ["LightSwitch"]
@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     async def async_registry_updated(
-        event: EventType[er.EventEntityRegistryUpdatedData],
+        event: Event[er.EventEntityRegistryUpdatedData],
     ) -> None:
         """Handle entity registry update."""
         data = event.data
@@ -91,6 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, entity_id, async_registry_updated
         )
     )
+    entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
 
     device_id = async_add_to_device(hass, entry, entity_id)
 
@@ -98,6 +99,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry, (entry.options[CONF_TARGET_DOMAIN],)
     )
     return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug(
+        "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
+    )
+
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+    if config_entry.version == 1:
+        options = {**config_entry.options}
+        if config_entry.minor_version < 2:
+            options.setdefault(CONF_INVERT, False)
+        hass.config_entries.async_update_entry(
+            config_entry, options=options, minor_version=2
+        )
+
+    _LOGGER.debug(
+        "Migration to version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    return True
+
+
+async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Update listener, called when the config entry options are changed."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

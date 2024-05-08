@@ -1,4 +1,5 @@
 """Config flow to configure the GeoJSON events integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -6,7 +7,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LOCATION,
@@ -15,7 +16,6 @@ from homeassistant.const import (
     CONF_URL,
     UnitOfLength,
 )
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.util.unit_conversion import DistanceConverter
 
@@ -31,12 +31,12 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class GeoJsonEventsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class GeoJsonEventsFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a GeoJSON events config flow."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         if not user_input:
             suggested_values: Mapping[str, Any] = {

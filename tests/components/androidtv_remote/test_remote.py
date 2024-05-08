@@ -1,4 +1,5 @@
 """Tests for the Android TV Remote remote platform."""
+
 from unittest.mock import MagicMock, call
 
 from androidtvremote2 import ConnectionClosed

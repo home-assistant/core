@@ -48,7 +48,7 @@
       "cooling_state": {
         "name": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]"
       },
-      "slave_boiler_state": {
+      "secondary_boiler_state": {
         "name": "Secondary boiler state"
       },
       "plugwise_notification": {
@@ -97,6 +97,14 @@
           "comfort": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]"
         }
       },
+      "gateway_mode": {
+        "name": "Gateway mode",
+        "state": {
+          "away": "Pause",
+          "full": "Normal",
+          "vacation": "Vacation"
+        }
+      },
       "regulation_mode": {
         "name": "Regulation mode",
         "state": {
@@ -108,7 +116,10 @@
         }
       },
       "select_schedule": {
-        "name": "Thermostat schedule"
+        "name": "Thermostat schedule",
+        "state": {
+          "off": "Off"
+        }
       }
     },
     "sensor": {

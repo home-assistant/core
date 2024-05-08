@@ -52,6 +52,18 @@
     "switch": {
       "paused": {
         "name": "Pause session"
+      },
+      "locked": {
+        "name": "Lock EVSE"
+      },
+      "timer": {
+        "name": "Charge point timer"
+      },
+      "dynamic": {
+        "name": "Dynamic intensity modulation"
+      },
+      "pause_dynamic": {
+        "name": "Pause dynamic control modulation"
       }
     }
   }

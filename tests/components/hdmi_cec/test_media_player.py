@@ -1,4 +1,5 @@
 """Tests for the HDMI-CEC media player platform."""
+
 from pycec.const import (
     DEVICE_TYPE_NAMES,
     KEY_BACKWARD,

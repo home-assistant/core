@@ -1,5 +1,5 @@
 """The tests for the Yandex SpeechKit speech platform."""
-import asyncio
+
 from http import HTTPStatus
 
 import pytest
@@ -201,7 +201,7 @@ async def test_service_say_timeout(
     aioclient_mock.get(
         URL,
         status=HTTPStatus.OK,
-        exc=asyncio.TimeoutError(),
+        exc=TimeoutError(),
         params=url_param,
     )
 

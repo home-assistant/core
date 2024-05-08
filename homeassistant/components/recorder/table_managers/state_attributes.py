@@ -1,4 +1,5 @@
 """Support managing StateAttributes."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -7,8 +8,7 @@ from typing import TYPE_CHECKING, cast
 
 from sqlalchemy.orm.session import Session
 
-from homeassistant.core import Event
-from homeassistant.helpers.entity import entity_sources
+from homeassistant.core import Event, EventStateChangedData
 from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS
 
 from ..db_schema import StateAttributes
@@ -37,25 +37,24 @@ class StateAttributesManager(BaseLRUTableManager[StateAttributes]):
         """Initialize the event type manager."""
         super().__init__(recorder, CACHE_SIZE)
         self.active = True  # always active
-        self._entity_sources = entity_sources(recorder.hass)
 
-    def serialize_from_event(self, event: Event) -> bytes | None:
+    def serialize_from_event(self, event: Event[EventStateChangedData]) -> bytes | None:
         """Serialize event data."""
         try:
             return StateAttributes.shared_attrs_bytes_from_event(
-                event,
-                self._entity_sources,
-                self.recorder.dialect_name,
+                event, self.recorder.dialect_name
             )
         except JSON_ENCODE_EXCEPTIONS as ex:
             _LOGGER.warning(
                 "State is not JSON serializable: %s: %s",
-                event.data.get("new_state"),
+                event.data["new_state"],
                 ex,
             )
             return None
 
-    def load(self, events: list[Event], session: Session) -> None:
+    def load(
+        self, events: list[Event[EventStateChangedData]], session: Session
+    ) -> None:
         """Load the shared_attrs to attributes_ids mapping into memory from events.
 
         This call is not thread-safe and must be called from the

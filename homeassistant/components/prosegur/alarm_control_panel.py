@@ -1,4 +1,5 @@
 """Support for Prosegur alarm control panels."""
+
 from __future__ import annotations
 
 import logging
@@ -6,8 +7,10 @@ import logging
 from pyprosegur.auth import Auth
 from pyprosegur.installation import Installation, Status
 
-import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
@@ -40,7 +43,7 @@ async def async_setup_entry(
     )
 
 
-class ProsegurAlarm(alarm.AlarmControlPanelEntity):
+class ProsegurAlarm(AlarmControlPanelEntity):
     """Representation of a Prosegur alarm status."""
 
     _attr_supported_features = (

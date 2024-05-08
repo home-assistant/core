@@ -1,4 +1,5 @@
 """Support for SleepIQ outlet lights."""
+
 import logging
 from typing import Any
 

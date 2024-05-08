@@ -1,4 +1,19 @@
 # serializer version: 1
+# name: test_component_config_error_processing[exception_info_list0-bla-messages0-False-component_import_err]
+  'Unable to import test_domain: bla'
+# ---
+# name: test_component_config_error_processing[exception_info_list1-bla-messages1-True-config_validation_err]
+  'Invalid config for integration test_domain at configuration.yaml, line 140: bla'
+# ---
+# name: test_component_config_error_processing[exception_info_list2-bla @ data['path']-messages2-False-config_validation_err]
+  "Invalid config for integration test_domain at configuration.yaml, line 140: bla @ data['path']"
+# ---
+# name: test_component_config_error_processing[exception_info_list3-bla @ data['path']-messages3-False-platform_config_validation_err]
+  "Invalid config for test_domain from integration test_domain at file configuration.yaml, line 140: bla @ data['path']. Check the logs for more information"
+# ---
+# name: test_component_config_error_processing[exception_info_list4-bla-messages4-False-platform_component_load_err]
+  'Platform error: test_domain - bla'
+# ---
 # name: test_component_config_validation_error[basic]
   list([
     dict({
@@ -63,7 +78,7 @@
     }),
     dict({
       'has_exc_info': True,
-      'message': 'Unknown error calling custom_validator_bad_2 config validator',
+      'message': 'config_validator_unknown_err',
     }),
   ])
 # ---
@@ -131,7 +146,7 @@
     }),
     dict({
       'has_exc_info': True,
-      'message': 'Unknown error calling custom_validator_bad_2 config validator',
+      'message': 'config_validator_unknown_err',
     }),
   ])
 # ---
@@ -247,7 +262,7 @@
     }),
     dict({
       'has_exc_info': True,
-      'message': 'Unknown error calling custom_validator_bad_2 config validator',
+      'message': 'config_validator_unknown_err',
     }),
   ])
 # ---
@@ -291,7 +306,7 @@
     }),
     dict({
       'has_exc_info': True,
-      'message': 'Unknown error calling custom_validator_bad_2 config validator',
+      'message': 'config_validator_unknown_err',
     }),
     dict({
       'has_exc_info': False,
@@ -342,7 +357,27 @@
     ''',
     "Invalid config for 'custom_validator_ok_2' at configuration.yaml, line 52: required key 'host' not provided, please check the docs at https://www.home-assistant.io/integrations/custom_validator_ok_2",
     "Invalid config for 'custom_validator_bad_1' at configuration.yaml, line 55: broken, please check the docs at https://www.home-assistant.io/integrations/custom_validator_bad_1",
-    'Unknown error calling custom_validator_bad_2 config validator',
+    'config_validator_unknown_err',
+  ])
+# ---
+# name: test_individual_packages_schema_validation_errors[packages_dict]
+  list([
+    "Setup of package 'should_be_a_dict' at configuration.yaml, line 3 failed: Invalid package definition 'should_be_a_dict': expected a dictionary. Package will not be initialized",
+  ])
+# ---
+# name: test_individual_packages_schema_validation_errors[packages_include_dir_named_dict]
+  list([
+    "Setup of package 'should_be_a_dict' at packages/expected_dict.yaml, line 1 failed: Invalid package definition 'should_be_a_dict': expected a dictionary. Package will not be initialized",
+  ])
+# ---
+# name: test_individual_packages_schema_validation_errors[packages_include_dir_named_slug]
+  list([
+    "Setup of package 'this is not a slug but it should be one' at packages/expected_slug.yaml, line 1 failed: Invalid package definition 'this is not a slug but it should be one': invalid slug this is not a slug but it should be one (try this_is_not_a_slug_but_it_should_be_one). Package will not be initialized",
+  ])
+# ---
+# name: test_individual_packages_schema_validation_errors[packages_slug]
+  list([
+    "Setup of package 'this is not a slug but it should be one' at configuration.yaml, line 3 failed: Invalid package definition 'this is not a slug but it should be one': invalid slug this is not a slug but it should be one (try this_is_not_a_slug_but_it_should_be_one). Package will not be initialized",
   ])
 # ---
 # name: test_package_merge_error[packages]
@@ -379,6 +414,21 @@
 # name: test_package_merge_exception[packages_include_dir_named-error1]
   list([
     "Setup of package 'unknown_integration' at integrations/unknown_integration.yaml, line 1 failed: Integration test_domain caused error: ModuleNotFoundError: No module named 'not_installed_something'",
+  ])
+# ---
+# name: test_packages_schema_validation_error[packages_is_a_list]
+  list([
+    "Invalid package configuration 'packages' at configuration.yaml, line 2: expected a dictionary",
+  ])
+# ---
+# name: test_packages_schema_validation_error[packages_is_a_value]
+  list([
+    "Invalid package configuration 'packages' at configuration.yaml, line 2: expected a dictionary",
+  ])
+# ---
+# name: test_packages_schema_validation_error[packages_is_null]
+  list([
+    "Invalid package configuration 'packages' at configuration.yaml, line 3: expected a dictionary",
   ])
 # ---
 # name: test_yaml_error[basic]

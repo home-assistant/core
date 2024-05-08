@@ -1,4 +1,5 @@
 """The tests for Octoptint camera module."""
+
 from unittest.mock import patch
 
 from pyoctoprintapi import WebcamSettings

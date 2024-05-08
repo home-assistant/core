@@ -1,4 +1,5 @@
 """Entity representing a Sonos number control."""
+
 from __future__ import annotations
 
 import logging
@@ -21,6 +22,7 @@ LEVEL_TYPES = {
     "bass": (-10, 10),
     "balance": (-100, 100),
     "treble": (-10, 10),
+    "sub_crossover": (50, 110),
     "sub_gain": (-15, 15),
     "surround_level": (-15, 15),
     "music_surround_level": (-15, 15),

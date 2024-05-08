@@ -1,4 +1,5 @@
 """Test OpenUV diagnostics."""
+
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -19,6 +20,7 @@ async def test_entry_diagnostics(
         "entry": {
             "entry_id": config_entry.entry_id,
             "version": 2,
+            "minor_version": 1,
             "domain": "openuv",
             "title": REDACTED,
             "data": {

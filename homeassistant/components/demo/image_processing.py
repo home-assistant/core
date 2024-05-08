@@ -1,4 +1,5 @@
 """Support for the demo image processing."""
+
 from __future__ import annotations
 
 from homeassistant.components.image_processing import (

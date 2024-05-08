@@ -1,4 +1,5 @@
 """Platform allowing several fans to be grouped into one fan."""
+
 from __future__ import annotations
 
 from functools import reduce
@@ -39,7 +40,7 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import GroupEntity
+from .entity import GroupEntity
 from .util import attribute_equal, most_frequent_attribute, reduce_attribute
 
 SUPPORTED_FLAGS = {
@@ -91,7 +92,9 @@ async def async_setup_entry(
 
 
 @callback
-def async_create_preview_fan(name: str, validated_config: dict[str, Any]) -> FanGroup:
+def async_create_preview_fan(
+    hass: HomeAssistant, name: str, validated_config: dict[str, Any]
+) -> FanGroup:
     """Create a preview sensor."""
     return FanGroup(
         None,

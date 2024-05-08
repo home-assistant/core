@@ -32,7 +32,6 @@
       'description': '',
       'end_time': '2022-01-07 00:00:00',
       'friendly_name': 'Twente Milieu',
-      'icon': 'mdi:delete-empty',
       'location': '',
       'message': 'Christmas tree pickup',
       'start_time': '2022-01-06 00:00:00',
@@ -40,6 +39,7 @@
     'context': <ANY>,
     'entity_id': 'calendar.twente_milieu',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -61,16 +61,18 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:delete-empty',
+    'original_icon': None,
     'original_name': None,
     'platform': 'twentemilieu',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'calendar',
     'unique_id': '12345',
     'unit_of_measurement': None,
   })
@@ -93,6 +95,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Twente Milieu',
     'model': None,
     'name': 'Twente Milieu',

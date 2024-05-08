@@ -1,4 +1,5 @@
 """The Nibe Heat Pump binary sensors."""
+
 from __future__ import annotations
 
 from nibe.coil import Coil, CoilData

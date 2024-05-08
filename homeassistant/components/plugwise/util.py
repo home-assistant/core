@@ -1,4 +1,5 @@
 """Utilities for Plugwise."""
+
 from collections.abc import Awaitable, Callable, Coroutine
 from typing import Any, Concatenate, ParamSpec, TypeVar
 
@@ -14,7 +15,7 @@ _P = ParamSpec("_P")
 
 
 def plugwise_command(
-    func: Callable[Concatenate[_PlugwiseEntityT, _P], Awaitable[_R]]
+    func: Callable[Concatenate[_PlugwiseEntityT, _P], Awaitable[_R]],
 ) -> Callable[Concatenate[_PlugwiseEntityT, _P], Coroutine[Any, Any, _R]]:
     """Decorate Plugwise calls that send commands/make changes to the device.
 

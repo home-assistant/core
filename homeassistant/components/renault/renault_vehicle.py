@@ -1,4 +1,5 @@
 """Proxy to handle account communication with Renault servers."""
+
 from __future__ import annotations
 
 import asyncio
@@ -26,7 +27,7 @@ _P = ParamSpec("_P")
 
 
 def with_error_wrapping(
-    func: Callable[Concatenate[RenaultVehicleProxy, _P], Awaitable[_T]]
+    func: Callable[Concatenate[RenaultVehicleProxy, _P], Awaitable[_T]],
 ) -> Callable[Concatenate[RenaultVehicleProxy, _P], Coroutine[Any, Any, _T]]:
     """Catch Renault errors."""
 
@@ -124,16 +125,16 @@ class RenaultVehicleProxy:
             coordinator = self.coordinators[key]
             if coordinator.not_supported:
                 # Remove endpoint as it is not supported for this vehicle.
-                LOGGER.info(
-                    "Ignoring endpoint %s as it is not supported for this vehicle: %s",
+                LOGGER.warning(
+                    "Ignoring endpoint %s as it is not supported: %s",
                     coordinator.name,
                     coordinator.last_exception,
                 )
                 del self.coordinators[key]
             elif coordinator.access_denied:
                 # Remove endpoint as it is denied for this vehicle.
-                LOGGER.info(
-                    "Ignoring endpoint %s as it is denied for this vehicle: %s",
+                LOGGER.warning(
+                    "Ignoring endpoint %s as it is denied: %s",
                     coordinator.name,
                     coordinator.last_exception,
                 )

@@ -1,4 +1,5 @@
 """Test entity discovery for device-specific schemas for the Z-Wave JS integration."""
+
 import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -22,9 +23,10 @@ from homeassistant.components.zwave_js.discovery import (
 from homeassistant.components.zwave_js.discovery_data_template import (
     DynamicCurrentTempClimateDataTemplate,
 )
+from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 
 async def test_iblinds_v2(hass: HomeAssistant, client, iblinds_v2, integration) -> None:
@@ -132,6 +134,32 @@ async def test_merten_507801(
     assert state
 
 
+async def test_shelly_001p10_disabled_entities(
+    hass: HomeAssistant, client, shelly_qnsh_001P10_shutter, integration
+) -> None:
+    """Test that Shelly 001P10 entity created by endpoint 2 is disabled."""
+    registry = er.async_get(hass)
+    entity_ids = [
+        "cover.wave_shutter_2",
+    ]
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state is None
+        entry = registry.async_get(entity_id)
+        assert entry
+        assert entry.disabled
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+        # Test enabling entity
+        updated_entry = registry.async_update_entity(entry.entity_id, disabled_by=None)
+        assert updated_entry != entry
+        assert updated_entry.disabled is False
+
+    # Test if the main entity from endpoint 1 was created.
+    state = hass.states.get("cover.wave_shutter")
+    assert state
+
+
 async def test_merten_507801_disabled_enitites(
     hass: HomeAssistant, client, merten_507801, integration
 ) -> None:
@@ -151,9 +179,7 @@ async def test_merten_507801_disabled_enitites(
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
         # Test enabling entity
-        updated_entry = registry.async_update_entity(
-            entry.entity_id, **{"disabled_by": None}
-        )
+        updated_entry = registry.async_update_entity(entry.entity_id, disabled_by=None)
         assert updated_entry != entry
         assert updated_entry.disabled is False
 
@@ -224,14 +250,21 @@ async def test_indicator_test(
 
     This test covers indicators that we don't already have device fixtures for.
     """
+    device = dr.async_get(hass).async_get_device(
+        identifiers={get_device_id(client.driver, indicator_test)}
+    )
+    assert device
     ent_reg = er.async_get(hass)
-    assert len(hass.states.async_entity_ids(NUMBER_DOMAIN)) == 0
-    assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 1  # only ping
-    assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 1
-    assert (
-        len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
-    )  # include node + controller status
-    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+    entities = er.async_entries_for_device(ent_reg, device.id)
+
+    def len_domain(domain):
+        return len([entity for entity in entities if entity.domain == domain])
+
+    assert len_domain(NUMBER_DOMAIN) == 0
+    assert len_domain(BUTTON_DOMAIN) == 1  # only ping
+    assert len_domain(BINARY_SENSOR_DOMAIN) == 1
+    assert len_domain(SENSOR_DOMAIN) == 3  # include node status + last seen
+    assert len_domain(SWITCH_DOMAIN) == 1
 
     entity_id = "binary_sensor.this_is_a_fake_device_binary_sensor"
     entry = ent_reg.async_get(entity_id)

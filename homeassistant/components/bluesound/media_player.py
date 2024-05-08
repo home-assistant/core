@@ -1,4 +1,5 @@
 """Support for Bluesound devices."""
+
 from __future__ import annotations
 
 import asyncio
@@ -290,7 +291,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             while True:
                 await self.async_update_status()
 
-        except (asyncio.TimeoutError, ClientError, BluesoundPlayer._TimeoutException):
+        except (TimeoutError, ClientError, BluesoundPlayer._TimeoutException):
             _LOGGER.info("Node %s:%s is offline, retrying later", self.name, self.port)
             await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT)
             self.start_polling()
@@ -317,7 +318,7 @@ class BluesoundPlayer(MediaPlayerEntity):
                 self._retry_remove = None
 
             await self.force_update_sync_status(self._init_callback, True)
-        except (asyncio.TimeoutError, ClientError):
+        except (TimeoutError, ClientError):
             _LOGGER.info("Node %s:%s is offline, retrying later", self.host, self.port)
             self._retry_remove = async_track_time_interval(
                 self._hass, self.async_init, NODE_RETRY_INITIATION
@@ -365,12 +366,12 @@ class BluesoundPlayer(MediaPlayerEntity):
                     data = None
             elif response.status == 595:
                 _LOGGER.info("Status 595 returned, treating as timeout")
-                raise BluesoundPlayer._TimeoutException()
+                raise BluesoundPlayer._TimeoutException
             else:
                 _LOGGER.error("Error %s on %s", response.status, url)
                 return None
 
-        except (asyncio.TimeoutError, aiohttp.ClientError):
+        except (TimeoutError, aiohttp.ClientError):
             if raise_timeout:
                 _LOGGER.info("Timeout: %s:%s", self.host, self.port)
                 raise
@@ -431,13 +432,13 @@ class BluesoundPlayer(MediaPlayerEntity):
                 self.async_write_ha_state()
             elif response.status == 595:
                 _LOGGER.info("Status 595 returned, treating as timeout")
-                raise BluesoundPlayer._TimeoutException()
+                raise BluesoundPlayer._TimeoutException
             else:
                 _LOGGER.error(
                     "Error %s on %s. Trying one more time", response.status, url
                 )
 
-        except (asyncio.TimeoutError, ClientError):
+        except (TimeoutError, ClientError):
             self._is_online = False
             self._last_status_update = None
             self._status = None
@@ -685,20 +686,15 @@ class BluesoundPlayer(MediaPlayerEntity):
         if self._status is None or (self.is_grouped and not self.is_master):
             return None
 
-        sources = []
+        sources = [source["title"] for source in self._preset_items]
 
-        for source in self._preset_items:
-            sources.append(source["title"])
+        sources.extend(
+            source["title"]
+            for source in self._services_items
+            if source["type"] in ("LocalMusic", "RadioService")
+        )
 
-        for source in [
-            x
-            for x in self._services_items
-            if x["type"] in ("LocalMusic", "RadioService")
-        ]:
-            sources.append(source["title"])
-
-        for source in self._capture_items:
-            sources.append(source["title"])
+        sources.extend(source["title"] for source in self._capture_items)
 
         return sources
 
@@ -867,8 +863,6 @@ class BluesoundPlayer(MediaPlayerEntity):
         if self._group_name is None:
             return None
 
-        bluesound_group = []
-
         device_group = self._group_name.split("+")
 
         sorted_entities = sorted(
@@ -876,13 +870,11 @@ class BluesoundPlayer(MediaPlayerEntity):
             key=lambda entity: entity.is_master,
             reverse=True,
         )
-        bluesound_group = [
+        return [
             entity.name
             for entity in sorted_entities
             if entity.bluesound_device_name in device_group
         ]
-
-        return bluesound_group
 
     async def async_unjoin(self):
         """Unjoin the player from a group."""
@@ -942,7 +934,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         selected_source = items[0]
         url = f"Play?url={selected_source['url']}&preset_id&image={selected_source['image']}"
 
-        if "is_raw_url" in selected_source and selected_source["is_raw_url"]:
+        if selected_source.get("is_raw_url"):
             url = selected_source["url"]
 
         return await self.send_bluesound_command(url)

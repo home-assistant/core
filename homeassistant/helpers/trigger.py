@@ -1,4 +1,5 @@
 """Triggers."""
+
 from __future__ import annotations
 
 import asyncio
@@ -28,6 +29,8 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import IntegrationNotFound, async_get_integration
+from homeassistant.util.async_ import create_eager_task
+from homeassistant.util.hass_dict import HassKey
 
 from .typing import ConfigType, TemplateVarsType
 
@@ -40,7 +43,9 @@ _PLATFORM_ALIASES = {
     "time": "homeassistant",
 }
 
-DATA_PLUGGABLE_ACTIONS = "pluggable_actions"
+DATA_PLUGGABLE_ACTIONS: HassKey[defaultdict[tuple, PluggableActionsEntry]] = HassKey(
+    "pluggable_actions"
+)
 
 
 class TriggerProtocol(Protocol):
@@ -73,7 +78,7 @@ class TriggerActionType(Protocol):
         self,
         run_variables: dict[str, Any],
         context: Context | None = None,
-    ) -> None:
+    ) -> Any:
         """Define action callback type."""
 
 
@@ -136,9 +141,8 @@ class PluggableAction:
     def async_get_registry(hass: HomeAssistant) -> dict[tuple, PluggableActionsEntry]:
         """Return the pluggable actions registry."""
         if data := hass.data.get(DATA_PLUGGABLE_ACTIONS):
-            return data  # type: ignore[no-any-return]
-        data = defaultdict(PluggableActionsEntry)
-        hass.data[DATA_PLUGGABLE_ACTIONS] = data
+            return data
+        data = hass.data[DATA_PLUGGABLE_ACTIONS] = defaultdict(PluggableActionsEntry)
         return data
 
     @staticmethod
@@ -222,7 +226,7 @@ async def _async_get_trigger_platform(
     except IntegrationNotFound:
         raise vol.Invalid(f"Invalid platform '{platform}' specified") from None
     try:
-        return integration.get_platform("trigger")
+        return await integration.async_get_platform("trigger")
     except ImportError:
         raise vol.Invalid(
             f"Integration '{platform}' does not provide trigger support"
@@ -305,7 +309,7 @@ async def async_initialize_triggers(
     variables: TemplateVarsType = None,
 ) -> CALLBACK_TYPE | None:
     """Initialize triggers."""
-    triggers: list[Coroutine[Any, Any, CALLBACK_TYPE]] = []
+    triggers: list[asyncio.Task[CALLBACK_TYPE]] = []
     for idx, conf in enumerate(trigger_config):
         # Skip triggers that are not enabled
         if not conf.get(CONF_ENABLED, True):
@@ -325,8 +329,10 @@ async def async_initialize_triggers(
         )
 
         triggers.append(
-            platform.async_attach_trigger(
-                hass, conf, _trigger_action_wrapper(hass, action, conf), info
+            create_eager_task(
+                platform.async_attach_trigger(
+                    hass, conf, _trigger_action_wrapper(hass, action, conf), info
+                )
             )
         )
 

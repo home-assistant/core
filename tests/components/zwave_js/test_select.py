@@ -1,4 +1,5 @@
 """Test the Z-Wave JS number platform."""
+
 from unittest.mock import MagicMock
 
 from zwave_js_server.const import CURRENT_VALUE_PROPERTY, CommandClass
@@ -307,9 +308,7 @@ async def test_config_parameter_select(
     assert entity_entry.disabled
     assert entity_entry.entity_category == EntityCategory.CONFIG
 
-    updated_entry = ent_reg.async_update_entity(
-        select_entity_id, **{"disabled_by": None}
-    )
+    updated_entry = ent_reg.async_update_entity(select_entity_id, disabled_by=None)
     assert updated_entry != entity_entry
     assert updated_entry.disabled is False
 

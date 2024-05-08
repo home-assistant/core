@@ -1,4 +1,5 @@
 """Support for Big Ass Fans binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -21,19 +22,13 @@ from .entity import BAFEntity
 from .models import BAFData
 
 
-@dataclass
-class BAFBinarySensorDescriptionMixin:
-    """Required values for BAF binary sensors."""
-
-    value_fn: Callable[[Device], bool | None]
-
-
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class BAFBinarySensorDescription(
     BinarySensorEntityDescription,
-    BAFBinarySensorDescriptionMixin,
 ):
     """Class describing BAF binary sensor entities."""
+
+    value_fn: Callable[[Device], bool | None]
 
 
 OCCUPANCY_SENSORS = (

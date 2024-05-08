@@ -1,4 +1,5 @@
 """Config flow to configure Logi Circle component."""
+
 import asyncio
 from collections import OrderedDict
 from http import HTTPStatus
@@ -7,8 +8,8 @@ from logi_circle import LogiCircle
 from logi_circle.exception import AuthorizationFailed
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_CLIENT_ID,
@@ -53,7 +54,7 @@ def register_flow_implementation(
     }
 
 
-class LogiCircleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class LogiCircleFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Logi Circle component."""
 
     VERSION = 1
@@ -162,7 +163,7 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except AuthorizationFailed:
             (self.hass.data[DATA_FLOW_IMPL][DOMAIN][EXTERNAL_ERRORS]) = "invalid_auth"
             return self.async_abort(reason="external_error")
-        except asyncio.TimeoutError:
+        except TimeoutError:
             (
                 self.hass.data[DATA_FLOW_IMPL][DOMAIN][EXTERNAL_ERRORS]
             ) = "authorize_url_timeout"
@@ -191,7 +192,7 @@ class LogiCircleAuthCallbackView(HomeAssistantView):
 
     async def get(self, request):
         """Receive authorization code."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         if "code" in request.query:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(

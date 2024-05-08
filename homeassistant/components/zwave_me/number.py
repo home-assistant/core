@@ -1,4 +1,5 @@
 """Representation of a switchMultilevel."""
+
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback

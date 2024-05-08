@@ -1,8 +1,8 @@
 """Commands part of Websocket API."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
-import datetime as dt
 from functools import lru_cache, partial
 import json
 import logging
@@ -21,6 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     Context,
     Event,
+    EventStateChangedData,
     HomeAssistant,
     ServiceResponse,
     State,
@@ -36,7 +37,6 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_validation as cv, entity, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     TrackTemplate,
     TrackTemplateResult,
     async_track_template_result,
@@ -45,10 +45,9 @@ from homeassistant.helpers.json import (
     JSON_DUMP,
     ExtendedJSONEncoder,
     find_paths_unserializable_data,
-    json_dumps,
+    json_bytes,
 )
 from homeassistant.helpers.service import async_get_all_descriptions
-from homeassistant.helpers.typing import EventType
 from homeassistant.loader import (
     Integration,
     IntegrationNotFound,
@@ -56,7 +55,7 @@ from homeassistant.loader import (
     async_get_integration_descriptions,
     async_get_integrations,
 )
-from homeassistant.setup import DATA_SETUP_TIME, async_get_loaded_integrations
+from homeassistant.setup import async_get_loaded_integrations, async_get_setup_timings
 from homeassistant.util.json import format_unserializable_data
 
 from . import const, decorators, messages
@@ -104,30 +103,32 @@ def pong_message(iden: int) -> dict[str, Any]:
 
 @callback
 def _forward_events_check_permissions(
-    send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
+    send_message: Callable[[bytes | str | dict[str, Any] | Callable[[], str]], None],
     user: User,
-    msg_id: int,
+    message_id_as_bytes: bytes,
     event: Event,
 ) -> None:
     """Forward state changed events to websocket."""
     # We have to lookup the permissions again because the user might have
     # changed since the subscription was created.
     permissions = user.permissions
-    if not permissions.access_all_entities(
-        POLICY_READ
-    ) and not permissions.check_entity(event.data["entity_id"], POLICY_READ):
+    if (
+        not user.is_admin
+        and not permissions.access_all_entities(POLICY_READ)
+        and not permissions.check_entity(event.data["entity_id"], POLICY_READ)
+    ):
         return
-    send_message(messages.cached_event_message(msg_id, event))
+    send_message(messages.cached_event_message(message_id_as_bytes, event))
 
 
 @callback
 def _forward_events_unconditional(
-    send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
-    msg_id: int,
+    send_message: Callable[[bytes | str | dict[str, Any] | Callable[[], str]], None],
+    message_id_as_bytes: bytes,
     event: Event,
 ) -> None:
     """Forward events to websocket."""
-    send_message(messages.cached_event_message(msg_id, event))
+    send_message(messages.cached_event_message(message_id_as_bytes, event))
 
 
 @callback
@@ -151,20 +152,22 @@ def handle_subscribe_events(
         )
         raise Unauthorized(user_id=connection.user.id)
 
+    message_id_as_bytes = str(msg["id"]).encode()
+
     if event_type == EVENT_STATE_CHANGED:
         forward_events = partial(
             _forward_events_check_permissions,
             connection.send_message,
             connection.user,
-            msg["id"],
+            message_id_as_bytes,
         )
     else:
         forward_events = partial(
-            _forward_events_unconditional, connection.send_message, msg["id"]
+            _forward_events_unconditional, connection.send_message, message_id_as_bytes
         )
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
-        event_type, forward_events, run_immediately=True
+        event_type, forward_events
     )
 
     connection.send_result(msg["id"])
@@ -288,7 +291,7 @@ async def handle_call_service(
             translation_placeholders=err.translation_placeholders,
         )
     except HomeAssistantError as err:
-        connection.logger.exception(err)
+        connection.logger.exception("Unexpected exception")
         connection.send_error(
             msg["id"],
             const.ERR_HOME_ASSISTANT_ERROR,
@@ -297,8 +300,8 @@ async def handle_call_service(
             translation_key=err.translation_key,
             translation_placeholders=err.translation_placeholders,
         )
-    except Exception as err:  # pylint: disable=broad-except
-        connection.logger.exception(err)
+    except Exception as err:
+        connection.logger.exception("Unexpected exception")
         connection.send_error(msg["id"], const.ERR_UNKNOWN_ERROR, str(err))
 
 
@@ -306,7 +309,8 @@ async def handle_call_service(
 def _async_get_allowed_states(
     hass: HomeAssistant, connection: ActiveConnection
 ) -> list[State]:
-    if connection.user.permissions.access_all_entities(POLICY_READ):
+    user = connection.user
+    if user.is_admin or user.permissions.access_all_entities(POLICY_READ):
         return hass.states.async_all()
     entity_perm = connection.user.permissions.check_entity
     return [
@@ -349,21 +353,23 @@ def handle_get_states(
 
 
 def _send_handle_get_states_response(
-    connection: ActiveConnection, msg_id: int, serialized_states: list[str]
+    connection: ActiveConnection, msg_id: int, serialized_states: list[bytes]
 ) -> None:
     """Send handle get states response."""
     connection.send_message(
-        construct_result_message(msg_id, f'[{",".join(serialized_states)}]')
+        construct_result_message(
+            msg_id, b"".join((b"[", b",".join(serialized_states), b"]"))
+        )
     )
 
 
 @callback
 def _forward_entity_changes(
-    send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
+    send_message: Callable[[str | bytes | dict[str, Any] | Callable[[], str]], None],
     entity_ids: set[str],
     user: User,
-    msg_id: int,
-    event: Event,
+    message_id_as_bytes: bytes,
+    event: Event[EventStateChangedData],
 ) -> None:
     """Forward entity state changed events to websocket."""
     entity_id = event.data["entity_id"]
@@ -372,11 +378,13 @@ def _forward_entity_changes(
     # We have to lookup the permissions again because the user might have
     # changed since the subscription was created.
     permissions = user.permissions
-    if not permissions.access_all_entities(
-        POLICY_READ
-    ) and not permissions.check_entity(event.data["entity_id"], POLICY_READ):
+    if (
+        not user.is_admin
+        and not permissions.access_all_entities(POLICY_READ)
+        and not permissions.check_entity(event.data["entity_id"], POLICY_READ)
+    ):
         return
-    send_message(messages.cached_state_diff_message(msg_id, event))
+    send_message(messages.cached_state_diff_message(message_id_as_bytes, event))
 
 
 @callback
@@ -395,6 +403,7 @@ def handle_subscribe_entities(
     # state changed events or we will introduce a race condition
     # where some states are missed
     states = _async_get_allowed_states(hass, connection)
+    message_id_as_bytes = str(msg["id"]).encode()
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
         EVENT_STATE_CHANGED,
         partial(
@@ -402,9 +411,8 @@ def handle_subscribe_entities(
             connection.send_message,
             entity_ids,
             connection.user,
-            msg["id"],
+            message_id_as_bytes,
         ),
-        run_immediately=True,
     )
     connection.send_result(msg["id"])
 
@@ -439,15 +447,23 @@ def handle_subscribe_entities(
 
 
 def _send_handle_entities_init_response(
-    connection: ActiveConnection, msg_id: int, serialized_states: list[str]
+    connection: ActiveConnection, msg_id: int, serialized_states: list[bytes]
 ) -> None:
     """Send handle entities init response."""
     connection.send_message(
-        f'{{"id":{msg_id},"type":"event","event":{{"a":{{{",".join(serialized_states)}}}}}}}'
+        b"".join(
+            (
+                b'{"id":',
+                str(msg_id).encode(),
+                b',"type":"event","event":{"a":{',
+                b",".join(serialized_states),
+                b"}}}",
+            )
+        )
     )
 
 
-async def _async_get_all_descriptions_json(hass: HomeAssistant) -> str:
+async def _async_get_all_descriptions_json(hass: HomeAssistant) -> bytes:
     """Return JSON of descriptions (i.e. user documentation) for all service calls."""
     descriptions = await async_get_all_descriptions(hass)
     if ALL_SERVICE_DESCRIPTIONS_JSON_CACHE in hass.data:
@@ -456,8 +472,8 @@ async def _async_get_all_descriptions_json(hass: HomeAssistant) -> str:
         ]
         # If the descriptions are the same, return the cached JSON payload
         if cached_descriptions is descriptions:
-            return cast(str, cached_json_payload)
-    json_payload = json_dumps(descriptions)
+            return cast(bytes, cached_json_payload)
+    json_payload = json_bytes(descriptions)
     hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] = (descriptions, json_payload)
     return json_payload
 
@@ -528,10 +544,8 @@ def handle_integration_setup_info(
     connection.send_result(
         msg["id"],
         [
-            {"domain": integration, "seconds": timedelta.total_seconds()}
-            for integration, timedelta in cast(
-                dict[str, dt.timedelta], hass.data[DATA_SETUP_TIME]
-            ).items()
+            {"domain": integration, "seconds": seconds}
+            for integration, seconds in async_get_setup_timings(hass).items()
         ],
     )
 
@@ -608,7 +622,7 @@ async def handle_render_template(
 
     @callback
     def _template_listener(
-        event: EventType[EventStateChangedData] | None,
+        event: Event[EventStateChangedData] | None,
         updates: list[TrackTemplateResult],
     ) -> None:
         track_template_result = updates.pop()
@@ -650,7 +664,7 @@ async def handle_render_template(
 
 
 def _serialize_entity_sources(
-    entity_infos: dict[str, entity.EntityInfo]
+    entity_infos: dict[str, entity.EntityInfo],
 ) -> dict[str, Any]:
     """Prepare a websocket response from a dict of entity sources."""
     return {

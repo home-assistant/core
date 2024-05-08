@@ -1,4 +1,5 @@
 """Test the UptimeRobot init."""
+
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -10,6 +11,7 @@ from homeassistant.components.uptimerobot.const import (
     COORDINATOR_UPDATE_INTERVAL,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -43,7 +45,7 @@ async def test_reauthentication_trigger_in_setup(
 
     flows = hass.config_entries.flow.async_progress()
 
-    assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert mock_config_entry.reason == "could not authenticate"
 
     assert len(flows) == 1
@@ -73,7 +75,7 @@ async def test_reauthentication_trigger_key_read_only(
 
     flows = hass.config_entries.flow.async_progress()
 
-    assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert (
         mock_config_entry.reason
         == "Wrong API key type detected, use the 'main' API key"
@@ -101,7 +103,7 @@ async def test_reauthentication_trigger_after_setup(
     mock_config_entry = await setup_uptimerobot_integration(hass)
 
     binary_sensor = hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY)
-    assert mock_config_entry.state == config_entries.ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
     assert binary_sensor.state == STATE_ON
 
     with patch(
@@ -145,7 +147,7 @@ async def test_integration_reload(
         await hass.async_block_till_done()
 
     entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
-    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY).state == STATE_ON
 
 

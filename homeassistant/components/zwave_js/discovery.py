@@ -1,4 +1,5 @@
 """Map Z-Wave nodes and values to Home Assistant entities."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -446,6 +447,61 @@ DISCOVERY_SCHEMAS = [
         product_type={0x2400},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
         required_values=[SWITCH_MULTILEVEL_TARGET_VALUE_SCHEMA],
+    ),
+    # Shelly Qubino Wave Shutter QNSH-001P10
+    # Combine both switch_multilevel endpoints into shutter_tilt
+    # if operating mode (71) is set to venetian blind (1)
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="shutter_tilt",
+        manufacturer_id={0x0460},
+        product_id={0x0082},
+        product_type={0x0003},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SWITCH_MULTILEVEL},
+            property={CURRENT_VALUE_PROPERTY},
+            endpoint={1},
+            type={ValueType.NUMBER},
+        ),
+        data_template=CoverTiltDataTemplate(
+            current_tilt_value_id=ZwaveValueID(
+                property_=CURRENT_VALUE_PROPERTY,
+                command_class=CommandClass.SWITCH_MULTILEVEL,
+                endpoint=2,
+            ),
+            target_tilt_value_id=ZwaveValueID(
+                property_=TARGET_VALUE_PROPERTY,
+                command_class=CommandClass.SWITCH_MULTILEVEL,
+                endpoint=2,
+            ),
+        ),
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.CONFIGURATION},
+                property={71},
+                endpoint={0},
+                value={1},
+            )
+        ],
+    ),
+    # Shelly Qubino Wave Shutter QNSH-001P10
+    # Disable endpoint 2 (slat),
+    # as these are either combined with endpoint one as shutter_tilt
+    # or it has no practical function.
+    # CC: Switch_Multilevel
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="shutter",
+        manufacturer_id={0x0460},
+        product_id={0x0082},
+        product_type={0x0003},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SWITCH_MULTILEVEL},
+            property={CURRENT_VALUE_PROPERTY},
+            endpoint={2},
+            type={ValueType.NUMBER},
+        ),
+        entity_registry_enabled_default=False,
     ),
     # Qubino flush shutter
     ZWaveDiscoverySchema(

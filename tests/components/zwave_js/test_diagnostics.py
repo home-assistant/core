@@ -1,4 +1,5 @@
 """Test the Z-Wave JS diagnostics."""
+
 import copy
 from unittest.mock import patch
 
@@ -127,7 +128,9 @@ async def test_device_diagnostics(
     )
     assert diagnostics_data["state"] == {
         **multisensor_6.data,
-        "values": {id: val.data for id, val in multisensor_6.values.items()},
+        "values": {
+            value_id: val.data for value_id, val in multisensor_6.values.items()
+        },
         "endpoints": {
             str(idx): endpoint.data for idx, endpoint in multisensor_6.endpoints.items()
         },

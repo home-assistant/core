@@ -1,4 +1,5 @@
 """Make sure that existing Koogeek LS1 support isn't broken."""
+
 from datetime import timedelta
 from unittest import mock
 
@@ -21,7 +22,7 @@ LIGHT_ON = ("lightbulb", "on")
 
 
 @pytest.mark.parametrize("failure_cls", [AccessoryDisconnectedError, EncryptionError])
-async def test_recover_from_failure(hass: HomeAssistant, utcnow, failure_cls) -> None:
+async def test_recover_from_failure(hass: HomeAssistant, failure_cls) -> None:
     """Test that entity actually recovers from a network connection drop.
 
     See https://github.com/home-assistant/core/issues/18949

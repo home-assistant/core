@@ -1,6 +1,9 @@
 """Tests for Cert Expiry setup."""
+
 from datetime import timedelta
 from unittest.mock import patch
+
+from freezegun import freeze_time
 
 from homeassistant.components.cert_expiry.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -32,20 +35,23 @@ async def test_setup_with_config(hass: HomeAssistant) -> None:
             {"platform": DOMAIN, CONF_HOST: HOST, CONF_PORT: 888},
         ],
     }
-    assert await async_setup_component(hass, SENSOR_DOMAIN, config) is True
-    await hass.async_block_till_done()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-    await hass.async_block_till_done()
-    next_update = dt_util.utcnow() + timedelta(seconds=20)
-    async_fire_time_changed(hass, next_update)
 
-    with patch(
-        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
-    ), patch(
-        "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
-        return_value=future_timestamp(1),
+    with (
+        patch(
+            "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
+        ),
+        patch(
+            "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
+            return_value=future_timestamp(1),
+        ),
     ):
+        assert await async_setup_component(hass, SENSOR_DOMAIN, config) is True
         await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+        next_update = dt_util.utcnow() + timedelta(seconds=20)
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
 
@@ -73,8 +79,8 @@ async def test_update_unique_id(hass: HomeAssistant) -> None:
     assert entry.unique_id == f"{HOST}:{PORT}"
 
 
-@patch("homeassistant.util.dt.utcnow", return_value=static_datetime())
-async def test_unload_config_entry(mock_now, hass: HomeAssistant) -> None:
+@freeze_time(static_datetime())
+async def test_unload_config_entry(hass: HomeAssistant) -> None:
     """Test unloading a config entry."""
     assert hass.state is CoreState.running
 
@@ -118,7 +124,7 @@ async def test_unload_config_entry(mock_now, hass: HomeAssistant) -> None:
 
 async def test_delay_load_during_startup(hass: HomeAssistant) -> None:
     """Test delayed loading of a config entry during startup."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: HOST, CONF_PORT: PORT})
     entry.add_to_hass(hass)

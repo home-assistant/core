@@ -1,4 +1,5 @@
 """The tests for the logbook component."""
+
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
@@ -82,7 +83,7 @@ async def _async_mock_logbook_platform_with_broken_describe(
 
             async_describe_event("test", "mock_event", async_describe_test_event)
 
-    await logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
+    logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
 
 
 async def _async_mock_logbook_platform(hass: HomeAssistant) -> None:
@@ -108,7 +109,7 @@ async def _async_mock_logbook_platform(hass: HomeAssistant) -> None:
 
             async_describe_event("test", "mock_event", async_describe_test_event)
 
-    await logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
+    logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
 
 
 async def _async_mock_entity_with_broken_logbook_platform(
@@ -2284,7 +2285,7 @@ async def test_live_stream_with_one_second_commit_interval(
 
     hass.bus.async_fire("mock_event", {"device_id": device.id, "message": "7"})
 
-    while len(recieved_rows) != 7:
+    while len(recieved_rows) < 7:
         msg = await asyncio.wait_for(websocket_client.receive_json(), 2.5)
         assert msg["id"] == 7
         assert msg["type"] == "event"
@@ -2399,8 +2400,9 @@ async def test_stream_consumer_stop_processing(
 
     after_ws_created_listeners = hass.bus.async_listeners()
 
-    with patch.object(websocket_api, "MAX_PENDING_LOGBOOK_EVENTS", 5), patch.object(
-        websocket_api, "_async_events_consumer"
+    with (
+        patch.object(websocket_api, "MAX_PENDING_LOGBOOK_EVENTS", 5),
+        patch.object(websocket_api, "_async_events_consumer"),
     ):
         await websocket_client.send_json(
             {

@@ -1,4 +1,5 @@
 """Tests for the Huawei LTE selects."""
+
 from unittest.mock import MagicMock, patch
 
 from huawei_lte_api.enums.net import LTEBandEnum, NetworkBandEnum, NetworkModeEnum

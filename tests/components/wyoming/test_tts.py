@@ -1,4 +1,5 @@
 """Test tts."""
+
 from __future__ import annotations
 
 import io
@@ -14,12 +15,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_component import DATA_INSTANCES
 
 from . import MockAsyncTcpClient
-
-
-@pytest.fixture(autouse=True)
-def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
-    """Mock the TTS cache dir with empty dir."""
-    return mock_tts_cache_dir
 
 
 async def test_support(hass: HomeAssistant, init_wyoming_tts) -> None:
@@ -152,10 +147,13 @@ async def test_get_tts_audio_connection_lost(
     hass: HomeAssistant, init_wyoming_tts
 ) -> None:
     """Test streaming audio and losing connection."""
-    with patch(
-        "homeassistant.components.wyoming.tts.AsyncTcpClient",
-        MockAsyncTcpClient([None]),
-    ), pytest.raises(HomeAssistantError):
+    with (
+        patch(
+            "homeassistant.components.wyoming.tts.AsyncTcpClient",
+            MockAsyncTcpClient([None]),
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
         await tts.async_get_media_source_audio(
             hass,
             tts.generate_media_source_id(hass, "Hello world", "tts.test_tts", "en-US"),
@@ -174,13 +172,15 @@ async def test_get_tts_audio_audio_oserror(
 
     mock_client = MockAsyncTcpClient(audio_events)
 
-    with patch(
-        "homeassistant.components.wyoming.tts.AsyncTcpClient",
-        mock_client,
-    ), patch.object(
-        mock_client, "read_event", side_effect=OSError("Boom!")
-    ), pytest.raises(
-        HomeAssistantError,
+    with (
+        patch(
+            "homeassistant.components.wyoming.tts.AsyncTcpClient",
+            mock_client,
+        ),
+        patch.object(mock_client, "read_event", side_effect=OSError("Boom!")),
+        pytest.raises(
+            HomeAssistantError,
+        ),
     ):
         await tts.async_get_media_source_audio(
             hass,

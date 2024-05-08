@@ -1,4 +1,5 @@
 """Reolink parent entity class."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -20,7 +21,7 @@ from .const import DOMAIN
 _T = TypeVar("_T")
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ReolinkChannelEntityDescription(EntityDescription):
     """A class that describes entities for a camera channel."""
 
@@ -28,7 +29,7 @@ class ReolinkChannelEntityDescription(EntityDescription):
     supported: Callable[[Host, int], bool] = lambda api, ch: True
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ReolinkHostEntityDescription(EntityDescription):
     """A class that describes host entities."""
 

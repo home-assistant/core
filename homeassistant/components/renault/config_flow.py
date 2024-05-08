@@ -1,4 +1,5 @@
 """Config flow to configure Renault component."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -7,15 +8,14 @@ from typing import TYPE_CHECKING, Any
 from renault_api.const import AVAILABLE_LOCALES
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_KAMEREON_ACCOUNT_ID, CONF_LOCALE, DOMAIN
 from .renault_hub import RenaultHub
 
 
-class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Renault config flow."""
 
     VERSION = 1
@@ -28,7 +28,7 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a Renault config flow start.
 
         Ask the user for API keys.
@@ -45,7 +45,7 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_kamereon()
         return self._show_user_form()
 
-    def _show_user_form(self, errors: dict[str, Any] | None = None) -> FlowResult:
+    def _show_user_form(self, errors: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Show the API keys form."""
         return self.async_show_form(
             step_id="user",
@@ -61,7 +61,7 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_kamereon(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Select Kamereon account."""
         if user_input:
             await self.async_set_unique_id(user_input[CONF_KAMEREON_ACCOUNT_ID])
@@ -93,14 +93,16 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self._original_data = entry_data
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         if not user_input:
             return self._show_reauth_confirm_form()
@@ -128,7 +130,7 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _show_reauth_confirm_form(
         self, errors: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Show the API keys form."""
         if TYPE_CHECKING:
             assert self._original_data

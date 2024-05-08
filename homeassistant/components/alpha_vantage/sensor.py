@@ -1,4 +1,5 @@
 """Stock market information from Alpha Vantage."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -74,9 +75,9 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Alpha Vantage sensor."""
-    api_key = config[CONF_API_KEY]
-    symbols = config.get(CONF_SYMBOLS, [])
-    conversions = config.get(CONF_FOREIGN_EXCHANGE, [])
+    api_key: str = config[CONF_API_KEY]
+    symbols: list[dict[str, str]] = config.get(CONF_SYMBOLS, [])
+    conversions: list[dict[str, str]] = config.get(CONF_FOREIGN_EXCHANGE, [])
 
     if not symbols and not conversions:
         msg = "No symbols or currencies configured."
@@ -120,7 +121,7 @@ class AlphaVantageSensor(SensorEntity):
 
     _attr_attribution = ATTRIBUTION
 
-    def __init__(self, timeseries, symbol):
+    def __init__(self, timeseries: TimeSeries, symbol: dict[str, str]) -> None:
         """Initialize the sensor."""
         self._symbol = symbol[CONF_SYMBOL]
         self._attr_name = symbol.get(CONF_NAME, self._symbol)
@@ -154,7 +155,9 @@ class AlphaVantageForeignExchange(SensorEntity):
 
     _attr_attribution = ATTRIBUTION
 
-    def __init__(self, foreign_exchange, config):
+    def __init__(
+        self, foreign_exchange: ForeignExchange, config: dict[str, str]
+    ) -> None:
         """Initialize the sensor."""
         self._foreign_exchange = foreign_exchange
         self._from_currency = config[CONF_FROM]

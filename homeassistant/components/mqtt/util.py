@@ -10,10 +10,12 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.async_ import create_eager_task
 
 from .const import (
     ATTR_PAYLOAD,
@@ -37,6 +39,47 @@ AVAILABILITY_TIMEOUT = 30.0
 TEMP_DIR_NAME = f"home-assistant-{DOMAIN}"
 
 _VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
+
+
+def platforms_from_config(config: list[ConfigType]) -> set[Platform | str]:
+    """Return the platforms to be set up."""
+    return {key for platform in config for key in platform}
+
+
+async def async_forward_entry_setup_and_setup_discovery(
+    hass: HomeAssistant, config_entry: ConfigEntry, platforms: set[Platform | str]
+) -> None:
+    """Forward the config entry setup to the platforms and set up discovery."""
+    mqtt_data = get_mqtt_data(hass)
+    platforms_loaded = mqtt_data.platforms_loaded
+    new_platforms: set[Platform | str] = platforms - platforms_loaded
+    tasks: list[asyncio.Task] = []
+    if "device_automation" in new_platforms:
+        # Local import to avoid circular dependencies
+        # pylint: disable-next=import-outside-toplevel
+        from . import device_automation
+
+        tasks.append(
+            create_eager_task(device_automation.async_setup_entry(hass, config_entry))
+        )
+    if "tag" in new_platforms:
+        # Local import to avoid circular dependencies
+        # pylint: disable-next=import-outside-toplevel
+        from . import tag
+
+        tasks.append(create_eager_task(tag.async_setup_entry(hass, config_entry)))
+    if new_entity_platforms := (new_platforms - {"tag", "device_automation"}):
+        tasks.append(
+            create_eager_task(
+                hass.config_entries.async_forward_entry_setups(
+                    config_entry, new_entity_platforms
+                )
+            )
+        )
+    if not tasks:
+        return
+    await asyncio.gather(*tasks)
+    platforms_loaded.update(new_platforms)
 
 
 def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:
@@ -74,7 +117,7 @@ async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
         async with asyncio.timeout(AVAILABILITY_TIMEOUT):
             # Await the client setup or an error state was received
             return await state_reached_future
-    except asyncio.TimeoutError:
+    except TimeoutError:
         return False
 
 
@@ -93,9 +136,9 @@ def valid_topic(topic: Any) -> str:
         )
     if "\0" in validated_topic:
         raise vol.Invalid("MQTT topic name/filter must not contain null character.")
-    if any(char <= "\u001F" for char in validated_topic):
+    if any(char <= "\u001f" for char in validated_topic):
         raise vol.Invalid("MQTT topic name/filter must not contain control characters.")
-    if any("\u007f" <= char <= "\u009F" for char in validated_topic):
+    if any("\u007f" <= char <= "\u009f" for char in validated_topic):
         raise vol.Invalid("MQTT topic name/filter must not contain control characters.")
     if any("\ufdd0" <= char <= "\ufdef" for char in validated_topic):
         raise vol.Invalid("MQTT topic name/filter must not contain non-characters.")
@@ -175,8 +218,7 @@ def valid_birth_will(config: ConfigType) -> ConfigType:
 
 def get_mqtt_data(hass: HomeAssistant) -> MqttData:
     """Return typed MqttData from hass.data[DATA_MQTT]."""
-    mqtt_data: MqttData
-    mqtt_data = hass.data[DATA_MQTT]
+    mqtt_data: MqttData = hass.data[DATA_MQTT]
     return mqtt_data
 
 

@@ -1,4 +1,5 @@
 """Config flow for generic (IP Camera)."""
+
 from __future__ import annotations
 
 import asyncio
@@ -30,7 +31,12 @@ from homeassistant.components.stream import (
     SOURCE_TIMEOUT,
     create_stream,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,
@@ -40,12 +46,11 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.data_entry_flow import FlowResult, UnknownFlow
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import UnknownFlow
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template as template_helper
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util import slugify
 
 from .camera import GenericCamera, generate_auth
@@ -78,8 +83,8 @@ IMAGE_PREVIEWS_ACTIVE = "previews"
 def build_schema(
     user_input: Mapping[str, Any],
     is_options_flow: bool = False,
-    show_advanced_options=False,
-):
+    show_advanced_options: bool = False,
+) -> vol.Schema:
     """Create schema for camera config setup."""
     spec = {
         vol.Optional(
@@ -178,14 +183,27 @@ async def async_test_still(
     except (
         TimeoutError,
         RequestError,
-        HTTPStatusError,
         TimeoutException,
     ) as err:
         _LOGGER.error("Error getting camera image from %s: %s", url, type(err).__name__)
         return {CONF_STILL_IMAGE_URL: "unable_still_load"}, None
+    except HTTPStatusError as err:
+        _LOGGER.error(
+            "Error getting camera image from %s: %s %s",
+            url,
+            type(err).__name__,
+            err.response.text,
+        )
+        if err.response.status_code in [401, 403]:
+            return {CONF_STILL_IMAGE_URL: "unable_still_load_auth"}, None
+        if err.response.status_code in [404]:
+            return {CONF_STILL_IMAGE_URL: "unable_still_load_not_found"}, None
+        if err.response.status_code in [500, 503]:
+            return {CONF_STILL_IMAGE_URL: "unable_still_load_server_error"}, None
+        return {CONF_STILL_IMAGE_URL: "unable_still_load"}, None
 
     if not image:
-        return {CONF_STILL_IMAGE_URL: "unable_still_load"}, None
+        return {CONF_STILL_IMAGE_URL: "unable_still_load_no_image"}, None
     fmt = get_image_type(image)
     _LOGGER.debug(
         "Still image at '%s' detected format: %s",
@@ -273,11 +291,11 @@ async def async_test_stream(
             return {CONF_STREAM_SOURCE: "stream_no_route_to_host"}
         if err.errno == EIO:  # input/output error
             return {CONF_STREAM_SOURCE: "stream_io_error"}
-        raise err
+        raise
     return {}
 
 
-def register_preview(hass: HomeAssistant):
+def register_preview(hass: HomeAssistant) -> None:
     """Set up previews for camera feeds during config flow."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -314,7 +332,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         errors = {}
         hass = self.hass
@@ -358,7 +376,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user_confirm_still(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle user clicking confirm after still preview."""
         if user_input:
             if not user_input.get(CONF_CONFIRMED_OK):
@@ -379,47 +397,6 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=None,
         )
 
-    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
-        """Handle config import from yaml."""
-
-        _LOGGER.warning(
-            "Loading generic IP camera via configuration.yaml is deprecated, "
-            "it will be automatically imported.  Once you have confirmed correct "
-            "operation, please remove 'generic' (IP camera) section(s) from "
-            "configuration.yaml"
-        )
-
-        async_create_issue(
-            self.hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2024.2.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Generic IP Camera",
-            },
-        )
-        # abort if we've already got this one.
-        if self.check_for_existing(import_config):
-            return self.async_abort(reason="already_exists")
-        # Don't bother testing the still or stream details on yaml import.
-        still_url = import_config.get(CONF_STILL_IMAGE_URL)
-        stream_url = import_config.get(CONF_STREAM_SOURCE)
-        name = import_config.get(
-            CONF_NAME,
-            slug(self.hass, still_url) or slug(self.hass, stream_url) or DEFAULT_NAME,
-        )
-
-        if CONF_LIMIT_REFETCH_TO_URL_CHANGE not in import_config:
-            import_config[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
-        still_format = import_config.get(CONF_CONTENT_TYPE, "image/jpeg")
-        import_config[CONF_CONTENT_TYPE] = still_format
-        return self.async_create_entry(title=name, data={}, options=import_config)
-
 
 class GenericOptionsFlowHandler(OptionsFlow):
     """Handle Generic IP Camera options."""
@@ -431,7 +408,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage Generic IP Camera options."""
         errors: dict[str, str] = {}
         hass = self.hass
@@ -472,7 +449,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
 
     async def async_step_confirm_still(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle user clicking confirm after still preview."""
         if user_input:
             if not user_input.get(CONF_CONFIRMED_OK):
@@ -516,12 +493,12 @@ class CameraImagePreview(HomeAssistantView):
                 flow = self.hass.config_entries.options.async_get(flow_id)
             except UnknownFlow as exc:
                 _LOGGER.warning("Unknown flow while getting image preview")
-                raise web.HTTPNotFound() from exc
+                raise web.HTTPNotFound from exc
         user_input = flow["context"]["preview_cam"]
         camera = GenericCamera(self.hass, user_input, flow_id, "preview")
         if not camera.is_on:
             _LOGGER.debug("Camera is off")
-            raise web.HTTPServiceUnavailable()
+            raise web.HTTPServiceUnavailable
         image = await _async_get_image(
             camera,
             CAMERA_IMAGE_TIMEOUT,

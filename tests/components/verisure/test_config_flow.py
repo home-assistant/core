@@ -1,4 +1,5 @@
 """Test the Verisure config flow."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -31,7 +32,7 @@ async def test_full_user_flow_single_installation(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result.get("step_id") == "user"
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {}
 
     mock_verisure_config_flow.get_installations.return_value = {
@@ -48,7 +49,7 @@ async def test_full_user_flow_single_installation(
     )
     await hass.async_block_till_done()
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "ascending (12345th street)"
     assert result2.get("data") == {
         CONF_GIID: "12345",
@@ -70,7 +71,7 @@ async def test_full_user_flow_multiple_installations(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result.get("step_id") == "user"
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -83,7 +84,7 @@ async def test_full_user_flow_multiple_installations(
     await hass.async_block_till_done()
 
     assert result2.get("step_id") == "installation"
-    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("type") is FlowResultType.FORM
     assert result2.get("errors") is None
 
     result3 = await hass.config_entries.flow.async_configure(
@@ -91,7 +92,7 @@ async def test_full_user_flow_multiple_installations(
     )
     await hass.async_block_till_done()
 
-    assert result3.get("type") == FlowResultType.CREATE_ENTRY
+    assert result3.get("type") is FlowResultType.CREATE_ENTRY
     assert result3.get("title") == "descending (54321th street)"
     assert result3.get("data") == {
         CONF_GIID: "54321",
@@ -113,7 +114,7 @@ async def test_full_user_flow_single_installation_with_mfa(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result.get("step_id") == "user"
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {}
 
     mock_verisure_config_flow.login.side_effect = VerisureLoginError(
@@ -129,7 +130,7 @@ async def test_full_user_flow_single_installation_with_mfa(
     )
     await hass.async_block_till_done()
 
-    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("type") is FlowResultType.FORM
     assert result2.get("step_id") == "mfa"
 
     mock_verisure_config_flow.login.side_effect = None
@@ -146,7 +147,7 @@ async def test_full_user_flow_single_installation_with_mfa(
     )
     await hass.async_block_till_done()
 
-    assert result3.get("type") == FlowResultType.CREATE_ENTRY
+    assert result3.get("type") is FlowResultType.CREATE_ENTRY
     assert result3.get("title") == "ascending (12345th street)"
     assert result3.get("data") == {
         CONF_GIID: "12345",
@@ -170,7 +171,7 @@ async def test_full_user_flow_multiple_installations_with_mfa(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result.get("step_id") == "user"
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {}
 
     mock_verisure_config_flow.login.side_effect = VerisureLoginError(
@@ -186,7 +187,7 @@ async def test_full_user_flow_multiple_installations_with_mfa(
     )
     await hass.async_block_till_done()
 
-    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("type") is FlowResultType.FORM
     assert result2.get("step_id") == "mfa"
 
     mock_verisure_config_flow.login.side_effect = None
@@ -200,7 +201,7 @@ async def test_full_user_flow_multiple_installations_with_mfa(
     await hass.async_block_till_done()
 
     assert result3.get("step_id") == "installation"
-    assert result3.get("type") == FlowResultType.FORM
+    assert result3.get("type") is FlowResultType.FORM
     assert result3.get("errors") is None
 
     result4 = await hass.config_entries.flow.async_configure(
@@ -208,7 +209,7 @@ async def test_full_user_flow_multiple_installations_with_mfa(
     )
     await hass.async_block_till_done()
 
-    assert result4.get("type") == FlowResultType.CREATE_ENTRY
+    assert result4.get("type") is FlowResultType.CREATE_ENTRY
     assert result4.get("title") == "descending (54321th street)"
     assert result4.get("data") == {
         CONF_GIID: "54321",
@@ -251,7 +252,7 @@ async def test_verisure_errors(
     )
     await hass.async_block_till_done()
 
-    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("type") is FlowResultType.FORM
     assert result2.get("step_id") == "user"
     assert result2.get("errors") == {"base": error}
 
@@ -271,7 +272,7 @@ async def test_verisure_errors(
 
     mock_verisure_config_flow.request_mfa.side_effect = None
 
-    assert result3.get("type") == FlowResultType.FORM
+    assert result3.get("type") is FlowResultType.FORM
     assert result3.get("step_id") == "user"
     assert result3.get("errors") == {"base": "unknown_mfa"}
 
@@ -284,7 +285,7 @@ async def test_verisure_errors(
     )
     await hass.async_block_till_done()
 
-    assert result4.get("type") == FlowResultType.FORM
+    assert result4.get("type") is FlowResultType.FORM
     assert result4.get("step_id") == "mfa"
 
     mock_verisure_config_flow.validate_mfa.side_effect = side_effect
@@ -295,7 +296,7 @@ async def test_verisure_errors(
             "code": "123456",
         },
     )
-    assert result5.get("type") == FlowResultType.FORM
+    assert result5.get("type") is FlowResultType.FORM
     assert result5.get("step_id") == "mfa"
     assert result5.get("errors") == {"base": error}
 
@@ -314,7 +315,7 @@ async def test_verisure_errors(
     )
     await hass.async_block_till_done()
 
-    assert result6.get("type") == FlowResultType.CREATE_ENTRY
+    assert result6.get("type") is FlowResultType.CREATE_ENTRY
     assert result6.get("title") == "ascending (12345th street)"
     assert result6.get("data") == {
         CONF_GIID: "12345",
@@ -333,12 +334,12 @@ async def test_dhcp(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         data=dhcp.DhcpServiceInfo(
-            ip="1.2.3.4", macaddress="01:23:45:67:89:ab", hostname="mock_hostname"
+            ip="1.2.3.4", macaddress="0123456789ab", hostname="mock_hostname"
         ),
         context={"source": config_entries.SOURCE_DHCP},
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
 
@@ -361,7 +362,7 @@ async def test_reauth_flow(
         data=mock_config_entry.data,
     )
     assert result.get("step_id") == "reauth_confirm"
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -373,7 +374,7 @@ async def test_reauth_flow(
     )
     await hass.async_block_till_done()
 
-    assert result2.get("type") == FlowResultType.ABORT
+    assert result2.get("type") is FlowResultType.ABORT
     assert result2.get("reason") == "reauth_successful"
     assert mock_config_entry.data == {
         CONF_GIID: "12345",
@@ -404,7 +405,7 @@ async def test_reauth_flow_with_mfa(
         data=mock_config_entry.data,
     )
     assert result.get("step_id") == "reauth_confirm"
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {}
 
     mock_verisure_config_flow.login.side_effect = VerisureLoginError(
@@ -420,7 +421,7 @@ async def test_reauth_flow_with_mfa(
     )
     await hass.async_block_till_done()
 
-    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("type") is FlowResultType.FORM
     assert result2.get("step_id") == "reauth_mfa"
 
     mock_verisure_config_flow.login.side_effect = None
@@ -433,7 +434,7 @@ async def test_reauth_flow_with_mfa(
     )
     await hass.async_block_till_done()
 
-    assert result3.get("type") == FlowResultType.ABORT
+    assert result3.get("type") is FlowResultType.ABORT
     assert result3.get("reason") == "reauth_successful"
     assert mock_config_entry.data == {
         CONF_GIID: "12345",
@@ -486,7 +487,7 @@ async def test_reauth_flow_errors(
     await hass.async_block_till_done()
 
     assert result2.get("step_id") == "reauth_confirm"
-    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("type") is FlowResultType.FORM
     assert result2.get("errors") == {"base": error}
 
     mock_verisure_config_flow.login.side_effect = VerisureLoginError(
@@ -503,7 +504,7 @@ async def test_reauth_flow_errors(
     )
     await hass.async_block_till_done()
 
-    assert result3.get("type") == FlowResultType.FORM
+    assert result3.get("type") is FlowResultType.FORM
     assert result3.get("step_id") == "reauth_confirm"
     assert result3.get("errors") == {"base": "unknown_mfa"}
 
@@ -518,7 +519,7 @@ async def test_reauth_flow_errors(
     )
     await hass.async_block_till_done()
 
-    assert result4.get("type") == FlowResultType.FORM
+    assert result4.get("type") is FlowResultType.FORM
     assert result4.get("step_id") == "reauth_mfa"
 
     mock_verisure_config_flow.validate_mfa.side_effect = side_effect
@@ -529,7 +530,7 @@ async def test_reauth_flow_errors(
             "code": "123456",
         },
     )
-    assert result5.get("type") == FlowResultType.FORM
+    assert result5.get("type") is FlowResultType.FORM
     assert result5.get("step_id") == "reauth_mfa"
     assert result5.get("errors") == {"base": error}
 
@@ -574,7 +575,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -582,5 +583,5 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         user_input={CONF_LOCK_CODE_DIGITS: 4},
     )
 
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("data") == {CONF_LOCK_CODE_DIGITS: DEFAULT_LOCK_CODE_DIGITS}
