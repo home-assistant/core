@@ -29,7 +29,7 @@ class AsekoSensorEntityDescription(SensorEntityDescription):
 
 CONCENTRATION_KILOGRAMS_PER_CUBIC_METER = "kg/m³"
 CONCENTRATION_MILLIGRAMS_PER_LITER = "mg/l"
-GRAMS_PER_HOUR = "g/h"
+GRAMS_PER_HOUR = "g/hour"
 
 UNIT_SENSORS = {
     "airTemp": AsekoSensorEntityDescription(
