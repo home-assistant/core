@@ -21,7 +21,7 @@ async def test_jewish_calendar_min_config(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.date") is not None
+    assert hass.states.get("sensor.jewish_calendar_date") is not None
 
 
 async def test_jewish_calendar_hebrew(hass: HomeAssistant) -> None:
@@ -30,7 +30,7 @@ async def test_jewish_calendar_hebrew(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.date") is not None
+    assert hass.states.get("sensor.jewish_calendar_date") is not None
 
 
 TEST_PARAMS = [
@@ -187,7 +187,7 @@ async def test_jewish_calendar_sensor(
         else result
     )
 
-    sensor_object = hass.states.get(f"sensor.{sensor}")
+    sensor_object = hass.states.get(f"sensor.jewish_calendar_{sensor}")
     assert sensor_object.state == result
 
     if sensor == "holiday":
@@ -537,7 +537,7 @@ async def test_shabbat_times_sensor(
             else result_value
         )
 
-        assert hass.states.get(f"sensor.{sensor_type}").state == str(
+        assert hass.states.get(f"sensor.jewish_calendar_{sensor_type}").state == str(
             result_value
         ), f"Value for {sensor_type}"
 
@@ -575,7 +575,7 @@ async def test_omer_sensor(hass: HomeAssistant, test_time, result) -> None:
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.day_of_the_omer").state == result
+    assert hass.states.get("sensor.jewish_calendar_day_of_the_omer").state == result
 
 
 DAFYOMI_PARAMS = [
@@ -609,7 +609,7 @@ async def test_dafyomi_sensor(hass: HomeAssistant, test_time, result) -> None:
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.daf_yomi").state == result
+    assert hass.states.get("sensor.jewish_calendar_daf_yomi").state == result
 
 
 async def test_no_discovery_info(

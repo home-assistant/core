@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
-from . import DOMAIN
+from . import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -167,6 +167,7 @@ class JewishCalendarSensor(SensorEntity):
     ) -> None:
         """Initialize the Jewish calendar sensor."""
         self.entity_description = description
+        self._attr_name = f"{DEFAULT_NAME} {description.name}"
         self._attr_unique_id = f"{DOMAIN}_{description.key}"
         self._location = data["location"]
         self._hebrew = data["language"] == "hebrew"

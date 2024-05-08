@@ -21,7 +21,7 @@ from homeassistant.helpers import event
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from . import DOMAIN
+from . import DEFAULT_NAME, DOMAIN
 
 
 @dataclass(frozen=True)
@@ -85,6 +85,7 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
     ) -> None:
         """Initialize the binary sensor."""
         self.entity_description = description
+        self._attr_name = f"{DEFAULT_NAME} {description.name}"
         self._attr_unique_id = f"{DOMAIN}_{description.key}"
         self._location = data["location"]
         self._hebrew = data["language"] == "hebrew"
