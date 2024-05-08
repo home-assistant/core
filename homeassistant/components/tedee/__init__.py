@@ -83,8 +83,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         try:
             await coordinator.async_register_webhook(webhook_url)
-        except TedeeWebhookException as ex:
-            _LOGGER.exception("Failed to register Tedee webhook from bridge: %s", ex)
+        except TedeeWebhookException:
+            _LOGGER.exception("Failed to register Tedee webhook from bridge")
         else:
             entry.async_on_unload(
                 hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
