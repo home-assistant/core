@@ -592,7 +592,7 @@ class ConfigEntry(Generic[_DataT]):
                 self.domain,
                 error_reason,
             )
-            await self._async_process_on_unload(hass)
+            await self._async_process_unload(hass)
             result = False
         except ConfigEntryAuthFailed as exc:
             message = str(exc)
@@ -609,7 +609,7 @@ class ConfigEntry(Generic[_DataT]):
                 self.domain,
                 auth_message,
             )
-            await self._async_process_on_unload(hass)
+            await self._async_process_unload(hass)
             self.async_start_reauth(hass)
             result = False
         except ConfigEntryNotReady as exc:
@@ -655,7 +655,7 @@ class ConfigEntry(Generic[_DataT]):
                     functools.partial(self._async_setup_again, hass),
                 )
 
-            await self._async_process_on_unload(hass)
+            await self._async_process_unload(hass)
             return
         # pylint: disable-next=broad-except
         except (asyncio.CancelledError, SystemExit, Exception):
@@ -753,7 +753,7 @@ class ConfigEntry(Generic[_DataT]):
 
         component = await integration.async_get_component()
 
-        if integration.domain == self.domain:
+        if domain_is_integration := self.domain == integration.domain:
             if not self.state.recoverable:
                 return False
 
@@ -765,7 +765,7 @@ class ConfigEntry(Generic[_DataT]):
         supports_unload = hasattr(component, "async_unload_entry")
 
         if not supports_unload:
-            if integration.domain == self.domain:
+            if domain_is_integration:
                 self._async_set_state(
                     hass, ConfigEntryState.FAILED_UNLOAD, "Unload not supported"
                 )
@@ -773,19 +773,17 @@ class ConfigEntry(Generic[_DataT]):
 
         try:
             result = await component.async_unload_entry(hass, self)
-
             assert isinstance(result, bool)
-
-            # Only adjust state if we unloaded the component
-            if result and integration.domain == self.domain:
-                self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
-
-            await self._async_process_on_unload(hass)
+            if domain_is_integration:
+                # Only adjust state if we unloaded the component
+                if result:
+                    self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
+                await self._async_process_unload(hass)
         except Exception as exc:
             _LOGGER.exception(
                 "Error unloading entry %s for %s", self.title, integration.domain
             )
-            if integration.domain == self.domain:
+            if domain_is_integration:
                 self._async_set_state(
                     hass, ConfigEntryState.FAILED_UNLOAD, str(exc) or "Unknown error"
                 )
@@ -929,7 +927,7 @@ class ConfigEntry(Generic[_DataT]):
             self._on_unload = []
         self._on_unload.append(func)
 
-    async def _async_process_on_unload(self, hass: HomeAssistant) -> None:
+    async def _async_process_unload(self, hass: HomeAssistant) -> None:
         """Process the on_unload callbacks and wait for pending tasks.
 
         The entry runtime_data is cleared to avoid holding onto
