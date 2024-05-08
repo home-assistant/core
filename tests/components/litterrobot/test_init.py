@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .common import CONFIG, VACUUM_ENTITY_ID, remove_device
+from .common import CONFIG, VACUUM_ENTITY_ID
 from .conftest import setup_integration
 
 from tests.common import MockConfigEntry
@@ -87,20 +87,13 @@ async def test_device_remove_devices(
     assert entity.unique_id == "LR3C012345-litter_box"
 
     device_entry = device_registry.async_get(entity.device_id)
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), device_entry.id, config_entry.entry_id
-        )
-        is False
-    )
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(litterrobot.DOMAIN, "test-serial", "remove-serial")},
     )
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), dead_device_entry.id, config_entry.entry_id
-        )
-        is True
-    )
+    response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
+    assert response["success"]

@@ -228,6 +228,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         key="PoE port power sensor",
         device_class=SensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
         entity_registry_enabled_default=False,
         api_handler_fn=lambda api: api.ports,
@@ -238,6 +239,42 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         supported_fn=lambda hub, obj_id: bool(hub.api.ports[obj_id].port_poe),
         unique_id_fn=lambda hub, obj_id: f"poe_power-{obj_id}",
         value_fn=lambda _, obj: obj.poe_power if obj.poe_mode != "off" else "0",
+    ),
+    UnifiSensorEntityDescription[Ports, Port](
+        key="Port Bandwidth sensor RX",
+        device_class=SensorDeviceClass.DATA_RATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        icon="mdi:download",
+        allowed_fn=lambda hub, _: hub.config.option_allow_bandwidth_sensors,
+        api_handler_fn=lambda api: api.ports,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        name_fn=lambda port: f"{port.name} RX",
+        object_fn=lambda api, obj_id: api.ports[obj_id],
+        unique_id_fn=lambda hub, obj_id: f"port_rx-{obj_id}",
+        value_fn=lambda hub, port: port.rx_bytes_r,
+    ),
+    UnifiSensorEntityDescription[Ports, Port](
+        key="Port Bandwidth sensor TX",
+        device_class=SensorDeviceClass.DATA_RATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        icon="mdi:upload",
+        allowed_fn=lambda hub, _: hub.config.option_allow_bandwidth_sensors,
+        api_handler_fn=lambda api: api.ports,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        name_fn=lambda port: f"{port.name} TX",
+        object_fn=lambda api, obj_id: api.ports[obj_id],
+        unique_id_fn=lambda hub, obj_id: f"port_tx-{obj_id}",
+        value_fn=lambda hub, port: port.tx_bytes_r,
     ),
     UnifiSensorEntityDescription[Clients, Client](
         key="Client uptime",
@@ -424,7 +461,7 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
         if description.is_connected_fn is not None:
             # Send heartbeat if client is connected
             if description.is_connected_fn(self.hub, self._obj_id):
-                self.hub.async_heartbeat(
+                self.hub.update_heartbeat(
                     self._attr_unique_id,
                     dt_util.utcnow() + self.hub.config.option_detection_time,
                 )
@@ -449,4 +486,4 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
 
         if self.entity_description.is_connected_fn is not None:
             # Remove heartbeat registration
-            self.hub.async_heartbeat(self._attr_unique_id)
+            self.hub.remove_heartbeat(self._attr_unique_id)
