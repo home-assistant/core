@@ -2143,7 +2143,7 @@ pysesame2==1.0.1
 pysiaalarm==3.1.1
 
 # homeassistant.components.signal_messenger
-pysignalclirestapi==0.3.23
+pysignalclirestapi==0.3.24
 
 # homeassistant.components.sky_hub
 pyskyqhub==0.1.4
