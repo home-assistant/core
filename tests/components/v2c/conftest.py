@@ -1,7 +1,7 @@
 """Common fixtures for the V2C tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from pytrydan.models.trydan import TrydanData
