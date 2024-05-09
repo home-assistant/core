@@ -369,3 +369,47 @@ async def test_get_entity_config_error(
     assert not res["success"], res
     assert res["error"]["code"] == "home_assistant_error"
     assert res["error"]["message"].startswith(error_message_start)
+
+
+async def test_validate_entity(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test entity validation."""
+    await knx.setup_integration({})
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "knx/validate_entity",
+            "platform": Platform.SWITCH,
+            "data": {
+                "entity": {"name": "test_name"},
+                "knx": {"ga_switch": {"write": "1/2/3"}},
+            },
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is True
+
+    # invalid data
+    await client.send_json_auto_id(
+        {
+            "type": "knx/validate_entity",
+            "platform": Platform.SWITCH,
+            "data": {
+                "entity": {"name": "test_name"},
+                "knx": {"ga_switch": {}},
+            },
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is False
+    assert res["result"]["errors"][0]["path"] == ["data", "knx", "ga_switch", "write"]
+    assert res["result"]["errors"][0]["error_message"] == "required key not provided"
+    assert res["result"]["error_base"].startswith("required key not provided")
