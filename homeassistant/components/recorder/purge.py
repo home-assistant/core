@@ -694,7 +694,7 @@ def _purge_filtered_states(
     )
     if not to_purge:
         return True
-    state_ids, attributes_ids, event_ids = zip(*to_purge)
+    state_ids, attributes_ids, event_ids = zip(*to_purge, strict=False)
     filtered_event_ids = {id_ for id_ in event_ids if id_ is not None}
     _LOGGER.debug(
         "Selected %s state_ids to remove that should be filtered", len(state_ids)
@@ -735,7 +735,7 @@ def _purge_filtered_events(
     )
     if not to_purge:
         return True
-    event_ids, data_ids = zip(*to_purge)
+    event_ids, data_ids = zip(*to_purge, strict=False)
     event_ids_set = set(event_ids)
     _LOGGER.debug(
         "Selected %s event_ids to remove that should be filtered", len(event_ids_set)

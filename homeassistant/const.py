@@ -14,14 +14,16 @@ from .helpers.deprecation import (
     dir_with_deprecated_constants,
 )
 from .util.event_type import EventType
+from .util.hass_dict import HassKey
 from .util.signal_type import SignalType
 
 if TYPE_CHECKING:
     from .core import EventStateChangedData
+    from .helpers.typing import NoEventData
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
-MINOR_VERSION: Final = 5
+MINOR_VERSION: Final = 6
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -44,6 +46,7 @@ class Platform(StrEnum):
     CALENDAR = "calendar"
     CAMERA = "camera"
     CLIMATE = "climate"
+    CONVERSATION = "conversation"
     COVER = "cover"
     DATE = "date"
     DATETIME = "datetime"
@@ -294,6 +297,7 @@ CONF_WHILE: Final = "while"
 CONF_WHITELIST: Final = "whitelist"
 CONF_ALLOWLIST_EXTERNAL_DIRS: Final = "allowlist_external_dirs"
 LEGACY_CONF_WHITELIST_EXTERNAL_DIRS: Final = "whitelist_external_dirs"
+CONF_DEBUG: Final = "debug"
 CONF_XY: Final = "xy"
 CONF_ZONE: Final = "zone"
 
@@ -301,11 +305,13 @@ CONF_ZONE: Final = "zone"
 EVENT_CALL_SERVICE: Final = "call_service"
 EVENT_COMPONENT_LOADED: Final = "component_loaded"
 EVENT_CORE_CONFIG_UPDATE: Final = "core_config_updated"
-EVENT_HOMEASSISTANT_CLOSE: Final = "homeassistant_close"
-EVENT_HOMEASSISTANT_START: Final = "homeassistant_start"
-EVENT_HOMEASSISTANT_STARTED: Final = "homeassistant_started"
-EVENT_HOMEASSISTANT_STOP: Final = "homeassistant_stop"
-EVENT_HOMEASSISTANT_FINAL_WRITE: Final = "homeassistant_final_write"
+EVENT_HOMEASSISTANT_CLOSE: EventType[NoEventData] = EventType("homeassistant_close")
+EVENT_HOMEASSISTANT_START: EventType[NoEventData] = EventType("homeassistant_start")
+EVENT_HOMEASSISTANT_STARTED: EventType[NoEventData] = EventType("homeassistant_started")
+EVENT_HOMEASSISTANT_STOP: EventType[NoEventData] = EventType("homeassistant_stop")
+EVENT_HOMEASSISTANT_FINAL_WRITE: EventType[NoEventData] = EventType(
+    "homeassistant_final_write"
+)
 EVENT_LOGBOOK_ENTRY: Final = "logbook_entry"
 EVENT_LOGGING_CHANGED: Final = "logging_changed"
 EVENT_SERVICE_REGISTERED: Final = "service_registered"
@@ -1620,7 +1626,7 @@ SIGNAL_BOOTSTRAP_INTEGRATIONS: SignalType[dict[str, float]] = SignalType(
 
 
 # hass.data key for logging information.
-KEY_DATA_LOGGING = "logging"
+KEY_DATA_LOGGING: HassKey[str] = HassKey("logging")
 
 
 # Date/Time formats

@@ -674,6 +674,41 @@ async def test_message_is_truncated(
     assert len(event_data["text"]) == 3
 
 
+@pytest.mark.parametrize("imap_search", [TEST_SEARCH_RESPONSE])
+@pytest.mark.parametrize(
+    "imap_fetch", [(TEST_FETCH_RESPONSE_TEXT_PLAIN)], ids=["plain"]
+)
+@pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
+@pytest.mark.parametrize("event_message_data", [[], ["text"], ["text", "headers"]])
+async def test_message_data(
+    hass: HomeAssistant,
+    mock_imap_protocol: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    event_message_data: list,
+) -> None:
+    """Test with different message data."""
+    event_called = async_capture_events(hass, "imap_content")
+
+    config = MOCK_CONFIG.copy()
+    # Mock different message data
+    config["event_message_data"] = event_message_data
+    config_entry = MockConfigEntry(domain=DOMAIN, data=config)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    # Make sure we have had one update (when polling)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.imap_email_email_com")
+    # We should have received one message
+    assert state is not None
+    assert state.state == "1"
+    assert len(event_called) == 1
+
+    event_data = event_called[0].data
+    assert set(event_message_data).issubset(set(event_data))
+
+
 @pytest.mark.parametrize(
     ("imap_search", "imap_fetch"),
     [(TEST_SEARCH_RESPONSE, TEST_FETCH_RESPONSE_TEXT_PLAIN)],
@@ -847,6 +882,17 @@ async def test_services(hass: HomeAssistant, mock_imap_protocol: MagicMock) -> N
     mock_imap_protocol.store.assert_called_with("1", "+FLAGS (\\Deleted)")
     mock_imap_protocol.protocol.expunge.assert_called_once()
 
+    # Test fetch service
+    data = {"entry": config_entry.entry_id, "uid": "1"}
+    response = await hass.services.async_call(
+        DOMAIN, "fetch", data, blocking=True, return_response=True
+    )
+    mock_imap_protocol.fetch.assert_called_with("1", "BODY.PEEK[]")
+    assert response["text"] == "Test body\r\n"
+    assert response["sender"] == "john.doe@example.com"
+    assert response["subject"] == "Test subject"
+    assert response["uid"] == "1"
+
     # Test with invalid entry_id
     data = {"entry": "invalid", "uid": "1"}
     with pytest.raises(ServiceValidationError) as exc:
@@ -877,43 +923,53 @@ async def test_services(hass: HomeAssistant, mock_imap_protocol: MagicMock) -> N
             )
 
     # Test unexpected errors with storing a flag during a service call
-    service_calls = {
-        "seen": {"entry": config_entry.entry_id, "uid": "1"},
-        "move": {
-            "entry": config_entry.entry_id,
-            "uid": "1",
-            "seen": False,
-            "target_folder": "Trash",
-        },
-        "delete": {"entry": config_entry.entry_id, "uid": "1"},
+    service_calls_response = {
+        "seen": ({"entry": config_entry.entry_id, "uid": "1"}, False),
+        "move": (
+            {
+                "entry": config_entry.entry_id,
+                "uid": "1",
+                "seen": False,
+                "target_folder": "Trash",
+            },
+            False,
+        ),
+        "delete": ({"entry": config_entry.entry_id, "uid": "1"}, False),
+        "fetch": ({"entry": config_entry.entry_id, "uid": "1"}, True),
     }
-    store_error_translation_key = {
-        "seen": "seen_failed",
-        "move": "copy_failed",
-        "delete": "delete_failed",
+    patch_error_translation_key = {
+        "seen": ("store", "seen_failed"),
+        "move": ("copy", "copy_failed"),
+        "delete": ("store", "delete_failed"),
+        "fetch": ("fetch", "fetch_failed"),
     }
-    for service, data in service_calls.items():
+    for service, (data, response) in service_calls_response.items():
         with (
             pytest.raises(ServiceValidationError) as exc,
             patch.object(
-                mock_imap_protocol, "store", side_effect=AioImapException("Bla")
+                mock_imap_protocol,
+                patch_error_translation_key[service][0],
+                side_effect=AioImapException("Bla"),
             ),
         ):
-            await hass.services.async_call(DOMAIN, service, data, blocking=True)
+            await hass.services.async_call(
+                DOMAIN, service, data, blocking=True, return_response=response
+            )
         assert exc.value.translation_domain == DOMAIN
         assert exc.value.translation_key == "imap_server_fail"
         assert exc.value.translation_placeholders == {"error": "Bla"}
-        # Test with bad responses on store command
+        # Test with bad responses
         with (
             pytest.raises(ServiceValidationError) as exc,
             patch.object(
-                mock_imap_protocol, "store", return_value=Response("BAD", [b"Bla"])
-            ),
-            patch.object(
-                mock_imap_protocol, "copy", return_value=Response("BAD", [b"Bla"])
+                mock_imap_protocol,
+                patch_error_translation_key[service][0],
+                return_value=Response("BAD", [b"Bla"]),
             ),
         ):
-            await hass.services.async_call(DOMAIN, service, data, blocking=True)
+            await hass.services.async_call(
+                DOMAIN, service, data, blocking=True, return_response=response
+            )
         assert exc.value.translation_domain == DOMAIN
-        assert exc.value.translation_key == store_error_translation_key[service]
+        assert exc.value.translation_key == patch_error_translation_key[service][1]
         assert exc.value.translation_placeholders == {"error": "Bla"}

@@ -29,7 +29,7 @@ class DownloaderConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await self._validate_input(user_input)
             except DirectoryDoesNotExist:
-                errors["base"] = "cannot_connect"
+                errors["base"] = "directory_does_not_exist"
             else:
                 return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 

@@ -412,9 +412,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             stream.add_provider("hls")
             await stream.start()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STARTED, preload_stream, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, preload_stream)
 
     @callback
     def update_tokens(t: datetime) -> None:
@@ -432,9 +430,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Unsubscribe track time interval timer."""
         unsub()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, unsub_track_time_interval, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unsub_track_time_interval)
 
     component.async_register_entity_service(
         SERVICE_ENABLE_MOTION, {}, "async_enable_motion_detection"
@@ -515,14 +511,14 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self._create_stream_lock: asyncio.Lock | None = None
         self._rtsp_to_webrtc = False
 
-    @property
+    @cached_property
     def entity_picture(self) -> str:
         """Return a link to the camera feed as entity picture."""
         if self._attr_entity_picture is not None:
             return self._attr_entity_picture
         return ENTITY_IMAGE_URL.format(self.entity_id, self.access_tokens[-1])
 
-    @property
+    @cached_property
     def use_stream_for_stills(self) -> bool:
         """Whether or not to use stream to generate stills."""
         return False
@@ -749,6 +745,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def async_update_token(self) -> None:
         """Update the used token."""
         self.access_tokens.append(hex(_RND.getrandbits(256))[2:])
+        self.__dict__.pop("entity_picture", None)
 
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""

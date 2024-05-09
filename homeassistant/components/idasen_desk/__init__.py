@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from attr import dataclass
@@ -10,6 +11,7 @@ from idasen_ha import Desk
 from idasen_ha.errors import AuthFailedError
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth.match import ADDRESS, BluetoothCallbackMatcher
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_NAME,
@@ -46,6 +48,7 @@ class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):  # pylint: disab
         self._address = address
         self._expected_connected = False
         self._connection_lost = False
+        self._disconnect_lock = asyncio.Lock()
 
         self.desk = Desk(self.async_set_updated_data)
 
@@ -56,6 +59,7 @@ class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):  # pylint: disab
             self.hass, self._address, connectable=True
         )
         if ble_device is None:
+            _LOGGER.debug("No BLEDevice for %s", self._address)
             return False
         self._expected_connected = True
         await self.desk.connect(ble_device)
@@ -68,20 +72,28 @@ class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):  # pylint: disab
         self._connection_lost = False
         await self.desk.disconnect()
 
-    @callback
-    def async_set_updated_data(self, data: int | None) -> None:
-        """Handle data update."""
+    async def async_ensure_connection_state(self) -> None:
+        """Check if the expected connection state matches the current state and correct it if needed."""
         if self._expected_connected:
             if not self.desk.is_connected:
                 _LOGGER.debug("Desk disconnected. Reconnecting")
                 self._connection_lost = True
-                self.hass.async_create_task(self.async_connect())
+                await self.async_connect()
             elif self._connection_lost:
                 _LOGGER.info("Reconnected to desk")
                 self._connection_lost = False
         elif self.desk.is_connected:
-            _LOGGER.warning("Desk is connected but should not be. Disconnecting")
-            self.hass.async_create_task(self.desk.disconnect())
+            if self._disconnect_lock.locked():
+                _LOGGER.debug("Already disconnecting")
+                return
+            async with self._disconnect_lock:
+                _LOGGER.debug("Desk is connected but should not be. Disconnecting")
+                await self.desk.disconnect()
+
+    @callback
+    def async_set_updated_data(self, data: int | None) -> None:
+        """Handle data update."""
+        self.hass.async_create_task(self.async_ensure_connection_state())
         return super().async_set_updated_data(data)
 
 
@@ -115,6 +127,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
+    @callback
+    def _async_bluetooth_callback(
+        service_info: bluetooth.BluetoothServiceInfoBleak,
+        change: bluetooth.BluetoothChange,
+    ) -> None:
+        """Update from a Bluetooth callback to ensure that a new BLEDevice is fetched."""
+        _LOGGER.debug("Bluetooth callback triggered")
+        hass.async_create_task(coordinator.async_ensure_connection_state())
+
+    entry.async_on_unload(
+        bluetooth.async_register_callback(
+            hass,
+            _async_bluetooth_callback,
+            BluetoothCallbackMatcher({ADDRESS: address}),
+            bluetooth.BluetoothScanningMode.ACTIVE,
+        )
+    )
 
     async def _async_stop(event: Event) -> None:
         """Close the connection."""

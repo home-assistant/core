@@ -544,7 +544,7 @@ def test_string(hass: HomeAssistant) -> None:
 
     # Test subclasses of str are returned
     class MyString(str):
-        pass
+        __slots__ = ()
 
     my_string = MyString("hello")
     assert schema(my_string) is my_string

@@ -152,7 +152,7 @@ class OAuthFixture:
         )
 
     async def async_finish_setup(
-        self, result: dict, user_input: dict = None
+        self, result: dict, user_input: dict | None = None
     ) -> ConfigEntry:
         """Finish the OAuth flow exchanging auth token for refresh token."""
         with patch(
