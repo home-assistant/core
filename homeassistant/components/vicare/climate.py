@@ -158,7 +158,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         translation_key: str,
     ) -> None:
         """Initialize the climate device."""
-        super().__init__(device_config, device, circuit, circuit.id)
+        super().__init__(device_config, device, circuit, translation_key)
         self._device = device
         self._attr_translation_key = translation_key
 
@@ -289,11 +289,9 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
             self._attr_target_temperature = temp
 
     @property
-    def preset_mode(self) -> str | None:
+    def preset_mode(self):
         """Return the current preset mode, e.g., home, away, temp."""
-        if self._current_program:
-            return VICARE_TO_HA_PRESET_HEATING.get(self._current_program)
-        return None
+        return VICARE_TO_HA_PRESET_HEATING.get(self._current_program)
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode and deactivate any existing programs."""
