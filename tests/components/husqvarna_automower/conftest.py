@@ -60,7 +60,7 @@ def mock_config_entry(jwt, expires_at: int) -> MockConfigEntry:
 
 @pytest.fixture
 def mock_missing_scope_config_entry(jwt, expires_at: int) -> MockConfigEntry:
-    """Return the default mocked config entry."""
+    """Return the default mocked config entry without 'amc:api'."""
     return MockConfigEntry(
         version=1,
         domain=DOMAIN,

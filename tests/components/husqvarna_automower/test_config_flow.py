@@ -313,7 +313,7 @@ async def test_reauth_missing_scope(
     reason: str,
     scope: str,
 ) -> None:
-    """Test the reauthentication aborts, if user tries to reauthenticate with the wrong scope."""
+    """Test the reauthentication if the config entry had a missing scope."""
 
     mock_missing_scope_config_entry.add_to_hass(hass)
 
