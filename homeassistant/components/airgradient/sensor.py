@@ -20,7 +20,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -132,23 +132,31 @@ async def async_setup_entry(
     """Set up AirGradient sensor entities based on a config entry."""
 
     coordinator: AirGradientDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    listener: Callable[[], None] | None = None
+    not_setup: set[AirGradientSensorEntityDescription] = set(SENSOR_TYPES)
 
+    @callback
     def add_entities() -> None:
-        async_add_entities(
-            AirGradientSensor(coordinator, description) for description in SENSOR_TYPES
-        )
+        """Add new entities based on the latest data."""
+        sensor_descriptions = not_setup
+        not_setup.clear()
+        sensors = []
+        for description in sensor_descriptions:
+            if description.value_fn(coordinator.data) is None:
+                not_setup.add(description)
+            else:
+                sensors.append(AirGradientSensor(coordinator, description))
 
-    if coordinator.data.rco2 is None:
+        if sensors:
+            async_add_entities(sensors)
+        nonlocal listener
+        if not_setup:
+            if not listener:
+                listener = coordinator.async_add_listener(add_entities)
+        elif listener:
+            listener()
 
-        def add_entities_with_data() -> None:
-            """Add entities once we have data."""
-            if coordinator.data.rco2 is not None:
-                add_entities()
-                listener()
-
-        listener = coordinator.async_add_listener(add_entities_with_data)
-    else:
-        add_entities()
+    add_entities()
 
 
 class AirGradientSensor(
