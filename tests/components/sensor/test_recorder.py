@@ -1636,7 +1636,7 @@ async def test_compile_hourly_sum_statistics_total_increasing(
     }
     seq = [10, 15, 20, 10, 30, 40, 50, 60, 70]
     with freeze_time(period0) as freezer:
-        _, eight, states = await async_record_meter_states
+        _, eight, states = await async_record_meter_states(
             hass, freezer, period0, "sensor.test1", attributes, seq
         )
     await async_wait_recording_done(hass)
