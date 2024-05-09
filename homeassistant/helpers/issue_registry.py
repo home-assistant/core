@@ -6,7 +6,7 @@ import dataclasses
 from datetime import datetime
 from enum import StrEnum
 import functools as ft
-from typing import Any, cast
+from typing import Any, Literal, TypedDict, cast
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
@@ -14,15 +14,27 @@ from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
+from homeassistant.util.event_type import EventType
+from homeassistant.util.hass_dict import HassKey
 
 from .registry import BaseRegistry
 from .storage import Store
 
-DATA_REGISTRY = "issue_registry"
-EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED = "repairs_issue_registry_updated"
+DATA_REGISTRY: HassKey[IssueRegistry] = HassKey("issue_registry")
+EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED: EventType[EventIssueRegistryUpdatedData] = (
+    EventType("repairs_issue_registry_updated")
+)
 STORAGE_KEY = "repairs.issue_registry"
 STORAGE_VERSION_MAJOR = 1
 STORAGE_VERSION_MINOR = 2
+
+
+class EventIssueRegistryUpdatedData(TypedDict):
+    """Event data for when the issue registry is updated."""
+
+    action: Literal["create", "remove", "update"]
+    domain: str
+    issue_id: str
 
 
 class IssueSeverity(StrEnum):
@@ -154,7 +166,11 @@ class IssueRegistry(BaseRegistry):
             self.async_schedule_save()
             self.hass.bus.async_fire_internal(
                 EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
-                {"action": "create", "domain": domain, "issue_id": issue_id},
+                EventIssueRegistryUpdatedData(
+                    action="create",
+                    domain=domain,
+                    issue_id=issue_id,
+                ),
             )
         else:
             replacement = dataclasses.replace(
@@ -176,7 +192,11 @@ class IssueRegistry(BaseRegistry):
                 self.async_schedule_save()
                 self.hass.bus.async_fire_internal(
                     EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
-                    {"action": "update", "domain": domain, "issue_id": issue_id},
+                    EventIssueRegistryUpdatedData(
+                        action="update",
+                        domain=domain,
+                        issue_id=issue_id,
+                    ),
                 )
 
         return issue
@@ -191,7 +211,11 @@ class IssueRegistry(BaseRegistry):
         self.async_schedule_save()
         self.hass.bus.async_fire_internal(
             EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
-            {"action": "remove", "domain": domain, "issue_id": issue_id},
+            EventIssueRegistryUpdatedData(
+                action="remove",
+                domain=domain,
+                issue_id=issue_id,
+            ),
         )
 
     @callback
@@ -211,7 +235,11 @@ class IssueRegistry(BaseRegistry):
         self.async_schedule_save()
         self.hass.bus.async_fire_internal(
             EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
-            {"action": "update", "domain": domain, "issue_id": issue_id},
+            EventIssueRegistryUpdatedData(
+                action="update",
+                domain=domain,
+                issue_id=issue_id,
+            ),
         )
 
         return issue
@@ -275,7 +303,7 @@ class IssueRegistry(BaseRegistry):
 @callback
 def async_get(hass: HomeAssistant) -> IssueRegistry:
     """Get issue registry."""
-    return cast(IssueRegistry, hass.data[DATA_REGISTRY])
+    return hass.data[DATA_REGISTRY]
 
 
 async def async_load(hass: HomeAssistant, *, read_only: bool = False) -> None:

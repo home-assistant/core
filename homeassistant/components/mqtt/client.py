@@ -316,7 +316,7 @@ class EnsureJobAfterCooldown:
         self._loop = asyncio.get_running_loop()
         self._timeout = timeout
         self._callback = callback_job
-        self._task: asyncio.Future | None = None
+        self._task: asyncio.Task | None = None
         self._timer: asyncio.TimerHandle | None = None
 
     def set_timeout(self, timeout: float) -> None:
@@ -331,28 +331,23 @@ class EnsureJobAfterCooldown:
             _LOGGER.error("%s", ha_error)
 
     @callback
-    def _async_task_done(self, task: asyncio.Future) -> None:
+    def _async_task_done(self, task: asyncio.Task) -> None:
         """Handle task done."""
         self._task = None
 
     @callback
-    def _async_execute(self) -> None:
+    def async_execute(self) -> asyncio.Task:
         """Execute the job."""
         if self._task:
             # Task already running,
             # so we schedule another run
             self.async_schedule()
-            return
+            return self._task
 
         self._async_cancel_timer()
         self._task = create_eager_task(self._async_job())
         self._task.add_done_callback(self._async_task_done)
-
-    async def async_fire(self) -> None:
-        """Execute the job immediately."""
-        if self._task:
-            await self._task
-        self._async_execute()
+        return self._task
 
     @callback
     def _async_cancel_timer(self) -> None:
@@ -367,7 +362,7 @@ class EnsureJobAfterCooldown:
         # We want to reschedule the timer in the future
         # every time this is called.
         self._async_cancel_timer()
-        self._timer = self._loop.call_later(self._timeout, self._async_execute)
+        self._timer = self._loop.call_later(self._timeout, self.async_execute)
 
     async def async_cleanup(self) -> None:
         """Cleanup any pending task."""
@@ -379,7 +374,7 @@ class EnsureJobAfterCooldown:
             await self._task
         except asyncio.CancelledError:
             pass
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error cleaning up task")
 
 
@@ -494,6 +489,9 @@ class MQTT:
         mqttc.on_publish = self._async_mqtt_on_callback
         mqttc.on_subscribe = self._async_mqtt_on_callback
         mqttc.on_unsubscribe = self._async_mqtt_on_callback
+
+        # suppress exceptions at callback
+        mqttc.suppress_exceptions = True
 
         if will := self.conf.get(CONF_WILL_MESSAGE, DEFAULT_WILL):
             will_message = PublishMessage(**will)
@@ -844,8 +842,9 @@ class MQTT:
         subscription_list = list(subscriptions.items())
         result, mid = self._mqttc.subscribe(subscription_list)
 
-        for topic, qos in subscriptions.items():
-            _LOGGER.debug("Subscribing to %s, mid: %s, qos: %s", topic, mid, qos)
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            for topic, qos in subscriptions.items():
+                _LOGGER.debug("Subscribing to %s, mid: %s, qos: %s", topic, mid, qos)
         self._last_subscribe = time.monotonic()
 
         if result == 0:
@@ -863,8 +862,9 @@ class MQTT:
 
         result, mid = self._mqttc.unsubscribe(topics)
         _raise_on_error(result)
-        for topic in topics:
-            _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            for topic in topics:
+                _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
 
         await self._async_wait_for_mid(mid)
 
@@ -877,7 +877,7 @@ class MQTT:
         await self._discovery_cooldown()  # Wait for MQTT discovery to cool down
         # Update subscribe cooldown period to a shorter time
         # and make sure we flush the debouncer
-        await self._subscribe_debouncer.async_fire()
+        await self._subscribe_debouncer.async_execute()
         self._subscribe_debouncer.set_timeout(SUBSCRIBE_COOLDOWN)
         await self.async_publish(
             topic=birth_message.topic,
@@ -987,10 +987,21 @@ class MQTT:
     def _async_mqtt_on_message(
         self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage
     ) -> None:
-        topic = msg.topic
-        # msg.topic is a property that decodes the topic to a string
-        # every time it is accessed. Save the result to avoid
-        # decoding the same topic multiple times.
+        try:
+            # msg.topic is a property that decodes the topic to a string
+            # every time it is accessed. Save the result to avoid
+            # decoding the same topic multiple times.
+            topic = msg.topic
+        except UnicodeDecodeError:
+            bare_topic: bytes = getattr(msg, "_topic")
+            _LOGGER.warning(
+                "Skipping received%s message on invalid topic %s (qos=%s): %s",
+                " retained" if msg.retain else "",
+                bare_topic,
+                msg.qos,
+                msg.payload[0:8192],
+            )
+            return
         _LOGGER.debug(
             "Received%s message on %s (qos=%s): %s",
             " retained" if msg.retain else "",

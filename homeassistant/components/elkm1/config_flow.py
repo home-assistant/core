@@ -248,7 +248,7 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "cannot_connect"}, None
         except InvalidAuth:
             return {CONF_PASSWORD: "invalid_auth"}, None
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return {"base": "unknown"}, None
 

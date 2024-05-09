@@ -39,6 +39,7 @@ async def test_entry_diagnostics(
     assert result == snapshot
 
 
+@pytest.mark.freeze_time(datetime.datetime(2024, 2, 29, 11, tzinfo=datetime.UTC))
 async def test_device_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
