@@ -44,8 +44,9 @@ class V2CConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 data = await evse.get_data()
 
-                await self.async_set_unique_id(data.ID)
-                self._abort_if_unique_id_configured()
+                if data.ID:
+                    await self.async_set_unique_id(data.ID)
+                    self._abort_if_unique_id_configured()
 
             except TrydanError:
                 errors["base"] = "cannot_connect"
