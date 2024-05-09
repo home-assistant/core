@@ -203,6 +203,7 @@ async def test_ecobee3_setup_connection_failure(
     # We just advance time by 5 minutes so that the retry happens, rather
     # than manually invoking async_setup_entry.
     await time_changed(hass, 5 * 60)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     climate = entity_registry.async_get("climate.homew")
     assert climate.unique_id == "00:00:00:00:00:00_1_16"

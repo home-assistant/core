@@ -142,7 +142,7 @@ def session_scope(
         if session.get_transaction() and not read_only:
             need_rollback = True
             session.commit()
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:
         _LOGGER.exception("Error executing query")
         if need_rollback:
             session.rollback()

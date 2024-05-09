@@ -100,6 +100,6 @@ class SkybellFlowHandler(ConfigFlow, domain=DOMAIN):
             return None, "invalid_auth"
         except exceptions.SkybellException:
             return None, "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             return None, "unknown"
         return skybell.user_id, None

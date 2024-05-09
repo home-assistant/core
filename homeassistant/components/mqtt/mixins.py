@@ -305,12 +305,12 @@ async def _async_discover(
     except vol.Invalid as err:
         discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
         clear_discovery_hash(hass, discovery_hash)
-        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
+        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None)
         async_handle_schema_error(discovery_payload, err)
     except Exception:
         discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
         clear_discovery_hash(hass, discovery_hash)
-        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
+        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None)
         raise
 
 
@@ -745,7 +745,7 @@ def get_discovery_hash(discovery_data: DiscoveryInfoType) -> tuple[str, str]:
 def send_discovery_done(hass: HomeAssistant, discovery_data: DiscoveryInfoType) -> None:
     """Acknowledge a discovery message has been handled."""
     discovery_hash = get_discovery_hash(discovery_data)
-    async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
+    async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None)
 
 
 def stop_discovery_updates(
@@ -809,7 +809,7 @@ class MqttDiscoveryDeviceUpdate(ABC):
         discovery_hash = get_discovery_hash(discovery_data)
         self._remove_discovery_updated = async_dispatcher_connect(
             hass,
-            MQTT_DISCOVERY_UPDATED.format(discovery_hash),
+            MQTT_DISCOVERY_UPDATED.format(*discovery_hash),
             self.async_discovery_update,
         )
         config_entry.async_on_unload(self._entry_unload)
@@ -1015,8 +1015,7 @@ class MqttDiscoveryUpdate(Entity):
                 self.hass.async_create_task(
                     _async_process_discovery_update_and_remove(
                         payload, self._discovery_data
-                    ),
-                    eager_start=False,
+                    )
                 )
             elif self._discovery_update:
                 if old_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]:
@@ -1025,8 +1024,7 @@ class MqttDiscoveryUpdate(Entity):
                     self.hass.async_create_task(
                         _async_process_discovery_update(
                             payload, self._discovery_update, self._discovery_data
-                        ),
-                        eager_start=False,
+                        )
                     )
                 else:
                     # Non-empty, unchanged payload: Ignore to avoid changing states
@@ -1044,7 +1042,7 @@ class MqttDiscoveryUpdate(Entity):
             set_discovery_hash(self.hass, discovery_hash)
             self._remove_discovery_updated = async_dispatcher_connect(
                 self.hass,
-                MQTT_DISCOVERY_UPDATED.format(discovery_hash),
+                MQTT_DISCOVERY_UPDATED.format(*discovery_hash),
                 discovery_callback,
             )
 
@@ -1058,6 +1056,15 @@ class MqttDiscoveryUpdate(Entity):
             # Clear the discovery topic so the entity is not
             # rediscovered after a restart
             await async_remove_discovery_payload(self.hass, self._discovery_data)
+
+    @final
+    async def add_to_platform_finish(self) -> None:
+        """Finish adding entity to platform."""
+        await super().add_to_platform_finish()
+        # Only send the discovery done after the entity is fully added
+        # and the state is written to the state machine.
+        if self._discovery_data is not None:
+            send_discovery_done(self.hass, self._discovery_data)
 
     @callback
     def add_to_platform_abort(self) -> None:
@@ -1218,8 +1225,6 @@ class MqttEntity(
         self._prepare_subscribe_topics()
         await self._subscribe_topics()
         await self.mqtt_async_added_to_hass()
-        if self._discovery_data is not None:
-            send_discovery_done(self.hass, self._discovery_data)
 
     async def mqtt_async_added_to_hass(self) -> None:
         """Call before the discovery message is acknowledged.

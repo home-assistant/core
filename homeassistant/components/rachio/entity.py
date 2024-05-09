@@ -70,6 +70,7 @@ class RachioHoseTimerEntity(CoordinatorEntity[RachioUpdateCoordinator]):
             manufacturer=DEFAULT_NAME,
             configuration_url="https://app.rach.io",
         )
+        self._update_attr()
 
     @property
     def available(self) -> bool:

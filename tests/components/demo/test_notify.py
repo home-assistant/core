@@ -69,7 +69,17 @@ async def test_sending_message(hass: HomeAssistant, events: list[Event]) -> None
     await hass.services.async_call(notify.DOMAIN, notify.SERVICE_SEND_MESSAGE, data)
     await hass.async_block_till_done()
     last_event = events[-1]
-    assert last_event.data[notify.ATTR_MESSAGE] == "Test message"
+    assert last_event.data == {notify.ATTR_MESSAGE: "Test message"}
+
+    data[notify.ATTR_TITLE] = "My title"
+    # Test with Title
+    await hass.services.async_call(notify.DOMAIN, notify.SERVICE_SEND_MESSAGE, data)
+    await hass.async_block_till_done()
+    last_event = events[-1]
+    assert last_event.data == {
+        notify.ATTR_MESSAGE: "Test message",
+        notify.ATTR_TITLE: "My title",
+    }
 
 
 async def test_calling_notify_from_script_loaded_from_yaml(

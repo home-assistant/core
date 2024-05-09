@@ -191,12 +191,12 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
         """Turn the device on."""
         if await self._switch(self._command_on) and not self._command_state:
             self._attr_is_on = True
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
         await self._update_entity_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if await self._switch(self._command_off) and not self._command_state:
             self._attr_is_on = False
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
         await self._update_entity_state()
