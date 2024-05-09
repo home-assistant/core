@@ -154,9 +154,10 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         self._current_program = None
         self._attr_translation_key = translation_key
 
+        self._attributes["vicare_programs"] = self._circuit.getPrograms()
         self._attr_preset_modes = [
             preset
-            for heating_program in self._circuit.getPrograms()
+            for heating_program in self._attributes["vicare_programs"]
             if (preset := HeatingProgram.to_ha_preset(heating_program)) is not None
         ]
 
@@ -208,7 +209,6 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
 
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attributes["vicare_modes"] = self._circuit.getModes()
-            self._attributes["vicare_programs"] = self._circuit.getPrograms()
 
             self._current_action = False
             # Update the specific device attributes
