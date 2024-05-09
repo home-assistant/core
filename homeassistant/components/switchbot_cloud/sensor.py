@@ -78,11 +78,7 @@ class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if self.coordinator.data:
-            if self.entity_description.key == SENSOR_TYPE_TEMPERATURE:
-                self._attr_native_value = self.coordinator.data.get("temperature")
-            if self.entity_description.key == SENSOR_TYPE_HUMIDITY:
-                self._attr_native_value = self.coordinator.data.get("humidity")
-            if self.entity_description.key == SENSOR_TYPE_BATTERY:
-                self._attr_native_value = self.coordinator.data.get("battery")
-            self.async_write_ha_state()
+        if not self.coordinator.data:
+            return
+        self._attr_native_value = self.coordinator.data.get(self.entity_description.key)
+        self.async_write_ha_state()
