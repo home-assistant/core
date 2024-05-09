@@ -109,7 +109,7 @@ def generate_duration(seconds: float = 1.0) -> timedelta:
 def string_to_datetime(dt: str) -> datetime:
     """Convert string into datetime."""
     return datetime.strptime(
-        datetime.now().strftime("%Y-%m-%d") + " " + dt, "%Y-%m-%d %H%M%S.%f"
+        datetime.now().strftime("%Y-%m-%d") + " " + dt, "%Y-%m-%d %H:%M:%S.%f"
     )
 
 

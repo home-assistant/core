@@ -2288,6 +2288,9 @@ class RascalScheduler(BaseScheduler):
 
     def _remove_routine_from_lock_queues(self, routine: RoutineEntity) -> None:
         """Remove routine from lock queues."""
+        _LOGGER.info(
+            "Remove routine %s's actions from the lock queues", routine.routine_id
+        )
         for action in list(routine.actions.values())[:-1]:
             target_entities = get_target_entities(self._hass, action.action)
             for entity in target_entities:
@@ -3142,6 +3145,7 @@ class RascalScheduler(BaseScheduler):
         self._remove_routine_from_lock_queues(routine)
         self._release_routine_locks(routine)
         self._remove_routine_from_serialization_order(routine_id)
+        output_all(_LOGGER, lock_queues=self._lineage_table.lock_queues)
 
         if self._scheduling_policy == FCFS:
             self._start_ready_routines_fcfs()
