@@ -4,8 +4,8 @@
   "codeowners": ["@SeraphicRav", "@laurence-presland"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/switchbot_cloud",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["switchbot-api"],
-  "requirements": ["switchbot-api==2.1.0"],
-  "integration_type": "hub"
+  "requirements": ["switchbot-api==2.1.0"]
 }
