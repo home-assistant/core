@@ -8,7 +8,13 @@ from typing import Any
 
 from deebot_client.capabilities import VacuumCapabilities
 from deebot_client.device import Device
-from deebot_client.events import BatteryEvent, FanSpeedEvent, RoomsEvent, StateEvent
+from deebot_client.events import (
+    BatteryEvent,
+    CustomCommandEvent,
+    FanSpeedEvent,
+    RoomsEvent,
+    StateEvent,
+)
 from deebot_client.models import CleanAction, CleanMode, Room, State
 import sucks
 
@@ -30,9 +36,9 @@ from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
 
 from . import EcovacsConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, EVENT_CUSTOM_COMMAND
 from .entity import EcovacsEntity
-from .util import get_name_key
+from .util import dataclass_to_dict, get_name_key
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -265,10 +271,15 @@ class EcovacsVacuum(
             self._attr_state = _STATE_TO_VACUUM_STATE[event.state]
             self.async_write_ha_state()
 
+        async def on_custom_command(event: CustomCommandEvent) -> None:
+            self.hass.bus.fire(EVENT_CUSTOM_COMMAND, dataclass_to_dict(event))
+
         self._subscribe(self._capability.battery.event, on_battery)
         self._subscribe(self._capability.fan_speed.event, on_fan_speed)
         self._subscribe(self._capability.state.event, on_status)
 
+        if custom := self._capability.custom:
+            self._subscribe(custom.event, on_custom_command)
         if map_caps := self._capability.map:
             self._subscribe(map_caps.rooms.event, on_rooms)
 
@@ -335,11 +346,6 @@ class EcovacsVacuum(
         _LOGGER.debug("async_send_command %s with %s", command, params)
         if params is None:
             params = {}
-        elif isinstance(params, list):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="vacuum_send_command_params_dict",
-            )
 
         if command in ["spot_area", "custom_area"]:
             if params is None:
@@ -348,6 +354,13 @@ class EcovacsVacuum(
                     translation_key="vacuum_send_command_params_required",
                     translation_placeholders={"command": command},
                 )
+
+            if isinstance(params, list):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="vacuum_send_command_params_dict",
+                )
+
             if self._capability.clean.action.area is None:
                 info = self._device.device_info
                 name = info.get("nick", info["name"])

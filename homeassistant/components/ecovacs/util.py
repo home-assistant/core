@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import dataclasses
 from enum import Enum
 import random
 import string
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from deebot_client.capabilities import Capabilities
 
@@ -51,3 +52,15 @@ def get_supported_entitites(
 def get_name_key(enum: Enum) -> str:
     """Return the lower case name of the enum."""
     return enum.name.lower()
+
+
+def dataclass_to_dict(obj: Any) -> dict[str, Any]:
+    """Convert dataclass to dict and remove None fields."""
+    dic = dataclasses.asdict(obj)
+    for key, value in dic.copy().items():
+        if value is None:
+            dic.pop(key)
+        elif isinstance(value, Enum):
+            dic[key] = value.value
+
+    return dic

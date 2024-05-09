@@ -11,6 +11,8 @@ CONF_OVERRIDE_REST_URL = "override_rest_url"
 CONF_OVERRIDE_MQTT_URL = "override_mqtt_url"
 CONF_VERIFY_MQTT_CERTIFICATE = "verify_mqtt_certificate"
 
+EVENT_CUSTOM_COMMAND = "ecovacs_custom_command"
+
 SUPPORTED_LIFESPANS = (
     LifeSpan.BLADE,
     LifeSpan.BRUSH,
