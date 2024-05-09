@@ -23,7 +23,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         yield mock_setup_entry
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def mock_airgradient_client() -> Generator[AsyncMock, None, None]:
     """Mock an AirGradient client."""
     with (
