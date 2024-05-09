@@ -19,7 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) -> 
     """Set up Plugwise components from a config entry."""
     await er.async_migrate_entries(hass, entry.entry_id, async_migrate_entity_entry)
 
-    coordinator = PlugwiseDataUpdateCoordinator(hass, entry)
+    coordinator = PlugwiseDataUpdateCoordinator(hass)
     await coordinator.async_config_entry_first_refresh()
     migrate_sensor_entities(hass, coordinator)
 
