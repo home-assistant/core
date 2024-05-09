@@ -12,8 +12,10 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .const import DOMAIN, LOGGER, PLATFORMS
 from .coordinator import PlugwiseDataUpdateCoordinator
 
+PlugwiseConfigEntry = ConfigEntry[PlugwiseDataUpdateCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) -> bool:
     """Set up Plugwise components from a config entry."""
     await er.async_migrate_entries(hass, entry.entry_id, async_migrate_entity_entry)
 
@@ -21,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
     migrate_sensor_entities(hass, coordinator)
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -38,11 +40,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) -> bool:
     """Unload the Plugwise components."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 @callback
