@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN
@@ -48,6 +49,8 @@ class V2CConfigFlow(ConfigFlow, domain=DOMAIN):
 
             except TrydanError:
                 errors["base"] = "cannot_connect"
+            except AbortFlow:
+                raise
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
