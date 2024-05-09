@@ -1,15 +1,10 @@
 """Common fixtures for the V2C tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from pytrydan.models.trydan import TrydanData
-
-from homeassistant.components.v2c import DOMAIN
-from homeassistant.const import CONF_HOST
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.v2c import DOMAIN
 from homeassistant.const import CONF_HOST
