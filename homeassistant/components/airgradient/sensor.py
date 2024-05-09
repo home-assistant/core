@@ -138,7 +138,7 @@ async def async_setup_entry(
     @callback
     def add_entities() -> None:
         """Add new entities based on the latest data."""
-        sensor_descriptions = not_setup
+        sensor_descriptions = not_setup.copy()
         not_setup.clear()
         sensors = []
         for description in sensor_descriptions:
