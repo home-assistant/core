@@ -136,12 +136,10 @@ async def test_describe_image_service_response_text(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
-    service_data,
-    expected_args,
+    #    service_data,
+    #    expected_args,
 ) -> None:
     """Test describe image service for text responses."""
-    service_data["config_entry"] = mock_config_entry.entry_id
-    expected_args["model"] = "gpt-4-turbo"
 
     with patch(
         "openai.resources.chat.completions.create",
@@ -152,14 +150,14 @@ async def test_describe_image_service_response_text(
         response = await hass.services.async_call(
             "openai_conversation",
             "describe_image",
-            service_data,
+            {"config_entry": mock_config_entry.entry_id},
             blocking=True,
             return_response=True,
         )
 
     assert response == {"description": "A person walking along a path"}
     assert len(mock_create.mock_calls) == 1
-    assert mock_create.mock_calls[0][2] == expected_args
+    assert mock_create.mock_calls[0][2] == {"model": "gpt-4-turbo"}
 
 
 async def test_describe_image_service_response_json(
@@ -192,7 +190,7 @@ async def test_describe_image_service_response_json(
         response = await hass.services.async_call(
             "openai_conversation",
             "describe_image",
-            service_data,
+            {"config_entry": mock_config_entry.entry_id},
             blocking=True,
             return_response=True,
         )
@@ -203,7 +201,7 @@ async def test_describe_image_service_response_json(
         "items": ["dog", "cat", "human"],
     }
     assert len(mock_create.mock_calls) == 1
-    assert mock_create.mock_calls[0][2] == expected_args
+    assert mock_create.mock_calls[0][2] == {"model": "gpt-4-turbo"}
 
 
 @pytest.mark.usefixtures("mock_init_component")
