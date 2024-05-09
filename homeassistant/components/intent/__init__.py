@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
 from typing import Any, Protocol
 
@@ -45,7 +44,6 @@ from .timers import (
     DecreaseTimerIntentHandler,
     IncreaseTimerIntentHandler,
     SetTimerIntentHandler,
-    TimerHandler,
     TimerManager,
 )
 
@@ -333,17 +331,6 @@ class SetPositionIntentHandler(intent.DynamicServiceIntentHandler):
             return (VALVE_DOMAIN, SERVICE_SET_VALVE_POSITION)
 
         raise intent.IntentHandleError(f"Domain not supported: {state.domain}")
-
-
-def async_register_timer_handler(
-    hass: HomeAssistant, handler: TimerHandler, device_id: str | None
-) -> Callable[[], None]:
-    """Register a handler for timer events on a device.
-
-    Returns a function to unregister.
-    """
-    timer_manager: TimerManager = hass.data[TIMER_DATA]
-    return timer_manager.register_handler(handler, device_id=device_id)
 
 
 async def _async_process_intent(

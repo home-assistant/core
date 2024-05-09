@@ -1,10 +1,9 @@
 """Timer implementation for intents."""
 
+from __future__ import annotations
+
 import asyncio
-from collections import defaultdict
-from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from enum import StrEnum
 from functools import cached_property
 import logging
 import time
@@ -12,32 +11,24 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.util import ulid
 
-from .const import TIMER_DATA
+from .const import (
+    ATTR_SECONDS_LEFT,
+    ATTR_START_HOURS,
+    ATTR_START_MINUTES,
+    ATTR_START_SECONDS,
+    EVENT_INTENT_TIMER_CANCELLED,
+    EVENT_INTENT_TIMER_FINISHED,
+    EVENT_INTENT_TIMER_STARTED,
+    EVENT_INTENT_TIMER_UPDATED,
+    TIMER_DATA,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class TimerEventType(StrEnum):
-    """Timer event type."""
-
-    STARTED = "started"
-    FINISHED = "finished"
-    CANCELLED = "cancelled"
-    UPDATED = "updated"
-
-
-@dataclass(frozen=True)
-class TimerEvent:
-    """Event sent when a timer changes state."""
-
-    type: TimerEventType
-    timer_id: str
-    seconds_left: int
-    name: str | None = None
 
 
 @dataclass
@@ -70,6 +61,18 @@ class TimerInfo:
             return None
 
         return self.name.strip().casefold()
+
+    def to_event(self) -> dict[str, Any]:
+        """Convert to event data."""
+        return {
+            ATTR_ID: self.id,
+            ATTR_NAME: self.name or "",
+            ATTR_DEVICE_ID: self.device_id or "",
+            ATTR_SECONDS_LEFT: self.seconds_left,
+            ATTR_START_HOURS: self.start_hours or 0,
+            ATTR_START_MINUTES: self.start_minutes or 0,
+            ATTR_START_SECONDS: self.start_seconds or 0,
+        }
 
 
 class TimerError(Exception):
@@ -106,9 +109,6 @@ class TimerNotFoundError(TimerError):
         )
 
 
-TimerHandler = Callable[[TimerEvent], Coroutine[Any, Any, None]]
-
-
 class TimerManager:
     """Manager for intent timers."""
 
@@ -118,17 +118,6 @@ class TimerManager:
 
         # timer id -> timer
         self.timers: dict[str, TimerInfo] = {}
-
-        # device id -> handlers
-        self.handlers: dict[str | None, list[TimerHandler]] = defaultdict(list)
-
-    def register_handler(
-        self, handler: TimerHandler, device_id: str | None
-    ) -> Callable[[], None]:
-        """Register a timer event handler for a device."""
-        self.handlers[device_id].append(handler)
-
-        return lambda: self.handlers[device_id].remove(handler)
 
     async def start_timer(
         self,
@@ -151,7 +140,7 @@ class TimerManager:
 
         timer_id = ulid.ulid_now()
         created_at = time.monotonic_ns()
-        self.timers[timer_id] = TimerInfo(
+        timer = TimerInfo(
             id=timer_id,
             name=name,
             start_hours=hours,
@@ -165,19 +154,18 @@ class TimerManager:
             ),
             updated_at=created_at,
         )
+        self.timers[timer_id] = timer
 
-        event = TimerEvent(
-            TimerEventType.STARTED, timer_id, name=name, seconds_left=total_seconds
-        )
-        await asyncio.gather(*(handler(event) for handler in self.handlers[device_id]))
+        self.hass.bus.async_fire(EVENT_INTENT_TIMER_STARTED, timer.to_event())
 
         _LOGGER.debug(
-            "Timer started: id=%s, name=%s, hours=%s, minutes=%s, seconds=%s",
+            "Timer started: id=%s, name=%s, hours=%s, minutes=%s, seconds=%s, device_id=%s",
             timer_id,
             name,
             hours,
             minutes,
             seconds,
+            device_id,
         )
 
         return timer_id
@@ -191,7 +179,7 @@ class TimerManager:
             if (timer := self.timers.get(timer_id)) and (
                 timer.updated_at == updated_at
             ):
-                await self._timer_finished(timer_id, timer.device_id)
+                await self._timer_finished(timer_id)
         except asyncio.CancelledError:
             pass  # expected when timer is updated
 
@@ -228,16 +216,21 @@ class TimerManager:
         if timer is None:
             return
 
+        # Capture event data before cancellation to get accurate seconds_left
+        event_data = timer.to_event()
+
         timer.seconds = 0
         timer.updated_at = time.monotonic_ns()
         timer.task.cancel()
-        event = TimerEvent(
-            TimerEventType.CANCELLED, timer_id, name=timer.name, seconds_left=0
+
+        self.hass.bus.async_fire(EVENT_INTENT_TIMER_CANCELLED, event_data)
+
+        _LOGGER.debug(
+            "Timer cancelled: id=%s, name=%s, device_id=%s",
+            timer_id,
+            timer.name,
+            timer.device_id,
         )
-        await asyncio.gather(
-            *(handler(event) for handler in self.handlers[timer.device_id])
-        )
-        _LOGGER.debug("Timer cancelled: id=%s", timer_id)
 
     async def add_time(self, timer_id: str, seconds: int) -> None:
         """Add time to a timer."""
@@ -255,37 +248,46 @@ class TimerManager:
             self._wait_for_timer(timer_id, timer.seconds, timer.updated_at),
             name=f"Timer {timer_id}",
         )
-        event = TimerEvent(
-            TimerEventType.UPDATED,
-            timer_id,
-            name=timer.name,
-            seconds_left=timer.seconds,
-        )
-        await asyncio.gather(
-            *(handler(event) for handler in self.handlers[timer.device_id])
-        )
+
+        self.hass.bus.async_fire(EVENT_INTENT_TIMER_UPDATED, timer.to_event())
 
         if seconds > 0:
-            _LOGGER.debug("Timer increased by %s second(s): id=%s", seconds, timer_id)
+            log_verb = "increased"
+            log_seconds = seconds
         else:
-            _LOGGER.debug("Timer decreased by %s second(s): id=%s", -seconds, timer_id)
+            log_verb = "decrease"
+            log_seconds = -seconds
+
+        _LOGGER.debug(
+            "Timer %s by %s second(s): id=%s, name=%s, device_id=%s",
+            log_verb,
+            log_seconds,
+            timer_id,
+            timer.name,
+            timer.device_id,
+        )
 
     async def remove_time(self, timer_id: str, seconds: int) -> None:
         """Remove time from a timer."""
         await self.add_time(timer_id, -seconds)
 
-    async def _timer_finished(self, timer_id: str, device_id: str | None) -> None:
+    async def _timer_finished(self, timer_id: str) -> None:
         """Call event handlers when a timer finishes."""
         timer = self.timers.pop(timer_id, None)
         if timer is None:
             return
 
-        event = TimerEvent(
-            TimerEventType.FINISHED, timer_id, name=timer.name, seconds_left=0
-        )
-        await asyncio.gather(*(handler(event) for handler in self.handlers[device_id]))
+        # Force seconds left to 0
+        timer.seconds = 0
+        timer.updated_at = time.monotonic_ns()
+        self.hass.bus.async_fire(EVENT_INTENT_TIMER_FINISHED, timer.to_event())
 
-        _LOGGER.debug("Timer finished: id=%s", timer_id)
+        _LOGGER.debug(
+            "Timer finished: id=%s, name=%s, device_id=%s",
+            timer_id,
+            timer.name,
+            timer.device_id,
+        )
 
 
 def _find_timer(
@@ -294,8 +296,11 @@ def _find_timer(
     timer_manager: TimerManager = hass.data[TIMER_DATA]
 
     timer_id: str | None = None
+    name: str | None = None
+
     if "name" in slots:
-        name: str = slots["name"]["value"]
+        name = slots["name"]["value"]
+        assert name is not None
         timer_id = timer_manager.find_timer_by_name(name, device_id=device_id)
 
         if timer_id is not None:
@@ -318,6 +323,15 @@ def _find_timer(
     )
 
     if timer_id is None:
+        _LOGGER.warning(
+            "Timer not found: name=%s, hours=%s, minutes=%s, seconds=%s, device_id=%s",
+            name,
+            start_hours,
+            start_minutes,
+            start_seconds,
+            device_id,
+        )
+
         raise TimerNotFoundError(
             name=name,
             start_hours=start_hours,

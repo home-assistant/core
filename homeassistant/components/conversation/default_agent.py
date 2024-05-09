@@ -335,10 +335,22 @@ class DefaultAgent(ConversationEntity):
         assert lang_intents is not None
 
         # Slot values to pass to the intent
-        slots = {
-            entity.name: {"value": entity.value, "text": entity.text or entity.value}
-            for entity in result.entities_list
-        }
+        slots: dict[str, Any] = {}
+
+        # Automatically add device id
+        if user_input.device_id is not None:
+            slots["device_id"] = user_input.device_id
+
+        # Add entities from match
+        slots.update(
+            {
+                entity.name: {
+                    "value": entity.value,
+                    "text": entity.text or entity.value,
+                }
+                for entity in result.entities_list
+            }
+        )
 
         try:
             intent_response = await intent.async_handle(
@@ -412,8 +424,8 @@ class DefaultAgent(ConversationEntity):
         language: str,
     ) -> RecognizeResult | None:
         """Search intents for a match to user input."""
-        # Prioritize matches with entity names above area names
-        maybe_result: RecognizeResult | None = None
+        possible_results: list[RecognizeResult] = []
+        best_text_chunks_matched: int | None = None
         for result in recognize_all(
             user_input.text,
             lang_intents.intents,
@@ -421,17 +433,29 @@ class DefaultAgent(ConversationEntity):
             intent_context=intent_context,
             language=language,
         ):
+            if (best_text_chunks_matched is None) or (
+                result.text_chunks_matched > best_text_chunks_matched
+            ):
+                # Only overwrite if more literal text was matched.
+                # This causes wildcards to match last.
+                possible_results = [result]
+                best_text_chunks_matched = result.text_chunks_matched
+            elif result.text_chunks_matched == best_text_chunks_matched:
+                # Accumulate results with the same number of literal text matched.
+                # We will resolve the ambiguity below.
+                possible_results.append(result)
+
+        for result in possible_results:
+            # Prioritize matches with entity names above area names
             if "name" in result.entities:
                 return result
 
-            # Keep looking in case an entity has the same name
-            maybe_result = result
-
-        if maybe_result is not None:
+        if possible_results:
             # Successful strict match
-            return maybe_result
+            return possible_results[0]
 
         # Try again with missing entities enabled
+        maybe_result: RecognizeResult | None = None
         best_num_unmatched_entities = 0
         for result in recognize_all(
             user_input.text,
