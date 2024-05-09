@@ -48,6 +48,11 @@ class PassiveBluetoothDataUpdateCoordinator(
         super().__init__(hass, logger, address, mode, connectable)
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
 
+    @property
+    def available(self) -> bool:
+        """Return if device is available."""
+        return self._available
+
     @callback
     def async_update_listeners(self) -> None:
         """Update all registered listeners."""

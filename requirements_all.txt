@@ -389,7 +389,7 @@ aiounifi==77
 aiovlc==0.1.0
 
 # homeassistant.components.vodafone_station
-aiovodafone==0.5.4
+aiovodafone==0.6.0
 
 # homeassistant.components.waqi
 aiowaqi==3.0.1
@@ -405,6 +405,9 @@ aiowithings==2.1.0
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
+
+# homeassistant.components.airgradient
+airgradient==0.4.0
 
 # homeassistant.components.airly
 airly==1.1.0
@@ -440,7 +443,7 @@ androidtvremote2==0.0.15
 anel-pwrctrl-homeassistant==0.0.1.dev2
 
 # homeassistant.components.anova
-anova-wifi==0.10.0
+anova-wifi==0.12.0
 
 # homeassistant.components.anthemav
 anthemav==1.4.1
@@ -554,7 +557,7 @@ bleak-esphome==1.0.0
 bleak-retry-connector==3.5.0
 
 # homeassistant.components.bluetooth
-bleak==0.21.1
+bleak==0.22.0
 
 # homeassistant.components.blebox
 blebox-uniapi==2.2.2
@@ -949,7 +952,7 @@ glances-api==0.6.0
 goalzero==0.2.2
 
 # homeassistant.components.goodwe
-goodwe==0.3.4
+goodwe==0.3.5
 
 # homeassistant.components.google_mail
 # homeassistant.components.google_tasks
@@ -1806,7 +1809,7 @@ pyefergy==22.1.1
 pyegps==0.2.5
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.20.1
+pyenphase==1.20.3
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
@@ -1959,7 +1962,7 @@ pylitterbot==2023.5.0
 pylutron-caseta==0.20.0
 
 # homeassistant.components.lutron
-pylutron==0.2.12
+pylutron==0.2.13
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -2294,7 +2297,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==2.0.0
+python-roborock==2.1.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
@@ -2463,7 +2466,7 @@ rjpl==0.3.6
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-rokuecp==0.19.2
+rokuecp==0.19.3
 
 # homeassistant.components.romy
 romy==0.0.10

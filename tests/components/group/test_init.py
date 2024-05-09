@@ -19,13 +19,17 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_CLOSED,
     STATE_HOME,
+    STATE_JAMMED,
     STATE_LOCKED,
+    STATE_LOCKING,
     STATE_NOT_HOME,
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
+    STATE_OPENING,
     STATE_UNKNOWN,
     STATE_UNLOCKED,
+    STATE_UNLOCKING,
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -769,6 +773,48 @@ async def test_is_on(hass: HomeAssistant) -> None:
             (STATE_ON, True),
             (STATE_OFF, False),
         ),
+        (
+            ("lock", "lock"),
+            (STATE_OPEN, STATE_LOCKED),
+            (STATE_LOCKED, STATE_LOCKED),
+            (STATE_UNLOCKED, True),
+            (STATE_LOCKED, False),
+        ),
+        (
+            ("lock", "lock"),
+            (STATE_OPENING, STATE_LOCKED),
+            (STATE_LOCKED, STATE_LOCKED),
+            (STATE_UNLOCKED, True),
+            (STATE_LOCKED, False),
+        ),
+        (
+            ("lock", "lock"),
+            (STATE_UNLOCKING, STATE_LOCKED),
+            (STATE_LOCKED, STATE_LOCKED),
+            (STATE_UNLOCKED, True),
+            (STATE_LOCKED, False),
+        ),
+        (
+            ("lock", "lock"),
+            (STATE_LOCKING, STATE_LOCKED),
+            (STATE_LOCKED, STATE_LOCKED),
+            (STATE_UNLOCKED, True),
+            (STATE_LOCKED, False),
+        ),
+        (
+            ("lock", "lock"),
+            (STATE_JAMMED, STATE_LOCKED),
+            (STATE_LOCKED, STATE_LOCKED),
+            (STATE_LOCKED, False),
+            (STATE_LOCKED, False),
+        ),
+        (
+            ("cover", "lock"),
+            (STATE_OPEN, STATE_OPEN),
+            (STATE_CLOSED, STATE_LOCKED),
+            (STATE_ON, True),
+            (STATE_OFF, False),
+        ),
     ],
 )
 async def test_is_on_and_state_mixed_domains(
@@ -1247,6 +1293,8 @@ async def test_group_mixed_domains_off(hass: HomeAssistant) -> None:
     [
         (("locked", "locked", "unlocked"), "unlocked"),
         (("locked", "locked", "locked"), "locked"),
+        (("locked", "locked", "open"), "unlocked"),
+        (("locked", "unlocked", "open"), "unlocked"),
     ],
 )
 async def test_group_locks(hass: HomeAssistant, states, group_state) -> None:

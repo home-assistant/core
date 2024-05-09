@@ -1015,8 +1015,7 @@ class MqttDiscoveryUpdate(Entity):
                 self.hass.async_create_task(
                     _async_process_discovery_update_and_remove(
                         payload, self._discovery_data
-                    ),
-                    eager_start=False,
+                    )
                 )
             elif self._discovery_update:
                 if old_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]:
@@ -1025,8 +1024,7 @@ class MqttDiscoveryUpdate(Entity):
                     self.hass.async_create_task(
                         _async_process_discovery_update(
                             payload, self._discovery_update, self._discovery_data
-                        ),
-                        eager_start=False,
+                        )
                     )
                 else:
                     # Non-empty, unchanged payload: Ignore to avoid changing states
@@ -1058,6 +1056,15 @@ class MqttDiscoveryUpdate(Entity):
             # Clear the discovery topic so the entity is not
             # rediscovered after a restart
             await async_remove_discovery_payload(self.hass, self._discovery_data)
+
+    @final
+    async def add_to_platform_finish(self) -> None:
+        """Finish adding entity to platform."""
+        await super().add_to_platform_finish()
+        # Only send the discovery done after the entity is fully added
+        # and the state is written to the state machine.
+        if self._discovery_data is not None:
+            send_discovery_done(self.hass, self._discovery_data)
 
     @callback
     def add_to_platform_abort(self) -> None:
@@ -1218,8 +1225,6 @@ class MqttEntity(
         self._prepare_subscribe_topics()
         await self._subscribe_topics()
         await self.mqtt_async_added_to_hass()
-        if self._discovery_data is not None:
-            send_discovery_done(self.hass, self._discovery_data)
 
     async def mqtt_async_added_to_hass(self) -> None:
         """Call before the discovery message is acknowledged.
