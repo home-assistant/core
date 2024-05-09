@@ -833,7 +833,6 @@ class HAZHAData:
 
     yaml_config: ConfigType = dataclasses.field(default_factory=dict)
     config_entry: ConfigEntry | None = dataclasses.field(default=None)
-    zha_lib_config: ZHAData | None = dataclasses.field(default=None)
     device_trigger_cache: dict[str, tuple[str, dict]] = dataclasses.field(
         default_factory=dict
     )
@@ -1155,7 +1154,7 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
                 type=override["type"],
             )
 
-    zha_data: ZHAData = ZHAData(
+    return ZHAData(
         zigpy_config=app_config,
         config=ZHAConfiguration(
             light_options=light_options,
@@ -1166,6 +1165,3 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
             device_overrides=overrides_config,
         ),
     )
-
-    ha_zha_data.zha_lib_config = zha_data
-    return zha_data
