@@ -496,7 +496,7 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return bool(self._tibber_home.rt_subscription_running)
+        return self._tibber_home.rt_subscription_running
 
     @callback
     def _handle_coordinator_update(self) -> None:
