@@ -21,13 +21,12 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AirGradientDataUpdateCoordinator
 from .const import DOMAIN
+from .entity import AirGradientEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -159,9 +158,7 @@ async def async_setup_entry(
     add_entities()
 
 
-class AirGradientSensor(
-    CoordinatorEntity[AirGradientDataUpdateCoordinator], SensorEntity
-):
+class AirGradientSensor(AirGradientEntity, SensorEntity):
     """Defines an AirGradient sensor."""
 
     _attr_has_entity_name = True
@@ -175,16 +172,8 @@ class AirGradientSensor(
     ) -> None:
         """Initialize airgradient sensor."""
         super().__init__(coordinator)
-
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.data.serial_number}-{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.data.serial_number)},
-            model=coordinator.data.model,
-            manufacturer="AirGradient",
-            serial_number=coordinator.data.serial_number,
-            sw_version=coordinator.data.firmware_version,
-        )
 
     @property
     def native_value(self) -> StateType:
