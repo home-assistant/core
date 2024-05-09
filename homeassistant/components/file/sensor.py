@@ -59,7 +59,7 @@ async def async_setup_entry(
     """Set up the file sensor."""
     config = dict(entry.data)
     file_path: str = config[CONF_FILE_PATH]
-    name: str = config.get(CONF_NAME, DEFAULT_NAME)
+    name: str = config[CONF_NAME]
     unit: str | None = config.get(CONF_UNIT_OF_MEASUREMENT)
     value_template: Template | None = None
 
