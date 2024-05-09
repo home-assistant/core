@@ -13,6 +13,7 @@ from PyViCare.PyViCareUtils import (
 import voluptuous as vol
 
 from homeassistant.components import dhcp
+from homeassistant.core import callback
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
@@ -26,7 +27,6 @@ from .const import (
     DOMAIN,
     VICARE_NAME,
     HeatingType,
-    callback,
 )
 
 _LOGGER = logging.getLogger(__name__)
