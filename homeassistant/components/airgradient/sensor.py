@@ -138,7 +138,7 @@ async def async_setup_entry(
     @callback
     def add_entities() -> None:
         """Add new entities based on the latest data."""
-        nonlocal not_setup
+        nonlocal not_setup, listener
         sensor_descriptions = not_setup
         not_setup = set()
         sensors = []
@@ -150,7 +150,6 @@ async def async_setup_entry(
 
         if sensors:
             async_add_entities(sensors)
-        nonlocal listener
         if not_setup:
             if not listener:
                 listener = coordinator.async_add_listener(add_entities)
