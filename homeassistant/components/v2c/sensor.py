@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 class V2CSensorEntityDescription(SensorEntityDescription):
     """Describes an EVSE Power sensor entity."""
 
-    value_fn: Callable[[TrydanData], float]
+    value_fn: Callable[[TrydanData], float | str | None]
 
 
 TRYDAN_SENSORS = (
@@ -75,6 +75,21 @@ TRYDAN_SENSORS = (
         device_class=SensorDeviceClass.POWER,
         value_fn=lambda evse_data: evse_data.fv_power,
     ),
+    V2CSensorEntityDescription(
+        key="slave_error",
+        translation_key="slave_error",
+        value_fn=lambda evse_data: evse_data.slave_error.name,
+        entity_registry_enabled_default=False,
+    ),
+    V2CSensorEntityDescription(
+        key="battery_power",
+        translation_key="battery_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        value_fn=lambda evse_data: evse_data.battery_power,
+        entity_registry_enabled_default=False,
+    ),
 )
 
 
@@ -108,6 +123,6 @@ class V2CSensorBaseEntity(V2CBaseEntity, SensorEntity):
         self._attr_unique_id = f"{entry_id}_{description.key}"
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float | str | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.data)

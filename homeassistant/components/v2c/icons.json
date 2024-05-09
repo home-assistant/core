@@ -15,6 +15,12 @@
       },
       "fv_power": {
         "default": "mdi:solar-power-variant"
+      },
+      "slave_error": {
+        "default": "mdi:alert"
+      },
+      "battery_power": {
+        "default": "mdi:home-battery"
       }
     },
     "switch": {
