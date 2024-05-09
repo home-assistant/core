@@ -406,6 +406,9 @@ aiowithings==2.1.0
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
 
+# homeassistant.components.airgradient
+airgradient==0.4.0
+
 # homeassistant.components.airly
 airly==1.1.0
 
@@ -949,7 +952,7 @@ glances-api==0.6.0
 goalzero==0.2.2
 
 # homeassistant.components.goodwe
-goodwe==0.3.4
+goodwe==0.3.5
 
 # homeassistant.components.google_mail
 # homeassistant.components.google_tasks
@@ -2294,7 +2297,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==2.0.0
+python-roborock==2.1.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
