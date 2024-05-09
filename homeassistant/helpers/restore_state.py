@@ -11,6 +11,7 @@ from homeassistant.const import ATTR_RESTORED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import json_loads
 
 from . import start
@@ -20,7 +21,7 @@ from .frame import report
 from .json import JSONEncoder
 from .storage import Store
 
-DATA_RESTORE_STATE = "restore_state"
+DATA_RESTORE_STATE: HassKey[RestoreStateData] = HassKey("restore_state")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,7 +105,7 @@ async def async_load(hass: HomeAssistant) -> None:
 @callback
 def async_get(hass: HomeAssistant) -> RestoreStateData:
     """Get the restore state data helper."""
-    return cast(RestoreStateData, hass.data[DATA_RESTORE_STATE])
+    return hass.data[DATA_RESTORE_STATE]
 
 
 class RestoreStateData:

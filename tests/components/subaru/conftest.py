@@ -56,6 +56,7 @@ MOCK_API_GET_REMOTE_STATUS = f"{MOCK_API}get_remote_status"
 MOCK_API_GET_SAFETY_STATUS = f"{MOCK_API}get_safety_status"
 MOCK_API_GET_SUBSCRIPTION_STATUS = f"{MOCK_API}get_subscription_status"
 MOCK_API_GET_DATA = f"{MOCK_API}get_data"
+MOCK_API_GET_RAW_DATA = f"{MOCK_API}get_raw_data"
 MOCK_API_UPDATE = f"{MOCK_API}update"
 MOCK_API_FETCH = f"{MOCK_API}fetch"
 
