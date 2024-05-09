@@ -237,7 +237,7 @@ def _build_entities(
         ViCareNumber(
             device.config,
             device.api,
-            circuit,
+            None,
             description,
         )
         for device in device_list
@@ -248,8 +248,9 @@ def _build_entities(
     entities.extend(
         [
             ViCareNumber(
-                circuit,
                 device.config,
+                device.api,
+                circuit,
                 description,
             )
             for device in device_list
