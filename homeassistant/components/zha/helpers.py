@@ -71,7 +71,6 @@ from zigpy.config import (
     CONF_DEVICE_PATH,
     CONF_NWK,
     CONF_NWK_CHANNEL,
-    CONF_NWK_VALIDATE_SETTINGS,
 )
 import zigpy.exceptions
 from zigpy.profiles import PROFILES
@@ -135,7 +134,6 @@ from .const import (
     CONF_FLOW_CONTROL,
     CONF_GROUP_MEMBERS_ASSUME_STATE,
     CONF_RADIO_TYPE,
-    CONF_USE_THREAD,
     CONF_ZIGPY,
     CUSTOM_CONFIGURATION,
     DATA_ZHA,
@@ -1087,18 +1085,6 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
     app_config[CONF_DEVICE] = ha_zha_data.config_entry.data[CONF_DEVICE]
 
     radio_type = RadioType[ha_zha_data.config_entry.data[CONF_RADIO_TYPE]]
-
-    if CONF_NWK_VALIDATE_SETTINGS not in app_config:
-        app_config[CONF_NWK_VALIDATE_SETTINGS] = True
-
-        # The bellows UART thread sometimes propagates a cancellation into the main Core
-        # event loop, when a connection to a TCP coordinator fails in a specific way
-        if (
-            CONF_USE_THREAD not in app_config
-            and radio_type is RadioType.ezsp
-            and app_config[CONF_DEVICE][CONF_DEVICE_PATH].startswith("socket://")
-        ):
-            app_config[CONF_USE_THREAD] = False
 
     # Until we have a way to coordinate channels with the Thread half of multi-PAN,
     # stick to the old zigpy default of channel 15 instead of dynamically scanning
