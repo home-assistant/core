@@ -17,6 +17,18 @@ import copy
 from datetime import datetime, timedelta
 from typing import Optional
 
+from homeassistant.const import (
+    MAX_AVG_PARALLELISM,
+    MAX_P05_PARALLELISM,
+    MIN_AVG_IDLE_TIME,
+    MIN_AVG_RTN_LATENCY,
+    MIN_AVG_RTN_WAIT_TIME,
+    MIN_LENGTH,
+    MIN_P95_IDLE_TIME,
+    MIN_P95_RTN_LATENCY,
+    MIN_P95_RTN_WAIT_TIME,
+    MIN_RTN_EXEC_TIME_STD_DEV,
+)
 from homeassistant.helpers.rascalscheduler import get_routine_id
 
 
@@ -74,6 +86,7 @@ class ScheduleMetrics:
             self._scheduling_policy = sm._scheduling_policy
             self._rescheduling_policy = sm._rescheduling_policy
             self._arrival_times = copy.deepcopy(sm._arrival_times)
+            self._remaining_actions = copy.deepcopy(sm._remaining_actions)
             self._start_times = copy.deepcopy(sm._start_times)
             self._end_times = copy.deepcopy(sm._end_times)
             self._wait_times = copy.deepcopy(sm._wait_times)
@@ -81,6 +94,7 @@ class ScheduleMetrics:
             self._first_arrival_time = sm._first_arrival_time
             self._schedule_start = sm._schedule_start
             self._schedule_end = sm._schedule_end
+            self._action_times = copy.deepcopy(sm._action_times)
             self._last_action_end = copy.deepcopy(sm._last_action_end)
             self._idle_times = copy.deepcopy(sm._idle_times)
             self._parallelism = copy.deepcopy(sm._parallelism)
@@ -112,6 +126,7 @@ class ScheduleMetrics:
         """
         if routine_id in self._arrival_times:
             raise ValueError(f"Routine {routine_id} has already arrived.")
+        arrival_time = arrival_time.replace(tzinfo=None)
         self._arrival_times[routine_id] = arrival_time
         if not self._first_arrival_time:
             self._first_arrival_time = arrival_time
@@ -183,6 +198,8 @@ class ScheduleMetrics:
             action_id: The ID of the action.
 
         """
+        time = time.replace(tzinfo=None)
+
         # dict should be ordered by insertion time in Python 3.7+
         last_parallelism = (
             list(self._parallelism.values())[-1] if self._parallelism else 0
@@ -213,6 +230,7 @@ class ScheduleMetrics:
             action_id: The ID of the action.
 
         """
+        time = time.replace(tzinfo=None)
 
         # dict should be ordered by insertion time in Python 3.7+
         last_parallelism = (
@@ -234,6 +252,8 @@ class ScheduleMetrics:
         """Record the start of a scheduled action. Called by the optimal rescheduler."""
         if entity_id not in self._action_times:
             self._action_times[entity_id] = dict[str, ActionTimeRange]()
+
+        time = time.replace(tzinfo=None)
         self._action_times[entity_id][action_id] = ActionTimeRange(time)
 
         # routine start
@@ -249,6 +269,7 @@ class ScheduleMetrics:
             raise ValueError(
                 f"Action {action_id} has not started on entity {entity_id}."
             )
+        time = time.replace(tzinfo=None)
         self._action_times[entity_id][action_id].end(time)
 
         # routine end
@@ -453,11 +474,11 @@ class ScheduleMetrics:
 
         """
         if not self._parallelism:
-            return 0
+            return 0.0
         return sum(self._parallelism.values()) / len(self._parallelism)
 
     @property
-    def p05_parallelism(self) -> int:
+    def p05_parallelism(self) -> float:
         """Return the 5th percentile parallelism of the schedule.
 
         Returns:
@@ -465,10 +486,34 @@ class ScheduleMetrics:
 
         """
         if not self._parallelism:
-            return 0
+            return 0.0
         parallelism = list(self._parallelism.values())
         parallelism.sort()
         return parallelism[int(len(parallelism) * 0.95)]
+
+    def get(self, metric: str) -> float:
+        """Return the schedule metric of interest."""
+        if metric == MIN_LENGTH:
+            return self.schedule_length.total_seconds()
+        if metric == MIN_AVG_RTN_WAIT_TIME:
+            return self.avg_wait_time.total_seconds()
+        if metric == MIN_P95_RTN_WAIT_TIME:
+            return self.p95_wait_time.total_seconds()
+        if metric == MIN_RTN_EXEC_TIME_STD_DEV:
+            return self.exec_time_std_dev
+        if metric == MIN_AVG_RTN_LATENCY:
+            return self.avg_latency.total_seconds()
+        if metric == MIN_P95_RTN_LATENCY:
+            return self.p95_latency.total_seconds()
+        if metric == MIN_AVG_IDLE_TIME:
+            return self.avg_idle_time.total_seconds()
+        if metric == MIN_P95_IDLE_TIME:
+            return self.p95_idle_time.total_seconds()
+        if metric == MAX_AVG_PARALLELISM:
+            return self.avg_parallelism
+        if metric == MAX_P05_PARALLELISM:
+            return self.p05_parallelism
+        raise ValueError(f"Metric {metric} is not supported.")
 
     def remove_action_times(self) -> None:
         """Remove the action times of all entities."""

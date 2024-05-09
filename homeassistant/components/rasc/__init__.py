@@ -33,8 +33,9 @@ from homeassistant.const import (
     MIN_P95_RTN_WAIT_TIME,
     MIN_RTN_EXEC_TIME_STD_DEV,
     NONE,
-    OPTIMAL,
     OPTIMAL_SCHEDULE_METRIC,
+    OPTIMALW,
+    OPTIMALWO,
     PROACTIVE,
     REACTIVE,
     RESCHEDULE_ALL,
@@ -72,7 +73,8 @@ supported_rescheduling_policies = [
     GLOBAL_SHORTEST,
     GLOBAL_LONGEST,
     NONE,
-    OPTIMAL,
+    OPTIMALW,
+    OPTIMALWO,
     SJFW,
     SJFWO,
 ]
@@ -99,7 +101,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(SCHEDULING_POLICY, default=TIMELINE): vol.In(
                     supported_scheduling_policies
                 ),
-                vol.Optional(RESCHEDULING_POLICY, default=SJFWO): vol.In(
+                vol.Optional(RESCHEDULING_POLICY, default=SJFW): vol.In(
                     supported_rescheduling_policies
                 ),
                 vol.Optional(RESCHEDULING_TRIGGER, default=PROACTIVE): vol.In(

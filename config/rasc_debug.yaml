@@ -1,7 +1,7 @@
 scheduling_policy: "tl" # from tl, jit, fcfs, fcfs_post
-rescheduling_policy: "sjfw" # from sjfw, sjfwo, optimal, rv, early_start
+rescheduling_policy: "sjfw" # from sjfw, sjfwo, optimalw, optimalwo, rv, early_start, none
 rescheduling_trigger: "reactive" # from reactive, anticipatory, proactive
-optimal_schedule_metric: "min_length"
+optimal_schedule_metric: "min_avg_rtn_latency"
 # from min_length, min_avg_rtn_wait_time, min_p95_rtn_wait_time,
 # min_avg_rtn_latency, min_p95_rtn_latency, min_rtn_exect_time_std_dev,
 # min_avg_idle_time, min_p95_idle_time,

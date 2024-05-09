@@ -1241,7 +1241,8 @@ SCHEDULING_POLICY: Final = "scheduling_policy"
 
 
 RESCHEDULING_POLICY: Final = "rescheduling_policy"
-OPTIMAL: Final = "optimal"
+OPTIMALW: Final = "optimalw"
+OPTIMALWO: Final = "optimalwo"
 RV: Final = "rv"
 EARLY_START: Final = "early_start"
 SJFWO: Final = "sjfwo"

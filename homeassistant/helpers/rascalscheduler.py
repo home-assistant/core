@@ -109,13 +109,23 @@ def generate_duration(seconds: float = 1.0) -> timedelta:
 def string_to_datetime(dt: str) -> datetime:
     """Convert string into datetime."""
     return datetime.strptime(
-        datetime.now().strftime("%Y-%m-%d") + " " + dt, "%Y-%m-%d %H%M%S"
+        datetime.now().strftime("%Y-%m-%d") + " " + dt, "%Y-%m-%d %H%M%S.%f"
     )
 
 
 def datetime_to_string(dt: datetime) -> str:
     """Convert datetime to string."""
-    return dt.strftime("%H%M%S")
+    return dt.strftime("%H:%M:%S.%f")
+
+
+def time_range_to_string(time_range: tuple) -> str:
+    """Convert time range to string."""
+    start_time: datetime = time_range[0]
+    end_time: Optional[datetime] = time_range[1]
+    text = f"{datetime_to_string(start_time)} - "
+    if end_time is None:
+        return text + "None"
+    return text + datetime_to_string(end_time)
 
 
 def generate_short_uuid(size: int = 5) -> str:

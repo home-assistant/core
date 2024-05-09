@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterator, Sequence
 from contextlib import suppress
-from datetime import timedelta
+from datetime import datetime, timedelta
 import json
 import logging
 import time
@@ -27,6 +27,7 @@ from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.rascalscheduler import (
     generate_short_uuid,
     get_entity_id_from_number,
+    time_range_to_string,
 )
 from homeassistant.util import slugify
 
@@ -213,7 +214,7 @@ class RoutineEntity(BaseRoutineEntity):
         self._last_trigger_time = last_trigger_time
         self._set_logger(logger)
         self._log_exceptions = log_exceptions
-        self._attr_earliest_end_time: str
+        self._attr_earliest_end_time: datetime
 
     @property
     def routine_id(self) -> str:
@@ -233,12 +234,12 @@ class RoutineEntity(BaseRoutineEntity):
             self._logger = logging.getLogger(f"{__name__}.{slugify(self.name)}")
 
     @property
-    def earliest_end_time(self) -> str:
+    def earliest_end_time(self) -> datetime:
         """Get earliest end time."""
         return self._attr_earliest_end_time
 
     @earliest_end_time.setter
-    def earliest_end_time(self, end_time: str) -> None:
+    def earliest_end_time(self, end_time: datetime) -> None:
         """Set earliest end time."""
         self._attr_earliest_end_time = end_time
 
@@ -285,6 +286,10 @@ class ActionEntity:
             f", children: {[child.action_id if not child.is_end_node else 'end' for child in self.children]})"
         )
 
+    def __lt__(self, other: ActionEntity) -> bool:
+        """Compare two action entities."""
+        return self.action_id < other.action_id
+
     @property
     def action_id(self) -> str:
         """Get action id."""
@@ -329,6 +334,25 @@ class ActionEntity:
         new_entity.parents = self.parents
         new_entity.children = self.children
         return new_entity
+
+    def is_descendant_of(self, action_id: str) -> bool:
+        """Check if the action is a descendant of the current action."""
+        ancestors = self.parents.copy()
+        while ancestors:
+            ancestor = ancestors.pop()
+            if ancestor.action_id == action_id:
+                return True
+            ancestors.extend(ancestor.parents)
+
+        return False
+
+    def is_descendant_of_any(self, action_ids: set[str]) -> bool:
+        """Check if the action is a descendant of any of the actions."""
+        for action_id in action_ids:
+            if self.is_descendant_of(action_id):
+                _LOGGER.debug("%s is a descendant of %s", self.action_id, action_id)
+                return True
+        return False
 
     def _set_logger(self, logger: logging.Logger | None = None) -> None:
         """Set logger."""
@@ -710,7 +734,13 @@ class Queue(Generic[_KT, _VT]):
 
     def __repr__(self) -> str:
         """Return the string representation of the queue."""
-        return f"Queue({self._data})"
+        if self._keys and isinstance(self.top()[0], datetime):
+            text = ", ".join(
+                [time_range_to_string(item) for item in self._data.items()]
+            )
+        else:
+            text = ", ".join([f"{key}: {value}" for key, value in self._data.items()])
+        return f"Queue({text})"
 
 
 class _HaltScript(Exception):
