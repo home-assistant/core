@@ -236,6 +236,11 @@ async def test_read_window_cover_tilt_missing_tilt(hass: HomeAssistant) -> None:
     helper = await setup_test_component(
         hass, create_window_covering_service_with_none_tilt
     )
+
+    await helper.async_update(
+        ServicesTypes.WINDOW_COVERING,
+        {CharacteristicsTypes.OBSTRUCTION_DETECTED: True},
+    )
     state = await helper.poll_and_get_state()
     assert "current_tilt_position" not in state.attributes
     assert state.state != STATE_UNAVAILABLE
