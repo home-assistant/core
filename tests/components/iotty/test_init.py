@@ -1,4 +1,5 @@
 """Tests for the iotty integration."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.components.iotty.const import DOMAIN

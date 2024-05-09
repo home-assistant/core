@@ -1,4 +1,5 @@
 """Implement a iotty Light Switch Device."""
+
 import logging
 from typing import Any
 

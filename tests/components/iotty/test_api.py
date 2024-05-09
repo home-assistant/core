@@ -1,6 +1,5 @@
 """Unit tests for iottycloud API."""
 
-
 from unittest.mock import patch
 
 from aiohttp import ClientSession

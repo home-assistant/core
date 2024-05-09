@@ -1,6 +1,5 @@
 """Test the IottyDataUpdateCoordinator component."""
 
-
 from aiohttp import ClientSession
 
 from homeassistant.components.iotty.api import IottyProxy
