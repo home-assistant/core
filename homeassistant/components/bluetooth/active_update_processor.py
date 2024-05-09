@@ -7,10 +7,11 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 import logging
-from typing import Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any
 
 from bleak import BleakError
 from bluetooth_data_tools import monotonic_time_coarse
+from typing_extensions import TypeVar
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
@@ -18,15 +19,16 @@ from homeassistant.helpers.debounce import Debouncer
 from . import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
 from .passive_update_processor import PassiveBluetoothProcessorCoordinator
 
+if TYPE_CHECKING:
+    from sensor_state_data import SensorUpdate  # noqa: F401
+
 POLL_DEFAULT_COOLDOWN = 10
 POLL_DEFAULT_IMMEDIATE = True
 
-_T = TypeVar("_T")
+_DataT = TypeVar("_DataT", default="SensorUpdate")
 
 
-class ActiveBluetoothProcessorCoordinator(
-    Generic[_T], PassiveBluetoothProcessorCoordinator[_T]
-):
+class ActiveBluetoothProcessorCoordinator(PassiveBluetoothProcessorCoordinator[_DataT]):
     """A processor coordinator that parses passive data.
 
     Parses passive data from advertisements but can also poll.
@@ -63,11 +65,11 @@ class ActiveBluetoothProcessorCoordinator(
         *,
         address: str,
         mode: BluetoothScanningMode,
-        update_method: Callable[[BluetoothServiceInfoBleak], _T],
+        update_method: Callable[[BluetoothServiceInfoBleak], _DataT],
         needs_poll_method: Callable[[BluetoothServiceInfoBleak, float | None], bool],
         poll_method: Callable[
             [BluetoothServiceInfoBleak],
-            Coroutine[Any, Any, _T],
+            Coroutine[Any, Any, _DataT],
         ]
         | None = None,
         poll_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
@@ -110,7 +112,7 @@ class ActiveBluetoothProcessorCoordinator(
 
     async def _async_poll_data(
         self, last_service_info: BluetoothServiceInfoBleak
-    ) -> _T:
+    ) -> _DataT:
         """Fetch the latest data from the source."""
         if self._poll_method is None:
             raise NotImplementedError("Poll method not implemented")
