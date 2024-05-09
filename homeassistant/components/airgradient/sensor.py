@@ -161,8 +161,6 @@ async def async_setup_entry(
 class AirGradientSensor(AirGradientEntity, SensorEntity):
     """Defines an AirGradient sensor."""
 
-    _attr_has_entity_name = True
-
     entity_description: AirGradientSensorEntityDescription
 
     def __init__(
