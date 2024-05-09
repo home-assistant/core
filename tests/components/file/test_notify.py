@@ -176,7 +176,7 @@ async def test_legacy_notify_file_exception(
             {
                 "name": "test",
                 "platform": "notify",
-                "filename": "mock_file",
+                "file_path": "mock_file",
                 "timestamp": False,
             },
         ),
@@ -185,7 +185,7 @@ async def test_legacy_notify_file_exception(
             {
                 "name": "test",
                 "platform": "notify",
-                "filename": "mock_file",
+                "file_path": "mock_file",
                 "timestamp": True,
             },
         ),
@@ -208,7 +208,7 @@ async def test_legacy_notify_file_entry_only_setup(
     message = params["message"]
 
     entry = MockConfigEntry(
-        domain=DOMAIN, data=data, title=f"test [{data['filename']}]"
+        domain=DOMAIN, data=data, title=f"test [{data['file_path']}]"
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -230,9 +230,8 @@ async def test_legacy_notify_file_entry_only_setup(
 
         await hass.services.async_call(domain, service, params, blocking=True)
 
-        full_filename = os.path.join(hass.config.path(), filename)
         assert m_open.call_count == 1
-        assert m_open.call_args == call(full_filename, "a", encoding="utf8")
+        assert m_open.call_args == call(filename, "a", encoding="utf8")
 
         assert m_open.return_value.write.call_count == 2
         if not timestamp:
@@ -255,7 +254,7 @@ async def test_legacy_notify_file_entry_only_setup(
             {
                 "name": "test",
                 "platform": "notify",
-                "filename": "mock_file",
+                "file_path": "mock_file",
             },
         ),
     ],
@@ -269,7 +268,7 @@ async def test_legacy_notify_file_not_allowed(
 ) -> None:
     """Test legacy notify file output not allowed."""
     entry = MockConfigEntry(
-        domain=DOMAIN, data=config, title=f"test [{config['filename']}]"
+        domain=DOMAIN, data=config, title=f"test [{config['file_path']}]"
     )
     entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(entry.entry_id)
@@ -284,7 +283,7 @@ async def test_legacy_notify_file_not_allowed(
             {
                 "name": "test",
                 "platform": "notify",
-                "filename": "mock_file",
+                "file_path": "mock_file",
             },
             True,
         ),
@@ -303,7 +302,7 @@ async def test_notify_file_write_access_failed(
     params = {"message": "one, two, testing, testing"}
 
     entry = MockConfigEntry(
-        domain=DOMAIN, data=data, title=f"test [{data['filename']}]"
+        domain=DOMAIN, data=data, title=f"test [{data['file_path']}]"
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)

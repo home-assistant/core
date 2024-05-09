@@ -28,12 +28,12 @@
         "title": "Notification to file service",
         "description": "Set up a service that allows to write notification to a file.",
         "data": {
-          "filename": "Filename",
+          "file_path": "File path",
           "name": "Name",
           "timestamp": "Timestamp"
         },
         "data_description": {
-          "filename": "A relative file path in the hass config root to write the notification to",
+          "file_path": "A local file path to write the notification to",
           "name": "Name of the notify service",
           "timestamp": "Add a timestamp to the notification"
         }

@@ -1,9 +1,7 @@
 """The file component."""
 
-import os
-
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_FILE_PATH, CONF_FILENAME, CONF_PLATFORM, Platform
+from homeassistant.const import CONF_FILE_PATH, CONF_PLATFORM, Platform
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -25,13 +23,16 @@ YAML_PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the file integration."""
 
+    if hass.config_entries.async_entries(DOMAIN):
+        # We skip import in case we already have config entries
+        return True
     # The YAML config was imported with HA Core 2024.6.0 and will be removed with
     # HA Core 2024.12
     ir.async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2024.12",
+        breaks_in_ha_version="2024.12.0",
         is_fixable=False,
         issue_domain=DOMAIN,
         learn_more_url="https://www.home-assistant.io/integrations/file/",
@@ -42,27 +43,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             "integration_title": "File",
         },
     )
-    if hass.config_entries.async_entries(DOMAIN):
-        # We skip import in case we already have config entries
-        return True
 
-    # Prepare to import the YAML config into separate config entries
-    config_data: dict[str, list[ConfigType]] = {
-        domain: [item for item in config[domain] if item.pop(CONF_PLATFORM) == DOMAIN]
-        for domain in config
-        if domain in YAML_PLATFORMS
-    }
-
-    for domain, items in config_data.items():
+    # Import the YAML config into separate config entries
+    for domain, items in config.items():
         for item in items:
-            item[CONF_PLATFORM] = domain
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_IMPORT},
-                    data=item,
+            if item[CONF_PLATFORM] == DOMAIN:
+                item[CONF_PLATFORM] = domain
+                hass.async_create_task(
+                    hass.config_entries.flow.async_init(
+                        DOMAIN,
+                        context={"source": SOURCE_IMPORT},
+                        data=item,
+                    )
                 )
-            )
 
     return True
 
@@ -70,11 +63,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a file component entry."""
     config = dict(entry.data)
-    filepath: str = ""
-    if (platform := config[CONF_PLATFORM]) == Platform.NOTIFY:
-        filepath = os.path.join(hass.config.config_dir, config[CONF_FILENAME])
-    elif platform == Platform.SENSOR:
-        filepath = config[CONF_FILE_PATH]
+    filepath: str = config[CONF_FILE_PATH]
     if filepath and not await hass.async_add_executor_job(
         hass.config.is_allowed_path, filepath
     ):
