@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, Self
 from zigpy.quirks.v2 import EntityMetadata, EntityType
 
 from homeassistant.const import ATTR_NAME, EntityCategory
-from homeassistant.core import CALLBACK_TYPE, Event, callback
+from homeassistant.core import CALLBACK_TYPE, Event, EventStateChangedData, callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
@@ -19,10 +19,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .core.const import (
@@ -182,25 +179,28 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
         if entity_metadata.initially_disabled:
             self._attr_entity_registry_enabled_default = False
 
-        if entity_metadata.translation_key:
-            self._attr_translation_key = entity_metadata.translation_key
-
-        if hasattr(entity_metadata.entity_metadata, "attribute_name"):
-            if not entity_metadata.translation_key:
-                self._attr_translation_key = (
-                    entity_metadata.entity_metadata.attribute_name
-                )
-            self._unique_id_suffix = entity_metadata.entity_metadata.attribute_name
-        elif hasattr(entity_metadata.entity_metadata, "command_name"):
-            if not entity_metadata.translation_key:
-                self._attr_translation_key = (
-                    entity_metadata.entity_metadata.command_name
-                )
-            self._unique_id_suffix = entity_metadata.entity_metadata.command_name
+        has_device_class = hasattr(entity_metadata, "device_class")
+        has_attribute_name = hasattr(entity_metadata, "attribute_name")
+        has_command_name = hasattr(entity_metadata, "command_name")
+        if not has_device_class or (
+            has_device_class and entity_metadata.device_class is None
+        ):
+            if entity_metadata.translation_key:
+                self._attr_translation_key = entity_metadata.translation_key
+            elif has_attribute_name:
+                self._attr_translation_key = entity_metadata.attribute_name
+            elif has_command_name:
+                self._attr_translation_key = entity_metadata.command_name
+        if has_attribute_name:
+            self._unique_id_suffix = entity_metadata.attribute_name
+        elif has_command_name:
+            self._unique_id_suffix = entity_metadata.command_name
         if entity_metadata.entity_type is EntityType.CONFIG:
             self._attr_entity_category = EntityCategory.CONFIG
         elif entity_metadata.entity_type is EntityType.DIAGNOSTIC:
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        else:
+            self._attr_entity_category = None
 
     @property
     def available(self) -> bool:

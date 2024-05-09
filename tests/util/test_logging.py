@@ -20,7 +20,7 @@ import homeassistant.util.logging as logging_util
 async def test_logging_with_queue_handler() -> None:
     """Test logging with HomeAssistantQueueHandler."""
 
-    simple_queue = queue.SimpleQueue()  # type: ignore
+    simple_queue = queue.SimpleQueue()
     handler = logging_util.HomeAssistantQueueHandler(simple_queue)
 
     log_record = logging.makeLogRecord({"msg": "Test Log Record"})

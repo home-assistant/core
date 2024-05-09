@@ -650,20 +650,25 @@ async def test_update_entity_delay(
     assert len(client.async_send_command.call_args_list) == 2
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    nodes: set[int] = set()
 
     assert len(client.async_send_command.call_args_list) == 3
     args = client.async_send_command.call_args_list[2][0][0]
     assert args["command"] == "controller.get_available_firmware_updates"
-    assert args["nodeId"] == ge_in_wall_dimmer_switch.node_id
+    nodes.add(args["nodeId"])
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(client.async_send_command.call_args_list) == 4
     args = client.async_send_command.call_args_list[3][0][0]
     assert args["command"] == "controller.get_available_firmware_updates"
-    assert args["nodeId"] == zen_31.node_id
+    nodes.add(args["nodeId"])
+
+    assert len(nodes) == 2
+    assert nodes == {ge_in_wall_dimmer_switch.node_id, zen_31.node_id}
 
 
 async def test_update_entity_partial_restore_data(

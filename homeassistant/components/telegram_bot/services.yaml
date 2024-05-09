@@ -22,6 +22,7 @@ send_message:
             - "html"
             - "markdown"
             - "markdownv2"
+            - "plain_text"
     disable_notification:
       selector:
         boolean:
@@ -94,6 +95,7 @@ send_photo:
             - "html"
             - "markdown"
             - "markdownv2"
+            - "plain_text"
     disable_notification:
       selector:
         boolean:
@@ -229,6 +231,7 @@ send_animation:
             - "html"
             - "markdown"
             - "markdownv2"
+            - "plain_text"
     disable_notification:
       selector:
         boolean:
@@ -300,6 +303,7 @@ send_video:
             - "html"
             - "markdown"
             - "markdownv2"
+            - "plain_text"
     disable_notification:
       selector:
         boolean:
@@ -435,6 +439,7 @@ send_document:
             - "html"
             - "markdown"
             - "markdownv2"
+            - "plain_text"
     disable_notification:
       selector:
         boolean:
@@ -587,6 +592,7 @@ edit_message:
             - "html"
             - "markdown"
             - "markdownv2"
+            - "plain_text"
     disable_web_page_preview:
       selector:
         boolean:

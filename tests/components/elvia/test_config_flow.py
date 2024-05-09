@@ -27,7 +27,7 @@ async def test_single_metering_point(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -42,7 +42,7 @@ async def test_single_metering_point(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "1234"
     assert result["data"] == {
         CONF_API_TOKEN: TEST_API_TOKEN,
@@ -60,7 +60,7 @@ async def test_multiple_metering_points(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -80,7 +80,7 @@ async def test_multiple_metering_points(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "select_meter"
 
     result = await hass.config_entries.flow.async_configure(
@@ -91,7 +91,7 @@ async def test_multiple_metering_points(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "5678"
     assert result["data"] == {
         CONF_API_TOKEN: TEST_API_TOKEN,
@@ -109,7 +109,7 @@ async def test_no_metering_points(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -124,7 +124,7 @@ async def test_no_metering_points(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_metering_points"
 
     assert len(mock_setup_entry.mock_calls) == 0
@@ -139,7 +139,7 @@ async def test_bad_data(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -154,7 +154,7 @@ async def test_bad_data(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_metering_points"
 
     assert len(mock_setup_entry.mock_calls) == 0
@@ -175,7 +175,7 @@ async def test_abort_when_metering_point_id_exist(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -190,7 +190,7 @@ async def test_abort_when_metering_point_id_exist(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "metering_point_id_already_configured"
 
     assert len(mock_setup_entry.mock_calls) == 0
@@ -227,7 +227,7 @@ async def test_form_exceptions(
             },
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": base_error}
 
     # Simulate that the user gives up and closes the window...

@@ -12,9 +12,12 @@ from fyta_cli.fyta_exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from .const import CONF_EXPIRATION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,17 +42,33 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
     ) -> dict[int, dict[str, Any]]:
         """Fetch data from API endpoint."""
 
-        if self.fyta.expiration is None or self.fyta.expiration < datetime.now():
+        if (
+            self.fyta.expiration is None
+            or self.fyta.expiration.timestamp() < datetime.now().timestamp()
+        ):
             await self.renew_authentication()
 
         return await self.fyta.update_all_plants()
 
-    async def renew_authentication(self) -> None:
+    async def renew_authentication(self) -> bool:
         """Renew access token for FYTA API."""
+        credentials: dict[str, Any] = {}
 
         try:
-            await self.fyta.login()
+            credentials = await self.fyta.login()
         except FytaConnectionError as ex:
             raise ConfigEntryNotReady from ex
         except (FytaAuthentificationError, FytaPasswordError) as ex:
-            raise ConfigEntryError from ex
+            raise ConfigEntryAuthFailed from ex
+
+        new_config_entry = {**self.config_entry.data}
+        new_config_entry[CONF_ACCESS_TOKEN] = credentials[CONF_ACCESS_TOKEN]
+        new_config_entry[CONF_EXPIRATION] = credentials[CONF_EXPIRATION].isoformat()
+
+        self.hass.config_entries.async_update_entry(
+            self.config_entry, data=new_config_entry
+        )
+
+        _LOGGER.debug("Credentials successfully updated")
+
+        return True

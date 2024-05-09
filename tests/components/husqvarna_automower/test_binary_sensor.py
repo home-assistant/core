@@ -1,6 +1,5 @@
 """Tests for binary sensor platform."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from aioautomower.model import MowerActivities
@@ -9,6 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN
+from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -20,6 +20,7 @@ from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     load_json_value_fixture,
+    snapshot_platform,
 )
 
 
@@ -51,7 +52,7 @@ async def test_binary_sensor_states(
     ]:
         values[TEST_MOWER_ID].mower.activity = activity
         mock_automower_client.get_status.return_value = values
-        freezer.tick(timedelta(minutes=5))
+        freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         state = hass.states.get(f"binary_sensor.{entity}")
@@ -71,13 +72,6 @@ async def test_snapshot_binary_sensor(
         [Platform.BINARY_SENSOR],
     ):
         await setup_integration(hass, mock_config_entry)
-        entity_entries = er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
+        await snapshot_platform(
+            hass, entity_registry, snapshot, mock_config_entry.entry_id
         )
-
-        assert entity_entries
-        for entity_entry in entity_entries:
-            assert hass.states.get(entity_entry.entity_id) == snapshot(
-                name=f"{entity_entry.entity_id}-state"
-            )
-            assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")

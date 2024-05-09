@@ -651,7 +651,7 @@ async def test_probability_updates(hass: HomeAssistant) -> None:
     prob_given_false = [0.7, 0.4, 0.2]
     prior = 0.5
 
-    for p_t, p_f in zip(prob_given_true, prob_given_false):
+    for p_t, p_f in zip(prob_given_true, prob_given_false, strict=False):
         prior = bayesian.update_probability(prior, p_t, p_f)
 
     assert round(abs(0.720000 - prior), 7) == 0
@@ -660,7 +660,7 @@ async def test_probability_updates(hass: HomeAssistant) -> None:
     prob_given_false = [0.6, 0.4, 0.2]
     prior = 0.7
 
-    for p_t, p_f in zip(prob_given_true, prob_given_false):
+    for p_t, p_f in zip(prob_given_true, prob_given_false, strict=False):
         prior = bayesian.update_probability(prior, p_t, p_f)
 
     assert round(abs(0.9130434782608695 - prior), 7) == 0

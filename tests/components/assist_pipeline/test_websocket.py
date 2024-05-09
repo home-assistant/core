@@ -1166,7 +1166,7 @@ async def test_get_pipeline(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "conversation_engine": "homeassistant",
+        "conversation_engine": "conversation.home_assistant",
         "conversation_language": "en",
         "id": ANY,
         "language": "en",
@@ -1250,7 +1250,7 @@ async def test_list_pipelines(
     assert msg["result"] == {
         "pipelines": [
             {
-                "conversation_engine": "homeassistant",
+                "conversation_engine": "conversation.home_assistant",
                 "conversation_language": "en",
                 "id": ANY,
                 "language": "en",
@@ -2012,7 +2012,7 @@ async def test_wake_word_cooldown_different_entities(
     await client_pipeline.send_json_auto_id(
         {
             "type": "assist_pipeline/pipeline/create",
-            "conversation_engine": "homeassistant",
+            "conversation_engine": "conversation.home_assistant",
             "conversation_language": "en-US",
             "language": "en",
             "name": "pipeline_with_wake_word_1",
@@ -2032,7 +2032,7 @@ async def test_wake_word_cooldown_different_entities(
     await client_pipeline.send_json_auto_id(
         {
             "type": "assist_pipeline/pipeline/create",
-            "conversation_engine": "homeassistant",
+            "conversation_engine": "conversation.home_assistant",
             "conversation_language": "en-US",
             "language": "en",
             "name": "pipeline_with_wake_word_2",

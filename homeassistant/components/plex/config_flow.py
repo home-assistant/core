@@ -216,8 +216,8 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
             self.available_servers = available_servers.args[0]
             return await self.async_step_select_server()
 
-        except Exception as error:  # pylint: disable=broad-except
-            _LOGGER.exception("Unknown error connecting to Plex server: %s", error)
+        except Exception:
+            _LOGGER.exception("Unknown error connecting to Plex server")
             return self.async_abort(reason="unknown")
 
         if errors:

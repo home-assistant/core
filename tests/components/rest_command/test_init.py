@@ -68,7 +68,7 @@ async def test_rest_command_timeout(
 
     with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(DOMAIN, "get_test", {}, blocking=True)
-    assert str(exc.value) == "Timeout when calling resource 'https://example.com/'"
+    assert str(exc.value) == 'Timeout when calling resource "https://example.com/"'
 
     assert len(aioclient_mock.mock_calls) == 1
 
@@ -88,7 +88,7 @@ async def test_rest_command_aiohttp_error(
 
     assert (
         str(exc.value)
-        == "Client error occurred when calling resource 'https://example.com/'"
+        == 'Client error occurred when calling resource "https://example.com/"'
     )
     assert len(aioclient_mock.mock_calls) == 1
 
@@ -341,7 +341,7 @@ async def test_rest_command_get_response_malformed_json(
         )
     assert (
         str(exc.value)
-        == "The response of 'https://example.com/' could not be decoded as JSON"
+        == 'The response of "https://example.com/" could not be decoded as JSON'
     )
 
 
@@ -375,7 +375,7 @@ async def test_rest_command_get_response_none(
         )
     assert (
         str(exc.value)
-        == "The response of 'https://example.com/' could not be decoded as text"
+        == 'The response of "https://example.com/" could not be decoded as text'
     )
 
     assert not response

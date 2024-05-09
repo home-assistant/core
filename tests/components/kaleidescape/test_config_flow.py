@@ -21,7 +21,7 @@ async def test_user_config_flow_success(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
@@ -29,7 +29,7 @@ async def test_user_config_flow_success(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert "data" in result
     assert result["data"][CONF_HOST] == MOCK_HOST
 
@@ -44,7 +44,7 @@ async def test_user_config_flow_bad_connect_errors(
         DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: MOCK_HOST}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -59,7 +59,7 @@ async def test_user_config_flow_unsupported_device_errors(
         DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: MOCK_HOST}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "unsupported"}
 
@@ -71,7 +71,7 @@ async def test_user_config_flow_device_exists_abort(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: MOCK_HOST}
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -83,7 +83,7 @@ async def test_ssdp_config_flow_success(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_info
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
 
     result = await hass.config_entries.flow.async_configure(
@@ -91,7 +91,7 @@ async def test_ssdp_config_flow_success(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert "data" in result
     assert result["data"][CONF_HOST] == MOCK_HOST
 
@@ -107,7 +107,7 @@ async def test_ssdp_config_flow_bad_connect_aborts(
         DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_info
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -122,5 +122,5 @@ async def test_ssdp_config_flow_unsupported_device_aborts(
         DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_info
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unsupported"

@@ -16,7 +16,7 @@ import os
 import re
 import subprocess
 import tempfile
-from typing import Any, TypedDict, final
+from typing import Any, Final, TypedDict, final
 
 from aiohttp import web
 import mutagen
@@ -98,6 +98,13 @@ ATTR_PREFERRED_SAMPLE_RATE = "preferred_sample_rate"
 ATTR_PREFERRED_SAMPLE_CHANNELS = "preferred_sample_channels"
 ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
 ATTR_VOICE = "voice"
+
+_DEFAULT_FORMAT = "mp3"
+_PREFFERED_FORMAT_OPTIONS: Final[set[str]] = {
+    ATTR_PREFERRED_FORMAT,
+    ATTR_PREFERRED_SAMPLE_RATE,
+    ATTR_PREFERRED_SAMPLE_CHANNELS,
+}
 
 CONF_LANG = "language"
 
@@ -569,25 +576,23 @@ class SpeechManager:
         ):
             raise HomeAssistantError(f"Language '{language}' not supported")
 
+        options = options or {}
+        supported_options = engine_instance.supported_options or []
+
         # Update default options with provided options
+        invalid_opts: list[str] = []
         merged_options = dict(engine_instance.default_options or {})
-        merged_options.update(options or {})
+        for option_name, option_value in options.items():
+            # Only count an option as invalid if it's not a "preferred format"
+            # option. These are used as hints to the TTS system if supported,
+            # and otherwise as parameters to ffmpeg conversion.
+            if (option_name in supported_options) or (
+                option_name in _PREFFERED_FORMAT_OPTIONS
+            ):
+                merged_options[option_name] = option_value
+            else:
+                invalid_opts.append(option_name)
 
-        supported_options = list(engine_instance.supported_options or [])
-
-        # ATTR_PREFERRED_* options are always "supported" since they're used to
-        # convert audio after the TTS has run (if necessary).
-        supported_options.extend(
-            (
-                ATTR_PREFERRED_FORMAT,
-                ATTR_PREFERRED_SAMPLE_RATE,
-                ATTR_PREFERRED_SAMPLE_CHANNELS,
-            )
-        )
-
-        invalid_opts = [
-            opt_name for opt_name in merged_options if opt_name not in supported_options
-        ]
         if invalid_opts:
             raise HomeAssistantError(f"Invalid options found: {invalid_opts}")
 
@@ -687,10 +692,31 @@ class SpeechManager:
 
         This method is a coroutine.
         """
-        options = options or {}
+        options = dict(options or {})
+        supported_options = engine_instance.supported_options or []
 
-        # Default to MP3 unless a different format is preferred
-        final_extension = options.get(ATTR_PREFERRED_FORMAT, "mp3")
+        # Extract preferred format options.
+        #
+        # These options are used by Assist pipelines, etc. to get a format that
+        # the voice satellite will support.
+        #
+        # The TTS system ideally supports options directly so we won't have
+        # to convert with ffmpeg later. If not, we pop the options here and
+        # perform the conversation after receiving the audio.
+        if ATTR_PREFERRED_FORMAT in supported_options:
+            final_extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
+        else:
+            final_extension = options.pop(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
+
+        if ATTR_PREFERRED_SAMPLE_RATE in supported_options:
+            sample_rate = options.get(ATTR_PREFERRED_SAMPLE_RATE)
+        else:
+            sample_rate = options.pop(ATTR_PREFERRED_SAMPLE_RATE, None)
+
+        if ATTR_PREFERRED_SAMPLE_CHANNELS in supported_options:
+            sample_channels = options.get(ATTR_PREFERRED_SAMPLE_CHANNELS)
+        else:
+            sample_channels = options.pop(ATTR_PREFERRED_SAMPLE_CHANNELS, None)
 
         async def get_tts_data() -> str:
             """Handle data available."""
@@ -716,8 +742,8 @@ class SpeechManager:
             # rate/format/channel count is requested.
             needs_conversion = (
                 (final_extension != extension)
-                or (ATTR_PREFERRED_SAMPLE_RATE in options)
-                or (ATTR_PREFERRED_SAMPLE_CHANNELS in options)
+                or (sample_rate is not None)
+                or (sample_channels is not None)
             )
 
             if needs_conversion:
@@ -726,8 +752,8 @@ class SpeechManager:
                     extension,
                     data,
                     to_extension=final_extension,
-                    to_sample_rate=options.get(ATTR_PREFERRED_SAMPLE_RATE),
-                    to_sample_channels=options.get(ATTR_PREFERRED_SAMPLE_CHANNELS),
+                    to_sample_rate=sample_rate,
+                    to_sample_channels=sample_channels,
                 )
 
             # Create file infos
@@ -756,7 +782,7 @@ class SpeechManager:
 
             return filename
 
-        audio_task = self.hass.async_create_task(get_tts_data())
+        audio_task = self.hass.async_create_task(get_tts_data(), eager_start=False)
 
         def handle_error(_future: asyncio.Future) -> None:
             """Handle error."""

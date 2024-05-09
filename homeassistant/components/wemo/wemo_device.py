@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass, fields
 from datetime import timedelta
+from functools import partial
 import logging
 from typing import TYPE_CHECKING, Literal
 
@@ -130,10 +131,19 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-en
             )
         else:
             updated = self.wemo.subscription_update(event_type, params)
-            self.hass.create_task(self._async_subscription_callback(updated))
+            self.hass.loop.call_soon_threadsafe(
+                partial(
+                    self.hass.async_create_background_task,
+                    self._async_subscription_callback(updated),
+                    f"{self.name} subscription_callback",
+                    eager_start=True,
+                )
+            )
 
     async def async_shutdown(self) -> None:
         """Unregister push subscriptions and remove from coordinators dict."""
+        if self._shutdown_requested:
+            return
         await super().async_shutdown()
         if TYPE_CHECKING:
             # mypy doesn't known that the device_id is set in async_setup.
@@ -202,10 +212,10 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-en
             if self.last_update_success:
                 _LOGGER.exception("Subscription callback failed")
                 self.last_update_success = False
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:
             self.last_exception = err
             self.last_update_success = False
-            _LOGGER.exception("Unexpected error fetching %s data: %s", self.name, err)
+            _LOGGER.exception("Unexpected error fetching %s data", self.name)
         else:
             self.async_set_updated_data(None)
 

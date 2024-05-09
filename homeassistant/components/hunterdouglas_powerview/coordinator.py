@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -25,6 +26,10 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
         """Initialize DataUpdateCoordinator to gather data for specific Powerview Hub."""
         self.shades = shades
         self.hub = hub
+        # The hub tends to crash if there are multiple radio operations at the same time
+        # but it seems to handle all other requests that do not use RF without issue
+        # so we have a lock to prevent multiple radio operations at the same time
+        self.radio_operation_lock = asyncio.Lock()
         super().__init__(
             hass,
             _LOGGER,

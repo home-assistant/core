@@ -55,5 +55,8 @@ SKU_TO_BASE_DEVICE = {
     "LAP-V201S-WUS": "Vital200S",  # Alt ID Model Vital200S
     "LAP-V201-AUSR": "Vital200S",  # Alt ID Model Vital200S
     "Vital100S": "Vital100S",
-    "LAP-V102S-WUS": "Vital100S",  # Alt ID Model Vital100S,
+    "LAP-V102S-WUS": "Vital100S",  # Alt ID Model Vital100S
+    "LAP-V102S-AASR": "Vital100S",  # Alt ID Model Vital100S
+    "LAP-V102S-WEU": "Vital100S",  # Alt ID Model Vital100S
+    "LAP-V102S-WUK": "Vital100S",  # Alt ID Model Vital100S
 }

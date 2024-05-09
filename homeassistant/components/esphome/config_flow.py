@@ -430,8 +430,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         except aiohttp.ClientError as err:
             _LOGGER.error("Error talking to the dashboard: %s", err)
             return False
-        except json.JSONDecodeError as err:
-            _LOGGER.exception("Error parsing response from dashboard: %s", err)
+        except json.JSONDecodeError:
+            _LOGGER.exception("Error parsing response from dashboard")
             return False
 
         self._noise_psk = noise_psk
