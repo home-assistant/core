@@ -984,8 +984,8 @@ build.json @home-assistant/supervisor
 /tests/components/onvif/ @hunterjm
 /homeassistant/components/open_meteo/ @frenck
 /tests/components/open_meteo/ @frenck
-/homeassistant/components/openai_conversation/ @balloob
-/tests/components/openai_conversation/ @balloob
+/homeassistant/components/openai_conversation/ @balloob @tlanfer
+/tests/components/openai_conversation/ @balloob @tlanfer
 /homeassistant/components/openerz/ @misialq
 /tests/components/openerz/ @misialq
 /homeassistant/components/openexchangerates/ @MartinHjelmare
