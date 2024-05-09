@@ -1,5 +1,7 @@
 """Test AccuWeather diagnostics."""
 
+from unittest.mock import AsyncMock
+
 from syrupy import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
@@ -13,6 +15,7 @@ from tests.typing import ClientSessionGenerator
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    mock_accuweather_client: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
