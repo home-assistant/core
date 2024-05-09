@@ -5,6 +5,7 @@ from typing import Generic, TypeVar
 
 from airgradient import AirGradientClient, AirGradientError, Config, Measures
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -17,6 +18,7 @@ class AirGradientCoordinator(DataUpdateCoordinator[_T], Generic[_T]):
     """Class to manage fetching AirGradient data."""
 
     _update_interval: timedelta
+    config_entry: ConfigEntry
 
     def __init__(self, hass: HomeAssistant, client: AirGradientClient) -> None:
         """Initialize coordinator."""
@@ -27,6 +29,8 @@ class AirGradientCoordinator(DataUpdateCoordinator[_T], Generic[_T]):
             update_interval=self._update_interval,
         )
         self.client = client
+        assert self.config_entry.unique_id
+        self.serial_number = self.config_entry.unique_id
 
     async def _async_update_data(self) -> _T:
         try:

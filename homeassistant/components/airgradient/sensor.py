@@ -174,7 +174,7 @@ class AirGradientSensor(AirGradientEntity, SensorEntity):
         """Initialize airgradient sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.data.serial_number}-{description.key}"
+        self._attr_unique_id = f"{coordinator.serial_number}-{description.key}"
 
     @property
     def native_value(self) -> StateType:

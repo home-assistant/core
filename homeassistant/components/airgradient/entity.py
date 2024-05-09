@@ -16,9 +16,5 @@ class AirGradientEntity(CoordinatorEntity[AirGradientCoordinator]):
         """Initialize airgradient entity."""
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.data.serial_number)},
-            model=coordinator.data.model,
-            manufacturer="AirGradient",
-            serial_number=coordinator.data.serial_number,
-            sw_version=coordinator.data.firmware_version,
+            identifiers={(DOMAIN, coordinator.serial_number)},
         )

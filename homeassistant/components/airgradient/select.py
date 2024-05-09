@@ -28,7 +28,7 @@ class AirGradientSelectEntityDescription(SelectEntityDescription):
 CONFIG_CONTROL_ENTITY = AirGradientSelectEntityDescription(
     key="configuration_control",
     translation_key="configuration_control",
-    options=list(ConfigurationControl),
+    options=[x.value for x in ConfigurationControl],
     value_fn=lambda config: config.configuration_control,
     set_value_fn=lambda client, value: client.set_configuration_control(
         ConfigurationControl(value)
@@ -39,7 +39,7 @@ PROTECTED_SELECT_TYPES: tuple[AirGradientSelectEntityDescription, ...] = (
     AirGradientSelectEntityDescription(
         key="temperature_unit",
         translation_key="temperature_unit",
-        options=list(TemperatureUnit),
+        options=[x.value for x in TemperatureUnit],
         value_fn=lambda config: config.temperature_unit,
         set_value_fn=lambda client, value: client.set_temperature_unit(
             TemperatureUnit(value)
@@ -81,7 +81,7 @@ class AirGradientSelect(AirGradientEntity, SelectEntity):
         """Initialize AirGradient select."""
         super().__init__(coordinator)
         self.entity_description = description
-        # self._attr_unique_id = f"{coordinator.data.serial_number}-{description.key}"
+        self._attr_unique_id = f"{coordinator.serial_number}-{description.key}"
 
     @property
     def current_option(self) -> str:
