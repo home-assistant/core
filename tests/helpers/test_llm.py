@@ -4,12 +4,10 @@ from unittest.mock import AsyncMock
 
 import pytest
 import voluptuous as vol
-from voluptuous_openapi import UNSUPPORTED
 
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, llm
-from homeassistant.util.color import color_name_to_rgb
+from homeassistant.helpers import llm
 
 
 def test_async_register(hass: HomeAssistant) -> None:
@@ -133,7 +131,7 @@ async def test_function_tool(hass: HomeAssistant) -> None:
     call = {}
 
     @llm.llm_tool(hass)
-    def test_async_function_tool(
+    def test_function(
         hass: HomeAssistant,
         platform: str,
         context: Context,
@@ -149,34 +147,27 @@ async def test_function_tool(hass: HomeAssistant) -> None:
         return {"result": "test_response"}
 
     tool = list(llm.async_get_tools(hass))[0]
-    assert tool.specification == {
-        "name": "test_async_function_tool",
-        "description": "Test tool description.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "optional_arg": {
-                    "anyOf": [
-                        {
-                            "type": "number",
-                        },
-                        {
-                            "type": "string",
-                        },
-                    ],
-                    "default": 9.6,
-                },
-                "required_arg": {
-                    "type": "integer",
-                },
-            },
-            "required": ["required_arg"],
-        },
+    assert tool.name == "test_function"
+    assert tool.description == "Test tool description."
+
+    schema = {
+        vol.Required("required_arg"): int,
+        vol.Optional("optional_arg", default=9.6): vol.Any(float, str),
     }
+    tool_schema = tool.parameters.schema
+    assert isinstance(tool_schema[vol.Optional("optional_arg", default=9.6)], vol.Any)
+    assert tool_schema[vol.Optional("optional_arg", default=9.6)].validators == (
+        float,
+        str,
+    )
+    schema[vol.Optional("optional_arg", default=9.6)] = tool_schema[
+        vol.Optional("optional_arg", default=9.6)
+    ]
+    assert tool_schema == schema
 
     test_context = Context()
     tool_input = llm.ToolInput(
-        tool_name="test_async_function_tool",
+        tool_name="test_function",
         tool_args={"required_arg": 4},
         platform="test_platform",
         context=test_context,
@@ -199,7 +190,7 @@ async def test_function_tool(hass: HomeAssistant) -> None:
         "required_arg": 4,
     }
 
-    llm.async_remove_tool(hass, "test_async_function_tool")
+    llm.async_remove_tool(hass, "test_function")
 
     assert list(llm.async_get_tools(hass)) == []
 
@@ -209,7 +200,7 @@ async def test_async_function_tool(hass: HomeAssistant) -> None:
     call = {}
 
     @llm.llm_tool(hass)
-    async def async_test_async_function_tool(
+    async def async_test_async_function(
         hass: HomeAssistant,
         platform: str,
         context: Context,
@@ -225,28 +216,22 @@ async def test_async_function_tool(hass: HomeAssistant) -> None:
         return {"result": "test_response"}
 
     tool = list(llm.async_get_tools(hass))[0]
-    assert tool.specification == {
-        "name": "test_async_function_tool",
-        "description": "Test tool description.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "optional_arg": {
-                    "type": "number",
-                    "nullable": True,
-                    "default": None,
-                },
-                "required_arg": {
-                    "type": "integer",
-                },
-            },
-            "required": ["required_arg"],
-        },
+    assert tool.name == "test_async_function"
+    assert tool.description == "Test tool description."
+
+    schema = {
+        vol.Required("required_arg"): int,
+        vol.Optional("optional_arg"): vol.Maybe(float),
     }
+    tool_schema = tool.parameters.schema
+    assert isinstance(tool_schema[vol.Optional("optional_arg")], vol.Any)
+    assert tool_schema[vol.Optional("optional_arg")].validators == (None, float)
+    schema[vol.Optional("optional_arg")] = tool_schema[vol.Optional("optional_arg")]
+    assert tool_schema == schema
 
     test_context = Context()
     tool_input = llm.ToolInput(
-        tool_name="test_async_function_tool",
+        tool_name="test_async_function",
         tool_args={"required_arg": 4},
         platform="test_platform",
         context=test_context,
@@ -269,19 +254,6 @@ async def test_async_function_tool(hass: HomeAssistant) -> None:
         "required_arg": 4,
     }
 
-    llm.async_remove_tool(hass, async_test_async_function_tool)
+    llm.async_remove_tool(hass, async_test_async_function)
 
     assert list(llm.async_get_tools(hass)) == []
-
-
-def test_custom_serializer() -> None:
-    """Test custom serializer."""
-    tool = llm.Tool()
-    assert tool.custom_serializer(cv.string) == {"type": "string"}
-    assert tool.custom_serializer(cv.boolean) == {"type": "boolean"}
-    assert tool.custom_serializer(color_name_to_rgb) == {"type": "string"}
-    assert tool.custom_serializer(cv.multi_select(["alpha", "beta"])) == {
-        "enum": ["alpha", "beta"]
-    }
-    assert tool.custom_serializer(lambda x: x) == {}
-    assert tool.custom_serializer("unsupported") == UNSUPPORTED

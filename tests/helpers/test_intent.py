@@ -476,19 +476,6 @@ async def test_intent_tool_with_area_and_floor(
     tool = intent.IntentTool("test_intent", schema)
     assert tool.description == "Execute Home Assistant test_intent intent"
     assert tool.parameters == schema
-    assert tool.as_dict() == {
-        "name": "test_intent",
-        "description": "Execute Home Assistant test_intent intent",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "test_arg": {"type": "string", "description": "test arg description"},
-                "area": {"type": "string"},
-                "floor": {"type": "string"},
-            },
-            "required": [],
-        },
-    }
 
     area_kitchen = area_registry.async_get_or_create("kitchen")
     floor_1 = floor_registry.async_create("first floor", aliases={"ground floor"})

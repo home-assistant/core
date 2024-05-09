@@ -5,19 +5,15 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from functools import cached_property
 import inspect
 import logging
-from types import FunctionType, NoneType, UnionType
+from types import NoneType, UnionType
 from typing import Any, get_args, get_type_hints
 
 import voluptuous as vol
-from voluptuous_openapi import UNSUPPORTED, convert
 
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-
-from . import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,53 +43,10 @@ class Tool:
     description: str | None = None
     parameters: vol.Schema = vol.Schema({})
 
-    @cached_property
-    def specification(self) -> dict[str, Any]:
-        """Get the tool specification in OpenAPI-compatible format."""
-        result = {"name": self.name}
-        if self.description:
-            result["description"] = self.description
-
-        def custom_serializer(schema: Any) -> Any:
-            """Wrap self.custom_serializer."""
-            return self.custom_serializer(schema)
-
-        result["parameters"] = convert(
-            self.parameters, custom_serializer=custom_serializer
-        )
-        return result
-
     @abstractmethod
     async def async_call(self, hass: HomeAssistant, tool_input: ToolInput) -> Any:
         """Call the tool."""
         raise NotImplementedError
-
-    def custom_serializer(self, schema: Any) -> Any:
-        """Serialize additional types in OpenAPI-compatible format."""
-        from homeassistant.util.color import (  # pylint: disable=import-outside-toplevel
-            color_name_to_rgb,
-        )
-
-        if schema is cv.string:
-            return {"type": "string"}
-
-        if schema is cv.boolean:
-            return {"type": "boolean"}
-
-        if schema is color_name_to_rgb:
-            return {"type": "string"}
-
-        if isinstance(schema, cv.multi_select):
-            return {"enum": schema.options}
-
-        if isinstance(schema, FunctionType):
-            return {}
-
-        return UNSUPPORTED
-
-    def as_dict(self) -> dict[str, Any]:
-        """Get the tool specification in OpenAPI-compatible format."""
-        return self.specification
 
     def __repr__(self) -> str:
         """Represent a string of a Tool."""
