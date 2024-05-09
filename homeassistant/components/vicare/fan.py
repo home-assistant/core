@@ -99,6 +99,10 @@ class ViCareFan(ViCareEntity, FanEntity):
         super().__init__(device_config, device, translation_key)
         self._attr_translation_key = translation_key
 
+        with suppress(PyViCareNotSupportedFeatureError):
+            self._attributes["vicare_modes"] = self._api.getAvailableModes()
+        self._attributes["vicare_programs"] = self._api.getAvailablePrograms()
+
     def update(self) -> None:
         """Update state of fan."""
         try:
@@ -106,9 +110,6 @@ class ViCareFan(ViCareEntity, FanEntity):
                 self._attributes["active_vicare_mode"] = self._api.getActiveMode()
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attributes["active_vicare_program"] = self._api.getActiveProgram()
-
-            self._attributes["vicare_modes"] = self._api.getAvailableModes()
-            self._attributes["vicare_programs"] = self._api.getAvailablePrograms()
         except RequestConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
         except ValueError:
