@@ -1755,6 +1755,27 @@ async def test_ttsentity_subclass_properties(
 ) -> None:
     """Test for errors when subclasses of the TextToSpeechEntity are missing required properties."""
 
+    class TestClass1(tts.TextToSpeechEntity):
+        _attr_default_language = DEFAULT_LANG
+        _attr_supported_languages = SUPPORT_LANGUAGES
+
+    await mock_config_entry_setup(hass, TestClass1())
+
+    class TestClass2(tts.TextToSpeechEntity):
+        @property
+        def default_language(self) -> str:
+            return DEFAULT_LANG
+
+        @property
+        def supported_languages(self) -> list[str]:
+            return SUPPORT_LANGUAGES
+
+    await mock_config_entry_setup(hass, TestClass2())
+
+    assert all(record.exc_info is None for record in caplog.records)
+
+    caplog.clear()
+
     class TestClass3(tts.TextToSpeechEntity):
         _attr_default_language = DEFAULT_LANG
 

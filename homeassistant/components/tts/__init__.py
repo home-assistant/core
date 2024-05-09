@@ -427,19 +427,18 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
     async def async_internal_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
         await super().async_internal_added_to_hass()
-        if not (
-            hasattr(self, "_attr_default_language") or hasattr(self, "default_language")
-        ):
+        try:
+            _ = self.default_language
+        except AttributeError as err:
             raise AttributeError(
                 "You need to either set the '_attr_default_language' attribute or override the 'default_language' property"
-            )
-        if not (
-            hasattr(self, "_attr_supported_languages")
-            or hasattr(self, "supported_languages")
-        ):
+            ) from err
+        try:
+            _ = self.supported_languages
+        except AttributeError as err:
             raise AttributeError(
                 "You need to either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
-            )
+            ) from err
         state = await self.async_get_last_state()
         if (
             state is not None
