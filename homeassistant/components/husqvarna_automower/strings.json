@@ -5,6 +5,10 @@
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Husqvarna Automower integration needs to re-authenticate your account"
       },
+      "missing_scope": {
+        "title": "Your account is missing some API conenctions.",
+        "description": "[%key:component::husqvarna_automower::config::abort::missing_amc_scope%]"
+      },
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       }
@@ -27,19 +31,6 @@
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
-    }
-  },
-  "issues": {
-    "wrong_scope": {
-      "title": "Not all APIs connected",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "Not all APIs connected",
-            "description": "[%key:component::husqvarna_automower::config::abort::missing_amc_scope%]"
-          }
-        }
-      }
     }
   },
   "entity": {

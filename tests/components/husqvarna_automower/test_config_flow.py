@@ -297,14 +297,15 @@ async def test_reauth_wrong_account(
 @pytest.mark.parametrize(
     ("user_id", "reason", "scope"),
     [
+        (USER_ID, "reauth_successful", "iam:read amc:api"),
         (USER_ID, "missing_amc_scope", "iam:read"),
     ],
 )
-async def test_reauth_wrong_scope(
+async def test_reauth_missing_scope(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    mock_config_entry: MockConfigEntry,
+    mock_missing_scope_config_entry: MockConfigEntry,
     current_request_with_host: None,
     mock_automower_client: AsyncMock,
     jwt,
@@ -314,15 +315,15 @@ async def test_reauth_wrong_scope(
 ) -> None:
     """Test the reauthentication aborts, if user tries to reauthenticate with the wrong scope."""
 
-    mock_config_entry.add_to_hass(hass)
+    mock_missing_scope_config_entry.add_to_hass(hass)
 
-    mock_config_entry.async_start_reauth(hass)
+    mock_missing_scope_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     result = flows[0]
-    assert result["step_id"] == "reauth_confirm"
+    assert result["step_id"] == "missing_scope"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     state = config_entry_oauth2_flow._encode_jwt(
@@ -366,3 +367,15 @@ async def test_reauth_wrong_scope(
 
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == reason
+
+    assert mock_missing_scope_config_entry.unique_id == USER_ID
+    assert "token" in mock_missing_scope_config_entry.data
+    # Verify access token is refreshed
+    assert (
+        mock_missing_scope_config_entry.data["token"].get("access_token")
+        == "mock-updated-token"
+    )
+    assert (
+        mock_missing_scope_config_entry.data["token"].get("refresh_token")
+        == "mock-refresh-token"
+    )

@@ -62,6 +62,9 @@ class HusqvarnaConfigFlowHandler(
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
+        if self.reauth_entry is not None:
+            if "amc:api" not in self.reauth_entry.data["token"]["scope"]:
+                return await self.async_step_missing_scope()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -70,4 +73,12 @@ class HusqvarnaConfigFlowHandler(
         """Confirm reauth dialog."""
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")
+        return await self.async_step_user()
+
+    async def async_step_missing_scope(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauth dialog."""
+        if user_input is None:
+            return self.async_show_form(step_id="missing_scope")
         return await self.async_step_user()

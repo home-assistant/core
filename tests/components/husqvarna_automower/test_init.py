@@ -39,6 +39,18 @@ async def test_load_unload_entry(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
+async def test_load_missing_scope(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_missing_scope_config_entry: MockConfigEntry,
+) -> None:
+    """Test load and unload entry."""
+    await setup_integration(hass, mock_missing_scope_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    assert entry.state is ConfigEntryState.LOADED
+
+
 @pytest.mark.parametrize(
     ("expires_at", "status", "expected_state"),
     [
