@@ -2,8 +2,6 @@
 
 from typing import Any
 
-from microBeesPy import Sensor
-
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
@@ -19,7 +17,9 @@ from .const import DOMAIN
 from .coordinator import MicroBeesUpdateCoordinator
 from .entity import MicroBeesActuatorEntity
 
-CLIMATE_PRODUCT_IDS = {76, 78}
+CLIMATE_PRODUCT_IDS = {76: "Thermostat", 78: "Thermovalve"}
+THERMOSTAT_SENSOR_ID = 762
+THERMOVALVE_SENSOR_ID = 782
 
 
 async def async_setup_entry(
@@ -37,7 +37,12 @@ async def async_setup_entry(
             next(
                 sensor.id
                 for sensor in bee.sensors
-                if sensor.deviceID == (762 if bee.productID == 76 else 782)
+                if sensor.deviceID
+                == (
+                    THERMOSTAT_SENSOR_ID
+                    if bee.productID == 76
+                    else THERMOVALVE_SENSOR_ID
+                )
             ),
         )
         for bee_id, bee in coordinator.data.bees.items()
@@ -75,16 +80,11 @@ class MBClimate(MicroBeesActuatorEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the sensor temperature."""
-        return self.temperature_sensor.value
-
-    @property
-    def temperature_sensor(self) -> Sensor:
-        """Return the sensor temperature."""
-        return self.coordinator.data.sensors[self.sensor_id]
+        return self.coordinator.data.sensors[self.sensor_id].value
 
     @property
     def hvac_mode(self) -> HVACMode | None:
-        """Return current hvac operation ie. heat, cool mode."""
+        """Return current hvac operation i.e. heat, cool mode."""
         if self.actuator.value == 1:
             return HVACMode.HEAT
         return HVACMode.OFF
