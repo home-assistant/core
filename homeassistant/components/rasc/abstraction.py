@@ -6,10 +6,12 @@ from collections.abc import Callable, Coroutine
 import datetime
 from datetime import timedelta
 import json
+import math
 import time
 from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast
 
 import numpy as np
+from scipy.stats import rv_continuous
 
 from homeassistant.components import notify
 from homeassistant.const import (
@@ -342,7 +344,7 @@ class StateDetector:
             self._attr_upper_bound = None
             return
         # TODO: put this in bg # pylint: disable=fixme
-        dist = get_best_distribution(history)
+        dist: rv_continuous = get_best_distribution(history)
         self._attr_upper_bound = dist.ppf(0.99)
         self._polls = get_polls(dist, worst_case_delta=worst_Q)
         self._last_updated: Optional[float] = None
@@ -693,6 +695,8 @@ class RASCState:
         # fire failure if exceed upper_bound
         if self._s_detector.upper_bound and self._c_detector.upper_bound:
             upper_bound = self._s_detector.upper_bound + self._c_detector.upper_bound
+            if math.isnan(upper_bound):
+                upper_bound = DEFAULT_FAILURE_TIMEOUT
         else:
             upper_bound = DEFAULT_FAILURE_TIMEOUT
         async_track_point_in_time(

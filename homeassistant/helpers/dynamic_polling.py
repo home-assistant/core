@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from logging import getLogger
 import math
-from typing import Any
 
 import numdifftools as nd
 import numpy as np
@@ -122,7 +121,7 @@ dist_list = [
 ]
 
 
-def get_best_distribution(data: list[float]) -> Any:
+def get_best_distribution(data: list[float]) -> st.rv_continuous:
     """Get distribution based on p value."""
     if len(data) == 1:
         return st.uniform(0, data[0])
@@ -136,7 +135,7 @@ def get_best_distribution(data: list[float]) -> Any:
     dist_results = []
     params = {}
     for dist_name in dist_names:
-        dist = getattr(st, dist_name)
+        dist: st.rv_continuous = getattr(st, dist_name)
         param = dist.fit(data)
 
         params[dist_name] = param
@@ -157,12 +156,14 @@ def get_best_distribution(data: list[float]) -> Any:
     return getattr(st, best_dist)(*params[best_dist])
 
 
-def _get_polling_interval(dist: Any, num_poll: int, upper_bound: float) -> list[float]:
+def _get_polling_interval(
+    dist: st.rv_continuous, num_poll: int, upper_bound: float
+) -> list[float]:
     return _get_polling_interval_r(dist, num_poll, upper_bound, 0, upper_bound)
 
 
 def _get_polling_interval_r(
-    dist: Any,
+    dist: st.rv_continuous,
     num_poll: int,
     upper_bound: float,
     left: float,
@@ -209,8 +210,8 @@ def _get_polling_interval_r(
     )
 
 
-def _examinate_2nd_derivate(dist: Any, L: list[float]) -> bool:
-    # examinate 2nd derivative
+def _examine_2nd_derivate(dist: st.rv_continuous, L: list[float]) -> bool:
+    # examine 2nd derivative
     pdf_prime = nd.Derivative(dist.pdf)
     for i, _ in enumerate(L):
         if i == len(L) - 1:
@@ -221,7 +222,7 @@ def _examinate_2nd_derivate(dist: Any, L: list[float]) -> bool:
     return True
 
 
-def _examinate_Q(dist: Any, L: list[float]) -> float:
+def _examine_Q(dist: st.rv_continuous, L: list[float]) -> float:
     L = [0] + L
     Q = 0
     for i in range(1, len(L)):
@@ -231,8 +232,8 @@ def _examinate_Q(dist: Any, L: list[float]) -> float:
     return Q
 
 
-def _examinate_delta(
-    dist: Any, L: list[float], delta: float, SLO: float = 0.95
+def _examine_delta(
+    dist: st.rv_continuous, L: list[float], delta: float, SLO: float = 0.95
 ) -> bool:
     L = [0] + L
     prob = 0
@@ -242,13 +243,13 @@ def _examinate_delta(
     return prob >= float(SLO - dist.cdf(0))
 
 
-def get_detection_time(dist: Any, L: list[float]) -> float:
+def get_detection_time(dist: st.rv_continuous, L: list[float]) -> float:
     """Get detection time of L."""
-    return _examinate_Q(dist, L)
+    return _examine_Q(dist, L)
 
 
 def get_polls(
-    dist: Any,
+    dist: st.rv_continuous,
     *,
     upper_bound: float | None = None,
     worst_case_delta: float = 2.0,
@@ -258,11 +259,13 @@ def get_polls(
 ) -> list[float]:
     """Get polls based on distribution."""
     upper_bound = upper_bound or float(dist.ppf(0.99))
+    if math.isnan(upper_bound):
+        return [0.0]
     if N is not None:
         L = _get_polling_interval(dist, N, upper_bound)
-        valid = _examinate_2nd_derivate(dist, L)
+        valid = _examine_2nd_derivate(dist, L)
         if not valid:
-            print("The result for", name, "is probably not minimized.")  # noqa: T201
+            LOGGER.debug("The result for %s is probably not minimized", name)
 
         return L
 
@@ -279,7 +282,7 @@ def get_polls(
 
 
 def _r_get_polls(
-    dist: Any,
+    dist: st.rv_continuous,
     upper_bound: float,
     left_N: int,
     right_N: int,
@@ -296,12 +299,12 @@ def _r_get_polls(
         return _r_get_polls(
             dist, upper_bound, left_N, N + 1, N, worst_case_delta, SLO, name
         )
-    valid = _examinate_2nd_derivate(dist, L)
+    valid = _examine_2nd_derivate(dist, L)
     if not valid:
         print("The result for", name, "is probably not minimized.")  # noqa: T201
 
-    # _examinate_Q(dist, L, SLO)
-    valid = _examinate_delta(dist, L, worst_case_delta, SLO)
+    # _examine_Q(dist, L, SLO)
+    valid = _examine_delta(dist, L, worst_case_delta, SLO)
 
     if left_N == right_N or last_N == N:
         if not valid:
