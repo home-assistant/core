@@ -296,11 +296,12 @@ async def test_remove_entry_cloudhook(
     config_entry.add_to_hass(hass)
     hass.data[DOMAIN][CONF_CLOUDHOOK_URL] = "https://test.cloud"
     # Act
-    with patch.object(
-        cloud, "async_is_logged_in", return_value=True
-    ) as mock_async_is_logged_in, patch.object(
-        cloud, "async_delete_cloudhook"
-    ) as mock_async_delete_cloudhook:
+    with (
+        patch.object(
+            cloud, "async_is_logged_in", return_value=True
+        ) as mock_async_is_logged_in,
+        patch.object(cloud, "async_delete_cloudhook") as mock_async_delete_cloudhook,
+    ):
         await smartthings.async_remove_entry(hass, config_entry)
     # Assert
     assert smartthings_mock.delete_installed_app.call_count == 1
@@ -369,9 +370,9 @@ async def test_remove_entry_installedapp_unknown_error(
 ) -> None:
     """Test raises exceptions removing the installed app."""
     # Arrange
-    smartthings_mock.delete_installed_app.side_effect = Exception
+    smartthings_mock.delete_installed_app.side_effect = ValueError
     # Act
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         await smartthings.async_remove_entry(hass, config_entry)
     # Assert
     assert smartthings_mock.delete_installed_app.call_count == 1
@@ -402,9 +403,9 @@ async def test_remove_entry_app_unknown_error(
 ) -> None:
     """Test raises exceptions removing the app."""
     # Arrange
-    smartthings_mock.delete_app.side_effect = Exception
+    smartthings_mock.delete_app.side_effect = ValueError
     # Act
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         await smartthings.async_remove_entry(hass, config_entry)
     # Assert
     assert smartthings_mock.delete_installed_app.call_count == 1

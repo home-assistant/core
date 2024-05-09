@@ -50,10 +50,12 @@ async def test_configuring_lifx_causes_discovery(hass: HomeAssistant) -> None:
         def cleanup(self):
             """Mock cleanup."""
 
-    with _patch_config_flow_try_connect(), patch.object(
-        discovery, "DEFAULT_TIMEOUT", 0
-    ), patch(
-        "homeassistant.components.lifx.discovery.LifxDiscovery", MockLifxDiscovery
+    with (
+        _patch_config_flow_try_connect(),
+        patch.object(discovery, "DEFAULT_TIMEOUT", 0),
+        patch(
+            "homeassistant.components.lifx.discovery.LifxDiscovery", MockLifxDiscovery
+        ),
     ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -85,10 +87,10 @@ async def test_config_entry_reload(hass: HomeAssistant) -> None:
     with _patch_discovery(), _patch_config_flow_try_connect(), _patch_device():
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert already_migrated_config_entry.state == ConfigEntryState.LOADED
+        assert already_migrated_config_entry.state is ConfigEntryState.LOADED
         await hass.config_entries.async_unload(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
-        assert already_migrated_config_entry.state == ConfigEntryState.NOT_LOADED
+        assert already_migrated_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_config_entry_retry(hass: HomeAssistant) -> None:
@@ -97,12 +99,14 @@ async def test_config_entry_retry(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=SERIAL
     )
     already_migrated_config_entry.add_to_hass(hass)
-    with _patch_discovery(no_device=True), _patch_config_flow_try_connect(
-        no_device=True
-    ), _patch_device(no_device=True):
+    with (
+        _patch_discovery(no_device=True),
+        _patch_config_flow_try_connect(no_device=True),
+        _patch_device(no_device=True),
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert already_migrated_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_get_version_fails(hass: HomeAssistant) -> None:
@@ -119,7 +123,7 @@ async def test_get_version_fails(hass: HomeAssistant) -> None:
     with _patch_discovery(device=bulb), _patch_device(device=bulb):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert already_migrated_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_dns_error_at_startup(hass: HomeAssistant) -> None:
@@ -145,13 +149,16 @@ async def test_dns_error_at_startup(hass: HomeAssistant) -> None:
             """Mock teardown."""
 
     # Cannot connect due to dns error
-    with _patch_discovery(device=bulb), patch(
-        "homeassistant.components.lifx.LIFXConnection",
-        MockLifxConnectonDnsError,
+    with (
+        _patch_discovery(device=bulb),
+        patch(
+            "homeassistant.components.lifx.LIFXConnection",
+            MockLifxConnectonDnsError,
+        ),
     ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert already_migrated_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_config_entry_wrong_serial(
@@ -166,7 +173,7 @@ async def test_config_entry_wrong_serial(
     with _patch_discovery(), _patch_config_flow_try_connect(), _patch_device():
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert already_migrated_config_entry.state is ConfigEntryState.SETUP_RETRY
 
     assert (
         "Unexpected device found at 127.0.0.1; expected aa:bb:cc:dd:ee:c0, found aa:bb:cc:dd:ee:cc"

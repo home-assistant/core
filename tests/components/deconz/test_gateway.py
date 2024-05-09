@@ -305,8 +305,11 @@ async def test_get_deconz_api_fails(
 ) -> None:
     """Failed call."""
     config_entry = MockConfigEntry(domain=DECONZ_DOMAIN, data=ENTRY_CONFIG)
-    with patch(
-        "pydeconz.DeconzSession.refresh_state",
-        side_effect=side_effect,
-    ), pytest.raises(raised_exception):
+    with (
+        patch(
+            "pydeconz.DeconzSession.refresh_state",
+            side_effect=side_effect,
+        ),
+        pytest.raises(raised_exception),
+    ):
         assert await get_deconz_api(hass, config_entry)

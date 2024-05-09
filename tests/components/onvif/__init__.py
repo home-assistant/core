@@ -187,13 +187,15 @@ async def setup_onvif_integration(
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.onvif.config_flow.get_device"
-    ) as mock_onvif_camera, patch(
-        "homeassistant.components.onvif.config_flow.wsdiscovery"
-    ) as mock_discovery, patch(
-        "homeassistant.components.onvif.ONVIFDevice"
-    ) as mock_device:
+    with (
+        patch(
+            "homeassistant.components.onvif.config_flow.get_device"
+        ) as mock_onvif_camera,
+        patch(
+            "homeassistant.components.onvif.config_flow.wsdiscovery"
+        ) as mock_discovery,
+        patch("homeassistant.components.onvif.ONVIFDevice") as mock_device,
+    ):
         setup_mock_onvif_camera(mock_onvif_camera, two_profiles=True)
         # no discovery
         mock_discovery.return_value = []

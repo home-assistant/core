@@ -173,7 +173,7 @@ class NestFlowHandler(
     async def async_step_create_cloud_project(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle initial step in app credentails flow."""
+        """Handle initial step in app credentials flow."""
         implementations = await config_entry_oauth2_flow.async_get_implementations(
             self.hass, self.DOMAIN
         )

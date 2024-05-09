@@ -15,12 +15,11 @@ import pytest
 
 from homeassistant.const import MATCH_ALL
 import homeassistant.core as ha
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     TrackStates,
     TrackTemplate,
     TrackTemplateResult,
@@ -4805,3 +4804,36 @@ async def test_async_track_device_registry_updated_event_with_a_callback_that_th
     unsub2()
 
     assert event_data[0] == {"action": "create", "device_id": device_id}
+
+
+async def test_track_state_change_deprecated(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test track_state_change is deprecated."""
+    async_track_state_change(
+        hass, "light.Bowl", lambda entity_id, old_state, new_state: None, "on", "off"
+    )
+
+    assert (
+        "Detected code that calls `async_track_state_change` instead "
+        "of `async_track_state_change_event` which is deprecated and "
+        "will be removed in Home Assistant 2025.5. Please report this issue."
+    ) in caplog.text
+
+
+async def test_track_point_in_time_repr(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test track point in time."""
+
+    @ha.callback
+    def _raise_exception(_):
+        raise RuntimeError("something happened and its poorly described")
+
+    async_track_point_in_utc_time(hass, _raise_exception, dt_util.utcnow())
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Exception in callback _TrackPointUTCTime" in caplog.text
+    assert "._raise_exception" in caplog.text
+    await hass.async_block_till_done(wait_background_tasks=True)

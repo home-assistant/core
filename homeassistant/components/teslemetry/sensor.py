@@ -58,7 +58,7 @@ SHIFT_STATES = {"P": "p", "D": "d", "R": "r", "N": "n"}
 class TeslemetrySensorEntityDescription(SensorEntityDescription):
     """Describes Teslemetry Sensor entity."""
 
-    value_fn: Callable[[StateType], StateType | datetime] = lambda x: x
+    value_fn: Callable[[StateType], StateType] = lambda x: x
 
 
 VEHICLE_DESCRIPTIONS: tuple[TeslemetrySensorEntityDescription, ...] = (
@@ -447,7 +447,13 @@ class TeslemetryVehicleSensorEntity(TeslemetryVehicleEntity, SensorEntity):
         description: TeslemetrySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
+        self.entity_description = description
         super().__init__(vehicle, description.key)
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self._value)
 
 
 class TeslemetryVehicleTimeSensorEntity(TeslemetryVehicleEntity, SensorEntity):
@@ -476,7 +482,7 @@ class TeslemetryVehicleTimeSensorEntity(TeslemetryVehicleEntity, SensorEntity):
 
     @property
     def available(self) -> bool:
-        """Return the avaliability of the sensor."""
+        """Return the availability of the sensor."""
         return isinstance(self._value, int | float) and self._value > 0
 
 

@@ -19,6 +19,7 @@ from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY
 from homeassistant.components.cloud.const import DEFAULT_EXPOSED_DOMAINS, DOMAIN
 from homeassistant.components.google_assistant.helpers import GoogleEntity
 from homeassistant.components.homeassistant import exposed_entities
+from homeassistant.components.http.const import StrictConnectionMode
 from homeassistant.components.websocket_api import ERR_INVALID_FORMAT
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
@@ -231,6 +232,7 @@ async def test_login_view_create_pipeline(
     }
 
     assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "assist_pipeline", {})
     assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
     await hass.async_block_till_done()
 
@@ -270,6 +272,7 @@ async def test_login_view_create_pipeline_fail(
     }
 
     assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "assist_pipeline", {})
     assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
     await hass.async_block_till_done()
 
@@ -749,14 +752,17 @@ async def test_websocket_status(
     cloud.iot.state = STATE_CONNECTED
     client = await hass_ws_client(hass)
 
-    with patch.dict(
-        "homeassistant.components.google_assistant.const.DOMAIN_TO_GOOGLE_TYPES",
-        {"light": None},
-        clear=True,
-    ), patch.dict(
-        "homeassistant.components.alexa.entities.ENTITY_ADAPTERS",
-        {"switch": None},
-        clear=True,
+    with (
+        patch.dict(
+            "homeassistant.components.google_assistant.const.DOMAIN_TO_GOOGLE_TYPES",
+            {"light": None},
+            clear=True,
+        ),
+        patch.dict(
+            "homeassistant.components.alexa.entities.ENTITY_ADAPTERS",
+            {"switch": None},
+            clear=True,
+        ),
     ):
         await client.send_json({"id": 5, "type": "cloud/status"})
         response = await client.receive_json()
@@ -777,6 +783,7 @@ async def test_websocket_status(
             "google_report_state": True,
             "remote_allow_remote_enable": True,
             "remote_enabled": False,
+            "strict_connection": "disabled",
             "tts_default_voice": ["en-US", "JennyNeural"],
         },
         "alexa_entities": {
@@ -896,6 +903,7 @@ async def test_websocket_update_preferences(
     assert cloud.client.prefs.alexa_enabled
     assert cloud.client.prefs.google_secure_devices_pin is None
     assert cloud.client.prefs.remote_allow_remote_enable is True
+    assert cloud.client.prefs.strict_connection is StrictConnectionMode.DISABLED
 
     client = await hass_ws_client(hass)
 
@@ -907,6 +915,7 @@ async def test_websocket_update_preferences(
             "google_secure_devices_pin": "1234",
             "tts_default_voice": ["en-GB", "RyanNeural"],
             "remote_allow_remote_enable": False,
+            "strict_connection": StrictConnectionMode.DROP_CONNECTION,
         }
     )
     response = await client.receive_json()
@@ -917,6 +926,7 @@ async def test_websocket_update_preferences(
     assert cloud.client.prefs.google_secure_devices_pin == "1234"
     assert cloud.client.prefs.remote_allow_remote_enable is False
     assert cloud.client.prefs.tts_default_voice == ("en-GB", "RyanNeural")
+    assert cloud.client.prefs.strict_connection is StrictConnectionMode.DROP_CONNECTION
 
 
 @pytest.mark.parametrize(
@@ -954,16 +964,20 @@ async def test_websocket_update_preferences_alexa_report_state(
     """Test updating alexa_report_state sets alexa authorized."""
     client = await hass_ws_client(hass)
 
-    with patch(
-        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig.async_sync_entities"
-    ), patch(
-        (
-            "homeassistant.components.cloud.alexa_config.CloudAlexaConfig"
-            ".async_get_access_token"
+    with (
+        patch(
+            "homeassistant.components.cloud.alexa_config.CloudAlexaConfig.async_sync_entities"
         ),
-    ), patch(
-        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig.set_authorized"
-    ) as set_authorized_mock:
+        patch(
+            (
+                "homeassistant.components.cloud.alexa_config.CloudAlexaConfig"
+                ".async_get_access_token"
+            ),
+        ),
+        patch(
+            "homeassistant.components.cloud.alexa_config.CloudAlexaConfig.set_authorized"
+        ) as set_authorized_mock,
+    ):
         set_authorized_mock.assert_not_called()
 
         await client.send_json(
@@ -985,15 +999,18 @@ async def test_websocket_update_preferences_require_relink(
     """Test updating preference requires relink."""
     client = await hass_ws_client(hass)
 
-    with patch(
-        (
-            "homeassistant.components.cloud.alexa_config.CloudAlexaConfig"
-            ".async_get_access_token"
+    with (
+        patch(
+            (
+                "homeassistant.components.cloud.alexa_config.CloudAlexaConfig"
+                ".async_get_access_token"
+            ),
+            side_effect=alexa_errors.RequireRelink,
         ),
-        side_effect=alexa_errors.RequireRelink,
-    ), patch(
-        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig.set_authorized"
-    ) as set_authorized_mock:
+        patch(
+            "homeassistant.components.cloud.alexa_config.CloudAlexaConfig.set_authorized"
+        ) as set_authorized_mock,
+    ):
         set_authorized_mock.assert_not_called()
 
         await client.send_json(
@@ -1015,15 +1032,18 @@ async def test_websocket_update_preferences_no_token(
     """Test updating preference no token available."""
     client = await hass_ws_client(hass)
 
-    with patch(
-        (
-            "homeassistant.components.cloud.alexa_config.CloudAlexaConfig"
-            ".async_get_access_token"
+    with (
+        patch(
+            (
+                "homeassistant.components.cloud.alexa_config.CloudAlexaConfig"
+                ".async_get_access_token"
+            ),
+            side_effect=alexa_errors.NoTokenAvailable,
         ),
-        side_effect=alexa_errors.NoTokenAvailable,
-    ), patch(
-        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig.set_authorized"
-    ) as set_authorized_mock:
+        patch(
+            "homeassistant.components.cloud.alexa_config.CloudAlexaConfig.set_authorized"
+        ) as set_authorized_mock,
+    ):
         set_authorized_mock.assert_not_called()
 
         await client.send_json(
@@ -1357,13 +1377,16 @@ async def test_list_alexa_entities(
         "interfaces": ["Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"],
     }
 
-    with patch(
-        (
-            "homeassistant.components.cloud.alexa_config.CloudAlexaConfig"
-            ".async_get_access_token"
+    with (
+        patch(
+            (
+                "homeassistant.components.cloud.alexa_config.CloudAlexaConfig"
+                ".async_get_access_token"
+            ),
         ),
-    ), patch(
-        "homeassistant.components.cloud.alexa_config.alexa_state_report.async_send_add_or_update_message"
+        patch(
+            "homeassistant.components.cloud.alexa_config.alexa_state_report.async_send_add_or_update_message"
+        ),
     ):
         # Add the entity to the entity registry
         entity_registry.async_get_or_create(

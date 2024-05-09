@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from aionut import NUTError
+from aionut import NUTError, NUTLoginError
 
 from homeassistant.components.nut.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -56,13 +56,43 @@ async def test_config_not_ready(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.nut.AIONUTClient.list_ups",
-        return_value={"ups1"},
-    ), patch(
-        "homeassistant.components.nut.AIONUTClient.list_vars",
-        side_effect=NUTError,
+    with (
+        patch(
+            "homeassistant.components.nut.AIONUTClient.list_ups",
+            return_value={"ups1"},
+        ),
+        patch(
+            "homeassistant.components.nut.AIONUTClient.list_vars",
+            side_effect=NUTError,
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_auth_fails(hass: HomeAssistant) -> None:
+    """Test for setup failure if auth has changed."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "mock", CONF_PORT: "mock"},
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.nut.AIONUTClient.list_ups",
+            return_value={"ups1"},
+        ),
+        patch(
+            "homeassistant.components.nut.AIONUTClient.list_vars",
+            side_effect=NUTLoginError,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"

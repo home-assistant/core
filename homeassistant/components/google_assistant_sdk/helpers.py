@@ -70,7 +70,7 @@ async def async_send_text_commands(
     except aiohttp.ClientResponseError as err:
         if 400 <= err.status < 500:
             entry.async_start_reauth(hass)
-        raise err
+        raise
 
     credentials = Credentials(session.token[CONF_ACCESS_TOKEN])
     language_code = entry.options.get(CONF_LANGUAGE_CODE, default_language_code(hass))

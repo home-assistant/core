@@ -41,6 +41,10 @@
       "name": "Purge entities",
       "description": "Starts a purge task to remove the data related to specific entities from your database.",
       "fields": {
+        "entity_id": {
+          "name": "Entities to remove",
+          "description": "List of entities for which the data is to be removed from the recorder database."
+        },
         "domains": {
           "name": "Domains to remove",
           "description": "List of domains for which the data needs to be removed from the recorder database."

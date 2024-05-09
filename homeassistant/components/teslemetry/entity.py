@@ -5,7 +5,7 @@ from typing import Any
 
 from tesla_fleet_api.exceptions import TeslaFleetError
 
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -82,6 +82,11 @@ class TeslemetryVehicleEntity(CoordinatorEntity[TeslemetryVehicleDataCoordinator
         for key, value in args:
             self.coordinator.data[key] = value
         self.async_write_ha_state()
+
+    def raise_for_scope(self):
+        """Raise an error if a scope is not available."""
+        if not self.scoped:
+            raise ServiceValidationError("Missing required scope")
 
 
 class TeslemetryEnergyEntity(CoordinatorEntity[TeslemetryEnergyDataCoordinator]):

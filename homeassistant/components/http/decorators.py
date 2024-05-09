@@ -29,15 +29,13 @@ def require_admin(
 ) -> Callable[
     [_FuncType[_HomeAssistantViewT, _P, _ResponseT]],
     _FuncType[_HomeAssistantViewT, _P, _ResponseT],
-]:
-    ...
+]: ...
 
 
 @overload
 def require_admin(
     _func: _FuncType[_HomeAssistantViewT, _P, _ResponseT],
-) -> _FuncType[_HomeAssistantViewT, _P, _ResponseT]:
-    ...
+) -> _FuncType[_HomeAssistantViewT, _P, _ResponseT]: ...
 
 
 def require_admin(
