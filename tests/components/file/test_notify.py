@@ -46,7 +46,6 @@ async def test_bad_config(hass: HomeAssistant) -> None:
                         "name": "test",
                         "platform": "file",
                         "filename": "mock_file",
-                        "timestamp": False,
                     }
                 ]
             },
@@ -255,6 +254,7 @@ async def test_legacy_notify_file_entry_only_setup(
                 "name": "test",
                 "platform": "notify",
                 "file_path": "mock_file",
+                "timestamp": False,
             },
         ),
     ],
@@ -284,6 +284,7 @@ async def test_legacy_notify_file_not_allowed(
                 "name": "test",
                 "platform": "notify",
                 "file_path": "mock_file",
+                "timestamp": False,
             },
             True,
         ),

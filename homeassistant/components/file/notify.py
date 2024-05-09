@@ -45,7 +45,7 @@ async def async_get_service(
         # We only set up through discovery
         return None
     file_path: str = discovery_info[CONF_FILE_PATH]
-    timestamp: bool = discovery_info.get(CONF_TIMESTAMP, False)
+    timestamp: bool = discovery_info[CONF_TIMESTAMP]
 
     return FileNotificationService(file_path, timestamp)
 
