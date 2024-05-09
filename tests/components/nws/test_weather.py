@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
+from pynws import NwsNoDataError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -112,6 +113,68 @@ async def test_none_values(hass: HomeAssistant, mock_simple_nws, no_sensor) -> N
     data = state.attributes
     for key in WEATHER_EXPECTED_OBSERVATION_IMPERIAL:
         assert data.get(key) is None
+
+
+async def test_no_data_error_observation(
+    hass: HomeAssistant, mock_simple_nws, no_sensor, caplog
+) -> None:
+    """Test catching NwsNoDataDrror."""
+    instance = mock_simple_nws.return_value
+    instance.update_observation.side_effect = NwsNoDataError("Test")
+
+    entry = MockConfigEntry(
+        domain=nws.DOMAIN,
+        data=NWS_CONFIG,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        "Error fetching NWS observation station ABC data: No data returned"
+        in caplog.text
+    )
+
+
+async def test_no_data_error_forecast(
+    hass: HomeAssistant, mock_simple_nws, no_sensor, caplog
+) -> None:
+    """Test catching NwsNoDataDrror."""
+    instance = mock_simple_nws.return_value
+    instance.update_forecast.side_effect = NwsNoDataError("Test")
+
+    entry = MockConfigEntry(
+        domain=nws.DOMAIN,
+        data=NWS_CONFIG,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        "Error fetching NWS forecast station ABC data: No data returned" in caplog.text
+    )
+
+
+async def test_no_data_error_forecast_hourly(
+    hass: HomeAssistant, mock_simple_nws, no_sensor, caplog
+) -> None:
+    """Test catching NwsNoDataDrror."""
+    instance = mock_simple_nws.return_value
+    instance.update_forecast_hourly.side_effect = NwsNoDataError("Test")
+
+    entry = MockConfigEntry(
+        domain=nws.DOMAIN,
+        data=NWS_CONFIG,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        "Error fetching NWS forecast hourly station ABC data: No data returned"
+        in caplog.text
+    )
 
 
 async def test_none(hass: HomeAssistant, mock_simple_nws, no_sensor) -> None:
