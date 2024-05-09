@@ -42,7 +42,6 @@ from zha.application.const import (
 )
 from zha.application.gateway import (
     DeviceFullInitEvent,
-    DeviceInfo,
     DeviceJoinedEvent,
     DeviceLeftEvent,
     DeviceRemovedEvent,
@@ -210,13 +209,13 @@ class ZHAGroupProxy(LogMixin):
                     "device": self.gateway_proxy.device_proxies[
                         member.device.ieee
                     ].zha_device_info,
-                    "entities": self.associated_entities(member),
+                    "entities": [e._asdict() for e in self.associated_entities(member)],
                 }
                 for member in self.group.members
             ],
         }
 
-    def associated_entities(self, member: GroupMember) -> list[dict[str, Any]]:
+    def associated_entities(self, member: GroupMember) -> list[GroupEntityReference]:
         """Return the list of entities that were derived from this endpoint."""
         entity_registry = er.async_get(self.gateway_proxy.hass)
         entity_refs: collections.defaultdict[EUI64, list[EntityReference]] = (
@@ -243,7 +242,7 @@ class ZHAGroupProxy(LogMixin):
                     name=entity.name,
                     original_name=entity.original_name,
                     entity_id=entity_ref.ha_entity_id,
-                )._asdict()
+                )
             )
 
         return entity_info
@@ -518,7 +517,9 @@ class ZHAGatewayProxy(EventBase):
     @callback
     def handle_device_fully_initialized(self, event: DeviceFullInitEvent) -> None:
         """Handle a device fully initialized event."""
-        zha_device_proxy = self._async_get_or_create_device_proxy(event.device_info)
+        zha_device = self.gateway.get_device(event.device_info.ieee)
+        zha_device_proxy = self._async_get_or_create_device_proxy(zha_device)
+
         device_info = zha_device_proxy.zha_device_info
         device_info[DEVICE_PAIRING_STATUS] = event.device_info.pairing_status.name
         if event.new_join:
@@ -631,12 +632,8 @@ class ZHAGatewayProxy(EventBase):
                 if e.ha_entity_id != entity.entity_id
             ]
 
-    def _async_get_or_create_device_proxy(
-        self, zha_device: Device | DeviceInfo
-    ) -> ZHADeviceProxy:
+    def _async_get_or_create_device_proxy(self, zha_device: Device) -> ZHADeviceProxy:
         """Get or create a ZHA device."""
-        if not isinstance(zha_device, Device):
-            zha_device = self.gateway.get_device(zha_device.ieee)
         if (zha_device_proxy := self.device_proxies.get(zha_device.ieee)) is None:
             zha_device_proxy = ZHADeviceProxy(zha_device, self)
             self.device_proxies[zha_device_proxy.device.ieee] = zha_device_proxy
@@ -666,24 +663,26 @@ class ZHAGatewayProxy(EventBase):
     ) -> None:
         """Create HA entity metadata."""
         ha_zha_data = get_zha_data(self.hass)
-        zha_entities: list[PlatformEntity | GroupEntity] = (
-            proxy_object.device.platform_entities.values()
-            if isinstance(proxy_object, ZHADeviceProxy)
-            else proxy_object.group.group_entities.values()
-        )
-        group_proxy = proxy_object if isinstance(proxy_object, ZHAGroupProxy) else None
-        device_proxy = (
-            proxy_object
-            if isinstance(proxy_object, ZHADeviceProxy)
-            else self.device_proxies[self.gateway.coordinator_zha_device.ieee]
-        )
-        for entity in zha_entities:
-            platform = Platform(entity.PLATFORM)
-            ha_zha_data.platforms[platform].append(
-                EntityData(
-                    entity=entity, device_proxy=device_proxy, group_proxy=group_proxy
+        coordinator_proxy = self.device_proxies[
+            self.gateway.coordinator_zha_device.ieee
+        ]
+
+        if isinstance(proxy_object, ZHADeviceProxy):
+            for entity in proxy_object.device.platform_entities.values():
+                ha_zha_data.platforms[Platform(entity.PLATFORM)].append(
+                    EntityData(
+                        entity=entity, device_proxy=proxy_object, group_proxy=None
+                    )
                 )
-            )
+        else:
+            for entity in proxy_object.group.group_entities.values():
+                ha_zha_data.platforms[Platform(entity.PLATFORM)].append(
+                    EntityData(
+                        entity=entity,
+                        device_proxy=coordinator_proxy,
+                        group_proxy=proxy_object,
+                    )
+                )
 
     def _cleanup_group_entity_registry_entries(
         self, zigpy_group: zigpy.group.Group

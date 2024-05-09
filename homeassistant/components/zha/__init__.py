@@ -142,7 +142,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     try:
         zha_gateway = await Gateway.async_from_config(zha_lib_data)
-        ha_zha_data.gateway_proxy = ZHAGatewayProxy(hass, config_entry, zha_gateway)
     except NetworkSettingsInconsistent as exc:
         await warn_on_inconsistent_network_settings(
             hass,
@@ -173,6 +172,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise ConfigEntryNotReady from exc
 
     repairs.async_delete_blocking_issues(hass)
+
+    ha_zha_data.gateway_proxy = ZHAGatewayProxy(hass, config_entry, zha_gateway)
 
     manufacturer = zha_gateway.state.node_info.manufacturer
     model = zha_gateway.state.node_info.model
