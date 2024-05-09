@@ -2,11 +2,10 @@
 
 import asyncio
 
-from homeassistant.components.intent import (
-    TimerEvent,
-    TimerEventType,
-    async_register_timer_handler,
-)
+import pytest
+
+from homeassistant.components.intent import async_register_timer_handler
+from homeassistant.components.intent.timers import TimerEvent, TimerEventType
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
@@ -26,7 +25,7 @@ async def test_start_finish_timer(hass: HomeAssistant) -> None:
         elif event.type == TimerEventType.FINISHED:
             finished_event.set()
 
-    unregister = async_register_timer_handler(hass, device_id, handler)
+    unregister = async_register_timer_handler(hass, handler, device_id)
     result = await intent.async_handle(
         hass,
         "test",
@@ -60,7 +59,7 @@ async def test_cancel_timer(hass: HomeAssistant) -> None:
         elif event.type == TimerEventType.CANCELLED:
             cancelled_event.set()
 
-    unregister = async_register_timer_handler(hass, device_id, handler)
+    unregister = async_register_timer_handler(hass, handler, device_id)
 
     # Cancel by starting time
     result = await intent.async_handle(
@@ -139,7 +138,7 @@ async def test_increase_timer(hass: HomeAssistant) -> None:
         elif event.type == TimerEventType.CANCELLED:
             cancelled_event.set()
 
-    unregister = async_register_timer_handler(hass, device_id, handler)
+    unregister = async_register_timer_handler(hass, handler, device_id)
     result = await intent.async_handle(
         hass,
         "test",
@@ -201,7 +200,7 @@ async def test_decrease_timer(hass: HomeAssistant) -> None:
         elif event.type == TimerEventType.CANCELLED:
             cancelled_event.set()
 
-    unregister = async_register_timer_handler(hass, device_id, handler)
+    unregister = async_register_timer_handler(hass, handler, device_id)
     result = await intent.async_handle(
         hass,
         "test",
@@ -263,7 +262,7 @@ async def test_decrease_timer_below_zero(hass: HomeAssistant) -> None:
         elif event.type == TimerEventType.FINISHED:
             finished_event.set()
 
-    unregister = async_register_timer_handler(hass, device_id, handler)
+    unregister = async_register_timer_handler(hass, handler, device_id)
     result = await intent.async_handle(
         hass,
         "test",
@@ -294,3 +293,53 @@ async def test_decrease_timer_below_zero(hass: HomeAssistant) -> None:
         await asyncio.gather(updated_event.wait(), finished_event.wait())
 
     unregister()
+
+
+async def test_find_timer_failed(hass: HomeAssistant) -> None:
+    """Test finding a timer with the wrong info."""
+    assert await async_setup_component(hass, "intent", {})
+
+    # Start a 5 minute timer for pizza
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_SET_TIMER,
+        {"name": {"value": "pizza"}, "minutes": {"value": 5}},
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    # Right name
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_INCREASE_TIMER,
+        {"name": {"value": "PIZZA "}, "minutes": {"value": 1}},
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    # Wrong name
+    with pytest.raises(intent.IntentError):
+        await intent.async_handle(
+            hass,
+            "test",
+            intent.INTENT_CANCEL_TIMER,
+            {"name": {"value": "does-not-exist"}},
+        )
+
+    # Right start time
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_INCREASE_TIMER,
+        {"start_minutes": {"value": 5}, "minutes": {"value": 1}},
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    # Wrong start time
+    with pytest.raises(intent.IntentError):
+        await intent.async_handle(
+            hass,
+            "test",
+            intent.INTENT_CANCEL_TIMER,
+            {"start_minutes": {"value": 1}},
+        )
