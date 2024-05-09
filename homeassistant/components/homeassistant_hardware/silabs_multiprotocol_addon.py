@@ -939,4 +939,7 @@ async def multi_pan_addon_using_device(hass: HomeAssistant, device_path: str) ->
     if addon_info.state != AddonState.RUNNING:
         return False
 
-    return bool(addon_info.options["device"] == device_path)
+    if addon_info.options["device"] != device_path:
+        return False
+
+    return True

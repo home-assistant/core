@@ -36,9 +36,14 @@ def find_matching_platform(
 def skip_entity(model: str, device_point: DevicePoint) -> bool:
     """Check if entity should be skipped for this device model."""
     if model == "SMO 20":
-        return not (
-            len(device_point.smart_home_categories) > 0
-            or device_point.parameter_id
-            in ("40940", "47011", "47015", "47028", "47032", "50004")
-        )
+        if len(device_point.smart_home_categories) > 0 or device_point.parameter_id in (
+            "40940",
+            "47011",
+            "47015",
+            "47028",
+            "47032",
+            "50004",
+        ):
+            return False
+        return True
     return False

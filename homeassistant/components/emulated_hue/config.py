@@ -259,4 +259,7 @@ class Config:
         # Expose an entity if the entity's domain is exposed by default and
         # the configuration doesn't explicitly exclude it from being
         # exposed, or if the entity is explicitly exposed
-        return state.domain in self.exposed_domains
+        if state.domain in self.exposed_domains:
+            return True
+
+        return False

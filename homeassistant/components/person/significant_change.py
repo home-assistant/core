@@ -18,4 +18,7 @@ def async_check_significant_change(
 ) -> bool | None:
     """Test if state significantly changed."""
 
-    return new_state != old_state
+    if new_state != old_state:
+        return True
+
+    return False

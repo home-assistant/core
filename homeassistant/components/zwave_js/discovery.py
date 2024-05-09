@@ -1431,9 +1431,9 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
     if schema.value is not None and value.value not in schema.value:
         return False
     # check metadata_stateful
-    return not (
-        schema.stateful is not None and value.metadata.stateful != schema.stateful
-    )
+    if schema.stateful is not None and value.metadata.stateful != schema.stateful:
+        return False
+    return True
 
 
 @callback
@@ -1443,4 +1443,6 @@ def check_device_class(
     """Check if device class id or label matches."""
     if required_value is None:
         return True
-    return any(device_class.label == val for val in required_value)
+    if any(device_class.label == val for val in required_value):
+        return True
+    return False

@@ -860,10 +860,13 @@ class StartStopTrait(_Trait):
         if domain == vacuum.DOMAIN:
             return True
 
-        return bool(
+        if (
             domain in COVER_VALVE_DOMAINS
             and features & COVER_VALVE_STOP_FEATURE[domain]
-        )
+        ):
+            return True
+
+        return False
 
     def sync_attributes(self):
         """Return StartStop attributes for a sync request."""
@@ -2083,10 +2086,12 @@ class InputSelectorTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        return bool(
-            domain == media_player.DOMAIN
-            and features & MediaPlayerEntityFeature.SELECT_SOURCE
-        )
+        if domain == media_player.DOMAIN and (
+            features & MediaPlayerEntityFeature.SELECT_SOURCE
+        ):
+            return True
+
+        return False
 
     def sync_attributes(self):
         """Return mode attributes for a sync request."""
@@ -2633,11 +2638,14 @@ class ChannelTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        return bool(
+        if (
             domain == media_player.DOMAIN
-            and features & MediaPlayerEntityFeature.PLAY_MEDIA
+            and (features & MediaPlayerEntityFeature.PLAY_MEDIA)
             and device_class == media_player.MediaPlayerDeviceClass.TV
-        )
+        ):
+            return True
+
+        return False
 
     def sync_attributes(self):
         """Return attributes for a sync request."""

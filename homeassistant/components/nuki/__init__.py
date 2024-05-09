@@ -156,7 +156,10 @@ def _register_webhook(bridge: NukiBridge, entry_id: str, url: str) -> bool:
                 return True
             bridge.callback_remove(item["id"])
 
-    return bool(bridge.callback_add(url)["success"])
+    if bridge.callback_add(url)["success"]:
+        return True
+
+    return False
 
 
 def _remove_webhook(bridge: NukiBridge, entry_id: str) -> None:

@@ -212,9 +212,13 @@ def _async_integration_has_notify_services(
     hass: HomeAssistant, integration_name: str
 ) -> bool:
     """Determine if an integration has notify services registered."""
-    return (
-        NOTIFY_SERVICES in hass.data and integration_name in hass.data[NOTIFY_SERVICES]
-    )
+    if (
+        NOTIFY_SERVICES not in hass.data
+        or integration_name not in hass.data[NOTIFY_SERVICES]
+    ):
+        return False
+
+    return True
 
 
 class BaseNotificationService:

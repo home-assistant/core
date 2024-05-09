@@ -80,15 +80,12 @@ def seen_all_fields(
         or not previous_match.service_data.issuperset(advertisement_data.service_data)
     ):
         return False
-    return not (
-        advertisement_data.service_uuids
-        and (
-            not previous_match.service_uuids
-            or not previous_match.service_uuids.issuperset(
-                advertisement_data.service_uuids
-            )
-        )
-    )
+    if advertisement_data.service_uuids and (
+        not previous_match.service_uuids
+        or not previous_match.service_uuids.issuperset(advertisement_data.service_uuids)
+    ):
+        return False
+    return True
 
 
 class IntegrationMatcher:
@@ -420,10 +417,13 @@ def ble_device_matches(
             ):
                 return False
 
-    return not (
-        (local_name := matcher.get(LOCAL_NAME))
-        and not _memorized_fnmatch(service_info.name, local_name)
-    )
+    if (local_name := matcher.get(LOCAL_NAME)) and not _memorized_fnmatch(
+        service_info.name,
+        local_name,
+    ):
+        return False
+
+    return True
 
 
 @lru_cache(maxsize=4096, typed=True)

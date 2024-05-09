@@ -977,11 +977,12 @@ class HKDevice:
         if self.pairing.controller.transport_type != TransportType.BLE:
             return False
 
-        return bool(
-            self.entity_map.aid(1).services.first(
-                service_type=ServicesTypes.THREAD_TRANSPORT
-            )
-        )
+        if not self.entity_map.aid(1).services.first(
+            service_type=ServicesTypes.THREAD_TRANSPORT
+        ):
+            return False
+
+        return True
 
     async def async_thread_provision(self) -> None:
         """Migrate a HomeKit pairing to CoAP (Thread)."""

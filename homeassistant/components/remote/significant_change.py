@@ -22,4 +22,7 @@ def async_check_significant_change(
     if old_state != new_state:
         return True
 
-    return old_attrs.get(ATTR_CURRENT_ACTIVITY) != new_attrs.get(ATTR_CURRENT_ACTIVITY)
+    if old_attrs.get(ATTR_CURRENT_ACTIVITY) != new_attrs.get(ATTR_CURRENT_ACTIVITY):
+        return True
+
+    return False

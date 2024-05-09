@@ -35,4 +35,8 @@ def async_check_significant_change(
     )
     changed_attrs: set[str] = {item[0] for item in old_attrs_s ^ new_attrs_s}
 
-    return bool(changed_attrs)
+    if changed_attrs:
+        return True
+
+    # no significant attribute change detected
+    return False
