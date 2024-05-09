@@ -9,6 +9,7 @@ from openai import (
     BadRequestError,
     RateLimitError,
 )
+from openai.types.chat import ChatCompletion
 from openai.types.image import Image
 from openai.types.images_response import ImagesResponse
 import pytest
@@ -126,6 +127,80 @@ async def test_generate_image_service(
     assert response == {
         "url": "A",
         "revised_prompt": "A clear and detailed picture of an ordinary canine",
+    }
+    assert len(mock_create.mock_calls) == 1
+    assert mock_create.mock_calls[0][2] == expected_args
+
+
+async def test_describe_image_service_response_text(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    service_data,
+    expected_args,
+) -> None:
+    """Test describe image service for text responses."""
+    service_data["config_entry"] = mock_config_entry.entry_id
+    expected_args["model"] = "gpt-4-turbo"
+
+    with patch(
+        "openai.resources.chat.completions.create",
+        return_value=ChatCompletion(
+            choices=[{"content": "A person walking along a path"}]
+        ),
+    ) as mock_create:
+        response = await hass.services.async_call(
+            "openai_conversation",
+            "describe_image",
+            service_data,
+            blocking=True,
+            return_response=True,
+        )
+
+    assert response == {"description": "A person walking along a path"}
+    assert len(mock_create.mock_calls) == 1
+    assert mock_create.mock_calls[0][2] == expected_args
+
+
+async def test_describe_image_service_response_json(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    service_data,
+    expected_args,
+) -> None:
+    """Test describe image service for json responses."""
+    service_data["config_entry"] = mock_config_entry.entry_id
+    expected_args["model"] = "gpt-4-turbo"
+
+    with patch(
+        "openai.resources.chat.completions.create",
+        return_value=ChatCompletion(
+            choices=[
+                {
+                    "content": """{
+                        "foo": "bar",
+                        "hello": "world",
+                        "items": [
+                            "dog", "cat", "human"
+                        ]
+                    }"""
+                }
+            ]
+        ),
+    ) as mock_create:
+        response = await hass.services.async_call(
+            "openai_conversation",
+            "describe_image",
+            service_data,
+            blocking=True,
+            return_response=True,
+        )
+
+    assert response == {
+        "foo": "bar",
+        "hello": "world",
+        "items": ["dog", "cat", "human"],
     }
     assert len(mock_create.mock_calls) == 1
     assert mock_create.mock_calls[0][2] == expected_args

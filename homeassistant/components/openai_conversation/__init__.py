@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import base64
+import json
+
 import openai
 import voluptuous as vol
 
+from homeassistant.components.camera import async_get_image
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import (
@@ -21,9 +25,11 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, LOGGER
+from .const import DEFAULT_IMAGE_DESCRIPTION_PROMPT, DOMAIN, LOGGER
 
 SERVICE_GENERATE_IMAGE = "generate_image"
+SERVICE_DESCRIBE_IMAGE = "describe_image"
+
 PLATFORMS = (Platform.CONVERSATION,)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -65,6 +71,68 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             raise HomeAssistantError(f"Error generating image: {err}") from err
 
         return response.data[0].model_dump(exclude={"b64_json"})
+
+    async def describe_image(call: ServiceCall) -> ServiceResponse:
+        """Describe an image using gpt-4 vision."""
+
+        prompt = DEFAULT_IMAGE_DESCRIPTION_PROMPT
+
+        if "prompt" in call.data:
+            prompt = call.data["prompt"]
+
+        LOGGER.info(f"Using prompt: {prompt}")
+
+        opts = {"timeout": 10}
+
+        if call.data["detail"] == "low":
+            opts["width"] = 512
+            opts["height"] = 512
+
+        img = await async_get_image(hass, call.data["camera"], **opts)
+        b64_bytes = base64.b64encode(img.content).decode("utf-8")
+
+        client = hass.data[DOMAIN][call.data["config_entry"]]
+        response = await client.chat.completions.create(
+            model="gpt-4-turbo",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{b64_bytes}",
+                                "detail": call.data["detail"],
+                            },
+                        },
+                    ],
+                }
+            ],
+            max_tokens=500,
+        )
+
+        try:
+            return json.loads(response.choices[0].message.content)
+        except json.JSONDecodeError:
+            return {"Response": response.choices[0].message.content}
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_DESCRIBE_IMAGE,
+        describe_image,
+        schema=vol.Schema(
+            {
+                vol.Required("config_entry"): selector.ConfigEntrySelector(
+                    {"integration": DOMAIN}
+                ),
+                vol.Required("camera"): selector.EntitySelector({"domain": "camera"}),
+                vol.Optional("prompt"): cv.string,
+                vol.Optional("detail", default="low"): vol.In(("low", "high")),
+            }
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
 
     hass.services.async_register(
         DOMAIN,

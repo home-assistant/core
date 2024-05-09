@@ -34,3 +34,21 @@ CONF_TOP_P = "top_p"
 DEFAULT_TOP_P = 1
 CONF_TEMPERATURE = "temperature"
 DEFAULT_TEMPERATURE = 0.5
+
+
+DEFAULT_IMAGE_DESCRIPTION_PROMPT = """
+Describe what is happening in this image. Do not describe the scenery.
+
+Provide the response in JSON format, according to this example:
+{
+  "summary": "A man walking with a dog towards the door",
+  "description": "A man walking along a path in a front yard is looking at his phone. He is being followed by a black dog",
+  "people": 1,
+}
+
+The field "summary" should be a very brief summary of things happening in this image.
+The field "description" can be more verbose, providing more context of the actions done by creatures in the image.
+The field "people" should describe how many humans are visible in the picture.
+
+Do not provide anything else other than the JSON object.
+"""

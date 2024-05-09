@@ -53,6 +53,29 @@
           "description": "The style of the generated image"
         }
       }
+    },
+    "describe_image": {
+      "name": "Describe image",
+      "description": "Analyze a camera image and ask questions about it",
+      "fields": {
+        "config_entry": {
+          "name": "Config Entry",
+          "description": "The config entry to use for this service"
+        },
+        "camera": {
+          "name": "Camera",
+          "description": "The camera to take an image from"
+        },
+        "prompt": {
+          "name": "Custom Prompt",
+          "description": "Customize the prompt for OpenAI. You can ask OpenAI to return JSON content.",
+          "example": "Count the number of birds"
+        },
+        "detail": {
+          "name": "Detail",
+          "description": "Level of detail to request from OpenAI. High detail will use significantly more tokens."
+        }
+      }
     }
   },
   "issues": {

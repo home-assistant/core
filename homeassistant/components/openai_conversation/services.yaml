@@ -38,3 +38,32 @@ generate_image:
           options:
             - "vivid"
             - "natural"
+
+describe_image:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: openai_conversation
+    camera:
+      required: true
+      selector:
+        entity:
+          domain: camera
+    prompt:
+      required: false
+      example: "Describe what is happening in the picture"
+      default: "Describe what is happening in the picture"
+      selector:
+        text:
+          multiline: true
+    detail:
+      required: true
+      example: "low"
+      default: "low"
+      selector:
+        select:
+          options:
+            - "low"
+            - "high"
