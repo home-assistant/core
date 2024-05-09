@@ -1750,67 +1750,70 @@ async def test_async_convert_audio_error(hass: HomeAssistant) -> None:
         await tts.async_convert_audio(hass, "wav", bytes(0), "mp3")
 
 
-def test_ttsentity_subclass_properties() -> None:
-    """Test for exceptions when subclasses of the TextToSpeechEntity are missing required properties."""
+async def test_ttsentity_subclass_properties(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test for errors when subclasses of the TextToSpeechEntity are missing required properties."""
 
-    class TestClass1(tts.TextToSpeechEntity):
+    class TestClass3(tts.TextToSpeechEntity):
         _attr_default_language = DEFAULT_LANG
+
+    await mock_config_entry_setup(hass, TestClass3())
+
+    assert (
+        "You need to either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
+        in [
+            str(record.exc_info[1])
+            for record in caplog.records
+            if record.exc_info is not None
+        ]
+    )
+    caplog.clear()
+
+    class TestClass4(tts.TextToSpeechEntity):
         _attr_supported_languages = SUPPORT_LANGUAGES
 
-    class TestClass2(tts.TextToSpeechEntity):
+    await mock_config_entry_setup(hass, TestClass4())
+
+    assert (
+        "You need to either set the '_attr_default_language' attribute or override the 'default_language' property"
+        in [
+            str(record.exc_info[1])
+            for record in caplog.records
+            if record.exc_info is not None
+        ]
+    )
+    caplog.clear()
+
+    class TestClass5(tts.TextToSpeechEntity):
         @property
         def default_language(self) -> str:
             return DEFAULT_LANG
 
+    await mock_config_entry_setup(hass, TestClass5())
+
+    assert (
+        "You need to either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
+        in [
+            str(record.exc_info[1])
+            for record in caplog.records
+            if record.exc_info is not None
+        ]
+    )
+    caplog.clear()
+
+    class TestClass6(tts.TextToSpeechEntity):
         @property
         def supported_languages(self) -> list[str]:
             return SUPPORT_LANGUAGES
 
-    assert TestClass1().default_language == DEFAULT_LANG
-    assert TestClass1().supported_languages == SUPPORT_LANGUAGES
-    assert TestClass2().default_language == DEFAULT_LANG
-    assert TestClass2().supported_languages == SUPPORT_LANGUAGES
-
-    with pytest.raises(AttributeError) as exc_info:
-
-        class TestClass3(tts.TextToSpeechEntity):
-            _attr_default_language = DEFAULT_LANG
+    await mock_config_entry_setup(hass, TestClass6())
 
     assert (
-        str(exc_info.value)
-        == "You need to either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
-    )
-
-    with pytest.raises(AttributeError) as exc_info:
-
-        class TestClass4(tts.TextToSpeechEntity):
-            _attr_supported_languages = SUPPORT_LANGUAGES
-
-    assert (
-        str(exc_info.value)
-        == "You need to either set the '_attr_default_language' attribute or override the 'default_language' property"
-    )
-
-    with pytest.raises(AttributeError) as exc_info:
-
-        class TestClass5(tts.TextToSpeechEntity):
-            @property
-            def default_language(self) -> str:
-                return DEFAULT_LANG
-
-    assert (
-        str(exc_info.value)
-        == "You need to either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
-    )
-
-    with pytest.raises(AttributeError) as exc_info:
-
-        class TestClass6(tts.TextToSpeechEntity):
-            @property
-            def supported_languages(self) -> list[str]:
-                return SUPPORT_LANGUAGES
-
-    assert (
-        str(exc_info.value)
-        == "You need to either set the '_attr_default_language' attribute or override the 'default_language' property"
+        "You need to either set the '_attr_default_language' attribute or override the 'default_language' property"
+        in [
+            str(record.exc_info[1])
+            for record in caplog.records
+            if record.exc_info is not None
+        ]
     )

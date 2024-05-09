@@ -372,7 +372,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-class TextToSpeechEntity(RestoreEntity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "default_language",
+    "supported_languages",
+    "supported_options",
+    "default_options",
+}
+
+
+class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Represent a single TTS engine."""
 
     _attr_should_poll = False
@@ -382,24 +390,6 @@ class TextToSpeechEntity(RestoreEntity):
     _attr_supported_languages: list[str]
     _attr_supported_options: list[str] | None = None
     _attr_default_options: Mapping[str, Any] | None = None
-
-    @classmethod
-    def __init_subclass__(cls) -> None:
-        super().__init_subclass__()
-        if not (
-            hasattr(cls, "_attr_default_language")
-            or cls.default_language != TextToSpeechEntity.default_language
-        ):
-            raise AttributeError(
-                "You need to either set the '_attr_default_language' attribute or override the 'default_language' property"
-            )
-        if not (
-            hasattr(cls, "_attr_supported_languages")
-            or cls.supported_languages != TextToSpeechEntity.supported_languages
-        ):
-            raise AttributeError(
-                "You need to either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
-            )
 
     @property
     @final
@@ -437,6 +427,19 @@ class TextToSpeechEntity(RestoreEntity):
     async def async_internal_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
         await super().async_internal_added_to_hass()
+        if not (
+            hasattr(self, "_attr_default_language") or hasattr(self, "default_language")
+        ):
+            raise AttributeError(
+                "You need to either set the '_attr_default_language' attribute or override the 'default_language' property"
+            )
+        if not (
+            hasattr(self, "_attr_supported_languages")
+            or hasattr(self, "supported_languages")
+        ):
+            raise AttributeError(
+                "You need to either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
+            )
         state = await self.async_get_last_state()
         if (
             state is not None
