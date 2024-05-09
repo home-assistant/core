@@ -21,7 +21,6 @@ from aiohttp.typedefs import JSONDecoder, StrOrURL
 from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
 from aiohttp.web_protocol import RequestHandler
 from aiohttp_fast_url_dispatcher import FastUrlDispatcher, attach_fast_url_dispatcher
-from aiohttp_isal import enable_isal
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -54,6 +53,7 @@ from homeassistant.helpers.http import (
     HomeAssistantView,
     current_request,
 )
+from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -69,6 +69,7 @@ from homeassistant.util.json import json_loads
 from .auth import async_setup_auth, async_sign_path
 from .ban import setup_bans
 from .const import (  # noqa: F401
+    DOMAIN,
     KEY_HASS_REFRESH_TOKEN_ID,
     KEY_HASS_USER,
     StrictConnectionMode,
@@ -81,8 +82,6 @@ from .request_context import setup_request_context
 from .security_filter import setup_security_filter
 from .static import CACHE_HEADERS, CachingStaticResource
 from .web_runner import HomeAssistantTCPSite
-
-DOMAIN: Final = "http"
 
 CONF_SERVER_HOST: Final = "server_host"
 CONF_SERVER_PORT: Final = "server_port"
@@ -149,7 +148,7 @@ HTTP_SCHEMA: Final = vol.All(
             vol.Optional(CONF_USE_X_FRAME_OPTIONS, default=True): cv.boolean,
             vol.Optional(
                 CONF_STRICT_CONNECTION, default=StrictConnectionMode.DISABLED
-            ): vol.In([e.value for e in StrictConnectionMode]),
+            ): vol.Coerce(StrictConnectionMode),
         }
     ),
 )
@@ -202,7 +201,9 @@ class ApiConfig:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HTTP API and debug interface."""
-    enable_isal()
+    # Late import to ensure isal is updated before
+    # we import aiohttp_fast_zlib
+    (await async_import_module(hass, "aiohttp_fast_zlib")).enable()
 
     conf: ConfData | None = config.get(DOMAIN)
 
@@ -556,8 +557,7 @@ class HomeAssistantHTTP:
         # However in Home Assistant components can be discovered after boot.
         # This will now raise a RunTimeError.
         # To work around this we now prevent the router from getting frozen
-        # pylint: disable-next=protected-access
-        self.app._router.freeze = lambda: None  # type: ignore[method-assign]
+        self.app._router.freeze = lambda: None  # type: ignore[method-assign]  # noqa: SLF001
 
         self.runner = web.AppRunner(
             self.app, handler_cancellation=True, shutdown_timeout=10
@@ -628,7 +628,9 @@ def _setup_services(hass: HomeAssistant, conf: ConfData) -> None:
             )
 
         try:
-            url = get_url(hass, prefer_external=True, allow_internal=False)
+            url = get_url(
+                hass, prefer_external=True, allow_internal=False, allow_cloud=False
+            )
         except NoURLAvailableError as ex:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,

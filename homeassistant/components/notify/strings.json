@@ -35,6 +35,10 @@
         "message": {
           "name": "Message",
           "description": "Your notification message."
+        },
+        "title": {
+          "name": "Title",
+          "description": "Title for your notification message."
         }
       }
     },
