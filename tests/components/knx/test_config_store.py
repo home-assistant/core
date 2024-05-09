@@ -2,6 +2,8 @@
 
 from typing import Any
 
+import pytest
+
 from homeassistant.components.knx.storage.config_store import (
     STORAGE_KEY as KNX_CONFIG_STORAGE_KEY,
 )
@@ -297,3 +299,73 @@ async def test_delete_entity_error(
     assert not res["success"], res
     assert res["error"]["code"] == "home_assistant_error"
     assert res["error"]["message"].startswith("Entity not found")
+
+
+async def test_get_entity_config(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test entity config retrieval."""
+    await knx.setup_integration({})
+    client = await hass_ws_client(hass)
+
+    test_entity = await _create_test_switch(entity_registry, client)
+
+    await client.send_json_auto_id(
+        {
+            "type": "knx/get_entity_config",
+            "entity_id": test_entity.entity_id,
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["platform"] == Platform.SWITCH
+    assert res["result"]["unique_id"] == test_entity.unique_id
+    assert res["result"]["data"] == {
+        "entity": {
+            "name": "Test no device",
+            "device_info": None,
+            "entity_category": None,
+        },
+        "knx": {
+            "ga_switch": {"write": "1/2/3", "passive": [], "state": None},
+            "respond_to_read": False,
+            "invert": False,
+            "sync_state": True,
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    ("test_entity_id", "error_message_start"),
+    [
+        ("switch.non_existing_entity", "Entity not found"),
+        ("sensor.knx_interface_individual_address", "Entity data not found"),
+    ],
+)
+async def test_get_entity_config_error(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    test_entity_id: str,
+    error_message_start: str,
+) -> None:
+    """Test entity config retrieval errors."""
+    await knx.setup_integration({})
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "knx/get_entity_config",
+            "entity_id": test_entity_id,
+        }
+    )
+    res = await client.receive_json()
+    assert not res["success"], res
+    assert res["error"]["code"] == "home_assistant_error"
+    assert res["error"]["message"].startswith(error_message_start)
