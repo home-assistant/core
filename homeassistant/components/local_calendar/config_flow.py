@@ -56,7 +56,7 @@ class LocalCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         key = slugify(user_input[CONF_CALENDAR_NAME])
         self._async_abort_entries_match({CONF_STORAGE_KEY: key})
         user_input[CONF_STORAGE_KEY] = key
-        if user_input[CONF_IMPORT_ICS]:
+        if user_input.get(CONF_IMPORT_ICS):
             self.data = user_input
             return await self.async_step_import()
         return self.async_create_entry(
