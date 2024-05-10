@@ -58,6 +58,8 @@ build.json @home-assistant/supervisor
 /tests/components/aidot/ @aidotdev2024
 /homeassistant/components/air_quality/ @home-assistant/core
 /tests/components/air_quality/ @home-assistant/core
+/homeassistant/components/airgradient/ @airgradienthq @joostlek
+/tests/components/airgradient/ @airgradienthq @joostlek
 /homeassistant/components/airly/ @bieniu
 /tests/components/airly/ @bieniu
 /homeassistant/components/airnow/ @asymworks
