@@ -17,7 +17,10 @@ from .const import DOMAIN
 from .coordinator import MicroBeesUpdateCoordinator
 from .entity import MicroBeesActuatorEntity
 
-CLIMATE_PRODUCT_IDS = {76: "Thermostat", 78: "Thermovalve"}
+CLIMATE_PRODUCT_IDS = {
+    76,  # Thermostat,
+    78,  # Thermovalve,
+}
 THERMOSTAT_SENSOR_ID = 762
 THERMOVALVE_SENSOR_ID = 782
 
