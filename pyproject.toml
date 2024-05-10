@@ -709,7 +709,6 @@ select = [
     "RUF013", # PEP 484 prohibits implicit Optional
     "RUF018", # Avoid assignment expressions in assert statements
     "RUF019", # Unnecessary key check before dictionary access
-    # "RUF100", # Unused `noqa` directive; temporarily every now and then to clean them up
     "S102", # Use of exec detected
     "S103", # bad-file-permissions
     "S108", # hardcoded-temp-file
@@ -762,6 +761,7 @@ ignore = [
     "RUF002", # Docstring contains ambiguous unicode character.
     "RUF003", # Comment contains ambiguous unicode character.
     "RUF015", # Prefer next(...) over single element slice
+    "RUF100", # Unused `noqa` directive; comment temporarily every now and then to clean them up
     "SIM102", # Use a single if statement instead of nested if statements
     "SIM103", # Return the condition {condition} directly
     "SIM108", # Use ternary operator {contents} instead of if-else-block
