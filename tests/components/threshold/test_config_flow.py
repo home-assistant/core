@@ -168,7 +168,7 @@ async def test_options(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     "user_input",
-    (
+    [
         (
             {
                 "name": "Test Sensor",
@@ -192,7 +192,7 @@ async def test_options(hass: HomeAssistant) -> None:
                 "lower": 20.0,
             }
         ),
-    ),
+    ],
     ids=("success", "missing_upper_lower", "missing_entity_id"),
 )
 async def test_config_flow_preview_success(
