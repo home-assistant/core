@@ -119,7 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # Setup Platforms
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = TeslemetryData(
+    entry.runtime_data.setdefault(DOMAIN, {})[entry.entry_id] = TeslemetryData(
         vehicles, energysites, scopes
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
