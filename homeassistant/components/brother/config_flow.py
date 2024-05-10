@@ -11,6 +11,7 @@ from homeassistant.components import zeroconf
 from homeassistant.components.snmp import async_get_snmp_engine
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TYPE
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.network import is_host_valid
 
@@ -22,6 +23,21 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_TYPE, default="laser"): vol.In(PRINTER_TYPES),
     }
 )
+
+
+async def validate_input(
+    hass: HomeAssistant, user_input: dict[str, Any]
+) -> tuple[str, str]:
+    """Validate the user input."""
+    if not is_host_valid(user_input[CONF_HOST]):
+        raise InvalidHost
+
+    snmp_engine = await async_get_snmp_engine(hass)
+
+    brother = await Brother.create(user_input[CONF_HOST], snmp_engine=snmp_engine)
+    await brother.async_update()
+
+    return (brother.model, brother.serial)
 
 
 class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -43,21 +59,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                if not is_host_valid(user_input[CONF_HOST]):
-                    raise InvalidHost
-
-                snmp_engine = await async_get_snmp_engine(self.hass)
-
-                brother = await Brother.create(
-                    user_input[CONF_HOST], snmp_engine=snmp_engine
-                )
-                await brother.async_update()
-
-                await self.async_set_unique_id(brother.serial.lower())
-                self._abort_if_unique_id_configured()
-
-                title = f"{brother.model} {brother.serial}"
-                return self.async_create_entry(title=title, data=user_input)
+                model, serial = await validate_input(self.hass, user_input)
             except InvalidHost:
                 errors[CONF_HOST] = "wrong_host"
             except (ConnectionError, TimeoutError):
@@ -66,6 +68,12 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "snmp_error"
             except UnsupportedModelError:
                 return self.async_abort(reason="unsupported_model")
+            else:
+                await self.async_set_unique_id(serial.lower())
+                self._abort_if_unique_id_configured()
+
+                title = f"{model} {serial}"
+                return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -152,18 +160,8 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self.entry is not None
 
         if user_input is not None:
-            self.host = user_input[CONF_HOST]
-
             try:
-                if not is_host_valid(user_input[CONF_HOST]):
-                    raise InvalidHost
-
-                snmp_engine = await async_get_snmp_engine(self.hass)
-
-                brother = await Brother.create(
-                    user_input[CONF_HOST], snmp_engine=snmp_engine
-                )
-                await brother.async_update()
+                await validate_input(self.hass, user_input)
             except InvalidHost:
                 errors[CONF_HOST] = "wrong_host"
             except (ConnectionError, TimeoutError):
@@ -176,7 +174,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(
                     self.entry,
                     data={
-                        CONF_HOST: self.host,
+                        CONF_HOST: user_input[CONF_HOST],
                         CONF_TYPE: self.entry.data[CONF_TYPE],
                     },
                 )
