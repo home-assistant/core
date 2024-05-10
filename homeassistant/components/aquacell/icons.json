@@ -1,10 +1,5 @@
 {
   "entity": {
-    "binary_sensor": {
-      "lid_in_place": {
-        "default": "mdi:check"
-      }
-    },
     "sensor": {
       "salt_left_side_percentage": {
         "default": "mdi:basket-fill"

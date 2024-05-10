@@ -19,11 +19,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "lid_in_place": {
-        "name": "Lid in place"
-      }
-    },
     "sensor": {
       "salt_left_side_percentage": {
         "name": "Salt left side percentage"

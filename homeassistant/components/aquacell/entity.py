@@ -24,10 +24,7 @@ class AquacellEntity(CoordinatorEntity[AquacellCoordinator]):
         """Initialize the aquacell entity."""
         super().__init__(coordinator)
 
-        self.softener = softener
-
-        self._attr_translation_key = entity_description.translation_key
-        self._attr_unique_id = f"{self.softener.dsn}-{entity_description.key}"
+        self._attr_unique_id = f"{softener.dsn}-{entity_description.key}"
         self._attr_device_info = DeviceInfo(
             name=softener.name,
             hw_version=softener.fwVersion,

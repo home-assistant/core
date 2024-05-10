@@ -12,7 +12,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import DATA_AQUACELL, DOMAIN
 from .coordinator import AquacellCoordinator
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR]
 
 AquacellConfigEntry = ConfigEntry[AquacellCoordinator]
 

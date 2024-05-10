@@ -87,10 +87,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensors."""
-    for softener in config_entry.runtime_data.data:
+    for idx, _ in enumerate(config_entry.runtime_data.data):
         async_add_entities(
-            SoftenerSensor(config_entry.runtime_data, sensor, softener)
-            for sensor in SENSORS
+            SoftenerSensor(config_entry.runtime_data, sensor, idx) for sensor in SENSORS
         )
 
 
@@ -98,19 +97,26 @@ class SoftenerSensor(AquacellEntity, SensorEntity):
     """Softener sensor."""
 
     entity_description: SoftenerSensorEntityDescription
+    _softener_index: int
 
     def __init__(
         self,
         coordinator: AquacellCoordinator,
         description: SoftenerSensorEntityDescription,
-        softener: Softener,
+        softener_index: int,
     ) -> None:
         """Pass coordinator to CoordinatorEntity."""
-        super().__init__(coordinator, softener, description)
+        super().__init__(coordinator, coordinator.data[softener_index], description)
 
         self.entity_description = description
+        self._softener_index = softener_index
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.softener)
+
+    @property
+    def softener(self) -> Softener:
+        """Handle updated data from the coordinator."""
+        return self.coordinator.data[self._softener_index]
