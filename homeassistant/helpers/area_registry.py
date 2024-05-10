@@ -18,6 +18,7 @@ from .normalized_name_base_registry import (
     normalize_name,
 )
 from .registry import BaseRegistry
+from .singleton import singleton
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
@@ -417,16 +418,16 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
 
 
 @callback
+@singleton(DATA_REGISTRY)
 def async_get(hass: HomeAssistant) -> AreaRegistry:
     """Get area registry."""
-    return hass.data[DATA_REGISTRY]
+    return AreaRegistry(hass)
 
 
 async def async_load(hass: HomeAssistant) -> None:
     """Load area registry."""
     assert DATA_REGISTRY not in hass.data
-    hass.data[DATA_REGISTRY] = AreaRegistry(hass)
-    await hass.data[DATA_REGISTRY].async_load()
+    await async_get(hass).async_load()
 
 
 @callback
