@@ -16,6 +16,29 @@
     }
   },
   "entity": {
+    "button": {
+      "boombox": {
+        "name": "Play fart"
+      },
+      "enable_keyless_driving": {
+        "name": "Keyless driving"
+      },
+      "flash_lights": {
+        "name": "Flash lights"
+      },
+      "homelink": {
+        "name": "Homelink"
+      },
+      "honk": {
+        "name": "Honk horn"
+      },
+      "refresh": {
+        "name": "Force refresh"
+      },
+      "wake": {
+        "name": "Wake"
+      }
+    },
     "climate": {
       "driver_temp": {
         "name": "[%key:component::climate::title%]",
