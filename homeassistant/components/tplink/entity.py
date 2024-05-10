@@ -12,8 +12,7 @@ from kasa import (
     Device,
     DeviceType,
     Feature,
-    SmartDevice,
-    SmartDeviceException,
+    KasaException,
     TimeoutException,
 )
 
@@ -61,7 +60,7 @@ def async_refresh_after(
                     "exc": str(ex),
                 },
             ) from ex
-        except SmartDeviceException as ex:
+        except KasaException as ex:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_error",
@@ -82,14 +81,14 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
 
     def __init__(
         self,
-        device: SmartDevice,
+        device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
-        feature: Feature = None,
-        parent: SmartDevice = None,
+        feature: Feature | None = None,
+        parent: Device | None = None,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self.device: SmartDevice = device
+        self.device: Device = device
         # TODO: clean up this mess.
         # If the entity is based on feature, we use its ID as part of the unique id
         if feature is not None:
@@ -142,7 +141,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         if parent is not None:
             self._attr_device_info["via_device"] = (DOMAIN, parent.device_id)
 
-    def _category_for_feature(self, feature: Feature):
+    def _category_for_feature(self, feature: Feature) -> EntityCategory | None:
         match feature.category:
             case Feature.Category.Primary:  # Main controls have no category
                 return None
@@ -160,7 +159,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
 
     @abstractmethod
     @callback
-    def _async_update_attrs(self):
+    def _async_update_attrs(self) -> None:
         """Implement to update the entity internals."""
         raise NotImplementedError
 
@@ -183,12 +182,12 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
 
 
 def _entities_for_device(
-    device,
+    device: Device,
     *,
     feature_type: Feature.Type,
     entity_class: type[CoordinatedTPLinkEntity],
     coordinator: TPLinkDataUpdateCoordinator,
-    parent: Device = None,
+    parent: Device | None = None,
 ) -> list[CoordinatedTPLinkEntity]:
     """Return a list of entities to add.
 

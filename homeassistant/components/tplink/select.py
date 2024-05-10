@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from kasa import Feature, SmartDevice
+from kasa import Feature, Device
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -45,10 +45,10 @@ class Select(CoordinatedTPLinkEntity, SelectEntity):
 
     def __init__(
         self,
-        device: SmartDevice,
+        device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
         feature: Feature,
-        parent: SmartDevice = None,
+        parent: Device = None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(device, coordinator, feature=feature, parent=parent)

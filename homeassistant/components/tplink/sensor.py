@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import cast
 
-from kasa import Feature, SmartDevice
+from kasa import Feature, Device
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -96,7 +96,7 @@ ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
 
 
 def async_emeter_from_device(
-    device: SmartDevice, description: TPLinkSensorEntityDescription
+    device: Device, description: TPLinkSensorEntityDescription
 ) -> float | None:
     """Map a sensor key to the device attribute."""
     if attr := description.emeter_attr:
@@ -113,9 +113,9 @@ def async_emeter_from_device(
 
 
 def _async_sensors_for_device(
-    device: SmartDevice,
+    device: Device,
     coordinator: TPLinkDataUpdateCoordinator,
-    parent: SmartDevice = None,
+    parent: Device | None = None,
 ) -> list[SmartPlugSensor]:
     """Generate the sensors for the device."""
     sensors = []
@@ -183,10 +183,10 @@ class Sensor(CoordinatedTPLinkEntity, SensorEntity):
 
     def __init__(
         self,
-        device: SmartDevice,
+        device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
         feature: Feature,
-        parent: SmartDevice = None,
+        parent: Device | None = None,
     ):
         """Initialize the sensor."""
         super().__init__(device, coordinator, feature=feature, parent=parent)
@@ -215,10 +215,10 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
 
     def __init__(
         self,
-        device: SmartDevice,
+        device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
         description: TPLinkSensorEntityDescription,
-        parent: SmartDevice = None,
+        parent: Device = None,
     ) -> None:
         """Initialize the switch."""
         self.entity_description = description

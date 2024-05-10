@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import cast
 
-from kasa import Feature, SmartDevice, SmartPlug
+from kasa import Feature, Device, SmartPlug
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -33,7 +33,7 @@ async def async_setup_entry(
     """Set up number entities."""
     data: TPLinkData = hass.data[DOMAIN][config_entry.entry_id]
     parent_coordinator = data.parent_coordinator
-    device = cast(SmartPlug, parent_coordinator.device)
+    device = parent_coordinator.device
 
     entities = _entities_for_device_and_its_children(
         device,
@@ -50,10 +50,10 @@ class Number(CoordinatedTPLinkEntity, NumberEntity):
 
     def __init__(
         self,
-        device: SmartDevice,
+        device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
         feature: Feature,
-        parent: SmartDevice = None,
+        parent: Device | None = None,
     ):
         """Initialize the number entity."""
         super().__init__(device, coordinator, feature=feature, parent=parent)

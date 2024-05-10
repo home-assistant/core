@@ -53,12 +53,13 @@ class Switch(CoordinatedTPLinkEntity, SwitchEntity):
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
         feature: Feature,
-        parent: Device = None,
+        parent: Device | None = None,
     ):
         """Initialize the switch."""
         super().__init__(device, coordinator, feature=feature, parent=parent)
         # TODO: generalize creation of entitydescription into CoordinatedTPLinkEntity?
         # Use the device name for the primary switch control
+        self._feature = cast(Feature, self._feature)
         if feature.category is Feature.Category.Primary:
             self._attr_name = None
 

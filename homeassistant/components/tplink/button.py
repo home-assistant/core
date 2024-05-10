@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from kasa import Feature, SmartDevice
+from kasa import Feature, Device
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -44,10 +44,10 @@ class Button(CoordinatedTPLinkEntity, ButtonEntity):
 
     def __init__(
         self,
-        device: SmartDevice,
+        device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
         feature: Feature,
-        parent: SmartDevice = None,
+        parent: Device | None = None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(device, coordinator, feature=feature, parent=parent)
