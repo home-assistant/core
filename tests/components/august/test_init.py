@@ -163,7 +163,9 @@ async def test_lock_throws_august_api_http_error(hass: HomeAssistant) -> None:
     )
 
 
-async def test_open_throws_hass_service_not_supported_error(hass: HomeAssistant) -> None:
+async def test_open_throws_hass_service_not_supported_error(
+    hass: HomeAssistant,
+) -> None:
     """Test open throws correct error on entity does not support this service error."""
     mocked_lock_detail = await _mock_operative_august_lock_detail(hass)
     await _create_august_with_devices(hass, [mocked_lock_detail])
