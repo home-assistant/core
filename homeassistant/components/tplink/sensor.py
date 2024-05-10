@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import cast
 
-from kasa import SmartDevice
+from kasa import Device
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -92,7 +92,7 @@ ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
 
 
 def async_emeter_from_device(
-    device: SmartDevice, description: TPLinkSensorEntityDescription
+    device: Device, description: TPLinkSensorEntityDescription
 ) -> float | None:
     """Map a sensor key to the device attribute."""
     if attr := description.emeter_attr:
@@ -109,7 +109,7 @@ def async_emeter_from_device(
 
 
 def _async_sensors_for_device(
-    device: SmartDevice,
+    device: Device,
     coordinator: TPLinkDataUpdateCoordinator,
     has_parent: bool = False,
 ) -> list[SmartPlugSensor]:
@@ -154,7 +154,7 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
 
     def __init__(
         self,
-        device: SmartDevice,
+        device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
         description: TPLinkSensorEntityDescription,
         has_parent: bool = False,
