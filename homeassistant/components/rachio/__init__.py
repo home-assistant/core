@@ -23,7 +23,7 @@ from .webhooks import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.CALENDAR, Platform.SWITCH]
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
@@ -96,7 +96,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     for base in person.base_stations:
-        await base.coordinator.async_config_entry_first_refresh()
+        await base.status_coordinator.async_config_entry_first_refresh()
+        await base.schedule_coordinator.async_config_entry_first_refresh()
 
     # Enable platform
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = person

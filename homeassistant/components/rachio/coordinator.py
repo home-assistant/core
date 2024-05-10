@@ -1,6 +1,6 @@
 """Coordinator object for the Rachio integration."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 
@@ -10,10 +10,22 @@ from requests.exceptions import Timeout
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, KEY_ID, KEY_VALVES
+from .const import (
+    DOMAIN,
+    KEY_DAY_VIEWS,
+    KEY_ID,
+    KEY_PROGRAM_RUN_SUMMARIES,
+    KEY_START_TIME,
+    KEY_VALVES,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+DAY = "day"
+MONTH = "month"
+YEAR = "year"
 
 UPDATE_DELAY_TIME = 8
 
@@ -54,3 +66,55 @@ class RachioUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except Timeout as err:
             raise UpdateFailed(f"Could not connect to the Rachio API: {err}") from err
         return {valve[KEY_ID]: valve for valve in data[1][KEY_VALVES]}
+
+
+class RachioScheduleUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
+    """Coordinator for fetching hose timer schedules."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        rachio: Rachio,
+        base_station,
+    ) -> None:
+        """Initialize a Rachio schedule coordinator."""
+        self.hass = hass
+        self.rachio = rachio
+        self.base_station = base_station
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN} schedule update coordinator",
+            update_interval=timedelta(minutes=30),
+        )
+
+    async def _async_update_data(self) -> Any:
+        """Add data for the past week and the next 60 days."""
+        _time_start: datetime = dt_util.now() - timedelta(days=0)
+        _time_end: datetime = dt_util.now() + timedelta(days=0)
+        start: dict[str, int] = {
+            YEAR: _time_start.year,
+            MONTH: _time_start.month,
+            DAY: _time_start.day,
+        }
+        end: dict[str, int] = {
+            YEAR: _time_end.year,
+            MONTH: _time_end.month,
+            DAY: _time_end.day,
+        }
+
+        try:
+            schedule = await self.hass.async_add_executor_job(
+                self.rachio.summary.get_valve_day_views,
+                self.base_station[KEY_ID],
+                start,
+                end,
+            )
+        except Timeout as err:
+            raise UpdateFailed(f"Could not connect to the Rachio API: {err}") from err
+        events: list = []
+        # Flatten and sort dates
+        for event in schedule[1][KEY_DAY_VIEWS]:
+            events.extend(event[KEY_PROGRAM_RUN_SUMMARIES])
+        events.sort(key=lambda event: event[KEY_START_TIME])
+        return events
