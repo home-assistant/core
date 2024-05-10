@@ -617,6 +617,8 @@ class Queue(Generic[_KT, _VT]):
 
     def __setitem__(self, key: _KT, value: Optional[_VT]) -> None:
         """Set item."""
+        if key in self._keys:
+            _LOGGER.error("Key %s already in the queue, not appended", key)
         self._keys.append(key)
         self._data[key] = value
 

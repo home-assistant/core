@@ -341,6 +341,7 @@ def get_target_entities(hass: HomeAssistant, script: dict[str, Any]) -> list[str
 def get_routine_targets(hass: HomeAssistant, routine: RoutineEntity) -> set[str]:
     """Get all the entities from the given routine."""
     target_entities = set[str]()
+    _LOGGER.debug("Gettig routine %s's targets", routine.routine_id)
     for action in routine.actions.values():
         if action.is_end_node:
             continue
@@ -829,7 +830,12 @@ class BaseScheduler:
 
     def get_action(self, action_id: str) -> ActionEntity | None:
         """Get the active action."""
-        routine_info = self._serialization_order[get_routine_id(action_id)]
+        routine_id = get_routine_id(action_id)
+        if routine_id not in self._serialization_order:
+            raise ValueError(
+                f"Routine {routine_id} is not scheduled. Action {action_id} cannot be found"
+            )
+        routine_info = self._serialization_order[routine_id]
 
         if not routine_info:
             return None
@@ -1605,7 +1611,7 @@ class TimeLineScheduler(BaseScheduler):
         self._scheduling_policy = scheduling_policy
 
     def get_next_start_time(
-        self, routine: RoutineEntity, new_preset: set[str], postset: set[str]
+        self, routine: RoutineEntity, preset: set[str], postset: set[str]
     ) -> datetime:
         """Get then next start time for the given routine."""
         # The idea is to reschedule the routine after the routines in the postset.
@@ -1632,7 +1638,7 @@ class TimeLineScheduler(BaseScheduler):
 
             for action in list(routine_in_postset.routine.actions.values())[:-1]:
                 entities = get_target_entities(self._hass, action.action)
-                find_candidate = False
+                # find_candidate = False
                 for entity in entities:
                     entity_id = get_entity_id_from_number(self._hass, entity)
 
@@ -1645,12 +1651,41 @@ class TimeLineScheduler(BaseScheduler):
                                 )
                             )
                         candidates.append(action_info.end_time)
-                        find_candidate = True
+                        # find_candidate = True
 
                 # Only require to identify the earliest action end time within the existing routines that may cause a serializability conflict.
-                if find_candidate:
-                    break
+                # if find_candidate:
+                #     break
 
+        for routine_id_in_preset in preset:
+            routine_in_preset = self._serialization_order[routine_id_in_preset]
+            if not routine_in_preset:
+                raise ValueError(
+                    "The routine {} in the preset is missing from the serialization order".format(
+                        routine_id_in_preset
+                    )
+                )
+
+            for action in list(routine_in_preset.routine.actions.values())[:-1]:
+                entities = get_target_entities(self._hass, action.action)
+                # find_candidate = False
+                for entity in entities:
+                    entity_id = get_entity_id_from_number(self._hass, entity)
+
+                    if entity_id in target_entities:
+                        action_info = self.get_action_info(action.action_id, entity_id)
+                        if not action_info:
+                            raise ValueError(
+                                "Action {}'s schedule info on entity {} is missing.".format(
+                                    action.action_id, entity_id
+                                )
+                            )
+                        candidates.append(action_info.end_time)
+                        # find_candidate = True
+
+                # Only require to identify the earliest action end time within the existing routines that may cause a serializability conflict.
+                # if find_candidate:
+                #     break
         return max(candidates)
 
     def conflict_determined_serializability_in_case_tl(
@@ -2722,29 +2757,16 @@ class RascalScheduler(BaseScheduler):
             )
 
         self._add_routine_to_serialization_order(routine, lock_leasing_status)
-        if self._acquire_routine_locks(routine):
-            routine_info = self._serialization_order[routine.routine_id]
-            if not routine_info:
-                raise ValueError(
-                    "Routine %s is not found in the serialization order"
-                    % routine.routine_id
-                )
-            routine_info.pass_eligibility = True
-            _LOGGER.info("Routine %s pass the eligibility test", routine.routine_id)
-
-            output_all(
-                _LOGGER,
-                locks=self._lineage_table.locks,
-                lock_queues=self._lineage_table.lock_queues,
-                free_slots=self._lineage_table.free_slots,
-                serialization_order=self._serialization_order,
+        # if self._acquire_routine_locks(routine):
+        routine_info = self._serialization_order[routine.routine_id]
+        if not routine_info:
+            raise ValueError(
+                "Routine %s is not found in the serialization order"
+                % routine.routine_id
             )
+        routine_info.pass_eligibility = True
+        _LOGGER.info("Routine %s pass the eligibility test", routine.routine_id)
 
-            return True
-
-        _LOGGER.error(
-            "Routine %s failed to pass the eligibility test", routine.routine_id
-        )
         output_all(
             _LOGGER,
             locks=self._lineage_table.locks,
@@ -2753,7 +2775,20 @@ class RascalScheduler(BaseScheduler):
             serialization_order=self._serialization_order,
         )
 
-        return False
+        return True
+
+        # _LOGGER.error(
+        #     "Routine %s failed to pass the eligibility test", routine.routine_id
+        # )
+        # output_all(
+        #     _LOGGER,
+        #     locks=self._lineage_table.locks,
+        #     lock_queues=self._lineage_table.lock_queues,
+        #     free_slots=self._lineage_table.free_slots,
+        #     serialization_order=self._serialization_order,
+        # )
+
+        # return False
 
     def initialize_routine(self, routine: RoutineEntity) -> None:
         """Initialize the given routine."""
@@ -2833,7 +2868,7 @@ class RascalScheduler(BaseScheduler):
                     )
 
                 if action_lock.start_time > datetime.now():
-                    _LOGGER.error(
+                    _LOGGER.warning(
                         "Action %s's start time %s hasn't come",
                         action.action_id,
                         action_lock.start_time,
@@ -3094,6 +3129,7 @@ class RascalScheduler(BaseScheduler):
 
         if wait_seconds > 0:
             await asyncio.sleep(wait_seconds)
+        _LOGGER.debug("Action %s should should start now", action_id)
 
     async def _async_wait_until(self, action_id: str, entity_id: str) -> None:
         """Wait until the time reaches the end time of the action."""

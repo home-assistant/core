@@ -2489,10 +2489,12 @@ class RascalRescheduler:
             """Check if the action is about to go on overtime and adjust the schedule."""
             if entity_id not in self._timer_handles:
                 raise ValueError("Timer handle for entity %s is missing." % entity_id)
-            saved_action_id = self._timer_handles[entity_id][0]
+            saved_action_id, saved_cancel = self._timer_handles[entity_id]
             if saved_action_id != action_id:
                 raise ValueError(
-                    "Action ID mismatch for entity %s in the timer handle." % entity_id
+                    "Action ID mismatch for entity {} in the timer handle. saved: {}, new: {}".format(
+                        entity_id, saved_action_id, action_id
+                    )
                 )
             self._timer_handles[entity_id] = None, None
 
@@ -2501,7 +2503,9 @@ class RascalRescheduler:
                 extra = _get_extra_anticipatory()
             elif self._resched_trigger in (PROACTIVE):
                 extra = _get_extra_proactive()
-            if extra == 0:
+            if extra <= 0:
+                if saved_cancel:
+                    saved_cancel()
                 return
             timer_delay = timedelta(seconds=extra * 0.95)
             self._setup_overtime_check(event, timer_delay)
@@ -2521,6 +2525,7 @@ class RascalRescheduler:
             if (not action_id or saved_action_id == action_id) and saved_cancel:
                 saved_cancel()
                 self._timer_handles[entity_id] = None, None
+        LOGGER.debug("Canceled overtime check for %s-%s", entity_id, action_id)
 
     def _action_length_diff(self, event: Event) -> timedelta:
         """Calculate the difference in action length."""
@@ -2555,19 +2560,20 @@ class RascalRescheduler:
 
     async def _handle_undertime(self, event: Event) -> None:
         diff = self._action_length_diff(event)
-        if diff.total_seconds() >= -MIN_RESCHEDULE_TIME:
-            return
         entity_id: Optional[str] = event.data.get(ATTR_ENTITY_ID)
         action_id: Optional[str] = event.data.get(ATTR_ACTION_ID)
         if not entity_id or not action_id:
             raise ValueError("Entity ID or action ID is missing in the event.")
+        self._cancel_overtime_check(event)
+        if diff.total_seconds() >= -MIN_RESCHEDULE_TIME:
+            return
+
         LOGGER.info(
             "Handling %s's undertime on entity %s, diff: %s",
             action_id,
             entity_id,
             diff.total_seconds(),
         )
-        self._cancel_overtime_check(event)
         await self._reschedule(entity_id, action_id, diff)
 
     async def handle_event(self, event: Event) -> None:

@@ -246,7 +246,7 @@ class RASCAbstraction:
                     failed_actions.append(entity_id)
                 else:
                     successful_actions.append(entity_id)
-                del self._states[entity_id]
+                # del self._states[entity_id]
             message = {
                 "action": service_call.service,
                 "successful": successful_actions,
