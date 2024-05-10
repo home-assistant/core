@@ -5,7 +5,11 @@ import http
 import time
 from unittest.mock import AsyncMock
 
-from aioautomower.exceptions import ApiException, HusqvarnaWSServerHandshakeError
+from aioautomower.exceptions import (
+    ApiException,
+    AuthException,
+    HusqvarnaWSServerHandshakeError,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -75,19 +79,25 @@ async def test_expired_token_refresh_failure(
     assert mock_config_entry.state is expected_state
 
 
+@pytest.mark.parametrize(
+    ("exception", "entry_state"),
+    [
+        (ApiException, ConfigEntryState.SETUP_RETRY),
+        (AuthException, ConfigEntryState.SETUP_ERROR),
+    ],
+)
 async def test_update_failed(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    entry_state: ConfigEntryState,
 ) -> None:
-    """Test load and unload entry."""
-    getattr(mock_automower_client, "get_status").side_effect = ApiException(
-        "Test error"
-    )
+    """Test update failed."""
+    mock_automower_client.get_status.side_effect = exception("Test error")
     await setup_integration(hass, mock_config_entry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state is entry_state
 
 
 async def test_websocket_not_available(
