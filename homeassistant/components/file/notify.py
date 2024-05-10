@@ -25,7 +25,6 @@ from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
 from .const import CONF_TIMESTAMP, DOMAIN, FILE_ICON
@@ -107,7 +106,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up notify entity."""
     config: dict[str, Any] = dict(entry.data)
-    async_add_entities([FileNotifyEntity(config)])
+    unique_id = entry.entry_id
+    async_add_entities([FileNotifyEntity(unique_id, config)])
 
 
 class FileNotifyEntity(NotifyEntity):
@@ -116,12 +116,13 @@ class FileNotifyEntity(NotifyEntity):
     _attr_icon = FILE_ICON
     _attr_supported_features = NotifyEntityFeature.TITLE
 
-    def __init__(self, config: dict[str, Any]) -> None:
+    def __init__(self, unique_id: str, config: dict[str, Any]) -> None:
         """Initialize the service."""
         self._file_path: str = config[CONF_FILE_PATH]
         self._add_timestamp: bool = config.get(CONF_TIMESTAMP, False)
-        self._attr_name = config[CONF_NAME]
-        self._attr_unique_id = slugify(f"{config[CONF_NAME]}_{config[CONF_FILE_PATH]}")
+        # Only import a name from an imported entity
+        self._attr_name = config.get(CONF_NAME)
+        self._attr_unique_id = unique_id
 
     def send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to a file."""

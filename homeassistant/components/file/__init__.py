@@ -2,7 +2,7 @@
 
 from homeassistant.components.notify import migrate_notify_issue
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_FILE_PATH, CONF_PLATFORM, Platform
+from homeassistant.const import CONF_FILE_PATH, CONF_NAME, CONF_PLATFORM, Platform
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -81,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(
         entry, [Platform(entry.data[CONF_PLATFORM])]
     )
-    if entry.data[CONF_PLATFORM] == Platform.NOTIFY:
+    if entry.data[CONF_PLATFORM] == Platform.NOTIFY and CONF_NAME in entry.data:
         # The notify platform is not yet set up as entry, so
         # forward setup config through discovery to ensure setup notify service.
         # This is needed as long as the legacy service is not migrated

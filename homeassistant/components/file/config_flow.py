@@ -42,7 +42,6 @@ FILE_SENSOR_SCHEMA = vol.Schema(
 
 FILE_NOTIFY_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): TEXT_SELECTOR,
         vol.Required(CONF_FILE_PATH): TEXT_SELECTOR,
         vol.Optional(CONF_TIMESTAMP, default=False): BOOLEAN_SELECTOR,
     }
