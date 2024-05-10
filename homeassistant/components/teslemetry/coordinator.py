@@ -111,3 +111,32 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         }
 
         return data
+
+
+class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Class to manage fetching energy site info from the Teslemetry API."""
+
+    def __init__(self, hass: HomeAssistant, api: EnergySpecific, product: dict) -> None:
+        """Initialize Teslemetry Energy Info coordinator."""
+        super().__init__(
+            hass,
+            LOGGER,
+            name="Teslemetry Energy Site Info",
+            update_interval=ENERGY_INFO_INTERVAL,
+        )
+        self.api = api
+        self.data = product
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Update energy site data using Teslemetry API."""
+
+        try:
+            data = (await self.api.site_info())["response"]
+        except InvalidToken as e:
+            raise ConfigEntryAuthFailed from e
+        except SubscriptionRequired as e:
+            raise ConfigEntryAuthFailed from e
+        except TeslaFleetError as e:
+            raise UpdateFailed(e.message) from e
+
+        return flatten(data)
