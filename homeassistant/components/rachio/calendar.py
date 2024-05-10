@@ -110,13 +110,13 @@ class RachioCalendarEntity(
                     and KEY_SKIP not in run[KEY_RUN_SUMMARIES][0]
                 ):
                     event = CalendarEvent(
-                        summary=run[KEY_RUN_SUMMARIES][0][KEY_VALVE_NAME],
+                        summary=run[KEY_PROGRAM_NAME],
                         start=start_time,
                         end=start_time
                         + timedelta(
                             seconds=int(run[KEY_RUN_SUMMARIES][0][KEY_DURATION_SECONDS])
                         ),
-                        description=run[KEY_PROGRAM_NAME],
+                        description=run[KEY_RUN_SUMMARIES][0][KEY_VALVE_NAME],
                         location=self.location,
                         uid=f"{run[KEY_PROGRAM_ID]}/{run[KEY_START_TIME]}",
                     )
