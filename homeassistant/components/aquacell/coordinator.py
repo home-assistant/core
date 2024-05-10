@@ -25,9 +25,9 @@ _LOGGER = logging.getLogger(__name__)
 class AquacellCoordinator(DataUpdateCoordinator[list[Softener]]):
     """My aquacell coordinator."""
 
-    def __init__(
-        self, hass: HomeAssistant, aquacell_api: AquacellApi, entry: ConfigEntry
-    ) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(self, hass: HomeAssistant, aquacell_api: AquacellApi) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
@@ -36,10 +36,9 @@ class AquacellCoordinator(DataUpdateCoordinator[list[Softener]]):
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
 
-        self.config_entry: ConfigEntry = entry
-        self.refresh_token = entry.data[CONF_REFRESH_TOKEN]
-        self.email = entry.data[CONF_EMAIL]
-        self.password = entry.data[CONF_PASSWORD]
+        self.refresh_token = self.config_entry.data[CONF_REFRESH_TOKEN]
+        self.email = self.config_entry.data[CONF_EMAIL]
+        self.password = self.config_entry.data[CONF_PASSWORD]
         self.aquacell_api = aquacell_api
 
     async def _async_update_data(self) -> list[Softener]:

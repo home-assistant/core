@@ -3,6 +3,7 @@
 from aioaquacell import Softener
 
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -13,18 +14,25 @@ class AquacellEntity(CoordinatorEntity[AquacellCoordinator]):
     """Representation of an aquacell entity."""
 
     _attr_has_entity_name = True
-    _attr_available = True
 
-    def __init__(self, softener: Softener, coordinator: AquacellCoordinator) -> None:
+    def __init__(
+        self,
+        coordinator: AquacellCoordinator,
+        softener: Softener,
+        entity_description: EntityDescription,
+    ) -> None:
         """Initialize the aquacell entity."""
         super().__init__(coordinator)
 
-        self._device_model = softener.dsn
-        self._device_name = softener.name
+        self.softener = softener
 
+        self._attr_translation_key = entity_description.translation_key
+        self._attr_unique_id = f"{self.softener.dsn}-{entity_description.key}"
         self._attr_device_info = DeviceInfo(
-            name=self._device_name,
-            identifiers={(DOMAIN, str(softener.ssn))},
+            name=softener.name,
+            hw_version=softener.fwVersion,
+            identifiers={(DOMAIN, str(softener.dsn))},
             manufacturer=softener.brand,
-            model=self._device_model,
+            model=softener.ssn,
+            serial_number=softener.dsn,
         )

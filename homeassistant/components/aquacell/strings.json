@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Fill in your Aquacell cloud credentials",
+        "description": "Fill in your Aquacell mobile app credentials",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -27,36 +27,31 @@
     }
   },
   "entity": {
-    "sensor": {
-      "salt_leftpercentage": {
-        "name": "Salt left percentage"
-      },
-      "salt_rightpercentage": {
-        "name": "Salt right percentage"
-      },
-      "salt_leftdays": {
-        "name": "Salt left days until empty"
-      },
-      "salt_rightdays": {
-        "name": "Salt right days until empty"
-      },
-      "fw_version": {
-        "name": "Firmware version"
-      },
-      "name": {
-        "name": "Name"
-      },
-      "battery": {
-        "name": "Battery percentage"
-      },
-      "last_update": {
-        "name": "Last update"
-      },
-      "wifi_level": {
-        "name": "WiFi level"
-      },
+    "binary_sensor": {
       "lid_in_place": {
         "name": "Lid in place"
+      }
+    },
+    "sensor": {
+      "salt_left_side_percentage": {
+        "name": "Salt left side percentage"
+      },
+      "salt_right_side_percentage": {
+        "name": "Salt right side percentage"
+      },
+      "salt_left_side_remaining_days": {
+        "name": "Salt left side days remaining"
+      },
+      "salt_right_side_remaining_days": {
+        "name": "Salt right side days remaining"
+      },
+      "wifi_level": {
+        "name": "WiFi level",
+        "state": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
       }
     }
   }

@@ -3,12 +3,10 @@
   "name": "Aquacell",
   "codeowners": ["@Jordi1990"],
   "config_flow": true,
-  "dependencies": [],
+  "dependencies": ["http", "network"],
   "documentation": "https://www.home-assistant.io/integrations/aquacell",
-  "homekit": {},
   "integration_type": "device",
   "iot_class": "cloud_polling",
-  "requirements": ["aioaquacell==0.1.4"],
-  "ssdp": [],
-  "zeroconf": []
+  "loggers": ["aioaquacell"],
+  "requirements": ["aioaquacell==0.1.5"]
 }

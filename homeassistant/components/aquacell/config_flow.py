@@ -8,8 +8,7 @@ from typing import Any
 from aioaquacell import ApiException, AquacellApi, AuthenticationFailed
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -49,7 +48,7 @@ async def validate_input(
     }
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AquaCellConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Aquacell."""
 
     VERSION = 1
@@ -85,40 +84,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=DATA_SCHEMA,
             errors=errors,
-        )
-
-    async def async_step_reauth(self, user_input=None):
-        """Perform reauth upon an API authentication error."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(self, user_input=None):
-        """Dialog that informs the user that reauth is required."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            try:
-                info = await validate_input(
-                    self.hass, user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
-                )
-                entry = await self.async_set_unique_id(
-                    user_input[CONF_EMAIL].lower(), raise_on_progress=False
-                )
-                if entry:
-                    self.hass.config_entries.async_update_entry(entry, data=info)
-                    await self.hass.config_entries.async_reload(entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
-
-                return self.async_create_entry(title=user_input[CONF_EMAIL], data=info)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-
-        return self.async_show_form(
-            step_id="reauth_confirm", data_schema=DATA_SCHEMA, errors=errors
         )
 
 
