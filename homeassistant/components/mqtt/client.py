@@ -921,7 +921,7 @@ class MQTT:
 
         self.connected = True
         async_dispatcher_send(self.hass, MQTT_CONNECTED)
-        _LOGGER.info(
+        _LOGGER.debug(
             "Connected to MQTT server %s:%s (%s)",
             self.conf[CONF_BROKER],
             self.conf.get(CONF_PORT, DEFAULT_PORT),
