@@ -59,6 +59,14 @@ def async_migrate_entity_entry(entry: er.RegistryEntry) -> dict[str, Any] | None
                 "-slave_boiler_state", "-secondary_boiler_state"
             )
         }
+    if entry.domain == Platform.SENSOR and entry.unique_id.endswith(
+        "-relative_humidity"
+    ):
+        return {
+            "new_unique_id": entry.unique_id.replace(
+                "-relative_humidity", "-humidity"
+            )
+        }
     if entry.domain == Platform.SWITCH and entry.unique_id.endswith("-plug"):
         return {"new_unique_id": entry.unique_id.replace("-plug", "-relay")}
 
