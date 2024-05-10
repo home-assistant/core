@@ -1,5 +1,7 @@
 """Support for MotionMount sensors."""
 
+from typing import TYPE_CHECKING
+
 import motionmount
 
 from homeassistant.config_entries import ConfigEntry
@@ -50,7 +52,7 @@ class MotionMountEntity(Entity):
     def update_name(self) -> None:
         """Update the name of the associated device."""
         if TYPE_CHECKING:
-            assert self.device_entry 
+            assert self.device_entry
         # Update the name in the device registry if needed
         if self.device_entry.name != self.mm.name:
             device_registry = dr.async_get(self.hass)
