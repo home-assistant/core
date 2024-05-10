@@ -7,16 +7,16 @@
     'calendar': dict({
       'events': list([
         dict({
-          'end': '2024-05-07T00:00:00+00:00',
+          'end': '2024-03-02T00:00:00+00:00',
           'rrule': 'FREQ=WEEKLY;BYDAY=MO,WE,FR',
-          'start': '2024-05-06T19:00:00+00:00',
+          'start': '2024-03-01T19:00:00+00:00',
           'uid': '1140_300_MO,WE,FR',
           'work_area_id': None,
         }),
         dict({
-          'end': '2024-05-07T08:00:00+00:00',
+          'end': '2024-03-02T08:00:00+00:00',
           'rrule': 'FREQ=WEEKLY;BYDAY=TU,TH,SA',
-          'start': '2024-05-07T00:00:00+00:00',
+          'start': '2024-03-02T00:00:00+00:00',
           'uid': '0_480_TU,TH,SA',
           'work_area_id': None,
         }),

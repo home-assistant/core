@@ -311,7 +311,7 @@ class PassiveBluetoothProcessorCoordinator(
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return super().available and self.last_update_success
+        return self._available and self.last_update_success
 
     @callback
     def async_get_restore_data(
@@ -373,7 +373,7 @@ class PassiveBluetoothProcessorCoordinator(
 
         try:
             update = self._update_method(service_info)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             self.last_update_success = False
             self.logger.exception("Unexpected error updating %s data", self.name)
             return
@@ -583,7 +583,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
         """Handle a Bluetooth event."""
         try:
             new_data = self.update_method(update)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             self.last_update_success = False
             self.coordinator.logger.exception(
                 "Unexpected error updating %s data", self.coordinator.name
