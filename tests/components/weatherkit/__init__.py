@@ -1,4 +1,5 @@
 """Tests for the Apple WeatherKit integration."""
+
 from unittest.mock import patch
 
 from apple_weatherkit import DataSetType
@@ -57,12 +58,15 @@ async def init_integration(
     else:
         available_data_sets.append(DataSetType.HOURLY_FORECAST)
 
-    with patch(
-        "homeassistant.components.weatherkit.WeatherKitApiClient.get_weather_data",
-        return_value=weather_response,
-    ), patch(
-        "homeassistant.components.weatherkit.WeatherKitApiClient.get_availability",
-        return_value=available_data_sets,
+    with (
+        patch(
+            "homeassistant.components.weatherkit.WeatherKitApiClient.get_weather_data",
+            return_value=weather_response,
+        ),
+        patch(
+            "homeassistant.components.weatherkit.WeatherKitApiClient.get_availability",
+            return_value=available_data_sets,
+        ),
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)

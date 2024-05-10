@@ -1,4 +1,5 @@
 """Support for Wireless Sensor Tags."""
+
 import logging
 
 from requests.exceptions import ConnectTimeout, HTTPError

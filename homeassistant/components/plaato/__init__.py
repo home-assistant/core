@@ -1,4 +1,5 @@
 """Support for Plaato devices."""
+
 from datetime import timedelta
 import logging
 
@@ -233,8 +234,7 @@ class PlaatoCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-
 
     async def _async_update_data(self):
         """Update data via library."""
-        data = await self.api.get_data(
+        return await self.api.get_data(
             session=aiohttp_client.async_get_clientsession(self.hass),
             device_type=self.device_type,
         )
-        return data

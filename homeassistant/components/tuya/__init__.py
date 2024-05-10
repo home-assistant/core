@@ -1,4 +1,5 @@
 """Support for Tuya Smart devices."""
+
 from __future__ import annotations
 
 import logging
@@ -59,12 +60,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     listener = DeviceListener(hass, manager)
     manager.add_device_listener(listener)
+
+    # Get all devices from Tuya
+    try:
+        await hass.async_add_executor_job(manager.update_device_cache)
+    except Exception as exc:
+        # While in general, we should avoid catching broad exceptions,
+        # we have no other way of detecting this case.
+        if "sign invalid" in str(exc):
+            msg = "Authentication failed. Please re-authenticate"
+            raise ConfigEntryAuthFailed(msg) from exc
+        raise
+
+    # Connection is successful, store the manager & listener
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantTuyaData(
         manager=manager, listener=listener
     )
 
-    # Get devices & clean up device entities
-    await hass.async_add_executor_job(manager.update_device_cache)
+    # Cleanup device registry
     await cleanup_device_registry(hass, manager)
 
     # Register known device IDs
@@ -102,9 +115,23 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if tuya.manager.mq is not None:
             tuya.manager.mq.stop()
         tuya.manager.remove_device_listener(tuya.listener)
-        await hass.async_add_executor_job(tuya.manager.unload)
         del hass.data[DOMAIN][entry.entry_id]
     return unload_ok
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove a config entry.
+
+    This will revoke the credentials from Tuya.
+    """
+    manager = Manager(
+        TUYA_CLIENT_ID,
+        entry.data[CONF_USER_CODE],
+        entry.data[CONF_TERMINAL_ID],
+        entry.data[CONF_ENDPOINT],
+        entry.data[CONF_TOKEN_INFO],
+    )
+    await hass.async_add_executor_job(manager.unload)
 
 
 class DeviceListener(SharingDeviceListener):

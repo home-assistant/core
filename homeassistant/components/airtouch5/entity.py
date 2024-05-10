@@ -1,4 +1,5 @@
 """Base class for Airtouch5 entities."""
+
 from airtouch5py.airtouch5_client import Airtouch5ConnectionStateChange
 from airtouch5py.airtouch5_simple_client import Airtouch5SimpleClient
 

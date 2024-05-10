@@ -1,7 +1,8 @@
 """Test the Fully Kiosk Browser buttons."""
+
 from unittest.mock import MagicMock
 
-import homeassistant.components.button as button
+from homeassistant.components import button
 from homeassistant.components.fully_kiosk.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant

@@ -1,4 +1,5 @@
 """Helpers to help with encoding Home Assistant objects in JSON."""
+
 from collections import deque
 from collections.abc import Callable
 import datetime

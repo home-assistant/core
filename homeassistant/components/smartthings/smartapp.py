@@ -1,4 +1,5 @@
 """SmartApp functionality to receive cloud-push notifications."""
+
 import asyncio
 import functools
 import logging
@@ -84,11 +85,9 @@ async def validate_installed_app(api, installed_app_id: str):
     installed_app = await api.installed_app(installed_app_id)
     if installed_app.installed_app_status != InstalledAppStatus.AUTHORIZED:
         raise RuntimeWarning(
-            "Installed SmartApp instance '{}' ({}) is not AUTHORIZED but instead {}".format(
-                installed_app.display_name,
-                installed_app.installed_app_id,
-                installed_app.installed_app_status,
-            )
+            f"Installed SmartApp instance '{installed_app.display_name}' "
+            f"({installed_app.installed_app_id}) is not AUTHORIZED "
+            f"but instead {installed_app.installed_app_status}"
         )
     return installed_app
 

@@ -1,4 +1,5 @@
 """Config flow for OctoPrint integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -11,8 +12,8 @@ from pyoctoprintapi import ApiError, OctoprintClient, OctoprintException
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant import config_entries, data_entry_flow, exceptions
 from homeassistant.components import ssdp, zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -22,7 +23,8 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
@@ -47,7 +49,7 @@ def _schema_with_defaults(
     )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OctoPrint."""
 
     VERSION = 1
@@ -76,7 +78,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors = {}
             try:
                 return await self._finish_config(user_input)
-            except data_entry_flow.AbortFlow as err:
+            except AbortFlow as err:
                 raise err from None
             except CannotConnect:
                 errors["base"] = "cannot_connect"
@@ -103,7 +105,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_get_api_key(self, user_input=None):
         """Get an Application Api Key."""
         if not self.api_key_task:
-            self.api_key_task = self.hass.async_create_task(self._async_get_auth_key())
+            self.api_key_task = self.hass.async_create_task(
+                self._async_get_auth_key(), eager_start=False
+            )
         if not self.api_key_task.done():
             return self.async_show_progress(
                 step_id="get_api_key",
@@ -113,11 +117,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await self.api_key_task
-        except OctoprintException as err:
-            _LOGGER.exception("Failed to get an application key: %s", err)
+        except OctoprintException:
+            _LOGGER.exception("Failed to get an application key")
             return self.async_show_progress_done(next_step_id="auth_failed")
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.exception("Failed to get an application key : %s", err)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Failed to get an application key")
             return self.async_show_progress_done(next_step_id="auth_failed")
         finally:
             self.api_key_task = None
@@ -131,7 +135,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
             # Reload the config entry otherwise devices will remain unavailable
             self.hass.async_create_task(
-                self.hass.config_entries.async_reload(existing_entry.entry_id)
+                self.hass.config_entries.async_reload(existing_entry.entry_id),
             )
 
             return self.async_abort(reason="reauth_successful")
@@ -160,7 +164,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> data_entry_flow.FlowResult:
+    ) -> ConfigFlowResult:
         """Handle discovery flow."""
         uuid = discovery_info.properties["uuid"]
         await self.async_set_unique_id(uuid)
@@ -186,7 +190,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(
         self, discovery_info: ssdp.SsdpServiceInfo
-    ) -> data_entry_flow.FlowResult:
+    ) -> ConfigFlowResult:
         """Handle ssdp discovery flow."""
         uuid = discovery_info.upnp["UDN"][5:]
         await self.async_set_unique_id(uuid)
@@ -209,7 +213,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_reauth(self, config: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, config: Mapping[str, Any]) -> ConfigFlowResult:
         """Handle reauthorization request from Octoprint."""
         self._reauth_data = dict(config)
 
@@ -223,7 +227,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle reauthorization flow."""
         assert self._reauth_data is not None
 
@@ -279,5 +283,5 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             session.detach()
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""

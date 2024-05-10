@@ -1,4 +1,5 @@
 """Support for interface with a Gree climate systems."""
+
 from __future__ import annotations
 
 import logging
@@ -113,6 +114,8 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = TARGET_TEMPERATURE_STEP
     _attr_hvac_modes = [*HVAC_MODES_REVERSE, HVACMode.OFF]
@@ -120,6 +123,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
     _attr_fan_modes = [*FAN_MODES_REVERSE]
     _attr_swing_modes = SWING_MODES
     _attr_name = None
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator: DeviceDataUpdateCoordinator) -> None:
         """Initialize the Gree device."""

@@ -1,21 +1,19 @@
 """The National Weather Service integration."""
+
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import datetime
 import logging
-from typing import TYPE_CHECKING
 
-from pynws import SimpleNWS
+from pynws import SimpleNWS, call_with_retry
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import debounce
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 from homeassistant.util.dt import utcnow
 
@@ -26,8 +24,10 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
 DEFAULT_SCAN_INTERVAL = datetime.timedelta(minutes=10)
-FAILED_SCAN_INTERVAL = datetime.timedelta(minutes=1)
-DEBOUNCE_TIME = 60  # in seconds
+RETRY_INTERVAL = datetime.timedelta(minutes=1)
+RETRY_STOP = datetime.timedelta(minutes=10)
+
+DEBOUNCE_TIME = 10 * 60  # in seconds
 
 
 def base_unique_id(latitude: float, longitude: float) -> str:
@@ -40,62 +40,9 @@ class NWSData:
     """Data for the National Weather Service integration."""
 
     api: SimpleNWS
-    coordinator_observation: NwsDataUpdateCoordinator
-    coordinator_forecast: NwsDataUpdateCoordinator
-    coordinator_forecast_hourly: NwsDataUpdateCoordinator
-
-
-class NwsDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
-    """NWS data update coordinator.
-
-    Implements faster data update intervals for failed updates and exposes a last successful update time.
-    """
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        logger: logging.Logger,
-        *,
-        name: str,
-        update_interval: datetime.timedelta,
-        failed_update_interval: datetime.timedelta,
-        update_method: Callable[[], Awaitable[None]] | None = None,
-        request_refresh_debouncer: debounce.Debouncer | None = None,
-    ) -> None:
-        """Initialize NWS coordinator."""
-        super().__init__(
-            hass,
-            logger,
-            name=name,
-            update_interval=update_interval,
-            update_method=update_method,
-            request_refresh_debouncer=request_refresh_debouncer,
-        )
-        self.failed_update_interval = failed_update_interval
-
-    @callback
-    def _schedule_refresh(self) -> None:
-        """Schedule a refresh."""
-        if self._unsub_refresh:
-            self._unsub_refresh()
-            self._unsub_refresh = None
-
-        # We _floor_ utcnow to create a schedule on a rounded second,
-        # minimizing the time between the point and the real activation.
-        # That way we obtain a constant update frequency,
-        # as long as the update process takes less than a second
-        if self.last_update_success:
-            if TYPE_CHECKING:
-                # the base class allows None, but this one doesn't
-                assert self.update_interval is not None
-            update_interval = self.update_interval
-        else:
-            update_interval = self.failed_update_interval
-        self._unsub_refresh = async_track_point_in_utc_time(
-            self.hass,
-            self._handle_refresh_interval,
-            utcnow().replace(microsecond=0) + update_interval,
-        )
+    coordinator_observation: TimestampDataUpdateCoordinator[None]
+    coordinator_forecast: TimestampDataUpdateCoordinator[None]
+    coordinator_forecast_hourly: TimestampDataUpdateCoordinator[None]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -113,39 +60,57 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def update_observation() -> None:
         """Retrieve recent observations."""
-        await nws_data.update_observation(start_time=utcnow() - UPDATE_TIME_PERIOD)
+        await call_with_retry(
+            nws_data.update_observation,
+            RETRY_INTERVAL,
+            RETRY_STOP,
+            start_time=utcnow() - UPDATE_TIME_PERIOD,
+        )
 
-    coordinator_observation = NwsDataUpdateCoordinator(
+    async def update_forecast() -> None:
+        """Retrieve twice-daily forecsat."""
+        await call_with_retry(
+            nws_data.update_forecast,
+            RETRY_INTERVAL,
+            RETRY_STOP,
+        )
+
+    async def update_forecast_hourly() -> None:
+        """Retrieve hourly forecast."""
+        await call_with_retry(
+            nws_data.update_forecast_hourly,
+            RETRY_INTERVAL,
+            RETRY_STOP,
+        )
+
+    coordinator_observation = TimestampDataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"NWS observation station {station}",
         update_method=update_observation,
         update_interval=DEFAULT_SCAN_INTERVAL,
-        failed_update_interval=FAILED_SCAN_INTERVAL,
         request_refresh_debouncer=debounce.Debouncer(
             hass, _LOGGER, cooldown=DEBOUNCE_TIME, immediate=True
         ),
     )
 
-    coordinator_forecast = NwsDataUpdateCoordinator(
+    coordinator_forecast = TimestampDataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"NWS forecast station {station}",
-        update_method=nws_data.update_forecast,
+        update_method=update_forecast,
         update_interval=DEFAULT_SCAN_INTERVAL,
-        failed_update_interval=FAILED_SCAN_INTERVAL,
         request_refresh_debouncer=debounce.Debouncer(
             hass, _LOGGER, cooldown=DEBOUNCE_TIME, immediate=True
         ),
     )
 
-    coordinator_forecast_hourly = NwsDataUpdateCoordinator(
+    coordinator_forecast_hourly = TimestampDataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"NWS forecast hourly station {station}",
-        update_method=nws_data.update_forecast_hourly,
+        update_method=update_forecast_hourly,
         update_interval=DEFAULT_SCAN_INTERVAL,
-        failed_update_interval=FAILED_SCAN_INTERVAL,
         request_refresh_debouncer=debounce.Debouncer(
             hass, _LOGGER, cooldown=DEBOUNCE_TIME, immediate=True
         ),

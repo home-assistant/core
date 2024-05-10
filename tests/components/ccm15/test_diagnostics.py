@@ -1,4 +1,5 @@
 """Test CCM15 diagnostics."""
+
 from unittest.mock import AsyncMock
 
 from syrupy import SnapshotAssertion

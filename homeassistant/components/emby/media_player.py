@@ -1,4 +1,5 @@
 """Support to interface with the Emby API."""
+
 from __future__ import annotations
 
 import logging

@@ -1,11 +1,13 @@
 """Home Assistant wrapper for a pyWeMo device."""
+
 from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass, fields
 from datetime import timedelta
+from functools import partial
 import logging
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pywemo import Insight, LongPressMixin, WeMoDevice
 from pywemo.exceptions import ActionException, PyWeMoException
@@ -35,7 +37,7 @@ from .models import async_wemo_data
 _LOGGER = logging.getLogger(__name__)
 
 # Literal values must match options.error keys from strings.json.
-ErrorStringKey = Literal["long_press_requires_subscription"]  # noqa: F821
+ErrorStringKey = Literal["long_press_requires_subscription"]
 # Literal values must match options.step.init.data keys from strings.json.
 OptionsFieldKey = Literal["enable_subscription", "enable_long_press"]
 
@@ -91,7 +93,7 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-en
 
     options: Options | None = None
 
-    def __init__(self, hass: HomeAssistant, wemo: WeMoDevice, device_id: str) -> None:
+    def __init__(self, hass: HomeAssistant, wemo: WeMoDevice) -> None:
         """Initialize DeviceCoordinator."""
         super().__init__(
             hass,
@@ -101,10 +103,15 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-en
         )
         self.hass = hass
         self.wemo = wemo
-        self.device_id = device_id
+        self.device_id: str | None = None
         self.device_info = _create_device_info(wemo)
         self.supports_long_press = isinstance(wemo, LongPressMixin)
         self.update_lock = asyncio.Lock()
+
+    @callback
+    def async_setup(self, device_id: str) -> None:
+        """Set up the device coordinator."""
+        self.device_id = device_id
 
     def subscription_callback(
         self, _device: WeMoDevice, event_type: str, params: str
@@ -124,11 +131,21 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-en
             )
         else:
             updated = self.wemo.subscription_update(event_type, params)
-            self.hass.create_task(self._async_subscription_callback(updated))
+            self.hass.loop.call_soon_threadsafe(
+                partial(
+                    self.hass.async_create_background_task,
+                    self._async_subscription_callback(updated),
+                    f"{self.name} subscription_callback",
+                    eager_start=True,
+                )
+            )
 
     async def async_shutdown(self) -> None:
         """Unregister push subscriptions and remove from coordinators dict."""
         await super().async_shutdown()
+        if TYPE_CHECKING:
+            # mypy doesn't known that the device_id is set in async_setup.
+            assert self.device_id is not None
         del _async_coordinators(self.hass)[self.device_id]
         assert self.options  # Always set by async_register_device.
         if self.options.enable_subscription:
@@ -196,7 +213,7 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-en
         except Exception as err:  # pylint: disable=broad-except
             self.last_exception = err
             self.last_update_success = False
-            _LOGGER.exception("Unexpected error fetching %s data: %s", self.name, err)
+            _LOGGER.exception("Unexpected error fetching %s data", self.name)
         else:
             self.async_set_updated_data(None)
 
@@ -221,7 +238,10 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-en
     async def _async_update_data(self) -> None:
         """Update WeMo state."""
         # No need to poll if the device will push updates.
-        if not self.should_poll:
+        # The device_id will not be set until after the first
+        # update so we should not check should_poll until after
+        # the device_id is set.
+        if self.device_id and not self.should_poll:
             return
 
         # If an update is in progress, we don't do anything.
@@ -244,7 +264,7 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-en
 def _create_device_info(wemo: WeMoDevice) -> DeviceInfo:
     """Create device information. Modify if special device."""
     _dev_info = _device_info(wemo)
-    if wemo.model_name == "DLI emulated Belkin Socket":
+    if wemo.model_name.lower() == "dli emulated belkin socket":
         _dev_info[ATTR_CONFIGURATION_URL] = f"http://{wemo.host}"
         _dev_info[ATTR_IDENTIFIERS] = {(DOMAIN, wemo.serial_number[:-1])}
     return _dev_info
@@ -265,15 +285,15 @@ async def async_register_device(
     hass: HomeAssistant, config_entry: ConfigEntry, wemo: WeMoDevice
 ) -> DeviceCoordinator:
     """Register a device with home assistant and enable pywemo event callbacks."""
-    # Ensure proper communication with the device and get the initial state.
-    await hass.async_add_executor_job(wemo.get_state, True)
-
+    device = DeviceCoordinator(hass, wemo)
+    await device.async_refresh()
+    if not device.last_update_success and device.last_exception:
+        raise device.last_exception
     device_registry = async_get_device_registry(hass)
     entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id, **_create_device_info(wemo)
     )
-
-    device = DeviceCoordinator(hass, wemo, entry.id)
+    device.async_setup(device_id=entry.id)
     _async_coordinators(hass)[entry.id] = device
 
     config_entry.async_on_unload(

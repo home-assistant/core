@@ -1,4 +1,5 @@
 """Support to embed Sonos."""
+
 from __future__ import annotations
 
 import asyncio
@@ -34,6 +35,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.async_ import create_eager_task
 
 from .alarms import SonosAlarms
 from .const import (
@@ -228,7 +230,8 @@ class SonosDiscoveryManager:
                 return
 
             self.hass.async_create_task(
-                self.async_add_speakers(zones_to_add, subscription, soco.uid)
+                self.async_add_speakers(zones_to_add, subscription, soco.uid),
+                eager_start=True,
             )
 
         async def async_subscription_failed(now: datetime.datetime) -> None:
@@ -319,11 +322,15 @@ class SonosDiscoveryManager:
                 zgs.total_requests,
             )
         await asyncio.gather(
-            *(speaker.async_offline() for speaker in self.data.discovered.values())
+            *(
+                create_eager_task(speaker.async_offline())
+                for speaker in self.data.discovered.values()
+            )
         )
         if events_asyncio.event_listener:
             await events_asyncio.event_listener.async_stop()
 
+    @callback
     def _stop_manual_heartbeat(self, event: Event | None = None) -> None:
         if self.data.hosts_heartbeat:
             self.data.hosts_heartbeat()
@@ -393,7 +400,7 @@ class SonosDiscoveryManager:
                 OSError,
                 SoCoException,
                 Timeout,
-                asyncio.TimeoutError,
+                TimeoutError,
             ) as ex:
                 if not self.hosts_in_error.get(ip_addr):
                     _LOGGER.warning(
@@ -447,7 +454,7 @@ class SonosDiscoveryManager:
                     OSError,
                     SoCoException,
                     Timeout,
-                    asyncio.TimeoutError,
+                    TimeoutError,
                 ) as ex:
                     _LOGGER.warning("Discovery message failed to %s : %s", ip_addr, ex)
             elif not known_speaker.available:
@@ -492,7 +499,8 @@ class SonosDiscoveryManager:
                     self.hass, f"{SONOS_SPEAKER_ACTIVITY}-{uid}", source
                 )
 
-    async def _async_ssdp_discovered_player(
+    @callback
+    def _async_ssdp_discovered_player(
         self, info: ssdp.SsdpServiceInfo, change: ssdp.SsdpChange
     ) -> None:
         uid = info.upnp[ssdp.ATTR_UPNP_UDN]
@@ -567,14 +575,16 @@ class SonosDiscoveryManager:
         await self.hass.config_entries.async_forward_entry_setups(self.entry, PLATFORMS)
         self.entry.async_on_unload(
             self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, self._async_stop_event_listener
+                EVENT_HOMEASSISTANT_STOP,
+                self._async_stop_event_listener,
             )
         )
         _LOGGER.debug("Adding discovery job")
         if self.hosts:
             self.entry.async_on_unload(
                 self.hass.bus.async_listen_once(
-                    EVENT_HOMEASSISTANT_STOP, self._stop_manual_heartbeat
+                    EVENT_HOMEASSISTANT_STOP,
+                    self._stop_manual_heartbeat,
                 )
             )
             await self.async_poll_manual_hosts()

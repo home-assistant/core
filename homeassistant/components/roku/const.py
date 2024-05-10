@@ -1,4 +1,5 @@
 """Constants for the Roku integration."""
+
 DOMAIN = "roku"
 
 # Attributes

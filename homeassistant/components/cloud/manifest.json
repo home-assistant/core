@@ -3,10 +3,10 @@
   "name": "Home Assistant Cloud",
   "after_dependencies": ["assist_pipeline", "google_assistant", "alexa"],
   "codeowners": ["@home-assistant/cloud"],
-  "dependencies": ["http", "webhook"],
+  "dependencies": ["auth", "http", "repairs", "webhook"],
   "documentation": "https://www.home-assistant.io/integrations/cloud",
   "integration_type": "system",
   "iot_class": "cloud_push",
   "loggers": ["hass_nabucasa"],
-  "requirements": ["hass-nabucasa==0.76.0"]
+  "requirements": ["hass-nabucasa==0.78.0"]
 }

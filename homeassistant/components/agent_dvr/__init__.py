@@ -1,4 +1,5 @@
 """Support for Agent."""
+
 from agent import AgentError
 from agent.a import Agent
 

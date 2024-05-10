@@ -1,5 +1,5 @@
 """Philips Hue sensors platform tests."""
-import asyncio
+
 from unittest.mock import Mock
 
 import aiohue
@@ -433,7 +433,7 @@ async def test_sensor_removed(hass: HomeAssistant, mock_bridge_v1) -> None:
 
 async def test_update_timeout(hass: HomeAssistant, mock_bridge_v1) -> None:
     """Test bridge marked as not available if timeout error during update."""
-    mock_bridge_v1.api.sensors.update = Mock(side_effect=asyncio.TimeoutError)
+    mock_bridge_v1.api.sensors.update = Mock(side_effect=TimeoutError)
     await setup_platform(hass, mock_bridge_v1, ["binary_sensor", "sensor"])
     assert len(mock_bridge_v1.mock_requests) == 0
     assert len(hass.states.async_all()) == 0

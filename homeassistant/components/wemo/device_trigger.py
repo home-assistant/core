@@ -1,4 +1,5 @@
 """Triggers for WeMo devices."""
+
 from __future__ import annotations
 
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS

@@ -1,4 +1,5 @@
 """Support for U.S. Geological Survey Earthquake Hazards Program Feeds."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

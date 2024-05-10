@@ -1,9 +1,10 @@
 """Constants used by Home Assistant components."""
+
 from __future__ import annotations
 
 from enum import StrEnum
 from functools import partial
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from .helpers.deprecation import (
     DeprecatedConstant,
@@ -12,17 +13,23 @@ from .helpers.deprecation import (
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
+from .util.event_type import EventType
+from .util.signal_type import SignalType
+
+if TYPE_CHECKING:
+    from .core import EventStateChangedData
+    from .helpers.typing import NoEventData
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
-MINOR_VERSION: Final = 3
+MINOR_VERSION: Final = 6
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
-REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 11, 0)
+REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 12, 0)
 REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 12, 0)
 # Truthy date string triggers showing related deprecation warning messages.
-REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = "2024.4"
+REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
@@ -38,6 +45,7 @@ class Platform(StrEnum):
     CALENDAR = "calendar"
     CAMERA = "camera"
     CLIMATE = "climate"
+    CONVERSATION = "conversation"
     COVER = "cover"
     DATE = "date"
     DATETIME = "datetime"
@@ -288,6 +296,7 @@ CONF_WHILE: Final = "while"
 CONF_WHITELIST: Final = "whitelist"
 CONF_ALLOWLIST_EXTERNAL_DIRS: Final = "allowlist_external_dirs"
 LEGACY_CONF_WHITELIST_EXTERNAL_DIRS: Final = "whitelist_external_dirs"
+CONF_DEBUG: Final = "debug"
 CONF_XY: Final = "xy"
 CONF_ZONE: Final = "zone"
 
@@ -295,16 +304,19 @@ CONF_ZONE: Final = "zone"
 EVENT_CALL_SERVICE: Final = "call_service"
 EVENT_COMPONENT_LOADED: Final = "component_loaded"
 EVENT_CORE_CONFIG_UPDATE: Final = "core_config_updated"
-EVENT_HOMEASSISTANT_CLOSE: Final = "homeassistant_close"
-EVENT_HOMEASSISTANT_START: Final = "homeassistant_start"
-EVENT_HOMEASSISTANT_STARTED: Final = "homeassistant_started"
-EVENT_HOMEASSISTANT_STOP: Final = "homeassistant_stop"
-EVENT_HOMEASSISTANT_FINAL_WRITE: Final = "homeassistant_final_write"
+EVENT_HOMEASSISTANT_CLOSE: EventType[NoEventData] = EventType("homeassistant_close")
+EVENT_HOMEASSISTANT_START: EventType[NoEventData] = EventType("homeassistant_start")
+EVENT_HOMEASSISTANT_STARTED: EventType[NoEventData] = EventType("homeassistant_started")
+EVENT_HOMEASSISTANT_STOP: EventType[NoEventData] = EventType("homeassistant_stop")
+EVENT_HOMEASSISTANT_FINAL_WRITE: EventType[NoEventData] = EventType(
+    "homeassistant_final_write"
+)
 EVENT_LOGBOOK_ENTRY: Final = "logbook_entry"
 EVENT_LOGGING_CHANGED: Final = "logging_changed"
 EVENT_SERVICE_REGISTERED: Final = "service_registered"
 EVENT_SERVICE_REMOVED: Final = "service_removed"
-EVENT_STATE_CHANGED: Final = "state_changed"
+EVENT_STATE_CHANGED: EventType[EventStateChangedData] = EventType("state_changed")
+EVENT_STATE_REPORTED: Final = "state_reported"
 EVENT_THEMES_UPDATED: Final = "themes_updated"
 EVENT_PANELS_UPDATED: Final = "panels_updated"
 EVENT_LOVELACE_UPDATED: Final = "lovelace_updated"
@@ -508,6 +520,12 @@ ATTR_AREA_ID: Final = "area_id"
 
 # Contains one string, the device ID
 ATTR_DEVICE_ID: Final = "device_id"
+
+# Contains one string or a list of strings, each being an floor id
+ATTR_FLOOR_ID: Final = "floor_id"
+
+# Contains one string or a list of strings, each being an label id
+ATTR_LABEL_ID: Final = "label_id"
 
 # String with a friendly name for the entity
 ATTR_FRIENDLY_NAME: Final = "friendly_name"
@@ -1214,6 +1232,7 @@ CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
 class UnitOfSpeed(StrEnum):
     """Speed units."""
 
+    BEAUFORT = "Beaufort"
     FEET_PER_SECOND = "ft/s"
     METERS_PER_SECOND = "m/s"
     KILOMETERS_PER_HOUR = "km/h"
@@ -1451,11 +1470,11 @@ _DEPRECATED_DATA_RATE_GIBIBYTES_PER_SECOND: Final = DeprecatedConstantEnum(
 
 
 # States
-COMPRESSED_STATE_STATE = "s"
-COMPRESSED_STATE_ATTRIBUTES = "a"
-COMPRESSED_STATE_CONTEXT = "c"
-COMPRESSED_STATE_LAST_CHANGED = "lc"
-COMPRESSED_STATE_LAST_UPDATED = "lu"
+COMPRESSED_STATE_STATE: Final = "s"
+COMPRESSED_STATE_ATTRIBUTES: Final = "a"
+COMPRESSED_STATE_CONTEXT: Final = "c"
+COMPRESSED_STATE_LAST_CHANGED: Final = "lc"
+COMPRESSED_STATE_LAST_UPDATED: Final = "lu"
 
 # #### SERVICES ####
 SERVICE_TURN_ON: Final = "turn_on"
@@ -1600,7 +1619,14 @@ CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
 # User used by Supervisor
 HASSIO_USER_NAME = "Supervisor"
 
-SIGNAL_BOOTSTRAP_INTEGRATIONS = "bootstrap_integrations"
+SIGNAL_BOOTSTRAP_INTEGRATIONS: SignalType[dict[str, float]] = SignalType(
+    "bootstrap_integrations"
+)
+
+
+# hass.data key for logging information.
+KEY_DATA_LOGGING = "logging"
+
 
 # Date/Time formats
 FORMAT_DATE: Final = "%Y-%m-%d"

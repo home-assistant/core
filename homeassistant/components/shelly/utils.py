@@ -1,13 +1,18 @@
 """Shelly helpers functions."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from ipaddress import IPv4Address
+from types import MappingProxyType
 from typing import Any, cast
 
 from aiohttp.web import Request, WebSocketResponse
 from aioshelly.block_device import COAP, Block, BlockDevice
 from aioshelly.const import (
     BLOCK_GENERATIONS,
+    DEFAULT_COAP_PORT,
+    DEFAULT_HTTP_PORT,
     MODEL_1L,
     MODEL_DIMMER,
     MODEL_DIMMER_2,
@@ -18,9 +23,10 @@ from aioshelly.const import (
 )
 from aioshelly.rpc_device import RpcDevice, WsServer
 
+from homeassistant.components import network
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir, singleton
 from homeassistant.helpers.device_registry import (
@@ -35,7 +41,6 @@ from .const import (
     BASIC_INPUTS_EVENTS_TYPES,
     CONF_COAP_PORT,
     CONF_GEN,
-    DEFAULT_COAP_PORT,
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
@@ -185,8 +190,6 @@ def get_block_input_triggers(
     if not is_block_momentary_input(device.settings, block, True):
         return []
 
-    triggers = []
-
     if block.type == "device" or get_number_of_channels(device, block) == 1:
         subtype = "button"
     else:
@@ -200,32 +203,42 @@ def get_block_input_triggers(
     else:
         trigger_types = BASIC_INPUTS_EVENTS_TYPES
 
-    for trigger_type in trigger_types:
-        triggers.append((trigger_type, subtype))
-
-    return triggers
+    return [(trigger_type, subtype) for trigger_type in trigger_types]
 
 
 def get_shbtn_input_triggers() -> list[tuple[str, str]]:
     """Return list of input triggers for SHBTN models."""
-    triggers = []
-
-    for trigger_type in SHBTN_INPUTS_EVENTS_TYPES:
-        triggers.append((trigger_type, "button"))
-
-    return triggers
+    return [(trigger_type, "button") for trigger_type in SHBTN_INPUTS_EVENTS_TYPES]
 
 
 @singleton.singleton("shelly_coap")
 async def get_coap_context(hass: HomeAssistant) -> COAP:
     """Get CoAP context to be used in all Shelly Gen1 devices."""
     context = COAP()
+
+    adapters = await network.async_get_adapters(hass)
+    LOGGER.debug("Network adapters: %s", adapters)
+
+    ipv4: list[IPv4Address] = []
+    if not network.async_only_default_interface_enabled(adapters):
+        ipv4.extend(
+            address
+            for address in await network.async_get_enabled_source_ips(hass)
+            if address.version == 4
+            and not (
+                address.is_link_local
+                or address.is_loopback
+                or address.is_multicast
+                or address.is_unspecified
+            )
+        )
+    LOGGER.debug("Network IPv4 addresses: %s", ipv4)
     if DOMAIN in hass.data:
         port = hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT)
     else:
         port = DEFAULT_COAP_PORT
     LOGGER.info("Starting CoAP context with UDP port %s", port)
-    await context.initialize(port)
+    await context.initialize(port, ipv4)
 
     @callback
     def shutdown_listener(ev: Event) -> None:
@@ -367,6 +380,11 @@ def is_rpc_channel_type_light(config: dict[str, Any], channel: int) -> bool:
     return cast(str, con_types[channel]).lower().startswith("light")
 
 
+def is_rpc_thermostat_internal_actuator(status: dict[str, Any]) -> bool:
+    """Return true if the thermostat uses an internal relay."""
+    return cast(bool, status["sys"].get("relay_in_thermostat", False))
+
+
 def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
     """Return list of input triggers for RPC device."""
     triggers = []
@@ -447,3 +465,43 @@ def async_create_issue_unsupported_firmware(
             "ip_address": entry.data["host"],
         },
     )
+
+
+def is_rpc_wifi_stations_disabled(
+    config: dict[str, Any], _status: dict[str, Any], key: str
+) -> bool:
+    """Return true if rpc all WiFi stations are disabled."""
+    if config[key]["sta"]["enable"] is True or config[key]["sta1"]["enable"] is True:
+        return False
+
+    return True
+
+
+def get_http_port(data: MappingProxyType[str, Any]) -> int:
+    """Get port from config entry data."""
+    return cast(int, data.get(CONF_PORT, DEFAULT_HTTP_PORT))
+
+
+async def async_shutdown_device(device: BlockDevice | RpcDevice) -> None:
+    """Shutdown a Shelly device."""
+    if isinstance(device, RpcDevice):
+        await device.shutdown()
+    if isinstance(device, BlockDevice):
+        device.shutdown()
+
+
+@callback
+def async_remove_shelly_rpc_entities(
+    hass: HomeAssistant, domain: str, mac: str, keys: list[str]
+) -> None:
+    """Remove RPC based Shelly entity."""
+    entity_reg = er_async_get(hass)
+    for key in keys:
+        if entity_id := entity_reg.async_get_entity_id(domain, DOMAIN, f"{mac}-{key}"):
+            LOGGER.debug("Removing entity: %s", entity_id)
+            entity_reg.async_remove(entity_id)
+
+
+def is_rpc_thermostat_mode(ident: int, status: dict[str, Any]) -> bool:
+    """Return True if 'thermostat:<IDent>' is present in the status."""
+    return f"thermostat:{ident}" in status

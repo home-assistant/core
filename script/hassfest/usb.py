@@ -1,4 +1,5 @@
 """Generate usb file."""
+
 from __future__ import annotations
 
 from .model import Config, Integration
@@ -15,13 +16,13 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
         if not match_types:
             continue
 
-        for entry in match_types:
-            match_list.append(
-                {
-                    "domain": domain,
-                    **{k: v for k, v in entry.items() if k != "known_devices"},
-                }
-            )
+        match_list.extend(
+            {
+                "domain": domain,
+                **{k: v for k, v in entry.items() if k != "known_devices"},
+            }
+            for entry in match_types
+        )
 
     return format_python_namespace({"USB": match_list})
 

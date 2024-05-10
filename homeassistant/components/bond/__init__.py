@@ -1,5 +1,5 @@
 """The Bond integration."""
-from asyncio import TimeoutError as AsyncIOTimeoutError
+
 from http import HTTPStatus
 import logging
 from typing import Any
@@ -35,8 +35,10 @@ _API_TIMEOUT = SLOW_UPDATE_WARNING - 1
 
 _LOGGER = logging.getLogger(__name__)
 
+BondConfigEntry = ConfigEntry[BondData]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: BondConfigEntry) -> bool:
     """Set up Bond from a config entry."""
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_ACCESS_TOKEN]
@@ -56,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.error("Bond token no longer valid: %s", ex)
             return False
         raise ConfigEntryNotReady from ex
-    except (ClientError, AsyncIOTimeoutError, OSError) as error:
+    except (ClientError, TimeoutError, OSError) as error:
         raise ConfigEntryNotReady from error
 
     bpup_subs = BPUPSubscriptions()
@@ -70,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, _async_stop_event)
     )
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = BondData(hub, bpup_subs)
+    entry.runtime_data = BondData(hub, bpup_subs)
 
     if not entry.unique_id:
         hass.config_entries.async_update_entry(entry, unique_id=hub.bond_id)
@@ -97,11 +99,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BondConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 @callback
@@ -118,10 +118,10 @@ def _async_remove_old_device_identifiers(
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: BondConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove bond config entry from a device."""
-    data: BondData = hass.data[DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     hub = data.hub
     for identifier in device_entry.identifiers:
         if identifier[0] != DOMAIN or len(identifier) != 3:

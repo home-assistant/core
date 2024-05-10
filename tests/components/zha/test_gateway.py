@@ -1,13 +1,13 @@
 """Test ZHA Gateway."""
+
 import asyncio
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 from zigpy.application import ControllerApplication
-import zigpy.profiles.zha as zha
+from zigpy.profiles import zha
 import zigpy.types
-import zigpy.zcl.clusters.general as general
-import zigpy.zcl.clusters.lighting as lighting
+from zigpy.zcl.clusters import general, lighting
 import zigpy.zdo.types
 
 from homeassistant.components.zha.core.gateway import ZHAGateway
@@ -60,8 +60,7 @@ def required_platform_only():
 async def zha_dev_basic(hass, zha_device_restored, zigpy_dev_basic):
     """ZHA device with just a basic cluster."""
 
-    zha_device = await zha_device_restored(zigpy_dev_basic)
-    return zha_device
+    return await zha_device_restored(zigpy_dev_basic)
 
 
 @pytest.fixture
@@ -198,7 +197,7 @@ async def test_gateway_group_methods(
     # the group entity should not have been cleaned up
     assert entity_id not in hass.states.async_entity_ids(Platform.LIGHT)
 
-    with patch("zigpy.zcl.Cluster.request", side_effect=asyncio.TimeoutError):
+    with patch("zigpy.zcl.Cluster.request", side_effect=TimeoutError):
         await zha_group.members[0].async_remove_from_group()
         assert len(zha_group.members) == 1
         for member in zha_group.members:
@@ -250,9 +249,10 @@ async def test_gateway_initialize_bellows_thread(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test ZHA disabling the UART thread when connecting to a TCP coordinator."""
-    config_entry.data = dict(config_entry.data)
-    config_entry.data["device"]["path"] = device_path
+    data = dict(config_entry.data)
+    data["device"]["path"] = device_path
     config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(config_entry, data=data)
 
     zha_gateway = ZHAGateway(hass, {"zigpy_config": config_override}, config_entry)
 
@@ -262,7 +262,7 @@ async def test_gateway_initialize_bellows_thread(
     ) as mock_new:
         await zha_gateway.async_initialize()
 
-    mock_new.mock_calls[-1].kwargs["config"]["use_thread"] is thread_state
+    assert mock_new.mock_calls[-1].kwargs["config"]["use_thread"] is thread_state
 
     await zha_gateway.shutdown()
 
@@ -285,9 +285,10 @@ async def test_gateway_force_multi_pan_channel(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test ZHA disabling the UART thread when connecting to a TCP coordinator."""
-    config_entry.data = dict(config_entry.data)
-    config_entry.data["device"]["path"] = device_path
+    data = dict(config_entry.data)
+    data["device"]["path"] = device_path
     config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(config_entry, data=data)
 
     zha_gateway = ZHAGateway(hass, {"zigpy_config": config_override}, config_entry)
 

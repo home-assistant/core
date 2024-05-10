@@ -1,15 +1,17 @@
-"""Test the Motion Blinds config flow."""
+"""Test the Motionblinds config flow."""
+
 import socket
 from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.motion_blinds import const
 from homeassistant.components.motion_blinds.config_flow import DEFAULT_GATEWAY_NAME
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -19,8 +21,9 @@ TEST_HOST_HA = "9.10.11.12"
 TEST_HOST_ANY = "any"
 TEST_API_KEY = "12ab345c-d67e-8f"
 TEST_API_KEY2 = "f8e76dc5-43ba-21"
-TEST_MAC = "ab:cd:ef:gh"
-TEST_MAC2 = "ij:kl:mn:op"
+TEST_MAC = "ab:bb:cc:dd:ee:ff"
+TEST_MAC2 = "ff:ee:dd:cc:bb:aa"
+DHCP_FORMATTED_MAC = "aabbccddeeff"
 TEST_DEVICE_LIST = {TEST_MAC: Mock()}
 
 TEST_DISCOVERY_1 = {
@@ -70,42 +73,56 @@ TEST_INTERFACES = [
 
 @pytest.fixture(name="motion_blinds_connect", autouse=True)
 def motion_blinds_connect_fixture(mock_get_source_ip):
-    """Mock motion blinds connection and entry setup."""
-    with patch(
-        "homeassistant.components.motion_blinds.gateway.MotionGateway.GetDeviceList",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.motion_blinds.gateway.MotionGateway.Update",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.motion_blinds.gateway.MotionGateway.Check_gateway_multicast",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.motion_blinds.gateway.MotionGateway.device_list",
-        TEST_DEVICE_LIST,
-    ), patch(
-        "homeassistant.components.motion_blinds.gateway.MotionGateway.mac",
-        TEST_MAC,
-    ), patch(
-        "homeassistant.components.motion_blinds.config_flow.MotionDiscovery.discover",
-        return_value=TEST_DISCOVERY_1,
-    ), patch(
-        "homeassistant.components.motion_blinds.config_flow.MotionGateway.GetDeviceList",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.motion_blinds.config_flow.MotionGateway.available",
-        True,
-    ), patch(
-        "homeassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Start_listen",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Stop_listen",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.motion_blinds.gateway.network.async_get_adapters",
-        return_value=TEST_INTERFACES,
-    ), patch(
-        "homeassistant.components.motion_blinds.async_setup_entry", return_value=True
+    """Mock Motionblinds connection and entry setup."""
+    with (
+        patch(
+            "homeassistant.components.motion_blinds.gateway.MotionGateway.GetDeviceList",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.motion_blinds.gateway.MotionGateway.Update",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.motion_blinds.gateway.MotionGateway.Check_gateway_multicast",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.motion_blinds.gateway.MotionGateway.device_list",
+            TEST_DEVICE_LIST,
+        ),
+        patch(
+            "homeassistant.components.motion_blinds.gateway.MotionGateway.mac",
+            TEST_MAC,
+        ),
+        patch(
+            "homeassistant.components.motion_blinds.config_flow.MotionDiscovery.discover",
+            return_value=TEST_DISCOVERY_1,
+        ),
+        patch(
+            "homeassistant.components.motion_blinds.config_flow.MotionGateway.GetDeviceList",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.motion_blinds.config_flow.MotionGateway.available",
+            True,
+        ),
+        patch(
+            "homeassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Start_listen",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Stop_listen",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.motion_blinds.gateway.network.async_get_adapters",
+            return_value=TEST_INTERFACES,
+        ),
+        patch(
+            "homeassistant.components.motion_blinds.async_setup_entry",
+            return_value=True,
+        ),
     ):
         yield
 
@@ -116,7 +133,7 @@ async def test_config_flow_manual_host_success(hass: HomeAssistant) -> None:
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -125,7 +142,7 @@ async def test_config_flow_manual_host_success(hass: HomeAssistant) -> None:
         {CONF_HOST: TEST_HOST},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "connect"
     assert result["errors"] == {}
 
@@ -134,7 +151,7 @@ async def test_config_flow_manual_host_success(hass: HomeAssistant) -> None:
         {CONF_API_KEY: TEST_API_KEY},
     )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_GATEWAY_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
@@ -149,7 +166,7 @@ async def test_config_flow_discovery_1_success(hass: HomeAssistant) -> None:
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -158,7 +175,7 @@ async def test_config_flow_discovery_1_success(hass: HomeAssistant) -> None:
         {},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "connect"
     assert result["errors"] == {}
 
@@ -171,7 +188,7 @@ async def test_config_flow_discovery_1_success(hass: HomeAssistant) -> None:
             {CONF_API_KEY: TEST_API_KEY},
         )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_GATEWAY_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
@@ -186,7 +203,7 @@ async def test_config_flow_discovery_2_success(hass: HomeAssistant) -> None:
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -199,7 +216,7 @@ async def test_config_flow_discovery_2_success(hass: HomeAssistant) -> None:
             {},
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "select"
     assert result["data_schema"].schema["select_ip"].container == [
         TEST_HOST,
@@ -212,7 +229,7 @@ async def test_config_flow_discovery_2_success(hass: HomeAssistant) -> None:
         {"select_ip": TEST_HOST2},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "connect"
     assert result["errors"] == {}
 
@@ -225,7 +242,7 @@ async def test_config_flow_discovery_2_success(hass: HomeAssistant) -> None:
             {CONF_API_KEY: TEST_API_KEY},
         )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_GATEWAY_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST2,
@@ -240,7 +257,7 @@ async def test_config_flow_connection_error(hass: HomeAssistant) -> None:
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -249,7 +266,7 @@ async def test_config_flow_connection_error(hass: HomeAssistant) -> None:
         {CONF_HOST: TEST_HOST},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "connect"
     assert result["errors"] == {}
 
@@ -262,7 +279,7 @@ async def test_config_flow_connection_error(hass: HomeAssistant) -> None:
             {CONF_API_KEY: TEST_API_KEY},
         )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "connection_error"
 
 
@@ -272,7 +289,7 @@ async def test_config_flow_discovery_fail(hass: HomeAssistant) -> None:
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -285,7 +302,7 @@ async def test_config_flow_discovery_fail(hass: HomeAssistant) -> None:
             {},
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "discovery_error"}
 
@@ -296,7 +313,7 @@ async def test_config_flow_invalid_interface(hass: HomeAssistant) -> None:
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -305,7 +322,7 @@ async def test_config_flow_invalid_interface(hass: HomeAssistant) -> None:
         {CONF_HOST: TEST_HOST},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "connect"
     assert result["errors"] == {}
 
@@ -318,7 +335,7 @@ async def test_config_flow_invalid_interface(hass: HomeAssistant) -> None:
             {CONF_API_KEY: TEST_API_KEY},
         )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_GATEWAY_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
@@ -332,14 +349,14 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
     dhcp_data = dhcp.DhcpServiceInfo(
         ip=TEST_HOST,
         hostname="MOTION_abcdef",
-        macaddress=TEST_MAC,
+        macaddress=DHCP_FORMATTED_MAC,
     )
 
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "connect"
     assert result["errors"] == {}
 
@@ -352,7 +369,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
             {CONF_API_KEY: TEST_API_KEY},
         )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_GATEWAY_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
@@ -362,11 +379,11 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
 
 
 async def test_dhcp_flow_abort(hass: HomeAssistant) -> None:
-    """Test that DHCP discovery aborts if not Motion Blinds."""
+    """Test that DHCP discovery aborts if not Motionblinds."""
     dhcp_data = dhcp.DhcpServiceInfo(
         ip=TEST_HOST,
         hostname="MOTION_abcdef",
-        macaddress=TEST_MAC,
+        macaddress=DHCP_FORMATTED_MAC,
     )
 
     with patch(
@@ -377,7 +394,7 @@ async def test_dhcp_flow_abort(hass: HomeAssistant) -> None:
             const.DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
         )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_motionblinds"
 
 
@@ -386,7 +403,7 @@ async def test_dhcp_flow_abort_invalid_response(hass: HomeAssistant) -> None:
     dhcp_data = dhcp.DhcpServiceInfo(
         ip=TEST_HOST,
         hostname="MOTION_abcdef",
-        macaddress=TEST_MAC,
+        macaddress=DHCP_FORMATTED_MAC,
     )
 
     with patch(
@@ -397,7 +414,7 @@ async def test_dhcp_flow_abort_invalid_response(hass: HomeAssistant) -> None:
             const.DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
         )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_motionblinds"
 
 
@@ -419,7 +436,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -427,7 +444,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         user_input={const.CONF_WAIT_FOR_PUSH: False},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         const.CONF_WAIT_FOR_PUSH: False,
     }
@@ -451,7 +468,7 @@ async def test_change_connection_settings(hass: HomeAssistant) -> None:
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -460,7 +477,7 @@ async def test_change_connection_settings(hass: HomeAssistant) -> None:
         {CONF_HOST: TEST_HOST2},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "connect"
     assert result["errors"] == {}
 
@@ -469,7 +486,7 @@ async def test_change_connection_settings(hass: HomeAssistant) -> None:
         {CONF_API_KEY: TEST_API_KEY2},
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert config_entry.data[CONF_HOST] == TEST_HOST2
     assert config_entry.data[CONF_API_KEY] == TEST_API_KEY2
     assert config_entry.data[const.CONF_INTERFACE] == TEST_HOST_ANY

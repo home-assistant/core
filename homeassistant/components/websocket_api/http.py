@@ -1,4 +1,5 @@
 """View to accept incoming websocket connection."""
+
 from __future__ import annotations
 
 import asyncio
@@ -11,11 +12,12 @@ from typing import TYPE_CHECKING, Any, Final
 
 from aiohttp import WSMsgType, web
 
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
+from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.json import json_loads
 
 from .auth import AUTH_REQUIRED_MESSAGE, AuthPhase
@@ -48,7 +50,7 @@ class WebsocketAPIView(HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.WebSocketResponse:
         """Handle an incoming websocket connection."""
-        return await WebSocketHandler(request.app["hass"], request).async_handle()
+        return await WebSocketHandler(request.app[KEY_HASS], request).async_handle()
 
 
 class WebSocketAdapter(logging.LoggerAdapter):
@@ -282,7 +284,7 @@ class WebSocketHandler:
         try:
             async with asyncio.timeout(10):
                 await wsock.prepare(request)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self._logger.warning("Timeout preparing request from %s", request.remote)
             return wsock
 
@@ -293,7 +295,7 @@ class WebSocketHandler:
             EVENT_HOMEASSISTANT_STOP, self._async_handle_hass_stop
         )
 
-        writer = wsock._writer  # pylint: disable=protected-access
+        writer = wsock._writer  # noqa: SLF001
         if TYPE_CHECKING:
             assert writer is not None
 
@@ -310,7 +312,7 @@ class WebSocketHandler:
             # Auth Phase
             try:
                 msg = await wsock.receive(10)
-            except asyncio.TimeoutError as err:
+            except TimeoutError as err:
                 disconnect_warn = "Did not receive auth message within 10 seconds"
                 raise Disconnect from err
 
@@ -336,7 +338,7 @@ class WebSocketHandler:
             # We only start the writer queue after the auth phase is completed
             # since there is no need to queue messages before the auth phase
             self._connection = connection
-            self._writer_task = asyncio.create_task(self._writer(send_bytes_text))
+            self._writer_task = create_eager_task(self._writer(send_bytes_text))
             hass.data[DATA_CONNECTIONS] = hass.data.get(DATA_CONNECTIONS, 0) + 1
             async_dispatcher_send(hass, SIGNAL_WEBSOCKET_CONNECTED)
 
@@ -376,7 +378,7 @@ class WebSocketHandler:
             # added a way to set the limit, but there is no way to actually
             # reach the code to set the limit, so we have to set it directly.
             #
-            writer._limit = 2**20  # pylint: disable=protected-access
+            writer._limit = 2**20  # noqa: SLF001
             async_handle_str = connection.async_handle
             async_handle_binary = connection.async_handle_binary
 

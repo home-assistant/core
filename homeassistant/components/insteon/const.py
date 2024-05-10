@@ -1,4 +1,5 @@
 """Constants used by insteon component."""
+
 import re
 
 from pyinsteon.groups import (
@@ -100,6 +101,8 @@ SIGNAL_SAVE_DEVICES = "save_devices"
 SIGNAL_ADD_ENTITIES = "insteon_add_entities"
 SIGNAL_ADD_DEFAULT_LINKS = "add_default_links"
 SIGNAL_ADD_DEVICE_OVERRIDE = "add_device_override"
+SIGNAL_REMOVE_HA_DEVICE = "insteon_remove_ha_device"
+SIGNAL_REMOVE_INSTEON_DEVICE = "insteon_remove_insteon_device"
 SIGNAL_REMOVE_DEVICE_OVERRIDE = "insteon_remove_device_override"
 SIGNAL_REMOVE_ENTITY = "insteon_remove_entity"
 SIGNAL_ADD_X10_DEVICE = "insteon_add_x10_device"

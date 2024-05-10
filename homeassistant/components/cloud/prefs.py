@@ -1,13 +1,19 @@
 """Preference management for cloud."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from typing import Any
 import uuid
 
+from hass_nabucasa.voice import MAP_VOICE
+
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
-from homeassistant.components import webhook
+from homeassistant.components import http, webhook
+from homeassistant.components.google_assistant.http import (
+    async_get_users as async_get_google_assistant_users,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
@@ -28,6 +34,7 @@ from .const import (
     PREF_ENABLE_ALEXA,
     PREF_ENABLE_GOOGLE,
     PREF_ENABLE_REMOTE,
+    PREF_GOOGLE_CONNECTED,
     PREF_GOOGLE_DEFAULT_EXPOSE,
     PREF_GOOGLE_ENTITY_CONFIGS,
     PREF_GOOGLE_LOCAL_WEBHOOK_ID,
@@ -35,14 +42,16 @@ from .const import (
     PREF_GOOGLE_SECURE_DEVICES_PIN,
     PREF_GOOGLE_SETTINGS_VERSION,
     PREF_INSTANCE_ID,
+    PREF_REMOTE_ALLOW_REMOTE_ENABLE,
     PREF_REMOTE_DOMAIN,
+    PREF_STRICT_CONNECTION,
     PREF_TTS_DEFAULT_VOICE,
     PREF_USERNAME,
 )
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-STORAGE_VERSION_MINOR = 2
+STORAGE_VERSION_MINOR = 4
 
 ALEXA_SETTINGS_VERSION = 3
 GOOGLE_SETTINGS_VERSION = 3
@@ -55,10 +64,45 @@ class CloudPreferencesStore(Store):
         self, old_major_version: int, old_minor_version: int, old_data: dict[str, Any]
     ) -> dict[str, Any]:
         """Migrate to the new version."""
+
+        async def google_connected() -> bool:
+            """Return True if our user is preset in the google_assistant store."""
+            # If we don't have a user, we can't be connected to Google
+            if not (cur_username := old_data.get(PREF_USERNAME)):
+                return False
+
+            # If our user is in the Google store, we're connected
+            return cur_username in await async_get_google_assistant_users(self.hass)
+
         if old_major_version == 1:
             if old_minor_version < 2:
                 old_data.setdefault(PREF_ALEXA_SETTINGS_VERSION, 1)
                 old_data.setdefault(PREF_GOOGLE_SETTINGS_VERSION, 1)
+            if old_minor_version < 3:
+                # Import settings from the google_assistant store which was previously
+                # shared between the cloud integration and manually configured Google
+                # assistant.
+                # In HA Core 2024.9, remove the import and also remove the Google
+                # assistant store if it's not been migrated by manual Google assistant
+                old_data.setdefault(PREF_GOOGLE_CONNECTED, await google_connected())
+            if old_minor_version < 4:
+                # Update the default TTS voice to the new default.
+                # The default tts voice is a tuple.
+                # The first item is the language, the second item used to be gender.
+                # The new second item is the voice name.
+                default_tts_voice = old_data.get(PREF_TTS_DEFAULT_VOICE)
+                if default_tts_voice and (voice_item_two := default_tts_voice[1]) in (
+                    "female",
+                    "male",
+                ):
+                    language: str = default_tts_voice[0]
+                    if voice := MAP_VOICE.get((language, voice_item_two)):
+                        old_data[PREF_TTS_DEFAULT_VOICE] = (
+                            language,
+                            voice,
+                        )
+                    else:
+                        old_data[PREF_TTS_DEFAULT_VOICE] = DEFAULT_TTS_DEFAULT_VOICE
 
         return old_data
 
@@ -131,6 +175,9 @@ class CloudPreferences:
         remote_domain: str | None | UndefinedType = UNDEFINED,
         alexa_settings_version: int | UndefinedType = UNDEFINED,
         google_settings_version: int | UndefinedType = UNDEFINED,
+        google_connected: bool | UndefinedType = UNDEFINED,
+        remote_allow_remote_enable: bool | UndefinedType = UNDEFINED,
+        strict_connection: http.const.StrictConnectionMode | UndefinedType = UNDEFINED,
     ) -> None:
         """Update user preferences."""
         prefs = {**self._prefs}
@@ -148,6 +195,9 @@ class CloudPreferences:
             (PREF_GOOGLE_SETTINGS_VERSION, google_settings_version),
             (PREF_TTS_DEFAULT_VOICE, tts_default_voice),
             (PREF_REMOTE_DOMAIN, remote_domain),
+            (PREF_GOOGLE_CONNECTED, google_connected),
+            (PREF_REMOTE_ALLOW_REMOTE_ENABLE, remote_allow_remote_enable),
+            (PREF_STRICT_CONNECTION, strict_connection),
         ):
             if value is not UNDEFINED:
                 prefs[key] = value
@@ -177,6 +227,10 @@ class CloudPreferences:
 
         return True
 
+    async def async_erase_config(self) -> None:
+        """Erase the configuration."""
+        await self._save_prefs(self._empty_config(""))
+
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version."""
         return {
@@ -189,8 +243,16 @@ class CloudPreferences:
             PREF_GOOGLE_DEFAULT_EXPOSE: self.google_default_expose,
             PREF_GOOGLE_REPORT_STATE: self.google_report_state,
             PREF_GOOGLE_SECURE_DEVICES_PIN: self.google_secure_devices_pin,
+            PREF_REMOTE_ALLOW_REMOTE_ENABLE: self.remote_allow_remote_enable,
             PREF_TTS_DEFAULT_VOICE: self.tts_default_voice,
+            PREF_STRICT_CONNECTION: self.strict_connection,
         }
+
+    @property
+    def remote_allow_remote_enable(self) -> bool:
+        """Return if it's allowed to remotely activate remote."""
+        allowed: bool = self._prefs.get(PREF_REMOTE_ALLOW_REMOTE_ENABLE, True)
+        return allowed
 
     @property
     def remote_enabled(self) -> bool:
@@ -242,6 +304,12 @@ class CloudPreferences:
         return google_enabled
 
     @property
+    def google_connected(self) -> bool:
+        """Return if Google is connected."""
+        google_connected: bool = self._prefs[PREF_GOOGLE_CONNECTED]
+        return google_connected
+
+    @property
     def google_report_state(self) -> bool:
         """Return if Google report state is enabled."""
         return self._prefs.get(PREF_GOOGLE_REPORT_STATE, DEFAULT_GOOGLE_REPORT_STATE)  # type: ignore[no-any-return]
@@ -288,8 +356,25 @@ class CloudPreferences:
 
     @property
     def tts_default_voice(self) -> tuple[str, str]:
-        """Return the default TTS voice."""
+        """Return the default TTS voice.
+
+        The return value is a tuple of language and voice.
+        """
         return self._prefs.get(PREF_TTS_DEFAULT_VOICE, DEFAULT_TTS_DEFAULT_VOICE)  # type: ignore[no-any-return]
+
+    @property
+    def strict_connection(self) -> http.const.StrictConnectionMode:
+        """Return the strict connection mode."""
+        mode = self._prefs.get(PREF_STRICT_CONNECTION)
+
+        if mode is None:
+            # Set to default value
+            # We store None in the store as the default value to detect if the user has changed the
+            # value or not.
+            mode = http.const.StrictConnectionMode.DISABLED
+        elif not isinstance(mode, http.const.StrictConnectionMode):
+            mode = http.const.StrictConnectionMode(mode)
+        return mode
 
     async def get_cloud_user(self) -> str:
         """Return ID of Home Assistant Cloud system user."""
@@ -338,6 +423,7 @@ class CloudPreferences:
             PREF_ENABLE_ALEXA: True,
             PREF_ENABLE_GOOGLE: True,
             PREF_ENABLE_REMOTE: False,
+            PREF_GOOGLE_CONNECTED: False,
             PREF_GOOGLE_DEFAULT_EXPOSE: DEFAULT_EXPOSED_DOMAINS,
             PREF_GOOGLE_ENTITY_CONFIGS: {},
             PREF_GOOGLE_SETTINGS_VERSION: GOOGLE_SETTINGS_VERSION,
@@ -345,5 +431,7 @@ class CloudPreferences:
             PREF_INSTANCE_ID: uuid.uuid4().hex,
             PREF_GOOGLE_SECURE_DEVICES_PIN: None,
             PREF_REMOTE_DOMAIN: None,
+            PREF_REMOTE_ALLOW_REMOTE_ENABLE: True,
             PREF_USERNAME: username,
+            PREF_STRICT_CONNECTION: None,
         }

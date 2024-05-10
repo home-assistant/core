@@ -1,4 +1,5 @@
 """API for Google Mail bound to Home Assistant OAuth."""
+
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials

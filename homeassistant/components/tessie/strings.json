@@ -59,6 +59,9 @@
       },
       "charge_state_charge_port_latch": {
         "name": "Charge cable lock"
+      },
+      "vehicle_state_speed_limit_mode_active": {
+        "name": "Speed limit"
       }
     },
     "media_player": {
@@ -98,6 +101,12 @@
       },
       "charge_state_battery_range": {
         "name": "Battery range"
+      },
+      "charge_state_est_battery_range": {
+        "name": "Battery range estimate"
+      },
+      "charge_state_ideal_battery_range": {
+        "name": "Battery range ideal"
       },
       "charge_state_minutes_to_full_charge": {
         "name": "Time to full charge"
@@ -167,8 +176,12 @@
       "charge_state_charge_port_door_open": {
         "name": "Charge port door"
       },
-      "vehicle_state_ft": { "name": "Frunk" },
-      "vehicle_state_rt": { "name": "Trunk" }
+      "vehicle_state_ft": {
+        "name": "Frunk"
+      },
+      "vehicle_state_rt": {
+        "name": "Trunk"
+      }
     },
     "select": {
       "climate_state_seat_heater_left": {
@@ -239,7 +252,7 @@
       "state": {
         "name": "Status"
       },
-      "charge_state_battery_heater_on": {
+      "climate_state_battery_heater": {
         "name": "Battery heater"
       },
       "charge_state_charge_enable_request": {
@@ -322,12 +335,24 @@
       }
     },
     "button": {
-      "wake": { "name": "Wake" },
-      "flash_lights": { "name": "Flash lights" },
-      "honk": { "name": "Honk horn" },
-      "trigger_homelink": { "name": "Homelink" },
-      "enable_keyless_driving": { "name": "Keyless driving" },
-      "boombox": { "name": "Play fart" }
+      "wake": {
+        "name": "Wake"
+      },
+      "flash_lights": {
+        "name": "Flash lights"
+      },
+      "honk": {
+        "name": "Honk horn"
+      },
+      "trigger_homelink": {
+        "name": "Homelink"
+      },
+      "enable_keyless_driving": {
+        "name": "Keyless driving"
+      },
+      "boombox": {
+        "name": "Play fart"
+      }
     },
     "switch": {
       "charge_state_charge_enable_request": {
@@ -364,8 +389,61 @@
     }
   },
   "exceptions": {
+    "unknown": {
+      "message": "An unknown issue occured changing {name}."
+    },
+    "not_supported": {
+      "message": "{name} is not supported."
+    },
+    "cable_connected": {
+      "message": "Charge cable is connected."
+    },
+    "already_active": {
+      "message": "{name} is already active."
+    },
+    "already_inactive": {
+      "message": "{name} is already inactive."
+    },
+    "incorrect_pin": {
+      "message": "Incorrect pin for {name}."
+    },
     "no_cable": {
       "message": "Insert cable to lock"
+    }
+  },
+  "issues": {
+    "deprecated_speed_limit_entity": {
+      "title": "Detected Tessie speed limit lock entity usage",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::tessie::issues::deprecated_speed_limit_entity::title%]",
+            "description": "The Tessie integration's speed limit lock entity has been deprecated and will be remove in 2024.11.0.\nHome Assistant detected that entity `{entity}` is being used in `{info}`\n\nYou should remove the speed limit lock entity from `{info}` then click submit to fix this issue."
+          }
+        }
+      }
+    },
+    "deprecated_speed_limit_locked": {
+      "title": "Detected Tessie speed limit lock entity locked",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::tessie::issues::deprecated_speed_limit_locked::title%]",
+            "description": "The Tessie integration's speed limit lock entity has been deprecated and will be remove in 2024.11.0.\n\nPlease remove this entity from any automation or script, disable the entity then click submit to fix this issue."
+          }
+        }
+      }
+    },
+    "deprecated_speed_limit_unlocked": {
+      "title": "Detected Tessie speed limit lock entity unlocked",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::tessie::issues::deprecated_speed_limit_unlocked::title%]",
+            "description": "The Tessie integration's speed limit lock entity has been deprecated and will be remove in 2024.11.0.\n\nPlease remove this entity from any automation or script, disable the entity then click submit to fix this issue."
+          }
+        }
+      }
     }
   }
 }

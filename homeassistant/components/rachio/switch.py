@@ -1,4 +1,5 @@
 """Integration with the Rachio Iro sprinkler system controller."""
+
 from abc import abstractmethod
 from contextlib import suppress
 from datetime import timedelta
@@ -10,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_ID
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -23,6 +24,7 @@ from .const import (
     CONF_MANUAL_RUN_MINS,
     DEFAULT_MANUAL_RUN_MINS,
     DOMAIN as DOMAIN_RACHIO,
+    KEY_CURRENT_STATUS,
     KEY_CUSTOM_CROP,
     KEY_CUSTOM_SHADE,
     KEY_CUSTOM_SLOPE,
@@ -35,7 +37,9 @@ from .const import (
     KEY_ON,
     KEY_RAIN_DELAY,
     KEY_RAIN_DELAY_END,
+    KEY_REPORTED_STATE,
     KEY_SCHEDULE_ID,
+    KEY_STATE,
     KEY_SUBTYPE,
     KEY_SUMMARY,
     KEY_TYPE,
@@ -45,6 +49,7 @@ from .const import (
     SCHEDULE_TYPE_FLEX,
     SERVICE_SET_ZONE_MOISTURE,
     SERVICE_START_MULTIPLE_ZONES,
+    SERVICE_START_WATERING,
     SIGNAL_RACHIO_CONTROLLER_UPDATE,
     SIGNAL_RACHIO_RAIN_DELAY_UPDATE,
     SIGNAL_RACHIO_SCHEDULE_UPDATE,
@@ -55,7 +60,7 @@ from .const import (
     SLOPE_STEEP,
 )
 from .device import RachioPerson
-from .entity import RachioDevice
+from .entity import RachioDevice, RachioHoseTimerEntity
 from .webhooks import (
     SUBTYPE_RAIN_DELAY_OFF,
     SUBTYPE_RAIN_DELAY_ON,
@@ -79,6 +84,7 @@ ATTR_SCHEDULE_ENABLED = "Enabled"
 ATTR_SCHEDULE_DURATION = "Duration"
 ATTR_SCHEDULE_TYPE = "Type"
 ATTR_SORT_ORDER = "sortOrder"
+ATTR_WATERING_DURATION = "Watering Duration seconds"
 ATTR_ZONE_NUMBER = "Zone number"
 ATTR_ZONE_SHADE = "Shade"
 ATTR_ZONE_SLOPE = "Slope"
@@ -140,6 +146,19 @@ async def async_setup_entry(
         else:
             raise HomeAssistantError("No matching zones found in given entity_ids")
 
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_START_WATERING,
+        {
+            vol.Optional(ATTR_DURATION): cv.positive_int,
+        },
+        "turn_on",
+    )
+
+    # If only hose timers on account, none of these services apply
+    if not zone_entities:
+        return
+
     hass.services.async_register(
         DOMAIN_RACHIO,
         SERVICE_START_MULTIPLE_ZONES,
@@ -168,10 +187,18 @@ def _create_entities(hass: HomeAssistant, config_entry: ConfigEntry) -> list[Ent
         schedules = controller.list_schedules()
         flex_schedules = controller.list_flex_schedules()
         current_schedule = controller.current_schedule
-        for zone in zones:
-            entities.append(RachioZone(person, controller, zone, current_schedule))
-        for sched in schedules + flex_schedules:
-            entities.append(RachioSchedule(person, controller, sched, current_schedule))
+        entities.extend(
+            RachioZone(person, controller, zone, current_schedule) for zone in zones
+        )
+        entities.extend(
+            RachioSchedule(person, controller, schedule, current_schedule)
+            for schedule in schedules + flex_schedules
+        )
+    entities.extend(
+        RachioValve(person, base_station, valve, base_station.coordinator)
+        for base_station in person.base_stations
+        for valve in base_station.coordinator.data.values()
+    )
     return entities
 
 
@@ -198,7 +225,6 @@ class RachioStandbySwitch(RachioSwitch):
 
     _attr_has_entity_name = True
     _attr_translation_key = "standby"
-    _attr_icon = "mdi:power"
 
     @property
     def unique_id(self) -> str:
@@ -242,11 +268,10 @@ class RachioRainDelay(RachioSwitch):
 
     _attr_has_entity_name = True
     _attr_translation_key = "rain_delay"
-    _attr_icon = "mdi:camera-timer"
 
-    def __init__(self, controller):
+    def __init__(self, controller) -> None:
         """Set up a Rachio rain delay switch."""
-        self._cancel_update = None
+        self._cancel_update: CALLBACK_TYPE | None = None
         super().__init__(controller)
 
     @property
@@ -322,7 +347,7 @@ class RachioZone(RachioSwitch):
 
     _attr_icon = "mdi:water"
 
-    def __init__(self, person, controller, data, current_schedule):
+    def __init__(self, person, controller, data, current_schedule) -> None:
         """Initialize a new Rachio Zone."""
         self.id = data[KEY_ID]
         self._attr_name = data[KEY_NAME]
@@ -377,11 +402,14 @@ class RachioZone(RachioSwitch):
         self.turn_off()
 
         # Start this zone
-        manual_run_time = timedelta(
-            minutes=self._person.config_entry.options.get(
-                CONF_MANUAL_RUN_MINS, DEFAULT_MANUAL_RUN_MINS
+        if ATTR_DURATION in kwargs:
+            manual_run_time = timedelta(minutes=kwargs[ATTR_DURATION])
+        else:
+            manual_run_time = timedelta(
+                minutes=self._person.config_entry.options.get(
+                    CONF_MANUAL_RUN_MINS, DEFAULT_MANUAL_RUN_MINS
+                )
             )
-        )
         # The API limit is 3 hours, and requires an int be passed
         self._controller.rachio.zone.start(self.zone_id, manual_run_time.seconds)
         _LOGGER.debug(
@@ -433,7 +461,7 @@ class RachioZone(RachioSwitch):
 class RachioSchedule(RachioSwitch):
     """Representation of one fixed schedule on the Rachio Iro."""
 
-    def __init__(self, person, controller, data, current_schedule):
+    def __init__(self, person, controller, data, current_schedule) -> None:
         """Initialize a new Rachio Schedule."""
         self._schedule_id = data[KEY_ID]
         self._duration = data[KEY_DURATION]
@@ -507,3 +535,47 @@ class RachioSchedule(RachioSwitch):
                 self.hass, SIGNAL_RACHIO_SCHEDULE_UPDATE, self._async_handle_update
             )
         )
+
+
+class RachioValve(RachioHoseTimerEntity, SwitchEntity):
+    """Representation of one smart hose timer valve."""
+
+    _attr_name = None
+
+    def __init__(self, person, base, data, coordinator) -> None:
+        """Initialize a new smart hose valve."""
+        super().__init__(data, coordinator)
+        self._person = person
+        self._base = base
+        self._attr_unique_id = f"{self.id}-valve"
+
+    def turn_on(self, **kwargs: Any) -> None:
+        """Turn on this valve."""
+        if ATTR_DURATION in kwargs:
+            manual_run_time = timedelta(minutes=kwargs[ATTR_DURATION])
+        else:
+            manual_run_time = timedelta(
+                minutes=self._person.config_entry.options.get(
+                    CONF_MANUAL_RUN_MINS, DEFAULT_MANUAL_RUN_MINS
+                )
+            )
+
+        self._base.start_watering(self.id, manual_run_time.seconds)
+        self._attr_is_on = True
+        self.schedule_update_ha_state(force_refresh=True)
+        _LOGGER.debug("Starting valve %s for %s", self._name, str(manual_run_time))
+
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn off this valve."""
+        self._base.stop_watering(self.id)
+        self._attr_is_on = False
+        self.schedule_update_ha_state(force_refresh=True)
+        _LOGGER.debug("Stopping watering on valve %s", self._name)
+
+    @callback
+    def _update_attr(self) -> None:
+        """Handle updated coordinator data."""
+        data = self.coordinator.data[self.id]
+
+        self._static_attrs = data[KEY_STATE][KEY_REPORTED_STATE]
+        self._attr_is_on = KEY_CURRENT_STATUS in self._static_attrs

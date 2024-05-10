@@ -1,4 +1,5 @@
 """Arcam media player."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -256,7 +257,7 @@ class ArcamFmj(MediaPlayerEntity):
             for preset in presets.values()
         ]
 
-        root = BrowseMedia(
+        return BrowseMedia(
             title="Arcam FMJ Receiver",
             media_class=MediaClass.DIRECTORY,
             media_content_id="root",
@@ -265,8 +266,6 @@ class ArcamFmj(MediaPlayerEntity):
             can_expand=True,
             children=radio,
         )
-
-        return root
 
     @convert_exception
     async def async_play_media(
@@ -325,9 +324,7 @@ class ArcamFmj(MediaPlayerEntity):
     def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
         source = self._state.get_source()
-        if source == SourceCodes.DAB:
-            value = MediaType.MUSIC
-        elif source == SourceCodes.FM:
+        if source in (SourceCodes.DAB, SourceCodes.FM):
             value = MediaType.MUSIC
         else:
             value = None

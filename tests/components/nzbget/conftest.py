@@ -1,4 +1,5 @@
 """Define fixtures available for all tests."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest

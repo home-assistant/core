@@ -1,0 +1,15 @@
+{
+  "services": {
+    "add_all_link": "mdi:link-variant",
+    "delete_all_link": "mdi:link-variant-remove",
+    "load_all_link_database": "mdi:database",
+    "print_all_link_database": "mdi:database-export",
+    "print_im_all_link_database": "mdi:database-export",
+    "x10_all_units_off": "mdi:power-off",
+    "x10_all_lights_on": "mdi:lightbulb-on",
+    "x10_all_lights_off": "mdi:lightbulb-off",
+    "scene_on": "mdi:palette",
+    "scene_off": "mdi:palette-outline",
+    "add_default_links": "mdi:link-variant-plus"
+  }
+}

@@ -1,12 +1,13 @@
-""""Config flow for Lupusec integration."""
+"""Config flow for Lupusec integration."""
 
+from json import JSONDecodeError
 import logging
 from typing import Any
 
 import lupupy
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_IP_ADDRESS,
@@ -15,7 +16,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
@@ -31,12 +31,12 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class LupusecConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Lupusec config flow."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -49,6 +49,8 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await test_host_connection(self.hass, host, username, password)
             except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except JSONDecodeError:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
@@ -64,7 +66,7 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Import the yaml config."""
         self._async_abort_entries_match(
             {
@@ -79,6 +81,8 @@ class LupusecConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await test_host_connection(self.hass, host, username, password)
         except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        except JSONDecodeError:
             return self.async_abort(reason="cannot_connect")
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
@@ -101,9 +105,9 @@ async def test_host_connection(
 
     try:
         await hass.async_add_executor_job(lupupy.Lupusec, username, password, host)
-    except lupupy.LupusecException:
+    except lupupy.LupusecException as ex:
         _LOGGER.error("Failed to connect to Lupusec device at %s", host)
-        raise CannotConnect
+        raise CannotConnect from ex
 
 
 class CannotConnect(HomeAssistantError):

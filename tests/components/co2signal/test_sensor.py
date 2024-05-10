@@ -1,4 +1,5 @@
 """Tests Electricity Maps sensor platform."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock
 

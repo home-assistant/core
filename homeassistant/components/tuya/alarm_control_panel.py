@@ -1,4 +1,5 @@
 """Support for Tuya Alarm."""
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -70,11 +71,11 @@ async def async_setup_entry(
         for device_id in device_ids:
             device = hass_data.manager.device_map[device_id]
             if descriptions := ALARM.get(device.category):
-                for description in descriptions:
-                    if description.key in device.status:
-                        entities.append(
-                            TuyaAlarmEntity(device, hass_data.manager, description)
-                        )
+                entities.extend(
+                    TuyaAlarmEntity(device, hass_data.manager, description)
+                    for description in descriptions
+                    if description.key in device.status
+                )
         async_add_entities(entities)
 
     async_discover_device([*hass_data.manager.device_map])
@@ -87,7 +88,6 @@ async def async_setup_entry(
 class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
     """Tuya Alarm Entity."""
 
-    _attr_icon = "mdi:security"
     _attr_name = None
 
     def __init__(

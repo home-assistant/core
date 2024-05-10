@@ -1,4 +1,5 @@
 """Helpers for config validation using voluptuous."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Hashable
@@ -10,7 +11,6 @@ from datetime import (
     timedelta,
 )
 from enum import Enum, StrEnum
-import inspect
 import logging
 from numbers import Number
 import os
@@ -29,6 +29,8 @@ from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    ATTR_FLOOR_ID,
+    ATTR_LABEL_ID,
     CONF_ABOVE,
     CONF_ALIAS,
     CONF_ATTRIBUTE,
@@ -103,6 +105,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.yaml.objects import NodeStrClass
 
 from . import script_variables as script_variables_helper, template as template_helper
+from .frame import get_integration_logger
 
 TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
 
@@ -158,15 +161,15 @@ def path(value: Any) -> str:
 # https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
 def has_at_least_one_key(*keys: Any) -> Callable[[dict], dict]:
     """Validate that at least one key exists."""
+    key_set = set(keys)
 
     def validate(obj: dict) -> dict:
         """Test keys exist in dict."""
         if not isinstance(obj, dict):
             raise vol.Invalid("expected dictionary")
 
-        for k in obj:
-            if k in keys:
-                return obj
+        if not key_set.isdisjoint(obj):
+            return obj
         expected = ", ".join(str(k) for k in keys)
         raise vol.Invalid(f"must contain at least one of {expected}.")
 
@@ -245,13 +248,13 @@ def is_regex(value: Any) -> re.Pattern[Any]:
     """Validate that a string is a valid regular expression."""
     try:
         r = re.compile(value)
-        return r
     except TypeError as err:
         raise vol.Invalid(
             f"value {value} is of the wrong type for a regular expression"
         ) from err
     except re.error as err:
         raise vol.Invalid(f"value {value} is not a valid regular expression") from err
+    return r
 
 
 def isfile(value: Any) -> str:
@@ -281,18 +284,15 @@ def isdir(value: Any) -> str:
 
 
 @overload
-def ensure_list(value: None) -> list[Any]:
-    ...
+def ensure_list(value: None) -> list[Any]: ...
 
 
 @overload
-def ensure_list(value: list[_T]) -> list[_T]:
-    ...
+def ensure_list(value: list[_T]) -> list[_T]: ...
 
 
 @overload
-def ensure_list(value: list[_T] | _T) -> list[_T]:
-    ...
+def ensure_list(value: list[_T] | _T) -> list[_T]: ...
 
 
 def ensure_list(value: _T | None) -> list[_T] | list[Any]:
@@ -429,6 +429,19 @@ def icon(value: Any) -> str:
         return str_value
 
     raise vol.Invalid('Icons should be specified in the form "prefix:name"')
+
+
+_COLOR_HEX = re.compile(r"^#[0-9A-F]{6}$", re.IGNORECASE)
+
+
+def color_hex(value: Any) -> str:
+    """Validate a hex color code."""
+    str_value = str(value)
+
+    if not _COLOR_HEX.match(str_value):
+        raise vol.Invalid("Color should be in the format #RRGGBB")
+
+    return str_value
 
 
 _TIME_PERIOD_DICT_KEYS = ("days", "hours", "minutes", "seconds", "milliseconds")
@@ -610,7 +623,7 @@ def string(value: Any) -> str:
     # This is expected to be the most common case, so check it first.
     if (
         type(value) is str  # noqa: E721
-        or type(value) is NodeStrClass  # noqa: E721
+        or type(value) is NodeStrClass
         or isinstance(value, str)
     ):
         return value
@@ -658,9 +671,9 @@ def template(value: Any | None) -> template_helper.Template:
 
     try:
         template_value.ensure_valid()
-        return template_value
     except TemplateError as ex:
         raise vol.Invalid(f"invalid template ({ex})") from ex
+    return template_value
 
 
 def dynamic_template(value: Any | None) -> template_helper.Template:
@@ -680,9 +693,9 @@ def dynamic_template(value: Any | None) -> template_helper.Template:
 
     try:
         template_value.ensure_valid()
-        return template_value
     except TemplateError as ex:
         raise vol.Invalid(f"invalid template ({ex})") from ex
+    return template_value
 
 
 def template_complex(value: Any) -> Any:
@@ -877,28 +890,21 @@ def _deprecated_or_removed(
         - No warning if neither key nor replacement_key are provided
             - Adds replacement_key with default value in this case
     """
-    module = inspect.getmodule(inspect.stack(context=0)[2].frame)
-    if module is not None:
-        module_name = module.__name__
-    else:
-        # If Python is unable to access the sources files, the call stack frame
-        # will be missing information, so let's guard.
-        # https://github.com/home-assistant/core/issues/24982
-        module_name = __name__
-    if option_removed:
-        logger_func = logging.getLogger(module_name).error
-        option_status = "has been removed"
-    else:
-        logger_func = logging.getLogger(module_name).warning
-        option_status = "is deprecated"
 
     def validator(config: dict) -> dict:
         """Check if key is in config and log warning or error."""
         if key in config:
+            if option_removed:
+                level = logging.ERROR
+                option_status = "has been removed"
+            else:
+                level = logging.WARNING
+                option_status = "is deprecated"
+
             try:
                 near = (
                     f"near {config.__config_file__}"  # type: ignore[attr-defined]
-                    f":{config.__line__} "
+                    f":{config.__line__} "  # type: ignore[attr-defined]
                 )
             except AttributeError:
                 near = ""
@@ -915,7 +921,7 @@ def _deprecated_or_removed(
             if raise_if_present:
                 raise vol.Invalid(warning % arguments)
 
-            logger_func(warning, *arguments)
+            get_integration_logger(__name__).log(level, warning, *arguments)
             value = config[key]
             if replacement_key or option_removed:
                 config.pop(key)
@@ -1099,26 +1105,16 @@ def expand_condition_shorthand(value: Any | None) -> Any:
 def empty_config_schema(domain: str) -> Callable[[dict], dict]:
     """Return a config schema which logs if there are configuration parameters."""
 
-    module = inspect.getmodule(inspect.stack(context=0)[2].frame)
-    if module is not None:
-        module_name = module.__name__
-    else:
-        # If Python is unable to access the sources files, the call stack frame
-        # will be missing information, so let's guard.
-        # https://github.com/home-assistant/core/issues/24982
-        module_name = __name__
-    logger_func = logging.getLogger(module_name).error
-
     def validator(config: dict) -> dict:
-        if domain in config and config[domain]:
-            logger_func(
+        if config_domain := config.get(domain):
+            get_integration_logger(__name__).error(
                 (
                     "The %s integration does not support any configuration parameters, "
                     "got %s. Please remove the configuration parameters from your "
                     "configuration."
                 ),
                 domain,
-                config[domain],
+                config_domain,
             )
         return config
 
@@ -1132,16 +1128,6 @@ def _no_yaml_config_schema(
     translation_placeholders: dict[str, str],
 ) -> Callable[[dict], dict]:
     """Return a config schema which logs if attempted to setup from YAML."""
-
-    module = inspect.getmodule(inspect.stack(context=0)[2].frame)
-    if module is not None:
-        module_name = module.__name__
-    else:
-        # If Python is unable to access the sources files, the call stack frame
-        # will be missing information, so let's guard.
-        # https://github.com/home-assistant/core/issues/24982
-        module_name = __name__
-    logger_func = logging.getLogger(module_name).error
 
     def raise_issue() -> None:
         # pylint: disable-next=import-outside-toplevel
@@ -1163,7 +1149,7 @@ def _no_yaml_config_schema(
 
     def validator(config: dict) -> dict:
         if domain in config:
-            logger_func(
+            get_integration_logger(__name__).error(
                 (
                     "The %s integration does not support YAML setup, please remove it "
                     "from your configuration file"
@@ -1229,6 +1215,12 @@ ENTITY_SERVICE_FIELDS = {
     vol.Optional(ATTR_AREA_ID): vol.Any(
         ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
     ),
+    vol.Optional(ATTR_FLOOR_ID): vol.Any(
+        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+    ),
+    vol.Optional(ATTR_LABEL_ID): vol.Any(
+        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+    ),
 }
 
 TARGET_SERVICE_FIELDS = {
@@ -1246,12 +1238,19 @@ TARGET_SERVICE_FIELDS = {
     vol.Optional(ATTR_AREA_ID): vol.Any(
         ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
     ),
+    vol.Optional(ATTR_FLOOR_ID): vol.Any(
+        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+    ),
+    vol.Optional(ATTR_LABEL_ID): vol.Any(
+        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+    ),
 }
 
 
-def make_entity_service_schema(
-    schema: dict, *, extra: int = vol.PREVENT_EXTRA
-) -> vol.Schema:
+_HAS_ENTITY_SERVICE_FIELD = has_at_least_one_key(*ENTITY_SERVICE_FIELDS)
+
+
+def _make_entity_service_schema(schema: dict, extra: int) -> vol.Schema:
     """Create an entity service schema."""
     return vol.Schema(
         vol.All(
@@ -1264,9 +1263,24 @@ def make_entity_service_schema(
                 },
                 extra=extra,
             ),
-            has_at_least_one_key(*ENTITY_SERVICE_FIELDS),
+            _HAS_ENTITY_SERVICE_FIELD,
         )
     )
+
+
+BASE_ENTITY_SCHEMA = _make_entity_service_schema({}, vol.PREVENT_EXTRA)
+
+
+def make_entity_service_schema(
+    schema: dict, *, extra: int = vol.PREVENT_EXTRA
+) -> vol.Schema:
+    """Create an entity service schema."""
+    if not schema and extra == vol.PREVENT_EXTRA:
+        # If the schema is empty and we don't allow extra keys, we can return
+        # the base schema and avoid compiling a new schema which is the case
+        # for ~50% of services.
+        return BASE_ENTITY_SCHEMA
+    return _make_entity_service_schema(schema, extra)
 
 
 SCRIPT_CONVERSATION_RESPONSE_SCHEMA = vol.Any(template, None)
@@ -1336,7 +1350,8 @@ SERVICE_SCHEMA = vol.All(
 )
 
 NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
-    vol.Coerce(float), vol.All(str, entity_domain(["input_number", "number", "sensor"]))
+    vol.Coerce(float),
+    vol.All(str, entity_domain(["input_number", "number", "sensor", "zone"])),
 )
 
 CONDITION_BASE_SCHEMA = {
@@ -1811,54 +1826,42 @@ SCRIPT_ACTION_WAIT_FOR_TRIGGER = "wait_for_trigger"
 SCRIPT_ACTION_WAIT_TEMPLATE = "wait_template"
 
 
+ACTIONS_MAP = {
+    CONF_DELAY: SCRIPT_ACTION_DELAY,
+    CONF_WAIT_TEMPLATE: SCRIPT_ACTION_WAIT_TEMPLATE,
+    CONF_CONDITION: SCRIPT_ACTION_CHECK_CONDITION,
+    "and": SCRIPT_ACTION_CHECK_CONDITION,
+    "or": SCRIPT_ACTION_CHECK_CONDITION,
+    "not": SCRIPT_ACTION_CHECK_CONDITION,
+    CONF_EVENT: SCRIPT_ACTION_FIRE_EVENT,
+    CONF_DEVICE_ID: SCRIPT_ACTION_DEVICE_AUTOMATION,
+    CONF_SCENE: SCRIPT_ACTION_ACTIVATE_SCENE,
+    CONF_REPEAT: SCRIPT_ACTION_REPEAT,
+    CONF_CHOOSE: SCRIPT_ACTION_CHOOSE,
+    CONF_WAIT_FOR_TRIGGER: SCRIPT_ACTION_WAIT_FOR_TRIGGER,
+    CONF_VARIABLES: SCRIPT_ACTION_VARIABLES,
+    CONF_IF: SCRIPT_ACTION_IF,
+    CONF_SERVICE: SCRIPT_ACTION_CALL_SERVICE,
+    CONF_SERVICE_TEMPLATE: SCRIPT_ACTION_CALL_SERVICE,
+    CONF_STOP: SCRIPT_ACTION_STOP,
+    CONF_PARALLEL: SCRIPT_ACTION_PARALLEL,
+    CONF_SET_CONVERSATION_RESPONSE: SCRIPT_ACTION_SET_CONVERSATION_RESPONSE,
+}
+
+ACTIONS_SET = set(ACTIONS_MAP)
+
+
 def determine_script_action(action: dict[str, Any]) -> str:
     """Determine action type."""
-    if CONF_DELAY in action:
-        return SCRIPT_ACTION_DELAY
-
-    if CONF_WAIT_TEMPLATE in action:
-        return SCRIPT_ACTION_WAIT_TEMPLATE
-
-    if any(key in action for key in (CONF_CONDITION, "and", "or", "not")):
-        return SCRIPT_ACTION_CHECK_CONDITION
-
-    if CONF_EVENT in action:
-        return SCRIPT_ACTION_FIRE_EVENT
-
-    if CONF_DEVICE_ID in action:
-        return SCRIPT_ACTION_DEVICE_AUTOMATION
-
-    if CONF_SCENE in action:
-        return SCRIPT_ACTION_ACTIVATE_SCENE
-
-    if CONF_REPEAT in action:
-        return SCRIPT_ACTION_REPEAT
-
-    if CONF_CHOOSE in action:
-        return SCRIPT_ACTION_CHOOSE
-
-    if CONF_WAIT_FOR_TRIGGER in action:
-        return SCRIPT_ACTION_WAIT_FOR_TRIGGER
-
-    if CONF_VARIABLES in action:
-        return SCRIPT_ACTION_VARIABLES
-
-    if CONF_IF in action:
-        return SCRIPT_ACTION_IF
-
-    if CONF_SERVICE in action or CONF_SERVICE_TEMPLATE in action:
-        return SCRIPT_ACTION_CALL_SERVICE
-
-    if CONF_STOP in action:
-        return SCRIPT_ACTION_STOP
-
-    if CONF_PARALLEL in action:
-        return SCRIPT_ACTION_PARALLEL
-
-    if CONF_SET_CONVERSATION_RESPONSE in action:
-        return SCRIPT_ACTION_SET_CONVERSATION_RESPONSE
-
-    raise ValueError("Unable to determine action")
+    if not (actions := ACTIONS_SET.intersection(action)):
+        raise ValueError("Unable to determine action")
+    if len(actions) > 1:
+        # Ambiguous action, select the first one in the
+        # order of the ACTIONS_MAP
+        for action_key, _script_action in ACTIONS_MAP.items():
+            if action_key in actions:
+                return _script_action
+    return ACTIONS_MAP[actions.pop()]
 
 
 ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {

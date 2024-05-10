@@ -1,4 +1,5 @@
 """The Google Generative AI Conversation integration."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -63,7 +64,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for image_filename in image_filenames:
             if not hass.config.is_allowed_path(image_filename):
                 raise HomeAssistantError(
-                    f"Cannot read `{image_filename}`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
+                    f"Cannot read `{image_filename}`, no access to path; "
+                    "`allowlist_external_dirs` may need to be adjusted in "
+                    "`configuration.yaml`"
                 )
             if not Path(image_filename).exists():
                 raise HomeAssistantError(f"`{image_filename}` does not exist")
@@ -179,11 +182,11 @@ class GoogleGenerativeAIAgent(conversation.AbstractConversationAgent):
             conversation_id = ulid.ulid_now()
             messages = [{}, {}]
 
+        intent_response = intent.IntentResponse(language=user_input.language)
         try:
             prompt = self._async_generate_prompt(raw_prompt)
         except TemplateError as err:
             _LOGGER.error("Error rendering prompt: %s", err)
-            intent_response = intent.IntentResponse(language=user_input.language)
             intent_response.async_set_error(
                 intent.IntentResponseErrorCode.UNKNOWN,
                 f"Sorry, I had a problem with my template: {err}",
@@ -207,7 +210,6 @@ class GoogleGenerativeAIAgent(conversation.AbstractConversationAgent):
             genai_types.StopCandidateException,
         ) as err:
             _LOGGER.error("Error sending message: %s", err)
-            intent_response = intent.IntentResponse(language=user_input.language)
             intent_response.async_set_error(
                 intent.IntentResponseErrorCode.UNKNOWN,
                 f"Sorry, I had a problem talking to Google Generative AI: {err}",
@@ -217,9 +219,15 @@ class GoogleGenerativeAIAgent(conversation.AbstractConversationAgent):
             )
 
         _LOGGER.debug("Response: %s", chat_response.parts)
+        if not chat_response.parts:
+            intent_response.async_set_error(
+                intent.IntentResponseErrorCode.UNKNOWN,
+                "Sorry, I had a problem talking to Google Generative AI. Likely blocked",
+            )
+            return conversation.ConversationResult(
+                response=intent_response, conversation_id=conversation_id
+            )
         self.history[conversation_id] = chat.history
-
-        intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(chat_response.text)
         return conversation.ConversationResult(
             response=intent_response, conversation_id=conversation_id

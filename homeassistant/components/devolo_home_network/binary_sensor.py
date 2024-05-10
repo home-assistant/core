@@ -1,4 +1,5 @@
 """Platform for binary sensor integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -32,18 +33,11 @@ def _is_connected_to_router(entity: DevoloBinarySensorEntity) -> bool:
     )
 
 
-@dataclass(frozen=True)
-class DevoloBinarySensorRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class DevoloBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes devolo sensor entity."""
 
     value_func: Callable[[DevoloBinarySensorEntity], bool]
-
-
-@dataclass(frozen=True)
-class DevoloBinarySensorEntityDescription(
-    BinarySensorEntityDescription, DevoloBinarySensorRequiredKeysMixin
-):
-    """Describes devolo sensor entity."""
 
 
 SENSOR_TYPES: dict[str, DevoloBinarySensorEntityDescription] = {
@@ -52,7 +46,6 @@ SENSOR_TYPES: dict[str, DevoloBinarySensorEntityDescription] = {
         device_class=BinarySensorDeviceClass.PLUG,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:router-network",
         value_func=_is_connected_to_router,
     ),
 }

@@ -1,11 +1,11 @@
 """Component to create an interface to a Pilight daemon."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import timedelta
 import functools
 import logging
-import socket
 import threading
 from typing import Any, ParamSpec
 
@@ -75,7 +75,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     try:
         pilight_client = pilight.Client(host=host, port=port)
-    except (OSError, socket.timeout) as err:
+    except (OSError, TimeoutError) as err:
         _LOGGER.error("Unable to connect to %s on port %s: %s", host, port, err)
         return False
 
@@ -117,11 +117,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             {"protocol": data["protocol"], "uuid": data["uuid"]}, **data["message"]
         )
 
-        # No whitelist defined, put data on event bus
-        if not whitelist:
-            hass.bus.fire(EVENT, data)
-        # Check if data matches the defined whitelist
-        elif all(str(data[key]) in whitelist[key] for key in whitelist):
+        # No whitelist defined or data matches whitelist, put data on event bus
+        if not whitelist or all(str(data[key]) in whitelist[key] for key in whitelist):
             hass.bus.fire(EVENT, data)
 
     pilight_client.set_callback(handle_received_code)

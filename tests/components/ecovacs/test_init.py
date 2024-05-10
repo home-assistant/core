@@ -1,7 +1,9 @@
 """Test init of ecovacs."""
+
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
+from deebot_client.capabilities import Capabilities
 from deebot_client.exceptions import DeebotError, InvalidAuthenticationError
 import pytest
 from syrupy import SnapshotAssertion
@@ -18,21 +20,34 @@ from .const import IMPORT_DATA
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures(
+    "mock_authenticator", "mock_mqtt_client", "mock_device_execute"
+)
 async def test_load_unload_config_entry(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test loading and unloading the integration."""
-    mock_config_entry = init_integration
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert DOMAIN in hass.data
+    with patch(
+        "homeassistant.components.ecovacs.EcovacsController",
+        autospec=True,
+    ):
+        mock_config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-    assert DOMAIN not in hass.data
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+        assert DOMAIN not in hass.data
+        controller = mock_config_entry.runtime_data
+        assert isinstance(controller, EcovacsController)
+        controller.initialize.assert_called_once()
+
+        await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        controller.teardown.assert_called_once()
+
+        assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.fixture
@@ -106,20 +121,21 @@ async def test_devices_in_dr(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test all devices are in the device registry."""
-    for device in controller.devices:
+    for device in controller.devices(Capabilities):
         assert (
             device_entry := device_registry.async_get_device(
-                identifiers={(DOMAIN, device.device_info.did)}
+                identifiers={(DOMAIN, device.device_info["did"])}
             )
         )
-        assert device_entry == snapshot(name=device.device_info.did)
+        assert device_entry == snapshot(name=device.device_info["did"])
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 @pytest.mark.parametrize(
     ("device_fixture", "entities"),
     [
-        ("yna5x1", 25),
+        ("yna5x1", 26),
+        ("5xu9h3", 24),
     ],
 )
 async def test_all_entities_loaded(

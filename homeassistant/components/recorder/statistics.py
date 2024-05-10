@@ -1,9 +1,9 @@
 """Statistics helper."""
+
 from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Sequence
-import contextlib
 import dataclasses
 from datetime import datetime, timedelta
 from functools import lru_cache, partial
@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
 from sqlalchemy import Select, and_, bindparam, func, lambda_stmt, select, text
 from sqlalchemy.engine.row import Row
-from sqlalchemy.exc import SQLAlchemyError, StatementError
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 import voluptuous as vol
@@ -72,6 +72,7 @@ from .models import (
 from .util import (
     execute,
     execute_stmt_lambda_element,
+    filter_unique_constraint_integrity_error,
     get_instance,
     retryable_database_job,
     session_scope,
@@ -348,8 +349,7 @@ def get_start_time() -> datetime:
     now = dt_util.utcnow()
     current_period_minutes = now.minute - now.minute % 5
     current_period = now.replace(minute=current_period_minutes, second=0, microsecond=0)
-    last_period = current_period - timedelta(minutes=5)
-    return last_period
+    return current_period - timedelta(minutes=5)
 
 
 def _compile_hourly_statistics_summary_mean_stmt(
@@ -454,7 +454,9 @@ def compile_missing_statistics(instance: Recorder) -> bool:
 
     with session_scope(
         session=instance.get_session(),
-        exception_filter=_filter_unique_constraint_integrity_error(instance),
+        exception_filter=filter_unique_constraint_integrity_error(
+            instance, "statistic"
+        ),
     ) as session:
         # Find the newest statistics run, if any
         if last_run := session.query(func.max(StatisticsRuns.start)).scalar():
@@ -483,10 +485,18 @@ def compile_statistics(instance: Recorder, start: datetime, fire_events: bool) -
 
     The actual calculation is delegated to the platforms.
     """
+    # Define modified_statistic_ids outside of the "with" statement as
+    # _compile_statistics may raise and be trapped by
+    # filter_unique_constraint_integrity_error which would make
+    # modified_statistic_ids unbound.
+    modified_statistic_ids: set[str] | None = None
+
     # Return if we already have 5-minute statistics for the requested period
     with session_scope(
         session=instance.get_session(),
-        exception_filter=_filter_unique_constraint_integrity_error(instance),
+        exception_filter=filter_unique_constraint_integrity_error(
+            instance, "statistic"
+        ),
     ) as session:
         modified_statistic_ids = _compile_statistics(
             instance, session, start, fire_events
@@ -636,7 +646,6 @@ def _insert_statistics(
     try:
         stat = table.from_stats(metadata_id, statistic)
         session.add(stat)
-        return stat
     except SQLAlchemyError:
         _LOGGER.exception(
             "Unexpected exception when inserting statistics %s:%s ",
@@ -644,6 +653,7 @@ def _insert_statistics(
             statistic,
         )
         return None
+    return stat
 
 
 def _update_statistics(
@@ -680,7 +690,7 @@ def get_metadata_with_session(
     session: Session,
     *,
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
     """Fetch meta data.
@@ -701,7 +711,7 @@ def get_metadata(
     hass: HomeAssistant,
     *,
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
     """Return metadata for statistic_ids."""
@@ -737,7 +747,9 @@ def update_statistics_metadata(
     if new_statistic_id is not UNDEFINED and new_statistic_id is not None:
         with session_scope(
             session=instance.get_session(),
-            exception_filter=_filter_unique_constraint_integrity_error(instance),
+            exception_filter=filter_unique_constraint_integrity_error(
+                instance, "statistic"
+            ),
         ) as session:
             statistics_meta_manager.update_statistic_id(
                 session, DOMAIN, statistic_id, new_statistic_id
@@ -747,7 +759,7 @@ def update_statistics_metadata(
 async def async_list_statistic_ids(
     hass: HomeAssistant,
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
 ) -> list[dict]:
     """Return all statistic_ids (or filtered one) and unit of measurement.
 
@@ -817,7 +829,7 @@ def _flatten_list_statistic_ids_metadata_result(
 def list_statistic_ids(
     hass: HomeAssistant,
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
 ) -> list[dict]:
     """Return all statistic_ids (or filtered one) and unit of measurement.
 
@@ -2032,7 +2044,7 @@ def _fast_build_sum_list(
     ]
 
 
-def _sorted_statistics_to_dict(  # noqa: C901
+def _sorted_statistics_to_dict(
     hass: HomeAssistant,
     session: Session,
     stats: Sequence[Row[Any]],
@@ -2056,7 +2068,7 @@ def _sorted_statistics_to_dict(  # noqa: C901
     seen_statistic_ids: set[str] = set()
     key_func = itemgetter(metadata_id_idx)
     for meta_id, group in groupby(stats, key_func):
-        stats_list = stats_by_meta_id[meta_id] = list(group)
+        stats_by_meta_id[meta_id] = list(group)
         seen_statistic_ids.add(metadata[meta_id]["statistic_id"])
 
     # Set all statistic IDs to empty lists in result set to maintain the order
@@ -2246,54 +2258,6 @@ def async_add_external_statistics(
     _async_import_statistics(hass, metadata, statistics)
 
 
-def _filter_unique_constraint_integrity_error(
-    instance: Recorder,
-) -> Callable[[Exception], bool]:
-    def _filter_unique_constraint_integrity_error(err: Exception) -> bool:
-        """Handle unique constraint integrity errors."""
-        if not isinstance(err, StatementError):
-            return False
-
-        assert instance.engine is not None
-        dialect_name = instance.engine.dialect.name
-
-        ignore = False
-        if (
-            dialect_name == SupportedDialect.SQLITE
-            and "UNIQUE constraint failed" in str(err)
-        ):
-            ignore = True
-        if (
-            dialect_name == SupportedDialect.POSTGRESQL
-            and err.orig
-            and hasattr(err.orig, "pgcode")
-            and err.orig.pgcode == "23505"
-        ):
-            ignore = True
-        if (
-            dialect_name == SupportedDialect.MYSQL
-            and err.orig
-            and hasattr(err.orig, "args")
-        ):
-            with contextlib.suppress(TypeError):
-                if err.orig.args[0] == 1062:
-                    ignore = True
-
-        if ignore:
-            _LOGGER.warning(
-                (
-                    "Blocked attempt to insert duplicated statistic rows, please report"
-                    " at %s"
-                ),
-                "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+recorder%22",
-                exc_info=err,
-            )
-
-        return ignore
-
-    return _filter_unique_constraint_integrity_error
-
-
 def _import_statistics_with_session(
     instance: Recorder,
     session: Session,
@@ -2397,7 +2361,9 @@ def import_statistics(
 
     with session_scope(
         session=instance.get_session(),
-        exception_filter=_filter_unique_constraint_integrity_error(instance),
+        exception_filter=filter_unique_constraint_integrity_error(
+            instance, "statistic"
+        ),
     ) as session:
         return _import_statistics_with_session(
             instance, session, metadata, statistics, table

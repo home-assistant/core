@@ -4,9 +4,13 @@
       "title": "MQTT vacuum entities with deprecated `schema` config settings found in your configuration.yaml",
       "description": "The `schema` setting for MQTT vacuum entities is deprecated and should be removed. Please adjust your configuration.yaml and restart Home Assistant to fix this issue."
     },
-    "deprecated_climate_aux_property": {
-      "title": "MQTT entities with auxiliary heat support found",
-      "description": "Entity `{entity_id}` has auxiliary heat support enabled, which has been deprecated for MQTT climate devices. Please adjust your configuration and remove deprecated config options from your configuration and restart Home Assistant to fix this issue."
+    "deprecated_color_handling": {
+      "title": "Deprecated color handling used for MQTT light",
+      "description": "An MQTT light config (with `json` schema) found in `configuration.yaml` uses deprecated color handling flags.\n\nConfiguration found:\n```yaml\n{config}\n```\nDeprecated flags: **{deprecated_flags}**.\n\nUse the `supported_color_modes` option instead and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
+    },
+    "deprecated_color_mode_flag": {
+      "title": "Deprecated color_mode option flag used for MQTT light",
+      "description": "An MQTT light config (with `json` schema) found in `configuration.yaml` uses a deprecated `color_mode` flag.\n\nConfiguration found:\n```yaml\n{config}\n```\n\nRemove the option from your config and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
     },
     "invalid_platform_config": {
       "title": "Invalid config found for mqtt {domain} item",
@@ -64,10 +68,23 @@
         "data_description": {
           "discovery": "Option to enable MQTT automatic discovery."
         }
+      },
+      "reauth_confirm": {
+        "title": "Re-authentication required with the MQTT broker",
+        "description": "The MQTT broker reported an authentication error. Please confirm the brokers correct usernname and password.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::mqtt::config::step::broker::data_description::username%]",
+          "password": "[%key:component::mqtt::config::step::broker::data_description::password%]"
+        }
       }
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
@@ -80,6 +97,7 @@
       "bad_client_cert_key": "Client certificate and private key are not a valid pair",
       "bad_ws_headers": "Supply valid HTTP headers as a JSON object",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_inclusion": "The client certificate and private key must be configurered together"
     }
   },
@@ -250,14 +268,20 @@
     }
   },
   "exceptions": {
+    "command_template_error": {
+      "message": "Parsing template `{command_template}` for entity `{entity_id}` failed with error: {error}."
+    },
     "invalid_platform_config": {
       "message": "Reloading YAML config for manually configured MQTT `{domain}` item failed. See logs for more details."
     },
+    "invalid_publish_topic": {
+      "message": "Unable to publish: topic template `{topic_template}` produced an invalid topic `{topic}` after rendering ({error})"
+    },
     "mqtt_not_setup_cannot_subscribe": {
-      "message": "Cannot subscribe to topic '{topic}', make sure MQTT is set up correctly."
+      "message": "Cannot subscribe to topic \"{topic}\", make sure MQTT is set up correctly."
     },
     "mqtt_not_setup_cannot_publish": {
-      "message": "Cannot publish to topic '{topic}', make sure MQTT is set up correctly."
+      "message": "Cannot publish to topic \"{topic}\", make sure MQTT is set up correctly."
     }
   }
 }

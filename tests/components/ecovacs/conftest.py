@@ -1,9 +1,10 @@
 """Common fixtures for the Ecovacs tests."""
+
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
-from deebot_client.const import PATH_API_APPSVR_APP
+from deebot_client import const
 from deebot_client.device import Device
 from deebot_client.exceptions import ApiError
 from deebot_client.models import Credentials
@@ -54,12 +55,15 @@ def device_fixture() -> str:
 @pytest.fixture
 def mock_authenticator(device_fixture: str) -> Generator[Mock, None, None]:
     """Mock the authenticator."""
-    with patch(
-        "homeassistant.components.ecovacs.controller.Authenticator",
-        autospec=True,
-    ) as mock, patch(
-        "homeassistant.components.ecovacs.config_flow.Authenticator",
-        new=mock,
+    with (
+        patch(
+            "homeassistant.components.ecovacs.controller.Authenticator",
+            autospec=True,
+        ) as mock,
+        patch(
+            "homeassistant.components.ecovacs.config_flow.Authenticator",
+            new=mock,
+        ),
     ):
         authenticator = mock.return_value
         authenticator.authenticate.return_value = Credentials("token", "user_id", 0)
@@ -75,9 +79,13 @@ def mock_authenticator(device_fixture: str) -> Generator[Mock, None, None]:
             query_params: dict[str, Any] | None = None,
             headers: dict[str, Any] | None = None,
         ) -> dict[str, Any]:
-            if path == PATH_API_APPSVR_APP:
-                return {"code": 0, "devices": devices, "errno": "0"}
-            raise ApiError("Path not mocked: {path}")
+            match path:
+                case const.PATH_API_APPSVR_APP:
+                    return {"code": 0, "devices": devices, "errno": "0"}
+                case const.PATH_API_USERS_USER:
+                    return {"todo": "result", "result": "ok", "devices": devices}
+                case _:
+                    raise ApiError("Path not mocked: {path}")
 
         authenticator.post_authenticated.side_effect = post_authenticated
         yield authenticator
@@ -92,12 +100,15 @@ def mock_authenticator_authenticate(mock_authenticator: Mock) -> AsyncMock:
 @pytest.fixture
 def mock_mqtt_client(mock_authenticator: Mock) -> Mock:
     """Mock the MQTT client."""
-    with patch(
-        "homeassistant.components.ecovacs.controller.MqttClient",
-        autospec=True,
-    ) as mock, patch(
-        "homeassistant.components.ecovacs.config_flow.MqttClient",
-        new=mock,
+    with (
+        patch(
+            "homeassistant.components.ecovacs.controller.MqttClient",
+            autospec=True,
+        ) as mock,
+        patch(
+            "homeassistant.components.ecovacs.config_flow.MqttClient",
+            new=mock,
+        ),
     ):
         client = mock.return_value
         client._authenticator = mock_authenticator
@@ -145,8 +156,6 @@ async def init_integration(
 
 
 @pytest.fixture
-def controller(
-    hass: HomeAssistant, init_integration: MockConfigEntry
-) -> EcovacsController:
+def controller(init_integration: MockConfigEntry) -> EcovacsController:
     """Get the controller for the config entry."""
-    return hass.data[DOMAIN][init_integration.entry_id]
+    return init_integration.runtime_data

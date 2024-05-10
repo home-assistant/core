@@ -19,7 +19,7 @@ from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 CALENDAR_NAME = "Light Schedule"
-FRIENDLY_NAME = "Light schedule"
+FRIENDLY_NAME = "Light Schedule"
 STORAGE_KEY = "light_schedule"
 TEST_ENTITY = "calendar.light_schedule"
 

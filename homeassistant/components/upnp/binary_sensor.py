@@ -1,4 +1,5 @@
 """Support for UPnP/IGD Binary Sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

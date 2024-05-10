@@ -1,4 +1,5 @@
 """Test entity discovery for device-specific schemas for the Z-Wave JS integration."""
+
 import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -133,6 +134,32 @@ async def test_merten_507801(
     assert state
 
 
+async def test_shelly_001p10_disabled_entities(
+    hass: HomeAssistant, client, shelly_qnsh_001P10_shutter, integration
+) -> None:
+    """Test that Shelly 001P10 entity created by endpoint 2 is disabled."""
+    registry = er.async_get(hass)
+    entity_ids = [
+        "cover.wave_shutter_2",
+    ]
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state is None
+        entry = registry.async_get(entity_id)
+        assert entry
+        assert entry.disabled
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+        # Test enabling entity
+        updated_entry = registry.async_update_entity(entry.entity_id, disabled_by=None)
+        assert updated_entry != entry
+        assert updated_entry.disabled is False
+
+    # Test if the main entity from endpoint 1 was created.
+    state = hass.states.get("cover.wave_shutter")
+    assert state
+
+
 async def test_merten_507801_disabled_enitites(
     hass: HomeAssistant, client, merten_507801, integration
 ) -> None:
@@ -152,9 +179,7 @@ async def test_merten_507801_disabled_enitites(
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
         # Test enabling entity
-        updated_entry = registry.async_update_entity(
-            entry.entity_id, **{"disabled_by": None}
-        )
+        updated_entry = registry.async_update_entity(entry.entity_id, disabled_by=None)
         assert updated_entry != entry
         assert updated_entry.disabled is False
 

@@ -1,4 +1,5 @@
 """Test the binary sensor platform of ping."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -50,8 +51,10 @@ async def test_disabled_after_import(
     entity_registry: er.EntityRegistry,
 ):
     """Test if binary sensor is disabled after import."""
-    config_entry.data = {CONF_IMPORTED_BY: "device_tracker"}
     config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry, data={CONF_IMPORTED_BY: "device_tracker"}
+    )
 
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()

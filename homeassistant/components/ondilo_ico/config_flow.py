@@ -1,4 +1,5 @@
 """Config flow for Ondilo ICO."""
+
 import logging
 
 from homeassistant.helpers import config_entry_oauth2_flow

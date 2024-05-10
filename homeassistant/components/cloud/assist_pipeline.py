@@ -1,4 +1,5 @@
 """Handle Cloud assist pipelines."""
+
 import asyncio
 
 from homeassistant.components.assist_pipeline import (

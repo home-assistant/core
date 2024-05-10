@@ -1,4 +1,5 @@
 """Support for Honeywell Lyric climate platform."""
+
 from __future__ import annotations
 
 import asyncio
@@ -125,23 +126,22 @@ async def async_setup_entry(
     """Set up the Honeywell Lyric climate platform based on a config entry."""
     coordinator: DataUpdateCoordinator[Lyric] = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
-
-    for location in coordinator.data.locations:
-        for device in location.devices:
-            entities.append(
-                LyricClimate(
-                    coordinator,
-                    ClimateEntityDescription(
-                        key=f"{device.macID}_thermostat",
-                        name=device.name,
-                    ),
-                    location,
-                    device,
-                )
+    async_add_entities(
+        (
+            LyricClimate(
+                coordinator,
+                ClimateEntityDescription(
+                    key=f"{device.macID}_thermostat",
+                    name=device.name,
+                ),
+                location,
+                device,
             )
-
-    async_add_entities(entities, True)
+            for location in coordinator.data.locations
+            for device in location.devices
+        ),
+        True,
+    )
 
     platform = entity_platform.async_get_current_platform()
 
@@ -173,6 +173,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         PRESET_TEMPORARY_HOLD,
         PRESET_VACATION_HOLD,
     ]
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -229,6 +230,11 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             ]
             self._attr_supported_features = (
                 self._attr_supported_features | ClimateEntityFeature.FAN_MODE
+            )
+
+        if len(self.hvac_modes) > 1:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
             )
 
         super().__init__(

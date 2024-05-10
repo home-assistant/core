@@ -1,4 +1,5 @@
 """Tests for ScreenLogic integration data processing."""
+
 from unittest.mock import DEFAULT, patch
 
 from screenlogicpy import ScreenLogicGateway
@@ -52,16 +53,19 @@ async def test_async_cleanup_entries(
     assert unused_entity
     assert unused_entity.unique_id == TEST_UNUSED_ENTRY["unique_id"]
 
-    with patch(
-        GATEWAY_DISCOVERY_IMPORT_PATH,
-        return_value={},
-    ), patch.multiple(
-        ScreenLogicGateway,
-        async_connect=lambda *args, **kwargs: stub_async_connect(
-            DATA_MIN_ENTITY_CLEANUP, *args, **kwargs
+    with (
+        patch(
+            GATEWAY_DISCOVERY_IMPORT_PATH,
+            return_value={},
         ),
-        is_connected=True,
-        _async_connected_request=DEFAULT,
+        patch.multiple(
+            ScreenLogicGateway,
+            async_connect=lambda *args, **kwargs: stub_async_connect(
+                DATA_MIN_ENTITY_CLEANUP, *args, **kwargs
+            ),
+            is_connected=True,
+            _async_connected_request=DEFAULT,
+        ),
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

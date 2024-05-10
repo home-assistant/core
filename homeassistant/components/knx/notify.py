@@ -1,4 +1,5 @@
-"""Support for KNX/IP notification services."""
+"""Support for KNX/IP notifications."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,13 +7,16 @@ from typing import Any
 from xknx import XKNX
 from xknx.devices import Notification as XknxNotification
 
-from homeassistant.components.notify import BaseNotificationService
-from homeassistant.const import CONF_NAME, CONF_TYPE
+from homeassistant import config_entries
+from homeassistant.components.notify import BaseNotificationService, NotifyEntity
+from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS
-from .schema import NotifySchema
+from .knx_entity import KnxEntity
+from .repairs import migrate_notify_issue
 
 
 async def async_get_service(
@@ -24,24 +28,14 @@ async def async_get_service(
     if discovery_info is None:
         return None
 
-    if platform_config := hass.data[DATA_KNX_CONFIG].get(NotifySchema.PLATFORM):
+    if platform_config := hass.data[DATA_KNX_CONFIG].get(Platform.NOTIFY):
         xknx: XKNX = hass.data[DOMAIN].xknx
 
-        notification_devices = []
-        for device_config in platform_config:
-            notification_devices.append(
-                XknxNotification(
-                    xknx,
-                    name=device_config[CONF_NAME],
-                    group_address=device_config[KNX_ADDRESS],
-                    value_type=device_config[CONF_TYPE],
-                )
-            )
-        return (
-            KNXNotificationService(notification_devices)
-            if notification_devices
-            else None
-        )
+        notification_devices = [
+            _create_notification_instance(xknx, device_config)
+            for device_config in platform_config
+        ]
+        return KNXNotificationService(notification_devices)
 
     return None
 
@@ -63,6 +57,7 @@ class KNXNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a notification to knx bus."""
+        migrate_notify_issue(self.hass)
         if "target" in kwargs:
             await self._async_send_to_device(message, kwargs["target"])
         else:
@@ -78,3 +73,41 @@ class KNXNotificationService(BaseNotificationService):
         for device in self.devices:
             if device.name in names:
                 await device.set(message)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: config_entries.ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up notify(s) for KNX platform."""
+    xknx: XKNX = hass.data[DOMAIN].xknx
+    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.NOTIFY]
+
+    async_add_entities(KNXNotify(xknx, entity_config) for entity_config in config)
+
+
+def _create_notification_instance(xknx: XKNX, config: ConfigType) -> XknxNotification:
+    """Return a KNX Notification to be used within XKNX."""
+    return XknxNotification(
+        xknx,
+        name=config[CONF_NAME],
+        group_address=config[KNX_ADDRESS],
+        value_type=config[CONF_TYPE],
+    )
+
+
+class KNXNotify(KnxEntity, NotifyEntity):
+    """Representation of a KNX notification entity."""
+
+    _device: XknxNotification
+
+    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
+        """Initialize a KNX notification."""
+        super().__init__(_create_notification_instance(xknx, config))
+        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
+        self._attr_unique_id = str(self._device.remote_value.group_address)
+
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
+        """Send a notification to knx bus."""
+        await self._device.set(message)

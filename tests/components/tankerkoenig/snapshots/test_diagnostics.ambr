@@ -3,8 +3,10 @@
   dict({
     'data': dict({
       '3bcd61da-xxxx-xxxx-xxxx-19d5523a7ae8': dict({
-        '__type': "<class 'aiotankerkoenig.models.PriceInfo'>",
-        'repr': "PriceInfo(status=<Status.OPEN: 'open'>, e5=1.719, e10=1.659, diesel=1.659)",
+        'diesel': 1.659,
+        'e10': 1.659,
+        'e5': 1.719,
+        'status': 'open',
       }),
     }),
     'entry': dict({

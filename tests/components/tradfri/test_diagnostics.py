@@ -1,9 +1,9 @@
 """Tests for Tradfri diagnostics."""
+
 from __future__ import annotations
 
-from unittest.mock import MagicMock, Mock
-
-from pytradfri.device.air_purifier import AirPurifier
+import pytest
+from pytradfri.device import Device
 
 from homeassistant.core import HomeAssistant
 
@@ -13,16 +13,13 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.parametrize("device", ["air_purifier"], indirect=True)
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_gateway: Mock,
-    mock_api_factory: MagicMock,
-    air_purifier: AirPurifier,
+    device: Device,
 ) -> None:
     """Test diagnostics for config entry."""
-    device = air_purifier.device
-    mock_gateway.mock_devices.append(device)
     config_entry = await setup_integration(hass)
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)

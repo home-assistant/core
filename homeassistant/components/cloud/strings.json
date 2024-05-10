@@ -5,6 +5,14 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
+  "exceptions": {
+    "strict_connection_not_enabled": {
+      "message": "Strict connection is not enabled for cloud requests"
+    },
+    "no_url_available": {
+      "message": "No cloud URL available.\nPlease mark sure you have a working Remote UI."
+    }
+  },
   "system_health": {
     "info": {
       "can_reach_cert_server": "Reach Certificate Server",
@@ -24,13 +32,28 @@
     }
   },
   "issues": {
+    "deprecated_gender": {
+      "title": "The `{deprecated_option}` text-to-speech option is deprecated",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::cloud::issues::deprecated_voice::title%]",
+            "description": "The `{deprecated_option}` option for text-to-speech in the {integration_name} integration is deprecated and will be removed.\nPlease update your automations and scripts to replace the `{deprecated_option}` option with an option for a supported `{replacement_option}` instead."
+          }
+        }
+      }
+    },
+    "deprecated_tts_platform_config": {
+      "title": "The Cloud text-to-speech platform configuration is deprecated",
+      "description": "The whole `platform: cloud` entry under the `tts:` section in configuration.yaml is deprecated and should be removed. You can use the UI to change settings for the Cloud text-to-speech platform. Please adjust your configuration.yaml and restart Home Assistant to fix this issue."
+    },
     "deprecated_voice": {
       "title": "A deprecated voice was used",
       "fix_flow": {
         "step": {
           "confirm": {
             "title": "[%key:component::cloud::issues::deprecated_voice::title%]",
-            "description": "The '{deprecated_voice}' voice is deprecated and will be removed.\nPlease update your automations and scripts to replace the '{deprecated_voice}' with another voice like eg. '{replacement_voice}'."
+            "description": "The `{deprecated_voice}`voice is deprecated and will be removed.\nPlease update your automations and scripts to replace the `{deprecated_voice}` with another voice like eg. `{replacement_voice}`."
           }
         }
       }
@@ -58,6 +81,10 @@
     }
   },
   "services": {
+    "create_temporary_strict_connection_url": {
+      "name": "Create a temporary strict connection URL",
+      "description": "Create a temporary strict connection URL, which can be used to login on another device."
+    },
     "remote_connect": {
       "name": "Remote connect",
       "description": "Makes the instance UI accessible from outside of the local network by using Home Assistant Cloud."

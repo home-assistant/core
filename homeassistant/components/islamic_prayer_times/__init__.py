@@ -1,4 +1,5 @@
 """The islamic_prayer_times component."""
+
 from __future__ import annotations
 
 import logging
@@ -62,10 +63,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 CONF_LONGITUDE: lon,
             }
             unique_id = f"{lat}-{lon}"
-        config_entry.version = 1
-        config_entry.minor_version = 2
         hass.config_entries.async_update_entry(
-            config_entry, data=new, unique_id=unique_id
+            config_entry, data=new, unique_id=unique_id, version=1, minor_version=2
         )
 
     _LOGGER.debug("Migration to version %s successful", config_entry.version)

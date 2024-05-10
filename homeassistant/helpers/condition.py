@@ -1,4 +1,5 @@
 """Offer reusable conditions."""
+
 from __future__ import annotations
 
 import asyncio
@@ -163,7 +164,7 @@ def trace_condition(variables: TemplateVarsType) -> Generator[TraceElement, None
         yield trace_element
     except Exception as ex:
         trace_element.set_error(ex)
-        raise ex
+        raise
     finally:
         if should_pop:
             trace_stack_pop(trace_stack_cv)
@@ -197,7 +198,7 @@ async def _async_get_condition_platform(
             f'Invalid condition "{platform}" specified {config}'
         ) from None
     try:
-        return integration.get_platform("condition")
+        return await integration.async_get_platform("condition")
     except ImportError:
         raise HomeAssistantError(
             f"Integration '{platform}' does not provide condition support"
@@ -361,7 +362,7 @@ def numeric_state(
     ).result()
 
 
-def async_numeric_state(  # noqa: C901
+def async_numeric_state(
     hass: HomeAssistant,
     entity: None | str | State,
     below: float | str | None = None,
@@ -1055,9 +1056,9 @@ async def async_validate_conditions_config(
     hass: HomeAssistant, conditions: list[ConfigType]
 ) -> list[ConfigType | Template]:
     """Validate config."""
-    return await asyncio.gather(
-        *(async_validate_condition_config(hass, cond) for cond in conditions)
-    )
+    # No gather here because async_validate_condition_config is unlikely
+    # to suspend and the overhead of creating many tasks is not worth it
+    return [await async_validate_condition_config(hass, cond) for cond in conditions]
 
 
 @callback

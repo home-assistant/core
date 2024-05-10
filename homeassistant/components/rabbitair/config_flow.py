@@ -1,18 +1,17 @@
 """Config flow for Rabbit Air integration."""
+
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
 from rabbitair import UdpClient
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
@@ -36,7 +35,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     except ValueError as err:
         # Most likely caused by the invalid access token.
         raise InvalidAccessToken from err
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         # Either the host doesn't respond or the auth failed.
         raise TimeoutConnect from err
     except OSError as err:
@@ -50,7 +49,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     return {"mac": info.mac}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class RabbitAirConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Rabbit Air."""
 
     VERSION = 1
@@ -59,7 +58,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
 
@@ -101,7 +100,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         mac = dr.format_mac(discovery_info.properties["id"])
         await self.async_set_unique_id(mac)

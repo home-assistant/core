@@ -1,4 +1,5 @@
 """Support for Broadlink remotes."""
+
 import asyncio
 from base64 import b64encode
 from collections import defaultdict
@@ -372,8 +373,11 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             start_time = dt_util.utcnow()
             while (dt_util.utcnow() - start_time) < LEARNING_TIMEOUT:
                 await asyncio.sleep(1)
-                found = await device.async_request(device.api.check_frequency)
-                if found:
+                is_found, frequency = await device.async_request(
+                    device.api.check_frequency
+                )
+                if is_found:
+                    _LOGGER.info("Radiofrequency detected: %s MHz", frequency)
                     break
             else:
                 await device.async_request(device.api.cancel_sweep_frequency)

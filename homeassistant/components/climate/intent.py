@@ -1,4 +1,5 @@
 """Intents for the client integration."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -36,24 +37,35 @@ class GetTemperatureIntent(intent.IntentHandler):
         if not entities:
             raise intent.IntentHandleError("No climate entities")
 
-        if "area" in slots:
-            # Filter by area
-            area_name = slots["area"]["value"]
+        name_slot = slots.get("name", {})
+        entity_name: str | None = name_slot.get("value")
+        entity_text: str | None = name_slot.get("text")
+
+        area_slot = slots.get("area", {})
+        area_id = area_slot.get("value")
+
+        if area_id:
+            # Filter by area and optionally name
+            area_name = area_slot.get("text")
 
             for maybe_climate in intent.async_match_states(
-                hass, area_name=area_name, domains=[DOMAIN]
+                hass, name=entity_name, area_name=area_id, domains=[DOMAIN]
             ):
                 climate_state = maybe_climate
                 break
 
             if climate_state is None:
-                raise intent.IntentHandleError(f"No climate entity in area {area_name}")
+                raise intent.NoStatesMatchedError(
+                    name=entity_text or entity_name,
+                    area=area_name or area_id,
+                    floor=None,
+                    domains={DOMAIN},
+                    device_classes=None,
+                )
 
             climate_entity = component.get_entity(climate_state.entity_id)
-        elif "name" in slots:
+        elif entity_name:
             # Filter by name
-            entity_name = slots["name"]["value"]
-
             for maybe_climate in intent.async_match_states(
                 hass, name=entity_name, domains=[DOMAIN]
             ):
@@ -61,7 +73,13 @@ class GetTemperatureIntent(intent.IntentHandler):
                 break
 
             if climate_state is None:
-                raise intent.IntentHandleError(f"No climate entity named {entity_name}")
+                raise intent.NoStatesMatchedError(
+                    name=entity_name,
+                    area=None,
+                    floor=None,
+                    domains={DOMAIN},
+                    device_classes=None,
+                )
 
             climate_entity = component.get_entity(climate_state.entity_id)
         else:

@@ -1,4 +1,5 @@
 """The Z-Wave JS integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -168,7 +169,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 translation_key="invalid_server_version",
             )
         raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
-    except (asyncio.TimeoutError, BaseZwaveJSServerError) as err:
+    except (TimeoutError, BaseZwaveJSServerError) as err:
         raise ConfigEntryNotReady(f"Failed to connect: {err}") from err
 
     async_delete_issue(hass, DOMAIN, "invalid_server_version")
@@ -185,9 +186,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Create a task to allow the config entry to be unloaded before the driver is ready.
     # Unloading the config entry is needed if the client listen task errors.
     start_client_task = hass.async_create_task(start_client(hass, entry, client))
-    hass.data[DOMAIN].setdefault(entry.entry_id, {})[
-        DATA_START_CLIENT_TASK
-    ] = start_client_task
+    hass.data[DOMAIN].setdefault(entry.entry_id, {})[DATA_START_CLIENT_TASK] = (
+        start_client_task
+    )
 
     return True
 
@@ -306,7 +307,8 @@ class DriverEvents:
             controller.on(
                 "node added",
                 lambda event: self.hass.async_create_task(
-                    self.controller_events.async_on_node_added(event["node"])
+                    self.controller_events.async_on_node_added(event["node"]),
+                    eager_start=False,
                 ),
             )
         )
@@ -414,7 +416,8 @@ class ControllerEvents:
             node.on(
                 "ready",
                 lambda event: self.hass.async_create_task(
-                    self.node_events.async_on_node_ready(event["node"])
+                    self.node_events.async_on_node_ready(event["node"]),
+                    eager_start=False,
                 ),
             )
         )

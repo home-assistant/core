@@ -1,4 +1,5 @@
 """Support to interface with the Plex API."""
+
 from __future__ import annotations
 
 from yarl import URL
@@ -292,18 +293,16 @@ def generate_plex_uri(server_id, media_id, params=None):
 
 def root_payload(hass, is_internal, platform=None):
     """Return root payload for Plex."""
-    children = []
-
-    for server_id in get_plex_data(hass)[SERVERS]:
-        children.append(
-            browse_media(
-                hass,
-                is_internal,
-                "server",
-                generate_plex_uri(server_id, ""),
-                platform=platform,
-            )
+    children = [
+        browse_media(
+            hass,
+            is_internal,
+            "server",
+            generate_plex_uri(server_id, ""),
+            platform=platform,
         )
+        for server_id in get_plex_data(hass)[SERVERS]
+    ]
 
     if len(children) == 1:
         return children[0]
@@ -325,7 +324,7 @@ def library_section_payload(section):
         children_media_class = ITEM_TYPE_MEDIA_CLASS[section.TYPE]
     except KeyError as err:
         raise UnknownMediaType(f"Unknown type received: {section.TYPE}") from err
-    server_id = section._server.machineIdentifier  # pylint: disable=protected-access
+    server_id = section._server.machineIdentifier  # noqa: SLF001
     return BrowseMedia(
         title=section.title,
         media_class=MediaClass.DIRECTORY,
@@ -358,7 +357,7 @@ def hub_payload(hub):
         media_content_id = f"{hub.librarySectionID}/{hub.hubIdentifier}"
     else:
         media_content_id = f"server/{hub.hubIdentifier}"
-    server_id = hub._server.machineIdentifier  # pylint: disable=protected-access
+    server_id = hub._server.machineIdentifier  # noqa: SLF001
     payload = {
         "title": hub.title,
         "media_class": MediaClass.DIRECTORY,
@@ -372,7 +371,7 @@ def hub_payload(hub):
 
 def station_payload(station):
     """Create response payload for a music station."""
-    server_id = station._server.machineIdentifier  # pylint: disable=protected-access
+    server_id = station._server.machineIdentifier  # noqa: SLF001
     return BrowseMedia(
         title=station.title,
         media_class=ITEM_TYPE_MEDIA_CLASS[station.type],

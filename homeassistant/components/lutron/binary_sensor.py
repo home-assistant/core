@@ -1,4 +1,5 @@
 """Support for Lutron Powr Savr occupancy sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

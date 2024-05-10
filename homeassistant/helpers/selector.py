@@ -1,4 +1,5 @@
 """Selectors for Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
@@ -97,6 +98,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
     from homeassistant.components.light import LightEntityFeature
     from homeassistant.components.lock import LockEntityFeature
     from homeassistant.components.media_player import MediaPlayerEntityFeature
+    from homeassistant.components.notify import NotifyEntityFeature
     from homeassistant.components.remote import RemoteEntityFeature
     from homeassistant.components.siren import SirenEntityFeature
     from homeassistant.components.todo import TodoListEntityFeature
@@ -118,6 +120,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
         "LightEntityFeature": LightEntityFeature,
         "LockEntityFeature": LockEntityFeature,
         "MediaPlayerEntityFeature": MediaPlayerEntityFeature,
+        "NotifyEntityFeature": NotifyEntityFeature,
         "RemoteEntityFeature": RemoteEntityFeature,
         "SirenEntityFeature": SirenEntityFeature,
         "TodoListEntityFeature": TodoListEntityFeature,
@@ -843,6 +846,48 @@ class EntitySelector(Selector[EntitySelectorConfig]):
         return cast(list, vol.Schema([validate])(data))  # Output is a list
 
 
+class FloorSelectorConfig(TypedDict, total=False):
+    """Class to represent an floor selector config."""
+
+    entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
+    device: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
+    multiple: bool
+
+
+@SELECTORS.register("floor")
+class FloorSelector(Selector[AreaSelectorConfig]):
+    """Selector of a single or list of floors."""
+
+    selector_type = "floor"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("entity"): vol.All(
+                cv.ensure_list,
+                [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
+            vol.Optional("device"): vol.All(
+                cv.ensure_list,
+                [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
+            vol.Optional("multiple", default=False): cv.boolean,
+        }
+    )
+
+    def __init__(self, config: FloorSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str | list[str]:
+        """Validate the passed selection."""
+        if not self.config["multiple"]:
+            floor_id: str = vol.Schema(str)(data)
+            return floor_id
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [vol.Schema(str)(val) for val in data]
+
+
 class IconSelectorConfig(TypedDict, total=False):
     """Class to represent an icon selector config."""
 
@@ -868,6 +913,38 @@ class IconSelector(Selector[IconSelectorConfig]):
         """Validate the passed selection."""
         icon: str = vol.Schema(str)(data)
         return icon
+
+
+class LabelSelectorConfig(TypedDict, total=False):
+    """Class to represent a label selector config."""
+
+    multiple: bool
+
+
+@SELECTORS.register("label")
+class LabelSelector(Selector[LabelSelectorConfig]):
+    """Selector of a single or list of labels."""
+
+    selector_type = "label"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("multiple", default=False): cv.boolean,
+        }
+    )
+
+    def __init__(self, config: LabelSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str | list[str]:
+        """Validate the passed selection."""
+        if not self.config["multiple"]:
+            label_id: str = vol.Schema(str)(data)
+            return label_id
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [vol.Schema(str)(val) for val in data]
 
 
 class LanguageSelectorConfig(TypedDict, total=False):

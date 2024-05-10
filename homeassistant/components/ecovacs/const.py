@@ -1,4 +1,5 @@
 """Ecovacs constants."""
+
 from enum import StrEnum
 
 from deebot_client.events import LifeSpan
@@ -11,8 +12,10 @@ CONF_OVERRIDE_MQTT_URL = "override_mqtt_url"
 CONF_VERIFY_MQTT_CERTIFICATE = "verify_mqtt_certificate"
 
 SUPPORTED_LIFESPANS = (
+    LifeSpan.BLADE,
     LifeSpan.BRUSH,
     LifeSpan.FILTER,
+    LifeSpan.LENS_BRUSH,
     LifeSpan.SIDE_BRUSH,
 )
 

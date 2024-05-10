@@ -21,16 +21,15 @@
     "universal_silabs_flasher"
   ],
   "requirements": [
-    "bellows==0.37.6",
+    "bellows==0.38.4",
     "pyserial==3.5",
-    "pyserial-asyncio==0.6",
-    "zha-quirks==0.0.110",
-    "zigpy-deconz==0.22.4",
-    "zigpy==0.61.0",
+    "zha-quirks==0.0.115",
+    "zigpy-deconz==0.23.1",
+    "zigpy==0.64.0",
     "zigpy-xbee==0.20.1",
     "zigpy-zigate==0.12.0",
     "zigpy-znp==0.12.1",
-    "universal-silabs-flasher==0.0.15",
+    "universal-silabs-flasher==0.0.18",
     "pyserial-asyncio-fast==0.11"
   ],
   "usb": [
@@ -39,6 +38,12 @@
       "pid": "EA60",
       "description": "*2652*",
       "known_devices": ["slae.sh cc2652rb stick"]
+    },
+    {
+      "vid": "10C4",
+      "pid": "EA60",
+      "description": "*slzb-07*",
+      "known_devices": ["smlight slzb-07"]
     },
     {
       "vid": "1A86",

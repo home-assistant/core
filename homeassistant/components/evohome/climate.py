@@ -1,4 +1,5 @@
 """Support for Climate devices of (EMEA/EU-based) Honeywell TCC systems."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -156,6 +157,7 @@ class EvoClimateEntity(EvoDevice, ClimateEntity):
     """Base for an evohome Climate device."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def hvac_modes(self) -> list[HVACMode]:
@@ -190,7 +192,10 @@ class EvoZone(EvoChild, EvoClimateEntity):
             ]
 
         self._attr_supported_features = (
-            ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+            ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
 
     async def async_zone_svc_request(self, service: str, data: dict[str, Any]) -> None:
@@ -372,6 +377,9 @@ class EvoController(EvoClimateEntity):
         ]
         if self._attr_preset_modes:
             self._attr_supported_features = ClimateEntityFeature.PRESET_MODE
+        self._attr_supported_features |= (
+            ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+        )
 
     async def async_tcs_svc_request(self, service: str, data: dict[str, Any]) -> None:
         """Process a service request (system mode) for a controller.

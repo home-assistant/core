@@ -1,4 +1,5 @@
 """Config flow for Blue Current integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -13,24 +14,23 @@ from bluecurrent_api.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN, LOGGER
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_TOKEN): str})
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class BlueCurrentConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the config flow for Blue Current."""
 
     VERSION = 1
-    _reauth_entry: config_entries.ConfigEntry | None = None
+    _reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -75,7 +75,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle a reauthorization flow request."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]

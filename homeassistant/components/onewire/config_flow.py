@@ -1,4 +1,5 @@
 """Config flow for 1-Wire component."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -8,11 +9,11 @@ import voluptuous as vol
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
+    ConfigFlowResult,
     OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
 
@@ -65,7 +66,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle 1-Wire config flow start.
 
         Let user manually input configuration.
@@ -124,7 +125,7 @@ class OnewireOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         device_registry = dr.async_get(self.hass)
         self.configurable_devices = {
@@ -142,7 +143,7 @@ class OnewireOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
     async def async_step_device_selection(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Select what devices to configure."""
         errors = {}
         if user_input is not None:
@@ -187,7 +188,7 @@ class OnewireOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
     async def async_step_configure_device(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Config precision option for device."""
         if user_input is not None:
             self._update_device_options(user_input)

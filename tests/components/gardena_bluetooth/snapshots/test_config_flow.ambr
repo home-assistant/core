@@ -1,17 +1,17 @@
 # serializer version: 1
 # name: test_bluetooth
   FlowResultSnapshot({
-    'data_schema': None,
-    'description_placeholders': dict({
-      'name': 'Gardena Water Computer',
+    'context': dict({
+      'confirm_only': True,
+      'source': 'bluetooth',
+      'title_placeholders': dict({
+        'name': 'Gardena Water Computer',
+      }),
+      'unique_id': '00000000-0000-0000-0000-000000000001',
     }),
-    'errors': None,
     'flow_id': <ANY>,
     'handler': 'gardena_bluetooth',
-    'last_step': None,
-    'preview': None,
     'step_id': 'confirm',
-    'type': <FlowResultType.FORM: 'form'>,
   })
 # ---
 # name: test_bluetooth.1

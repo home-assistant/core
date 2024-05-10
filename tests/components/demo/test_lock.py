@@ -1,4 +1,5 @@
 """The tests for the Demo lock platform."""
+
 from unittest.mock import patch
 
 import pytest

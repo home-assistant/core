@@ -1,4 +1,5 @@
 """Support for Homekit switches."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -42,31 +43,31 @@ SWITCH_ENTITIES: dict[str, DeclarativeSwitchEntityDescription] = {
     CharacteristicsTypes.VENDOR_AQARA_PAIRING_MODE: DeclarativeSwitchEntityDescription(
         key=CharacteristicsTypes.VENDOR_AQARA_PAIRING_MODE,
         name="Pairing Mode",
-        icon="mdi:lock-open",
+        translation_key="pairing_mode",
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.VENDOR_AQARA_E1_PAIRING_MODE: DeclarativeSwitchEntityDescription(
         key=CharacteristicsTypes.VENDOR_AQARA_E1_PAIRING_MODE,
         name="Pairing Mode",
-        icon="mdi:lock-open",
+        translation_key="pairing_mode",
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.LOCK_PHYSICAL_CONTROLS: DeclarativeSwitchEntityDescription(
         key=CharacteristicsTypes.LOCK_PHYSICAL_CONTROLS,
         name="Lock Physical Controls",
-        icon="mdi:lock-open",
+        translation_key="lock_physical_controls",
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.MUTE: DeclarativeSwitchEntityDescription(
         key=CharacteristicsTypes.MUTE,
         name="Mute",
-        icon="mdi:volume-mute",
+        translation_key="mute",
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.VENDOR_AIRVERSA_SLEEP_MODE: DeclarativeSwitchEntityDescription(
         key=CharacteristicsTypes.VENDOR_AIRVERSA_SLEEP_MODE,
         name="Sleep Mode",
-        icon="mdi:power-sleep",
+        translation_key="sleep_mode",
         entity_category=EntityCategory.CONFIG,
     ),
 }
@@ -104,6 +105,8 @@ class HomeKitSwitch(HomeKitEntity, SwitchEntity):
 class HomeKitValve(HomeKitEntity, SwitchEntity):
     """Represents a valve in an irrigation system."""
 
+    _attr_translation_key = "valve"
+
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [
@@ -120,11 +123,6 @@ class HomeKitValve(HomeKitEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the specified valve off."""
         await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: False})
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return "mdi:water"
 
     @property
     def is_on(self) -> bool:
@@ -194,7 +192,7 @@ class DeclarativeCharacteristicSwitch(CharacteristicEntity, SwitchEntity):
         )
 
 
-ENTITY_TYPES: dict[str, type[HomeKitSwitch] | type[HomeKitValve]] = {
+ENTITY_TYPES: dict[str, type[HomeKitSwitch | HomeKitValve]] = {
     ServicesTypes.SWITCH: HomeKitSwitch,
     ServicesTypes.OUTLET: HomeKitSwitch,
     ServicesTypes.VALVE: HomeKitValve,

@@ -1,6 +1,7 @@
 """Tests for Shelly switch platform."""
+
 from copy import deepcopy
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 from aioshelly.const import MODEL_GAS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
@@ -15,7 +16,6 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_ICON,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -23,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_registry import EntityRegistry
 import homeassistant.helpers.issue_registry as ir
 from homeassistant.setup import async_setup_component
 
@@ -33,7 +33,9 @@ RELAY_BLOCK_ID = 0
 GAS_VALVE_BLOCK_ID = 6
 
 
-async def test_block_device_services(hass: HomeAssistant, mock_block_device) -> None:
+async def test_block_device_services(
+    hass: HomeAssistant, mock_block_device: Mock
+) -> None:
     """Test block device turn on/off services."""
     await init_integration(hass, 1)
 
@@ -52,6 +54,17 @@ async def test_block_device_services(hass: HomeAssistant, mock_block_device) -> 
         blocking=True,
     )
     assert hass.states.get("switch.test_name_channel_1").state == STATE_OFF
+
+
+async def test_block_device_unique_ids(
+    hass: HomeAssistant, entity_registry: EntityRegistry, mock_block_device: Mock
+) -> None:
+    """Test block device unique_ids."""
+    await init_integration(hass, 1)
+
+    entry = entity_registry.async_get("switch.test_name_channel_1")
+    assert entry
+    assert entry.unique_id == "123456789ABC-relay_0"
 
 
 async def test_block_set_state_connection_error(
@@ -75,7 +88,7 @@ async def test_block_set_state_connection_error(
 
 
 async def test_block_set_state_auth_error(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test block device set state authentication error."""
     monkeypatch.setattr(
@@ -85,7 +98,7 @@ async def test_block_set_state_auth_error(
     )
     entry = await init_integration(hass, 1)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -95,7 +108,7 @@ async def test_block_set_state_auth_error(
     )
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -110,7 +123,7 @@ async def test_block_set_state_auth_error(
 
 
 async def test_block_device_update(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test block device update."""
     monkeypatch.setattr(mock_block_device.blocks[RELAY_BLOCK_ID], "output", False)
@@ -123,7 +136,7 @@ async def test_block_device_update(
 
 
 async def test_block_device_no_relay_blocks(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test block device without relay blocks."""
     monkeypatch.setattr(mock_block_device.blocks[RELAY_BLOCK_ID], "type", "roller")
@@ -132,7 +145,7 @@ async def test_block_device_no_relay_blocks(
 
 
 async def test_block_device_mode_roller(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test block device in roller mode."""
     monkeypatch.setitem(mock_block_device.settings, "mode", "roller")
@@ -141,7 +154,7 @@ async def test_block_device_mode_roller(
 
 
 async def test_block_device_app_type_light(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test block device in app type set to light mode."""
     monkeypatch.setitem(
@@ -152,7 +165,7 @@ async def test_block_device_app_type_light(
 
 
 async def test_rpc_device_services(
-    hass: HomeAssistant, mock_rpc_device, monkeypatch
+    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test RPC device turn on/off services."""
     await init_integration(hass, 2)
@@ -176,8 +189,19 @@ async def test_rpc_device_services(
     assert hass.states.get("switch.test_switch_0").state == STATE_OFF
 
 
+async def test_rpc_device_unique_ids(
+    hass: HomeAssistant, mock_rpc_device: Mock, entity_registry: EntityRegistry
+) -> None:
+    """Test RPC device unique_ids."""
+    await init_integration(hass, 2)
+
+    entry = entity_registry.async_get("switch.test_switch_0")
+    assert entry
+    assert entry.unique_id == "123456789ABC-switch:0"
+
+
 async def test_rpc_device_switch_type_lights_mode(
-    hass: HomeAssistant, mock_rpc_device, monkeypatch
+    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test RPC device with switch in consumption type lights mode."""
     monkeypatch.setitem(
@@ -189,7 +213,10 @@ async def test_rpc_device_switch_type_lights_mode(
 
 @pytest.mark.parametrize("exc", [DeviceConnectionError, RpcCallError(-1, "error")])
 async def test_rpc_set_state_errors(
-    hass: HomeAssistant, exc, mock_rpc_device, monkeypatch
+    hass: HomeAssistant,
+    exc: Exception,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC device set state connection/call errors."""
     monkeypatch.setattr(mock_rpc_device, "call_rpc", AsyncMock(side_effect=exc))
@@ -205,7 +232,7 @@ async def test_rpc_set_state_errors(
 
 
 async def test_rpc_auth_error(
-    hass: HomeAssistant, mock_rpc_device, monkeypatch
+    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test RPC device set state authentication error."""
     monkeypatch.setattr(
@@ -215,7 +242,7 @@ async def test_rpc_auth_error(
     )
     entry = await init_integration(hass, 2)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -225,7 +252,7 @@ async def test_rpc_auth_error(
     )
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -240,7 +267,10 @@ async def test_rpc_auth_error(
 
 
 async def test_block_device_gas_valve(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block device Shelly Gas with Valve addon."""
     entity_id = register_entity(
@@ -249,10 +279,9 @@ async def test_block_device_gas_valve(
         "test_name_valve",
         "valve_0-valve",
     )
-    registry = er.async_get(hass)
     await init_integration(hass, 1, MODEL_GAS)
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "123456789ABC-valve_0-valve"
 
@@ -268,7 +297,6 @@ async def test_block_device_gas_valve(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON  # valve is open
-    assert state.attributes.get(ATTR_ICON) == "mdi:valve-open"
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -280,7 +308,6 @@ async def test_block_device_gas_valve(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF  # valve is closed
-    assert state.attributes.get(ATTR_ICON) == "mdi:valve-closed"
 
     monkeypatch.setattr(mock_block_device.blocks[GAS_VALVE_BLOCK_ID], "valve", "opened")
     mock_block_device.mock_update()
@@ -289,50 +316,45 @@ async def test_block_device_gas_valve(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON  # valve is open
-    assert state.attributes.get(ATTR_ICON) == "mdi:valve-open"
-
-
-async def test_wall_display_thermostat_mode(
-    hass: HomeAssistant,
-    mock_rpc_device,
-) -> None:
-    """Test Wall Display in thermostat mode."""
-    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
-
-    # the switch entity should not be created, only the climate entity
-    assert hass.states.get("switch.test_name") is None
-    assert hass.states.get("climate.test_name")
 
 
 async def test_wall_display_relay_mode(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_rpc_device,
-    monkeypatch,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test Wall Display in thermostat mode."""
-    entity_id = register_entity(
-        hass,
-        CLIMATE_DOMAIN,
-        "test_name",
-        "thermostat:0",
-    )
+    """Test Wall Display in relay mode."""
+    climate_entity_id = "climate.test_name"
+    switch_entity_id = "switch.test_switch_0"
 
-    new_shelly = deepcopy(mock_rpc_device.shelly)
-    new_shelly["relay_in_thermostat"] = False
-    monkeypatch.setattr(mock_rpc_device, "shelly", new_shelly)
+    new_status = deepcopy(mock_rpc_device.status)
+    new_status["sys"]["relay_in_thermostat"] = False
+    new_status.pop("thermostat:0")
+    monkeypatch.setattr(mock_rpc_device, "status", new_status)
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
     # the climate entity should be removed
-    assert hass.states.get(entity_id) is None
+    assert hass.states.get(climate_entity_id) is None
+    assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 0
+
+    # the switch entity should be created
+    state = hass.states.get(switch_entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+
+    entry = entity_registry.async_get(switch_entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-switch:0"
 
 
 async def test_create_issue_valve_switch(
     hass: HomeAssistant,
-    mock_block_device,
+    mock_block_device: Mock,
     entity_registry_enabled_by_default: None,
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test we create an issue when an automation or script is using a deprecated entity."""
     monkeypatch.setitem(mock_block_device.status, "cloud", {"connected": False})

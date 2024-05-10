@@ -1,4 +1,5 @@
 """Support for the iZone HVAC."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -144,12 +145,17 @@ class ControllerDevice(ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_target_temperature_step = 0.5
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, controller: Controller) -> None:
         """Initialise ControllerDevice."""
         self._controller = controller
 
-        self._attr_supported_features = ClimateEntityFeature.FAN_MODE
+        self._attr_supported_features = (
+            ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
+        )
 
         # If mode RAS, or mode master with CtrlZone 13 then can set master temperature,
         # otherwise the unit determines which zone to use as target. See interface manual p. 8

@@ -1,4 +1,5 @@
 """Helper functions for Z-Wave JS integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -95,7 +96,7 @@ def value_matches_matcher(
     return all(
         redacted_field_val is None or redacted_field_val == zwave_value_field_val
         for redacted_field_val, zwave_value_field_val in zip(
-            astuple(matcher), astuple(zwave_value_id)
+            astuple(matcher), astuple(zwave_value_id), strict=False
         )
     )
 

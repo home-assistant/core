@@ -1,4 +1,5 @@
 """Config flow for qBittorrent."""
+
 from __future__ import annotations
 
 import logging
@@ -8,9 +9,8 @@ from qbittorrent.client import LoginRequired
 from requests.exceptions import RequestException
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_NAME, DEFAULT_URL, DOMAIN
 from .helpers import setup_client
@@ -32,7 +32,7 @@ class QbittorrentConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a user-initiated config flow."""
         errors = {}
 

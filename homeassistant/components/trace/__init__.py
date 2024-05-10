@@ -1,4 +1,5 @@
 """Support for script and automation tracing and debugging."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -110,13 +111,9 @@ async def async_list_contexts(
 
 def _get_debug_traces(hass: HomeAssistant, key: str) -> list[dict[str, Any]]:
     """Return a serializable list of debug traces for a script or automation."""
-    traces: list[dict[str, Any]] = []
-
     if traces_for_key := _get_data(hass).get(key):
-        for trace in traces_for_key.values():
-            traces.append(trace.as_short_dict())
-
-    return traces
+        return [trace.as_short_dict() for trace in traces_for_key.values()]
+    return []
 
 
 async def async_list_traces(
@@ -176,7 +173,7 @@ async def async_restore_traces(hass: HomeAssistant) -> None:
         restored_traces = {}
 
     for key, traces in restored_traces.items():
-        # Add stored traces in reversed order to priorize the newest traces
+        # Add stored traces in reversed order to prioritize the newest traces
         for json_trace in reversed(traces):
             if (
                 (stored_traces := _get_data(hass).get(key))

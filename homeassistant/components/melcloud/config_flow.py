@@ -1,4 +1,5 @@
 """Config flow for the MELCloud platform."""
+
 from __future__ import annotations
 
 import asyncio
@@ -11,9 +12,8 @@ from aiohttp import ClientError, ClientResponseError
 import pymelcloud
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -21,14 +21,14 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
 
-    entry: config_entries.ConfigEntry | None = None
+    entry: ConfigEntry | None = None
 
-    async def _create_entry(self, username: str, token: str) -> FlowResult:
+    async def _create_entry(self, username: str, token: str) -> ConfigFlowResult:
         """Register new entry."""
         await self.async_set_unique_id(username)
         self._abort_if_unique_id_configured({CONF_TOKEN: token})
@@ -42,7 +42,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         *,
         password: str | None = None,
         token: str | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Create client."""
         try:
             async with asyncio.timeout(10):
@@ -60,14 +60,14 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if err.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
                 return self.async_abort(reason="invalid_auth")
             return self.async_abort(reason="cannot_connect")
-        except (asyncio.TimeoutError, ClientError):
+        except (TimeoutError, ClientError):
             return self.async_abort(reason="cannot_connect")
 
         return await self._create_entry(username, acquired_token)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """User initiated config flow."""
         if user_input is None:
             return self.async_show_form(
@@ -79,14 +79,16 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         username = user_input[CONF_USERNAME]
         return await self._create_client(username, password=user_input[CONF_PASSWORD])
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle initiation of re-authentication with MELCloud."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle re-authentication with MELCloud."""
         errors: dict[str, str] = {}
 
@@ -126,17 +128,21 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     async_get_clientsession(self.hass),
                 )
         except (ClientResponseError, AttributeError) as err:
-            if isinstance(err, ClientResponseError) and err.status in (
-                HTTPStatus.UNAUTHORIZED,
-                HTTPStatus.FORBIDDEN,
+            if (
+                isinstance(err, ClientResponseError)
+                and err.status
+                in (
+                    HTTPStatus.UNAUTHORIZED,
+                    HTTPStatus.FORBIDDEN,
+                )
+                or isinstance(err, AttributeError)
+                and err.name == "get"
             ):
-                errors["base"] = "invalid_auth"
-            elif isinstance(err, AttributeError) and err.name == "get":
                 errors["base"] = "invalid_auth"
             else:
                 errors["base"] = "cannot_connect"
         except (
-            asyncio.TimeoutError,
+            TimeoutError,
             ClientError,
         ):
             errors["base"] = "cannot_connect"

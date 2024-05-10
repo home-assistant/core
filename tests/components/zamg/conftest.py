@@ -1,4 +1,5 @@
 """Fixtures for Zamg integration tests."""
+
 from collections.abc import Generator
 import json
 from unittest.mock import MagicMock, patch

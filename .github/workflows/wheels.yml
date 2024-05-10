@@ -14,6 +14,10 @@ on:
       - "homeassistant/package_constraints.txt"
       - "requirements_all.txt"
       - "requirements.txt"
+      - "script/gen_requirements_all.py"
+
+env:
+  DEFAULT_PYTHON: "3.12"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name}}
@@ -28,7 +32,22 @@ jobs:
       architectures: ${{ steps.info.outputs.architectures }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.4
+
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        id: python
+        uses: actions/setup-python@v5.1.0
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
+
+      - name: Create Python virtual environment
+        run: |
+          python -m venv venv
+          . venv/bin/activate
+          python --version
+          pip install "$(grep '^uv' < requirements_test.txt)"
+          uv pip install -r requirements.txt
 
       - name: Get information
         id: info
@@ -63,16 +82,29 @@ jobs:
           ) > .env_file
 
       - name: Upload env_file
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4.3.3
         with:
           name: env_file
           path: ./.env_file
+          overwrite: true
 
       - name: Upload requirements_diff
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4.3.3
         with:
           name: requirements_diff
           path: ./requirements_diff.txt
+          overwrite: true
+
+      - name: Generate requirements
+        run: |
+          . venv/bin/activate
+          python -m script.gen_requirements_all ci
+
+      - name: Upload requirements_all_wheels
+        uses: actions/upload-artifact@v4.3.3
+        with:
+          name: requirements_all_wheels
+          path: ./requirements_all_wheels_*.txt
 
   core:
     name: Build Core wheels ${{ matrix.abi }} for ${{ matrix.arch }} (musllinux_1_2)
@@ -82,19 +114,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        abi: ["cp311", "cp312"]
+        abi: ["cp312"]
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.4
 
       - name: Download env_file
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: env_file
 
       - name: Download requirements_diff
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: requirements_diff
 
@@ -120,61 +152,34 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        abi: ["cp311", "cp312"]
+        abi: ["cp312"]
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.4
 
       - name: Download env_file
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: env_file
 
       - name: Download requirements_diff
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: requirements_diff
 
-      - name: (Un)comment packages
-        run: |
-          requirement_files="requirements_all.txt requirements_diff.txt"
-          for requirement_file in ${requirement_files}; do
-            sed -i "s|# fritzconnection|fritzconnection|g" ${requirement_file}
-            sed -i "s|# pyuserinput|pyuserinput|g" ${requirement_file}
-            sed -i "s|# evdev|evdev|g" ${requirement_file}
-            sed -i "s|# pycups|pycups|g" ${requirement_file}
-            sed -i "s|# homekit|homekit|g" ${requirement_file}
-            sed -i "s|# decora-wifi|decora-wifi|g" ${requirement_file}
-            sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
-
-            # Some packages are not buildable on armhf anymore
-            if [ "${{ matrix.arch }}" = "armhf" ]; then
-
-              # Pandas has issues building on armhf, it is expected they
-              # will drop the platform in the near future (they consider it
-              # "flimsy" on 386). The following packages depend on pandas,
-              # so we comment them out.
-              sed -i "s|env-canada|# env-canada|g" ${requirement_file}
-              sed -i "s|noaa-coops|# noaa-coops|g" ${requirement_file}
-              sed -i "s|pyezviz|# pyezviz|g" ${requirement_file}
-              sed -i "s|pykrakenapi|# pykrakenapi|g" ${requirement_file}
-            fi
-
-            # Some speedups are only for 64-bit
-            if [ "${{ matrix.arch }}" = "amd64" ] || [ "${{ matrix.arch }}" = "aarch64" ]; then
-              sed -i "s|aiohttp-zlib-ng|aiohttp-zlib-ng\[isal\]|g" ${requirement_file}
-            fi
-
-          done
+      - name: Download requirements_all_wheels
+        uses: actions/download-artifact@v4.1.7
+        with:
+          name: requirements_all_wheels
 
       - name: Split requirements all
         run: |
-          # We split requirements all into two different files.
+          # We split requirements all into multiple files.
           # This is to prevent the build from running out of memory when
           # resolving packages on 32-bits systems (like armhf, armv7).
 
-          split -l $(expr $(expr $(cat requirements_all.txt | wc -l) + 1) / 3) requirements_all.txt requirements_all.txt
+          split -l $(expr $(expr $(cat requirements_all.txt | wc -l) + 1) / 3) requirements_all_wheels_${{ matrix.arch }}.txt requirements_all.txt
 
       - name: Create requirements for cython<3
         run: |
@@ -206,7 +211,7 @@ jobs:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
           apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev"
-          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf
+          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf;pydantic
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_old-cython.txt"
@@ -221,7 +226,7 @@ jobs:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
           apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm"
-          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf
+          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf;pydantic
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_all.txtaa"
@@ -235,7 +240,7 @@ jobs:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
           apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm"
-          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf
+          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf;pydantic
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_all.txtab"
@@ -249,7 +254,7 @@ jobs:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
           apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm"
-          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf
+          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf;pydantic
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_all.txtac"

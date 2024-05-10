@@ -1,4 +1,5 @@
 """Triggers."""
+
 from __future__ import annotations
 
 import asyncio
@@ -28,6 +29,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import IntegrationNotFound, async_get_integration
+from homeassistant.util.async_ import create_eager_task
 
 from .typing import ConfigType, TemplateVarsType
 
@@ -222,7 +224,7 @@ async def _async_get_trigger_platform(
     except IntegrationNotFound:
         raise vol.Invalid(f"Invalid platform '{platform}' specified") from None
     try:
-        return integration.get_platform("trigger")
+        return await integration.async_get_platform("trigger")
     except ImportError:
         raise vol.Invalid(
             f"Integration '{platform}' does not provide trigger support"
@@ -305,7 +307,7 @@ async def async_initialize_triggers(
     variables: TemplateVarsType = None,
 ) -> CALLBACK_TYPE | None:
     """Initialize triggers."""
-    triggers: list[Coroutine[Any, Any, CALLBACK_TYPE]] = []
+    triggers: list[asyncio.Task[CALLBACK_TYPE]] = []
     for idx, conf in enumerate(trigger_config):
         # Skip triggers that are not enabled
         if not conf.get(CONF_ENABLED, True):
@@ -325,8 +327,10 @@ async def async_initialize_triggers(
         )
 
         triggers.append(
-            platform.async_attach_trigger(
-                hass, conf, _trigger_action_wrapper(hass, action, conf), info
+            create_eager_task(
+                platform.async_attach_trigger(
+                    hass, conf, _trigger_action_wrapper(hass, action, conf), info
+                )
             )
         )
 

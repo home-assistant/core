@@ -1,4 +1,5 @@
 """Define Guardian-specific utilities."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine, Iterable
@@ -48,9 +49,10 @@ def async_finish_entity_domain_replacements(
         try:
             [registry_entry] = [
                 registry_entry
-                for registry_entry in ent_reg.entities.values()
-                if registry_entry.config_entry_id == entry.entry_id
-                and registry_entry.domain == strategy.old_domain
+                for registry_entry in er.async_entries_for_config_entry(
+                    ent_reg, entry.entry_id
+                )
+                if registry_entry.domain == strategy.old_domain
                 and registry_entry.unique_id == strategy.old_unique_id
             ]
         except ValueError:

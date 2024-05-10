@@ -1,4 +1,5 @@
 """Config flow for Matter integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,7 +9,6 @@ from matter_server.client import MatterClient
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.hassio import (
     AddonError,
     AddonInfo,
@@ -17,9 +17,12 @@ from homeassistant.components.hassio import (
     HassioServiceInfo,
     is_hassio,
 )
+from homeassistant.components.onboarding import async_is_onboarded
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
 
@@ -56,13 +59,14 @@ def build_ws_address(host: str, port: int) -> str:
     return f"ws://{host}:{port}/ws"
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Matter."""
 
     VERSION = 1
 
     def __init__(self) -> None:
         """Set up flow instance."""
+        self._running_in_background = False
         self.ws_address: str | None = None
         # If we install the add-on we should uninstall it on entry remove.
         self.integration_created_addon = False
@@ -72,12 +76,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_install_addon(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Install Matter Server add-on."""
         if not self.install_task:
             self.install_task = self.hass.async_create_task(self._async_install_addon())
 
-        if not self.install_task.done():
+        if not self._running_in_background and not self.install_task.done():
             return self.async_show_progress(
                 step_id="install_addon",
                 progress_action="install_addon",
@@ -88,17 +92,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.install_task
         except AddonError as err:
             LOGGER.error(err)
+            if self._running_in_background:
+                return await self.async_step_install_failed()
             return self.async_show_progress_done(next_step_id="install_failed")
         finally:
             self.install_task = None
 
         self.integration_created_addon = True
 
+        if self._running_in_background:
+            return await self.async_step_start_addon()
         return self.async_show_progress_done(next_step_id="start_addon")
 
     async def async_step_install_failed(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Add-on installation failed."""
         return self.async_abort(reason="addon_install_failed")
 
@@ -120,11 +128,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_start_addon(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Start Matter Server add-on."""
         if not self.start_task:
             self.start_task = self.hass.async_create_task(self._async_start_addon())
-        if not self.start_task.done():
+        if not self._running_in_background and not self.start_task.done():
             return self.async_show_progress(
                 step_id="start_addon",
                 progress_action="start_addon",
@@ -135,15 +143,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.start_task
         except (FailedConnect, AddonError, AbortFlow) as err:
             LOGGER.error(err)
+            if self._running_in_background:
+                return await self.async_step_start_failed()
             return self.async_show_progress_done(next_step_id="start_failed")
         finally:
             self.start_task = None
 
+        if self._running_in_background:
+            return await self.async_step_finish_addon_setup()
         return self.async_show_progress_done(next_step_id="finish_addon_setup")
 
     async def async_step_start_failed(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Add-on start failed."""
         return self.async_abort(reason="addon_start_failed")
 
@@ -186,7 +198,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if is_hassio(self.hass):
             return await self.async_step_on_supervisor()
@@ -195,7 +207,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a manual configuration."""
         if user_input is None:
             return self.async_show_form(
@@ -222,7 +234,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="manual", data_schema=get_manual_schema(user_input), errors=errors
         )
 
-    async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle zeroconf discovery."""
+        if not async_is_onboarded(self.hass) and is_hassio(self.hass):
+            await self._async_handle_discovery_without_unique_id()
+            self._running_in_background = True
+            return await self.async_step_on_supervisor(
+                user_input={CONF_USE_ADDON: True}
+            )
+        return await self._async_step_discovery_without_unique_id()
+
+    async def async_step_hassio(
+        self, discovery_info: HassioServiceInfo
+    ) -> ConfigFlowResult:
         """Receive configuration from add-on discovery info.
 
         This flow is triggered by the Matter Server add-on.
@@ -240,7 +266,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_hassio_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm the add-on discovery."""
         if user_input is not None:
             return await self.async_step_on_supervisor(
@@ -251,7 +277,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_on_supervisor(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle logic when on Supervisor host."""
         if user_input is None:
             return self.async_show_form(
@@ -274,7 +300,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_finish_addon_setup(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Prepare info needed to complete the config entry."""
         if not self.ws_address:
             discovery_info = await self._async_get_addon_discovery_info()
@@ -289,7 +315,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._async_create_entry_or_abort()
 
-    async def _async_create_entry_or_abort(self) -> FlowResult:
+    async def _async_create_entry_or_abort(self) -> ConfigFlowResult:
         """Return a config entry for the flow or abort if already configured."""
         assert self.ws_address is not None
 

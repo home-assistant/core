@@ -1,4 +1,5 @@
 """Tests for sensors."""
+
 from homeassistant.core import HomeAssistant
 
 from .conftest import (

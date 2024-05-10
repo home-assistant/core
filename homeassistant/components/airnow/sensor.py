@@ -1,4 +1,5 @@
 """Support for the AirNow sensor service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -12,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TIME,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -25,7 +25,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import get_time_zone
 
-from . import AirNowDataUpdateCoordinator
+from . import AirNowConfigEntry, AirNowDataUpdateCoordinator
 from .const import (
     ATTR_API_AQI,
     ATTR_API_AQI_DESCRIPTION,
@@ -51,17 +51,12 @@ ATTR_LEVEL = "level"
 ATTR_STATION = "reporting_station"
 
 
-@dataclass(frozen=True)
-class AirNowEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class AirNowEntityDescription(SensorEntityDescription):
+    """Describes Airnow sensor entity."""
 
     value_fn: Callable[[Any], StateType]
     extra_state_attributes_fn: Callable[[Any], dict[str, str]] | None
-
-
-@dataclass(frozen=True)
-class AirNowEntityDescription(SensorEntityDescription, AirNowEntityDescriptionMixin):
-    """Describes Airnow sensor entity."""
 
 
 def station_extra_attrs(data: dict[str, Any]) -> dict[str, Any]:
@@ -120,11 +115,11 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AirNowConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AirNow sensor entities based on a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     entities = [AirNowSensor(coordinator, description) for description in SENSOR_TYPES]
 

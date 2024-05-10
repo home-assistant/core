@@ -1,12 +1,12 @@
 """Test ZHA cover."""
+
 import asyncio
 from unittest.mock import patch
 
 import pytest
 import zigpy.profiles.zha
 import zigpy.types
-import zigpy.zcl.clusters.closures as closures
-import zigpy.zcl.clusters.general as general
+from zigpy.zcl.clusters import closures, general
 import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.cover import (
@@ -835,7 +835,7 @@ async def test_shade(
     assert hass.states.get(entity_id).state == STATE_OPEN
 
     # test cover stop
-    with patch("zigpy.zcl.Cluster.request", side_effect=asyncio.TimeoutError):
+    with patch("zigpy.zcl.Cluster.request", side_effect=TimeoutError):
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 COVER_DOMAIN,
@@ -924,7 +924,7 @@ async def test_keen_vent(
     assert hass.states.get(entity_id).state == STATE_CLOSED
 
     # open from UI command fails
-    p1 = patch.object(cluster_on_off, "request", side_effect=asyncio.TimeoutError)
+    p1 = patch.object(cluster_on_off, "request", side_effect=TimeoutError)
     p2 = patch.object(cluster_level, "request", return_value=[4, 0])
 
     with p1, p2:

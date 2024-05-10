@@ -1,4 +1,5 @@
 """Support for UpCloud."""
+
 from __future__ import annotations
 
 import dataclasses

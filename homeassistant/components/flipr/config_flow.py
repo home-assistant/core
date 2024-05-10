@@ -1,4 +1,5 @@
 """Config flow for Flipr integration."""
+
 from __future__ import annotations
 
 import logging
@@ -7,16 +8,15 @@ from flipr_api import FliprAPIRestClient
 from requests.exceptions import HTTPError, Timeout
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_FLIPR_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class FliprConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Flipr."""
 
     VERSION = 1
@@ -28,7 +28,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self._show_setup_form()
@@ -44,9 +44,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except (Timeout, ConnectionError):
                 errors["base"] = "cannot_connect"
-            except Exception as exception:  # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
-                _LOGGER.exception(exception)
+                _LOGGER.exception("Unexpected exception")
 
             if not errors and not flipr_ids:
                 # No flipr_id found. Tell the user with an error message.
@@ -91,13 +91,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Instantiates the flipr API that does not require async since it is has no network access.
         client = FliprAPIRestClient(self._username, self._password)
 
-        flipr_ids = await self.hass.async_add_executor_job(client.search_flipr_ids)
-
-        return flipr_ids
+        return await self.hass.async_add_executor_job(client.search_flipr_ids)
 
     async def async_step_flipr_id(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if not user_input:
             # Creation of a select with the proposal of flipr ids values found by API.

@@ -1,4 +1,5 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5)."""
+
 from collections.abc import Callable
 import logging
 

@@ -1,7 +1,7 @@
 """Pluggable auth modules for Home Assistant."""
+
 from __future__ import annotations
 
-import importlib
 import logging
 import types
 from typing import Any
@@ -14,6 +14,7 @@ from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.importlib import async_import_module
 from homeassistant.util.decorator import Registry
 
 MULTI_FACTOR_AUTH_MODULES: Registry[str, type[MultiFactorAuthModule]] = Registry()
@@ -148,7 +149,7 @@ async def _load_mfa_module(hass: HomeAssistant, module_name: str) -> types.Modul
     module_path = f"homeassistant.auth.mfa_modules.{module_name}"
 
     try:
-        module = importlib.import_module(module_path)
+        module = await async_import_module(hass, module_path)
     except ImportError as err:
         _LOGGER.error("Unable to load mfa module %s: %s", module_name, err)
         raise HomeAssistantError(

@@ -1,4 +1,5 @@
 """Test the Camera significant change platform."""
+
 from homeassistant.components.camera import STATE_IDLE, STATE_RECORDING
 from homeassistant.components.camera.significant_change import (
     async_check_significant_change,

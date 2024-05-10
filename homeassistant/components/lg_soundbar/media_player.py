@@ -1,4 +1,5 @@
 """Support for LG soundbars."""
+
 from __future__ import annotations
 
 import temescal
@@ -90,7 +91,7 @@ class LGDevice(MediaPlayerEntity):
 
     def handle_event(self, response):
         """Handle responses from the speakers."""
-        data = response["data"] if "data" in response else {}
+        data = response.get("data") or {}
         if response["msg"] == "EQ_VIEW_INFO":
             if "i_bass" in data:
                 self._bass = data["i_bass"]
@@ -165,11 +166,11 @@ class LGDevice(MediaPlayerEntity):
     @property
     def sound_mode_list(self):
         """Return the available sound modes."""
-        modes = []
-        for equaliser in self._equalisers:
-            if equaliser < len(temescal.equalisers):
-                modes.append(temescal.equalisers[equaliser])
-        return sorted(modes)
+        return sorted(
+            temescal.equalisers[equaliser]
+            for equaliser in self._equalisers
+            if equaliser < len(temescal.equalisers)
+        )
 
     @property
     def source(self):
@@ -181,11 +182,11 @@ class LGDevice(MediaPlayerEntity):
     @property
     def source_list(self):
         """List of available input sources."""
-        sources = []
-        for function in self._functions:
-            if function < len(temescal.functions):
-                sources.append(temescal.functions[function])
-        return sorted(sources)
+        return sorted(
+            temescal.functions[function]
+            for function in self._functions
+            if function < len(temescal.functions)
+        )
 
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""

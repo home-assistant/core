@@ -1,4 +1,5 @@
 """Slack platform for sensor component."""
+
 from __future__ import annotations
 
 from slack import WebClient
@@ -30,7 +31,6 @@ async def async_setup_entry(
                 SensorEntityDescription(
                     key="do_not_disturb_until",
                     translation_key="do_not_disturb_until",
-                    icon="mdi:clock",
                     device_class=SensorDeviceClass.TIMESTAMP,
                 ),
                 entry,

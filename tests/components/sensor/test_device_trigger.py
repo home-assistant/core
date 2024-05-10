@@ -1,10 +1,11 @@
 """The test for sensor device automation."""
+
 from datetime import timedelta
 
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -29,8 +30,9 @@ from tests.common import (
     async_get_device_automation_capabilities,
     async_get_device_automations,
     async_mock_service,
+    setup_test_component_platform,
 )
-from tests.testing_config.custom_components.test.sensor import UNITS_OF_MEASUREMENT
+from tests.components.sensor.common import UNITS_OF_MEASUREMENT, MockSensor
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -86,11 +88,10 @@ async def test_get_triggers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
+    mock_sensor_entities: dict[str, MockSensor],
 ) -> None:
     """Test we get the expected triggers from a sensor."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_sensor_entities.values())
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
     sensor_entries: dict[SensorDeviceClass, er.RegistryEntry] = {}
@@ -105,7 +106,7 @@ async def test_get_triggers(
         sensor_entries[device_class] = entity_registry.async_get_or_create(
             DOMAIN,
             "test",
-            platform.ENTITIES[device_class].unique_id,
+            mock_sensor_entities[device_class].unique_id,
             device_id=device_entry.id,
         )
 
@@ -132,12 +133,12 @@ async def test_get_triggers(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_triggers_hidden_auxiliary(
     hass: HomeAssistant,
@@ -181,13 +182,13 @@ async def test_get_triggers_hidden_auxiliary(
 
 @pytest.mark.parametrize(
     ("state_class", "unit", "trigger_types"),
-    (
+    [
         (SensorStateClass.MEASUREMENT, None, ["value"]),
         (SensorStateClass.TOTAL, None, ["value"]),
         (SensorStateClass.TOTAL_INCREASING, None, ["value"]),
         (SensorStateClass.MEASUREMENT, "dogs", ["value"]),
         (None, None, []),
-    ),
+    ],
 )
 async def test_get_triggers_no_unit_or_stateclass(
     hass: HomeAssistant,
@@ -240,6 +241,7 @@ async def test_get_trigger_capabilities(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    mock_sensor_entities: dict[str, MockSensor],
     set_state,
     device_class_reg,
     device_class_state,
@@ -247,8 +249,7 @@ async def test_get_trigger_capabilities(
     unit_state,
 ) -> None:
     """Test we get the expected capabilities from a sensor trigger."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_sensor_entities)
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -259,7 +260,7 @@ async def test_get_trigger_capabilities(
     entity_id = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
-        platform.ENTITIES["battery"].unique_id,
+        mock_sensor_entities["battery"].unique_id,
         device_id=device_entry.id,
         original_device_class=device_class_reg,
         unit_of_measurement=unit_reg,
@@ -310,6 +311,7 @@ async def test_get_trigger_capabilities_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    mock_sensor_entities: dict[str, MockSensor],
     set_state,
     device_class_reg,
     device_class_state,
@@ -317,8 +319,7 @@ async def test_get_trigger_capabilities_legacy(
     unit_state,
 ) -> None:
     """Test we get the expected capabilities from a sensor trigger."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_sensor_entities)
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -329,7 +330,7 @@ async def test_get_trigger_capabilities_legacy(
     entity_id = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
-        platform.ENTITIES["battery"].unique_id,
+        mock_sensor_entities["battery"].unique_id,
         device_id=device_entry.id,
         original_device_class=device_class_reg,
         unit_of_measurement=unit_reg,
@@ -373,11 +374,13 @@ async def test_get_trigger_capabilities_legacy(
 async def test_get_trigger_capabilities_none(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
 ) -> None:
     """Test we get the expected capabilities from a sensor trigger."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
+    entity = MockSensor(
+        name="none sensor",
+        unique_id="unique_none",
+    )
+    setup_test_component_platform(hass, DOMAIN, [entity])
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -385,7 +388,7 @@ async def test_get_trigger_capabilities_none(
     entry_none = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
-        platform.ENTITIES["none"].unique_id,
+        entity.unique_id,
     )
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
@@ -493,15 +496,12 @@ async def test_if_fires_on_state_above(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "bat_low {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "bat_low {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -561,15 +561,12 @@ async def test_if_fires_on_state_below(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "bat_low {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "bat_low {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -630,15 +627,12 @@ async def test_if_fires_on_state_between(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "bat_low {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "bat_low {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -709,15 +703,12 @@ async def test_if_fires_on_state_legacy(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "bat_low {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "bat_low {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -778,15 +769,12 @@ async def test_if_fires_on_state_change_with_for(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_off {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "turn_off {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },

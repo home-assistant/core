@@ -1,4 +1,5 @@
 """Config flow for OpenAI Conversation integration."""
+
 from __future__ import annotations
 
 import logging
@@ -9,10 +10,14 @@ from typing import Any
 import openai
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -61,14 +66,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     await hass.async_add_executor_job(client.with_options(timeout=10.0).models.list)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenAI Conversation."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -95,22 +100,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
         """Create the options flow."""
-        return OptionsFlow(config_entry)
+        return OpenAIOptionsFlow(config_entry)
 
 
-class OptionsFlow(config_entries.OptionsFlow):
+class OpenAIOptionsFlow(OptionsFlow):
     """OpenAI config flow options handler."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="OpenAI Conversation", data=user_input)

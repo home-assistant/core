@@ -1,4 +1,5 @@
 """Test the flo config flow."""
+
 from http import HTTPStatus
 import json
 import time
@@ -8,6 +9,7 @@ from homeassistant import config_entries
 from homeassistant.components.flo.const import DOMAIN
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .common import TEST_EMAIL_ADDRESS, TEST_PASSWORD, TEST_TOKEN, TEST_USER_ID
 
@@ -20,7 +22,7 @@ async def test_form(hass: HomeAssistant, aioclient_mock_fixture) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -30,7 +32,7 @@ async def test_form(hass: HomeAssistant, aioclient_mock_fixture) -> None:
             result["flow_id"], {"username": TEST_USER_ID, "password": TEST_PASSWORD}
         )
 
-        assert result2["type"] == "create_entry"
+        assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["title"] == TEST_USER_ID
         assert result2["data"] == {"username": TEST_USER_ID, "password": TEST_PASSWORD}
         await hass.async_block_till_done()
@@ -67,5 +69,5 @@ async def test_form_cannot_connect(
         result["flow_id"], {"username": "test-username", "password": "test-password"}
     )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}

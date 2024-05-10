@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for Met.no integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -77,7 +78,7 @@ class MetWeatherData:
         """Fetch data from API - (current weather and forecast)."""
         resp = await self._weather_data.fetching_data()
         if not resp:
-            raise CannotConnect()
+            raise CannotConnect
         self.current_weather_data = self._weather_data.get_current_weather()
         time_zone = dt_util.DEFAULT_TIME_ZONE
         self.daily_forecast = self._weather_data.get_forecast(time_zone, False, 0)

@@ -1,4 +1,5 @@
 """The tests for SleepIQ sensor platform."""
+
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.core import HomeAssistant

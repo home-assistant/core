@@ -1,4 +1,5 @@
 """Support for interfacing to the Logitech SqueezeBox API."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -27,7 +28,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
-    EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
@@ -43,6 +43,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.start import async_at_start
 from homeassistant.util.dt import utcnow
 
 from .browse_media import (
@@ -167,9 +168,9 @@ async def async_setup_entry(
             for player in players:
                 hass.async_create_task(_discovered_player(player))
 
-        hass.data[DOMAIN][config_entry.entry_id][
-            PLAYER_DISCOVERY_UNSUB
-        ] = async_call_later(hass, DISCOVERY_INTERVAL, _discovery)
+        hass.data[DOMAIN][config_entry.entry_id][PLAYER_DISCOVERY_UNSUB] = (
+            async_call_later(hass, DISCOVERY_INTERVAL, _discovery)
+        )
 
     _LOGGER.debug("Adding player discovery job for LMS server: %s", host)
     config_entry.async_create_background_task(
@@ -206,12 +207,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(SERVICE_UNSYNC, None, "async_unsync")
 
     # Start server discovery task if not already running
-    if hass.is_running:
-        hass.async_create_task(start_server_discovery(hass))
-    else:
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, start_server_discovery(hass)
-        )
+    config_entry.async_on_unload(async_at_start(hass, start_server_discovery))
 
 
 class SqueezeBoxEntity(MediaPlayerEntity):
@@ -257,13 +253,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     @property
     def extra_state_attributes(self):
         """Return device-specific attributes."""
-        squeezebox_attr = {
+        return {
             attr: getattr(self, attr)
             for attr in ATTR_TO_PROPERTY
             if getattr(self, attr) is not None
         }
-
-        return squeezebox_attr
 
     @callback
     def rediscovered(self, unique_id, connected):
@@ -394,11 +388,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         player_ids = {
             p.unique_id: p.entity_id for p in self.hass.data[DOMAIN][KNOWN_PLAYERS]
         }
-        sync_group = []
-        for player in self._player.sync_group:
-            if player in player_ids:
-                sync_group.append(player_ids[player])
-        return sync_group
+        return [
+            player_ids[player]
+            for player in self._player.sync_group
+            if player in player_ids
+        ]
 
     @property
     def sync_group(self):
@@ -549,8 +543,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         """
         all_params = [command]
         if parameters:
-            for parameter in parameters:
-                all_params.append(parameter)
+            all_params.extend(parameters)
         await self._player.async_query(*all_params)
 
     async def async_call_query(self, command, parameters=None):
@@ -561,8 +554,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         """
         all_params = [command]
         if parameters:
-            for parameter in parameters:
-                all_params.append(parameter)
+            all_params.extend(parameters)
         self._query_result = await self._player.async_query(*all_params)
         _LOGGER.debug("call_query got result %s", self._query_result)
 

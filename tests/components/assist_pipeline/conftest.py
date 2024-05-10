@@ -1,4 +1,5 @@
 """Test fixtures for voice assistant."""
+
 from __future__ import annotations
 
 from collections.abc import AsyncIterable, Generator
@@ -110,6 +111,7 @@ class MockTTSProvider(tts.Provider):
             tts.Voice("fran_drescher", "Fran Drescher"),
         ]
     }
+    _supported_options = ["voice", "age", tts.ATTR_AUDIO_OUTPUT]
 
     @property
     def default_language(self) -> str:
@@ -129,7 +131,7 @@ class MockTTSProvider(tts.Provider):
     @property
     def supported_options(self) -> list[str]:
         """Return list of supported options like voice, emotions."""
-        return ["voice", "age", tts.ATTR_AUDIO_OUTPUT]
+        return self._supported_options
 
     def get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
@@ -201,16 +203,19 @@ class MockWakeWordEntity(wake_word.WakeWordDetectionEntity):
 
         if self.alternate_detections:
             detected_id = wake_words[self.detected_wake_word_index].id
+            detected_name = wake_words[self.detected_wake_word_index].name
             self.detected_wake_word_index = (self.detected_wake_word_index + 1) % len(
                 wake_words
             )
         else:
             detected_id = wake_words[0].id
+            detected_name = wake_words[0].name
 
         async for chunk, timestamp in stream:
             if chunk.startswith(b"wake word"):
                 return wake_word.DetectionResult(
                     wake_word_id=detected_id,
+                    wake_word_phrase=detected_name,
                     timestamp=timestamp,
                     queued_audio=[(b"queued audio", 0)],
                 )
@@ -240,6 +245,7 @@ class MockWakeWordEntity2(wake_word.WakeWordDetectionEntity):
             if chunk.startswith(b"wake word"):
                 return wake_word.DetectionResult(
                     wake_word_id=wake_words[0].id,
+                    wake_word_phrase=wake_words[0].name,
                     timestamp=timestamp,
                     queued_audio=[(b"queued audio", 0)],
                 )

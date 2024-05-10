@@ -1,7 +1,7 @@
 {
   "domain": "lutron_caseta",
   "name": "Lutron Cas\u00e9ta",
-  "codeowners": ["@swails", "@bdraco", "@danaues"],
+  "codeowners": ["@swails", "@bdraco", "@danaues", "@eclair4151"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lutron_caseta",
   "homekit": {
@@ -9,7 +9,7 @@
   },
   "iot_class": "local_push",
   "loggers": ["pylutron_caseta"],
-  "requirements": ["pylutron-caseta==0.19.0"],
+  "requirements": ["pylutron-caseta==0.20.0"],
   "zeroconf": [
     {
       "type": "_lutron._tcp.local.",

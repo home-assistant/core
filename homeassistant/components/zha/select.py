@@ -1,4 +1,5 @@
 """Support for ZHA controls using the select platform."""
+
 from __future__ import annotations
 
 from enum import Enum
@@ -10,6 +11,7 @@ from zhaquirks.quirk_ids import TUYA_PLUG_MANUFACTURER, TUYA_PLUG_ONOFF
 from zhaquirks.xiaomi.aqara.magnet_ac01 import OppleCluster as MagnetAC01OppleCluster
 from zhaquirks.xiaomi.aqara.switch_acn047 import OppleCluster as T2RelayOppleCluster
 from zigpy import types
+from zigpy.quirks.v2 import ZCLEnumMetadata
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasWd
 
@@ -27,6 +29,7 @@ from .core.const import (
     CLUSTER_HANDLER_INOVELLI,
     CLUSTER_HANDLER_OCCUPANCY,
     CLUSTER_HANDLER_ON_OFF,
+    ENTITY_METADATA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     Strobe,
@@ -82,9 +85,9 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
         **kwargs: Any,
     ) -> None:
         """Init this select entity."""
+        self._cluster_handler: ClusterHandler = cluster_handlers[0]
         self._attribute_name = self._enum.__name__
         self._attr_options = [entry.name.replace("_", " ") for entry in self._enum]
-        self._cluster_handler: ClusterHandler = cluster_handlers[0]
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
     @property
@@ -176,7 +179,7 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         cluster_handler = cluster_handlers[0]
-        if (
+        if ENTITY_METADATA not in kwargs and (
             cls._attribute_name in cluster_handler.cluster.unsupported_attributes
             or cls._attribute_name not in cluster_handler.cluster.attributes_by_name
             or cluster_handler.cluster.get(cls._attribute_name) is None
@@ -198,9 +201,17 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
         **kwargs: Any,
     ) -> None:
         """Init this select entity."""
-        self._attr_options = [entry.name.replace("_", " ") for entry in self._enum]
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
+        if ENTITY_METADATA in kwargs:
+            self._init_from_quirks_metadata(kwargs[ENTITY_METADATA])
+        self._attr_options = [entry.name.replace("_", " ") for entry in self._enum]
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+
+    def _init_from_quirks_metadata(self, entity_metadata: ZCLEnumMetadata) -> None:
+        """Init this entity from the quirks metadata."""
+        super()._init_from_quirks_metadata(entity_metadata)
+        self._attribute_name = entity_metadata.attribute_name
+        self._enum = entity_metadata.enum
 
     @property
     def current_option(self) -> str | None:
@@ -613,7 +624,6 @@ class AqaraPetFeederMode(ZCLEnumSelectEntity):
     _attribute_name = "feeding_mode"
     _enum = AqaraFeedingMode
     _attr_translation_key: str = "feeding_mode"
-    _attr_icon: str = "mdi:wrench-clock"
 
 
 class AqaraThermostatPresetMode(types.enum8):
@@ -678,4 +688,3 @@ class KeypadLockout(ZCLEnumSelectEntity):
     _attribute_name: str = "keypad_lockout"
     _enum = KeypadLockoutEnum
     _attr_translation_key: str = "keypad_lockout"
-    _attr_icon: str = "mdi:lock"

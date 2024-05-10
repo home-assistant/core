@@ -1,4 +1,5 @@
 """Constants for tests."""
+
 from datetime import timedelta
 
 from icmplib import Host

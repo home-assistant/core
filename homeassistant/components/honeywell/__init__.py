@@ -1,5 +1,5 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
-import asyncio
+
 from dataclasses import dataclass
 
 import aiosomecomfort
@@ -21,7 +21,7 @@ from .const import (
 )
 
 UPDATE_LOOP_SLEEP_TIME = 5
-PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
 
 MIGRATE_OPTIONS_KEYS = {CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE}
 
@@ -68,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         aiosomecomfort.device.ConnectionError,
         aiosomecomfort.device.ConnectionTimeout,
         aiosomecomfort.device.SomeComfortError,
-        asyncio.TimeoutError,
+        TimeoutError,
     ) as ex:
         raise ConfigEntryNotReady(
             "Failed to initialize the Honeywell client: Connection error"

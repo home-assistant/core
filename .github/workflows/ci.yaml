@@ -33,12 +33,12 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 5
-  PIP_CACHE_VERSION: 4
-  MYPY_CACHE_VERSION: 7
-  HA_SHORT_VERSION: "2024.3"
-  DEFAULT_PYTHON: "3.11"
-  ALL_PYTHON_VERSIONS: "['3.11', '3.12']"
+  CACHE_VERSION: 8
+  UV_CACHE_VERSION: 1
+  MYPY_CACHE_VERSION: 8
+  HA_SHORT_VERSION: "2024.6"
+  DEFAULT_PYTHON: "3.12"
+  ALL_PYTHON_VERSIONS: "['3.12']"
   # 10.3 is the oldest supported version
   # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
   # 10.6 is the current long-term-support
@@ -56,7 +56,7 @@ env:
   # - 15.2 is the latest (as of 9 Feb 2023)
   POSTGRESQL_VERSIONS: "['postgres:12.14','postgres:15.2']"
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
-  PIP_CACHE: /tmp/pip-cache
+  UV_CACHE_DIR: /tmp/uv-cache
   SQLALCHEMY_WARN_20: 1
   PYTHONASYNCIODEBUG: 1
   HASS_CI: 1
@@ -89,21 +89,25 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.4
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
-        run: >-
-          echo "key=venv-${{ env.CACHE_VERSION }}-${{
-            hashFiles('requirements_test.txt') }}-${{
+        run: |
+          # Include HA_SHORT_VERSION to force the immediate creation
+          # of a new uv cache entry after a version bump.
+          echo "key=venv-${{ env.CACHE_VERSION }}-${{ env.HA_SHORT_VERSION }}-${{
+            hashFiles('requirements_test.txt', 'requirements_test_pre_commit.txt') }}-${{
+            hashFiles('requirements.txt') }}-${{
             hashFiles('requirements_all.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}" >> $GITHUB_OUTPUT
+            hashFiles('homeassistant/package_constraints.txt') }}-${{
+            hashFiles('script/gen_requirements_all.py') }}" >> $GITHUB_OUTPUT
       - name: Generate partial pre-commit restore key
         id: generate_pre-commit_cache_key
         run: >-
           echo "key=pre-commit-${{ env.CACHE_VERSION }}-${{
             hashFiles('.pre-commit-config.yaml') }}"  >> $GITHUB_OUTPUT
       - name: Filter for core changes
-        uses: dorny/paths-filter@v3.0.0
+        uses: dorny/paths-filter@v3.0.2
         id: core
         with:
           filters: .core_files.yaml
@@ -118,7 +122,7 @@ jobs:
           echo "Result:"
           cat .integration_paths.yaml
       - name: Filter for integration changes
-        uses: dorny/paths-filter@v3.0.0
+        uses: dorny/paths-filter@v3.0.2
         id: integrations
         with:
           filters: .integration_paths.yaml
@@ -222,16 +226,16 @@ jobs:
       - info
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.4
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.0.0
+        uses: actions/setup-python@v5.1.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v4.0.0
+        uses: actions/cache@v4.0.2
         with:
           path: venv
           key: >-
@@ -243,10 +247,11 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           python --version
-          pip install "$(cat requirements_test.txt | grep pre-commit)"
+          pip install "$(grep '^uv' < requirements_test.txt)"
+          uv pip install "$(cat requirements_test.txt | grep pre-commit)"
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v4.0.0
+        uses: actions/cache@v4.0.2
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           lookup-only: true
@@ -267,16 +272,16 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.4
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.0.0
+        uses: actions/setup-python@v5.1.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.0.0
+        uses: actions/cache/restore@v4.0.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -285,7 +290,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v4.0.0
+        uses: actions/cache/restore@v4.0.2
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -307,16 +312,16 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.4
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.0.0
+        uses: actions/setup-python@v5.1.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.0.0
+        uses: actions/cache/restore@v4.0.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -325,7 +330,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v4.0.0
+        uses: actions/cache/restore@v4.0.2
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -346,16 +351,16 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.4
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.0.0
+        uses: actions/setup-python@v5.1.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.0.0
+        uses: actions/cache/restore@v4.0.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -364,7 +369,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v4.0.0
+        uses: actions/cache/restore@v4.0.2
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -440,40 +445,45 @@ jobs:
         python-version: ${{ fromJSON(needs.info.outputs.python_versions) }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.4
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.0.0
+        uses: actions/setup-python@v5.1.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
-      - name: Generate partial pip restore key
-        id: generate-pip-key
-        run: >-
-          echo "key=pip-${{ env.PIP_CACHE_VERSION }}-${{
+      - name: Generate partial uv restore key
+        id: generate-uv-key
+        run: |
+          uv_version=$(cat requirements_test.txt | grep uv | cut -d '=' -f 3)
+          echo "version=${uv_version}" >> $GITHUB_OUTPUT
+          echo "key=uv-${{ env.UV_CACHE_VERSION }}-${uv_version}-${{
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v4.0.0
+        uses: actions/cache@v4.0.2
         with:
           path: venv
           lookup-only: true
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
-      - name: Restore pip wheel cache
+      - name: Restore uv wheel cache
         if: steps.cache-venv.outputs.cache-hit != 'true'
-        uses: actions/cache@v4.0.0
+        uses: actions/cache@v4.0.2
         with:
-          path: ${{ env.PIP_CACHE }}
+          path: ${{ env.UV_CACHE_DIR }}
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
-            steps.generate-pip-key.outputs.key }}
+            steps.generate-uv-key.outputs.key }}
           restore-keys: |
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-pip-${{ env.PIP_CACHE_VERSION }}-${{ env.HA_SHORT_VERSION }}-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-uv-${{
+            env.UV_CACHE_VERSION }}-${{ steps.generate-uv-key.outputs.version }}-${{
+            env.HA_SHORT_VERSION }}-
       - name: Install additional OS dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
           sudo apt-get -y install \
             bluez \
@@ -483,6 +493,7 @@ jobs:
             libavfilter-dev \
             libavformat-dev \
             libavutil-dev \
+            libgammu-dev \
             libswresample-dev \
             libswscale-dev \
             libudev-dev
@@ -492,10 +503,13 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           python --version
-          PIP_CACHE_DIR=$PIP_CACHE pip install -U "pip>=21.3.1" setuptools wheel
-          PIP_CACHE_DIR=$PIP_CACHE pip install -r requirements_all.txt
-          PIP_CACHE_DIR=$PIP_CACHE pip install -r requirements_test.txt
-          pip install -e . --config-settings editable_mode=compat
+          pip install "$(grep '^uv' < requirements_test.txt)"
+          uv pip install -U "pip>=21.3.1" setuptools wheel
+          uv pip install -r requirements.txt
+          python -m script.gen_requirements_all ci
+          uv pip install -r requirements_all_pytest.txt
+          uv pip install -r requirements_test.txt
+          uv pip install -e . --config-settings editable_mode=compat
 
   hassfest:
     name: Check hassfest
@@ -508,16 +522,16 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.4
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.0.0
+        uses: actions/setup-python@v5.1.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.0.0
+        uses: actions/cache/restore@v4.0.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -540,16 +554,16 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.4
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.0.0
+        uses: actions/setup-python@v5.1.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.0.0
+        uses: actions/cache/restore@v4.0.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -573,16 +587,16 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.4
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.0.0
+        uses: actions/setup-python@v5.1.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.0.0
+        uses: actions/cache/restore@v4.0.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -617,10 +631,10 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.4
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.0.0
+        uses: actions/setup-python@v5.1.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -633,7 +647,7 @@ jobs:
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.0.0
+        uses: actions/cache/restore@v4.0.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -641,7 +655,7 @@ jobs:
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Restore mypy cache
-        uses: actions/cache@v4.0.0
+        uses: actions/cache@v4.0.2
         with:
           path: .mypy_cache
           key: >-
@@ -668,14 +682,63 @@ jobs:
           python --version
           mypy homeassistant/components/${{ needs.info.outputs.integrations_glob }}
 
-  pytest:
+  prepare-pytest-full:
     runs-on: ubuntu-22.04
     if: |
       (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
       && github.event.inputs.lint-only != 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
-      && (needs.info.outputs.test_full_suite == 'true' || needs.info.outputs.tests_glob)
+      && needs.info.outputs.test_full_suite == 'true'
+    needs:
+      - info
+      - base
+    name: Split tests for full run
+    steps:
+      - name: Install additional OS dependencies
+        run: |
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
+          sudo apt-get update
+          sudo apt-get -y install \
+            bluez \
+            ffmpeg \
+            libgammu-dev
+      - name: Check out code from GitHub
+        uses: actions/checkout@v4.1.4
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        id: python
+        uses: actions/setup-python@v5.1.0
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
+      - name: Restore base Python virtual environment
+        id: cache-venv
+        uses: actions/cache/restore@v4.0.2
+        with:
+          path: venv
+          fail-on-cache-miss: true
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
+      - name: Run split_tests.py
+        run: |
+          . venv/bin/activate
+          python -m script.split_tests ${{ needs.info.outputs.test_group_count }} tests
+      - name: Upload pytest_buckets
+        uses: actions/upload-artifact@v4.3.3
+        with:
+          name: pytest_buckets
+          path: pytest_buckets.txt
+          overwrite: true
+
+  pytest-full:
+    runs-on: ubuntu-22.04
+    if: |
+      (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
+      && github.event.inputs.lint-only != 'true'
+      && github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
+      && needs.info.outputs.test_full_suite == 'true'
     needs:
       - info
       - base
@@ -684,6 +747,7 @@ jobs:
       - lint-other
       - lint-ruff
       - mypy
+      - prepare-pytest-full
     strategy:
       fail-fast: false
       matrix:
@@ -694,21 +758,23 @@ jobs:
     steps:
       - name: Install additional OS dependencies
         run: |
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
           sudo apt-get -y install \
             bluez \
-            ffmpeg
+            ffmpeg \
+            libgammu-dev
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.4
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.0.0
+        uses: actions/setup-python@v5.1.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.0.0
+        uses: actions/cache/restore@v4.0.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -717,22 +783,18 @@ jobs:
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
-      - name: Install Pytest Annotation plugin
-        run: |
-          . venv/bin/activate
-          # Ideally this should be part of our dependencies
-          # However this plugin is fairly new and doesn't run correctly
-          # on a non-GitHub environment.
-          pip install pytest-github-actions-annotate-failures==0.1.3
       - name: Register pytest slow test problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
+      - name: Download pytest_buckets
+        uses: actions/download-artifact@v4.1.7
+        with:
+          name: pytest_buckets
       - name: Compile English translations
         run: |
           . venv/bin/activate
           python3 -m script.translations develop --all
-      - name: Run pytest (fully)
-        if: needs.info.outputs.test_full_suite == 'true'
+      - name: Run pytest
         timeout-minutes: 60
         id: pytest-full
         env:
@@ -753,60 +815,27 @@ jobs:
             --durations=10 \
             -n auto \
             --dist=loadfile \
-            --test-group-count ${{ needs.info.outputs.test_group_count }} \
-            --test-group=${{ matrix.group }} \
             ${cov_params[@]} \
             -o console_output_style=count \
             -p no:sugar \
-            tests \
-              2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
-      - name: Run pytest (partially)
-        if: needs.info.outputs.test_full_suite == 'false'
-        timeout-minutes: 10
-        id: pytest-partial
-        shell: bash
-        env:
-          PYTHONDONTWRITEBYTECODE: 1
-        run: |
-          . venv/bin/activate
-          python --version
-          set -o pipefail
-
-          if [[ ! -f "tests/components/${{ matrix.group }}/__init__.py" ]]; then
-            echo "::error:: missing file tests/components/${{ matrix.group }}/__init__.py"
-            exit 1
-          fi
-
-          cov_params=()
-          if [[ "${{ needs.info.outputs.skip_coverage }}" != "true" ]]; then
-            cov_params+=(--cov="homeassistant.components.${{ matrix.group }}")
-            cov_params+=(--cov-report=xml)
-            cov_params+=(--cov-report=term-missing)
-          fi
-
-          python3 -b -X dev -m pytest \
-            -qq \
-            --timeout=9 \
-            -n auto \
-            ${cov_params[@]} \
-            -o console_output_style=count \
-            --durations=0 \
-            --durations-min=1 \
-            -p no:sugar \
-            tests/components/${{ matrix.group }} \
+            $(sed -n "${{ matrix.group }},1p" pytest_buckets.txt) \
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Upload pytest output
-        if: success() || failure() && (steps.pytest-full.conclusion == 'failure' || steps.pytest-partial.conclusion == 'failure')
-        uses: actions/upload-artifact@v3.1.2
+        if: success() || failure() && steps.pytest-full.conclusion == 'failure'
+        uses: actions/upload-artifact@v4.3.3
         with:
-          name: pytest-${{ github.run_number }}
+          name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{ matrix.group }}
           path: pytest-*.txt
+          overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4.3.3
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
+          overwrite: true
+      - name: Remove pytest_buckets
+        run: rm pytest_buckets.txt
       - name: Check dirty
         run: |
           ./script/check_dirty
@@ -845,22 +874,23 @@ jobs:
     steps:
       - name: Install additional OS dependencies
         run: |
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
           sudo apt-get -y install \
             bluez \
             ffmpeg \
             libmariadb-dev-compat
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.4
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.0.0
+        uses: actions/setup-python@v5.1.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.0.0
+        uses: actions/cache/restore@v4.0.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -869,20 +899,13 @@ jobs:
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
-      - name: Install Pytest Annotation plugin
-        run: |
-          . venv/bin/activate
-          # Ideally this should be part of our dependencies
-          # However this plugin is fairly new and doesn't run correctly
-          # on a non-GitHub environment.
-          pip install pytest-github-actions-annotate-failures==0.1.3
       - name: Register pytest slow test problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Install SQL Python libraries
         run: |
           . venv/bin/activate
-          pip install mysqlclient sqlalchemy_utils
+          uv pip install mysqlclient sqlalchemy_utils
       - name: Compile English translations
         run: |
           . venv/bin/activate
@@ -922,17 +945,20 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${mariadb}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4.3.3
         with:
-          name: pytest-${{ github.run_number }}
+          name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{
+            steps.pytest-partial.outputs.mariadb }}
           path: pytest-*.txt
+          overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4.3.3
         with:
-          name: coverage-${{ matrix.python-version }}-mariadb-${{
+          name: coverage-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.mariadb }}
           path: coverage.xml
+          overwrite: true
       - name: Check dirty
         run: |
           ./script/check_dirty
@@ -971,22 +997,23 @@ jobs:
     steps:
       - name: Install additional OS dependencies
         run: |
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
           sudo apt-get -y install \
             bluez \
             ffmpeg \
             postgresql-server-dev-14
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.4
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.0.0
+        uses: actions/setup-python@v5.1.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.0.0
+        uses: actions/cache/restore@v4.0.2
         with:
           path: venv
           fail-on-cache-miss: true
@@ -995,20 +1022,13 @@ jobs:
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
-      - name: Install Pytest Annotation plugin
-        run: |
-          . venv/bin/activate
-          # Ideally this should be part of our dependencies
-          # However this plugin is fairly new and doesn't run correctly
-          # on a non-GitHub environment.
-          pip install pytest-github-actions-annotate-failures==0.1.3
       - name: Register pytest slow test problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Install SQL Python libraries
         run: |
           . venv/bin/activate
-          pip install psycopg2 sqlalchemy_utils
+          uv pip install psycopg2 sqlalchemy_utils
       - name: Compile English translations
         run: |
           . venv/bin/activate
@@ -1049,52 +1069,178 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${postgresql}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4.3.3
         with:
-          name: pytest-${{ github.run_number }}
+          name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{
+            steps.pytest-partial.outputs.postgresql }}
           path: pytest-*.txt
+          overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v3.1.0
+        uses: actions/upload-artifact@v4.3.3
         with:
           name: coverage-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.postgresql }}
           path: coverage.xml
+          overwrite: true
       - name: Check dirty
         run: |
           ./script/check_dirty
 
-  coverage:
-    name: Upload test coverage to Codecov
+  coverage-full:
+    name: Upload test coverage to Codecov (full suite)
     if: needs.info.outputs.skip_coverage != 'true'
     runs-on: ubuntu-22.04
     needs:
       - info
-      - pytest
+      - pytest-full
+      - pytest-postgres
+      - pytest-mariadb
     timeout-minutes: 10
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.4
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@v3
-      - name: Upload coverage to Codecov (full coverage)
+        uses: actions/download-artifact@v4.1.7
+        with:
+          pattern: coverage-*
+      - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: Wandalen/wretry.action@v1.3.0
+        uses: codecov/codecov-action@v4.3.1
         with:
-          action: codecov/codecov-action@v3.1.3
-          with: |
-            fail_ci_if_error: true
-            flags: full-suite
-            token: ${{ env.CODECOV_TOKEN }}
-          attempt_limit: 5
-          attempt_delay: 30000
-      - name: Upload coverage to Codecov (partial coverage)
+          fail_ci_if_error: true
+          flags: full-suite
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  pytest-partial:
+    runs-on: ubuntu-22.04
+    if: |
+      (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
+      && github.event.inputs.lint-only != 'true'
+      && github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
+      && needs.info.outputs.tests_glob
+      && needs.info.outputs.test_full_suite == 'false'
+    needs:
+      - info
+      - base
+      - gen-requirements-all
+      - hassfest
+      - lint-other
+      - lint-ruff
+      - mypy
+    strategy:
+      fail-fast: false
+      matrix:
+        group: ${{ fromJson(needs.info.outputs.test_groups) }}
+        python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
+    name: >-
+      Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
+    steps:
+      - name: Install additional OS dependencies
+        run: |
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
+          sudo apt-get update
+          sudo apt-get -y install \
+            bluez \
+            ffmpeg \
+            libgammu-dev
+      - name: Check out code from GitHub
+        uses: actions/checkout@v4.1.4
+      - name: Set up Python ${{ matrix.python-version }}
+        id: python
+        uses: actions/setup-python@v5.1.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          check-latest: true
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
+        id: cache-venv
+        uses: actions/cache/restore@v4.0.2
+        with:
+          path: venv
+          fail-on-cache-miss: true
+          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
+      - name: Register Python problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/python.json"
+      - name: Register pytest slow test problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
+      - name: Compile English translations
+        run: |
+          . venv/bin/activate
+          python3 -m script.translations develop --all
+      - name: Run pytest
+        timeout-minutes: 10
+        id: pytest-partial
+        shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: 1
+        run: |
+          . venv/bin/activate
+          python --version
+          set -o pipefail
+
+          if [[ ! -f "tests/components/${{ matrix.group }}/__init__.py" ]]; then
+            echo "::error:: missing file tests/components/${{ matrix.group }}/__init__.py"
+            exit 1
+          fi
+
+          cov_params=()
+          if [[ "${{ needs.info.outputs.skip_coverage }}" != "true" ]]; then
+            cov_params+=(--cov="homeassistant.components.${{ matrix.group }}")
+            cov_params+=(--cov-report=xml)
+            cov_params+=(--cov-report=term-missing)
+          fi
+
+          python3 -b -X dev -m pytest \
+            -qq \
+            --timeout=9 \
+            -n auto \
+            ${cov_params[@]} \
+            -o console_output_style=count \
+            --durations=0 \
+            --durations-min=1 \
+            -p no:sugar \
+            tests/components/${{ matrix.group }} \
+              2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
+      - name: Upload pytest output
+        if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
+        uses: actions/upload-artifact@v4.3.3
+        with:
+          name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{ matrix.group }}
+          path: pytest-*.txt
+          overwrite: true
+      - name: Upload coverage artifact
+        if: needs.info.outputs.skip_coverage != 'true'
+        uses: actions/upload-artifact@v4.3.3
+        with:
+          name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
+          path: coverage.xml
+          overwrite: true
+      - name: Check dirty
+        run: |
+          ./script/check_dirty
+
+  coverage-partial:
+    name: Upload test coverage to Codecov (partial suite)
+    if: needs.info.outputs.skip_coverage != 'true'
+    runs-on: ubuntu-22.04
+    needs:
+      - info
+      - pytest-partial
+    timeout-minutes: 10
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v4.1.4
+      - name: Download all coverage artifacts
+        uses: actions/download-artifact@v4.1.7
+        with:
+          pattern: coverage-*
+      - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: Wandalen/wretry.action@v1.3.0
+        uses: codecov/codecov-action@v4.3.1
         with:
-          action: codecov/codecov-action@v3.1.3
-          with: |
-            fail_ci_if_error: true
-            token: ${{ env.CODECOV_TOKEN }}
-          attempt_limit: 5
-          attempt_delay: 30000
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}

@@ -15,6 +15,12 @@
           'is_in_ignored_zone': False,
           'name': 'test2',
         }),
+        'device_tracker.test3': dict({
+          'dir_of_travel': None,
+          'dist_to_zone': 4077309,
+          'is_in_ignored_zone': False,
+          'name': 'test3',
+        }),
       }),
       'entity_mapping': dict({
         'device_tracker.test1': list([
@@ -29,10 +35,14 @@
           'sensor.home_test3_distance',
           'sensor.home_test3_direction_of_travel',
         ]),
+        'device_tracker.test4': list([
+          'sensor.home_test4_distance',
+          'sensor.home_test4_direction_of_travel',
+        ]),
       }),
       'proximity': dict({
-        'dir_of_travel': 'unknown',
-        'dist_to_zone': 2219,
+        'dir_of_travel': None,
+        'dist_to_zone': 2218752,
         'nearest': 'test1',
       }),
       'tracked_states': dict({
@@ -56,6 +66,17 @@
           'entity_id': 'device_tracker.test2',
           'state': 'not_home',
         }),
+        'device_tracker.test3': dict({
+          'attributes': dict({
+            'friendly_name': 'test3',
+            'latitude': '**REDACTED**',
+            'location_name': '**REDACTED**',
+            'longitude': '**REDACTED**',
+          }),
+          'context': '**REDACTED**',
+          'entity_id': 'device_tracker.test3',
+          'state': '**REDACTED**',
+        }),
       }),
     }),
     'entry': dict({
@@ -67,6 +88,7 @@
           'device_tracker.test1',
           'device_tracker.test2',
           'device_tracker.test3',
+          'device_tracker.test4',
         ]),
         'zone': 'zone.home',
       }),

@@ -1,4 +1,5 @@
 """Interface implementation for cloud client."""
+
 from __future__ import annotations
 
 import asyncio
@@ -9,7 +10,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 import aiohttp
-from hass_nabucasa.client import CloudClient as Interface
+from hass_nabucasa.client import CloudClient as Interface, RemoteActivationNotAllowed
 
 from homeassistant.components import google_assistant, persistent_notification, webhook
 from homeassistant.components.alexa import (
@@ -213,6 +214,10 @@ class CloudClient(Interface):
         """Cleanup some stuff after logout."""
         await self.prefs.async_set_username(None)
 
+        if self._alexa_config:
+            self._alexa_config.async_deinitialize()
+        self._alexa_config = None
+
         if self._google_config:
             self._google_config.async_deinitialize()
         self._google_config = None
@@ -230,6 +235,8 @@ class CloudClient(Interface):
 
     async def async_cloud_connect_update(self, connect: bool) -> None:
         """Process cloud remote message to client."""
+        if not self._prefs.remote_allow_remote_enable:
+            raise RemoteActivationNotAllowed
         await self._prefs.async_update(remote_enabled=connect)
 
     async def async_cloud_connection_info(
@@ -238,10 +245,12 @@ class CloudClient(Interface):
         """Process cloud connection info message to client."""
         return {
             "remote": {
+                "can_enable": self._prefs.remote_allow_remote_enable,
                 "connected": self.cloud.remote.is_connected,
                 "enabled": self._prefs.remote_enabled,
                 "instance_domain": self.cloud.remote.instance_domain,
                 "alias": self.cloud.remote.alias,
+                "strict_connection": self._prefs.strict_connection,
             },
             "version": HA_VERSION,
             "instance_id": self.prefs.instance_id,
@@ -263,13 +272,23 @@ class CloudClient(Interface):
         """Process cloud google message to client."""
         gconf = await self.get_google_config()
 
+        msgid: Any = "<UNKNOWN>"
+        if isinstance(payload, dict):
+            msgid = payload.get("requestId")
+        _LOGGER.debug("Received cloud message %s", msgid)
+
         if not self._prefs.google_enabled:
             return ga.api_disabled_response(  # type: ignore[no-any-return, no-untyped-call]
                 payload, gconf.agent_user_id
             )
 
         return await ga.async_handle_message(  # type: ignore[no-any-return, no-untyped-call]
-            self._hass, gconf, gconf.cloud_user, payload, google_assistant.SOURCE_CLOUD
+            self._hass,
+            gconf,
+            gconf.agent_user_id,
+            gconf.cloud_user,
+            payload,
+            google_assistant.SOURCE_CLOUD,
         )
 
     async def async_webhook_message(self, payload: dict[Any, Any]) -> dict[Any, Any]:

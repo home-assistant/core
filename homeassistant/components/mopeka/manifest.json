@@ -11,7 +11,43 @@
     {
       "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
       "manufacturer_id": 89,
+      "manufacturer_data_start": [4],
+      "connectable": false
+    },
+    {
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
+      "manufacturer_id": 89,
+      "manufacturer_data_start": [5],
+      "connectable": false
+    },
+    {
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
+      "manufacturer_id": 89,
+      "manufacturer_data_start": [6],
+      "connectable": false
+    },
+    {
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
+      "manufacturer_id": 89,
       "manufacturer_data_start": [8],
+      "connectable": false
+    },
+    {
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
+      "manufacturer_id": 89,
+      "manufacturer_data_start": [9],
+      "connectable": false
+    },
+    {
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
+      "manufacturer_id": 89,
+      "manufacturer_data_start": [10],
+      "connectable": false
+    },
+    {
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
+      "manufacturer_id": 89,
+      "manufacturer_data_start": [11],
       "connectable": false
     },
     {
@@ -27,5 +63,5 @@
   "documentation": "https://www.home-assistant.io/integrations/mopeka",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["mopeka-iot-ble==0.5.0"]
+  "requirements": ["mopeka-iot-ble==0.7.0"]
 }

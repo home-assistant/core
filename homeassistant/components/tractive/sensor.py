@@ -1,4 +1,5 @@
 """Support for Tractive sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -36,25 +37,17 @@ from .const import (
     CLIENT,
     DOMAIN,
     TRACKABLES,
-    TRACKER_ACTIVITY_STATUS_UPDATED,
     TRACKER_HARDWARE_STATUS_UPDATED,
     TRACKER_WELLNESS_STATUS_UPDATED,
 )
 from .entity import TractiveEntity
 
 
-@dataclass(frozen=True)
-class TractiveRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class TractiveSensorEntityDescription(SensorEntityDescription):
+    """Class describing Tractive sensor entities."""
 
     signal_prefix: str
-
-
-@dataclass(frozen=True)
-class TractiveSensorEntityDescription(
-    SensorEntityDescription, TractiveRequiredKeysMixin
-):
-    """Class describing Tractive sensor entities."""
 
     hardware_sensor: bool = False
     value_fn: Callable[[StateType], StateType] = lambda state: state
@@ -111,10 +104,10 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         translation_key="tracker_state",
         signal_prefix=TRACKER_HARDWARE_STATUS_UPDATED,
         hardware_sensor=True,
-        icon="mdi:radar",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
         options=[
+            "inaccurate_position",
             "not_reporting",
             "operational",
             "system_shutdown_user",
@@ -124,15 +117,13 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_ACTIVE,
         translation_key="activity_time",
-        icon="mdi:clock-time-eight-outline",
         native_unit_of_measurement=UnitOfTime.MINUTES,
-        signal_prefix=TRACKER_ACTIVITY_STATUS_UPDATED,
+        signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
         state_class=SensorStateClass.TOTAL,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_REST,
         translation_key="rest_time",
-        icon="mdi:clock-time-eight-outline",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
         state_class=SensorStateClass.TOTAL,
@@ -140,7 +131,6 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
     TractiveSensorEntityDescription(
         key=ATTR_CALORIES,
         translation_key="calories",
-        icon="mdi:fire",
         native_unit_of_measurement="kcal",
         signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
         state_class=SensorStateClass.TOTAL,
@@ -148,14 +138,12 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
     TractiveSensorEntityDescription(
         key=ATTR_DAILY_GOAL,
         translation_key="daily_goal",
-        icon="mdi:flag-checkered",
         native_unit_of_measurement=UnitOfTime.MINUTES,
-        signal_prefix=TRACKER_ACTIVITY_STATUS_UPDATED,
+        signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_DAY_SLEEP,
         translation_key="minutes_day_sleep",
-        icon="mdi:sleep",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
         state_class=SensorStateClass.TOTAL,
@@ -163,7 +151,6 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_NIGHT_SLEEP,
         translation_key="minutes_night_sleep",
-        icon="mdi:sleep",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
         state_class=SensorStateClass.TOTAL,
@@ -171,7 +158,6 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
     TractiveSensorEntityDescription(
         key=ATTR_SLEEP_LABEL,
         translation_key="sleep",
-        icon="mdi:sleep",
         signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
         value_fn=lambda state: state.lower() if isinstance(state, str) else state,
         device_class=SensorDeviceClass.ENUM,
@@ -184,7 +170,6 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
     TractiveSensorEntityDescription(
         key=ATTR_ACTIVITY_LABEL,
         translation_key="activity",
-        icon="mdi:run",
         signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
         value_fn=lambda state: state.lower() if isinstance(state, str) else state,
         device_class=SensorDeviceClass.ENUM,

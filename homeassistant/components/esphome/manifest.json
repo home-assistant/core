@@ -15,9 +15,9 @@
   "iot_class": "local_push",
   "loggers": ["aioesphomeapi", "noiseprotocol", "bleak_esphome"],
   "requirements": [
-    "aioesphomeapi==21.0.1",
+    "aioesphomeapi==24.3.0",
     "esphome-dashboard-api==1.2.3",
-    "bleak-esphome==0.4.1"
+    "bleak-esphome==1.0.0"
   ],
   "zeroconf": ["_esphomelib._tcp.local."]
 }

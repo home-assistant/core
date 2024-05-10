@@ -1,4 +1,5 @@
 """Test fixtures for the Open Thread Border Router integration."""
+
 from unittest.mock import Mock, patch
 
 import pytest
@@ -27,15 +28,19 @@ async def otbr_config_entry_multipan_fixture(hass):
         title="Open Thread Border Router",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
-    ), patch(
-        "python_otbr_api.OTBR.get_border_agent_id", return_value=TEST_BORDER_AGENT_ID
-    ), patch(
-        "python_otbr_api.OTBR.get_extended_address",
-        return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
-    ), patch(
-        "homeassistant.components.otbr.util.compute_pskc"
+    with (
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_border_agent_id",
+            return_value=TEST_BORDER_AGENT_ID,
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_extended_address",
+            return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+        ),
+        patch("homeassistant.components.otbr.util.compute_pskc"),
     ):  # Patch to speed up tests
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
@@ -50,15 +55,19 @@ async def otbr_config_entry_thread_fixture(hass):
         title="Open Thread Border Router",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
-    ), patch(
-        "python_otbr_api.OTBR.get_border_agent_id", return_value=TEST_BORDER_AGENT_ID
-    ), patch(
-        "python_otbr_api.OTBR.get_extended_address",
-        return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
-    ), patch(
-        "homeassistant.components.otbr.util.compute_pskc"
+    with (
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_border_agent_id",
+            return_value=TEST_BORDER_AGENT_ID,
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_extended_address",
+            return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+        ),
+        patch("homeassistant.components.otbr.util.compute_pskc"),
     ):  # Patch to speed up tests
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 

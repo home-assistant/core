@@ -1,4 +1,5 @@
 """Test honeywell setup process."""
+
 from unittest.mock import MagicMock, create_autospec, patch
 
 import aiosomecomfort
@@ -29,7 +30,7 @@ async def test_setup_entry(hass: HomeAssistant, config_entry: MockConfigEntry) -
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
     assert (
-        hass.states.async_entity_ids_count() == 3
+        hass.states.async_entity_ids_count() == 4
     )  # 1 climate entity; 2 sensor entities
 
 
@@ -62,8 +63,8 @@ async def test_setup_multiple_thermostats(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
     assert (
-        hass.states.async_entity_ids_count() == 6
-    )  # 2 climate entities; 4 sensor entities
+        hass.states.async_entity_ids_count() == 8
+    )  # 2 climate entities; 4 sensor entities; 2 switch entities
 
 
 async def test_setup_multiple_thermostats_with_same_deviceid(
@@ -83,8 +84,8 @@ async def test_setup_multiple_thermostats_with_same_deviceid(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
     assert (
-        hass.states.async_entity_ids_count() == 3
-    )  # 1 climate entity; 2 sensor entities
+        hass.states.async_entity_ids_count() == 4
+    )  # 1 climate entity; 2 sensor entities; 1 switch enitiy
     assert "Platform honeywell does not generate unique IDs" not in caplog.text
 
 
@@ -170,7 +171,7 @@ async def test_remove_stale_device(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
-    assert hass.states.async_entity_ids_count() == 6
+    assert hass.states.async_entity_ids_count() == 8
 
     device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
@@ -195,18 +196,21 @@ async def test_remove_stale_device(
         (DOMAIN, 7654321) in device.identifiers for device in device_entries_other
     )
 
-    assert await config_entry.async_unload(hass)
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     del location.devices_by_id[another_device.deviceid]
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
     assert config_entry.state is ConfigEntryState.LOADED
+
     assert (
-        hass.states.async_entity_ids_count() == 3
-    )  # 1 climate entities; 2 sensor entities
+        hass.states.async_entity_ids_count() == 4
+    )  # 1 climate entities; 2 sensor entities; 1 switch entity
 
     device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id

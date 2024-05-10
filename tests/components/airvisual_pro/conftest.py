@@ -1,4 +1,5 @@
 """Define test fixtures for AirVisual Pro."""
+
 from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, Mock, patch
@@ -55,7 +56,7 @@ def disconnect_fixture():
     return AsyncMock()
 
 
-@pytest.fixture(name="data", scope="session")
+@pytest.fixture(name="data", scope="package")
 def data_fixture():
     """Define an update coordinator data example."""
     return json.loads(load_fixture("data.json", "airvisual_pro"))
@@ -74,11 +75,14 @@ def pro_fixture(connect, data, disconnect):
 @pytest.fixture(name="setup_airvisual_pro")
 async def setup_airvisual_pro_fixture(hass, config, pro):
     """Define a fixture to set up AirVisual Pro."""
-    with patch(
-        "homeassistant.components.airvisual_pro.config_flow.NodeSamba", return_value=pro
-    ), patch(
-        "homeassistant.components.airvisual_pro.NodeSamba", return_value=pro
-    ), patch("homeassistant.components.airvisual.PLATFORMS", []):
+    with (
+        patch(
+            "homeassistant.components.airvisual_pro.config_flow.NodeSamba",
+            return_value=pro,
+        ),
+        patch("homeassistant.components.airvisual_pro.NodeSamba", return_value=pro),
+        patch("homeassistant.components.airvisual_pro.PLATFORMS", []),
+    ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
         yield

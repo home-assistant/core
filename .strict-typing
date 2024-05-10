@@ -66,6 +66,7 @@ homeassistant.components.alpha_vantage.*
 homeassistant.components.amazon_polly.*
 homeassistant.components.amberelectric.*
 homeassistant.components.ambiclimate.*
+homeassistant.components.ambient_network.*
 homeassistant.components.ambient_station.*
 homeassistant.components.amcrest.*
 homeassistant.components.ampio.*
@@ -80,6 +81,7 @@ homeassistant.components.anthemav.*
 homeassistant.components.apache_kafka.*
 homeassistant.components.apcupsd.*
 homeassistant.components.api.*
+homeassistant.components.apple_tv.*
 homeassistant.components.apprise.*
 homeassistant.components.aprs.*
 homeassistant.components.aqualogic.*
@@ -165,10 +167,12 @@ homeassistant.components.electric_kiwi.*
 homeassistant.components.elgato.*
 homeassistant.components.elkm1.*
 homeassistant.components.emulated_hue.*
+homeassistant.components.energenie_power_sockets.*
 homeassistant.components.energy.*
 homeassistant.components.energyzero.*
 homeassistant.components.enigma2.*
 homeassistant.components.enphase_envoy.*
+homeassistant.components.eq3btsmart.*
 homeassistant.components.esphome.*
 homeassistant.components.event.*
 homeassistant.components.evil_genius_labs.*
@@ -227,9 +231,11 @@ homeassistant.components.homekit_controller.select
 homeassistant.components.homekit_controller.storage
 homeassistant.components.homekit_controller.utils
 homeassistant.components.homewizard.*
+homeassistant.components.homeworks.*
 homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
 homeassistant.components.humidifier.*
+homeassistant.components.husqvarna_automower.*
 homeassistant.components.hydrawise.*
 homeassistant.components.hyperion.*
 homeassistant.components.ibeacon.*
@@ -238,6 +244,7 @@ homeassistant.components.image.*
 homeassistant.components.image_processing.*
 homeassistant.components.image_upload.*
 homeassistant.components.imap.*
+homeassistant.components.imgw_pib.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
 homeassistant.components.input_text.*
@@ -359,6 +366,7 @@ homeassistant.components.rest_command.*
 homeassistant.components.rfxtrx.*
 homeassistant.components.rhasspy.*
 homeassistant.components.ridwell.*
+homeassistant.components.ring.*
 homeassistant.components.rituals_perfume_genie.*
 homeassistant.components.roku.*
 homeassistant.components.romy.*

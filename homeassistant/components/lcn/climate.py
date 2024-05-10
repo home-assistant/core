@@ -1,4 +1,5 @@
 """Support for LCN climate control."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -55,21 +56,18 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LCN switch entities from a config entry."""
-    entities = []
 
-    for entity_config in config_entry.data[CONF_ENTITIES]:
-        if entity_config[CONF_DOMAIN] == DOMAIN_CLIMATE:
-            entities.append(
-                create_lcn_climate_entity(hass, entity_config, config_entry)
-            )
-
-    async_add_entities(entities)
+    async_add_entities(
+        create_lcn_climate_entity(hass, entity_config, config_entry)
+        for entity_config in config_entry.data[CONF_ENTITIES]
+        if entity_config[CONF_DOMAIN] == DOMAIN_CLIMATE
+    )
 
 
 class LcnClimate(LcnEntity, ClimateEntity):
     """Representation of a LCN climate device."""
 
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, config: ConfigType, entry_id: str, device_connection: DeviceConnectionType
@@ -95,6 +93,11 @@ class LcnClimate(LcnEntity, ClimateEntity):
         self._attr_hvac_modes = [HVACMode.HEAT]
         if self.is_lockable:
             self._attr_hvac_modes.append(HVACMode.OFF)
+        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        if len(self.hvac_modes) > 1:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+            )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""

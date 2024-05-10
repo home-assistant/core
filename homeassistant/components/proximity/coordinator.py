@@ -3,6 +3,7 @@
 from collections import defaultdict
 from dataclasses import dataclass
 import logging
+from typing import cast
 
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -14,10 +15,16 @@ from homeassistant.const import (
     CONF_ZONE,
     UnitOfLength,
 )
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.location import distance
 from homeassistant.util.unit_conversion import DistanceConverter
@@ -38,6 +45,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+ProximityConfigEntry = ConfigEntry["ProximityDataUpdateCoordinator"]
+
 
 @dataclass
 class StateChangedData:
@@ -52,24 +61,21 @@ class StateChangedData:
 class ProximityData:
     """ProximityCoordinatorData class."""
 
-    proximity: dict[str, str | float]
+    proximity: dict[str, str | int | None]
     entities: dict[str, dict[str, str | int | None]]
 
 
-DEFAULT_DATA = ProximityData(
-    {
-        ATTR_DIST_TO: DEFAULT_DIST_TO_ZONE,
-        ATTR_DIR_OF_TRAVEL: DEFAULT_DIR_OF_TRAVEL,
-        ATTR_NEAREST: DEFAULT_NEAREST,
-    },
-    {},
-)
+DEFAULT_PROXIMITY_DATA: dict[str, str | int | None] = {
+    ATTR_DIST_TO: DEFAULT_DIST_TO_ZONE,
+    ATTR_DIR_OF_TRAVEL: DEFAULT_DIR_OF_TRAVEL,
+    ATTR_NEAREST: DEFAULT_NEAREST,
+}
 
 
 class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
     """Proximity data update coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: ProximityConfigEntry
 
     def __init__(
         self, hass: HomeAssistant, friendly_name: str, config: ConfigType
@@ -92,7 +98,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             update_interval=None,
         )
 
-        self.data = DEFAULT_DATA
+        self.data = ProximityData(DEFAULT_PROXIMITY_DATA, {})
 
         self.state_change_data: StateChangedData | None = None
 
@@ -102,14 +108,18 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         self.entity_mapping[tracked_entity_id].append(entity_id)
 
     async def async_check_proximity_state_change(
-        self, entity: str, old_state: State | None, new_state: State | None
+        self,
+        event: Event[EventStateChangedData],
     ) -> None:
         """Fetch and process state change event."""
-        self.state_change_data = StateChangedData(entity, old_state, new_state)
+        data = event.data
+        self.state_change_data = StateChangedData(
+            data["entity_id"], data["old_state"], data["new_state"]
+        )
         await self.async_refresh()
 
     async def async_check_tracked_entity_change(
-        self, event: EventType[er.EventEntityRegistryUpdatedData]
+        self, event: Event[er.EventEntityRegistryUpdatedData]
     ) -> None:
         """Fetch and process tracked entity change event."""
         data = event.data
@@ -126,14 +136,16 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                     **self.config_entry.data,
                     CONF_TRACKED_ENTITIES: [
                         tracked_entity
-                        for tracked_entity in self.tracked_entities
-                        + [new_tracked_entity_id]
+                        for tracked_entity in (
+                            *self.tracked_entities,
+                            new_tracked_entity_id,
+                        )
                         if tracked_entity != old_tracked_entity_id
                     ],
                 },
             )
 
-    def _convert(self, value: float | str) -> float | str:
+    def convert_legacy(self, value: float | str) -> float | str:
         """Round and convert given distance value."""
         if isinstance(value, str):
             return value
@@ -238,7 +250,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 self.name,
                 self.proximity_zone_id,
             )
-            return DEFAULT_DATA
+            return ProximityData(DEFAULT_PROXIMITY_DATA, {})
 
         entities_data = self.data.entities
 
@@ -294,19 +306,19 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 old_lat = None
                 old_lon = None
 
-            entities_data[state_change_data.entity_id][
-                ATTR_DIR_OF_TRAVEL
-            ] = self._calc_direction_of_travel(
-                zone_state,
-                new_state,
-                old_lat,
-                old_lon,
-                new_state.attributes.get(ATTR_LATITUDE),
-                new_state.attributes.get(ATTR_LONGITUDE),
+            entities_data[state_change_data.entity_id][ATTR_DIR_OF_TRAVEL] = (
+                self._calc_direction_of_travel(
+                    zone_state,
+                    new_state,
+                    old_lat,
+                    old_lon,
+                    new_state.attributes.get(ATTR_LATITUDE),
+                    new_state.attributes.get(ATTR_LONGITUDE),
+                )
             )
 
         # takeover data for legacy proximity entity
-        proximity_data: dict[str, str | float] = {
+        proximity_data: dict[str, str | int | None] = {
             ATTR_DIST_TO: DEFAULT_DIST_TO_ZONE,
             ATTR_DIR_OF_TRAVEL: DEFAULT_DIR_OF_TRAVEL,
             ATTR_NEAREST: DEFAULT_NEAREST,
@@ -321,27 +333,25 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 _LOGGER.debug("set first entity_data: %s", entity_data)
                 proximity_data = {
                     ATTR_DIST_TO: distance_to,
-                    ATTR_DIR_OF_TRAVEL: entity_data[ATTR_DIR_OF_TRAVEL] or "unknown",
+                    ATTR_DIR_OF_TRAVEL: entity_data[ATTR_DIR_OF_TRAVEL],
                     ATTR_NEAREST: str(entity_data[ATTR_NAME]),
                 }
                 continue
 
-            if float(nearest_distance_to) > float(distance_to):
+            if cast(int, nearest_distance_to) > int(distance_to):
                 _LOGGER.debug("set closer entity_data: %s", entity_data)
                 proximity_data = {
                     ATTR_DIST_TO: distance_to,
-                    ATTR_DIR_OF_TRAVEL: entity_data[ATTR_DIR_OF_TRAVEL] or "unknown",
+                    ATTR_DIR_OF_TRAVEL: entity_data[ATTR_DIR_OF_TRAVEL],
                     ATTR_NEAREST: str(entity_data[ATTR_NAME]),
                 }
                 continue
 
-            if float(nearest_distance_to) == float(distance_to):
+            if cast(int, nearest_distance_to) == int(distance_to):
                 _LOGGER.debug("set equally close entity_data: %s", entity_data)
-                proximity_data[
-                    ATTR_NEAREST
-                ] = f"{proximity_data[ATTR_NEAREST]}, {str(entity_data[ATTR_NAME])}"
-
-        proximity_data[ATTR_DIST_TO] = self._convert(proximity_data[ATTR_DIST_TO])
+                proximity_data[ATTR_NEAREST] = (
+                    f"{proximity_data[ATTR_NEAREST]}, {str(entity_data[ATTR_NAME])}"
+                )
 
         return ProximityData(proximity_data, entities_data)
 

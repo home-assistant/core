@@ -1,4 +1,5 @@
 """Support for interface with an LG webOS Smart TV."""
+
 from __future__ import annotations
 
 import asyncio
@@ -240,6 +241,20 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             name=self._device_name,
         )
 
+        self._attr_assumed_state = True
+        if (
+            self._client.media_state is not None
+            and self._client.media_state.get("foregroundAppInfo") is not None
+        ):
+            self._attr_assumed_state = False
+            for entry in self._client.media_state.get("foregroundAppInfo"):
+                if entry.get("playState") == "playing":
+                    self._attr_state = MediaPlayerState.PLAYING
+                elif entry.get("playState") == "paused":
+                    self._attr_state = MediaPlayerState.PAUSED
+                elif entry.get("playState") == "unloaded":
+                    self._attr_state = MediaPlayerState.IDLE
+
         if self._client.system_info is not None or self.state != MediaPlayerState.OFF:
             maj_v = self._client.software_info.get("major_ver")
             min_v = self._client.software_info.get("minor_ver")
@@ -474,7 +489,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         content = None
 
         websession = async_get_clientsession(self.hass)
-        with suppress(asyncio.TimeoutError):
+        with suppress(TimeoutError):
             async with asyncio.timeout(10):
                 response = await websession.get(url, ssl=False)
                 if response.status == HTTPStatus.OK:

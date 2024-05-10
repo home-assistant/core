@@ -1,0 +1,31 @@
+{
+  "entity": {
+    "number": {
+      "config_volume": {
+        "default": "mdi:volume-high"
+      }
+    },
+    "sensor": {
+      "power_failure_alarm": {
+        "default": "mdi:flash"
+      },
+      "power_failure_alarm_mute": {
+        "default": "mdi:volume-mute"
+      },
+      "power_failure_alarm_volume": {
+        "default": "mdi:volume-high"
+      },
+      "power_failure_alarm_beep": {
+        "default": "mdi:bullhorn"
+      }
+    },
+    "switch": {
+      "manipulator_state": {
+        "default": "mdi:pipe"
+      }
+    }
+  },
+  "services": {
+    "play_on_speaker_hub": "mdi:speaker"
+  }
+}

@@ -1,4 +1,5 @@
 """Plugwise Binary Sensor component for Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -63,8 +64,8 @@ BINARY_SENSORS: tuple[PlugwiseBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PlugwiseBinarySensorEntityDescription(
-        key="slave_boiler_state",
-        translation_key="slave_boiler_state",
+        key="secondary_boiler_state",
+        translation_key="secondary_boiler_state",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PlugwiseBinarySensorEntityDescription(

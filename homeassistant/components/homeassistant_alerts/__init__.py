@@ -1,7 +1,7 @@
 """The Home Assistant alerts integration."""
+
 from __future__ import annotations
 
-import asyncio
 import dataclasses
 from datetime import timedelta
 import logging
@@ -20,14 +20,17 @@ from homeassistant.helpers.issue_registry import (
     async_create_issue,
     async_delete_issue,
 )
-from homeassistant.helpers.start import async_at_start
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.setup import EventComponentLoaded
 
 COMPONENT_LOADED_COOLDOWN = 30
 DOMAIN = "homeassistant_alerts"
 UPDATE_INTERVAL = timedelta(hours=3)
 _LOGGER = logging.getLogger(__name__)
+
+REQUEST_TIMEOUT = aiohttp.ClientTimeout(total=30)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -51,9 +54,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             try:
                 response = await async_get_clientsession(hass).get(
                     f"https://alerts.home-assistant.io/alerts/{alert.alert_id}.json",
-                    timeout=aiohttp.ClientTimeout(total=30),
+                    timeout=REQUEST_TIMEOUT,
                 )
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 _LOGGER.warning("Error fetching %s: timeout", alert.filename)
                 continue
 
@@ -84,7 +87,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if not coordinator.last_update_success:
             return
 
-        hass.async_create_task(async_update_alerts())
+        hass.async_create_background_task(
+            async_update_alerts(), "homeassistant_alerts update", eager_start=True
+        )
 
     coordinator = AlertUpdateCoordinator(hass)
     coordinator.async_add_listener(async_schedule_update_alerts)
@@ -96,15 +101,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             cooldown=COMPONENT_LOADED_COOLDOWN,
             immediate=False,
             function=coordinator.async_refresh,
+            background=True,
         )
 
-        async def _component_loaded(_: Event) -> None:
-            await refresh_debouncer.async_call()
+        @callback
+        def _component_loaded(_: Event[EventComponentLoaded]) -> None:
+            refresh_debouncer.async_schedule_call()
 
         await coordinator.async_refresh()
         hass.bus.async_listen(EVENT_COMPONENT_LOADED, _component_loaded)
 
-    async_at_start(hass, initial_refresh)
+    async_at_started(hass, initial_refresh)
 
     return True
 
@@ -144,7 +151,7 @@ class AlertUpdateCoordinator(DataUpdateCoordinator[dict[str, IntegrationAlert]])
     async def _async_update_data(self) -> dict[str, IntegrationAlert]:
         response = await async_get_clientsession(self.hass).get(
             "https://alerts.home-assistant.io/alerts.json",
-            timeout=aiohttp.ClientTimeout(total=10),
+            timeout=REQUEST_TIMEOUT,
         )
         alerts = await response.json()
 

@@ -1,4 +1,5 @@
 """iAlarm integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -28,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         async with asyncio.timeout(10):
             mac = await hass.async_add_executor_job(ialarm.get_mac)
-    except (asyncio.TimeoutError, ConnectionError) as ex:
+    except (TimeoutError, ConnectionError) as ex:
         raise ConfigEntryNotReady from ex
 
     coordinator = IAlarmDataUpdateCoordinator(hass, ialarm, mac)

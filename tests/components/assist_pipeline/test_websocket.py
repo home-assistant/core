@@ -1,6 +1,8 @@
 """Websocket tests for Voice Assistant integration."""
+
 import asyncio
 import base64
+from typing import Any
 from unittest.mock import ANY, patch
 
 from syrupy.assertion import SnapshotAssertion
@@ -379,12 +381,15 @@ async def test_audio_pipeline_no_wake_word_entity(
     """Test timeout from a pipeline run with audio input/output + wake word."""
     client = await hass_ws_client(hass)
 
-    with patch(
-        "homeassistant.components.wake_word.async_default_entity",
-        return_value="wake_word.bad-entity-id",
-    ), patch(
-        "homeassistant.components.wake_word.async_get_wake_word_detection_entity",
-        return_value=None,
+    with (
+        patch(
+            "homeassistant.components.wake_word.async_default_entity",
+            return_value="wake_word.bad-entity-id",
+        ),
+        patch(
+            "homeassistant.components.wake_word.async_get_wake_word_detection_entity",
+            return_value=None,
+        ),
     ):
         await client.send_json_auto_id(
             {
@@ -1161,7 +1166,7 @@ async def test_get_pipeline(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "conversation_engine": "homeassistant",
+        "conversation_engine": "conversation.home_assistant",
         "conversation_language": "en",
         "id": ANY,
         "language": "en",
@@ -1245,7 +1250,7 @@ async def test_list_pipelines(
     assert msg["result"] == {
         "pipelines": [
             {
-                "conversation_engine": "homeassistant",
+                "conversation_engine": "conversation.home_assistant",
                 "conversation_language": "en",
                 "id": ANY,
                 "language": "en",
@@ -1698,15 +1703,19 @@ async def test_list_pipeline_languages_with_aliases(
     """Test listing pipeline languages using aliases."""
     client = await hass_ws_client(hass)
 
-    with patch(
-        "homeassistant.components.conversation.async_get_conversation_languages",
-        return_value={"he", "nb"},
-    ), patch(
-        "homeassistant.components.stt.async_get_speech_to_text_languages",
-        return_value={"he", "no"},
-    ), patch(
-        "homeassistant.components.tts.async_get_text_to_speech_languages",
-        return_value={"iw", "nb"},
+    with (
+        patch(
+            "homeassistant.components.conversation.async_get_conversation_languages",
+            return_value={"he", "nb"},
+        ),
+        patch(
+            "homeassistant.components.stt.async_get_speech_to_text_languages",
+            return_value={"he", "no"},
+        ),
+        patch(
+            "homeassistant.components.tts.async_get_text_to_speech_languages",
+            return_value={"iw", "nb"},
+        ),
     ):
         await client.send_json_auto_id({"type": "assist_pipeline/language/list"})
 
@@ -1887,14 +1896,23 @@ async def test_wake_word_cooldown_same_id(
     await client_2.send_bytes(bytes([handler_id_2]) + b"wake word")
 
     # Get response events
+    error_data: dict[str, Any] | None = None
     msg = await client_1.receive_json()
     event_type_1 = msg["event"]["type"]
+    assert msg["event"]["data"] == snapshot
+    if event_type_1 == "error":
+        error_data = msg["event"]["data"]
 
     msg = await client_2.receive_json()
     event_type_2 = msg["event"]["type"]
+    assert msg["event"]["data"] == snapshot
+    if event_type_2 == "error":
+        error_data = msg["event"]["data"]
 
     # One should be a wake up, one should be an error
     assert {event_type_1, event_type_2} == {"wake_word-end", "error"}
+    assert error_data is not None
+    assert error_data["code"] == "duplicate_wake_up_detected"
 
 
 async def test_wake_word_cooldown_different_ids(
@@ -1989,12 +2007,12 @@ async def test_wake_word_cooldown_different_entities(
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that duplicate wake word detections are allowed with different entities."""
+    """Test that duplicate wake word detections are blocked even with different wake word entities."""
     client_pipeline = await hass_ws_client(hass)
     await client_pipeline.send_json_auto_id(
         {
             "type": "assist_pipeline/pipeline/create",
-            "conversation_engine": "homeassistant",
+            "conversation_engine": "conversation.home_assistant",
             "conversation_language": "en-US",
             "language": "en",
             "name": "pipeline_with_wake_word_1",
@@ -2014,7 +2032,7 @@ async def test_wake_word_cooldown_different_entities(
     await client_pipeline.send_json_auto_id(
         {
             "type": "assist_pipeline/pipeline/create",
-            "conversation_engine": "homeassistant",
+            "conversation_engine": "conversation.home_assistant",
             "conversation_language": "en-US",
             "language": "en",
             "name": "pipeline_with_wake_word_2",
@@ -2049,7 +2067,7 @@ async def test_wake_word_cooldown_different_entities(
         }
     )
 
-    # Use different wake word entity
+    # Use different wake word entity (but same wake word)
     await client_2.send_json_auto_id(
         {
             "type": "assist_pipeline/run",
@@ -2099,18 +2117,23 @@ async def test_wake_word_cooldown_different_entities(
     await client_2.send_bytes(bytes([handler_id_2]) + b"wake word")
 
     # Get response events
+    error_data: dict[str, Any] | None = None
     msg = await client_1.receive_json()
-    assert msg["event"]["type"] == "wake_word-end", msg
-    ww_id_1 = msg["event"]["data"]["wake_word_output"]["wake_word_id"]
+    event_type_1 = msg["event"]["type"]
     assert msg["event"]["data"] == snapshot
+    if event_type_1 == "error":
+        error_data = msg["event"]["data"]
 
     msg = await client_2.receive_json()
-    assert msg["event"]["type"] == "wake_word-end", msg
-    ww_id_2 = msg["event"]["data"]["wake_word_output"]["wake_word_id"]
+    event_type_2 = msg["event"]["type"]
     assert msg["event"]["data"] == snapshot
+    if event_type_2 == "error":
+        error_data = msg["event"]["data"]
 
-    # Wake words should be the same
-    assert ww_id_1 == ww_id_2
+    # One should be a wake up, one should be an error
+    assert {event_type_1, event_type_2} == {"wake_word-end", "error"}
+    assert error_data is not None
+    assert error_data["code"] == "duplicate_wake_up_detected"
 
 
 async def test_device_capture(
@@ -2376,7 +2399,7 @@ async def test_device_capture_queue_full(
 
         def put_nowait(self, item):
             if item is not None:
-                raise asyncio.QueueFull()
+                raise asyncio.QueueFull
 
             super().put_nowait(item)
 
@@ -2521,3 +2544,138 @@ async def test_pipeline_list_devices(
             "pipeline_entity": "select.test_assist_device_test_prefix_pipeline",
         }
     ]
+
+
+async def test_stt_cooldown_same_id(
+    hass: HomeAssistant,
+    init_components,
+    mock_stt_provider,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that two speech-to-text pipelines cannot run within the cooldown period if they have the same wake word."""
+    client_1 = await hass_ws_client(hass)
+    client_2 = await hass_ws_client(hass)
+
+    await client_1.send_json_auto_id(
+        {
+            "type": "assist_pipeline/run",
+            "start_stage": "stt",
+            "end_stage": "tts",
+            "input": {
+                "sample_rate": 16000,
+                "wake_word_phrase": "ok_nabu",
+            },
+        }
+    )
+
+    await client_2.send_json_auto_id(
+        {
+            "type": "assist_pipeline/run",
+            "start_stage": "stt",
+            "end_stage": "tts",
+            "input": {
+                "sample_rate": 16000,
+                "wake_word_phrase": "ok_nabu",
+            },
+        }
+    )
+
+    # result
+    msg = await client_1.receive_json()
+    assert msg["success"], msg
+
+    msg = await client_2.receive_json()
+    assert msg["success"], msg
+
+    # run start
+    msg = await client_1.receive_json()
+    assert msg["event"]["type"] == "run-start"
+    msg["event"]["data"]["pipeline"] = ANY
+    assert msg["event"]["data"] == snapshot
+
+    msg = await client_2.receive_json()
+    assert msg["event"]["type"] == "run-start"
+    msg["event"]["data"]["pipeline"] = ANY
+    assert msg["event"]["data"] == snapshot
+
+    # Get response events
+    error_data: dict[str, Any] | None = None
+    msg = await client_1.receive_json()
+    event_type_1 = msg["event"]["type"]
+    if event_type_1 == "error":
+        error_data = msg["event"]["data"]
+
+    msg = await client_2.receive_json()
+    event_type_2 = msg["event"]["type"]
+    if event_type_2 == "error":
+        error_data = msg["event"]["data"]
+
+    # One should be a stt start, one should be an error
+    assert {event_type_1, event_type_2} == {"stt-start", "error"}
+    assert error_data is not None
+    assert error_data["code"] == "duplicate_wake_up_detected"
+
+
+async def test_stt_cooldown_different_ids(
+    hass: HomeAssistant,
+    init_components,
+    mock_stt_provider,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that two speech-to-text pipelines can run within the cooldown period if they have the different wake words."""
+    client_1 = await hass_ws_client(hass)
+    client_2 = await hass_ws_client(hass)
+
+    await client_1.send_json_auto_id(
+        {
+            "type": "assist_pipeline/run",
+            "start_stage": "stt",
+            "end_stage": "tts",
+            "input": {
+                "sample_rate": 16000,
+                "wake_word_phrase": "ok_nabu",
+            },
+        }
+    )
+
+    await client_2.send_json_auto_id(
+        {
+            "type": "assist_pipeline/run",
+            "start_stage": "stt",
+            "end_stage": "tts",
+            "input": {
+                "sample_rate": 16000,
+                "wake_word_phrase": "hey_jarvis",
+            },
+        }
+    )
+
+    # result
+    msg = await client_1.receive_json()
+    assert msg["success"], msg
+
+    msg = await client_2.receive_json()
+    assert msg["success"], msg
+
+    # run start
+    msg = await client_1.receive_json()
+    assert msg["event"]["type"] == "run-start"
+    msg["event"]["data"]["pipeline"] = ANY
+    assert msg["event"]["data"] == snapshot
+
+    msg = await client_2.receive_json()
+    assert msg["event"]["type"] == "run-start"
+    msg["event"]["data"]["pipeline"] = ANY
+    assert msg["event"]["data"] == snapshot
+
+    # Get response events
+    msg = await client_1.receive_json()
+    event_type_1 = msg["event"]["type"]
+
+    msg = await client_2.receive_json()
+    event_type_2 = msg["event"]["type"]
+
+    # Both should start stt
+    assert {event_type_1, event_type_2} == {"stt-start"}

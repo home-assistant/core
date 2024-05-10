@@ -1,4 +1,5 @@
 """The tests for the Modbus sensor component."""
+
 import struct
 
 import pytest
@@ -121,15 +122,6 @@ SLAVE_UNIQUE_ID = "ground_floor_sensor"
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_DATA_TYPE: DataType.INT16,
-                }
-            ]
-        },
-        {
-            CONF_SENSORS: [
-                {
-                    CONF_NAME: TEST_ENTITY_NAME,
-                    CONF_ADDRESS: 51,
-                    CONF_DATA_TYPE: DataType.INT16,
                     CONF_SWAP: CONF_SWAP_BYTE,
                 }
             ]
@@ -182,6 +174,28 @@ SLAVE_UNIQUE_ID = "ground_floor_sensor"
                     CONF_DATA_TYPE: DataType.INT32,
                     CONF_VIRTUAL_COUNT: 5,
                     CONF_LAZY_ERROR: 3,
+                }
+            ]
+        },
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_DATA_TYPE: DataType.INT16,
+                    CONF_MIN_VALUE: 1,
+                    CONF_MAX_VALUE: 3,
+                }
+            ]
+        },
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_DATA_TYPE: DataType.INT16,
+                    CONF_MIN_VALUE: -3,
+                    CONF_MAX_VALUE: -1,
                 }
             ]
         },
@@ -688,6 +702,16 @@ async def test_config_wrong_struct_sensor(
             False,
             "112594",
         ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.INT16,
+                CONF_SCALE: -1,
+                CONF_OFFSET: 0,
+            },
+            [0x000A],
+            False,
+            "-10",
+        ),
     ],
 )
 async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
@@ -877,7 +901,7 @@ async def test_virtual_sensor(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_do_cycle, expected
 ) -> None:
     """Run test for sensor."""
-    for i in range(0, len(expected)):
+    for i in range(len(expected)):
         entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
         unique_id = f"{SLAVE_UNIQUE_ID}"
         if i:
@@ -1047,7 +1071,7 @@ async def test_virtual_swap_sensor(
     hass: HomeAssistant, mock_do_cycle, expected
 ) -> None:
     """Run test for sensor."""
-    for i in range(0, len(expected)):
+    for i in range(len(expected)):
         entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
         if i:
             entity_id = f"{entity_id}_{i}"
@@ -1367,14 +1391,14 @@ async def test_restore_state_sensor(
         },
     ],
 )
-async def test_service_sensor_update(hass: HomeAssistant, mock_modbus, mock_ha) -> None:
+async def test_service_sensor_update(hass: HomeAssistant, mock_modbus_ha) -> None:
     """Run test for service homeassistant.update_entity."""
-    mock_modbus.read_input_registers.return_value = ReadResult([27])
+    mock_modbus_ha.read_input_registers.return_value = ReadResult([27])
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
     assert hass.states.get(ENTITY_ID).state == "27"
-    mock_modbus.read_input_registers.return_value = ReadResult([32])
+    mock_modbus_ha.read_input_registers.return_value = ReadResult([32])
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )

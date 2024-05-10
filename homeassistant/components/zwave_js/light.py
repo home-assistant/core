@@ -1,4 +1,5 @@
 """Support for Z-Wave lights."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -410,18 +411,15 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
     @callback
     def _calculate_color_support(self) -> None:
         """Calculate light colors."""
-        (red_val, green_val, blue_val, ww_val, cw_val) = self._get_color_values()
+        (red, green, blue, warm_white, cool_white) = self._get_color_values()
         # RGB support
-        if red_val and green_val and blue_val:
+        if red and green and blue:
             self._supports_color = True
         # color temperature support
-        if ww_val and cw_val:
+        if warm_white and cool_white:
             self._supports_color_temp = True
-        # only one white channel (warm white) = rgbw support
-        elif red_val and green_val and blue_val and ww_val:
-            self._supports_rgbw = True
-        # only one white channel (cool white) = rgbw support
-        elif cw_val:
+        # only one white channel (warm white or cool white) = rgbw support
+        elif red and green and blue and warm_white or cool_white:
             self._supports_rgbw = True
 
     @callback

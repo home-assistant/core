@@ -2,11 +2,6 @@ name: "CodeQL"
 
 # yamllint disable-line rule:truthy
 on:
-  push:
-    branches:
-      - dev
-      - rc
-      - master
   schedule:
     - cron: "30 18 * * 4"
 
@@ -26,14 +21,14 @@ jobs:
 
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.4
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3.23.2
+        uses: github/codeql-action/init@v3.25.3
         with:
           languages: python
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3.23.2
+        uses: github/codeql-action/analyze@v3.25.3
         with:
           category: "/language:python"

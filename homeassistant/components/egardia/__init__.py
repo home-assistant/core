@@ -1,4 +1,5 @@
 """Interfaces with Egardia/Woonveilig alarm control panel."""
+
 import logging
 
 from pythonegardia import egardiadevice, egardiaserver

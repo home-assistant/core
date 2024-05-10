@@ -1,4 +1,5 @@
 """Support for Kegtron sensors."""
+
 from __future__ import annotations
 
 from kegtron_ble import (

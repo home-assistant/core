@@ -1,4 +1,5 @@
 """Support for Satel Integra devices."""
+
 import collections
 import logging
 

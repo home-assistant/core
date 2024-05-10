@@ -1,4 +1,5 @@
 """Class to hold all fan accessories."""
+
 import logging
 from typing import Any
 
@@ -55,7 +56,7 @@ class Fan(HomeAccessory):
     Currently supports: state, speed, oscillate, direction.
     """
 
-    def __init__(self, *args: Any, category: str = CATEGORY_FAN) -> None:
+    def __init__(self, *args: Any, category: int = CATEGORY_FAN) -> None:
         """Initialize a new Fan accessory object."""
         super().__init__(*args, category=category)
         self.chars = []
@@ -121,11 +122,9 @@ class Fan(HomeAccessory):
                     ),
                 )
 
-                setter_callback = (
-                    lambda value, preset_mode=preset_mode: self.set_preset_mode(
-                        value, preset_mode
-                    )
-                )
+                def setter_callback(value: int, preset_mode: str = preset_mode) -> None:
+                    self.set_preset_mode(value, preset_mode)
+
                 self.preset_mode_chars[preset_mode] = preset_serv.configure_char(
                     CHAR_ON,
                     value=False,
@@ -137,7 +136,7 @@ class Fan(HomeAccessory):
         self.async_update_state(state)
         serv_fan.setter_callback = self.set_chars
 
-    def create_services(self):
+    def create_services(self) -> Any:
         """Create and configure the primary service for this accessory."""
         if self.preset_modes and len(self.preset_modes) == 1:
             self.chars.append(CHAR_TARGET_FAN_STATE)
@@ -146,7 +145,7 @@ class Fan(HomeAccessory):
         self.char_active = serv_fan.configure_char(CHAR_ACTIVE, value=0)
         return serv_fan
 
-    def set_chars(self, char_values):
+    def set_chars(self, char_values: Any) -> None:
         """Set characteristic values."""
         _LOGGER.debug("Fan _set_chars: %s", char_values)
         if CHAR_ACTIVE in char_values:

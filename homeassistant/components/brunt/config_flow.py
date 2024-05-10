@@ -1,4 +1,5 @@
 """Config flow for brunt integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -10,9 +11,8 @@ from aiohttp.client_exceptions import ServerDisconnectedError
 from brunt import BruntClientAsync
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -38,13 +38,13 @@ async def validate_input(user_input: dict[str, Any]) -> dict[str, str] | None:
             _LOGGER.warning("Brunt Credentials are incorrect")
             errors = {"base": "invalid_auth"}
         else:
-            _LOGGER.exception("Unknown error when trying to login to Brunt: %s", exc)
+            _LOGGER.exception("Unknown error when trying to login to Brunt")
             errors = {"base": "unknown"}
     except ServerDisconnectedError:
         _LOGGER.warning("Cannot connect to Brunt")
         errors = {"base": "cannot_connect"}
-    except Exception as exc:  # pylint: disable=broad-except
-        _LOGGER.exception("Unknown error when trying to login to Brunt: %s", exc)
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Unknown error when trying to login to Brunt")
         errors = {"base": "unknown"}
     finally:
         await bapi.async_close()
@@ -60,7 +60,7 @@ class BruntConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
@@ -78,7 +78,9 @@ class BruntConfigFlow(ConfigFlow, domain=DOMAIN):
             data=user_input,
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -87,7 +89,7 @@ class BruntConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         assert self._reauth_entry
         username = self._reauth_entry.data[CONF_USERNAME]

@@ -1,4 +1,5 @@
 """Diagnostics support for Philips JS."""
+
 from __future__ import annotations
 
 from typing import Any

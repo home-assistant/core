@@ -1,4 +1,5 @@
 """Adds support for generic hygrostat units."""
+
 from __future__ import annotations
 
 import asyncio
@@ -33,6 +34,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     DOMAIN as HA_DOMAIN,
     Event,
+    EventStateChangedData,
     HomeAssistant,
     State,
     callback,
@@ -40,7 +42,7 @@ from homeassistant.core import (
 from homeassistant.helpers import condition
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
-    async_track_state_change,
+    async_track_state_change_event,
     async_track_time_interval,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -84,9 +86,9 @@ async def async_setup_platform(
     name: str = config[CONF_NAME]
     switch_entity_id: str = config[CONF_HUMIDIFIER]
     sensor_entity_id: str = config[CONF_SENSOR]
-    min_humidity: int | None = config.get(CONF_MIN_HUMIDITY)
-    max_humidity: int | None = config.get(CONF_MAX_HUMIDITY)
-    target_humidity: int | None = config.get(CONF_TARGET_HUMIDITY)
+    min_humidity: float | None = config.get(CONF_MIN_HUMIDITY)
+    max_humidity: float | None = config.get(CONF_MAX_HUMIDITY)
+    target_humidity: float | None = config.get(CONF_TARGET_HUMIDITY)
     device_class: HumidifierDeviceClass | None = config.get(CONF_DEVICE_CLASS)
     min_cycle_duration: timedelta | None = config.get(CONF_MIN_DUR)
     sensor_stale_duration: timedelta | None = config.get(CONF_STALE_DURATION)
@@ -132,9 +134,9 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         name: str,
         switch_entity_id: str,
         sensor_entity_id: str,
-        min_humidity: int | None,
-        max_humidity: int | None,
-        target_humidity: int | None,
+        min_humidity: float | None,
+        max_humidity: float | None,
+        target_humidity: float | None,
         device_class: HumidifierDeviceClass | None,
         min_cycle_duration: timedelta | None,
         dry_tolerance: float,
@@ -178,11 +180,15 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         await super().async_added_to_hass()
 
         # Add listener
-        async_track_state_change(
-            self.hass, self._sensor_entity_id, self._async_sensor_changed
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, self._sensor_entity_id, self._async_sensor_changed_event
+            )
         )
-        async_track_state_change(
-            self.hass, self._switch_entity_id, self._async_switch_changed
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, self._switch_entity_id, self._async_switch_changed_event
+            )
         )
 
         if self._keep_alive:
@@ -263,12 +269,12 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         return self._state
 
     @property
-    def current_humidity(self) -> int | None:
+    def current_humidity(self) -> float | None:
         """Return the measured humidity."""
-        return int(self._cur_humidity) if self._cur_humidity is not None else None
+        return self._cur_humidity
 
     @property
-    def target_humidity(self) -> int | None:
+    def target_humidity(self) -> float | None:
         """Return the humidity we try to reach."""
         return self._target_humidity
 
@@ -325,7 +331,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @property
-    def min_humidity(self) -> int:
+    def min_humidity(self) -> float:
         """Return the minimum humidity."""
         if self._min_humidity:
             return self._min_humidity
@@ -334,13 +340,22 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         return super().min_humidity
 
     @property
-    def max_humidity(self) -> int:
+    def max_humidity(self) -> float:
         """Return the maximum humidity."""
         if self._max_humidity:
             return self._max_humidity
 
         # Get default humidity from super class
         return super().max_humidity
+
+    async def _async_sensor_changed_event(
+        self, event: Event[EventStateChangedData]
+    ) -> None:
+        """Handle ambient humidity changes."""
+        data = event.data
+        await self._async_sensor_changed(
+            data["entity_id"], data["old_state"], data["new_state"]
+        )
 
     async def _async_sensor_changed(
         self, entity_id: str, old_state: State | None, new_state: State | None
@@ -374,6 +389,14 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         await self._async_update_humidity("Stalled")
 
     @callback
+    def _async_switch_changed_event(self, event: Event[EventStateChangedData]) -> None:
+        """Handle humidifier switch state changes."""
+        data = event.data
+        self._async_switch_changed(
+            data["entity_id"], data["old_state"], data["new_state"]
+        )
+
+    @callback
     def _async_switch_changed(
         self, entity_id: str, old_state: State | None, new_state: State | None
     ) -> None:
@@ -389,16 +412,19 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         else:
             self._attr_action = HumidifierAction.IDLE
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def _async_update_humidity(self, humidity: str) -> None:
         """Update hygrostat with latest state from sensor."""
         try:
             self._cur_humidity = float(humidity)
         except ValueError as ex:
-            _LOGGER.warning("Unable to update from sensor: %s", ex)
+            if self._active:
+                _LOGGER.warning("Unable to update from sensor: %s", ex)
+                self._active = False
+            else:
+                _LOGGER.debug("Unable to update from sensor: %s", ex)
             self._cur_humidity = None
-            self._active = False
             if self._is_device_active:
                 await self._async_device_turn_off()
 

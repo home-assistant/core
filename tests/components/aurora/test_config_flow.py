@@ -1,11 +1,13 @@
 """Test the Aurora config flow."""
+
 from unittest.mock import patch
 
 from aiohttp import ClientError
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.aurora.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -21,23 +23,26 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.aurora.config_flow.AuroraForecast.get_forecast_data",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.aurora.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.aurora.config_flow.AuroraForecast.get_forecast_data",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.aurora.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             DATA,
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Aurora visibility"
     assert result2["data"] == DATA
     assert len(mock_setup_entry.mock_calls) == 1
@@ -59,7 +64,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             DATA,
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -80,7 +85,7 @@ async def test_with_unknown_error(hass: HomeAssistant) -> None:
             DATA,
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "unknown"}
 
@@ -100,7 +105,7 @@ async def test_option_flow(hass: HomeAssistant) -> None:
             data=None,
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -108,5 +113,5 @@ async def test_option_flow(hass: HomeAssistant) -> None:
         user_input={"forecast_threshold": 65},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"]["forecast_threshold"] == 65

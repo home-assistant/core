@@ -1,4 +1,5 @@
 """Support the sensor of a BloomSky weather station."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -101,13 +102,9 @@ class BloomSkySensor(SensorEntity):
         self._attr_name = f"{device['DeviceName']} {sensor_name}"
         self._attr_unique_id = f"{self._device_id}-{sensor_name}"
         self._attr_device_class = SENSOR_DEVICE_CLASS.get(sensor_name)
-        self._attr_native_unit_of_measurement = SENSOR_UNITS_IMPERIAL.get(
-            sensor_name, None
-        )
+        self._attr_native_unit_of_measurement = SENSOR_UNITS_IMPERIAL.get(sensor_name)
         if self._bloomsky.is_metric:
-            self._attr_native_unit_of_measurement = SENSOR_UNITS_METRIC.get(
-                sensor_name, None
-            )
+            self._attr_native_unit_of_measurement = SENSOR_UNITS_METRIC.get(sensor_name)
 
     def update(self) -> None:
         """Request an update from the BloomSky API."""

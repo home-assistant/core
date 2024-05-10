@@ -1,9 +1,10 @@
 """Config flow for Apple TV integration."""
+
 from __future__ import annotations
 
 import asyncio
 from collections import deque
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from ipaddress import ip_address
 import logging
 from random import randrange
@@ -13,13 +14,20 @@ from pyatv import exceptions, pair, scan
 from pyatv.const import DeviceModel, PairingRequirement, Protocol
 from pyatv.convert import model_str, protocol_str
 from pyatv.helpers import get_unique_id
+from pyatv.interface import BaseConfig, PairingHandler
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    SOURCE_ZEROCONF,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
-from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -49,10 +57,12 @@ OPTIONS_FLOW = {
 }
 
 
-async def device_scan(hass, identifier, loop):
+async def device_scan(
+    hass: HomeAssistant, identifier: str | None, loop: asyncio.AbstractEventLoop
+) -> tuple[BaseConfig | None, list[str] | None]:
     """Scan for a specific device using identifier as filter."""
 
-    def _filter_device(dev):
+    def _filter_device(dev: BaseConfig) -> bool:
         if identifier is None:
             return True
         if identifier == str(dev.address):
@@ -61,11 +71,14 @@ async def device_scan(hass, identifier, loop):
             return True
         return any(service.identifier == identifier for service in dev.services)
 
-    def _host_filter():
+    def _host_filter() -> list[str] | None:
+        if identifier is None:
+            return None
         try:
-            return [ip_address(identifier)]
+            ip_address(identifier)
         except ValueError:
             return None
+        return [identifier]
 
     # If we have an address, only probe that address to avoid
     # broadcast traffic on the network
@@ -79,31 +92,32 @@ async def device_scan(hass, identifier, loop):
     return None, None
 
 
-class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Apple TV."""
 
     VERSION = 1
 
+    scan_filter: str | None = None
+    atv: BaseConfig | None = None
+    atv_identifiers: list[str] | None = None
+    protocol: Protocol | None = None
+    pairing: PairingHandler | None = None
+    protocols_to_pair: deque[Protocol] | None = None
+
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> SchemaOptionsFlowHandler:
         """Get options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize a new AppleTVConfigFlow."""
-        self.scan_filter = None
-        self.atv = None
-        self.atv_identifiers = None
-        self.protocol = None
-        self.pairing = None
-        self.credentials = {}  # Protocol -> credentials
-        self.protocols_to_pair = deque()
+        self.credentials: dict[int, str | None] = {}  # Protocol -> credentials
 
     @property
-    def device_identifier(self):
+    def device_identifier(self) -> str | None:
         """Return a identifier for the config entry.
 
         A device has multiple unique identifiers, but Home Assistant only supports one
@@ -118,6 +132,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         existing config entry. If that's the case, the unique_id from that entry is
         re-used, otherwise the newly discovered identifier is used instead.
         """
+        assert self.atv
         all_identifiers = set(self.atv.all_identifiers)
         if unique_id := self._entry_unique_id_from_identifers(all_identifiers):
             return unique_id
@@ -133,7 +148,9 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return entry.unique_id
         return None
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle initial step when updating invalid credentials."""
         self.context["title_placeholders"] = {
             "name": entry_data[CONF_NAME],
@@ -141,18 +158,22 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         self.scan_filter = self.unique_id
         self.context["identifier"] = self.unique_id
-        return await self.async_step_reconfigure()
+        return await self.async_step_restore_device()
 
-    async def async_step_reconfigure(self, user_input=None):
+    async def async_step_restore_device(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Inform user that reconfiguration is about to start."""
         if user_input is not None:
             return await self.async_find_device_wrapper(
                 self.async_pair_next_protocol, allow_exist=True
             )
 
-        return self.async_show_form(step_id="reconfigure")
+        return self.async_show_form(step_id="restore_device")
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -170,6 +191,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(
                     self.device_identifier, raise_on_progress=False
                 )
+                assert self.atv
                 self.context["all_identifiers"] = self.atv.all_identifiers
                 return await self.async_step_confirm()
 
@@ -181,7 +203,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle device found via zeroconf."""
         if discovery_info.ip_address.version == 6:
             return self.async_abort(reason="ipv6_not_supported")
@@ -263,7 +285,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for flow in self._async_in_progress(include_uninitialized=True):
             context = flow["context"]
             if (
-                context.get("source") != config_entries.SOURCE_ZEROCONF
+                context.get("source") != SOURCE_ZEROCONF
                 or context.get(CONF_ADDRESS) != host
             ):
                 continue
@@ -275,8 +297,11 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 context["all_identifiers"].append(unique_id)
             raise AbortFlow("already_in_progress")
 
-    async def async_found_zeroconf_device(self, user_input=None):
+    async def async_found_zeroconf_device(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle device found after Zeroconf discovery."""
+        assert self.atv
         self.context["all_identifiers"] = self.atv.all_identifiers
         # Also abort if an integration with this identifier already exists
         await self.async_set_unique_id(self.device_identifier)
@@ -288,7 +313,11 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context["identifier"] = self.unique_id
         return await self.async_step_confirm()
 
-    async def async_find_device_wrapper(self, next_func, allow_exist=False):
+    async def async_find_device_wrapper(
+        self,
+        next_func: Callable[[], Awaitable[ConfigFlowResult]],
+        allow_exist: bool = False,
+    ) -> ConfigFlowResult:
         """Find a specific device and call another function when done.
 
         This function will do error handling and bail out when an error
@@ -306,13 +335,13 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await next_func()
 
-    async def async_find_device(self, allow_exist=False):
+    async def async_find_device(self, allow_exist: bool = False) -> None:
         """Scan for the selected device to discover services."""
         self.atv, self.atv_identifiers = await device_scan(
             self.hass, self.scan_filter, self.hass.loop
         )
         if not self.atv:
-            raise DeviceNotFound()
+            raise DeviceNotFound
 
         # Protocols supported by the device are prospects for pairing
         self.protocols_to_pair = deque(
@@ -350,15 +379,16 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_IDENTIFIERS: list(combined_identifiers),
                     },
                 )
-                if entry.source != config_entries.SOURCE_IGNORE:
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(entry.entry_id)
-                    )
+                if entry.source != SOURCE_IGNORE:
+                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
             if not allow_exist:
-                raise DeviceAlreadyConfigured()
+                raise DeviceAlreadyConfigured
 
-    async def async_step_confirm(self, user_input=None):
+    async def async_step_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle user-confirmation of discovered node."""
+        assert self.atv
         if user_input is not None:
             expected_identifier_count = len(self.context["all_identifiers"])
             # If number of services found during device scan mismatch number of
@@ -384,7 +414,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_pair_next_protocol(self):
+    async def async_pair_next_protocol(self) -> ConfigFlowResult:
         """Start pairing process for the next available protocol."""
         await self._async_cleanup()
 
@@ -393,7 +423,15 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._async_get_entry()
 
         self.protocol = self.protocols_to_pair.popleft()
+        assert self.atv
         service = self.atv.get_service(self.protocol)
+
+        if service is None:
+            _LOGGER.debug(
+                "%s does not support pairing (cannot find a corresponding service)",
+                self.protocol,
+            )
+            return await self.async_pair_next_protocol()
 
         # Service requires a password
         if service.requires_password:
@@ -413,7 +451,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("%s requires pairing", self.protocol)
 
         # Protocol specific arguments
-        pair_args = {}
+        pair_args: dict[str, Any] = {}
         if self.protocol in {Protocol.AirPlay, Protocol.Companion, Protocol.DMAP}:
             pair_args["name"] = "Home Assistant"
         if self.protocol == Protocol.DMAP:
@@ -448,8 +486,11 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_pair_no_pin()
 
-    async def async_step_protocol_disabled(self, user_input=None):
+    async def async_step_protocol_disabled(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Inform user that a protocol is disabled and cannot be paired."""
+        assert self.protocol
         if user_input is not None:
             return await self.async_pair_next_protocol()
         return self.async_show_form(
@@ -457,9 +498,13 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"protocol": protocol_str(self.protocol)},
         )
 
-    async def async_step_pair_with_pin(self, user_input=None):
+    async def async_step_pair_with_pin(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle pairing step where a PIN is required from the user."""
         errors = {}
+        assert self.pairing
+        assert self.protocol
         if user_input is not None:
             try:
                 self.pairing.pin(user_input[CONF_PIN])
@@ -480,8 +525,12 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"protocol": protocol_str(self.protocol)},
         )
 
-    async def async_step_pair_no_pin(self, user_input=None):
+    async def async_step_pair_no_pin(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle step where user has to enter a PIN on the device."""
+        assert self.pairing
+        assert self.protocol
         if user_input is not None:
             await self.pairing.finish()
             if self.pairing.has_paired:
@@ -497,12 +546,15 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="pair_no_pin",
             description_placeholders={
                 "protocol": protocol_str(self.protocol),
-                "pin": pin,
+                "pin": str(pin),
             },
         )
 
-    async def async_step_service_problem(self, user_input=None):
+    async def async_step_service_problem(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Inform user that a service will not be added."""
+        assert self.protocol
         if user_input is not None:
             return await self.async_pair_next_protocol()
 
@@ -511,8 +563,11 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"protocol": protocol_str(self.protocol)},
         )
 
-    async def async_step_password(self, user_input=None):
+    async def async_step_password(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Inform user that password is not supported."""
+        assert self.protocol
         if user_input is not None:
             return await self.async_pair_next_protocol()
 
@@ -521,17 +576,19 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"protocol": protocol_str(self.protocol)},
         )
 
-    async def _async_cleanup(self):
+    async def _async_cleanup(self) -> None:
         """Clean up allocated resources."""
         if self.pairing is not None:
             await self.pairing.close()
             self.pairing = None
 
-    async def _async_get_entry(self):
+    async def _async_get_entry(self) -> ConfigFlowResult:
         """Return config entry or update existing config entry."""
         # Abort if no protocols were paired
         if not self.credentials:
             return self.async_abort(reason="setup_failed")
+
+        assert self.atv
 
         data = {
             CONF_NAME: self.atv.name,

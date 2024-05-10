@@ -1,4 +1,5 @@
 """Support for Tuya Vacuums."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -92,13 +93,15 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         if self.find_dpcode(DPCode.PAUSE, prefer_function=True):
             self._attr_supported_features |= VacuumEntityFeature.PAUSE
 
-        if self.find_dpcode(DPCode.SWITCH_CHARGE, prefer_function=True):
-            self._attr_supported_features |= VacuumEntityFeature.RETURN_HOME
-        elif (
-            enum_type := self.find_dpcode(
-                DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
+        if (
+            self.find_dpcode(DPCode.SWITCH_CHARGE, prefer_function=True)
+            or (
+                enum_type := self.find_dpcode(
+                    DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
+                )
             )
-        ) and TUYA_MODE_RETURN_HOME in enum_type.range:
+            and TUYA_MODE_RETURN_HOME in enum_type.range
+        ):
             self._attr_supported_features |= VacuumEntityFeature.RETURN_HOME
 
         if self.find_dpcode(DPCode.SEEK, prefer_function=True):

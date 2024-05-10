@@ -1,4 +1,5 @@
 """UPnP/IGD integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -72,13 +73,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         async with asyncio.timeout(10):
             await device_discovered_event.wait()
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         raise ConfigEntryNotReady(f"Device not discovered: {usn}") from err
     finally:
         cancel_discovered_callback()
 
     # Create device.
     assert discovery_info is not None
+    assert discovery_info.ssdp_udn
     assert discovery_info.ssdp_all_locations
     location = get_preferred_location(discovery_info.ssdp_all_locations)
     try:
@@ -117,7 +119,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if device.serial_number:
         identifiers.add((IDENTIFIER_SERIAL_NUMBER, device.serial_number))
 
-    connections = {(dr.CONNECTION_UPNP, device.udn)}
+    connections = {(dr.CONNECTION_UPNP, discovery_info.ssdp_udn)}
+    if discovery_info.ssdp_udn != device.udn:
+        connections.add((dr.CONNECTION_UPNP, device.udn))
     if device_mac_address:
         connections.add((dr.CONNECTION_NETWORK_MAC, device_mac_address))
 

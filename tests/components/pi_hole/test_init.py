@@ -1,4 +1,5 @@
 """Test pi_hole component."""
+
 import logging
 from unittest.mock import AsyncMock
 
@@ -6,11 +7,13 @@ from hole.exceptions import HoleError
 import pytest
 
 from homeassistant.components import pi_hole, switch
+from homeassistant.components.pi_hole import PiHoleData
 from homeassistant.components.pi_hole.const import (
     CONF_STATISTICS_ONLY,
     SERVICE_DISABLE,
     SERVICE_DISABLE_ATTR_DURATION,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 
@@ -181,12 +184,13 @@ async def test_unload(hass: HomeAssistant) -> None:
     with _patch_init_hole(mocked_hole):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-    assert entry.entry_id in hass.data[pi_hole.DOMAIN]
+    assert entry.state is ConfigEntryState.LOADED
+    assert isinstance(entry.runtime_data, PiHoleData)
     assert await hass.config_entries.async_unload(entry.entry_id)
 
     await hass.async_block_till_done()
 
-    assert entry.entry_id not in hass.data[pi_hole.DOMAIN]
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_remove_obsolete(hass: HomeAssistant) -> None:

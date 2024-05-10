@@ -59,6 +59,11 @@ DHCP: list[dict[str, str | bool]] = [
         "macaddress": "B8A44F*",
     },
     {
+        "domain": "axis",
+        "hostname": "axis-e82725*",
+        "macaddress": "E82725*",
+    },
+    {
         "domain": "blink",
         "hostname": "blink*",
         "macaddress": "B85F98*",
@@ -970,6 +975,10 @@ DHCP: list[dict[str, str | bool]] = [
     {
         "domain": "twinkly",
         "hostname": "twinkly_*",
+    },
+    {
+        "domain": "twinkly",
+        "hostname": "twinkly-*",
     },
     {
         "domain": "unifiprotect",

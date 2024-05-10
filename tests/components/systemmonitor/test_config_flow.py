@@ -1,4 +1,5 @@
 """Test the System Monitor config flow."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock
@@ -6,11 +7,13 @@ from unittest.mock import AsyncMock
 from homeassistant import config_entries
 from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.components.systemmonitor.const import CONF_PROCESS, DOMAIN
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from homeassistant.util import slugify
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from tests.common import MockConfigEntry
 
@@ -22,7 +25,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["step_id"] == "user"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -30,7 +33,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["options"] == {}
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -57,9 +60,9 @@ async def test_import(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["options"] == {
-        "sensor": {"process": ["systemd", "octave-cli"]},
+        "binary_sensor": {"process": ["systemd", "octave-cli"]},
         "resources": [
             "disk_use_percent_/",
             "memory_free_",
@@ -96,7 +99,7 @@ async def test_form_already_configured(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["step_id"] == "user"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -104,7 +107,7 @@ async def test_form_already_configured(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -116,7 +119,7 @@ async def test_import_already_configured(
         domain=DOMAIN,
         source=config_entries.SOURCE_USER,
         options={
-            "sensor": [{CONF_PROCESS: "systemd"}],
+            "binary_sensor": [{CONF_PROCESS: "systemd"}],
             "resources": [
                 "disk_use_percent_/",
                 "memory_free_",
@@ -144,7 +147,7 @@ async def test_import_already_configured(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     issue = issue_registry.async_get_issue(
@@ -158,20 +161,25 @@ async def test_import_already_configured(
 
 
 async def test_add_and_remove_processes(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test adding and removing process sensors."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         source=config_entries.SOURCE_USER,
+        data={},
         options={},
         entry_id="1",
     )
     config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -182,9 +190,9 @@ async def test_add_and_remove_processes(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "sensor": {
+        "binary_sensor": {
             CONF_PROCESS: ["systemd"],
         }
     }
@@ -192,7 +200,7 @@ async def test_add_and_remove_processes(
     # Add another
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -203,33 +211,26 @@ async def test_add_and_remove_processes(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "sensor": {
+        "binary_sensor": {
             CONF_PROCESS: ["systemd", "octave-cli"],
         },
     }
 
-    entity_reg = er.async_get(hass)
-    entity_reg.async_get_or_create(
-        domain=Platform.SENSOR,
-        platform=DOMAIN,
-        unique_id=slugify("process_systemd"),
-        config_entry=config_entry,
+    assert (
+        entity_registry.async_get("binary_sensor.system_monitor_process_systemd")
+        is not None
     )
-    entity_reg.async_get_or_create(
-        domain=Platform.SENSOR,
-        platform=DOMAIN,
-        unique_id=slugify("process_octave-cli"),
-        config_entry=config_entry,
+    assert (
+        entity_registry.async_get("binary_sensor.system_monitor_process_octave_cli")
+        is not None
     )
-    assert entity_reg.async_get("sensor.systemmonitor_process_systemd") is not None
-    assert entity_reg.async_get("sensor.systemmonitor_process_octave_cli") is not None
 
     # Remove one
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -240,9 +241,9 @@ async def test_add_and_remove_processes(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "sensor": {
+        "binary_sensor": {
             CONF_PROCESS: ["systemd"],
         },
     }
@@ -250,7 +251,7 @@ async def test_add_and_remove_processes(
     # Remove last
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -261,10 +262,15 @@ async def test_add_and_remove_processes(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "sensor": {CONF_PROCESS: []},
+        "binary_sensor": {CONF_PROCESS: []},
     }
 
-    assert entity_reg.async_get("sensor.systemmonitor_process_systemd") is None
-    assert entity_reg.async_get("sensor.systemmonitor_process_octave_cli") is None
+    assert (
+        entity_registry.async_get("binary_sensor.systemmonitor_process_systemd") is None
+    )
+    assert (
+        entity_registry.async_get("binary_sensor.systemmonitor_process_octave_cli")
+        is None
+    )

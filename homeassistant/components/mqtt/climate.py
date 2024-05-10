@@ -1,4 +1,5 @@
 """Support for MQTT climate devices."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -44,7 +45,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -77,7 +77,6 @@ from .const import (
     CONF_TEMP_STATE_TEMPLATE,
     CONF_TEMP_STATE_TOPIC,
     DEFAULT_OPTIMISTIC,
-    DOMAIN,
     PAYLOAD_NONE,
 )
 from .debug_info import log_messages
@@ -98,13 +97,11 @@ from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
-MQTT_CLIMATE_AUX_DOCS = "https://www.home-assistant.io/integrations/climate.mqtt/"
-
 DEFAULT_NAME = "MQTT HVAC"
 
 # Options CONF_AUX_COMMAND_TOPIC, CONF_AUX_STATE_TOPIC
 # and CONF_AUX_STATE_TEMPLATE were deprecated in HA Core 2023.9
-# Support will be removed in HA Core 2024.3
+# Support was removed in HA Core 2024.3
 CONF_AUX_COMMAND_TOPIC = "aux_command_topic"
 CONF_AUX_STATE_TEMPLATE = "aux_state_template"
 CONF_AUX_STATE_TOPIC = "aux_state_topic"
@@ -150,7 +147,6 @@ DEFAULT_INITIAL_TEMPERATURE = 21.0
 
 MQTT_CLIMATE_ATTRIBUTES_BLOCKED = frozenset(
     {
-        climate.ATTR_AUX_HEAT,
         climate.ATTR_CURRENT_HUMIDITY,
         climate.ATTR_CURRENT_TEMPERATURE,
         climate.ATTR_FAN_MODE,
@@ -174,13 +170,11 @@ MQTT_CLIMATE_ATTRIBUTES_BLOCKED = frozenset(
 )
 
 VALUE_TEMPLATE_KEYS = (
-    CONF_AUX_STATE_TEMPLATE,
     CONF_CURRENT_HUMIDITY_TEMPLATE,
     CONF_CURRENT_TEMP_TEMPLATE,
     CONF_FAN_MODE_STATE_TEMPLATE,
     CONF_HUMIDITY_STATE_TEMPLATE,
     CONF_MODE_STATE_TEMPLATE,
-    CONF_POWER_STATE_TEMPLATE,
     CONF_ACTION_TEMPLATE,
     CONF_PRESET_MODE_VALUE_TEMPLATE,
     CONF_SWING_MODE_STATE_TEMPLATE,
@@ -204,8 +198,6 @@ COMMAND_TEMPLATE_KEYS = {
 
 TOPIC_KEYS = (
     CONF_ACTION_TOPIC,
-    CONF_AUX_COMMAND_TOPIC,
-    CONF_AUX_STATE_TOPIC,
     CONF_CURRENT_HUMIDITY_TOPIC,
     CONF_CURRENT_TEMP_TOPIC,
     CONF_FAN_MODE_COMMAND_TOPIC,
@@ -266,12 +258,6 @@ def valid_humidity_state_configuration(config: ConfigType) -> ConfigType:
 
 _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
-        # Options CONF_AUX_COMMAND_TOPIC, CONF_AUX_STATE_TOPIC
-        # and CONF_AUX_STATE_TEMPLATE were deprecated in HA Core 2023.9
-        # Support will be removed in HA Core 2024.3
-        vol.Optional(CONF_AUX_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_AUX_STATE_TEMPLATE): cv.template,
-        vol.Optional(CONF_AUX_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_CURRENT_HUMIDITY_TEMPLATE): cv.template,
         vol.Optional(CONF_CURRENT_HUMIDITY_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_CURRENT_TEMP_TEMPLATE): cv.template,
@@ -286,12 +272,12 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_FAN_MODE_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_HUMIDITY_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_HUMIDITY_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_HUMIDITY_MIN, default=DEFAULT_MIN_HUMIDITY): vol.Coerce(
-            float
-        ),
-        vol.Optional(CONF_HUMIDITY_MAX, default=DEFAULT_MAX_HUMIDITY): vol.Coerce(
-            float
-        ),
+        vol.Optional(
+            CONF_HUMIDITY_MIN, default=DEFAULT_MIN_HUMIDITY
+        ): cv.positive_float,
+        vol.Optional(
+            CONF_HUMIDITY_MAX, default=DEFAULT_MAX_HUMIDITY
+        ): cv.positive_float,
         vol.Optional(CONF_HUMIDITY_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_HUMIDITY_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
@@ -369,10 +355,10 @@ PLATFORM_SCHEMA_MODERN = vol.All(
     cv.removed(CONF_POWER_STATE_TOPIC),
     # Options CONF_AUX_COMMAND_TOPIC, CONF_AUX_STATE_TOPIC
     # and CONF_AUX_STATE_TEMPLATE were deprecated in HA Core 2023.9
-    # Support will be removed in HA Core 2024.3
-    cv.deprecated(CONF_AUX_COMMAND_TOPIC),
-    cv.deprecated(CONF_AUX_STATE_TEMPLATE),
-    cv.deprecated(CONF_AUX_STATE_TOPIC),
+    # Support was removed in HA Core 2024.3
+    cv.removed(CONF_AUX_COMMAND_TOPIC),
+    cv.removed(CONF_AUX_STATE_TEMPLATE),
+    cv.removed(CONF_AUX_STATE_TOPIC),
     _PLATFORM_SCHEMA_BASE,
     valid_preset_mode_configuration,
     valid_humidity_range_configuration,
@@ -470,7 +456,7 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
         except ValueError:
             _LOGGER.error("Could not parse %s from %s", template_name, payload)
 
-    def prepare_subscribe_topics(  # noqa: C901
+    def prepare_subscribe_topics(
         self,
         topics: dict[str, dict[str, Any]],
     ) -> None:
@@ -603,13 +589,13 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
 
     _attr_fan_mode: str | None = None
     _attr_hvac_mode: HVACMode | None = None
-    _attr_is_aux_heat: bool | None = None
     _attr_swing_mode: str | None = None
     _default_name = DEFAULT_NAME
     _entity_id_format = climate.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_CLIMATE_ATTRIBUTES_BLOCKED
     _attr_target_temperature_low: float | None = None
     _attr_target_temperature_high: float | None = None
+    _enable_turn_on_off_backwards_compatibility = False
 
     @staticmethod
     def config_schema() -> vol.Schema:
@@ -661,11 +647,6 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             self._attr_swing_mode = SWING_OFF
         if self._topic[CONF_MODE_STATE_TOPIC] is None or self._optimistic:
             self._attr_hvac_mode = HVACMode.OFF
-        # Options CONF_AUX_COMMAND_TOPIC, CONF_AUX_STATE_TOPIC
-        # and CONF_AUX_STATE_TEMPLATE were deprecated in HA Core 2023.9
-        # Support will be removed in HA Core 2024.3
-        if self._topic[CONF_AUX_STATE_TOPIC] is None or self._optimistic:
-            self._attr_is_aux_heat = False
         self._feature_preset_mode = CONF_PRESET_MODE_COMMAND_TOPIC in config
         if self._feature_preset_mode:
             presets = []
@@ -680,15 +661,12 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             self._optimistic or CONF_PRESET_MODE_STATE_TOPIC not in config
         )
 
-        value_templates: dict[str, Template | None] = {}
-        for key in VALUE_TEMPLATE_KEYS:
-            value_templates[key] = None
-        if CONF_VALUE_TEMPLATE in config:
-            value_templates = {
-                key: config.get(CONF_VALUE_TEMPLATE) for key in VALUE_TEMPLATE_KEYS
-            }
-        for key in VALUE_TEMPLATE_KEYS & config.keys():
-            value_templates[key] = config[key]
+        value_templates: dict[str, Template | None] = {
+            key: config.get(CONF_VALUE_TEMPLATE) for key in VALUE_TEMPLATE_KEYS
+        }
+        value_templates.update(
+            {key: config[key] for key in VALUE_TEMPLATE_KEYS & config.keys()}
+        )
         self._value_templates = {
             key: MqttValueTemplate(
                 template,
@@ -697,11 +675,10 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             for key, template in value_templates.items()
         }
 
-        self._command_templates = {}
-        for key in COMMAND_TEMPLATE_KEYS:
-            self._command_templates[key] = MqttCommandTemplate(
-                config.get(key), entity=self
-            ).async_render
+        self._command_templates = {
+            key: MqttCommandTemplate(config.get(key), entity=self).async_render
+            for key in COMMAND_TEMPLATE_KEYS
+        }
 
         support = ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
         if (self._topic[CONF_TEMP_STATE_TOPIC] is not None) or (
@@ -735,33 +712,9 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         if self._feature_preset_mode:
             support |= ClimateEntityFeature.PRESET_MODE
 
-        # Options CONF_AUX_COMMAND_TOPIC, CONF_AUX_STATE_TOPIC
-        # and CONF_AUX_STATE_TEMPLATE were deprecated in HA Core 2023.9
-        # Support will be removed in HA Core 2024.3
-        if (self._topic[CONF_AUX_STATE_TOPIC] is not None) or (
-            self._topic[CONF_AUX_COMMAND_TOPIC] is not None
-        ):
-            support |= ClimateEntityFeature.AUX_HEAT
         self._attr_supported_features = support
 
-    async def mqtt_async_added_to_hass(self) -> None:
-        """Handle deprecation issues."""
-        if self._attr_supported_features & ClimateEntityFeature.AUX_HEAT:
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                "deprecated_climate_aux_property_{self.entity_id}",
-                breaks_in_ha_version="2024.3.0",
-                is_fixable=False,
-                translation_key="deprecated_climate_aux_property",
-                translation_placeholders={
-                    "entity_id": self.entity_id,
-                },
-                learn_more_url=MQTT_CLIMATE_AUX_DOCS,
-                severity=IssueSeverity.WARNING,
-            )
-
-    def _prepare_subscribe_topics(self) -> None:  # noqa: C901
+    def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         topics: dict[str, dict[str, Any]] = {}
 
@@ -875,41 +828,6 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         )
 
         @callback
-        def handle_onoff_mode_received(
-            msg: ReceiveMessage, template_name: str, attr: str
-        ) -> None:
-            """Handle receiving on/off mode via MQTT."""
-            payload = self.render_template(msg, template_name)
-            payload_on: str = self._config[CONF_PAYLOAD_ON]
-            payload_off: str = self._config[CONF_PAYLOAD_OFF]
-
-            if payload == "True":
-                payload = payload_on
-            elif payload == "False":
-                payload = payload_off
-
-            if payload == payload_on:
-                setattr(self, attr, True)
-            elif payload == payload_off:
-                setattr(self, attr, False)
-            else:
-                _LOGGER.error("Invalid %s mode: %s", attr, payload)
-
-        # Options CONF_AUX_COMMAND_TOPIC, CONF_AUX_STATE_TOPIC
-        # and CONF_AUX_STATE_TEMPLATE were deprecated in HA Core 2023.9
-        # Support will be removed in HA Core 2024.3
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_is_aux_heat"})
-        def handle_aux_mode_received(msg: ReceiveMessage) -> None:
-            """Handle receiving aux mode via MQTT."""
-            handle_onoff_mode_received(
-                msg, CONF_AUX_STATE_TEMPLATE, "_attr_is_aux_heat"
-            )
-
-        self.add_subscription(topics, CONF_AUX_STATE_TOPIC, handle_aux_mode_received)
-
-        @callback
         @log_messages(self.hass, self.entity_id)
         @write_state_on_attr_change(self, {"_attr_preset_mode"})
         def handle_preset_mode_received(msg: ReceiveMessage) -> None:
@@ -947,7 +865,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             await self.async_set_hvac_mode(operation_mode)
         await super().async_set_temperature(**kwargs)
 
-    async def async_set_humidity(self, humidity: int) -> None:
+    async def async_set_humidity(self, humidity: float) -> None:
         """Set new target humidity."""
 
         await self._set_climate_attribute(
@@ -1000,27 +918,6 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         if self._optimistic_preset_mode:
             self._attr_preset_mode = preset_mode
             self.async_write_ha_state()
-
-    # Options CONF_AUX_COMMAND_TOPIC, CONF_AUX_STATE_TOPIC
-    # and CONF_AUX_STATE_TEMPLATE were deprecated in HA Core 2023.9
-    # Support will be removed in HA Core 2024.3
-    async def _set_aux_heat(self, state: bool) -> None:
-        await self._publish(
-            CONF_AUX_COMMAND_TOPIC,
-            self._config[CONF_PAYLOAD_ON] if state else self._config[CONF_PAYLOAD_OFF],
-        )
-
-        if self._optimistic or self._topic[CONF_AUX_STATE_TOPIC] is None:
-            self._attr_is_aux_heat = state
-            self.async_write_ha_state()
-
-    async def async_turn_aux_heat_on(self) -> None:
-        """Turn auxiliary heater on."""
-        await self._set_aux_heat(True)
-
-    async def async_turn_aux_heat_off(self) -> None:
-        """Turn auxiliary heater off."""
-        await self._set_aux_heat(False)
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""

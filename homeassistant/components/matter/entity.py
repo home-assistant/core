@@ -1,4 +1,5 @@
 """Matter entity base class."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -106,9 +107,6 @@ class MatterEntity(Entity):
                     attr_path_filter=attr_path,
                 )
             )
-        await self.matter_client.subscribe_attribute(
-            self._endpoint.node.node_id, sub_paths
-        )
         # subscribe to node (availability changes)
         self._unsubscribes.append(
             self.matter_client.subscribe_events(
@@ -129,6 +127,9 @@ class MatterEntity(Entity):
 
     async def async_update(self) -> None:
         """Call when the entity needs to be updated."""
+        if not self._endpoint.node.available:
+            # skip poll when the node is not (yet) available
+            return
         # manually poll/refresh the primary value
         await self.matter_client.refresh_attribute(
             self._endpoint.node.node_id,

@@ -1,6 +1,9 @@
 """Constants used by multiple MQTT modules."""
 
+import jinja2
+
 from homeassistant.const import CONF_PAYLOAD, Platform
+from homeassistant.exceptions import TemplateError
 
 ATTR_DISCOVERY_HASH = "discovery_hash"
 ATTR_DISCOVERY_PAYLOAD = "discovery_payload"
@@ -139,34 +142,6 @@ MQTT_DISCONNECTED = "mqtt_disconnected"
 PAYLOAD_EMPTY_JSON = "{}"
 PAYLOAD_NONE = "None"
 
-PLATFORMS = [
-    Platform.ALARM_CONTROL_PANEL,
-    Platform.BINARY_SENSOR,
-    Platform.BUTTON,
-    Platform.CAMERA,
-    Platform.CLIMATE,
-    Platform.COVER,
-    Platform.DEVICE_TRACKER,
-    Platform.EVENT,
-    Platform.FAN,
-    Platform.HUMIDIFIER,
-    Platform.IMAGE,
-    Platform.LAWN_MOWER,
-    Platform.LIGHT,
-    Platform.LOCK,
-    Platform.NUMBER,
-    Platform.SCENE,
-    Platform.SELECT,
-    Platform.SENSOR,
-    Platform.SIREN,
-    Platform.SWITCH,
-    Platform.TEXT,
-    Platform.UPDATE,
-    Platform.VACUUM,
-    Platform.VALVE,
-    Platform.WATER_HEATER,
-]
-
 RELOADABLE_PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
@@ -182,6 +157,7 @@ RELOADABLE_PLATFORMS = [
     Platform.LIGHT,
     Platform.LAWN_MOWER,
     Platform.LOCK,
+    Platform.NOTIFY,
     Platform.NUMBER,
     Platform.SCENE,
     Platform.SELECT,
@@ -194,3 +170,5 @@ RELOADABLE_PLATFORMS = [
     Platform.VALVE,
     Platform.WATER_HEATER,
 ]
+
+TEMPLATE_ERRORS = (jinja2.TemplateError, TemplateError, TypeError, ValueError)

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate updated constraint and requirements files."""
+
 from __future__ import annotations
 
 import difflib
@@ -16,8 +17,10 @@ from typing import Any
 from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Integration
 
-COMMENT_REQUIREMENTS = (
-    "Adafruit-BBIO",
+# Requirements which can't be installed on all systems because they rely on additional
+# system packages. Requirements listed in EXCLUDED_REQUIREMENTS_ALL will be commented-out
+# in requirements_all.txt and requirements_test_all.txt.
+EXCLUDED_REQUIREMENTS_ALL = {
     "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avea",  # depends on bluepy
     "avion",
@@ -28,7 +31,6 @@ COMMENT_REQUIREMENTS = (
     "decora-wifi",
     "evdev",
     "face-recognition",
-    "opencv-python-headless",
     "pybluez",
     "pycocotools",
     "pycups",
@@ -37,10 +39,39 @@ COMMENT_REQUIREMENTS = (
     "pyuserinput",
     "tensorflow",
     "tf-models-official",
-)
+}
 
-COMMENT_REQUIREMENTS_NORMALIZED = {
-    commented.lower().replace("_", "-") for commented in COMMENT_REQUIREMENTS
+# Requirements excluded by EXCLUDED_REQUIREMENTS_ALL which should be included when
+# building integration wheels for all architectures.
+INCLUDED_REQUIREMENTS_WHEELS = {
+    "decora-wifi",
+    "evdev",
+    "pycups",
+    "python-gammu",
+    "pyuserinput",
+}
+
+
+# Requirements to exclude or include when running github actions.
+# Requirements listed in "exclude" will be commented-out in
+# requirements_all_{action}.txt
+# Requirements listed in "include" must be listed in EXCLUDED_REQUIREMENTS_CI, and
+# will be included in requirements_all_{action}.txt
+
+OVERRIDDEN_REQUIREMENTS_ACTIONS = {
+    "pytest": {"exclude": set(), "include": {"python-gammu"}},
+    "wheels_aarch64": {"exclude": set(), "include": INCLUDED_REQUIREMENTS_WHEELS},
+    # Pandas has issues building on armhf, it is expected they
+    # will drop the platform in the near future (they consider it
+    # "flimsy" on 386). The following packages depend on pandas,
+    # so we comment them out.
+    "wheels_armhf": {
+        "exclude": {"env-canada", "noaa-coops", "pyezviz", "pykrakenapi"},
+        "include": INCLUDED_REQUIREMENTS_WHEELS,
+    },
+    "wheels_armv7": {"exclude": set(), "include": INCLUDED_REQUIREMENTS_WHEELS},
+    "wheels_amd64": {"exclude": set(), "include": INCLUDED_REQUIREMENTS_WHEELS},
+    "wheels_i386": {"exclude": set(), "include": INCLUDED_REQUIREMENTS_WHEELS},
 }
 
 IGNORE_PIN = ("colorlog>2.1,<3", "urllib3")
@@ -98,9 +129,9 @@ regex==2021.8.28
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.1.0
+anyio==4.3.0
 h11==0.14.0
-httpcore==1.0.2
+httpcore==1.0.5
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -124,7 +155,7 @@ backoff>=2.0
 
 # Required to avoid breaking (#101042).
 # v2 has breaking changes (#99218).
-pydantic==1.10.12
+pydantic==1.10.15
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
@@ -133,10 +164,6 @@ pubnub!=6.4.0
 # Package's __init__.pyi stub has invalid syntax and breaks mypy
 # https://github.com/dahlia/iso4217/issues/16
 iso4217!=1.10.20220401
-
-# Matplotlib 3.6.2 has issues building wheels on armhf/armv7
-# We need at least >=2.1.0 (tensorflow integration -> pycocotools)
-matplotlib==3.6.1
 
 # pyOpenSSL 24.0.0 or later required to avoid import errors when
 # cryptography 42.0.0 is installed with botocore
@@ -155,13 +182,9 @@ faust-cchardet>=2.1.18
 # https://github.com/aaugustin/websockets/issues/1329
 websockets>=11.0.1
 
-# pyasn1 0.5.0 has breaking changes which cause pysnmplib to fail
-# until they are resolved, we need to pin pyasn1 to 0.4.8 and
-# pysnmplib to 5.0.21 to avoid the issue.
-# https://github.com/pyasn1/pyasn1/pull/30#issuecomment-1517564335
-# https://github.com/pysnmp/pysnmp/issues/51
-pyasn1==0.4.8
-pysnmplib==5.0.21
+# pysnmplib is no longer maintained and does not work with newer
+# python
+pysnmplib==1000000000.0.0
 # pysnmp is no longer maintained and does not work with newer
 # python
 pysnmp==1000000000.0.0
@@ -181,6 +204,21 @@ dacite>=1.7.0
 
 # Musle wheels for pandas 2.2.0 cannot be build for any architecture.
 pandas==2.1.4
+
+# chacha20poly1305-reuseable==0.12.0 is incompatible with cryptography==42.0.x
+chacha20poly1305-reuseable>=0.12.1
+
+# pycountry<23.12.11 imports setuptools at run time
+# https://github.com/pycountry/pycountry/blob/ea69bab36f00df58624a0e490fdad4ccdc14268b/HISTORY.txt#L39
+pycountry>=23.12.11
+
+# scapy<2.5.0 will not work with python3.12
+scapy>=2.5.0
+
+# tuf isn't updated to deal with breaking changes in securesystemslib==1.0.
+# Only tuf>=4 includes a constraint to <1.0.
+# https://github.com/theupdateframework/python-tuf/releases/tag/v4.0.0
+tuf>=4.0.0
 """
 
 GENERATED_MESSAGE = (
@@ -253,6 +291,12 @@ def gather_recursive_requirements(
     return reqs
 
 
+def _normalize_package_name(package_name: str) -> str:
+    """Normalize a package name."""
+    # pipdeptree needs lowercase and dash instead of underscore or period as separator
+    return package_name.lower().replace("_", "-").replace(".", "-")
+
+
 def normalize_package_name(requirement: str) -> str:
     """Return a normalized package name from a requirement string."""
     # This function is also used in hassfest.
@@ -260,17 +304,25 @@ def normalize_package_name(requirement: str) -> str:
     if not match:
         return ""
 
-    # pipdeptree needs lowercase and dash instead of underscore as separator
-    package = match.group(1).lower().replace("_", "-")
-
-    return package
+    # pipdeptree needs lowercase and dash instead of underscore or period as separator
+    return _normalize_package_name(match.group(1))
 
 
 def comment_requirement(req: str) -> bool:
     """Comment out requirement. Some don't install on all systems."""
-    return any(
-        normalize_package_name(req) == ign for ign in COMMENT_REQUIREMENTS_NORMALIZED
-    )
+    return normalize_package_name(req) in EXCLUDED_REQUIREMENTS_ALL
+
+
+def process_action_requirement(req: str, action: str) -> str:
+    """Process requirement for a specific github action."""
+    normalized_package_name = normalize_package_name(req)
+    if normalized_package_name in OVERRIDDEN_REQUIREMENTS_ACTIONS[action]["exclude"]:
+        return f"# {req}"
+    if normalized_package_name in OVERRIDDEN_REQUIREMENTS_ACTIONS[action]["include"]:
+        return req
+    if normalized_package_name in EXCLUDED_REQUIREMENTS_ALL:
+        return f"# {req}"
+    return req
 
 
 def gather_modules() -> dict[str, list[str]] | None:
@@ -347,13 +399,22 @@ def generate_requirements_list(reqs: dict[str, list[str]]) -> str:
     """Generate a pip file based on requirements."""
     output = []
     for pkg, requirements in sorted(reqs.items(), key=itemgetter(0)):
-        for req in sorted(requirements):
-            output.append(f"\n# {req}")
+        output.extend(f"\n# {req}" for req in sorted(requirements))
 
         if comment_requirement(pkg):
             output.append(f"\n# {pkg}\n")
         else:
             output.append(f"\n{pkg}\n")
+    return "".join(output)
+
+
+def generate_action_requirements_list(reqs: dict[str, list[str]], action: str) -> str:
+    """Generate a pip file based on requirements."""
+    output = []
+    for pkg, requirements in sorted(reqs.items(), key=itemgetter(0)):
+        output.extend(f"\n# {req}" for req in sorted(requirements))
+        processed_pkg = process_action_requirement(pkg, action)
+        output.append(f"\n{processed_pkg}\n")
     return "".join(output)
 
 
@@ -379,6 +440,18 @@ def requirements_all_output(reqs: dict[str, list[str]]) -> str:
         "-r requirements.txt\n",
     ]
     output.append(generate_requirements_list(reqs))
+
+    return "".join(output)
+
+
+def requirements_all_action_output(reqs: dict[str, list[str]], action: str) -> str:
+    """Generate output for requirements_all_{action}."""
+    output = [
+        f"# Home Assistant Core, full dependency set for {action}\n",
+        GENERATED_MESSAGE,
+        "-r requirements.txt\n",
+    ]
+    output.append(generate_action_requirements_list(reqs, action))
 
     return "".join(output)
 
@@ -435,15 +508,17 @@ def gather_constraints() -> str:
     return (
         GENERATED_MESSAGE
         + "\n".join(
-            sorted(
-                {
-                    *core_requirements(),
-                    *gather_recursive_requirements("default_config"),
-                    *gather_recursive_requirements("mqtt"),
-                },
-                key=str.lower,
-            )
-            + [""]
+            [
+                *sorted(
+                    {
+                        *core_requirements(),
+                        *gather_recursive_requirements("default_config"),
+                        *gather_recursive_requirements("mqtt"),
+                    },
+                    key=str.lower,
+                ),
+                "",
+            ]
         )
         + CONSTRAINT_BASE
     )
@@ -461,7 +536,7 @@ def diff_file(filename: str, content: str) -> list[str]:
     )
 
 
-def main(validate: bool) -> int:
+def main(validate: bool, ci: bool) -> int:
     """Run the script."""
     if not os.path.isfile("requirements_all.txt"):
         print("Run this from HA root dir")
@@ -474,17 +549,28 @@ def main(validate: bool) -> int:
 
     reqs_file = requirements_output()
     reqs_all_file = requirements_all_output(data)
+    reqs_all_action_files = {
+        action: requirements_all_action_output(data, action)
+        for action in OVERRIDDEN_REQUIREMENTS_ACTIONS
+    }
     reqs_test_all_file = requirements_test_all_output(data)
+    # Always calling requirements_pre_commit_output is intentional to ensure
+    # the code is called by the pre-commit hooks.
     reqs_pre_commit_file = requirements_pre_commit_output()
     constraints = gather_constraints()
 
-    files = (
+    files = [
         ("requirements.txt", reqs_file),
         ("requirements_all.txt", reqs_all_file),
         ("requirements_test_pre_commit.txt", reqs_pre_commit_file),
         ("requirements_test_all.txt", reqs_test_all_file),
         ("homeassistant/package_constraints.txt", constraints),
-    )
+    ]
+    if ci:
+        files.extend(
+            (f"requirements_all_{action}.txt", reqs_all_file)
+            for action, reqs_all_file in reqs_all_action_files.items()
+        )
 
     if validate:
         errors = []
@@ -513,4 +599,5 @@ def main(validate: bool) -> int:
 
 if __name__ == "__main__":
     _VAL = sys.argv[-1] == "validate"
-    sys.exit(main(_VAL))
+    _CI = sys.argv[-1] == "ci"
+    sys.exit(main(_VAL, _CI))

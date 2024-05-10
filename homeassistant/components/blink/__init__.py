@@ -1,5 +1,5 @@
 """Support for Blink Home Camera System."""
-import asyncio
+
 from copy import deepcopy
 import logging
 
@@ -93,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await blink.start()
-    except (ClientError, asyncio.TimeoutError) as ex:
+    except (ClientError, TimeoutError) as ex:
         raise ConfigEntryNotReady("Can not connect to host") from ex
 
     if blink.auth.check_key_required():

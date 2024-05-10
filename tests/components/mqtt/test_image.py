@@ -1,4 +1,5 @@
 """The tests for mqtt image component."""
+
 from base64 import b64encode
 from http import HTTPStatus
 import json
@@ -10,7 +11,7 @@ import pytest
 import respx
 
 from homeassistant.components import image, mqtt
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .test_common import (
@@ -51,13 +52,6 @@ from tests.typing import (
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {image.DOMAIN: {"name": "test", "image_topic": "test_topic"}}
 }
-
-
-@pytest.fixture(autouse=True)
-def image_platform_only():
-    """Only setup the image platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.IMAGE]):
-        yield
 
 
 @pytest.mark.freeze_time("2023-04-01 00:00:00+00:00")
@@ -455,7 +449,7 @@ async def test_image_from_url_fails(
 
     state = hass.states.get("image.test")
 
-    # The image failed to load, the the last image update is registered
+    # The image failed to load, the last image update is registered
     # but _last_image was set to `None`
     assert state.state == "2023-04-01T00:00:00+00:00"
     client = await hass_client_no_auth()
@@ -844,3 +838,31 @@ async def test_skipped_async_ha_write_state(
     """Test a write state command is only called when there is change."""
     await mqtt_mock_entry()
     await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                image.DOMAIN: {
+                    "name": "test",
+                    "url_topic": "test-topic",
+                    "url_template": "{{ value_json.some_var * 1 }}",
+                }
+            }
+        }
+    ],
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
+    )

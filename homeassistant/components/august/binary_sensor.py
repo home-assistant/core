@@ -1,4 +1,5 @@
 """Support for August binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -21,14 +22,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from . import AugustData
-from .const import ACTIVITY_UPDATE_INTERVAL, DOMAIN
+from . import AugustConfigEntry, AugustData
+from .const import ACTIVITY_UPDATE_INTERVAL
 from .entity import AugustEntityMixin
 
 _LOGGER = logging.getLogger(__name__)
@@ -105,27 +105,15 @@ def _native_datetime() -> datetime:
     return datetime.now()
 
 
-@dataclass(frozen=True)
-class AugustBinarySensorEntityDescription(BinarySensorEntityDescription):
+@dataclass(frozen=True, kw_only=True)
+class AugustDoorbellBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes August binary_sensor entity."""
-
-
-@dataclass(frozen=True)
-class AugustDoorbellRequiredKeysMixin:
-    """Mixin for required keys."""
 
     value_fn: Callable[[AugustData, DoorbellDetail], bool]
     is_time_based: bool
 
 
-@dataclass(frozen=True)
-class AugustDoorbellBinarySensorEntityDescription(
-    BinarySensorEntityDescription, AugustDoorbellRequiredKeysMixin
-):
-    """Describes August binary_sensor entity."""
-
-
-SENSOR_TYPE_DOOR = AugustBinarySensorEntityDescription(
+SENSOR_TYPE_DOOR = BinarySensorEntityDescription(
     key="open",
     device_class=BinarySensorDeviceClass.DOOR,
 )
@@ -165,11 +153,11 @@ SENSOR_TYPES_DOORBELL: tuple[AugustDoorbellBinarySensorEntityDescription, ...] =
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AugustConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the August binary sensors."""
-    data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     entities: list[BinarySensorEntity] = []
 
     for door in data.locks:
@@ -217,7 +205,7 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
         self,
         data: AugustData,
         device: Lock,
-        description: AugustBinarySensorEntityDescription,
+        description: BinarySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(data, device)

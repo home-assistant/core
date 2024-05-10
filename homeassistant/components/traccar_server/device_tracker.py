@@ -1,4 +1,5 @@
 """Support for Traccar server device tracking."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -8,18 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    ATTR_ADDRESS,
-    ATTR_ALTITUDE,
-    ATTR_CATEGORY,
-    ATTR_GEOFENCE,
-    ATTR_MOTION,
-    ATTR_SPEED,
-    ATTR_STATUS,
-    ATTR_TRACCAR_ID,
-    ATTR_TRACKER,
-    DOMAIN,
-)
+from .const import ATTR_CATEGORY, ATTR_TRACCAR_ID, ATTR_TRACKER, DOMAIN
 from .coordinator import TraccarServerCoordinator
 from .entity import TraccarServerEntity
 
@@ -44,23 +34,11 @@ class TraccarServerDeviceTracker(TraccarServerEntity, TrackerEntity):
     _attr_name = None
 
     @property
-    def battery_level(self) -> int:
-        """Return battery value of the device."""
-        return self.traccar_position["attributes"].get("batteryLevel", -1)
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific attributes."""
-        geofence_name = self.traccar_geofence["name"] if self.traccar_geofence else None
         return {
             **self.traccar_attributes,
-            ATTR_ADDRESS: self.traccar_position["address"],
-            ATTR_ALTITUDE: self.traccar_position["altitude"],
             ATTR_CATEGORY: self.traccar_device["category"],
-            ATTR_GEOFENCE: geofence_name,
-            ATTR_MOTION: self.traccar_position["attributes"].get("motion", False),
-            ATTR_SPEED: self.traccar_position["speed"],
-            ATTR_STATUS: self.traccar_device["status"],
             ATTR_TRACCAR_ID: self.traccar_device["id"],
             ATTR_TRACKER: DOMAIN,
         }

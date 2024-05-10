@@ -1,4 +1,5 @@
 """Support for Alpha2 room control unit via Alpha2 base."""
+
 import logging
 from typing import Any
 

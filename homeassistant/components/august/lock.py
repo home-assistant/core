@@ -1,4 +1,5 @@
 """Support for August lock."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -11,15 +12,13 @@ from yalexs.lock import Lock, LockStatus
 from yalexs.util import get_latest_activity, update_lock_detail_from_activity
 
 from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.dt as dt_util
 
-from . import AugustData
-from .const import DOMAIN
+from . import AugustConfigEntry, AugustData
 from .entity import AugustEntityMixin
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,11 +28,11 @@ LOCK_JAMMED_ERR = 531
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AugustConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up August locks."""
-    data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     async_add_entities(AugustLock(data, lock) for lock in data.locks)
 
 
@@ -134,15 +133,18 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
 
         self._attr_is_jammed = self._lock_status is LockStatus.JAMMED
         self._attr_is_locking = self._lock_status is LockStatus.LOCKING
-        self._attr_is_unlocking = self._lock_status is LockStatus.UNLOCKING
+        self._attr_is_unlocking = self._lock_status in (
+            LockStatus.UNLOCKING,
+            LockStatus.UNLATCHING,
+        )
 
         self._attr_extra_state_attributes = {
             ATTR_BATTERY_LEVEL: self._detail.battery_level
         }
         if self._detail.keypad is not None:
-            self._attr_extra_state_attributes[
-                "keypad_battery_level"
-            ] = self._detail.keypad.battery_level
+            self._attr_extra_state_attributes["keypad_battery_level"] = (
+                self._detail.keypad.battery_level
+            )
 
     async def async_added_to_hass(self) -> None:
         """Restore ATTR_CHANGED_BY on startup since it is likely no longer in the activity log."""

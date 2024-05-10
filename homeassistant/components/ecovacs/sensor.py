@@ -1,11 +1,12 @@
 """Ecovacs sensor module."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Generic
 
-from deebot_client.capabilities import CapabilityEvent, CapabilityLifeSpan
+from deebot_client.capabilities import Capabilities, CapabilityEvent, CapabilityLifeSpan
 from deebot_client.events import (
     BatteryEvent,
     ErrorEvent,
@@ -23,7 +24,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     ATTR_BATTERY_LEVEL,
@@ -36,9 +36,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN, SUPPORTED_LIFESPANS
-from .controller import EcovacsController
+from . import EcovacsConfigEntry
+from .const import SUPPORTED_LIFESPANS
 from .entity import (
+    CapabilityDevice,
     EcovacsCapabilityEntityDescription,
     EcovacsDescriptionEntity,
     EcovacsEntity,
@@ -62,6 +63,7 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
     # Stats
     EcovacsSensorEntityDescription[StatsEvent](
         key="stats_area",
+        device_capabilities=Capabilities,
         capability_fn=lambda caps: caps.stats.clean,
         value_fn=lambda e: e.area,
         translation_key="stats_area",
@@ -69,6 +71,7 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
     ),
     EcovacsSensorEntityDescription[StatsEvent](
         key="stats_time",
+        device_capabilities=Capabilities,
         capability_fn=lambda caps: caps.stats.clean,
         value_fn=lambda e: e.time,
         translation_key="stats_time",
@@ -78,6 +81,7 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
     ),
     # TotalStats
     EcovacsSensorEntityDescription[TotalStatsEvent](
+        device_capabilities=Capabilities,
         capability_fn=lambda caps: caps.stats.total,
         value_fn=lambda e: e.area,
         key="total_stats_area",
@@ -86,6 +90,7 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     EcovacsSensorEntityDescription[TotalStatsEvent](
+        device_capabilities=Capabilities,
         capability_fn=lambda caps: caps.stats.total,
         value_fn=lambda e: e.time,
         key="total_stats_time",
@@ -96,6 +101,7 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     EcovacsSensorEntityDescription[TotalStatsEvent](
+        device_capabilities=Capabilities,
         capability_fn=lambda caps: caps.stats.total,
         value_fn=lambda e: e.cleanings,
         key="total_stats_cleanings",
@@ -103,6 +109,7 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     EcovacsSensorEntityDescription[BatteryEvent](
+        device_capabilities=Capabilities,
         capability_fn=lambda caps: caps.battery,
         value_fn=lambda e: e.value,
         key=ATTR_BATTERY_LEVEL,
@@ -111,6 +118,7 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     EcovacsSensorEntityDescription[NetworkInfoEvent](
+        device_capabilities=Capabilities,
         capability_fn=lambda caps: caps.network,
         value_fn=lambda e: e.ip,
         key="network_ip",
@@ -119,6 +127,7 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     EcovacsSensorEntityDescription[NetworkInfoEvent](
+        device_capabilities=Capabilities,
         capability_fn=lambda caps: caps.network,
         value_fn=lambda e: e.rssi,
         key="network_rssi",
@@ -127,6 +136,7 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     EcovacsSensorEntityDescription[NetworkInfoEvent](
+        device_capabilities=Capabilities,
         capability_fn=lambda caps: caps.network,
         value_fn=lambda e: e.ssid,
         key="network_ssid",
@@ -160,31 +170,32 @@ LIFESPAN_ENTITY_DESCRIPTIONS = tuple(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EcovacsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add entities for passed config_entry in HA."""
-    controller: EcovacsController = hass.data[DOMAIN][config_entry.entry_id]
+    controller = config_entry.runtime_data
 
     entities: list[EcovacsEntity] = get_supported_entitites(
         controller, EcovacsSensor, ENTITY_DESCRIPTIONS
     )
-    for device in controller.devices:
-        lifespan_capability = device.capabilities.life_span
-        for description in LIFESPAN_ENTITY_DESCRIPTIONS:
-            if description.component in lifespan_capability.types:
-                entities.append(
-                    EcovacsLifespanSensor(device, lifespan_capability, description)
-                )
-
-        if capability := device.capabilities.error:
-            entities.append(EcovacsErrorSensor(device, capability))
+    entities.extend(
+        EcovacsLifespanSensor(device, device.capabilities.life_span, description)
+        for device in controller.devices(Capabilities)
+        for description in LIFESPAN_ENTITY_DESCRIPTIONS
+        if description.component in device.capabilities.life_span.types
+    )
+    entities.extend(
+        EcovacsErrorSensor(device, capability)
+        for device in controller.devices(Capabilities)
+        if (capability := device.capabilities.error)
+    )
 
     async_add_entities(entities)
 
 
 class EcovacsSensor(
-    EcovacsDescriptionEntity[CapabilityEvent],
+    EcovacsDescriptionEntity[CapabilityDevice, CapabilityEvent],
     SensorEntity,
 ):
     """Ecovacs sensor."""
@@ -207,7 +218,7 @@ class EcovacsSensor(
 
 
 class EcovacsLifespanSensor(
-    EcovacsDescriptionEntity[CapabilityLifeSpan],
+    EcovacsDescriptionEntity[Capabilities, CapabilityLifeSpan],
     SensorEntity,
 ):
     """Lifespan sensor."""
@@ -227,7 +238,7 @@ class EcovacsLifespanSensor(
 
 
 class EcovacsErrorSensor(
-    EcovacsEntity[CapabilityEvent[ErrorEvent]],
+    EcovacsEntity[Capabilities, CapabilityEvent[ErrorEvent]],
     SensorEntity,
 ):
     """Error sensor."""

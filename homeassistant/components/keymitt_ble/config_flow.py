@@ -1,4 +1,5 @@
 """Adds config flow for MicroBot."""
+
 from __future__ import annotations
 
 import logging
@@ -17,9 +18,8 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -54,7 +54,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
         _LOGGER.debug("Discovered bluetooth device: %s", discovery_info)
         await self.async_set_unique_id(discovery_info.address)
@@ -71,14 +71,14 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         # This is for backwards compatibility.
         return await self.async_step_init(user_input)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Check if paired."""
         errors: dict[str, str] = {}
 
@@ -125,7 +125,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_link(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Given a configured host, will ask the user to press the button to pair."""
         errors: dict[str, str] = {}
         token = randomid(32)
@@ -138,6 +138,8 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
             await self._client.connect(init=True)
             return self.async_show_form(step_id="link")
 
+        if not await self._client.is_connected():
+            await self._client.connect(init=False)
         if not await self._client.is_connected():
             errors["base"] = "linking"
         else:

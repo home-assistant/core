@@ -1,4 +1,5 @@
 """The tests for the trigger helper."""
+
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
 import pytest
@@ -33,7 +34,8 @@ async def test_bad_trigger_platform(hass: HomeAssistant) -> None:
 async def test_trigger_subtype(hass: HomeAssistant) -> None:
     """Test trigger subtypes."""
     with patch(
-        "homeassistant.helpers.trigger.async_get_integration", return_value=MagicMock()
+        "homeassistant.helpers.trigger.async_get_integration",
+        return_value=MagicMock(async_get_platform=AsyncMock()),
     ) as integration_mock:
         await _async_get_trigger_platform(hass, {"platform": "test.subtype"})
         assert integration_mock.call_args == call(hass, "test")

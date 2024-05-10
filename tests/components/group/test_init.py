@@ -1,24 +1,31 @@
 """The tests for the Group components."""
+
 from __future__ import annotations
 
+import asyncio
 from collections import OrderedDict
 from typing import Any
 from unittest.mock import patch
 
 import pytest
 
-import homeassistant.components.group as group
+from homeassistant.components import group
+from homeassistant.components.group.registry import GroupIntegrationRegistry
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     EVENT_HOMEASSISTANT_START,
     SERVICE_RELOAD,
+    STATE_CLOSED,
     STATE_HOME,
+    STATE_LOCKED,
     STATE_NOT_HOME,
     STATE_OFF,
     STATE_ON,
+    STATE_OPEN,
     STATE_UNKNOWN,
+    STATE_UNLOCKED,
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -27,7 +34,116 @@ from homeassistant.setup import async_setup_component
 
 from . import common
 
-from tests.common import MockConfigEntry, assert_setup_component
+from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    assert_setup_component,
+    mock_integration,
+    mock_platform,
+)
+
+
+async def help_test_mixed_entity_platforms_on_off_state_test(
+    hass: HomeAssistant,
+    on_off_states1: tuple[set[str], str, str],
+    on_off_states2: tuple[set[str], str, str],
+    entity_and_state1_state_2: tuple[str, str | None, str | None],
+    group_state1: str,
+    group_state2: str,
+    grouped_groups: bool = False,
+) -> None:
+    """Help test on_off_states on mixed entity platforms."""
+
+    class MockGroupPlatform1(MockPlatform):
+        """Mock a group platform module for test1 integration."""
+
+        def async_describe_on_off_states(
+            self, hass: HomeAssistant, registry: GroupIntegrationRegistry
+        ) -> None:
+            """Describe group on off states."""
+            registry.on_off_states("test1", *on_off_states1)
+
+    class MockGroupPlatform2(MockPlatform):
+        """Mock a group platform module for test2 integration."""
+
+        def async_describe_on_off_states(
+            self, hass: HomeAssistant, registry: GroupIntegrationRegistry
+        ) -> None:
+            """Describe group on off states."""
+            registry.on_off_states("test2", *on_off_states2)
+
+    mock_integration(hass, MockModule(domain="test1"))
+    mock_platform(hass, "test1.group", MockGroupPlatform1())
+    assert await async_setup_component(hass, "test1", {"test1": {}})
+
+    mock_integration(hass, MockModule(domain="test2"))
+    mock_platform(hass, "test2.group", MockGroupPlatform2())
+    assert await async_setup_component(hass, "test2", {"test2": {}})
+
+    if grouped_groups:
+        assert await async_setup_component(
+            hass,
+            "group",
+            {
+                "group": {
+                    "test1": {
+                        "entities": [
+                            item[0]
+                            for item in entity_and_state1_state_2
+                            if item[0].startswith("test1.")
+                        ]
+                    },
+                    "test2": {
+                        "entities": [
+                            item[0]
+                            for item in entity_and_state1_state_2
+                            if item[0].startswith("test2.")
+                        ]
+                    },
+                    "test": {"entities": ["group.test1", "group.test2"]},
+                }
+            },
+        )
+    else:
+        assert await async_setup_component(
+            hass,
+            "group",
+            {
+                "group": {
+                    "test": {
+                        "entities": [item[0] for item in entity_and_state1_state_2]
+                    },
+                }
+            },
+        )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("group.test")
+    assert state is not None
+
+    # Set first state
+    for entity_id, state1, _ in entity_and_state1_state_2:
+        hass.states.async_set(entity_id, state1)
+
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("group.test")
+    assert state is not None
+    assert state.state == group_state1
+
+    # Set second state
+    for entity_id, _, state2 in entity_and_state1_state_2:
+        hass.states.async_set(entity_id, state2)
+
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("group.test")
+    assert state is not None
+    assert state.state == group_state2
 
 
 async def test_setup_group_with_mixed_groupable_states(hass: HomeAssistant) -> None:
@@ -553,6 +669,7 @@ async def test_group_updated_after_device_tracker_zone_change(
 
     assert await async_setup_component(hass, "group", {})
     assert await async_setup_component(hass, "device_tracker", {})
+    await hass.async_block_till_done()
 
     await group.Group.async_create_group(
         hass,
@@ -599,6 +716,108 @@ async def test_is_on(hass: HomeAssistant) -> None:
 
     # Try on non existing state
     assert not group.is_on(hass, "non.existing")
+
+
+@pytest.mark.parametrize(
+    (
+        "domains",
+        "states_old",
+        "states_new",
+        "state_ison_group_old",
+        "state_ison_group_new",
+    ),
+    [
+        (
+            ("light", "light"),
+            (STATE_ON, STATE_OFF),
+            (STATE_OFF, STATE_OFF),
+            (STATE_ON, True),
+            (STATE_OFF, False),
+        ),
+        (
+            ("cover", "cover"),
+            (STATE_OPEN, STATE_CLOSED),
+            (STATE_CLOSED, STATE_CLOSED),
+            (STATE_OPEN, True),
+            (STATE_CLOSED, False),
+        ),
+        (
+            ("lock", "lock"),
+            (STATE_UNLOCKED, STATE_LOCKED),
+            (STATE_LOCKED, STATE_LOCKED),
+            (STATE_UNLOCKED, True),
+            (STATE_LOCKED, False),
+        ),
+        (
+            ("cover", "lock"),
+            (STATE_OPEN, STATE_LOCKED),
+            (STATE_CLOSED, STATE_LOCKED),
+            (STATE_ON, True),
+            (STATE_OFF, False),
+        ),
+        (
+            ("cover", "lock"),
+            (STATE_OPEN, STATE_UNLOCKED),
+            (STATE_CLOSED, STATE_LOCKED),
+            (STATE_ON, True),
+            (STATE_OFF, False),
+        ),
+        (
+            ("cover", "lock", "light"),
+            (STATE_OPEN, STATE_LOCKED, STATE_ON),
+            (STATE_CLOSED, STATE_LOCKED, STATE_OFF),
+            (STATE_ON, True),
+            (STATE_OFF, False),
+        ),
+    ],
+)
+async def test_is_on_and_state_mixed_domains(
+    hass: HomeAssistant,
+    domains: tuple[str, ...],
+    states_old: tuple[str, ...],
+    states_new: tuple[str, ...],
+    state_ison_group_old: tuple[str, bool],
+    state_ison_group_new: tuple[str, bool],
+) -> None:
+    """Test is_on method with mixed domains."""
+    count = len(domains)
+    entity_ids = [f"{domains[index]}.test_{index}" for index in range(count)]
+    for index in range(count):
+        hass.states.async_set(entity_ids[index], states_old[index])
+
+    assert not group.is_on(hass, "group.none")
+    await asyncio.gather(
+        *[async_setup_component(hass, domain, {}) for domain in set(domains)]
+    )
+    assert await async_setup_component(hass, "group", {})
+    await hass.async_block_till_done()
+
+    test_group = await group.Group.async_create_group(
+        hass,
+        "init_group",
+        created_by_service=True,
+        entity_ids=entity_ids,
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
+    )
+    await hass.async_block_till_done()
+
+    # Assert on old state
+    state = hass.states.get(test_group.entity_id)
+    assert state is not None
+    assert state.state == state_ison_group_old[0]
+    assert group.is_on(hass, test_group.entity_id) == state_ison_group_old[1]
+
+    # Switch and assert on new state
+    for index in range(count):
+        hass.states.async_set(entity_ids[index], states_new[index])
+    await hass.async_block_till_done()
+    state = hass.states.get(test_group.entity_id)
+    assert state is not None
+    assert state.state == state_ison_group_new[0]
+    assert group.is_on(hass, test_group.entity_id) == state_ison_group_new[1]
 
 
 async def test_reloading_groups(hass: HomeAssistant) -> None:
@@ -758,6 +977,7 @@ async def test_service_group_services_add_remove_entities(hass: HomeAssistant) -
     assert await async_setup_component(hass, "person", {})
     with assert_setup_component(0, "group"):
         await async_setup_component(hass, "group", {"group": {}})
+    await hass.async_block_till_done()
 
     assert hass.services.has_service("group", group.SERVICE_SET)
 
@@ -1229,6 +1449,8 @@ async def test_group_vacuum_on(hass: HomeAssistant) -> None:
 
 async def test_device_tracker_not_home(hass: HomeAssistant) -> None:
     """Test group of device_tracker not_home."""
+    await async_setup_component(hass, "device_tracker", {})
+    await hass.async_block_till_done()
     hass.states.async_set("device_tracker.one", "not_home")
     hass.states.async_set("device_tracker.two", "not_home")
     hass.states.async_set("device_tracker.three", "not_home")
@@ -1448,6 +1670,7 @@ async def test_group_that_references_a_group_of_covers(hass: HomeAssistant) -> N
     for entity_id in entity_ids:
         hass.states.async_set(entity_id, "closed")
     await hass.async_block_till_done()
+    assert await async_setup_component(hass, "cover", {})
 
     assert await async_setup_component(
         hass,
@@ -1531,6 +1754,7 @@ async def test_group_that_references_two_types_of_groups(hass: HomeAssistant) ->
         hass.states.async_set(entity_id, "home")
     await hass.async_block_till_done()
 
+    assert await async_setup_component(hass, "cover", {})
     assert await async_setup_component(hass, "device_tracker", {})
     assert await async_setup_component(
         hass,
@@ -1621,7 +1845,7 @@ async def test_plant_group(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("group_type", "member_state", "extra_options"),
-    (
+    [
         ("binary_sensor", "on", {"all": False}),
         ("cover", "open", {}),
         ("fan", "on", {}),
@@ -1637,7 +1861,7 @@ async def test_plant_group(hass: HomeAssistant) -> None:
                 "state_class": "measurement",
             },
         ),
-    ),
+    ],
 )
 async def test_setup_and_remove_config_entry(
     hass: HomeAssistant,
@@ -1684,24 +1908,24 @@ async def test_setup_and_remove_config_entry(
 
 @pytest.mark.parametrize(
     ("hide_members", "hidden_by_initial", "hidden_by"),
-    (
+    [
         (False, er.RegistryEntryHider.INTEGRATION, er.RegistryEntryHider.INTEGRATION),
         (False, None, None),
         (False, er.RegistryEntryHider.USER, er.RegistryEntryHider.USER),
         (True, er.RegistryEntryHider.INTEGRATION, None),
         (True, None, None),
         (True, er.RegistryEntryHider.USER, er.RegistryEntryHider.USER),
-    ),
+    ],
 )
 @pytest.mark.parametrize(
     ("group_type", "extra_options"),
-    (
+    [
         ("binary_sensor", {"all": False}),
         ("cover", {}),
         ("fan", {}),
         ("light", {"all": False}),
         ("media_player", {}),
-    ),
+    ],
 )
 async def test_unhide_members_on_remove(
     hass: HomeAssistant,
@@ -1772,3 +1996,216 @@ async def test_unhide_members_on_remove(
     # Check the group members are unhidden
     assert entity_registry.async_get(f"{group_type}.one").hidden_by == hidden_by
     assert entity_registry.async_get(f"{group_type}.three").hidden_by == hidden_by
+
+
+@pytest.mark.parametrize("grouped_groups", [False, True])
+@pytest.mark.parametrize(
+    ("on_off_states1", "on_off_states2"),
+    [
+        (
+            (
+                {
+                    "on_beer",
+                    "on_milk",
+                },
+                "on_beer",  # default ON state test1
+                "off_water",  # default OFF state test1
+            ),
+            (
+                {
+                    "on_beer",
+                    "on_milk",
+                },
+                "on_milk",  # default ON state test2
+                "off_wine",  # default OFF state test2
+            ),
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("entity_and_state1_state_2", "group_state1", "group_state2"),
+    [
+        # All OFF states, no change, so group stays OFF
+        (
+            [
+                ("test1.ent1", "off_water", "off_water"),
+                ("test1.ent2", "off_water", "off_water"),
+                ("test2.ent1", "off_wine", "off_wine"),
+                ("test2.ent2", "off_wine", "off_wine"),
+            ],
+            STATE_OFF,
+            STATE_OFF,
+        ),
+        # All entities have state on_milk, but the state groups
+        # are different so the group status defaults to ON / OFF
+        (
+            [
+                ("test1.ent1", "off_water", "on_milk"),
+                ("test1.ent2", "off_water", "on_milk"),
+                ("test2.ent1", "off_wine", "on_milk"),
+                ("test2.ent2", "off_wine", "on_milk"),
+            ],
+            STATE_OFF,
+            STATE_ON,
+        ),
+        # Only test1 entities in group, all at ON state
+        # group returns the default ON state `on_beer`
+        (
+            [
+                ("test1.ent1", "off_water", "on_milk"),
+                ("test1.ent2", "off_water", "on_beer"),
+            ],
+            "off_water",
+            "on_beer",
+        ),
+        # Only test1 entities in group, all at ON state
+        # group returns the default ON state `on_beer`
+        (
+            [
+                ("test1.ent1", "off_water", "on_milk"),
+                ("test1.ent2", "off_water", "on_milk"),
+            ],
+            "off_water",
+            "on_beer",
+        ),
+        # Only test2 entities in group, all at ON state
+        # group returns the default ON state `on_milk`
+        (
+            [
+                ("test2.ent1", "off_wine", "on_milk"),
+                ("test2.ent2", "off_wine", "on_milk"),
+            ],
+            "off_wine",
+            "on_milk",
+        ),
+    ],
+)
+async def test_entity_platforms_with_multiple_on_states_no_state_match(
+    hass: HomeAssistant,
+    on_off_states1: tuple[set[str], str, str],
+    on_off_states2: tuple[set[str], str, str],
+    entity_and_state1_state_2: tuple[str, str | None, str | None],
+    group_state1: str,
+    group_state2: str,
+    grouped_groups: bool,
+) -> None:
+    """Test custom entity platforms with multiple ON states without state match.
+
+    The test group 1 an 2 non matching (default_state_on, state_off) pairs.
+    """
+    await help_test_mixed_entity_platforms_on_off_state_test(
+        hass,
+        on_off_states1,
+        on_off_states2,
+        entity_and_state1_state_2,
+        group_state1,
+        group_state2,
+        grouped_groups,
+    )
+
+
+@pytest.mark.parametrize("grouped_groups", [False, True])
+@pytest.mark.parametrize(
+    ("on_off_states1", "on_off_states2"),
+    [
+        (
+            (
+                {
+                    "on_beer",
+                    "on_milk",
+                },
+                "on_beer",  # default ON state test1
+                "off_water",  # default OFF state test1
+            ),
+            (
+                {
+                    "on_beer",
+                    "on_wine",
+                },
+                "on_beer",  # default ON state test2
+                "off_water",  # default OFF state test2
+            ),
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("entity_and_state1_state_2", "group_state1", "group_state2"),
+    [
+        # All OFF states, no change, so group stays OFF
+        (
+            [
+                ("test1.ent1", "off_water", "off_water"),
+                ("test1.ent2", "off_water", "off_water"),
+                ("test2.ent1", "off_water", "off_water"),
+                ("test2.ent2", "off_water", "off_water"),
+            ],
+            "off_water",
+            "off_water",
+        ),
+        # All entities have ON state `on_milk`
+        # but the group state will default to on_beer
+        # which is the default ON state for both integrations.
+        (
+            [
+                ("test1.ent1", "off_water", "on_milk"),
+                ("test1.ent2", "off_water", "on_milk"),
+                ("test2.ent1", "off_water", "on_milk"),
+                ("test2.ent2", "off_water", "on_milk"),
+            ],
+            "off_water",
+            "on_beer",
+        ),
+        # Only test1 entities in group, all at ON state
+        # group returns the default ON state `on_beer`
+        (
+            [
+                ("test1.ent1", "off_water", "on_milk"),
+                ("test1.ent2", "off_water", "on_beer"),
+            ],
+            "off_water",
+            "on_beer",
+        ),
+        # Only test1 entities in group, all at ON state
+        # group returns the default ON state `on_beer`
+        (
+            [
+                ("test1.ent1", "off_water", "on_milk"),
+                ("test1.ent2", "off_water", "on_milk"),
+            ],
+            "off_water",
+            "on_beer",
+        ),
+        # Only test2 entities in group, all at ON state
+        # group returns the default ON state `on_milk`
+        (
+            [
+                ("test2.ent1", "off_water", "on_wine"),
+                ("test2.ent2", "off_water", "on_wine"),
+            ],
+            "off_water",
+            "on_beer",
+        ),
+    ],
+)
+async def test_entity_platforms_with_multiple_on_states_with_state_match(
+    hass: HomeAssistant,
+    on_off_states1: tuple[set[str], str, str],
+    on_off_states2: tuple[set[str], str, str],
+    entity_and_state1_state_2: tuple[str, str | None, str | None],
+    group_state1: str,
+    group_state2: str,
+    grouped_groups: bool,
+) -> None:
+    """Test custom entity platforms with multiple ON states with a state match.
+
+    The integrations test1 and test2 have matching (default_state_on, state_off) pairs.
+    """
+    await help_test_mixed_entity_platforms_on_off_state_test(
+        hass,
+        on_off_states1,
+        on_off_states2,
+        entity_and_state1_state_2,
+        group_state1,
+        group_state2,
+        grouped_groups,
+    )

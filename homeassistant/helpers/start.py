@@ -1,4 +1,5 @@
 """Helpers to help during startup."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -13,13 +14,16 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
+from homeassistant.util.event_type import EventType
+
+from .typing import NoEventData
 
 
 @callback
 def _async_at_core_state(
     hass: HomeAssistant,
     at_start_cb: Callable[[HomeAssistant], Coroutine[Any, Any, None] | None],
-    event_type: str,
+    event_type: EventType[NoEventData],
     check_state: Callable[[HomeAssistant], bool],
 ) -> CALLBACK_TYPE:
     """Execute a job at_start_cb when Home Assistant has the wanted state.

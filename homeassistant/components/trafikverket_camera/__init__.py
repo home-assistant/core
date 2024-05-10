@@ -1,4 +1,5 @@
 """The trafikverket_camera component."""
+
 from __future__ import annotations
 
 import logging
@@ -18,13 +19,15 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
+TVCameraConfigEntry = ConfigEntry[TVDataUpdateCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: TVCameraConfigEntry) -> bool:
     """Set up Trafikverket Camera from a config entry."""
 
-    coordinator = TVDataUpdateCoordinator(hass, entry)
+    coordinator = TVDataUpdateCoordinator(hass)
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -33,11 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Trafikverket Camera config entry."""
-
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -58,10 +57,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return False
 
         if camera_id := camera_info.camera_id:
-            entry.version = 2
             hass.config_entries.async_update_entry(
                 entry,
                 unique_id=f"{DOMAIN}-{camera_id}",
+                version=2,
             )
             _LOGGER.debug(
                 "Migrated Trafikverket Camera config entry unique id to %s",
@@ -84,7 +83,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return False
 
         if camera_id := camera_info.camera_id:
-            entry.version = 3
             _LOGGER.debug(
                 "Migrate Trafikverket Camera config entry unique id to %s",
                 camera_id,
@@ -92,7 +90,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             new_data = entry.data.copy()
             new_data.pop(CONF_LOCATION)
             new_data[CONF_ID] = camera_id
-            hass.config_entries.async_update_entry(entry, data=new_data)
+            hass.config_entries.async_update_entry(entry, data=new_data, version=3)
             return True
         _LOGGER.error("Could not migrate the config entry. Camera has no id")
         return False

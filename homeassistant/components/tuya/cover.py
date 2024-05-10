@@ -1,4 +1,5 @@
 """Support for Tuya Cover."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -154,14 +155,14 @@ async def async_setup_entry(
         for device_id in device_ids:
             device = hass_data.manager.device_map[device_id]
             if descriptions := COVERS.get(device.category):
-                for description in descriptions:
+                entities.extend(
+                    TuyaCoverEntity(device, hass_data.manager, description)
+                    for description in descriptions
                     if (
                         description.key in device.function
                         or description.key in device.status_range
-                    ):
-                        entities.append(
-                            TuyaCoverEntity(device, hass_data.manager, description)
-                        )
+                    )
+                )
 
         async_add_entities(entities)
 

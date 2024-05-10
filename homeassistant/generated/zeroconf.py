@@ -64,6 +64,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX A21": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX BR30": {
         "always_discover": True,
         "domain": "lifx",
@@ -73,6 +77,10 @@ HOMEKIT = {
         "domain": "lifx",
     },
     "LIFX Candle": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX Ceiling": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -108,6 +116,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX Indoor Neon": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Lightstrip": {
         "always_discover": True,
         "domain": "lifx",
@@ -124,11 +136,23 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX PAR38": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Pls": {
         "always_discover": True,
         "domain": "lifx",
     },
     "LIFX Plus": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX Round": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX Square": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -343,6 +367,12 @@ ZEROCONF = {
             },
         },
         {
+            "domain": "axis",
+            "properties": {
+                "macaddress": "e82725*",
+            },
+        },
+        {
             "domain": "doorbird",
             "properties": {
                 "macaddress": "1ccae3*",
@@ -409,6 +439,11 @@ ZEROCONF = {
     "_elg._tcp.local.": [
         {
             "domain": "elgato",
+        },
+    ],
+    "_elmax-ssl._tcp.local.": [
+        {
+            "domain": "elmax",
         },
     ],
     "_enphase-envoy._tcp.local.": [
@@ -568,6 +603,16 @@ ZEROCONF = {
             },
         },
     ],
+    "_matter._tcp.local.": [
+        {
+            "domain": "matter",
+        },
+    ],
+    "_matterc._udp.local.": [
+        {
+            "domain": "matter",
+        },
+    ],
     "_mediaremotetv._tcp.local.": [
         {
             "domain": "apple_tv",
@@ -618,6 +663,11 @@ ZEROCONF = {
     "_plugwise._tcp.local.": [
         {
             "domain": "plugwise",
+        },
+    ],
+    "_powerview-g3._tcp.local.": [
+        {
+            "domain": "hunterdouglas_powerview",
         },
     ],
     "_powerview._tcp.local.": [

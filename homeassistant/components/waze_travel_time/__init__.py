@@ -1,4 +1,5 @@
 """The waze_travel_time component."""
+
 import asyncio
 
 from homeassistant.config_entries import ConfigEntry

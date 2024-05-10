@@ -1,4 +1,5 @@
 """Alexa entity adapters."""
+
 from __future__ import annotations
 
 from collections.abc import Generator, Iterable
@@ -258,11 +259,6 @@ class DisplayCategory:
     WEARABLE = "WEARABLE"
 
 
-def generate_alexa_id(entity_id: str) -> str:
-    """Return the alexa ID for an entity ID."""
-    return entity_id.replace(".", "#").translate(TRANSLATION_TABLE)
-
-
 class AlexaEntity:
     """An adaptation of an entity, expressed in Alexa's terms.
 
@@ -297,7 +293,7 @@ class AlexaEntity:
 
     def alexa_id(self) -> str:
         """Return the Alexa API entity id."""
-        return generate_alexa_id(self.entity.entity_id)
+        return self.config.generate_alexa_id(self.entity.entity_id)
 
     def display_categories(self) -> list[str] | None:
         """Return a list of display categories."""
@@ -383,10 +379,8 @@ def async_get_entities(
         try:
             alexa_entity = ENTITY_ADAPTERS[state.domain](hass, config, state)
             interfaces = list(alexa_entity.interfaces())
-        except Exception as exc:  # pylint: disable=broad-except
-            _LOGGER.exception(
-                "Unable to serialize %s for discovery: %s", state.entity_id, exc
-            )
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unable to serialize %s for discovery", state.entity_id)
         else:
             if not interfaces:
                 continue

@@ -1,21 +1,21 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.15
+    rev: v0.4.3
     hooks:
       - id: ruff
         args:
           - --fix
       - id: ruff-format
-        files: ^((homeassistant|pylint|script|tests)/.+)?[^/]+\.py$
+        files: ^((homeassistant|pylint|script|tests)/.+)?[^/]+\.(py|pyi)$
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.2
+    rev: v2.2.6
     hooks:
       - id: codespell
         args:
-          - --ignore-words-list=additionals,alle,alot,bund,currenty,datas,farenheit,falsy,fo,haa,hass,iif,incomfort,ines,ist,nam,nd,pres,pullrequests,resset,rime,ser,serie,te,technik,ue,unsecure,withing,zar
+          - --ignore-words-list=additionals,alle,alot,astroid,bund,caf,convencional,currenty,datas,farenheit,falsy,fo,frequence,haa,hass,iif,incomfort,ines,ist,nam,nd,pres,pullrequests,resset,rime,ser,serie,te,technik,ue,unsecure,vor,withing,zar
           - --skip="./.*,*.csv,*.json,*.ambr"
           - --quiet-level=2
-        exclude_types: [csv, json]
+        exclude_types: [csv, json, html]
         exclude: ^tests/fixtures/|homeassistant/generated/|tests/components/.*/snapshots/
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
@@ -30,7 +30,7 @@ repos:
           - --branch=master
           - --branch=rc
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.32.0
+    rev: v1.35.1
     hooks:
       - id: yamllint
   - repo: https://github.com/pre-commit/mirrors-prettier
@@ -63,7 +63,7 @@ repos:
         language: script
         types: [python]
         require_serial: true
-        files: ^(homeassistant|pylint)/.+\.py$
+        files: ^(homeassistant|pylint)/.+\.(py|pyi)$
       - id: pylint
         name: pylint
         entry: script/run-in-env.sh pylint -j 0 --ignore-missing-annotations=y
@@ -83,7 +83,7 @@ repos:
         pass_filenames: false
         language: script
         types: [text]
-        files: ^(homeassistant/.+/(icons|manifest|strings)\.json|homeassistant/brands/.*\.json|\.coveragerc|homeassistant/.+/services\.yaml|script/hassfest/(?!metadata|mypy_config).+\.py)$
+        files: ^(homeassistant/.+/(icons|manifest|strings)\.json|homeassistant/brands/.*\.json|\.coveragerc|homeassistant/.+/services\.yaml|script/hassfest/(?!metadata|mypy_config).+\.py|requirements_test.txt)$
       - id: hassfest-metadata
         name: hassfest-metadata
         entry: script/run-in-env.sh python3 -m script.hassfest -p metadata

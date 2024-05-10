@@ -1,7 +1,7 @@
 """Cluster handlers module for Zigbee Home Automation."""
+
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterator
 import contextlib
 from enum import Enum
@@ -62,7 +62,7 @@ def wrap_zigpy_exceptions() -> Iterator[None]:
     """Wrap zigpy exceptions in `HomeAssistantError` exceptions."""
     try:
         yield
-    except asyncio.TimeoutError as exc:
+    except TimeoutError as exc:
         raise HomeAssistantError(
             "Failed to send request: device did not respond"
         ) from exc
@@ -214,7 +214,7 @@ class ClusterHandler(LogMixin):
                     },
                 },
             )
-        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
+        except (zigpy.exceptions.ZigbeeException, TimeoutError) as ex:
             self.debug(
                 "Failed to bind '%s' cluster: %s",
                 self.cluster.ep_attribute,
@@ -275,7 +275,7 @@ class ClusterHandler(LogMixin):
             try:
                 res = await self.cluster.configure_reporting_multiple(reports, **kwargs)
                 self._configure_reporting_status(reports, res[0], event_data)
-            except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
+            except (zigpy.exceptions.ZigbeeException, TimeoutError) as ex:
                 self.debug(
                     "failed to set reporting on '%s' cluster for: %s",
                     self.cluster.ep_attribute,
@@ -335,9 +335,9 @@ class ClusterHandler(LogMixin):
             return
 
         for record in res:
-            event_data[self.cluster.find_attribute(record.attrid).name][
-                "status"
-            ] = record.status.name
+            event_data[self.cluster.find_attribute(record.attrid).name]["status"] = (
+                record.status.name
+            )
         failed = [
             self.cluster.find_attribute(record.attrid).name
             for record in res
@@ -518,7 +518,7 @@ class ClusterHandler(LogMixin):
                     manufacturer=manufacturer,
                 )
                 result.update(read)
-            except (asyncio.TimeoutError, zigpy.exceptions.ZigbeeException) as ex:
+            except (TimeoutError, zigpy.exceptions.ZigbeeException) as ex:
                 self.debug(
                     "failed to get attributes '%s' on '%s' cluster: %s",
                     chunk,
@@ -556,7 +556,7 @@ class ClusterHandler(LogMixin):
     def log(self, level, msg, *args, **kwargs):
         """Log a message."""
         msg = f"[%s:%s]: {msg}"
-        args = (self._endpoint.device.nwk, self._id) + args
+        args = (self._endpoint.device.nwk, self._id, *args)
         _LOGGER.log(level, msg, *args, **kwargs)
 
     def __getattr__(self, name):
@@ -620,7 +620,7 @@ class ZDOClusterHandler(LogMixin):
     def log(self, level, msg, *args, **kwargs):
         """Log a message."""
         msg = f"[%s:ZDO](%s): {msg}"
-        args = (self._zha_device.nwk, self._zha_device.model) + args
+        args = (self._zha_device.nwk, self._zha_device.model, *args)
         _LOGGER.log(level, msg, *args, **kwargs)
 
 
@@ -628,8 +628,9 @@ class ClientClusterHandler(ClusterHandler):
     """ClusterHandler for Zigbee client (output) clusters."""
 
     @callback
-    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
+    def attribute_updated(self, attrid: int, value: Any, timestamp: Any) -> None:
         """Handle an attribute updated on this cluster."""
+        super().attribute_updated(attrid, value, timestamp)
 
         try:
             attr_name = self._cluster.attributes[attrid].name

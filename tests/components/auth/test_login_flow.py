@@ -1,4 +1,5 @@
 """Tests for the login flow."""
+
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
@@ -218,11 +219,15 @@ async def test_invalid_redirect_uri(
     assert resp.status == HTTPStatus.OK
     step = await resp.json()
 
-    with patch(
-        "homeassistant.components.auth.indieauth.fetch_redirect_uris", return_value=[]
-    ), patch(
-        "homeassistant.components.http.ban.process_wrong_login"
-    ) as mock_process_wrong_login:
+    with (
+        patch(
+            "homeassistant.components.auth.indieauth.fetch_redirect_uris",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.http.ban.process_wrong_login"
+        ) as mock_process_wrong_login,
+    ):
         resp = await client.post(
             f"/auth/login_flow/{step['flow_id']}",
             json={

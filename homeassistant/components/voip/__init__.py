@@ -1,4 +1,5 @@
 """The Voice over IP integration."""
+
 from __future__ import annotations
 
 import asyncio

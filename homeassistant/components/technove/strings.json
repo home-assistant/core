@@ -63,8 +63,15 @@
         "state": {
           "unplugged": "Unplugged",
           "plugged_waiting": "Plugged, waiting",
-          "plugged_charging": "Plugged, charging"
+          "plugged_charging": "Plugged, charging",
+          "out_of_activation_period": "Out of activation period",
+          "high_charge_period": "High charge period"
         }
+      }
+    },
+    "switch": {
+      "auto_charge": {
+        "name": "Auto charge"
       }
     }
   }

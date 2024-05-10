@@ -1,4 +1,5 @@
 """Helper to help coordinating calls."""
+
 from __future__ import annotations
 
 import asyncio
@@ -24,6 +25,7 @@ def singleton(data_key: str) -> Callable[[_FuncType[_T]], _FuncType[_T]]:
         """Wrap a function with caching logic."""
         if not asyncio.iscoroutinefunction(func):
 
+            @functools.lru_cache(maxsize=1)
             @bind_hass
             @functools.wraps(func)
             def wrapped(hass: HomeAssistant) -> _T:

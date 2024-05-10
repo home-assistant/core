@@ -1,4 +1,5 @@
 """Fixtures for Tedee integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -10,12 +11,10 @@ from pytedee_async.lock import TedeeLock
 import pytest
 
 from homeassistant.components.tedee.const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_WEBHOOK_ID
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
-
-WEBHOOK_ID = "bq33efxmdi3vxy55q2wbnudbra7iv8mjrq9x0gea33g4zqtd87093pwveg8xcb33"
 
 
 @pytest.fixture
@@ -27,7 +26,6 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_LOCAL_ACCESS_TOKEN: "api_token",
             CONF_HOST: "192.168.1.42",
-            CONF_WEBHOOK_ID: WEBHOOK_ID,
         },
         unique_id="0000-0000",
     )
@@ -45,11 +43,14 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_tedee(request) -> Generator[MagicMock, None, None]:
     """Return a mocked Tedee client."""
-    with patch(
-        "homeassistant.components.tedee.coordinator.TedeeClient", autospec=True
-    ) as tedee_mock, patch(
-        "homeassistant.components.tedee.config_flow.TedeeClient",
-        new=tedee_mock,
+    with (
+        patch(
+            "homeassistant.components.tedee.coordinator.TedeeClient", autospec=True
+        ) as tedee_mock,
+        patch(
+            "homeassistant.components.tedee.config_flow.TedeeClient",
+            new=tedee_mock,
+        ),
     ):
         tedee = tedee_mock.return_value
 
@@ -62,8 +63,6 @@ def mock_tedee(request) -> Generator[MagicMock, None, None]:
         tedee.get_local_bridge.return_value = TedeeBridge(0, "0000-0000", "Bridge-AB1C")
 
         tedee.parse_webhook_message.return_value = None
-        tedee.register_webhook.return_value = 1
-        tedee.delete_webhooks.return_value = None
 
         locks_json = json.loads(load_fixture("locks.json", DOMAIN))
 

@@ -1,8 +1,8 @@
 """Manager for esphome devices."""
+
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
 from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, NamedTuple
@@ -21,7 +21,7 @@ from aioesphomeapi import (
     UserService,
     UserServiceArgType,
     VoiceAssistantAudioSettings,
-    VoiceAssistantEventType,
+    VoiceAssistantFeature,
 )
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
@@ -31,12 +31,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_MODE,
-    EVENT_HOMEASSISTANT_STOP,
+    EVENT_HOMEASSISTANT_CLOSE,
     EVENT_LOGGING_CHANGED,
 )
 from homeassistant.core import (
-    CALLBACK_TYPE,
     Event,
+    EventStateChangedData,
     HomeAssistant,
     ServiceCall,
     State,
@@ -47,10 +47,7 @@ from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
@@ -58,7 +55,7 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import EventType
+from homeassistant.util.async_ import create_eager_task
 
 from .bluetooth import async_connect_scanner
 from .const import (
@@ -76,7 +73,11 @@ from .domain_data import DomainData
 
 # Import config flow so that it's added to the registry
 from .entry_data import RuntimeEntryData
-from .voice_assistant import VoiceAssistantUDPServer
+from .voice_assistant import (
+    VoiceAssistantAPIPipeline,
+    VoiceAssistantPipeline,
+    VoiceAssistantUDPPipeline,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -147,7 +148,7 @@ class ESPHomeManager:
         "cli",
         "device_id",
         "domain_data",
-        "voice_assistant_udp_server",
+        "voice_assistant_pipeline",
         "reconnect_logic",
         "zeroconf_instance",
         "entry_data",
@@ -172,13 +173,13 @@ class ESPHomeManager:
         self.cli = cli
         self.device_id: str | None = None
         self.domain_data = domain_data
-        self.voice_assistant_udp_server: VoiceAssistantUDPServer | None = None
+        self.voice_assistant_pipeline: VoiceAssistantPipeline | None = None
         self.reconnect_logic: ReconnectLogic | None = None
         self.zeroconf_instance = zeroconf_instance
         self.entry_data = entry_data
 
     async def on_stop(self, event: Event) -> None:
-        """Cleanup the socket client on HA stop."""
+        """Cleanup the socket client on HA close."""
         await cleanup_instance(self.hass, self.entry)
 
     @property
@@ -267,7 +268,8 @@ class ESPHomeManager:
                 service_data,
             )
 
-    async def _send_home_assistant_state(
+    @callback
+    def _send_home_assistant_state(
         self, entity_id: str, attribute: str | None, state: State | None
     ) -> None:
         """Forward Home Assistant states to ESPHome."""
@@ -283,12 +285,13 @@ class ESPHomeManager:
             else:
                 send_state = attr_val
 
-        await self.cli.send_home_assistant_state(entity_id, attribute, str(send_state))
+        self.cli.send_home_assistant_state(entity_id, attribute, str(send_state))
 
-    async def _send_home_assistant_state_event(
+    @callback
+    def _send_home_assistant_state_event(
         self,
         attribute: str | None,
-        event: EventType[EventStateChangedData],
+        event: Event[EventStateChangedData],
     ) -> None:
         """Forward Home Assistant states updates to ESPHome."""
         event_data = event.data
@@ -306,9 +309,7 @@ class ESPHomeManager:
         ):
             return
 
-        await self._send_home_assistant_state(
-            event.data["entity_id"], attribute, new_state
-        )
+        self._send_home_assistant_state(event.data["entity_id"], attribute, new_state)
 
     @callback
     def async_on_state_subscription(
@@ -324,62 +325,80 @@ class ESPHomeManager:
             )
         )
         # Send initial state
-        hass.async_create_task(
-            self._send_home_assistant_state(
-                entity_id, attribute, hass.states.get(entity_id)
-            )
+        self._send_home_assistant_state(
+            entity_id, attribute, hass.states.get(entity_id)
         )
-
-    def _handle_pipeline_event(
-        self, event_type: VoiceAssistantEventType, data: dict[str, str] | None
-    ) -> None:
-        self.cli.send_voice_assistant_event(event_type, data)
 
     def _handle_pipeline_finished(self) -> None:
         self.entry_data.async_set_assist_pipeline_state(False)
 
-        if self.voice_assistant_udp_server is not None:
-            self.voice_assistant_udp_server.close()
-            self.voice_assistant_udp_server = None
+        if self.voice_assistant_pipeline is not None:
+            if isinstance(self.voice_assistant_pipeline, VoiceAssistantUDPPipeline):
+                self.voice_assistant_pipeline.close()
+            self.voice_assistant_pipeline = None
 
     async def _handle_pipeline_start(
         self,
         conversation_id: str,
         flags: int,
         audio_settings: VoiceAssistantAudioSettings,
+        wake_word_phrase: str | None,
     ) -> int | None:
         """Start a voice assistant pipeline."""
-        if self.voice_assistant_udp_server is not None:
+        if self.voice_assistant_pipeline is not None:
             _LOGGER.warning("Voice assistant UDP server was not stopped")
-            self.voice_assistant_udp_server.stop()
-            self.voice_assistant_udp_server = None
+            self.voice_assistant_pipeline.stop()
+            self.voice_assistant_pipeline = None
 
         hass = self.hass
-        self.voice_assistant_udp_server = VoiceAssistantUDPServer(
-            hass,
-            self.entry_data,
-            self._handle_pipeline_event,
-            self._handle_pipeline_finished,
-        )
-        port = await self.voice_assistant_udp_server.start_server()
+        assert self.entry_data.device_info is not None
+        if (
+            self.entry_data.device_info.voice_assistant_feature_flags_compat(
+                self.entry_data.api_version
+            )
+            & VoiceAssistantFeature.API_AUDIO
+        ):
+            self.voice_assistant_pipeline = VoiceAssistantAPIPipeline(
+                hass,
+                self.entry_data,
+                self.cli.send_voice_assistant_event,
+                self._handle_pipeline_finished,
+                self.cli,
+            )
+            port = 0
+        else:
+            self.voice_assistant_pipeline = VoiceAssistantUDPPipeline(
+                hass,
+                self.entry_data,
+                self.cli.send_voice_assistant_event,
+                self._handle_pipeline_finished,
+            )
+            port = await self.voice_assistant_pipeline.start_server()
 
         assert self.device_id is not None, "Device ID must be set"
         hass.async_create_background_task(
-            self.voice_assistant_udp_server.run_pipeline(
+            self.voice_assistant_pipeline.run_pipeline(
                 device_id=self.device_id,
                 conversation_id=conversation_id or None,
                 flags=flags,
                 audio_settings=audio_settings,
+                wake_word_phrase=wake_word_phrase,
             ),
-            "esphome.voice_assistant_udp_server.run_pipeline",
+            "esphome.voice_assistant_pipeline.run_pipeline",
         )
 
         return port
 
     async def _handle_pipeline_stop(self) -> None:
         """Stop a voice assistant pipeline."""
-        if self.voice_assistant_udp_server is not None:
-            self.voice_assistant_udp_server.stop()
+        if self.voice_assistant_pipeline is not None:
+            self.voice_assistant_pipeline.stop()
+
+    async def _handle_audio(self, data: bytes) -> None:
+        if self.voice_assistant_pipeline is None:
+            return
+        assert isinstance(self.voice_assistant_pipeline, VoiceAssistantAPIPipeline)
+        self.voice_assistant_pipeline.receive_audio_bytes(data)
 
     async def on_connect(self) -> None:
         """Subscribe to states and list entities on successful API login."""
@@ -404,8 +423,8 @@ class ESPHomeManager:
         stored_device_name = entry.data.get(CONF_DEVICE_NAME)
         unique_id_is_mac_address = unique_id and ":" in unique_id
         results = await asyncio.gather(
-            cli.device_info(),
-            cli.list_entities_services(),
+            create_eager_task(cli.device_info()),
+            create_eager_task(cli.list_entities_services()),
         )
 
         device_info: EsphomeDeviceInfo = results[0]
@@ -467,44 +486,43 @@ class ESPHomeManager:
             reconnect_logic.name = device_info.name
 
         self.device_id = _async_setup_device_registry(hass, entry, entry_data)
-        entry_data.async_update_device_state(hass)
+
+        entry_data.async_update_device_state()
         await entry_data.async_update_static_infos(
             hass, entry, entity_infos, device_info.mac_address
         )
         _setup_services(hass, entry_data, services)
 
-        setup_coros_with_disconnect_callbacks: list[
-            Coroutine[Any, Any, CALLBACK_TYPE]
-        ] = []
         if device_info.bluetooth_proxy_feature_flags_compat(api_version):
-            setup_coros_with_disconnect_callbacks.append(
+            entry_data.disconnect_callbacks.add(
                 async_connect_scanner(
                     hass, entry_data, cli, device_info, self.domain_data.bluetooth_cache
                 )
             )
 
-        if device_info.voice_assistant_version:
-            setup_coros_with_disconnect_callbacks.append(
-                cli.subscribe_voice_assistant(
-                    self._handle_pipeline_start,
-                    self._handle_pipeline_stop,
+        flags = device_info.voice_assistant_feature_flags_compat(api_version)
+        if flags:
+            if flags & VoiceAssistantFeature.API_AUDIO:
+                entry_data.disconnect_callbacks.add(
+                    cli.subscribe_voice_assistant(
+                        handle_start=self._handle_pipeline_start,
+                        handle_stop=self._handle_pipeline_stop,
+                        handle_audio=self._handle_audio,
+                    )
                 )
-            )
+            else:
+                entry_data.disconnect_callbacks.add(
+                    cli.subscribe_voice_assistant(
+                        handle_start=self._handle_pipeline_start,
+                        handle_stop=self._handle_pipeline_stop,
+                    )
+                )
 
-        setup_results = await asyncio.gather(
-            *setup_coros_with_disconnect_callbacks,
-            cli.subscribe_states(entry_data.async_update_state),
-            cli.subscribe_service_calls(self.async_on_service_call),
-            cli.subscribe_home_assistant_states(self.async_on_state_subscription),
-        )
+        cli.subscribe_states(entry_data.async_update_state)
+        cli.subscribe_service_calls(self.async_on_service_call)
+        cli.subscribe_home_assistant_states(self.async_on_state_subscription)
 
-        for result_idx in range(len(setup_coros_with_disconnect_callbacks)):
-            cancel_callback = setup_results[result_idx]
-            if TYPE_CHECKING:
-                assert cancel_callback is not None
-            entry_data.disconnect_callbacks.add(cancel_callback)
-
-        hass.async_create_task(entry_data.async_save_to_store())
+        entry_data.async_save_to_store()
         _async_check_firmware_version(hass, device_info, api_version)
         _async_check_using_api_password(hass, device_info, bool(self.password))
 
@@ -534,7 +552,7 @@ class ESPHomeManager:
             # since it generates a lot of state changed events and database
             # writes when we already know we're shutting down and the state
             # will be cleared anyway.
-            entry_data.async_update_device_state(hass)
+            entry_data.async_update_device_state()
 
     async def on_connect_error(self, err: Exception) -> None:
         """Start reauth flow if appropriate connect error type."""
@@ -566,12 +584,16 @@ class ESPHomeManager:
         # the callback twice when shutting down Home Assistant.
         # "Unable to remove unknown listener
         # <function EventBus.async_listen_once.<locals>.onetime_listener>"
+        # We only close the connection at the last possible moment
+        # when the CLOSE event is fired so anything using a Bluetooth
+        # proxy has a chance to shut down properly.
         entry_data.cleanup_callbacks.append(
-            hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self.on_stop)
+            hass.bus.async_listen(EVENT_HOMEASSISTANT_CLOSE, self.on_stop)
         )
         entry_data.cleanup_callbacks.append(
             hass.bus.async_listen(
-                EVENT_LOGGING_CHANGED, self._async_handle_logging_changed
+                EVENT_LOGGING_CHANGED,
+                self._async_handle_logging_changed,
             )
         )
 
@@ -712,11 +734,12 @@ ARG_TYPE_METADATA = {
 }
 
 
-async def execute_service(
+@callback
+def execute_service(
     entry_data: RuntimeEntryData, service: UserService, call: ServiceCall
 ) -> None:
     """Execute a service on a node."""
-    await entry_data.client.execute_service(service, call.data)
+    entry_data.client.execute_service(service, call.data)
 
 
 def build_service_name(device_info: EsphomeDeviceInfo, service: UserService) -> str:
@@ -796,8 +819,7 @@ def _setup_services(
             # New service
             to_register.append(service)
 
-    for service in old_services.values():
-        to_unregister.append(service)
+    to_unregister.extend(old_services.values())
 
     entry_data.services = {serv.key: serv for serv in services}
 

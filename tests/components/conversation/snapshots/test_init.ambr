@@ -101,7 +101,7 @@
 # ---
 # name: test_get_agent_info
   dict({
-    'id': 'homeassistant',
+    'id': 'conversation.home_assistant',
     'name': 'Home Assistant',
   })
 # ---
@@ -113,7 +113,7 @@
 # ---
 # name: test_get_agent_info.2
   dict({
-    'id': 'homeassistant',
+    'id': 'conversation.home_assistant',
     'name': 'Home Assistant',
   })
 # ---
@@ -127,7 +127,7 @@
   dict({
     'agents': list([
       dict({
-        'id': 'homeassistant',
+        'id': 'conversation.home_assistant',
         'name': 'Home Assistant',
         'supported_languages': list([
           'af',
@@ -207,7 +207,7 @@
   dict({
     'agents': list([
       dict({
-        'id': 'homeassistant',
+        'id': 'conversation.home_assistant',
         'name': 'Home Assistant',
         'supported_languages': list([
         ]),
@@ -231,7 +231,7 @@
   dict({
     'agents': list([
       dict({
-        'id': 'homeassistant',
+        'id': 'conversation.home_assistant',
         'name': 'Home Assistant',
         'supported_languages': list([
           'en',
@@ -255,7 +255,7 @@
   dict({
     'agents': list([
       dict({
-        'id': 'homeassistant',
+        'id': 'conversation.home_assistant',
         'name': 'Home Assistant',
         'supported_languages': list([
           'en',
@@ -279,7 +279,7 @@
   dict({
     'agents': list([
       dict({
-        'id': 'homeassistant',
+        'id': 'conversation.home_assistant',
         'name': 'Home Assistant',
         'supported_languages': list([
           'de',
@@ -304,7 +304,7 @@
   dict({
     'agents': list([
       dict({
-        'id': 'homeassistant',
+        'id': 'conversation.home_assistant',
         'name': 'Home Assistant',
         'supported_languages': list([
           'de-CH',
@@ -386,6 +386,36 @@
   })
 # ---
 # name: test_http_processing_intent[None]
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen',
+            'type': 'entity',
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent[conversation.home_assistant]
   dict({
     'conversation_id': None,
     'response': dict({
@@ -1035,6 +1065,36 @@
     }),
   })
 # ---
+# name: test_turn_on_intent[None-turn kitchen on-conversation.home_assistant]
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
 # name: test_turn_on_intent[None-turn kitchen on-homeassistant]
   dict({
     'conversation_id': None,
@@ -1066,6 +1126,36 @@
   })
 # ---
 # name: test_turn_on_intent[None-turn on kitchen-None]
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_turn_on_intent[None-turn on kitchen-conversation.home_assistant]
   dict({
     'conversation_id': None,
     'response': dict({
@@ -1155,6 +1245,36 @@
     }),
   })
 # ---
+# name: test_turn_on_intent[my_new_conversation-turn kitchen on-conversation.home_assistant]
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
 # name: test_turn_on_intent[my_new_conversation-turn kitchen on-homeassistant]
   dict({
     'conversation_id': None,
@@ -1186,6 +1306,36 @@
   })
 # ---
 # name: test_turn_on_intent[my_new_conversation-turn on kitchen-None]
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_turn_on_intent[my_new_conversation-turn on kitchen-conversation.home_assistant]
   dict({
     'conversation_id': None,
     'response': dict({
@@ -1498,7 +1648,7 @@
         'sentence_template': '[tell me] how many {on_off_domains:domain} (is|are) {on_off_states:state} [in <area>]',
         'slots': dict({
           'area': 'kitchen',
-          'domain': 'light',
+          'domain': 'lights',
           'state': 'on',
         }),
         'source': 'builtin',
@@ -1581,7 +1731,7 @@
         'match': True,
         'sentence_template': '[<numeric_value_set>] <name> brightness [to] <brightness>',
         'slots': dict({
-          'brightness': 100,
+          'brightness': '100%',
           'name': 'test light',
         }),
         'source': 'builtin',
