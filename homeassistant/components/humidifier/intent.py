@@ -33,12 +33,10 @@ class HumidityHandler(intent.IntentHandler):
     """Handle set humidity intents."""
 
     intent_type = INTENT_HUMIDITY
-    slot_schema = vol.Schema(
-        {
-            vol.Required("name"): cv.string,
-            vol.Required("humidity"): vol.All(vol.Coerce(int), vol.Range(0, 100)),
-        }
-    )
+    slot_schema = {
+        vol.Required("name"): cv.string,
+        vol.Required("humidity"): vol.All(vol.Coerce(int), vol.Range(0, 100)),
+    }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the hass intent."""
@@ -87,12 +85,10 @@ class SetModeHandler(intent.IntentHandler):
     """Handle set humidity intents."""
 
     intent_type = INTENT_MODE
-    slot_schema = vol.Schema(
-        {
-            vol.Required("name"): cv.string,
-            vol.Required("mode"): cv.string,
-        }
-    )
+    slot_schema = {
+        vol.Required("name"): cv.string,
+        vol.Required("mode"): cv.string,
+    }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the hass intent."""

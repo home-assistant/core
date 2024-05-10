@@ -175,14 +175,12 @@ class GetStateIntentHandler(intent.IntentHandler):
     """Answer questions about entity states."""
 
     intent_type = intent.INTENT_GET_STATE
-    slot_schema = vol.Schema(
-        {
-            vol.Any("name", "area"): cv.string,
-            vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional("state"): vol.All(cv.ensure_list, [cv.string]),
-        }
-    )
+    slot_schema = {
+        vol.Any("name", "area"): cv.string,
+        vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional("state"): vol.All(cv.ensure_list, [cv.string]),
+    }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the hass intent."""
