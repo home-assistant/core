@@ -49,8 +49,10 @@ class MotionMountEntity(Entity):
 
     def update_name(self) -> None:
         """Update the name of the associated device."""
+        if TYPE_CHECKING:
+            assert self.device_entry 
         # Update the name in the device registry if needed
-        if self.device_entry is not None and self.device_entry.name != self.mm.name:
+        if self.device_entry.name != self.mm.name:
             device_registry = dr.async_get(self.hass)
             device_registry.async_update_device(self.device_entry.id, name=self.mm.name)
 
