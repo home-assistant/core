@@ -14,10 +14,11 @@ import voluptuous as vol
 
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.hass_dict import HassKey
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_KEY = "llm_tool"
+DATA_KEY: HassKey[dict[str, Tool]] = HassKey("llm_tool")
 
 
 @dataclass(slots=True)
