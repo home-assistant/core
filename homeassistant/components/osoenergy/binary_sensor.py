@@ -47,7 +47,7 @@ SENSOR_TYPES: dict[str, OSOEnergyBinarySensorEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up OSO Energy sensor."""
+    """Set up OSO Energy binary sensor."""
     osoenergy = hass.data[DOMAIN][entry.entry_id]
     devices = osoenergy.session.device_list.get("binary_sensor")
     entities = []
@@ -75,7 +75,7 @@ class OSOEnergyBinarySensor(
         description: OSOEnergyBinarySensorEntityDescription,
         entity_data: OSOEnergyBinarySensorData,
     ) -> None:
-        """Initialize the Advantage Air timer control."""
+        """Set up OSO Energy binary sensor."""
         super().__init__(instance, entity_data)
 
         device_id = entity_data.device_id
