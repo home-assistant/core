@@ -663,7 +663,6 @@ def async_match_targets(  # noqa: C901
 
 
 @callback
-@bind_hass
 def async_match_states(
     hass: HomeAssistant,
     name: str | None = None,
