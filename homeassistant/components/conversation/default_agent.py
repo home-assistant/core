@@ -157,7 +157,7 @@ async def async_setup_default_agent(
             await hass.services.async_call(
                 DOMAIN,
                 SERVICE_PROCESS,
-                {ATTR_TEXT: command["value"], ATTR_LANGUAGE: event.data[ATTR_LANGUAGE]},
+                {ATTR_TEXT: command, ATTR_LANGUAGE: event.data[ATTR_LANGUAGE]},
             )
 
     hass.bus.async_listen(EVENT_INTENT_TIMER_FINISHED, timer_finished_listener)
@@ -367,13 +367,12 @@ class DefaultAgent(ConversationEntity):
                 # a.b.c -> {"a": {"b": "c": {"value": ..., "text": ...}}}
                 name_parts = entity.name.split(".")
                 current_dict = slots
-                for name_part in name_parts:
+                for name_part in name_parts[:-1]:
                     current_dict = current_dict.setdefault(name_part, {})
 
+                current_dict[name_parts[-1]] = entity.value
                 slot_name = name_parts[0]
                 slot_text = entity.text or entity.value
-                current_dict["value"] = entity.value
-                current_dict["text"] = slot_text
                 slot_value = slots[slot_name]
             else:
                 # {"name": {"value": ..., "text": ...}}
