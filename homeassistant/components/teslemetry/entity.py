@@ -13,6 +13,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LOGGER, TeslemetryState
 from .coordinator import (
+    TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
     TeslemetryVehicleDataCoordinator,
 )
@@ -21,7 +22,9 @@ from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 class TeslemetryEntity(
     CoordinatorEntity[
-        TeslemetryVehicleDataCoordinator | TeslemetryEnergySiteLiveCoordinator
+        TeslemetryVehicleDataCoordinator
+        | TeslemetryEnergySiteLiveCoordinator
+        | TeslemetryEnergySiteInfoCoordinator
     ]
 ):
     """Parent class for all Teslemetry entities."""
@@ -31,7 +34,8 @@ class TeslemetryEntity(
     def __init__(
         self,
         coordinator: TeslemetryVehicleDataCoordinator
-        | TeslemetryEnergySiteLiveCoordinator,
+        | TeslemetryEnergySiteLiveCoordinator
+        | TeslemetryEnergySiteInfoCoordinator,
         api: VehicleSpecific | EnergySpecific,
         key: str,
     ) -> None:
@@ -170,6 +174,21 @@ class TeslemetryEnergyLiveEntity(TeslemetryEntity):
         self._attr_device_info = data.device
 
         super().__init__(data.live_coordinator, data.api, key)
+
+
+class TeslemetryEnergyInfoEntity(TeslemetryEntity):
+    """Parent class for Teslemetry Energy Site Info Entities."""
+
+    def __init__(
+        self,
+        data: TeslemetryEnergyData,
+        key: str,
+    ) -> None:
+        """Initialize common aspects of a Teslemetry Energy Site Info entity."""
+        self._attr_unique_id = f"{data.id}-{key}"
+        self._attr_device_info = data.device
+
+        super().__init__(data.info_coordinator, data.api, key)
 
 
 class TeslemetryWallConnectorEntity(

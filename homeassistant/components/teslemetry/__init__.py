@@ -20,6 +20,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN, MODELS
 from .coordinator import (
+    TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
     TeslemetryVehicleDataCoordinator,
 )
@@ -83,6 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             site_id = product["energy_site_id"]
             api = EnergySpecific(teslemetry.energy, site_id)
             live_coordinator = TeslemetryEnergySiteLiveCoordinator(hass, api)
+            info_coordinator = TeslemetryEnergySiteInfoCoordinator(hass, api, product)
             device = DeviceInfo(
                 identifiers={(DOMAIN, str(site_id))},
                 manufacturer="Tesla",
@@ -94,6 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 TeslemetryEnergyData(
                     api=api,
                     live_coordinator=live_coordinator,
+                    info_coordinator=info_coordinator,
                     id=site_id,
                     device=device,
                 )
@@ -107,6 +110,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
         *(
             energysite.live_coordinator.async_config_entry_first_refresh()
+            for energysite in energysites
+        ),
+        *(
+            energysite.info_coordinator.async_config_entry_first_refresh()
             for energysite in energysites
         ),
     )
