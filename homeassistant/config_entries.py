@@ -526,6 +526,7 @@ class ConfigEntry(Generic[_DataT]):
                     f" {self.entry_id} cannot be setup because is already loaded in the"
                     f" {self.state} state"
                 )
+            assert self.setup_lock.locked(), "setup must be locked"
             self._async_set_state(hass, ConfigEntryState.SETUP_IN_PROGRESS, None)
 
         if self.supports_unload is None:
