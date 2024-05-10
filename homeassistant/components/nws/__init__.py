@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import datetime
+from functools import partial
 import logging
 
 from pynws import SimpleNWS, call_with_retry
@@ -58,36 +60,49 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     nws_data = SimpleNWS(latitude, longitude, api_key, client_session)
     await nws_data.set_station(station)
 
-    async def update_observation() -> None:
-        """Retrieve recent observations."""
-        await call_with_retry(
-            nws_data.update_observation,
-            RETRY_INTERVAL,
-            RETRY_STOP,
-            start_time=utcnow() - UPDATE_TIME_PERIOD,
-        )
+    def async_setup_update_observation(
+        retry_interval: datetime.timedelta | float,
+        retry_stop: datetime.timedelta | float,
+    ) -> Callable[[], Awaitable[None]]:
+        async def update_observation() -> None:
+            """Retrieve recent observations."""
+            await call_with_retry(
+                nws_data.update_observation,
+                retry_interval,
+                retry_stop,
+                start_time=utcnow() - UPDATE_TIME_PERIOD,
+            )
 
-    async def update_forecast() -> None:
-        """Retrieve twice-daily forecsat."""
-        await call_with_retry(
+        return update_observation
+
+    def async_setup_update_forecast(
+        retry_interval: datetime.timedelta | float,
+        retry_stop: datetime.timedelta | float,
+    ) -> Callable[[], Awaitable[None]]:
+        return partial(
+            call_with_retry,
             nws_data.update_forecast,
-            RETRY_INTERVAL,
-            RETRY_STOP,
+            retry_interval,
+            retry_stop,
         )
 
-    async def update_forecast_hourly() -> None:
-        """Retrieve hourly forecast."""
-        await call_with_retry(
+    def async_setup_update_forecast_hourly(
+        retry_interval: datetime.timedelta | float,
+        retry_stop: datetime.timedelta | float,
+    ) -> Callable[[], Awaitable[None]]:
+        return partial(
+            call_with_retry,
             nws_data.update_forecast_hourly,
-            RETRY_INTERVAL,
-            RETRY_STOP,
+            retry_interval,
+            retry_stop,
         )
 
+    # Don't use retries in setup
     coordinator_observation = TimestampDataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"NWS observation station {station}",
-        update_method=update_observation,
+        update_method=async_setup_update_observation(0, 0),
         update_interval=DEFAULT_SCAN_INTERVAL,
         request_refresh_debouncer=debounce.Debouncer(
             hass, _LOGGER, cooldown=DEBOUNCE_TIME, immediate=True
@@ -98,7 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         _LOGGER,
         name=f"NWS forecast station {station}",
-        update_method=update_forecast,
+        update_method=async_setup_update_forecast(0, 0),
         update_interval=DEFAULT_SCAN_INTERVAL,
         request_refresh_debouncer=debounce.Debouncer(
             hass, _LOGGER, cooldown=DEBOUNCE_TIME, immediate=True
@@ -109,7 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         _LOGGER,
         name=f"NWS forecast hourly station {station}",
-        update_method=update_forecast_hourly,
+        update_method=async_setup_update_forecast_hourly(0, 0),
         update_interval=DEFAULT_SCAN_INTERVAL,
         request_refresh_debouncer=debounce.Debouncer(
             hass, _LOGGER, cooldown=DEBOUNCE_TIME, immediate=True
@@ -127,6 +142,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator_observation.async_refresh()
     await coordinator_forecast.async_refresh()
     await coordinator_forecast_hourly.async_refresh()
+
+    # Use retries
+    coordinator_observation.update_method = async_setup_update_observation(
+        RETRY_INTERVAL, RETRY_STOP
+    )
+    coordinator_forecast.update_method = async_setup_update_forecast(
+        RETRY_INTERVAL, RETRY_STOP
+    )
+    coordinator_forecast_hourly.update_method = async_setup_update_forecast_hourly(
+        RETRY_INTERVAL, RETRY_STOP
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -98,7 +98,7 @@ async def safe_read(
             only_cache=only_cache,
             manufacturer=manufacturer,
         )
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         return {}
     return result
 

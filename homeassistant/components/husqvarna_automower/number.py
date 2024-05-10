@@ -49,13 +49,22 @@ async def async_set_work_area_cutting_height(
     work_area_id: int,
 ) -> None:
     """Set cutting height for work area."""
-    await coordinator.api.set_cutting_height_workarea(
+    await coordinator.api.commands.set_cutting_height_workarea(
         mower_id, int(cheight), work_area_id
     )
     # As there are no updates from the websocket regarding work area changes,
     # we need to wait 5s and then poll the API.
     await asyncio.sleep(5)
     await coordinator.async_request_refresh()
+
+
+async def async_set_cutting_height(
+    session: AutomowerSession,
+    mower_id: str,
+    cheight: float,
+) -> None:
+    """Set cutting height."""
+    await session.commands.set_cutting_height(mower_id, int(cheight))
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -77,9 +86,7 @@ NUMBER_TYPES: tuple[AutomowerNumberEntityDescription, ...] = (
         native_max_value=9,
         exists_fn=lambda data: data.cutting_height is not None,
         value_fn=_async_get_cutting_height,
-        set_value_fn=lambda session, mower_id, cheight: session.set_cutting_height(
-            mower_id, int(cheight)
-        ),
+        set_value_fn=async_set_cutting_height,
     ),
 )
 

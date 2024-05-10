@@ -68,7 +68,7 @@ class EfergyFlowHandler(ConfigFlow, domain=DOMAIN):
             return None, "cannot_connect"
         except exceptions.InvalidAuth:
             return None, "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception")
             return None, "unknown"
         return api.info["hid"], None
