@@ -366,6 +366,10 @@ async def _mock_doorsense_missing_august_lock_detail(hass):
     return await _mock_lock_from_fixture(hass, "get_lock.online_missing_doorsense.json")
 
 
+async def _mock_lock_with_unlatch(hass):
+    return await _mock_lock_from_fixture(hass, "get_lock.online_with_unlatch.json")
+
+
 def _mock_lock_operation_activity(lock, action, offset):
     return LockOperationActivity(
         SOURCE_LOCK_OPERATE,

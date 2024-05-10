@@ -18,6 +18,7 @@ from homeassistant.components.lock import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_LOCK,
+    SERVICE_OPEN,
     SERVICE_UNLOCK,
     STATE_LOCKED,
     STATE_UNAVAILABLE,
@@ -33,6 +34,7 @@ from .mocks import (
     _mock_activities_from_fixture,
     _mock_doorsense_enabled_august_lock_detail,
     _mock_lock_from_fixture,
+    _mock_lock_with_unlatch,
 )
 
 from tests.common import async_fire_time_changed
@@ -154,6 +156,22 @@ async def test_one_lock_operation(
         hass.states.get("sensor.online_with_doorsense_name_operator").state
         == STATE_UNKNOWN
     )
+
+
+async def test_open_lock_operation(hass: HomeAssistant) -> None:
+    """Test open lock operation using the open service."""
+    lock_with_unlatch = await _mock_lock_with_unlatch(hass)
+    await _create_august_with_devices(hass, [lock_with_unlatch])
+
+    lock_online_with_unlatch_name = hass.states.get("lock.online_with_unlatch_name")
+    assert lock_online_with_unlatch_name.state == STATE_LOCKED
+
+    data = {ATTR_ENTITY_ID: "lock.online_with_unlatch_name"}
+    await hass.services.async_call(LOCK_DOMAIN, SERVICE_OPEN, data, blocking=True)
+    await hass.async_block_till_done()
+
+    lock_online_with_unlatch_name = hass.states.get("lock.online_with_unlatch_name")
+    assert lock_online_with_unlatch_name.state == STATE_UNLOCKED
 
 
 async def test_one_lock_operation_pubnub_connected(
