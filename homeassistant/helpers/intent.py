@@ -408,7 +408,9 @@ class IntentHandler:
         """Return the schema including any extra slots."""
         if self.slot_schema is None:
             return vol.Schema({})
-        return self.slot_schema
+        if isinstance(self.slot_schema, vol.Schema):
+            return self.slot_schema
+        return vol.Schema(self.slot_schema)
 
     @callback
     def async_validate_slots(self, slots: _SlotsType) -> _SlotsType:
@@ -470,10 +472,10 @@ class DynamicServiceIntentHandler(IntentHandler):
     @cached_property
     def effective_slot_schema(self) -> vol.Schema:
         """Create validation schema for slots (with extra required slots)."""
-        if not self.extra_slots:
-            return self.slot_schema
+        if self.extra_slots is None:
+            return super().effective_slot_schema
 
-        return self.slot_schema.extend(self.extra_slots)
+        return super().effective_slot_schema.extend(self.extra_slots)
 
     @abstractmethod
     def get_domain_and_service(

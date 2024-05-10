@@ -213,7 +213,7 @@ async def test_match_device_area(
 
 def test_async_validate_slots() -> None:
     """Test async_validate_slots of IntentHandler."""
-    handler1 = MockIntentHandler(vol.Schema({vol.Required("name"): cv.string}))
+    handler1 = MockIntentHandler({vol.Required("name"): cv.string})
 
     with pytest.raises(vol.error.MultipleInvalid):
         handler1.async_validate_slots({})

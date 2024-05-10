@@ -22,7 +22,7 @@ class GetTemperatureIntent(intent.IntentHandler):
     """Handle GetTemperature intents."""
 
     intent_type = INTENT_GET_TEMPERATURE
-    slot_schema = vol.Schema({vol.Optional("area"): str, vol.Optional("name"): str})
+    slot_schema = {vol.Optional("area"): str, vol.Optional("name"): str}
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
