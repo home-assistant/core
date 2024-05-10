@@ -28,8 +28,8 @@
         "title": "Notification to file service",
         "description": "Set up a service that allows to write notification to a file.",
         "data": {
-          "file_path": "File path",
-          "name": "Name",
+          "file_path": "[%key:component::file::config::step::sensor::data::file_path%]",
+          "name": "[%key:component::file::config::step::sensor::data::name%]",
           "timestamp": "Timestamp"
         },
         "data_description": {
