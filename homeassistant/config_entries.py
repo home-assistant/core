@@ -1727,7 +1727,7 @@ class ConfigEntries:
 
         self._entries = entries
 
-    async def async_setup(self, entry_id: str) -> bool:
+    async def async_setup(self, entry_id: str, _lock: bool = True) -> bool:
         """Set up a config entry.
 
         Return True if entry has been successfully loaded.
@@ -1744,7 +1744,11 @@ class ConfigEntries:
 
         # Setup Component if not set up yet
         if entry.domain in self.hass.config.components:
-            await entry.async_setup(self.hass)
+            if _lock:
+                async with entry.setup_lock:
+                    await entry.async_setup(self.hass)
+            else:
+                await entry.async_setup(self.hass)
         else:
             # Setting up the component will set up all its config entries
             result = await async_setup_component(
@@ -1816,7 +1820,7 @@ class ConfigEntries:
             if not unload_result or entry.disabled_by:
                 return unload_result
 
-            return await self.async_setup(entry_id)
+            return await self.async_setup(entry_id, _lock=False)
 
     async def async_set_disabled_by(
         self, entry_id: str, disabled_by: ConfigEntryDisabler | None
