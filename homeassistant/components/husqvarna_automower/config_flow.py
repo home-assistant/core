@@ -7,7 +7,7 @@ from typing import Any
 from aioautomower.utils import structure_token
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN, NAME
@@ -78,7 +78,13 @@ class HusqvarnaConfigFlowHandler(
     async def async_step_missing_scope(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm reauth dialog."""
-        if user_input is None:
-            return self.async_show_form(step_id="missing_scope")
+        """Confirm reauth for missing scope."""
+        if user_input is None and self.reauth_entry is not None:
+            token_structured = structure_token(
+                self.reauth_entry.data["token"]["access_token"]
+            )
+            return self.async_show_form(
+                step_id="missing_scope",
+                description_placeholders={CONF_CLIENT_ID: token_structured.client_id},
+            )
         return await self.async_step_user()
