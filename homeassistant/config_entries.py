@@ -1937,7 +1937,7 @@ class ConfigEntries:
         self, entry: ConfigEntry, platforms: Iterable[Platform | str]
     ) -> None:
         """Forward the setup of an entry to platforms."""
-        integration = loader.async_get_loaded_integration(self.hass, entry.domain)
+        integration = await loader.async_get_integration(self.hass, entry.domain)
         if not integration.platforms_are_loaded(platforms):
             with async_pause_setup(self.hass, SetupPhases.WAIT_IMPORT_PLATFORMS):
                 await integration.async_get_platforms(platforms)
@@ -1980,7 +1980,7 @@ class ConfigEntries:
             # If this is a late setup, we need to make sure the platform is loaded
             # so we do not end up waiting for when the EntityComponent calls
             # async_prepare_setup_platform
-            integration = loader.async_get_loaded_integration(self.hass, entry.domain)
+            integration = await loader.async_get_integration(self.hass, entry.domain)
             if not integration.platforms_are_loaded((domain,)):
                 with async_pause_setup(self.hass, SetupPhases.WAIT_IMPORT_PLATFORMS):
                     await integration.async_get_platform(domain)
