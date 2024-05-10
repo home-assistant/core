@@ -10,16 +10,9 @@
 # name: test_config_flow_preview_success[missing_upper_lower]
   dict({
     'attributes': dict({
-      'entity_id': 'sensor.test_monitored',
       'friendly_name': 'Test Sensor',
-      'hysteresis': 0.0,
-      'lower': None,
-      'position': 'unknown',
-      'sensor_value': 16.0,
-      'type': 'upper',
-      'upper': None,
     }),
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_config_flow_preview_success[success]

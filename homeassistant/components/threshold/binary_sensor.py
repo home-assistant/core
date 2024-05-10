@@ -283,14 +283,6 @@ class ThresholdSensor(BinarySensorEntity):
             self._state = None
             return
 
-        # guard against the case where the thresholds are not set
-        if not hasattr(self, "_threshold_lower") and not hasattr(
-            self, "_threshold_upper"
-        ):
-            self._state_position = POSITION_UNKNOWN
-            self._state = None
-            return
-
         if self.threshold_type == TYPE_LOWER:
             if self._state is None:
                 self._state = False
@@ -345,7 +337,11 @@ class ThresholdSensor(BinarySensorEntity):
         """Render a preview."""
         # abort early if there is no entity_id
         # as without we can't track changes
-        if not self._entity_id:
+        # or if neither lower nor upper thresholds are set
+        if not self._entity_id or (
+            not hasattr(self, "_threshold_lower")
+            and not hasattr(self, "_threshold_upper")
+        ):
             self._attr_available = False
             calculated_state = self._async_calculate_state()
             preview_callback(calculated_state.state, calculated_state.attributes)
