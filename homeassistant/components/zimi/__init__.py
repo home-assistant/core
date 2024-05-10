@@ -1,4 +1,5 @@
 """The Zimi integration."""
+
 from __future__ import annotations
 
 import logging
@@ -7,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONTROLLER, DOMAIN, VERBOSITY
+from .const import CONTROLLER, DOMAIN
 from .controller import ZimiController
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,6 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     return True
 
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Zimi entry and clean up opened connections."""
 
@@ -48,7 +50,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("entry_id: %s", entry.entry_id)
 
     controller = ZimiController(hass, entry)
-    controller.disconnect()
+    await controller.disconnect()
 
     device_registry = dr.async_get(hass)
     device_registry.async_remove_device(entry.entry_id)
