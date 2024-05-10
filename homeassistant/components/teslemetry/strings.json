@@ -166,6 +166,9 @@
       "vehicle_state_tpms_pressure_rr": {
         "name": "Tire pressure rear right"
       },
+      "version": {
+        "name": "version"
+      },
       "vin": {
         "name": "Vehicle"
       },

@@ -498,65 +498,6 @@
     'state': 'on_grid',
   })
 # ---
-# name: test_sensors[sensor.energy_site_none_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.energy_site_none_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'teslemetry',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'version',
-    'unique_id': '123456-version',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.energy_site_none_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site None',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.energy_site_none_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '23.44.0 eb113390',
-  })
-# ---
-# name: test_sensors[sensor.energy_site_none_2-statealt]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site None',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.energy_site_none_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '23.44.0 eb113390',
-  })
-# ---
 # name: test_sensors[sensor.energy_site_percentage_charged-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -771,6 +712,65 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40.727',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_version-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_version',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'version',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'version',
+    'unique_id': '123456-version',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_version-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Energy Site version',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '23.44.0 eb113390',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_version-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Energy Site version',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '23.44.0 eb113390',
   })
 # ---
 # name: test_sensors[sensor.energy_site_vpp_backup_reserve-entry]
