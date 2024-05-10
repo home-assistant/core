@@ -575,7 +575,7 @@ dbus-fast==2.21.1
 debugpy==1.8.1
 
 # homeassistant.components.ecovacs
-deebot-client==7.1.0
+deebot-client==7.2.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -781,7 +781,7 @@ glances-api==0.6.0
 goalzero==0.2.2
 
 # homeassistant.components.goodwe
-goodwe==0.3.4
+goodwe==0.3.5
 
 # homeassistant.components.google_mail
 # homeassistant.components.google_tasks
@@ -1405,7 +1405,7 @@ pyefergy==22.1.1
 pyegps==0.2.5
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.20.1
+pyenphase==1.20.3
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1816,7 +1816,7 @@ pytradfri[async]==9.0.1
 pytrafikverket==0.3.10
 
 # homeassistant.components.v2c
-pytrydan==0.4.0
+pytrydan==0.6.0
 
 # homeassistant.components.usb
 pyudev==0.24.1
@@ -1906,7 +1906,7 @@ rflink==0.0.66
 ring-doorbell[listen]==0.8.11
 
 # homeassistant.components.roku
-rokuecp==0.19.2
+rokuecp==0.19.3
 
 # homeassistant.components.romy
 romy==0.0.10
@@ -2264,7 +2264,7 @@ yalexs==3.0.1
 yeelight==0.7.14
 
 # homeassistant.components.yolink
-yolink-api==0.4.3
+yolink-api==0.4.4
 
 # homeassistant.components.youless
 youless-api==1.0.1
