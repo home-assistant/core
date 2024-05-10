@@ -204,7 +204,7 @@ async def test_async_function_tool(hass: HomeAssistant) -> None:
         hass: HomeAssistant,
         platform: str,
         context: Context,
-        required_arg: int,
+        required_arg: int | dict[str, int],
         optional_arg: None | float = None,
     ):
         """Test tool description."""
@@ -220,13 +220,19 @@ async def test_async_function_tool(hass: HomeAssistant) -> None:
     assert tool.description == "Test tool description."
 
     schema = {
-        vol.Required("required_arg"): int,
+        vol.Required("required_arg"): vol.Any(int, {str: int}),
         vol.Optional("optional_arg"): vol.Maybe(float),
     }
     tool_schema = tool.parameters.schema
+
     assert isinstance(tool_schema[vol.Optional("optional_arg")], vol.Any)
     assert tool_schema[vol.Optional("optional_arg")].validators == (None, float)
     schema[vol.Optional("optional_arg")] = tool_schema[vol.Optional("optional_arg")]
+
+    assert isinstance(tool_schema[vol.Required("required_arg")], vol.Any)
+    assert tool_schema[vol.Required("required_arg")].validators == (int, {str: int})
+    schema[vol.Required("required_arg")] = tool_schema[vol.Required("required_arg")]
+
     assert tool_schema == schema
 
     test_context = Context()

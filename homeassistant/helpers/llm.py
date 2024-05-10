@@ -8,7 +8,7 @@ from dataclasses import dataclass
 import inspect
 import logging
 from types import NoneType, UnionType
-from typing import Any, get_args, get_type_hints
+from typing import Any, TypeVar, Union, get_args, get_origin, get_type_hints
 
 import voluptuous as vol
 
@@ -79,6 +79,34 @@ class FunctionTool(Tool):
 
         self.description = inspect.getdoc(function)
 
+        def hint_to_schema(hint: Any) -> Any:
+            if isinstance(hint, UnionType) or get_origin(hint) is Union:
+                hints = get_args(hint)
+                if len(hints) == 2 and hints[0] is NoneType:
+                    return vol.Maybe(hint_to_schema(hints[1]))
+                if len(hints) == 2 and hints[1] is NoneType:
+                    return vol.Maybe(hint_to_schema(hints[0]))
+                return vol.Any(*tuple(hint_to_schema(x) for x in hints))
+
+            if get_origin(hint) is list or get_origin(hint) is set:
+                schema = get_args(hint)[0]
+                if schema is Any or isinstance(schema, TypeVar):
+                    return get_origin(hint)
+                return [hint_to_schema(schema)]
+
+            if get_origin(hint) is dict:
+                schema = get_args(hint)
+                if (
+                    schema[0] is Any
+                    or schema[1] is Any
+                    or isinstance(schema[0], TypeVar)
+                    or isinstance(schema[1], TypeVar)
+                ):
+                    return dict
+                return {schema[0]: schema[1]}
+
+            return hint
+
         schema = {}
         annotations = get_type_hints(function)
         for param in inspect.signature(function).parameters.values():
@@ -87,23 +115,13 @@ class FunctionTool(Tool):
             if hasattr(ToolInput, param.name):
                 continue
 
-            hint = annotations.get(param.name, str)
-            if isinstance(hint, UnionType):
-                hints = get_args(hint)
-                if len(hints) == 2 and hints[0] is NoneType:
-                    hint = vol.Maybe(hints[1])
-                elif len(hints) == 2 and hints[1] is NoneType:
-                    hint = vol.Maybe(hints[0])
-                else:
-                    hint = vol.Any(
-                        *tuple(x if x is not NoneType else None for x in hints)
-                    )
+            hint = annotations.get(param.name, Any)
 
             schema[
                 vol.Required(param.name)
                 if param.default is inspect.Parameter.empty
                 else vol.Optional(param.name, default=param.default)
-            ] = hint
+            ] = hint_to_schema(hint)
 
         self.parameters = vol.Schema(schema)
 
