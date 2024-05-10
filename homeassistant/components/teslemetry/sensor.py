@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 from itertools import chain
 from typing import cast
 
@@ -36,7 +36,7 @@ from homeassistant.util.variance import ignore_variance
 
 from .const import DOMAIN
 from .entity import (
-    TeslemetryEnergyEntity,
+    TeslemetryEnergyLiveEntity,
     TeslemetryVehicleEntity,
     TeslemetryWallConnectorEntity,
 )
@@ -298,7 +298,7 @@ VEHICLE_TIME_DESCRIPTIONS: tuple[TeslemetryTimeEntityDescription, ...] = (
     ),
 )
 
-ENERGY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
+ENERGY_LIVE_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="solar_power",
         state_class=SensorStateClass.MEASUREMENT,
@@ -421,15 +421,15 @@ async def async_setup_entry(
                 for description in VEHICLE_TIME_DESCRIPTIONS
             ),
             (  # Add energy site live
-                TeslemetryEnergySensorEntity(energysite, description)
+                TeslemetryEnergyLiveSensorEntity(energysite, description)
                 for energysite in data.energysites
-                for description in ENERGY_DESCRIPTIONS
-                if description.key in energysite.coordinator.data
+                for description in ENERGY_LIVE_DESCRIPTIONS
+                if description.key in energysite.live_coordinator.data
             ),
             (  # Add wall connectors
                 TeslemetryWallConnectorSensorEntity(energysite, din, description)
                 for energysite in data.energysites
-                for din in energysite.coordinator.data.get("wall_connectors", {})
+                for din in energysite.live_coordinator.data.get("wall_connectors", {})
                 for description in WALL_CONNECTOR_DESCRIPTIONS
             ),
         )
@@ -443,21 +443,23 @@ class TeslemetryVehicleSensorEntity(TeslemetryVehicleEntity, SensorEntity):
 
     def __init__(
         self,
-        vehicle: TeslemetryVehicleData,
+        data: TeslemetryVehicleData,
         description: TeslemetrySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
-        super().__init__(vehicle, description.key)
+        super().__init__(data, description.key)
 
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        return self.entity_description.value_fn(self._value)
+    def _async_update_attrs(self) -> None:
+        """Update the attributes of the sensor."""
+        if self.has:
+            self._attr_native_value = self.entity_description.value_fn(self._value)
+        else:
+            self._attr_native_value = None
 
 
 class TeslemetryVehicleTimeSensorEntity(TeslemetryVehicleEntity, SensorEntity):
-    """Base class for Teslemetry vehicle metric sensors."""
+    """Base class for Teslemetry vehicle time sensors."""
 
     entity_description: TeslemetryTimeEntityDescription
 
@@ -475,35 +477,31 @@ class TeslemetryVehicleTimeSensorEntity(TeslemetryVehicleEntity, SensorEntity):
 
         super().__init__(data, description.key)
 
-    @property
-    def native_value(self) -> datetime | None:
-        """Return the state of the sensor."""
-        return self._get_timestamp(self._value)
-
-    @property
-    def available(self) -> bool:
-        """Return the availability of the sensor."""
-        return isinstance(self._value, int | float) and self._value > 0
+    def _async_update_attrs(self) -> None:
+        """Update the attributes of the sensor."""
+        self._attr_available = isinstance(self._value, int | float) and self._value > 0
+        if self._attr_available:
+            self._attr_native_value = self._get_timestamp(self._value)
 
 
-class TeslemetryEnergySensorEntity(TeslemetryEnergyEntity, SensorEntity):
+class TeslemetryEnergyLiveSensorEntity(TeslemetryEnergyLiveEntity, SensorEntity):
     """Base class for Teslemetry energy site metric sensors."""
 
     entity_description: SensorEntityDescription
 
     def __init__(
         self,
-        energysite: TeslemetryEnergyData,
+        data: TeslemetryEnergyData,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(energysite, description.key)
         self.entity_description = description
+        super().__init__(data, description.key)
 
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        return self.get()
+    def _async_update_attrs(self) -> None:
+        """Update the attributes of the sensor."""
+        self._attr_available = not self.is_none
+        self._attr_native_value = self._value
 
 
 class TeslemetryWallConnectorSensorEntity(TeslemetryWallConnectorEntity, SensorEntity):
@@ -513,19 +511,19 @@ class TeslemetryWallConnectorSensorEntity(TeslemetryWallConnectorEntity, SensorE
 
     def __init__(
         self,
-        energysite: TeslemetryEnergyData,
+        data: TeslemetryEnergyData,
         din: str,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
+        self.entity_description = description
         super().__init__(
-            energysite,
+            data,
             din,
             description.key,
         )
-        self.entity_description = description
 
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        return self._value
+    def _async_update_attrs(self) -> None:
+        """Update the attributes of the sensor."""
+        self._attr_available = not self.is_none
+        self._attr_native_value = self._value

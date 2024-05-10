@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import pytest
 from soco import SoCo
 from soco.alarms import Alarms
+from soco.data_structures import DidlFavorite, SearchResult
 from soco.events_base import Event as SonosEvent
 
 from homeassistant.components import ssdp, zeroconf
@@ -17,7 +18,7 @@ from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_fixture, load_json_value_fixture
 
 
 class SonosMockEventListener:
@@ -304,6 +305,14 @@ def config_fixture():
     return {DOMAIN: {MP_DOMAIN: {CONF_HOSTS: ["192.168.42.2"]}}}
 
 
+@pytest.fixture(name="sonos_favorites")
+def sonos_favorites_fixture() -> SearchResult:
+    """Create sonos favorites fixture."""
+    favorites = load_json_value_fixture("sonos_favorites.json", "sonos")
+    favorite_list = [DidlFavorite.from_dict(fav) for fav in favorites]
+    return SearchResult(favorite_list, "favorites", 3, 3, 1)
+
+
 class MockMusicServiceItem:
     """Mocks a Soco MusicServiceItem."""
 
@@ -408,10 +417,10 @@ def mock_get_music_library_information(
 
 
 @pytest.fixture(name="music_library")
-def music_library_fixture():
+def music_library_fixture(sonos_favorites: SearchResult) -> Mock:
     """Create music_library fixture."""
     music_library = MagicMock()
-    music_library.get_sonos_favorites.return_value.update_id = 1
+    music_library.get_sonos_favorites.return_value = sonos_favorites
     music_library.browse_by_idstring = mock_browse_by_idstring
     music_library.get_music_library_information = mock_get_music_library_information
     return music_library
