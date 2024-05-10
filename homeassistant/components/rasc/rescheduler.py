@@ -328,13 +328,7 @@ class BaseRescheduler(TimeLineScheduler):
         affected_action_ids = set[str]()
 
         # the same action's children are affected
-        if entity_id not in self._lineage_table.lock_queues:
-            raise ValueError("Entity %s has no schedule." % entity_id)
-        if action_id not in self._lineage_table.lock_queues[entity_id]:
-            raise ValueError(
-                f"Action {action_id} has not been scheduled on entity {entity_id}."
-            )
-        action_lock = self._lineage_table.lock_queues[entity_id][action_id]
+        action_lock = self.get_action_info(action_id, entity_id)
         if not action_lock:
             raise ValueError(
                 "Action {}'s schedule information on entity {} is missing.".format(
@@ -1432,13 +1426,7 @@ class BaseRescheduler(TimeLineScheduler):
         self, entity_id: str, action_id: str, time: datetime
     ) -> tuple[Optional[datetime], Optional[datetime], Optional[datetime]]:
         """Find a slot for the action after the specified time."""
-        if entity_id not in self._lineage_table.lock_queues:
-            raise ValueError("Entity %s has no schedule." % entity_id)
-        if action_id not in self._lineage_table.lock_queues[entity_id]:
-            raise ValueError(
-                f"Action {action_id} has not been scheduled on entity {entity_id}."
-            )
-        action_lock = self._lineage_table.lock_queues[entity_id][action_id]
+        action_lock = self.get_action_info(action_id, entity_id)
         if not action_lock:
             raise ValueError(
                 "Action {}'s schedule information on entity {} is missing.".format(
@@ -1550,15 +1538,7 @@ class BaseRescheduler(TimeLineScheduler):
                 scheduled = True
                 for target_entity in target_entities:
                     entity_id = get_entity_id_from_number(self._hass, target_entity)
-                    if entity_id not in self._lineage_table.lock_queues:
-                        raise ValueError("Entity %s has no schedule." % entity_id)
-                    if action_id not in self._lineage_table.lock_queues[entity_id]:
-                        raise ValueError(
-                            "Action {} has not been scheduled on entity {}.".format(
-                                action_id, entity_id
-                            )
-                        )
-                    action_lock = self._lineage_table.lock_queues[entity_id][action_id]
+                    action_lock = self.get_action_info(action.action_id, entity_id)
                     if not action_lock:
                         raise ValueError(
                             "Action {}'s schedule information on entity {} is missing.".format(
@@ -1684,15 +1664,7 @@ class BaseRescheduler(TimeLineScheduler):
         earliest_action_start = None
         for target_entity in target_entities:
             entity_id = get_entity_id_from_number(self._hass, target_entity)
-            if entity_id not in self._lineage_table.lock_queues:
-                raise ValueError("Entity %s has no schedule." % entity_id)
-            if action.action_id not in self._lineage_table.lock_queues[entity_id]:
-                raise ValueError(
-                    "Action {} has not been scheduled on entity {}.".format(
-                        action.action_id, entity_id
-                    )
-                )
-            action_lock = self._lineage_table.lock_queues[entity_id][action.action_id]
+            action_lock = self.get_action_info(action.action_id, entity_id)
             if not action_lock:
                 raise ValueError(
                     "Action {}'s schedule information on entity {} is missing.".format(
@@ -1711,13 +1683,7 @@ class BaseRescheduler(TimeLineScheduler):
         self, entity_id: str, action_id: str
     ) -> timedelta:  # unused so far
         """Find the duration of the action on the entity."""
-        if entity_id not in self._lineage_table.lock_queues:
-            raise ValueError("Entity %s has no schedule." % entity_id)
-        if action_id not in self._lineage_table.lock_queues[entity_id]:
-            raise ValueError(
-                f"Action {action_id} has not been scheduled on entity {entity_id}."
-            )
-        action_lock = self._lineage_table.lock_queues[entity_id][action_id]
+        action_lock = self.get_action_info(action_id, entity_id)
         if not action_lock:
             raise ValueError(
                 "Action {}'s schedule information on entity {} is missing.".format(
@@ -1729,13 +1695,7 @@ class BaseRescheduler(TimeLineScheduler):
 
     def _return_free_slot(self, entity_id: str, action_id: str) -> None:
         """Return the slot of the action to the free slots."""
-        if entity_id not in self._lineage_table.lock_queues:
-            raise ValueError("Entity %s has no schedule." % entity_id)
-        if action_id not in self._lineage_table.lock_queues[entity_id]:
-            raise ValueError(
-                f"Action {action_id} has not been scheduled on entity {entity_id}."
-            )
-        action_lock = self._lineage_table.lock_queues[entity_id][action_id]
+        action_lock = self.get_action_info(action_id, entity_id)
         if not action_lock:
             raise ValueError(
                 "Action {}'s schedule information on entity {} is missing.".format(
@@ -1797,13 +1757,7 @@ class BaseRescheduler(TimeLineScheduler):
 
         # get the current source actions of the routine serialized after this action's routine
         dependent_actions = self._dependent_actions(action_id)
-        if entity_id not in self._lineage_table.lock_queues:
-            raise ValueError("Entity %s has no schedule." % entity_id)
-        if action_id not in self._lineage_table.lock_queues[entity_id]:
-            raise ValueError(
-                f"Action {action_id} has not been scheduled on entity {entity_id}."
-            )
-        action_lock = self._lineage_table.lock_queues[entity_id][action_id]
+        action_lock = self.get_action_info(action_id, entity_id)
         if not action_lock:
             raise ValueError(
                 "Action {}'s schedule information on entity {} is missing.".format(
@@ -1989,14 +1943,7 @@ class BaseRescheduler(TimeLineScheduler):
            No need to check older ascendants.
         4. Routine serializability order is not violated.
         """
-        if entity_id not in self._lineage_table.lock_queues:
-            raise ValueError("Entity %s has no schedule." % entity_id)
-        entity_lock_queue = self._lineage_table.lock_queues[entity_id]
-        if action_id not in entity_lock_queue:
-            raise ValueError(
-                f"Action {action_id} has not been scheduled on entity {entity_id}."
-            )
-        action_lock = entity_lock_queue[action_id]
+        action_lock = self.get_action_info(action_id, entity_id)
         if not action_lock:
             raise ValueError(
                 "Action {}'s schedule information on entity {} is missing.".format(
@@ -2080,6 +2027,7 @@ class BaseRescheduler(TimeLineScheduler):
         # before the old action start do not belong to routines that are serialized
         # before this action's routine
         old_action_end = action_lock.end_time
+        entity_lock_queue = self._lineage_table.lock_queues[entity_id]
         for entity_action_id, entity_action_lock in entity_lock_queue.items():
             if not entity_action_lock:
                 raise ValueError(

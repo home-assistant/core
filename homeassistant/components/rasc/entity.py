@@ -243,6 +243,40 @@ class RoutineEntity(BaseRoutineEntity):
         """Set earliest end time."""
         self._attr_earliest_end_time = end_time
 
+    @property
+    def source_action_ids(self) -> list[str]:
+        """Get source action ids."""
+        return [
+            action_id
+            for action_id, action in self.actions.items()
+            if not action.parents
+        ]
+
+    @property
+    def source_actions(self) -> list[ActionEntity]:
+        """Get source actions."""
+        return [action for action in self.actions.values() if not action.parents]
+
+    @property
+    def sink_action_ids(self) -> list[str]:
+        """Get sink action ids."""
+        return [
+            action_id
+            for action_id, action in self.actions.items()
+            if len(action.children) == 1
+            and all(child.is_end_node for child in action.children)
+        ]
+
+    @property
+    def sink_actions(self) -> list[ActionEntity]:
+        """Get sink actions."""
+        return [
+            action
+            for action in self.actions.values()
+            if len(action.children) == 1
+            and all(child.is_end_node for child in action.children)
+        ]
+
 
 class ActionEntity:
     """Action Entity."""

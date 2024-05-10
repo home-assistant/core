@@ -330,8 +330,21 @@ def get_target_entities(hass: HomeAssistant, script: dict[str, Any]) -> list[str
                     for entity in script[CONF_TARGET][CONF_ENTITY_ID]
                 ]
     else:
-        target_entities = [get_entity_id_from_number(hass, script[CONF_ENTITY_ID])]
+        try:
+            target_entities = [get_entity_id_from_number(hass, script[CONF_ENTITY_ID])]
+        except Exception as _:  # pylint: disable=broad-except
+            _LOGGER.error("%s not found in the script: %s", CONF_ENTITY_ID, script)
 
+    return target_entities
+
+
+def get_routine_targets(hass: HomeAssistant, routine: RoutineEntity) -> set[str]:
+    """Get all the entities from the given routine."""
+    target_entities = set[str]()
+    for action in routine.actions.values():
+        if action.is_end_node:
+            continue
+        target_entities.update(get_target_entities(hass, action.action))
     return target_entities
 
 
@@ -822,6 +835,17 @@ class BaseScheduler:
             return None
 
         return routine_info.routine.actions[action_id]
+
+    def get_action_info(self, action_id: str, entity_id: str) -> ActionInfo | None:
+        """Get the active action."""
+        if entity_id not in self._lineage_table.lock_queues:
+            raise ValueError("Entity %s has no schedule." % entity_id)
+        lock_queue = self.lineage_table.lock_queues[entity_id]
+        if action_id not in lock_queue:
+            raise ValueError(
+                f"Action {action_id} has not been scheduled on entity {entity_id}."
+            )
+        return lock_queue[action_id]
 
     def filter_ts(
         self,
@@ -1613,16 +1637,7 @@ class TimeLineScheduler(BaseScheduler):
                     entity_id = get_entity_id_from_number(self._hass, entity)
 
                     if entity_id in target_entities:
-                        if entity_id not in self._lineage_table.lock_queues:
-                            raise ValueError("Entity %s has no schedule." % entity_id)
-                        lock_queue = self._lineage_table.lock_queues[entity_id]
-                        if action.action_id not in lock_queue:
-                            raise ValueError(
-                                "Action {} has not been scheduled on entity {}.".format(
-                                    action.action_id, entity_id
-                                )
-                            )
-                        action_info = lock_queue[action.action_id]
+                        action_info = self.get_action_info(action.action_id, entity_id)
                         if not action_info:
                             raise ValueError(
                                 "Action {}'s schedule info on entity {} is missing.".format(
@@ -1666,7 +1681,7 @@ class TimeLineScheduler(BaseScheduler):
         preset: set[str],
         postset: set[str],
         new_action: ActionEntity,
-    ) -> datetime | None:
+    ) -> tuple[datetime | None, Optional[set[str]]]:
         """Get available time slot by timeline."""
         _LOGGER.debug(
             "Free slots for entity %s: %s",
@@ -1674,6 +1689,7 @@ class TimeLineScheduler(BaseScheduler):
             free_slots[entity_id],
         )
 
+        conflict = None
         for slot_start, slot_end in free_slots[entity_id].items():
             # Check if the gap is available
             if slot_end and slot_end <= now:
@@ -1708,6 +1724,7 @@ class TimeLineScheduler(BaseScheduler):
                     action_st,
                     cur_preset.intersection(cur_postset),
                 )
+                conflict = cur_preset.intersection(cur_postset)
                 continue
 
             if self.conflict_determined_serializability_in_case_tl(
@@ -1721,16 +1738,17 @@ class TimeLineScheduler(BaseScheduler):
                     cur_preset,
                     cur_postset,
                 )
+                conflict = cur_preset.union(cur_postset)
                 continue
 
             preset.update(cur_preset)
             postset.update(cur_postset)
-            return slot_start
+            return slot_start, None
 
         preset.update(cur_preset)
         postset.update(cur_postset)
 
-        return None
+        return None, conflict
 
     def get_preset(
         self,
@@ -1788,10 +1806,10 @@ class TimeLineScheduler(BaseScheduler):
         preset: set[str],
         postset: set[str],
         new_action: ActionEntity,
-    ) -> datetime | None:
+    ) -> tuple[datetime | None, Optional[set[str]]]:
         """Get the start time of the first available time slot in the entity."""
 
-        start_time = self.get_available_ts_by_tl(
+        start_time, conflict = self.get_available_ts_by_tl(
             free_slots, now, entity_id, lock_leasing_status, preset, postset, new_action
         )
 
@@ -1803,7 +1821,7 @@ class TimeLineScheduler(BaseScheduler):
             datetime_to_string(start_time) if start_time else None,
         )
 
-        return start_time
+        return start_time, conflict
 
     def schedule_all_action_in_case_tl(
         self,
@@ -1813,7 +1831,7 @@ class TimeLineScheduler(BaseScheduler):
         lock_leasing_status: dict[str, str],
         preset: set[str],
         postset: set[str],
-    ) -> tuple[bool, datetime]:
+    ) -> tuple[bool, datetime, Optional[set[str]]]:
         """Insert action to the free slots at now based on lock leasing approach."""
 
         target_entities = get_target_entities(self._hass, action.action)
@@ -1831,7 +1849,7 @@ class TimeLineScheduler(BaseScheduler):
         for entity in target_entities:
             entity_id = get_entity_id_from_number(self._hass, entity)
 
-            start_time = self.get_available_ts_in_case_tl(
+            start_time, conflict = self.get_available_ts_in_case_tl(
                 now, free_slots, entity_id, lock_leasing_status, preset, postset, action
             )
 
@@ -1840,7 +1858,7 @@ class TimeLineScheduler(BaseScheduler):
                     "Failed to find a time slot start at %s. Need to reschedule",
                     now,
                 )
-                return False, max_end_time
+                return False, max_end_time, conflict
 
             group_action_start_time[entity_id] = max(start_time, now)
             group_slot_start_time[entity_id] = start_time
@@ -1856,7 +1874,7 @@ class TimeLineScheduler(BaseScheduler):
             for entity in target_entities:
                 entity_id = get_entity_id_from_number(self._hass, entity)
 
-                start_time = self.get_available_ts_in_case_tl(
+                start_time, conflict = self.get_available_ts_in_case_tl(
                     next_now,
                     free_slots,
                     entity_id,
@@ -1871,7 +1889,7 @@ class TimeLineScheduler(BaseScheduler):
                         "Failed to find a time slot start at %s. Need to reschedule",
                         now,
                     )
-                    return False, max_end_time
+                    return False, max_end_time, conflict
 
                 group_action_start_time[entity_id] = max(start_time, next_now)
                 group_slot_start_time[entity_id] = start_time
@@ -1890,11 +1908,11 @@ class TimeLineScheduler(BaseScheduler):
 
             max_end_time = max(max_end_time, action_end)
 
-        return True, max_end_time
+        return True, max_end_time, None
 
     def schedule_routine_in_case_tl(
         self, hass: HomeAssistant, routine: RoutineEntity, now: datetime
-    ) -> tuple[bool, dict[str, str]]:
+    ) -> tuple[bool, dict[str, str], Optional[set[str]]]:
         """Schedule the given routine."""
 
         _LOGGER.info("Start scheduling the routine %s", routine.routine_id)
@@ -1929,11 +1947,11 @@ class TimeLineScheduler(BaseScheduler):
                 action_id = f"{config[CONF_ROUTINE_ID]}.{config[CONF_STEP]}"
                 action = routine.actions[action_id]
 
-                success, next_end_time = self.schedule_all_action_in_case_tl(
+                success, next_end_time, conflict = self.schedule_all_action_in_case_tl(
                     action, next_end_time, tmp_fs, lock_leasing_status, preset, postset
                 )
             else:
-                success, next_end_time = self._schedule_routine_in_case_tl(
+                success, next_end_time, conflict = self._schedule_routine_in_case_tl(
                     hass,
                     script,
                     config,
@@ -1947,11 +1965,15 @@ class TimeLineScheduler(BaseScheduler):
 
             if not success:
                 next_start_time = self.get_next_start_time(routine, preset, postset)
-                return False, {"next_start_time": datetime_to_string(next_start_time)}
+                return (
+                    False,
+                    {"next_start_time": datetime_to_string(next_start_time)},
+                    conflict,
+                )
 
         self._lineage_table.free_slots = tmp_fs
         self.set_earliest_end_time(routine)
-        return True, lock_leasing_status
+        return True, lock_leasing_status, None
 
     def _schedule_routine_in_case_tl(
         self,
@@ -1964,14 +1986,14 @@ class TimeLineScheduler(BaseScheduler):
         lock_leasing_status: dict[str, str],
         preset: set[str],
         postset: set[str],
-    ) -> tuple[bool, datetime]:
+    ) -> tuple[bool, datetime, Optional[set[str]]]:
         """Schedule the given routine with the given script."""
         # print("script:", script)
         next_end_time = prev_end_time
 
         if CONF_PARALLEL in script:
             for item in list(script.values())[0]:
-                success, item_end_time = self._schedule_routine_in_case_tl(
+                success, item_end_time, conflict = self._schedule_routine_in_case_tl(
                     hass,
                     item,
                     config,
@@ -1984,13 +2006,13 @@ class TimeLineScheduler(BaseScheduler):
                 )
 
                 if not success:
-                    return False, next_end_time
+                    return False, next_end_time, conflict
 
                 next_end_time = max(next_end_time, item_end_time)
 
         elif CONF_SEQUENCE in script:
             for item in list(script.values())[0]:
-                success, next_end_time = self._schedule_routine_in_case_tl(
+                success, next_end_time, conflict = self._schedule_routine_in_case_tl(
                     hass,
                     item,
                     config,
@@ -2003,7 +2025,7 @@ class TimeLineScheduler(BaseScheduler):
                 )
 
                 if not success:
-                    return False, next_end_time
+                    return False, next_end_time, conflict
 
         elif CONF_SERVICE in script:
             temp: str = script[CONF_SERVICE]
@@ -2014,12 +2036,16 @@ class TimeLineScheduler(BaseScheduler):
                 ]
 
                 if not script_component:
-                    return False, next_end_time
+                    return False, next_end_time, None
 
                 base_script = script_component.get_entity(list(script.values())[0])
                 if base_script and base_script.raw_config:
                     for item in base_script.raw_config[CONF_SEQUENCE]:
-                        success, next_end_time = self._schedule_routine_in_case_tl(
+                        (
+                            success,
+                            next_end_time,
+                            conflict,
+                        ) = self._schedule_routine_in_case_tl(
                             hass,
                             item,
                             config,
@@ -2032,14 +2058,14 @@ class TimeLineScheduler(BaseScheduler):
                         )
 
                         if not success:
-                            return False, next_end_time
+                            return False, next_end_time, conflict
 
             else:
                 config[CONF_STEP] = config[CONF_STEP] + 1
                 action_id = f"{config[CONF_ROUTINE_ID]}.{config[CONF_STEP]}"
                 action = routine.actions[action_id]
 
-                success, next_end_time = self.schedule_all_action_in_case_tl(
+                success, next_end_time, conflict = self.schedule_all_action_in_case_tl(
                     action,
                     next_end_time,
                     free_slots,
@@ -2048,7 +2074,7 @@ class TimeLineScheduler(BaseScheduler):
                     postset,
                 )
                 if not success:
-                    return False, next_end_time
+                    return False, next_end_time, conflict
 
         elif CONF_DELAY in script:
             pass
@@ -2058,14 +2084,14 @@ class TimeLineScheduler(BaseScheduler):
             action_id = f"{config[CONF_ROUTINE_ID]}.{config[CONF_STEP]}"
             action = routine.actions[action_id]
 
-            success, next_end_time = self.schedule_all_action_in_case_tl(
+            success, next_end_time, conflict = self.schedule_all_action_in_case_tl(
                 action, next_end_time, free_slots, lock_leasing_status, preset, postset
             )
 
             if not success:
-                return False, next_end_time
+                return False, next_end_time, conflict
 
-        return True, next_end_time
+        return True, next_end_time, None
 
     def set_earliest_end_time(self, routine: RoutineEntity) -> None:
         """Set the earliest end time of the given routine for rescheduling."""
@@ -2076,17 +2102,7 @@ class TimeLineScheduler(BaseScheduler):
             target_entities = get_target_entities(self._hass, action.action)
             for entity in target_entities:
                 entity_id = get_entity_id_from_number(self._hass, entity)
-                if entity_id not in self._lineage_table.lock_queues:
-                    raise ValueError("Entity %s has no schedule." % entity_id)
-                if action.action_id not in self._lineage_table.lock_queues[entity_id]:
-                    raise ValueError(
-                        "Action {} has not been scheduled on entity {}.".format(
-                            action.action_id, entity_id
-                        )
-                    )
-                action_info = self._lineage_table.lock_queues[entity_id][
-                    action.action_id
-                ]
+                action_info = self.get_action_info(action.action_id, entity_id)
                 if not action_info:
                     raise ValueError(
                         "Action {}'s schedule information on entity {} is missing.".format(
@@ -2642,10 +2658,14 @@ class RascalScheduler(BaseScheduler):
             raise TypeError(
                 "The scheduler should be TimeLineScheduler for the timeline scheduling policy"
             )
-        success, lock_leasing_status = self._scheduler.schedule_routine_in_case_tl(
+        (
+            success,
+            lock_leasing_status,
+            conflict,
+        ) = self._scheduler.schedule_routine_in_case_tl(
             self._hass, routine, datetime.now()
         )
-        while not success:
+        while not success:  # pylint: disable=too-many-nested-blocks
             if (
                 not lock_leasing_status
                 or "next_start_time" not in lock_leasing_status
@@ -2658,11 +2678,47 @@ class RascalScheduler(BaseScheduler):
                 )
 
             self._remove_scheduled_actions(routine.routine_id)
+            next_start_time = string_to_datetime(lock_leasing_status["next_start_time"])
+            if conflict:
+                target_entities = get_routine_targets(self._hass, routine)
+                for conflict_routine_id in conflict:
+                    conflict_routine_info = self._serialization_order[
+                        conflict_routine_id
+                    ]
+                    if not conflict_routine_info:
+                        raise ValueError(
+                            "Routine %s is not found in the serialization order"
+                            % conflict_routine_id
+                        )
+                    for action in conflict_routine_info.routine.actions.values():
+                        conflict_action_targets = set(
+                            get_target_entities(self._hass, action.action)
+                        )
+                        conflicting_entities = target_entities.intersection(
+                            conflict_action_targets
+                        )
+                        for entity in conflicting_entities:
+                            entity_id = get_entity_id_from_number(self._hass, entity)
+                            action_lock = self.get_action_info(
+                                action.action_id, entity_id
+                            )
+                            if not action_lock:
+                                raise ValueError(
+                                    "Action {}'s schedule information on entity {} is missing.".format(
+                                        action.action_id, entity_id
+                                    )
+                                )
+
+                            next_start_time = max(next_start_time, action_lock.end_time)
             # rescheule the routine
-            success, lock_leasing_status = self._scheduler.schedule_routine_in_case_tl(
+            (
+                success,
+                lock_leasing_status,
+                conflict,
+            ) = self._scheduler.schedule_routine_in_case_tl(
                 self._hass,
                 routine,
-                string_to_datetime(lock_leasing_status["next_start_time"]),
+                next_start_time,
             )
 
         self._add_routine_to_serialization_order(routine, lock_leasing_status)
@@ -2728,14 +2784,17 @@ class RascalScheduler(BaseScheduler):
         # Start the action that doesn't have the parents
         for action_entity in list(routine.actions.values())[:-1]:
             if not action_entity.parents:
-                self._start_action(action_entity)
+                self._hass.async_create_task(self._start_action(action_entity))
 
-    def _start_action(self, action: ActionEntity) -> None:
+    async def _start_action(self, action: ActionEntity) -> None:
         """Start the given action."""
 
-        if self._is_action_ready(action):
-            _LOGGER.info("Start the action %s", action.action_id)
-            self._hass.async_create_task(action.attach_triggered(log_exceptions=False))
+        if not self._is_action_ready(action):
+            _LOGGER.info("Start the action %s later", action.action_id)
+            await self._async_wait_until_beginning(action.action_id)
+
+        _LOGGER.info("Start the action %s", action.action_id)
+        self._hass.async_create_task(action.attach_triggered(log_exceptions=False))
 
     def _is_action_ready(self, action: ActionEntity) -> bool:
         """Check if the given action acquire all the associated locks to get executed."""
@@ -2765,14 +2824,7 @@ class RascalScheduler(BaseScheduler):
             for entity in target_entities:
                 entity_id = get_entity_id_from_number(self._hass, entity)
 
-                lock_queues = self._lineage_table.lock_queues
-                if entity_id not in lock_queues:
-                    raise ValueError("Entity %s has no schedule." % entity_id)
-                if action.action_id not in lock_queues[entity_id]:
-                    raise ValueError(
-                        f"Action {action.action_id} has not been scheduled on entity {entity_id}."
-                    )
-                action_lock = lock_queues[entity_id][action.action_id]
+                action_lock = self.get_action_info(action.action_id, entity_id)
                 if not action_lock:
                     raise ValueError(
                         "Action {}'s schedule information on entity {} is missing.".format(
@@ -2805,17 +2857,7 @@ class RascalScheduler(BaseScheduler):
         for entity in target_entities:
             entity_id = get_entity_id_from_number(self._hass, entity)
 
-            lock_queues = self._lineage_table.lock_queues
-            if entity_id not in lock_queues:
-                raise ValueError("Entity %s has no schedule." % entity_id)
-            if action.action_id not in lock_queues[entity_id]:
-                _LOGGER.debug(
-                    "entity %s's lock queue: %s", entity_id, lock_queues[entity_id]
-                )
-                raise ValueError(
-                    f"Action {action.action_id} has not been scheduled on entity {entity_id}."
-                )
-            action_lock = lock_queues[entity_id][action.action_id]
+            action_lock = self.get_action_info(action.action_id, entity_id)
             if not action_lock:
                 raise ValueError(
                     "Action {}'s schedule information on entity {} is missing.".format(
@@ -2970,7 +3012,7 @@ class RascalScheduler(BaseScheduler):
         )
 
         if self._condition_check(cur_action.action):
-            self._start_action(cur_action.action)
+            self._hass.async_create_task(self._start_action(cur_action.action))
 
         return True
 
@@ -3014,13 +3056,7 @@ class RascalScheduler(BaseScheduler):
             entity_id,
             state,
         )
-        if entity_id not in self._lineage_table.lock_queues:
-            raise ValueError("Entity %s has no schedule." % entity_id)
-        if action_id not in self._lineage_table.lock_queues[entity_id]:
-            raise ValueError(
-                f"Action {action_id} has not been scheduled on entity {entity_id}."
-            )
-        action = self._lineage_table.lock_queues[entity_id].get(action_id)
+        action = self.get_action_info(action_id, entity_id)
         if action:
             action.lock_state = state
 
@@ -3034,25 +3070,34 @@ class RascalScheduler(BaseScheduler):
             entity_id,
             new_state,
         )
-        if entity_id not in self._lineage_table.lock_queues:
-            raise ValueError("Entity %s has no schedule." % entity_id)
-        if action_id not in self._lineage_table.lock_queues[entity_id]:
-            raise ValueError(
-                f"Action {action_id} has not been scheduled on entity {entity_id}."
-            )
-        action = self._lineage_table.lock_queues[entity_id].get(action_id)
+        action = self.get_action_info(action_id, entity_id)
         if action:
             action.action_state = new_state
 
+    async def _async_wait_until_beginning(self, action_id: str) -> None:
+        """Wait until the time reaches the end time of the action."""
+        action = self.get_action(action_id)
+        if not action:
+            raise ValueError("Action %s is not found" % action_id)
+        target_entities = get_target_entities(self._hass, action.action)
+        random_entity = target_entities[0]
+        entity_id = get_entity_id_from_number(self._hass, random_entity)
+        action_lock = self.get_action_info(action_id, entity_id)
+        if not action_lock:
+            raise ValueError(
+                "Action {}'s schedule information on entity {} is missing.".format(
+                    action_id, entity_id
+                )
+            )
+        action_start = action_lock.start_time
+        wait_seconds = (action_start - datetime.now()).total_seconds()
+
+        if wait_seconds > 0:
+            await asyncio.sleep(wait_seconds)
+
     async def _async_wait_until(self, action_id: str, entity_id: str) -> None:
         """Wait until the time reaches the end time of the action."""
-        if entity_id not in self._lineage_table.lock_queues:
-            raise ValueError("Entity %s has no schedule." % entity_id)
-        if action_id not in self._lineage_table.lock_queues[entity_id]:
-            raise ValueError(
-                f"Action {action_id} has not been scheduled on entity {entity_id}."
-            )
-        action = self._lineage_table.lock_queues[entity_id].get(action_id)
+        action = self.get_action_info(action_id, entity_id)
         if not action:
             return
         action_end = action.end_time
@@ -3126,7 +3171,7 @@ class RascalScheduler(BaseScheduler):
         for child in action.children:
             if self._condition_check(child):
                 if not child.is_end_node:
-                    self._start_action(child)
+                    self._hass.async_create_task(self._start_action(child))
                 else:
                     _LOGGER.info(
                         "This is the end of the routine %s",
@@ -3268,4 +3313,4 @@ class RascalScheduler(BaseScheduler):
             self._start_routine(next_routine.routine)
 
         if next_routine.pass_eligibility and self._condition_check(next_action.action):
-            self._start_action(next_action.action)
+            self._hass.async_create_task(self._start_action(next_action.action))
