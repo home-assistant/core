@@ -23,6 +23,7 @@ YAML_PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the file integration."""
 
+    hass.data[DOMAIN] = config
     if hass.config_entries.async_entries(DOMAIN):
         # We skip import in case we already have config entries
         return True
@@ -51,12 +52,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for domain, items in platforms_config.items():
         for item in items:
             if item[CONF_PLATFORM] == DOMAIN:
-                item[CONF_PLATFORM] = domain
+                file_config_item = dict(item)
+                file_config_item[CONF_PLATFORM] = domain
                 hass.async_create_task(
                     hass.config_entries.flow.async_init(
                         DOMAIN,
                         context={"source": SOURCE_IMPORT},
-                        data=item,
+                        data=file_config_item,
                     )
                 )
 
@@ -90,7 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 Platform.NOTIFY,
                 DOMAIN,
                 config,
-                {},
+                hass.data[DOMAIN],
             )
         )
 
