@@ -19,6 +19,10 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_ON,
+    FAN_OFF,
+    FAN_LOW,
+    FAN_MEDIUM,
+    FAN_HIGH,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_COMFORT,
@@ -105,6 +109,24 @@ SYSTEM_MODE_2_HVAC = {
     T.SystemMode.Fan_only: HVACMode.FAN_ONLY,
     T.SystemMode.Dry: HVACMode.DRY,
     T.SystemMode.Sleep: HVACMode.OFF,
+}
+
+FAN_MODE_2_FAN = {
+    F.FanMode.On: FAN_ON,
+    F.FanMode.Off: FAN_OFF,
+    F.FanMode.Auto: FAN_AUTO,
+    F.FanMode.Low: FAN_LOW,
+    F.FanMode.Medium: FAN_MEDIUM,
+    F.FanMode.High: FAN_HIGH,
+}
+
+FAN_2_FAN_MODE = {
+    FAN_ON: F.FanMode.On,
+    FAN_OFF: F.FanMode.Off,
+    FAN_AUTO: F.FanMode.Auto,
+    FAN_LOW: F.FanMode.Low,
+    FAN_MEDIUM: F.FanMode.Medium,
+    FAN_HIGH: F.FanMode.High,
 }
 
 ZCL_TEMP = 100
@@ -394,10 +416,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
             self.warning("Unsupported '%s' fan mode", fan_mode)
             return
 
-        if fan_mode == FAN_ON:
-            mode = F.FanMode.On
-        else:
-            mode = F.FanMode.Auto
+        mode = FAN_2_FAN_MODE.get(fan_mode, F.FanMode.Auto)
 
         await self._fan.async_set_speed(mode)
 
@@ -823,3 +842,35 @@ class ZONNSMARTThermostat(Thermostat):
             return await self._thrm.write_attributes_safe(
                 {"operation_preset": 4}, manufacturer=mfg_code
             )
+
+
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    aux_cluster_handlers=CLUSTER_HANDLER_FAN,
+    manufacturers="Airzone",
+    models={"Aidoo Zigbee"},
+    stop_on_match_group=CLUSTER_HANDLER_THERMOSTAT,
+)
+class AirzoneThermostat(Thermostat):
+    """Airzone Thermostat implementation."""
+
+    @property
+    def fan_mode(self) -> str | None:
+        """Return current FAN mode."""
+        return FAN_MODE_2_FAN.get(self._fan.fan_mode)
+
+    @property
+    def fan_modes(self) -> list[str] | None:
+        return [FAN_LOW, FAN_MEDIUM, FAN_HIGH, FAN_AUTO]
+
+    @property
+    def hvac_modes(self) -> list[HVACMode]:
+        """Return the list of available HVAC operation modes."""
+        return [
+            HVACMode.OFF,
+            HVACMode.HEAT_COOL,
+            HVACMode.COOL,
+            HVACMode.HEAT,
+            HVACMode.FAN_ONLY,
+            HVACMode.DRY
+        ]
