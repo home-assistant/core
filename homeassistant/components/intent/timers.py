@@ -130,7 +130,7 @@ class TimerNotFoundError(intent.IntentHandleError):
 
     def __init__(self) -> None:
         """Initialize error."""
-        super().__init__(TIMER_NOT_FOUND_RESPONSE)
+        super().__init__("Timer not found", TIMER_NOT_FOUND_RESPONSE)
 
 
 class MultipleTimersMatchedError(intent.IntentHandleError):
@@ -138,7 +138,7 @@ class MultipleTimersMatchedError(intent.IntentHandleError):
 
     def __init__(self) -> None:
         """Initialize error."""
-        super().__init__(MULTIPLE_TIMERS_MATCHED_RESPONSE)
+        super().__init__("Multiple timers matched", MULTIPLE_TIMERS_MATCHED_RESPONSE)
 
 
 class TimerManager:

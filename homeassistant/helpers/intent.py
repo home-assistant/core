@@ -149,9 +149,9 @@ class InvalidSlotInfo(IntentError):
 class IntentHandleError(IntentError):
     """Error while handling intent."""
 
-    def __init__(self, response_key: str | None = None) -> None:
+    def __init__(self, message: str, response_key: str | None = None) -> None:
         """Initialize error."""
-        super().__init__()
+        super().__init__(message)
         self.response_key = response_key
 
 
