@@ -116,16 +116,16 @@ def _async_sensors_for_device(
     device: Device,
     coordinator: TPLinkDataUpdateCoordinator,
     parent: Device | None = None,
-) -> list[SmartPlugSensor]:
+) -> list[CoordinatedTPLinkEntity]:
     """Generate the sensors for the device."""
-    sensors = []
+    sensors: list[CoordinatedTPLinkEntity] = []
     if device.has_emeter:
         sensors = [
             SmartPlugSensor(device, coordinator, description, parent=parent)
             for description in ENERGY_SENSORS
             if async_emeter_from_device(device, description) is not None
         ]
-    new_sensors = [
+    new_sensors: list[CoordinatedTPLinkEntity] = [
         Sensor(device, coordinator, feat, parent=parent)
         for feat in device.features.values()
         if feat.type == Feature.Sensor
@@ -190,7 +190,7 @@ class Sensor(CoordinatedTPLinkEntity, SensorEntity):
     ):
         """Initialize the sensor."""
         super().__init__(device, coordinator, feature=feature, parent=parent)
-
+        self._feature: Feature
         self.entity_description = _description_for_feature(
             SensorEntityDescription, feature, native_unit_of_measurement=feature.unit
         )
@@ -218,7 +218,7 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
         description: TPLinkSensorEntityDescription,
-        parent: Device = None,
+        parent: Device | None = None,
     ) -> None:
         """Initialize the switch."""
         self.entity_description = description

@@ -48,10 +48,11 @@ class Select(CoordinatedTPLinkEntity, SelectEntity):
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
         feature: Feature,
-        parent: Device = None,
+        parent: Device | None = None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(device, coordinator, feature=feature, parent=parent)
+        self._feature: Feature
         self.entity_description = _description_for_feature(
             SelectEntityDescription, feature, options=feature.choices
         )

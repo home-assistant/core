@@ -69,17 +69,17 @@ class Update(CoordinatedTPLinkEntity, UpdateEntity):
         self,
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
-        parent: Device = None,
+        parent: Device | None = None,
     ) -> None:
         """Initialize the Demo select entity."""
-        super().__init__(device, coordinator, parent)
+        super().__init__(device, coordinator, parent=parent)
 
         self._attr_unique_id = f"{legacy_device_id(device)}_update"
         self._attr_supported_features |= UpdateEntityFeature.INSTALL
         # TODO: Maybe in the future
         # self._attr_supported_features |= UpdateEntityFeature.PROGRESS
 
-        self._update_module: Firmware = device.modules["Firmware"]
+        self._update_module: Firmware = cast(Firmware, device.modules["Firmware"])
 
     @callback
     def _async_update_attrs(self) -> None:

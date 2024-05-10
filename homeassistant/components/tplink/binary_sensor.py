@@ -54,6 +54,7 @@ class BinarySensor(CoordinatedTPLinkEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(device, coordinator, feature=feature, parent=parent)
+        self._feature: Feature
         self.entity_description = _description_for_feature(
             BinarySensorEntityDescription, feature
         )
