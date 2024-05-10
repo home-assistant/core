@@ -456,7 +456,8 @@ class DefaultAgent(ConversationEntity):
         language: str,
     ) -> RecognizeResult | None:
         """Search intents for a match to user input."""
-        possible_results: list[RecognizeResult] = []
+        name_result: RecognizeResult | None = None
+        best_results: list[RecognizeResult] = []
         best_text_chunks_matched: int | None = None
         for result in recognize_all(
             user_input.text,
@@ -465,26 +466,28 @@ class DefaultAgent(ConversationEntity):
             intent_context=intent_context,
             language=language,
         ):
+            if "name" in result.entities:
+                name_result = result
+
             if (best_text_chunks_matched is None) or (
                 result.text_chunks_matched > best_text_chunks_matched
             ):
                 # Only overwrite if more literal text was matched.
                 # This causes wildcards to match last.
-                possible_results = [result]
+                best_results = [result]
                 best_text_chunks_matched = result.text_chunks_matched
             elif result.text_chunks_matched == best_text_chunks_matched:
                 # Accumulate results with the same number of literal text matched.
                 # We will resolve the ambiguity below.
-                possible_results.append(result)
+                best_results.append(result)
 
-        for result in possible_results:
+        if name_result is not None:
             # Prioritize matches with entity names above area names
-            if "name" in result.entities:
-                return result
+            return name_result
 
-        if possible_results:
+        if best_results:
             # Successful strict match
-            return possible_results[0]
+            return best_results[0]
 
         # Try again with missing entities enabled
         maybe_result: RecognizeResult | None = None
