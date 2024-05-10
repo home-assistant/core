@@ -107,12 +107,7 @@ class GoogleGenerativeAIConversationEntity(
         try:
             prompt = self._async_generate_prompt(raw_prompt)
         except TemplateError as err:
-<<<<<<< HEAD
-            _LOGGER.error("Error rendering prompt: %s", err)
-=======
             LOGGER.error("Error rendering prompt: %s", err)
-            intent_response = intent.IntentResponse(language=user_input.language)
->>>>>>> ee9efa0455 (Move logger and cleanup snapshots)
             intent_response.async_set_error(
                 intent.IntentResponseErrorCode.UNKNOWN,
                 f"Sorry, I had a problem with my template: {err}",
@@ -135,12 +130,7 @@ class GoogleGenerativeAIConversationEntity(
             genai_types.BlockedPromptException,
             genai_types.StopCandidateException,
         ) as err:
-<<<<<<< HEAD
-            _LOGGER.error("Error sending message: %s", err)
-=======
             LOGGER.error("Error sending message: %s", err)
-            intent_response = intent.IntentResponse(language=user_input.language)
->>>>>>> ee9efa0455 (Move logger and cleanup snapshots)
             intent_response.async_set_error(
                 intent.IntentResponseErrorCode.UNKNOWN,
                 f"Sorry, I had a problem talking to Google Generative AI: {err}",
@@ -149,8 +139,7 @@ class GoogleGenerativeAIConversationEntity(
                 response=intent_response, conversation_id=conversation_id
             )
 
-<<<<<<< HEAD
-        _LOGGER.debug("Response: %s", chat_response.parts)
+        LOGGER.debug("Response: %s", chat_response.parts)
         if not chat_response.parts:
             intent_response.async_set_error(
                 intent.IntentResponseErrorCode.UNKNOWN,
@@ -159,9 +148,6 @@ class GoogleGenerativeAIConversationEntity(
             return conversation.ConversationResult(
                 response=intent_response, conversation_id=conversation_id
             )
-=======
-        LOGGER.debug("Response: %s", chat_response.parts)
->>>>>>> ee9efa0455 (Move logger and cleanup snapshots)
         self.history[conversation_id] = chat.history
         intent_response.async_set_speech(chat_response.text)
         return conversation.ConversationResult(

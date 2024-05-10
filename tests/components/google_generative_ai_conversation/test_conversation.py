@@ -1,6 +1,6 @@
 """Tests for the Google Generative AI Conversation integration conversation platform."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from google.api_core.exceptions import ClientError
 import pytest
@@ -23,13 +23,16 @@ async def test_default_prompt(
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
-    agent_id: str,
+    agent_id: str | None,
 ) -> None:
     """Test that the default prompt works."""
     entry = MockConfigEntry(title=None)
     entry.add_to_hass(hass)
     for i in range(3):
         area_registry.async_create(f"{i}Empty Area")
+
+    if agent_id is None:
+        agent_id = mock_config_entry.entry_id
 
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -105,7 +108,11 @@ async def test_default_prompt(
         chat_response.parts = ["Hi there!"]
         chat_response.text = "Hi there!"
         result = await conversation.async_converse(
-            hass, "hello", None, Context(), agent_id=agent_id,
+            hass,
+            "hello",
+            None,
+            Context(),
+            agent_id=agent_id,
         )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
@@ -130,6 +137,7 @@ async def test_error_handling(
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
         "Sorry, I had a problem talking to Google Generative AI: None some error"
     )
+
 
 async def test_blocked_response(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
