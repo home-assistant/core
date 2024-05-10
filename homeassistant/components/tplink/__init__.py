@@ -11,10 +11,10 @@ from aiohttp import ClientSession
 from kasa import (
     AuthenticationException,
     Credentials,
+    Device,
     DeviceConfig,
     Discover,
-    SmartDevice,
-    SmartDeviceException,
+    KasaException,
 )
 from kasa.httpclient import get_cookie_jar
 
@@ -67,7 +67,7 @@ def create_async_tplink_clientsession(hass: HomeAssistant) -> ClientSession:
 @callback
 def async_trigger_discovery(
     hass: HomeAssistant,
-    discovered_devices: dict[str, SmartDevice],
+    discovered_devices: dict[str, Device],
 ) -> None:
     """Trigger config flows for discovered devices."""
     for formatted_mac, device in discovered_devices.items():
@@ -87,7 +87,7 @@ def async_trigger_discovery(
         )
 
 
-async def async_discover_devices(hass: HomeAssistant) -> dict[str, SmartDevice]:
+async def async_discover_devices(hass: HomeAssistant) -> dict[str, Device]:
     """Discover TPLink devices on configured network interfaces."""
 
     credentials = await get_credentials(hass)
@@ -101,7 +101,7 @@ async def async_discover_devices(hass: HomeAssistant) -> dict[str, SmartDevice]:
         )
         for address in broadcast_addresses
     ]
-    discovered_devices: dict[str, SmartDevice] = {}
+    discovered_devices: dict[str, Device] = {}
     for device_list in await asyncio.gather(*tasks):
         for device in device_list.values():
             discovered_devices[dr.format_mac(device.mac)] = device
@@ -135,7 +135,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if config_dict := entry.data.get(CONF_DEVICE_CONFIG):
         try:
             config = DeviceConfig.from_dict(config_dict)
-        except SmartDeviceException:
+        except KasaException:
             _LOGGER.warning(
                 "Invalid connection type dict for %s: %s", host, config_dict
             )
@@ -151,10 +151,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if credentials:
         config.credentials = credentials
     try:
-        device: SmartDevice = await SmartDevice.connect(config=config)
+        device: Device = await Device.connect(config=config)
     except AuthenticationException as ex:
         raise ConfigEntryAuthFailed from ex
-    except SmartDeviceException as ex:
+    except KasaException as ex:
         raise ConfigEntryNotReady from ex
 
     device_config_dict = device.config.to_dict(
@@ -217,7 +217,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def legacy_device_id(device: SmartDevice) -> str:
+def legacy_device_id(device: Device) -> str:
     """Convert the device id so it matches what was used in the original version."""
     device_id: str = device.device_id
     # Plugs are prefixed with the mac in python-kasa but not

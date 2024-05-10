@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any, cast
 
-from kasa import SmartDevice, SmartPlug
+from kasa import Device, SmartPlug
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -96,7 +96,7 @@ class SmartPlugSwitch(CoordinatedTPLinkEntity, SwitchEntity):
 
     def __init__(
         self,
-        device: SmartDevice,
+        device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
     ) -> None:
         """Initialize the switch."""
@@ -132,9 +132,9 @@ class SmartPlugSwitchChild(SmartPlugSwitch):
 
     def __init__(
         self,
-        device: SmartDevice,
+        device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
-        plug: SmartDevice,
+        plug: Device,
     ) -> None:
         """Initialize the child switch."""
         self._plug = plug
