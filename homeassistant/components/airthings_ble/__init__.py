@@ -16,7 +16,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MAX_RETRIES_AFTER_STARTUP
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -65,6 +65,12 @@ async def async_setup_entry(
     )
 
     await coordinator.async_config_entry_first_refresh()
+
+    # Once its setup and we know we are not going to delay
+    # the startup of Home Assistant, we can set the max attempts
+    # to a higher value. If the first connection attempt fails,
+    # Home Assistant's built-in retry logic will take over.
+    airthings.set_max_attempts(MAX_RETRIES_AFTER_STARTUP)
 
     entry.runtime_data = coordinator
 
