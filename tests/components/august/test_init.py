@@ -203,7 +203,6 @@ async def test_lock_has_doorsense(hass: HomeAssistant) -> None:
     binary_sensor_online_with_doorsense_name_open = hass.states.get(
         "binary_sensor.online_with_doorsense_name_door"
     )
-    binary_sensor_online_with_doorsense_name_open.attributes.get("")
     assert binary_sensor_online_with_doorsense_name_open.state == STATE_ON
     binary_sensor_missing_doorsense_id_name_open = hass.states.get(
         "binary_sensor.missing_with_doorsense_name_door"
