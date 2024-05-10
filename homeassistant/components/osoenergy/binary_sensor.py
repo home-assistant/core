@@ -1,0 +1,95 @@
+"""Support for OSO Energy binary sensors."""
+
+from collections.abc import Callable
+from dataclasses import dataclass
+
+from apyosoenergyapi import OSOEnergy
+from apyosoenergyapi.helper.const import OSOEnergyBinarySensorData
+
+from homeassistant.components.binary_sensor import (
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from . import OSOEnergyEntity
+from .const import DOMAIN
+
+
+@dataclass(frozen=True, kw_only=True)
+class OSOEnergyBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Class describing OSO Energy heater binary sensor entities."""
+
+    value_fn: Callable[[OSOEnergy], bool]
+
+
+SENSOR_TYPES: dict[str, OSOEnergyBinarySensorEntityDescription] = {
+    "power_save": OSOEnergyBinarySensorEntityDescription(
+        key="power_save",
+        translation_key="power_save",
+        value_fn=lambda entity_data: entity_data.state,
+    ),
+    "extra_energy": OSOEnergyBinarySensorEntityDescription(
+        key="extra_energy",
+        translation_key="extra_energy",
+        value_fn=lambda entity_data: entity_data.state,
+    ),
+    "heater_state": OSOEnergyBinarySensorEntityDescription(
+        key="heater_state",
+        translation_key="heater_state",
+        value_fn=lambda entity_data: entity_data.state,
+    ),
+}
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up OSO Energy sensor."""
+    osoenergy = hass.data[DOMAIN][entry.entry_id]
+    devices = osoenergy.session.device_list.get("binary_sensor")
+    entities = []
+    if devices:
+        for dev in devices:
+            sensor_type = dev.osoEnergyType.lower()
+            if sensor_type in SENSOR_TYPES:
+                entities.append(
+                    OSOEnergyBinarySensor(osoenergy, SENSOR_TYPES[sensor_type], dev)
+                )
+
+    async_add_entities(entities, True)
+
+
+class OSOEnergyBinarySensor(
+    OSOEnergyEntity[OSOEnergyBinarySensorData], BinarySensorEntity
+):
+    """OSO Energy Sensor Entity."""
+
+    entity_description: OSOEnergyBinarySensorEntityDescription
+
+    def __init__(
+        self,
+        instance: OSOEnergy,
+        description: OSOEnergyBinarySensorEntityDescription,
+        entity_data: OSOEnergyBinarySensorData,
+    ) -> None:
+        """Initialize the Advantage Air timer control."""
+        super().__init__(instance, entity_data)
+
+        device_id = entity_data.device_id
+        self._attr_unique_id = f"{device_id}_{description.key}"
+        self.entity_description = description
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.entity_data)
+
+    async def async_update(self):
+        """Update all data for OSO Energy."""
+        await self.osoenergy.session.update_data()
+        self.entity_data = await self.osoenergy.binary_sensor.get_sensor(
+            self.entity_data
+        )
