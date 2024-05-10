@@ -233,7 +233,7 @@ CREATE_ENTITY_BASE_SCHEMA = {
 }
 
 UPDATE_ENTITY_BASE_SCHEMA = {
-    vol.Required("unique_id"): str,
+    vol.Required("entity_id"): str,
     **CREATE_ENTITY_BASE_SCHEMA,
 }
 

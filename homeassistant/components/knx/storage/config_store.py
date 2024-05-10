@@ -88,7 +88,6 @@ class KNXConfigStore:
         try:
             return {
                 "platform": entry.domain,
-                "unique_id": entry.unique_id,
                 "data": self.data["entities"][entry.domain][entry.unique_id],
                 "schema_options": SCHEMA_OPTIONS.get(entry.domain),
             }
@@ -96,16 +95,22 @@ class KNXConfigStore:
             raise ConfigStoreException(f"Entity data not found: {entity_id}") from err
 
     async def update_entity(
-        self, platform: Platform, unique_id: str, data: dict[str, Any]
+        self, platform: Platform, entity_id: str, data: dict[str, Any]
     ) -> None:
         """Update an existing entity."""
         if platform not in self.async_add_entity:
             raise ConfigStoreException(f"Entity platform not ready: {platform}")
+        entity_registry = er.async_get(self.hass)
+        if (entry := entity_registry.async_get(entity_id)) is None:
+            raise ConfigStoreException(f"Entity not found: {entity_id}")
+        unique_id = entry.unique_id
         if (
             platform not in self.data["entities"]
             or unique_id not in self.data["entities"][platform]
         ):
-            raise ConfigStoreException(f"Entity not found in {platform}: {unique_id}")
+            raise ConfigStoreException(
+                f"Entity not found in storage: {entity_id} - {unique_id}"
+            )
         await self.entities.pop(unique_id).async_remove()
         self.async_add_entity[platform](unique_id, data)
         # store data after entity is added to make sure config doesn't raise exceptions

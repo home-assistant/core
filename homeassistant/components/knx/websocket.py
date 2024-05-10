@@ -320,7 +320,7 @@ async def ws_update_entity(
     try:
         await knx.config_store.update_entity(
             validated_data["platform"],
-            validated_data["unique_id"],
+            validated_data["entity_id"],
             validated_data["data"],
         )
     except ConfigStoreException as err:
