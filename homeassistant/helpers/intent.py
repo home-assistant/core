@@ -47,6 +47,9 @@ INTENT_SET_TIMER = "HassSetTimer"
 INTENT_CANCEL_TIMER = "HassCancelTimer"
 INTENT_INCREASE_TIMER = "HassIncreaseTimer"
 INTENT_DECREASE_TIMER = "HassDecreaseTimer"
+INTENT_PAUSE_TIMER = "HassPauseTimer"
+INTENT_UNPAUSE_TIMER = "HassUnpauseTimer"
+INTENT_TIMER_STATUS = "HassTimerStatus"
 
 SLOT_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
@@ -145,6 +148,11 @@ class InvalidSlotInfo(IntentError):
 
 class IntentHandleError(IntentError):
     """Error while handling intent."""
+
+    def __init__(self, response_key: str | None = None) -> None:
+        """Initialize error."""
+        super().__init__()
+        self.response_key = response_key
 
 
 class IntentUnexpectedError(IntentError):
@@ -1212,6 +1220,7 @@ class IntentResponse:
         self.failed_results: list[IntentResponseTarget] = []
         self.matched_states: list[State] = []
         self.unmatched_states: list[State] = []
+        self.speech_slots: dict[str, Any] = {}
 
         if (self.intent is not None) and (self.intent.category == IntentCategory.QUERY):
             # speech will be the answer to the query
@@ -1286,6 +1295,11 @@ class IntentResponse:
         """Set entity states that were matched or not matched during intent handling (query)."""
         self.matched_states = matched_states
         self.unmatched_states = unmatched_states or []
+
+    @callback
+    def async_set_speech_slots(self, speech_slots: dict[str, Any]) -> None:
+        """Set slots that will be used in the response template of the default agent."""
+        self.speech_slots = speech_slots
 
     @callback
     def as_dict(self) -> dict[str, Any]:

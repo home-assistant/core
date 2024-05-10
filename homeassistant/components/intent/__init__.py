@@ -43,8 +43,11 @@ from .timers import (
     CancelTimerIntentHandler,
     DecreaseTimerIntentHandler,
     IncreaseTimerIntentHandler,
+    PauseTimerIntentHandler,
     SetTimerIntentHandler,
     TimerManager,
+    TimerStatusIntentHandler,
+    UnpauseTimerIntentHandler,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,6 +90,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     intent.async_register(hass, CancelTimerIntentHandler())
     intent.async_register(hass, IncreaseTimerIntentHandler())
     intent.async_register(hass, DecreaseTimerIntentHandler())
+    intent.async_register(hass, PauseTimerIntentHandler())
+    intent.async_register(hass, UnpauseTimerIntentHandler())
+    intent.async_register(hass, TimerStatusIntentHandler())
 
     return True
 

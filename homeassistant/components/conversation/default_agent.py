@@ -29,6 +29,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_listen_entity_updates,
     async_should_expose,
 )
+from homeassistant.components.intent.timers import EVENT_INTENT_TIMER_FINISHED
 from homeassistant.const import EVENT_STATE_CHANGED, MATCH_ALL
 from homeassistant.helpers import (
     area_registry as ar,
@@ -44,7 +45,14 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_added_domain
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
-from .const import DEFAULT_EXPOSED_ATTRIBUTES, DOMAIN
+from .const import (
+    ASSIST_COMMAND,
+    ATTR_LANGUAGE,
+    ATTR_TEXT,
+    DEFAULT_EXPOSED_ATTRIBUTES,
+    DOMAIN,
+    SERVICE_PROCESS,
+)
 from .entity import ConversationEntity
 from .models import ConversationInput, ConversationResult
 
@@ -141,6 +149,18 @@ async def async_setup_default_agent(
         async_track_state_added_domain(hass, MATCH_ALL, async_entity_state_listener)
 
     start.async_at_started(hass, async_hass_started)
+
+    async def timer_finished_listener(event: core.Event) -> None:
+        """Forward command from timer to process service."""
+        timer_data = event.data.get("data", {})
+        if command := timer_data.get(ASSIST_COMMAND):
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_PROCESS,
+                {ATTR_TEXT: command["value"], ATTR_LANGUAGE: event.data[ATTR_LANGUAGE]},
+            )
+
+    hass.bus.async_listen(EVENT_INTENT_TIMER_FINISHED, timer_finished_listener)
 
 
 class DefaultAgent(ConversationEntity):
@@ -342,15 +362,26 @@ class DefaultAgent(ConversationEntity):
             slots["device_id"] = user_input.device_id
 
         # Add entities from match
-        slots.update(
-            {
-                entity.name: {
-                    "value": entity.value,
-                    "text": entity.text or entity.value,
-                }
-                for entity in result.entities_list
-            }
-        )
+        for entity in result.entities_list:
+            if "." in entity.name:
+                # a.b.c -> {"a": {"b": "c": {"value": ..., "text": ...}}}
+                name_parts = entity.name.split(".")
+                current_dict = slots
+                for name_part in name_parts:
+                    current_dict = current_dict.setdefault(name_part, {})
+
+                slot_name = name_parts[0]
+                slot_text = entity.text or entity.value
+                current_dict["value"] = entity.value
+                current_dict["text"] = slot_text
+                slot_value = slots[slot_name]
+            else:
+                # {"name": {"value": ..., "text": ...}}
+                slot_name = entity.name
+                slot_value = entity.value
+                slot_text = entity.text or entity.value
+
+            slots[slot_name] = {"value": slot_value, "text": slot_text}
 
         try:
             intent_response = await intent.async_handle(
@@ -376,14 +407,16 @@ class DefaultAgent(ConversationEntity):
                 ),
                 conversation_id,
             )
-        except intent.IntentHandleError:
+        except intent.IntentHandleError as err:
             # Intent was valid and entities matched constraints, but an error
             # occurred during handling.
             _LOGGER.exception("Intent handling error")
             return _make_error_result(
                 language,
                 intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
-                self._get_error_text(ErrorKey.HANDLE_ERROR, lang_intents),
+                self._get_error_text(
+                    err.response_key or ErrorKey.HANDLE_ERROR, lang_intents
+                ),
                 conversation_id,
             )
         except intent.IntentUnexpectedError:
@@ -542,13 +575,16 @@ class DefaultAgent(ConversationEntity):
             state1 = unmatched[0]
 
         # Render response template
+        speech_slots = {
+            entity_name: entity_value.text or entity_value.value
+            for entity_name, entity_value in recognize_result.entities.items()
+        }
+        speech_slots.update(intent_response.speech_slots)
+
         speech = response_template.async_render(
             {
-                # Slots from intent recognizer
-                "slots": {
-                    entity_name: entity_value.text or entity_value.value
-                    for entity_name, entity_value in recognize_result.entities.items()
-                },
+                # Slots from intent recognizer and response
+                "slots": speech_slots,
                 # First matched or unmatched state
                 "state": (
                     template.TemplateState(self.hass, state1)
@@ -873,7 +909,7 @@ class DefaultAgent(ConversationEntity):
 
     def _get_error_text(
         self,
-        error_key: ErrorKey,
+        error_key: ErrorKey | str,
         lang_intents: LanguageIntents | None,
         **response_args,
     ) -> str:
@@ -881,7 +917,11 @@ class DefaultAgent(ConversationEntity):
         if lang_intents is None:
             return _DEFAULT_ERROR_TEXT
 
-        response_key = error_key.value
+        if isinstance(error_key, ErrorKey):
+            response_key = error_key.value
+        else:
+            response_key = error_key
+
         response_str = (
             lang_intents.error_responses.get(response_key) or _DEFAULT_ERROR_TEXT
         )
