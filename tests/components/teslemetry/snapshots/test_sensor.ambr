@@ -1,67 +1,4 @@
 # serializer version: 1
-# name: test_sensors[sensor.energy_site_battery-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.energy_site_battery',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-    'original_icon': None,
-    'original_name': 'Battery',
-    'platform': 'teslemetry',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'vpp_backup_reserve_percent',
-    'unique_id': '123456-vpp_backup_reserve_percent',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensors[sensor.energy_site_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Energy Site Battery',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.energy_site_battery',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensors[sensor.energy_site_battery-statealt]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Energy Site Battery',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.energy_site_battery',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
 # name: test_sensors[sensor.energy_site_battery_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -834,6 +771,69 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40.727',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_vpp_backup_reserve-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.energy_site_vpp_backup_reserve',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'VPP backup reserve',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'vpp_backup_reserve_percent',
+    'unique_id': '123456-vpp_backup_reserve_percent',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_vpp_backup_reserve-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Energy Site VPP backup reserve',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_vpp_backup_reserve',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_vpp_backup_reserve-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Energy Site VPP backup reserve',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_vpp_backup_reserve',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.test_battery_level-entry]
