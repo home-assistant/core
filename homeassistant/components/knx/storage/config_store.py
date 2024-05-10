@@ -69,11 +69,9 @@ class KNXConfigStore:
         if platform not in self.async_add_entity:
             raise ConfigStoreException(f"Entity platform not ready: {platform}")
         unique_id = f"knx_es_{ulid_now()}"
-        if unique_id in self.data["entities"].setdefault(platform, {}):
-            raise ConfigStoreException("Unique id already used.")
         self.async_add_entity[platform](unique_id, data)
         # store data after entity was added to be sure config didn't raise exceptions
-        self.data["entities"][platform][unique_id] = data
+        self.data["entities"].setdefault(platform, {})[unique_id] = data
         await self._store.async_save(self.data)
 
         entity_registry = er.async_get(self.hass)
