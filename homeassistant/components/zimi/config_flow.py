@@ -1,4 +1,5 @@
 """Config flow for zcc integration."""
+
 from __future__ import annotations
 
 import logging
@@ -9,9 +10,7 @@ import voluptuous as vol
 from zcc import ControlPointDiscoveryService, ControlPointError
 
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, TIMEOUT, VERBOSITY, WATCHDOG
@@ -21,6 +20,14 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_HOST, default=""): str,
+        vol.Optional(CONF_PORT, default=5003): int,
+        vol.Optional(TIMEOUT, default=3): int,
+        vol.Optional(WATCHDOG, default=1800): int,
+        vol.Optional(VERBOSITY, default=1): int,
+        # CONF_PORT: int,
+        # TIMEOUT: int,
+        # WATCHDOG: int,
+        # VERBOSITY: int,
     }
 )
 
@@ -32,7 +39,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -66,7 +73,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def validate_input(self, hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+    async def validate_input(self, data: dict[str, Any]) -> dict[str, Any]:
         """Validate the user input."""
 
         if data[TIMEOUT] is None:
@@ -93,13 +100,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.settimeout(10)
-                await hass.async_add_executor_job(s.connect((data[CONF_HOST], int(data[CONF_PORT]))))
+                # await self.hass.async_add_executor_job(
+                #     s.connect((data[CONF_HOST], int(data[CONF_PORT])))
+                # )
+                s.connect((data[CONF_HOST], int(data[CONF_PORT])))
             except ConnectionRefusedError as e:
-                raise ConnectionRefused() from e
+                raise ConnectionRefused from e
             except TimeoutError as e:
-                raise TimeOut() from e
+                raise TimeOut from e
             except Exception as e:
-                raise CannotConnect() from e
+                raise CannotConnect from e
 
         # Return info that you want to store in the config entry.
         return {
