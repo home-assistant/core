@@ -45,7 +45,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     # Import the YAML config into separate config entries
-    for domain, items in config.items():
+    platforms_config = {
+        domain: config[domain] for domain in YAML_PLATFORMS if domain in config
+    }
+    for domain, items in platforms_config.items():
         for item in items:
             if item[CONF_PLATFORM] == DOMAIN:
                 item[CONF_PLATFORM] = domain
