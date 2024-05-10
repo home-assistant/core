@@ -39,6 +39,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 TIMER_NOT_FOUND_RESPONSE = "timer_not_found"
+MULTIPLE_TIMERS_MATCHED_RESPONSE = "multiple_timers_matched"
 
 
 @dataclass
@@ -68,6 +69,9 @@ class TimerInfo:
 
     start_seconds: int | None
     """Number of seconds the timer should run as given by the user."""
+
+    created_at: int
+    """Timestamp when timer was created (time.monotonic_ns)"""
 
     updated_at: int
     """Timestamp when timer was last updated (time.monotonic_ns)"""
@@ -124,33 +128,9 @@ class TimerInfo:
 class TimerNotFoundError(intent.IntentHandleError):
     """Error when a timer could not be found by name or start time."""
 
-    def __init__(
-        self,
-        name: str | None,
-        start_hours: int | None,
-        start_minutes: int | None,
-        start_seconds: int | None,
-        device_id: str | None,
-    ) -> None:
+    def __init__(self) -> None:
         """Initialize error."""
         super().__init__(TIMER_NOT_FOUND_RESPONSE)
-
-        self.name = name
-        self.start_hours = start_hours
-        self.start_minutes = start_minutes
-        self.start_seconds = start_seconds
-        self.device_id = device_id
-
-    def __repr__(self) -> str:
-        """Return string representation."""
-        return (
-            f"<TimerNotFoundError "
-            f"name={self.name}, "
-            f"hours={self.start_hours}, "
-            f"minutes={self.start_minutes}, "
-            f"seconds={self.start_seconds}, "
-            f"device_id={self.device_id}>"
-        )
 
 
 class MultipleTimersMatchedError(intent.IntentHandleError):
@@ -158,7 +138,7 @@ class MultipleTimersMatchedError(intent.IntentHandleError):
 
     def __init__(self) -> None:
         """Initialize error."""
-        super().__init__(TIMER_NOT_FOUND_RESPONSE)
+        super().__init__(MULTIPLE_TIMERS_MATCHED_RESPONSE)
 
 
 class TimerManager:
@@ -209,6 +189,7 @@ class TimerManager:
                 self._wait_for_timer(timer_id, total_seconds, created_at),
                 name=f"Timer {timer_id}",
             ),
+            created_at=created_at,
             updated_at=created_at,
             data=data,
         )
@@ -467,6 +448,13 @@ def _find_timer(hass: HomeAssistant, slots: dict[str, Any]) -> TimerInfo:
                 # Only 1 match remaining
                 return matching_floor_timers[0]
 
+    if has_filter and ("ordinal" in slots):
+        ordinal = int(slots["ordinal"]["value"])
+        if 0 <= ordinal < len(matching_timers):
+            # Sort by creation time
+            sorted_timers = sorted(matching_timers, key=lambda t: t.created_at)
+            return sorted_timers[ordinal]
+
     if matching_timers:
         raise MultipleTimersMatchedError
 
@@ -479,13 +467,7 @@ def _find_timer(hass: HomeAssistant, slots: dict[str, Any]) -> TimerInfo:
         device_id,
     )
 
-    raise TimerNotFoundError(
-        name=name,
-        start_hours=start_hours,
-        start_minutes=start_minutes,
-        start_seconds=start_seconds,
-        device_id=device_id,
-    )
+    raise TimerNotFoundError
 
 
 def _find_timers(hass: HomeAssistant, slots: dict[str, Any]) -> list[TimerInfo]:
@@ -638,6 +620,7 @@ class CancelTimerIntentHandler(intent.IntentHandler):
     slot_schema = {
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
+        vol.Optional("ordinal"): cv.positive_int,
         vol.Optional("device_id"): cv.string,
     }
 
@@ -661,6 +644,7 @@ class IncreaseTimerIntentHandler(intent.IntentHandler):
         vol.Any("hours", "minutes", "seconds"): cv.positive_int,
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
+        vol.Optional("ordinal"): cv.positive_int,
         vol.Optional("device_id"): cv.string,
     }
 
@@ -685,6 +669,7 @@ class DecreaseTimerIntentHandler(intent.IntentHandler):
         vol.Required(vol.Any("hours", "minutes", "seconds")): cv.positive_int,
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
+        vol.Optional("ordinal"): cv.positive_int,
         vol.Optional("device_id"): cv.string,
     }
 
@@ -708,6 +693,7 @@ class PauseTimerIntentHandler(intent.IntentHandler):
     slot_schema = {
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
+        vol.Optional("ordinal"): cv.positive_int,
         vol.Optional("device_id"): cv.string,
     }
 
@@ -730,6 +716,7 @@ class UnpauseTimerIntentHandler(intent.IntentHandler):
     slot_schema = {
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
+        vol.Optional("ordinal"): cv.positive_int,
         vol.Optional("device_id"): cv.string,
     }
 
@@ -752,6 +739,7 @@ class TimerStatusIntentHandler(intent.IntentHandler):
     slot_schema = {
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
+        vol.Optional("ordinal"): cv.positive_int,
         vol.Optional("device_id"): cv.string,
     }
 

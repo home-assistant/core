@@ -769,3 +769,53 @@ async def test_pause_unpause_timer(hass: HomeAssistant) -> None:
 
     async with asyncio.timeout(1):
         await updated_event.wait()
+
+
+async def test_ordinal(hass: HomeAssistant) -> None:
+    """Test targeting a timer by the order it was set."""
+    assert await async_setup_component(hass, "intent", {})
+
+    started_event = asyncio.Event()
+    cancelled_event = asyncio.Event()
+
+    timer_ids: list[str] = []
+    ordinal = 1
+
+    async def started_listener(event: Event) -> None:
+        timer_ids.append(event.data[ATTR_ID])
+        started_event.set()
+
+    async def cancelled_listener(event: Event) -> None:
+        cancelled_event.set()
+
+    hass.bus.async_listen(EVENT_INTENT_TIMER_STARTED, started_listener)
+    hass.bus.async_listen(EVENT_INTENT_TIMER_CANCELLED, cancelled_listener)
+
+    # Set three 5 minute timers
+    for _ in range(3):
+        started_event.clear()
+        result = await intent.async_handle(
+            hass, "test", intent.INTENT_SET_TIMER, {"minutes": {"value": 5}}
+        )
+        assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+        async with asyncio.timeout(1):
+            await started_event.wait()
+
+    # Cancelling "the" 5 minute timer is ambiguous
+    with pytest.raises(MultipleTimersMatchedError):
+        await intent.async_handle(
+            hass, "test", intent.INTENT_CANCEL_TIMER, {"start_minutes": {"value": 5}}
+        )
+
+    # Cancel the second 5 minute timer
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_CANCEL_TIMER,
+        {"start_minutes": {"value": 5}, "ordinal": {"value": ordinal}},
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    async with asyncio.timeout(1):
+        await cancelled_event.wait()
