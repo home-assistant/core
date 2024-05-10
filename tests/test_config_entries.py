@@ -386,7 +386,7 @@ async def test_remove_entry(
     ]
 
     # Setup entry
-    await entry.async_setup(hass)
+    await manager.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     # Check entity state got added
