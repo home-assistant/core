@@ -73,9 +73,11 @@ DATA_SETUP_TIME: HassKey[
     defaultdict[str, defaultdict[str | None, defaultdict[SetupPhases, float]]]
 ] = HassKey("setup_time")
 
-DATA_DEPS_REQS = "deps_reqs_processed"
+DATA_DEPS_REQS: HassKey[set[str]] = HassKey("deps_reqs_processed")
 
-DATA_PERSISTENT_ERRORS = "bootstrap_persistent_errors"
+DATA_PERSISTENT_ERRORS: HassKey[dict[str, str | None]] = HassKey(
+    "bootstrap_persistent_errors"
+)
 
 NOTIFY_FOR_TRANSLATION_KEYS = [
     "config_validation_err",
@@ -592,7 +594,7 @@ def _async_when_setup(
         """Call the callback."""
         try:
             await when_setup_cb(hass, component)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error handling when_setup callback for %s", component)
 
     if component in hass.config.components:

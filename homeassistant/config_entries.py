@@ -753,7 +753,7 @@ class ConfigEntry(Generic[_DataT]):
 
         component = await integration.async_get_component()
 
-        if integration.domain == self.domain:
+        if domain_is_integration := self.domain == integration.domain:
             if not self.state.recoverable:
                 return False
 
@@ -765,7 +765,7 @@ class ConfigEntry(Generic[_DataT]):
         supports_unload = hasattr(component, "async_unload_entry")
 
         if not supports_unload:
-            if integration.domain == self.domain:
+            if domain_is_integration:
                 self._async_set_state(
                     hass, ConfigEntryState.FAILED_UNLOAD, "Unload not supported"
                 )
@@ -777,15 +777,16 @@ class ConfigEntry(Generic[_DataT]):
             assert isinstance(result, bool)
 
             # Only adjust state if we unloaded the component
-            if result and integration.domain == self.domain:
-                self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
+            if domain_is_integration:
+                if result:
+                    self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
 
-            await self._async_process_on_unload(hass)
-        except Exception as exc:  # pylint: disable=broad-except
+                await self._async_process_on_unload(hass)
+        except Exception as exc:
             _LOGGER.exception(
                 "Error unloading entry %s for %s", self.title, integration.domain
             )
-            if integration.domain == self.domain:
+            if domain_is_integration:
                 self._async_set_state(
                     hass, ConfigEntryState.FAILED_UNLOAD, str(exc) or "Unknown error"
                 )
@@ -812,7 +813,7 @@ class ConfigEntry(Generic[_DataT]):
             return
         try:
             await component.async_remove_entry(hass, self)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Error calling entry remove callback %s for %s",
                 self.title,
@@ -888,7 +889,7 @@ class ConfigEntry(Generic[_DataT]):
                 return False
             if result:
                 hass.config_entries._async_schedule_save()  # noqa: SLF001
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Error migrating entry %s for %s", self.title, self.domain
             )

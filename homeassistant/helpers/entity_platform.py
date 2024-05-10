@@ -34,6 +34,7 @@ from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.generated import languages
 from homeassistant.setup import SetupPhases, async_start_setup
 from homeassistant.util.async_ import create_eager_task
+from homeassistant.util.hass_dict import HassKey
 
 from . import (
     config_validation as cv,
@@ -57,9 +58,13 @@ SLOW_ADD_ENTITY_MAX_WAIT = 15  # Per Entity
 SLOW_ADD_MIN_TIMEOUT = 500
 
 PLATFORM_NOT_READY_RETRIES = 10
-DATA_ENTITY_PLATFORM = "entity_platform"
-DATA_DOMAIN_ENTITIES = "domain_entities"
-DATA_DOMAIN_PLATFORM_ENTITIES = "domain_platform_entities"
+DATA_ENTITY_PLATFORM: HassKey[dict[str, list[EntityPlatform]]] = HassKey(
+    "entity_platform"
+)
+DATA_DOMAIN_ENTITIES: HassKey[dict[str, dict[str, Entity]]] = HassKey("domain_entities")
+DATA_DOMAIN_PLATFORM_ENTITIES: HassKey[dict[tuple[str, str], dict[str, Entity]]] = (
+    HassKey("domain_platform_entities")
+)
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 
 _LOGGER = getLogger(__name__)
@@ -155,20 +160,18 @@ class EntityPlatform:
         # with the child dict indexed by entity_id
         #
         # This is usually media_player, light, switch, etc.
-        domain_entities: dict[str, dict[str, Entity]] = hass.data.setdefault(
+        self.domain_entities = hass.data.setdefault(
             DATA_DOMAIN_ENTITIES, {}
-        )
-        self.domain_entities = domain_entities.setdefault(domain, {})
+        ).setdefault(domain, {})
 
         # Storage for entities indexed by domain and platform
         # with the child dict indexed by entity_id
         #
         # This is usually media_player.yamaha, light.hue, switch.tplink, etc.
-        domain_platform_entities: dict[tuple[str, str], dict[str, Entity]] = (
-            hass.data.setdefault(DATA_DOMAIN_PLATFORM_ENTITIES, {})
-        )
         key = (domain, platform_name)
-        self.domain_platform_entities = domain_platform_entities.setdefault(key, {})
+        self.domain_platform_entities = hass.data.setdefault(
+            DATA_DOMAIN_PLATFORM_ENTITIES, {}
+        ).setdefault(key, {})
 
     def __repr__(self) -> str:
         """Represent an EntityPlatform."""
@@ -407,7 +410,7 @@ class EntityPlatform:
                 SLOW_SETUP_MAX_WAIT,
             )
             return False
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             logger.exception(
                 "Error while setting up %s platform for %s",
                 self.platform_name,
@@ -429,7 +432,7 @@ class EntityPlatform:
             return await translation.async_get_translations(
                 self.hass, language, category, {integration}
             )
-        except Exception as err:  # pylint: disable=broad-exception-caught
+        except Exception as err:  # noqa: BLE001
             _LOGGER.debug(
                 "Could not load translations for %s",
                 integration,
@@ -579,7 +582,7 @@ class EntityPlatform:
                 for idx, coro in enumerate(coros):
                     try:
                         await coro
-                    except Exception as ex:  # pylint: disable=broad-except
+                    except Exception as ex:
                         entity = entities[idx]
                         self.logger.exception(
                             "Error adding entity %s for domain %s with platform %s",
@@ -708,7 +711,7 @@ class EntityPlatform:
         if update_before_add:
             try:
                 await entity.async_device_update(warning=False)
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 self.logger.exception("%s: Error on device update!", self.platform_name)
                 entity.add_to_platform_abort()
                 return
@@ -911,7 +914,7 @@ class EntityPlatform:
         for entity in list(self.entities.values()):
             try:
                 await entity.async_remove()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 self.logger.exception(
                     "Error while removing entity %s", entity.entity_id
                 )
@@ -1063,6 +1066,4 @@ def async_get_platforms(
     ):
         return []
 
-    platforms: list[EntityPlatform] = hass.data[DATA_ENTITY_PLATFORM][integration_name]
-
-    return platforms
+    return hass.data[DATA_ENTITY_PLATFORM][integration_name]

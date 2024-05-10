@@ -32,7 +32,7 @@ pytest==8.2.0
 requests-mock==1.12.1
 respx==0.21.1
 syrupy==4.6.1
-tqdm==4.66.2
+tqdm==4.66.4
 types-aiofiles==23.2.0.20240403
 types-atomicwrites==1.4.5.1
 types-croniter==2.0.0.20240423
