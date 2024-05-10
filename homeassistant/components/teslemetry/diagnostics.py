@@ -36,7 +36,8 @@ async def async_get_config_entry_diagnostics(
         x.coordinator.data for x in hass.data[DOMAIN][config_entry.entry_id].vehicles
     ]
     energysites = [
-        x.coordinator.data for x in hass.data[DOMAIN][config_entry.entry_id].energysites
+        x.live_coordinator.data
+        for x in hass.data[DOMAIN][config_entry.entry_id].energysites
     ]
 
     # Return only the relevant children
