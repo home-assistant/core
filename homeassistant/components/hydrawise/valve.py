@@ -38,7 +38,7 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
     async_add_entities(
-        HydrawiseValve(coordinator, description, controller, zone)
+        HydrawiseValve(coordinator, description, controller, zone_id=zone.id)
         for controller in coordinator.data.controllers.values()
         for zone in controller.zones
         for description in VALVE_TYPES
@@ -56,14 +56,10 @@ class HydrawiseValve(HydrawiseEntity, ValveEntity):
     async def async_open_valve(self, **kwargs: Any) -> None:
         """Open the valve."""
         await self.coordinator.api.start_zone(self.zone)
-        self._attr_is_closed = False
-        self.async_write_ha_state()
 
     async def async_close_valve(self) -> None:
         """Close the valve."""
         await self.coordinator.api.stop_zone(self.zone)
-        self._attr_is_closed = True
-        self.async_write_ha_state()
 
     def _update_attrs(self) -> None:
         """Update state attributes."""

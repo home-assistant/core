@@ -1,28 +1,37 @@
 """Test Hydrawise valve."""
 
-from unittest.mock import AsyncMock
+from collections.abc import Awaitable, Callable
+from unittest.mock import AsyncMock, patch
 
 from pydrawise.schema import Zone
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.valve import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_CLOSE_VALVE, SERVICE_OPEN_VALVE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_CLOSE_VALVE,
+    SERVICE_OPEN_VALVE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_states(
+async def test_all_valves(
     hass: HomeAssistant,
-    mock_added_config_entry: MockConfigEntry,
+    mock_add_config_entry: Callable[[], Awaitable[MockConfigEntry]],
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test valve states."""
-    zone1 = hass.states.get("valve.zone_one")
-    assert zone1 is not None
-    assert zone1.state == "closed"
-
-    zone2 = hass.states.get("valve.zone_two")
-    assert zone2 is not None
-    assert zone2.state == "open"
+    """Test that all valves are working."""
+    with patch(
+        "homeassistant.components.hydrawise.PLATFORMS",
+        [Platform.VALVE],
+    ):
+        config_entry = await mock_add_config_entry()
+        await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_services(
@@ -39,9 +48,6 @@ async def test_services(
         blocking=True,
     )
     mock_pydrawise.start_zone.assert_called_once_with(zones[0])
-    state = hass.states.get("valve.zone_one")
-    assert state is not None
-    assert state.state == "open"
     mock_pydrawise.reset_mock()
 
     await hass.services.async_call(
@@ -51,6 +57,3 @@ async def test_services(
         blocking=True,
     )
     mock_pydrawise.stop_zone.assert_called_once_with(zones[0])
-    state = hass.states.get("valve.zone_one")
-    assert state is not None
-    assert state.state == "closed"
