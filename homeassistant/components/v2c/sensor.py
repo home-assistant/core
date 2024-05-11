@@ -35,7 +35,7 @@ class V2CSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[TrydanData], StateType]
 
 
-_SLAVE_ERROR_OPTIONS = [error.name for error in SlaveCommunicationState]
+_SLAVE_ERROR_OPTIONS = [error.name.lower() for error in SlaveCommunicationState]
 
 TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
@@ -82,7 +82,7 @@ TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="slave_error",
         translation_key="slave_error",
-        value_fn=lambda evse_data: evse_data.slave_error.name,
+        value_fn=lambda evse_data: evse_data.slave_error.name.lower(),
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
         options=_SLAVE_ERROR_OPTIONS,
