@@ -526,7 +526,11 @@ class ConfigEntry(Generic[_DataT]):
                     f" {self.entry_id} cannot be setup because is already loaded in the"
                     f" {self.state} state"
                 )
-            assert self.setup_lock.locked(), "setup must be locked"
+            if not self.setup_lock.locked():
+                raise OperationNotAllowed(
+                    f"The config entry {self.title} ({self.domain}) with entry_id"
+                    f" {self.entry_id} cannot be setup because it is not locked"
+                )
             self._async_set_state(hass, ConfigEntryState.SETUP_IN_PROGRESS, None)
 
         if self.supports_unload is None:
@@ -764,6 +768,12 @@ class ConfigEntry(Generic[_DataT]):
         component = await integration.async_get_component()
 
         if domain_is_integration := self.domain == integration.domain:
+            if not self.setup_lock.locked():
+                raise OperationNotAllowed(
+                    f"The config entry {self.title} ({self.domain}) with entry_id"
+                    f" {self.entry_id} cannot be unloaded because it is not locked"
+                )
+
             if not self.state.recoverable:
                 return False
 
@@ -1762,7 +1772,7 @@ class ConfigEntries:
             entry.state is ConfigEntryState.LOADED  # type: ignore[comparison-overlap]
         )
 
-    async def async_unload(self, entry_id: str) -> bool:
+    async def async_unload(self, entry_id: str, _lock: bool = True) -> bool:
         """Unload a config entry."""
         if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
@@ -1773,6 +1783,10 @@ class ConfigEntries:
                 f" {entry.entry_id} cannot be unloaded because it is not in a"
                 f" recoverable state ({entry.state})"
             )
+
+        if _lock:
+            async with entry.setup_lock:
+                return await entry.async_unload(self.hass)
 
         return await entry.async_unload(self.hass)
 
@@ -1815,7 +1829,7 @@ class ConfigEntries:
             return entry.state is ConfigEntryState.LOADED
 
         async with entry.setup_lock:
-            unload_result = await self.async_unload(entry_id)
+            unload_result = await self.async_unload(entry_id, _lock=False)
 
             if not unload_result or entry.disabled_by:
                 return unload_result
