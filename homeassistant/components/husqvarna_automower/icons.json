@@ -32,5 +32,9 @@
         "default": "mdi:tooltip-question"
       }
     }
+  },
+  "services": {
+    "park_for": "mdi:parking",
+    "start_for": "mdi:clock-start"
   }
 }

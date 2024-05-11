@@ -54,32 +54,45 @@ async def test_lawn_mower_states(
 
 
 @pytest.mark.parametrize(
-    ("aioautomower_command", "service"),
+    ("domain", "aioautomower_command", "service", "service_data"),
     [
-        ("resume_schedule", "start_mowing"),
-        ("pause_mowing", "pause"),
-        ("park_until_next_schedule", "dock"),
+        ("lawn_mower", "resume_schedule", "start_mowing", None),
+        ("lawn_mower", "pause_mowing", "pause", None),
+        ("lawn_mower", "park_until_next_schedule", "dock", None),
+        (DOMAIN, "start_for", "start_for", {"duration": 123}),
+        (DOMAIN, "park_for", "park_for", {"duration": "321"}),
     ],
 )
 async def test_lawn_mower_commands(
     hass: HomeAssistant,
+    domain: str,
     aioautomower_command: str,
     service: str,
+    service_data: dict[str, int] | None,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test lawn_mower commands."""
     await setup_integration(hass, mock_config_entry)
+    mocked_method = getattr(mock_automower_client.commands, aioautomower_command)
+    await hass.services.async_call(
+        domain=domain,
+        service=service,
+        target={"entity_id": "lawn_mower.test_mower_1"},
+        service_data=service_data,
+        blocking=True,
+    )
+    assert len(mocked_method.mock_calls) == 1
 
     getattr(
         mock_automower_client.commands, aioautomower_command
     ).side_effect = ApiException("Test error")
-
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            domain="lawn_mower",
+            domain=domain,
             service=service,
-            service_data={"entity_id": "lawn_mower.test_mower_1"},
+            target={"entity_id": "lawn_mower.test_mower_1"},
+            service_data=service_data,
             blocking=True,
         )
     assert (

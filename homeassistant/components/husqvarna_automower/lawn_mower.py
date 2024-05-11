@@ -4,6 +4,7 @@ import logging
 
 from aioautomower.exceptions import ApiException
 from aioautomower.model import MowerActivities, MowerStates
+import voluptuous as vol
 
 from homeassistant.components.lawn_mower import (
     LawnMowerActivity,
@@ -13,6 +14,7 @@ from homeassistant.components.lawn_mower import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -49,6 +51,24 @@ async def async_setup_entry(
     async_add_entities(
         AutomowerLawnMowerEntity(mower_id, coordinator) for mower_id in coordinator.data
     )
+
+    platform = entity_platform.async_get_current_platform()
+    if platform is not None:
+        platform.async_register_entity_service(
+            "start_for",
+            {
+                vol.Required("duration"): vol.Coerce(int),
+            },
+            "async_start_for",
+        )
+
+        platform.async_register_entity_service(
+            "park_for",
+            {
+                vol.Required("duration"): vol.Coerce(int),
+            },
+            "async_park_for",
+        )
 
 
 class AutomowerLawnMowerEntity(AutomowerControlEntity, LawnMowerEntity):
@@ -102,6 +122,24 @@ class AutomowerLawnMowerEntity(AutomowerControlEntity, LawnMowerEntity):
         """Parks the mower until next schedule."""
         try:
             await self.coordinator.api.commands.park_until_next_schedule(self.mower_id)
+        except ApiException as exception:
+            raise HomeAssistantError(
+                f"Command couldn't be sent to the command queue: {exception}"
+            ) from exception
+
+    async def async_start_for(self, duration: int) -> None:
+        """Let the mower mow for a given period of time."""
+        try:
+            await self.coordinator.api.commands.start_for(self.mower_id, duration)
+        except ApiException as exception:
+            raise HomeAssistantError(
+                f"Command couldn't be sent to the command queue: {exception}"
+            ) from exception
+
+    async def async_park_for(self, duration: int) -> None:
+        """Let the mower mow for a given period of time."""
+        try:
+            await self.coordinator.api.commands.park_for(self.mower_id, duration)
         except ApiException as exception:
             raise HomeAssistantError(
                 f"Command couldn't be sent to the command queue: {exception}"

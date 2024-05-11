@@ -245,5 +245,27 @@
         "name": "Enable schedule"
       }
     }
+  },
+  "services": {
+    "park_for": {
+      "name": "Park for",
+      "description": "Parks the mower for a given time. The schedule will be overriden for the selected time.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "How long the override will last in minutes."
+        }
+      }
+    },
+    "start_for": {
+      "name": "Start for",
+      "description": "Starts the mower for a given time. The schedule will be overriden for the selected time.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "How long the override will last in minutes."
+        }
+      }
+    }
   }
 }
