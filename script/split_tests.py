@@ -78,7 +78,7 @@ class BucketHolder:
         if not test_folder.added_to_bucket:
             raise ValueError("Not all tests are added to a bucket")
 
-    def create_ouput_file(self) -> None:
+    def create_output_file(self) -> None:
         """Create output file."""
         with open("pytest_buckets.txt", "w") as file:
             for idx, bucket in enumerate(self._buckets):
@@ -116,17 +116,16 @@ class TestFolder:
         """Initialize test folder."""
         self.path: Final = path
         self.children: dict[Path, TestFolder | TestFile] = {}
-        self.total_tests = 0
-        self.total_weighted_tests = 0
-        self.frozen = False
 
-    def freeze(self) -> None:
-        """Freeze the object."""
-        self.total_tests = sum([test.total_tests for test in self.children.values()])
-        self.total_weighted_tests = sum(
-            [test.total_weighted_tests for test in self.children.values()]
-        )
-        self.frozen = True
+    @property
+    def total_tests(self) -> int:
+        """Return total tests."""
+        return sum([test.total_tests for test in self.children.values()])
+
+    @property
+    def total_weighted_tests(self) -> int:
+        """Return total weighted tests."""
+        return sum([test.total_weighted_tests for test in self.children.values()])
 
     @property
     def added_to_bucket(self) -> bool:
@@ -148,8 +147,6 @@ class TestFolder:
 
     def add_test_file(self, file: TestFile) -> None:
         """Add test file to folder."""
-        if self.frozen:
-            raise ValueError("Folder is frozen")
         path = file.path
         relative_path = path.relative_to(self.path)
         if not relative_path.parts:
@@ -207,7 +204,6 @@ def collect_tests(path: Path) -> TestFolder:
         file = TestFile(total, Path(file_path), False, total * weight)
         folder.add_test_file(file)
 
-    folder.freeze()
     return folder
 
 
@@ -250,7 +246,7 @@ def main() -> None:
     print(f"Total weighted tests: {total_weighted_tests}")
     print(f"Estimated tests per bucket: {tests_per_bucket}")
 
-    bucket_holder.create_ouput_file()
+    bucket_holder.create_output_file()
 
 
 if __name__ == "__main__":
