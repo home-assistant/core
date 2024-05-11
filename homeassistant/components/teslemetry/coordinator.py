@@ -85,7 +85,7 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
 
-        if self.pre2021 and data["state"] == TeslemetryState.ONLINE:
+        if self.api.pre2021 and data["state"] == TeslemetryState.ONLINE:
             # Handle pre-2021 vehicles which cannot sleep by themselves
             if (
                 data["charge_state"].get("charging_state") == "Charging"
