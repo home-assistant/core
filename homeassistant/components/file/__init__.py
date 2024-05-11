@@ -12,6 +12,13 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
+from .notify import PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA
+from .sensor import PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA
+
+IMPORT_SCHEMA = {
+    Platform.SENSOR: SENSOR_PLATFORM_SCHEMA,
+    Platform.NOTIFY: NOTIFY_PLATFORM_SCHEMA,
+}
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -52,7 +59,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for domain, items in platforms_config.items():
         for item in items:
             if item[CONF_PLATFORM] == DOMAIN:
-                file_config_item = dict(item)
+                file_config_item = IMPORT_SCHEMA[domain](item)
                 file_config_item[CONF_PLATFORM] = domain
                 hass.async_create_task(
                     hass.config_entries.flow.async_init(
