@@ -103,7 +103,6 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     # Let vehicle go to sleep now
                     self.update_interval = VEHICLE_WAIT
 
-        self.updated_once = True
         return flatten(data)
 
 
@@ -137,7 +136,6 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
             wc["din"]: wc for wc in (data.get("wall_connectors") or [])
         }
 
-        self.updated_once = True
         return data
 
 
@@ -167,5 +165,4 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
 
-        self.updated_once = True
         return flatten(data)
