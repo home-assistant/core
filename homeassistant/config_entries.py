@@ -1636,7 +1636,7 @@ class ConfigEntries:
             if not entry.state.recoverable:
                 unload_success = entry.state is not ConfigEntryState.FAILED_UNLOAD
             else:
-                unload_success = await self.async_unload(entry_id)
+                unload_success = await self.async_unload(entry_id, _lock=False)
 
             await entry.async_remove(self.hass)
 
