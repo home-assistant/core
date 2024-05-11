@@ -55,9 +55,7 @@ async def test_form_cannot_connect(
     mock_v2c_client.get_data.side_effect = side_effect
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_HOST: "1.1.1.1",
-        },
+        {CONF_HOST: "1.1.1.1"},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -66,14 +64,10 @@ async def test_form_cannot_connect(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_HOST: "1.1.1.1",
-        },
+        {CONF_HOST: "1.1.1.1"},
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "EVSE 1.1.1.1"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-    }
+    assert result["data"] == {CONF_HOST: "1.1.1.1"}
