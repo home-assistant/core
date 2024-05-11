@@ -23,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
 from . import (
@@ -52,6 +53,7 @@ SPEECH_TYPE_SSML = "ssml"
 
 
 @callback
+@bind_hass
 def async_register(hass: HomeAssistant, handler: IntentHandler) -> None:
     """Register an intent with Home Assistant."""
     if (intents := hass.data.get(DATA_KEY)) is None:
@@ -68,6 +70,7 @@ def async_register(hass: HomeAssistant, handler: IntentHandler) -> None:
 
 
 @callback
+@bind_hass
 def async_remove(hass: HomeAssistant, intent_type: str) -> None:
     """Remove an intent from Home Assistant."""
     if (intents := hass.data.get(DATA_KEY)) is None:
@@ -77,11 +80,13 @@ def async_remove(hass: HomeAssistant, intent_type: str) -> None:
 
 
 @callback
+@bind_hass
 def async_get(hass: HomeAssistant) -> Iterable[IntentHandler]:
     """Return registered intents."""
     return hass.data.get(DATA_KEY, {}).values()
 
 
+@bind_hass
 async def async_handle(
     hass: HomeAssistant,
     platform: str,
@@ -669,6 +674,7 @@ def async_match_targets(  # noqa: C901
 
 
 @callback
+@bind_hass
 def async_match_states(
     hass: HomeAssistant,
     name: str | None = None,
