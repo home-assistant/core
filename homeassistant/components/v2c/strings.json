@@ -61,7 +61,7 @@
           "communication": "Communication",
           "reading": "Reading",
           "slave": "Slave",
-          "waiting_wifi": "Waiting WiFi",
+          "waiting_wifi": "Waiting for Wi-Fi",
           "waiting_communication": "Waiting communication",
           "wrong_ip": "Wrong IP",
           "slave_not_found": "Slave not found",
