@@ -82,6 +82,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+MIN_BUFFER_SIZE = 131072  # Minimum buffer size to use
 PREFERRED_BUFFER_SIZE = 2097152  # Set buffer limit to 2MB
 
 DISCOVERY_COOLDOWN = 5
@@ -429,6 +430,7 @@ class MQTT:
                 hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self._async_ha_stop),
             )
         )
+        self._socket_buffersize: int | None = None
 
     @callback
     def _async_ha_started(self, _hass: HomeAssistant) -> None:
@@ -529,6 +531,34 @@ class MQTT:
                 self.hass, self._misc_loop(), name="mqtt misc loop"
             )
 
+    def _increase_recv_buffer_size(self, sock: SocketType) -> None:
+        """Increase the recv buffer size."""
+        if self._socket_buffersize is not None:
+            sock.setsockopt(
+                socket.SOL_SOCKET, socket.SO_RCVBUF, self._socket_buffersize
+            )
+            return
+        new_buffer_size = PREFERRED_BUFFER_SIZE
+        while True:
+            try:
+                # Some
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, new_buffer_size)
+            except OSError as err:
+                if new_buffer_size <= MIN_BUFFER_SIZE:
+                    _LOGGER.warning(
+                        "Unable to increase the socket buffer size to %s; "
+                        "The connection may unstable if the MQTT broker sends "
+                        "data at volume or a large amount of subscribes is "
+                        "to be processed: %s",
+                        new_buffer_size,
+                        err,
+                    )
+                    return
+                new_buffer_size //= 2
+            else:
+                self._socket_buffersize = new_buffer_size
+                return
+
     def _on_socket_open(
         self, client: mqtt.Client, userdata: Any, sock: SocketType
     ) -> None:
@@ -545,7 +575,7 @@ class MQTT:
         fileno = sock.fileno()
         _LOGGER.debug("%s: connection opened %s", self.config_entry.title, fileno)
         if fileno > -1:
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, PREFERRED_BUFFER_SIZE)
+            self._increase_recv_buffer_size(sock)
             self.loop.add_reader(sock, partial(self._async_reader_callback, client))
         self._async_start_misc_loop()
 
