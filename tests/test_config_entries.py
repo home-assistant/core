@@ -1692,6 +1692,68 @@ async def test_entry_cannot_be_loaded_twice(
     assert entry.state is state
 
 
+async def test_entry_setup_without_lock_raises(hass: HomeAssistant) -> None:
+    """Test trying to setup a config entry without the lock."""
+    entry = MockConfigEntry(
+        domain="comp", state=config_entries.ConfigEntryState.NOT_LOADED
+    )
+    entry.add_to_hass(hass)
+
+    async_setup = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=True)
+    async_unload_entry = AsyncMock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=async_setup,
+            async_setup_entry=async_setup_entry,
+            async_unload_entry=async_unload_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    with pytest.raises(
+        config_entries.OperationNotAllowed,
+        match="cannot be set up because it is not locked",
+    ):
+        await entry.async_setup(hass)
+    assert len(async_setup.mock_calls) == 0
+    assert len(async_setup_entry.mock_calls) == 0
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+
+
+async def test_entry_unload_without_lock_raises(hass: HomeAssistant) -> None:
+    """Test trying to unload a config entry without the lock."""
+    entry = MockConfigEntry(domain="comp", state=config_entries.ConfigEntryState.LOADED)
+    entry.add_to_hass(hass)
+
+    async_setup = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=True)
+    async_unload_entry = AsyncMock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=async_setup,
+            async_setup_entry=async_setup_entry,
+            async_unload_entry=async_unload_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    with pytest.raises(
+        config_entries.OperationNotAllowed,
+        match="cannot be unloaded because it is not locked",
+    ):
+        await entry.async_unload(hass)
+    assert len(async_setup.mock_calls) == 0
+    assert len(async_setup_entry.mock_calls) == 0
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
 @pytest.mark.parametrize(
     "state",
     [
