@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Callable, Iterable
+from collections.abc import Iterable
 from dataclasses import dataclass
-import inspect
 import logging
-from types import NoneType, UnionType
-from typing import Any, TypeVar, Union, get_args, get_origin, get_type_hints
+from typing import Any
 
 import voluptuous as vol
 
@@ -54,99 +52,11 @@ class Tool:
         return f"<{self.__class__.__name__} - {self.name}>"
 
 
-class FunctionTool(Tool):
-    """LLM Tool representing an Python function.
-
-    The function is recommended to have annotations for all parameters.
-    If a parameter name is "hass" or any of the ToolInput attributes,
-    then the value for that parameter will be provided by the conversation agent.
-    All other arguments will be provided by the LLM.
-    """
-
-    function: Callable
-
-    def __init__(
-        self,
-        function: Callable,
-    ) -> None:
-        """Init the class."""
-
-        self.function = function
-
-        self.name = function.__name__
-        if self.name.startswith("async_"):
-            self.name = self.name[len("async_") :]
-
-        self.description = inspect.getdoc(function)
-
-        def hint_to_schema(hint: Any) -> Any:
-            if isinstance(hint, UnionType) or get_origin(hint) is Union:
-                hints = get_args(hint)
-                if len(hints) == 2 and hints[0] is NoneType:
-                    return vol.Maybe(hint_to_schema(hints[1]))
-                if len(hints) == 2 and hints[1] is NoneType:
-                    return vol.Maybe(hint_to_schema(hints[0]))
-                return vol.Any(*tuple(hint_to_schema(x) for x in hints))
-
-            if get_origin(hint) is list or get_origin(hint) is set:
-                schema = get_args(hint)[0]
-                if schema is Any or isinstance(schema, TypeVar):
-                    return get_origin(hint)
-                return [hint_to_schema(schema)]
-
-            if get_origin(hint) is dict:
-                schema = get_args(hint)
-                if (
-                    schema[0] is Any
-                    or schema[1] is Any
-                    or isinstance(schema[0], TypeVar)
-                    or isinstance(schema[1], TypeVar)
-                ):
-                    return dict
-                return {schema[0]: schema[1]}
-
-            return hint
-
-        schema = {}
-        annotations = get_type_hints(function)
-        for param in inspect.signature(function).parameters.values():
-            if param.name == "hass":
-                continue
-            if hasattr(ToolInput, param.name):
-                continue
-
-            hint = annotations.get(param.name, Any)
-
-            schema[
-                vol.Required(param.name)
-                if param.default is inspect.Parameter.empty
-                else vol.Optional(param.name, default=param.default)
-            ] = hint_to_schema(hint)
-
-        self.parameters = vol.Schema(schema)
-
-    async def async_call(self, hass: HomeAssistant, tool_input: ToolInput) -> Any:
-        """Call the function."""
-        kwargs = tool_input.tool_args
-        for parameter in inspect.signature(self.function).parameters.values():
-            if parameter.name == "hass":
-                kwargs["hass"] = hass
-            elif hasattr(ToolInput, parameter.name):
-                kwargs[parameter.name] = getattr(tool_input, parameter.name)
-
-        if inspect.iscoroutinefunction(self.function):
-            return await self.function(**kwargs)
-        return self.function(**kwargs)
-
-
 @callback
-def async_register_tool(hass: HomeAssistant, tool: Tool | Callable) -> None:
+def async_register_tool(hass: HomeAssistant, tool: Tool) -> None:
     """Register an LLM tool with Home Assistant."""
     if (tools := hass.data.get(DATA_KEY)) is None:
         tools = hass.data[DATA_KEY] = {}
-
-    if not isinstance(tool, Tool):
-        tool = FunctionTool(tool)
 
     if tool.name in tools:
         raise HomeAssistantError(f"Tool {tool.name} is already registered")
@@ -155,19 +65,15 @@ def async_register_tool(hass: HomeAssistant, tool: Tool | Callable) -> None:
 
 
 @callback
-def async_remove_tool(hass: HomeAssistant, tool: Tool | Callable | str) -> None:
+def async_remove_tool(hass: HomeAssistant, tool: Tool | str) -> None:
     """Remove an LLM tool from Home Assistant."""
     if (tools := hass.data.get(DATA_KEY)) is None:
         return
 
     if isinstance(tool, str):
         tool_name = tool
-    elif isinstance(tool, Tool):
-        tool_name = tool.name
     else:
-        tool_name = tool.__name__
-        if tool_name.startswith("async_"):
-            tool_name = tool_name[len("async_") :]
+        tool_name = tool.name
 
     tools.pop(tool_name, None)
 
@@ -194,13 +100,3 @@ async def async_call_tool(hass: HomeAssistant, tool_input: ToolInput) -> Any:
     tool_input.tool_args = tool.parameters(tool_input.tool_args)
 
     return await tool.async_call(hass, tool_input)
-
-
-def llm_tool(hass: HomeAssistant) -> Callable:
-    """Register a function as an LLM Tool with decorator."""
-
-    def _llm_tool(func: Callable) -> Callable:
-        async_register_tool(hass, func)
-        return func
-
-    return _llm_tool
