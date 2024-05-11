@@ -82,9 +82,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry, [Platform(entry.data[CONF_PLATFORM])]
     )
     if entry.data[CONF_PLATFORM] == Platform.NOTIFY and CONF_NAME in entry.data:
-        # The notify platform is not yet set up as entry, so
-        # forward setup config through discovery to ensure setup notify service.
-        # This is needed as long as the legacy service is not migrated
+        # New notify entities are being setup through the config entry,
+        # but during the deprecation period we want to keep the legacy notify platform,
+        # so we forward the setup config through discovery.
         hass.async_create_task(
             discovery.async_load_platform(
                 hass,

@@ -5,6 +5,7 @@ from __future__ import annotations
 from functools import partial
 import logging
 import os
+from types import MappingProxyType
 from typing import Any, TextIO
 
 import voluptuous as vol
@@ -105,9 +106,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up notify entity."""
-    config: dict[str, Any] = dict(entry.data)
     unique_id = entry.entry_id
-    async_add_entities([FileNotifyEntity(unique_id, config)])
+    async_add_entities([FileNotifyEntity(unique_id, entry.data)])
 
 
 class FileNotifyEntity(NotifyEntity):
@@ -116,7 +116,7 @@ class FileNotifyEntity(NotifyEntity):
     _attr_icon = FILE_ICON
     _attr_supported_features = NotifyEntityFeature.TITLE
 
-    def __init__(self, unique_id: str, config: dict[str, Any]) -> None:
+    def __init__(self, unique_id: str, config: MappingProxyType[str, Any]) -> None:
         """Initialize the service."""
         self._file_path: str = config[CONF_FILE_PATH]
         self._add_timestamp: bool = config.get(CONF_TIMESTAMP, False)
@@ -142,7 +142,7 @@ class FileNotifyEntity(NotifyEntity):
                 else:
                     text = f"{message}\n"
                 file.write(text)
-        except Exception as exc:
+        except OSError as exc:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="write_access_failed",
