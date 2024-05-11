@@ -319,11 +319,8 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
         return forecast
 
     def _add_to_forecast(
-        self, forecast: list[Forecast] | None, nws_forecast: list[dict[str, Any]] | None
-    ) -> list[NWSForecast] | None:
-        if forecast is None or nws_forecast is None:
-            return None
-
+        self, forecast: list[Forecast], nws_forecast: list[dict[str, Any]]
+    ) -> list[NWSForecast]:
         full_forecast: list[NWSForecast] = cast(list[NWSForecast], forecast.copy())
         for forecast_entry, nws_forecast_entry in zip(
             full_forecast, nws_forecast, strict=True
