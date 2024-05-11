@@ -406,6 +406,9 @@ aiowithings==2.1.0
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
 
+# homeassistant.components.airgradient
+airgradient==0.4.0
+
 # homeassistant.components.airly
 airly==1.1.0
 
@@ -694,7 +697,7 @@ debugpy==1.8.1
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==7.1.0
+deebot-client==7.2.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1116,7 +1119,7 @@ ibmiotf==0.3.4
 # homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==8.0.0
+ical==8.0.1
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -2090,7 +2093,7 @@ pyqwikswitch==0.93
 pyrail==0.0.3
 
 # homeassistant.components.rainbird
-pyrainbird==4.0.2
+pyrainbird==6.0.1
 
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2
@@ -2340,7 +2343,7 @@ pytradfri[async]==9.0.1
 pytrafikverket==0.3.10
 
 # homeassistant.components.v2c
-pytrydan==0.4.0
+pytrydan==0.6.0
 
 # homeassistant.components.usb
 pyudev==0.24.1
@@ -2575,7 +2578,7 @@ smhi-pkg==1.0.16
 snapcast==2.3.6
 
 # homeassistant.components.sonos
-soco==0.30.3
+soco==0.30.4
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
