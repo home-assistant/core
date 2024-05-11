@@ -6,7 +6,7 @@
         "description": "The Husqvarna Automower integration needs to re-authenticate your account"
       },
       "missing_scope": {
-        "title": "Your account is missing some API conenctions.",
+        "title": "Your account is missing some API connections",
         "description": "For the best experience with this integration both `Authentiacation API` and `Automower Connect API` should be connected. Please make sure, that both of them are conncted to your account in the [Husqvarana Developers Portal](https://developer.husqvarnagroup.cloud/applications/{client_id}). You can find more inforamtion [here](https://www.home-assistant.io/integrations/husqvarna_automower/)."
       },
       "pick_implementation": {
