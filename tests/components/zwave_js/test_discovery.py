@@ -331,3 +331,15 @@ async def test_indicator_test(
         "propertyKey": "Switch",
     }
     assert args["value"] is False
+
+
+async def test_light_device_class_is_null(
+    hass: HomeAssistant, client, light_device_class_is_null, integration
+) -> None:
+    """Test that a Multilevel Switch CC value with a null device class is discovered as a light.
+
+    Tied to #117121.
+    """
+    node = light_device_class_is_null
+    assert node.device_class is None
+    assert hass.states.get("light.bar_display_cases")

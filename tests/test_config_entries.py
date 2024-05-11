@@ -386,7 +386,7 @@ async def test_remove_entry(
     ]
 
     # Setup entry
-    await entry.async_setup(hass)
+    await manager.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     # Check entity state got added
@@ -692,6 +692,13 @@ async def test_entries_excludes_ignore_and_disabled(
         entry3,
         disabled_entry,
     ]
+    assert manager.async_has_entries("test") is True
+    assert manager.async_has_entries("test2") is True
+    assert manager.async_has_entries("test3") is True
+    assert manager.async_has_entries("ignored") is True
+    assert manager.async_has_entries("disabled") is True
+
+    assert manager.async_has_entries("not") is False
     assert manager.async_entries(include_ignore=False) == [
         entry,
         entry2a,
@@ -712,6 +719,10 @@ async def test_entries_excludes_ignore_and_disabled(
         entry2b,
         entry3,
     ]
+    assert manager.async_has_entries("test", include_ignore=False) is True
+    assert manager.async_has_entries("test2", include_ignore=False) is True
+    assert manager.async_has_entries("test3", include_ignore=False) is True
+    assert manager.async_has_entries("ignored", include_ignore=False) is False
 
     assert manager.async_entries(include_ignore=True) == [
         entry,
@@ -737,6 +748,10 @@ async def test_entries_excludes_ignore_and_disabled(
         entry3,
         disabled_entry,
     ]
+    assert manager.async_has_entries("test", include_disabled=False) is True
+    assert manager.async_has_entries("test2", include_disabled=False) is True
+    assert manager.async_has_entries("test3", include_disabled=False) is True
+    assert manager.async_has_entries("disabled", include_disabled=False) is False
 
 
 async def test_saving_and_loading(
@@ -1613,7 +1628,9 @@ async def test_entry_reload_succeed(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test that we can reload an entry."""
-    entry = MockConfigEntry(domain="comp", state=config_entries.ConfigEntryState.LOADED)
+    entry = MockConfigEntry(
+        domain="comp", state=config_entries.ConfigEntryState.NOT_LOADED
+    )
     entry.add_to_hass(hass)
 
     async_setup = AsyncMock(return_value=True)
@@ -1635,6 +1652,42 @@ async def test_entry_reload_succeed(
     assert len(async_setup.mock_calls) == 1
     assert len(async_setup_entry.mock_calls) == 1
     assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    "state",
+    [
+        config_entries.ConfigEntryState.LOADED,
+        config_entries.ConfigEntryState.SETUP_IN_PROGRESS,
+    ],
+)
+async def test_entry_cannot_be_loaded_twice(
+    hass: HomeAssistant, state: config_entries.ConfigEntryState
+) -> None:
+    """Test that a config entry cannot be loaded twice."""
+    entry = MockConfigEntry(domain="comp", state=state)
+    entry.add_to_hass(hass)
+
+    async_setup = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=True)
+    async_unload_entry = AsyncMock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=async_setup,
+            async_setup_entry=async_setup_entry,
+            async_unload_entry=async_unload_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    with pytest.raises(config_entries.OperationNotAllowed, match=str(state)):
+        await entry.async_setup(hass)
+    assert len(async_setup.mock_calls) == 0
+    assert len(async_setup_entry.mock_calls) == 0
+    assert entry.state is state
 
 
 @pytest.mark.parametrize(
@@ -4005,7 +4058,9 @@ async def test_entry_reload_concurrency_not_setup_setup(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test multiple reload calls do not cause a reload race."""
-    entry = MockConfigEntry(domain="comp", state=config_entries.ConfigEntryState.LOADED)
+    entry = MockConfigEntry(
+        domain="comp", state=config_entries.ConfigEntryState.NOT_LOADED
+    )
     entry.add_to_hass(hass)
 
     async_setup = AsyncMock(return_value=True)
