@@ -109,7 +109,7 @@ async def test_service_unloaded_entry(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test service not called when config entry unloaded."""
-    await init_integration.async_unload(hass)
+    await hass.config_entries.async_unload(init_integration.entry_id)
 
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, "abcdef-123456")}
