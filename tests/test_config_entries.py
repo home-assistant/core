@@ -1241,7 +1241,7 @@ async def test_setup_retrying_during_unload(
     assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
     assert len(mock_call.return_value.mock_calls) == 0
 
-    await entry.async_unload(hass)
+    await manager.async_unload(entry.entry_id)
 
     assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
     assert len(mock_call.return_value.mock_calls) == 1
@@ -1268,7 +1268,7 @@ async def test_setup_retrying_during_unload_before_started(
         hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED] == initial_listeners + 1
     )
 
-    await entry.async_unload(hass)
+    await manager.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
