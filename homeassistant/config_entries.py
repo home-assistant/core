@@ -48,7 +48,7 @@ from .exceptions import (
 )
 from .helpers import device_registry, entity_registry, issue_registry as ir, storage
 from .helpers.debounce import Debouncer
-from .helpers.dispatcher import SignalType, async_dispatcher_send
+from .helpers.dispatcher import SignalType, async_dispatcher_send_internal
 from .helpers.event import (
     RANDOM_MICROSECOND_MAX,
     RANDOM_MICROSECOND_MIN,
@@ -153,7 +153,7 @@ class ConfigEntryState(Enum):
         """Create new ConfigEntryState."""
         obj = object.__new__(cls)
         obj._value_ = value
-        obj._recoverable = recoverable
+        obj._recoverable = recoverable  # noqa: SLF001
         return obj
 
     @property
@@ -517,6 +517,15 @@ class ConfigEntry(Generic[_DataT]):
 
         # Only store setup result as state if it was not forwarded.
         if domain_is_integration := self.domain == integration.domain:
+            if self.state in (
+                ConfigEntryState.LOADED,
+                ConfigEntryState.SETUP_IN_PROGRESS,
+            ):
+                raise OperationNotAllowed(
+                    f"The config entry {self.title} ({self.domain}) with entry_id"
+                    f" {self.entry_id} cannot be setup because is already loaded in the"
+                    f" {self.state} state"
+                )
             self._async_set_state(hass, ConfigEntryState.SETUP_IN_PROGRESS, None)
 
         if self.supports_unload is None:
@@ -753,7 +762,7 @@ class ConfigEntry(Generic[_DataT]):
 
         component = await integration.async_get_component()
 
-        if integration.domain == self.domain:
+        if domain_is_integration := self.domain == integration.domain:
             if not self.state.recoverable:
                 return False
 
@@ -765,7 +774,7 @@ class ConfigEntry(Generic[_DataT]):
         supports_unload = hasattr(component, "async_unload_entry")
 
         if not supports_unload:
-            if integration.domain == self.domain:
+            if domain_is_integration:
                 self._async_set_state(
                     hass, ConfigEntryState.FAILED_UNLOAD, "Unload not supported"
                 )
@@ -777,15 +786,16 @@ class ConfigEntry(Generic[_DataT]):
             assert isinstance(result, bool)
 
             # Only adjust state if we unloaded the component
-            if result and integration.domain == self.domain:
-                self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
+            if domain_is_integration:
+                if result:
+                    self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
 
-            await self._async_process_on_unload(hass)
-        except Exception as exc:  # pylint: disable=broad-except
+                await self._async_process_on_unload(hass)
+        except Exception as exc:
             _LOGGER.exception(
                 "Error unloading entry %s for %s", self.title, integration.domain
             )
-            if integration.domain == self.domain:
+            if domain_is_integration:
                 self._async_set_state(
                     hass, ConfigEntryState.FAILED_UNLOAD, str(exc) or "Unknown error"
                 )
@@ -812,7 +822,7 @@ class ConfigEntry(Generic[_DataT]):
             return
         try:
             await component.async_remove_entry(hass, self)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Error calling entry remove callback %s for %s",
                 self.title,
@@ -841,7 +851,7 @@ class ConfigEntry(Generic[_DataT]):
             error_reason_translation_placeholders,
         )
         self.clear_cache()
-        async_dispatcher_send(
+        async_dispatcher_send_internal(
             hass, SIGNAL_CONFIG_ENTRY_CHANGED, ConfigEntryChange.UPDATED, self
         )
 
@@ -887,9 +897,8 @@ class ConfigEntry(Generic[_DataT]):
                 )
                 return False
             if result:
-                # pylint: disable-next=protected-access
-                hass.config_entries._async_schedule_save()
-        except Exception:  # pylint: disable=broad-except
+                hass.config_entries._async_schedule_save()  # noqa: SLF001
+        except Exception:
             _LOGGER.exception(
                 "Error migrating entry %s for %s", self.title, self.domain
             )
@@ -1189,8 +1198,8 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         # a single config entry, but which already has an entry
         if (
             context.get("source") not in {SOURCE_IGNORE, SOURCE_REAUTH, SOURCE_UNIGNORE}
+            and self.config_entries.async_has_entries(handler, include_ignore=False)
             and await _support_single_config_entry_only(self.hass, handler)
-            and self.config_entries.async_entries(handler, include_ignore=False)
         ):
             return ConfigFlowResult(
                 type=data_entry_flow.FlowResultType.ABORT,
@@ -1294,9 +1303,9 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         # Avoid adding a config entry for a integration
         # that only supports a single config entry, but already has an entry
         if (
-            await _support_single_config_entry_only(self.hass, flow.handler)
+            self.config_entries.async_has_entries(flow.handler, include_ignore=False)
+            and await _support_single_config_entry_only(self.hass, flow.handler)
             and flow.context["source"] != SOURCE_IGNORE
-            and self.config_entries.async_entries(flow.handler, include_ignore=False)
         ):
             return ConfigFlowResult(
                 type=data_entry_flow.FlowResultType.ABORT,
@@ -1335,10 +1344,9 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
                 await flow.async_set_unique_id(None)
 
             # Find existing entry.
-            for check_entry in self.config_entries.async_entries(result["handler"]):
-                if check_entry.unique_id == flow.unique_id:
-                    existing_entry = check_entry
-                    break
+            existing_entry = self.config_entries.async_entry_for_domain_unique_id(
+                result["handler"], flow.unique_id
+            )
 
         # Unload the entry before setting up the new one.
         # We will remove it only after the other one is set up,
@@ -1566,6 +1574,21 @@ class ConfigEntries:
         return list(self._entries.data)
 
     @callback
+    def async_has_entries(
+        self, domain: str, include_ignore: bool = True, include_disabled: bool = True
+    ) -> bool:
+        """Return if there are entries for a domain."""
+        entries = self._entries.get_entries_for_domain(domain)
+        if include_ignore and include_disabled:
+            return bool(entries)
+        return any(
+            entry
+            for entry in entries
+            if (include_ignore or entry.source != SOURCE_IGNORE)
+            and (include_disabled or not entry.disabled_by)
+        )
+
+    @callback
     def async_entries(
         self,
         domain: str | None = None,
@@ -1612,15 +1635,16 @@ class ConfigEntries:
         if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
 
-        if not entry.state.recoverable:
-            unload_success = entry.state is not ConfigEntryState.FAILED_UNLOAD
-        else:
-            unload_success = await self.async_unload(entry_id)
+        async with entry.setup_lock:
+            if not entry.state.recoverable:
+                unload_success = entry.state is not ConfigEntryState.FAILED_UNLOAD
+            else:
+                unload_success = await self.async_unload(entry_id)
 
-        await entry.async_remove(self.hass)
+            await entry.async_remove(self.hass)
 
-        del self._entries[entry.entry_id]
-        self._async_schedule_save()
+            del self._entries[entry.entry_id]
+            self._async_schedule_save()
 
         dev_reg = device_registry.async_get(self.hass)
         ent_reg = entity_registry.async_get(self.hass)
@@ -1880,6 +1904,7 @@ class ConfigEntries:
         if entry.entry_id not in self._entries:
             raise UnknownEntry(entry.entry_id)
 
+        self.hass.verify_event_loop_thread("async_update_entry")
         changed = False
         _setter = object.__setattr__
 
@@ -1928,7 +1953,7 @@ class ConfigEntries:
         self, change_type: ConfigEntryChange, entry: ConfigEntry
     ) -> None:
         """Dispatch a config entry change."""
-        async_dispatcher_send(
+        async_dispatcher_send_internal(
             self.hass, SIGNAL_CONFIG_ENTRY_CHANGED, change_type, entry
         )
 
@@ -1984,7 +2009,7 @@ class ConfigEntries:
                 with async_pause_setup(self.hass, SetupPhases.WAIT_IMPORT_PLATFORMS):
                     await integration.async_get_platform(domain)
 
-        integration = await loader.async_get_integration(self.hass, domain)
+        integration = loader.async_get_loaded_integration(self.hass, domain)
         await entry.async_setup(self.hass, integration=integration)
         return True
 
@@ -2012,7 +2037,7 @@ class ConfigEntries:
         if domain not in self.hass.config.components:
             return True
 
-        integration = await loader.async_get_integration(self.hass, domain)
+        integration = loader.async_get_loaded_integration(self.hass, domain)
 
         return await entry.async_unload(self.hass, integration=integration)
 
@@ -2035,9 +2060,7 @@ class ConfigEntries:
         Config entries which are created after Home Assistant is started can't be waited
         for, the function will just return if the config entry is loaded or not.
         """
-        setup_done: dict[str, asyncio.Future[bool]] = self.hass.data.get(
-            DATA_SETUP_DONE, {}
-        )
+        setup_done = self.hass.data.get(DATA_SETUP_DONE, {})
         if setup_future := setup_done.get(entry.domain):
             await setup_future
         # The component was not loaded.
