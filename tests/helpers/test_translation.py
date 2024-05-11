@@ -16,6 +16,11 @@ from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
 
+@pytest.fixture(autouse=True)
+def _disable_translations_once(disable_translations_once):
+    """Override loading translations once."""
+
+
 @pytest.fixture
 def mock_config_flows():
     """Mock the config flows."""
