@@ -1235,15 +1235,21 @@ def async_discover_single_value(
             continue
 
         # check device_class_generic
-        if value.node.device_class and not check_device_class(
-            value.node.device_class.generic, schema.device_class_generic
-        ):
+        if (
+            value.node.device_class
+            and not check_device_class(
+                value.node.device_class.generic, schema.device_class_generic
+            )
+        ) or (not value.node.device_class and schema.device_class_generic):
             continue
 
         # check device_class_specific
-        if value.node.device_class and not check_device_class(
-            value.node.device_class.specific, schema.device_class_specific
-        ):
+        if (
+            value.node.device_class
+            and not check_device_class(
+                value.node.device_class.specific, schema.device_class_specific
+            )
+        ) or (not value.node.device_class and schema.device_class_specific):
             continue
 
         # check primary value
