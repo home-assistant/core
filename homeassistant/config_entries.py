@@ -529,7 +529,8 @@ class ConfigEntry(Generic[_DataT]):
             if not self.setup_lock.locked():
                 raise OperationNotAllowed(
                     f"The config entry {self.title} ({self.domain}) with entry_id"
-                    f" {self.entry_id} cannot be set up because it is not locked"
+                    f" {self.entry_id} cannot be set up because it does not hold "
+                    "the setup lock"
                 )
             self._async_set_state(hass, ConfigEntryState.SETUP_IN_PROGRESS, None)
 
@@ -771,7 +772,8 @@ class ConfigEntry(Generic[_DataT]):
             if not self.setup_lock.locked():
                 raise OperationNotAllowed(
                     f"The config entry {self.title} ({self.domain}) with entry_id"
-                    f" {self.entry_id} cannot be unloaded because it is not locked"
+                    f" {self.entry_id} cannot be unloaded because it does not hold "
+                   "the setup lock"
                 )
 
             if not self.state.recoverable:
@@ -821,7 +823,8 @@ class ConfigEntry(Generic[_DataT]):
         if not self.setup_lock.locked():
             raise OperationNotAllowed(
                 f"The config entry {self.title} ({self.domain}) with entry_id"
-                f" {self.entry_id} cannot be removed because it is not locked"
+                f" {self.entry_id} cannot be removed because it does not hold "
+               "the setup lock"
             )
 
         if not (integration := self._integration_for_domain):
