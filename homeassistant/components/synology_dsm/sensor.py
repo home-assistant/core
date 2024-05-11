@@ -274,7 +274,6 @@ EXTERNAL_USB_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         suggested_display_precision=2,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:chart-pie",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -286,7 +285,6 @@ EXTERNAL_USB_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         suggested_display_precision=2,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:chart-pie",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
@@ -297,7 +295,6 @@ EXTERNAL_USB_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         suggested_display_precision=2,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:chart-pie",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
@@ -305,7 +302,6 @@ EXTERNAL_USB_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         key="partitions_all_percentage_used",
         translation_key="partitions_all_percentage_used",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:chart-pie",
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
@@ -342,6 +338,8 @@ async def async_setup_entry(
     coordinator = data.coordinator_central
     storage = api.storage
     assert storage is not None
+    external_usb = api.external_usb
+    assert external_usb is not None
 
     entities: list[
         SynoDSMUtilSensor
@@ -374,11 +372,11 @@ async def async_setup_entry(
         )
 
     # Handle all external usb
-    if api.external_usb.get_devices:
+    if external_usb.get_devices:
         entities.extend(
             [
                 SynoDSMExternalUSBSensor(api, coordinator, description, device)
-                for device in entry.data.get(CONF_DEVICES, api.external_usb.get_devices)
+                for device in entry.data.get(CONF_DEVICES, external_usb.get_devices)
                 for description in EXTERNAL_USB_SENSORS
             ]
         )
@@ -477,7 +475,9 @@ class SynoDSMExternalUSBSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
     @property
     def native_value(self) -> StateType:
         """Return the state."""
-        device = self._api.external_usb.get_devices.get(str(self._device_id))
+        external_usb = self._api.external_usb
+        assert external_usb is not None
+        device = external_usb.get_devices.get(str(self._device_id))
         attr = getattr(device, self.entity_description.key)
         if callable(attr):
             attr = attr()

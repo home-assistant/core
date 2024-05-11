@@ -22,6 +22,9 @@
       "cpu_15min_load": {
         "default": "mdi:chip"
       },
+      "device_size_total": {
+        "default": "mdi:chart-pie"
+      },
       "memory_real_usage": {
         "default": "mdi:memory"
       },
@@ -48,6 +51,15 @@
       },
       "network_down": {
         "default": "mdi:download"
+      },
+      "partitions_all_percentage_used": {
+        "default": "mdi:chart-pie"
+      },
+      "partitions_all_size_total": {
+        "default": "mdi:chart-pie"
+      },
+      "partitions_all_size_used": {
+        "default": "mdi:chart-pie"
       },
       "volume_status": {
         "default": "mdi:checkbox-marked-circle-outline",
