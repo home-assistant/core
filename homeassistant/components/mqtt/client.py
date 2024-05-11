@@ -82,8 +82,8 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_BUFFER_SIZE = 131072  # Minimum buffer size to use
-PREFERRED_BUFFER_SIZE = 2097152  # Set buffer limit to 2MB
+MIN_BUFFER_SIZE = 131072  # Minimum buffer size to use if preferred size fails
+PREFERRED_BUFFER_SIZE = 2097152  # Set receive buffer size to 2MB
 
 DISCOVERY_COOLDOWN = 5
 # The initial subscribe cooldown controls how long to wait to group
