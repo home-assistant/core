@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 class V2CSensorEntityDescription(SensorEntityDescription):
     """Describes an EVSE Power sensor entity."""
 
-    value_fn: Callable[[TrydanData], float | str | None]
+    value_fn: Callable[[TrydanData], StateType]
 
 
 TRYDAN_SENSORS = (
