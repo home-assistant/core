@@ -11,13 +11,19 @@ import subprocess
 import sys
 from typing import Final
 
+#
 # Test weights are the relative time it takes to run a test vs
 # the average test. The average test is 1.
+#
 TEST_WEIGHTS = {
     "tests/test_circular_imports.py": 40,
     "tests/test_bootstrap.py": 2,
+    "tests/components/conversation/test_init.py": 5,
+    "tests/components/insteon/test_api_scenes.py": 5,
     "tests/components/sensor/test_recorder_missing_stats.py": 3,
     "tests/components/sensor/test_recorder.py": 3,
+    "tests/components/zha/test_discover.py": 3,
+    "tests/components/zha/test_cluster_handlers.py": 2,
 }
 
 
