@@ -1158,16 +1158,20 @@ async def test_update_entry_options_and_trigger_listener(
     """Test that we can update entry options and trigger listener."""
     entry = MockConfigEntry(domain="test", options={"first": True})
     entry.add_to_manager(manager)
+    update_listener_calls = []
 
     async def update_listener(hass, entry):
         """Test function."""
         assert entry.options == {"second": True}
+        update_listener_calls.append(None)
 
     entry.add_update_listener(update_listener)
 
     assert manager.async_update_entry(entry, options={"second": True}) is True
 
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert entry.options == {"second": True}
+    assert len(update_listener_calls) == 1
 
 
 async def test_setup_raise_not_ready(
@@ -2595,7 +2599,7 @@ async def test_manual_add_overrides_ignored_entry_singleton(
     assert p_entry.data == {"token": "supersecret"}
 
 
-async def test__async_current_entries_does_not_skip_ignore_non_user(
+async def test_async_current_entries_does_not_skip_ignore_non_user(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test that _async_current_entries does not skip ignore by default for non user step."""
@@ -2632,7 +2636,7 @@ async def test__async_current_entries_does_not_skip_ignore_non_user(
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test__async_current_entries_explicit_skip_ignore(
+async def test_async_current_entries_explicit_skip_ignore(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test that _async_current_entries can explicitly include ignore."""
@@ -2673,7 +2677,7 @@ async def test__async_current_entries_explicit_skip_ignore(
     assert p_entry.data == {"token": "supersecret"}
 
 
-async def test__async_current_entries_explicit_include_ignore(
+async def test_async_current_entries_explicit_include_ignore(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test that _async_current_entries can explicitly include ignore."""
@@ -3802,7 +3806,7 @@ async def test_scheduling_reload_unknown_entry(hass: HomeAssistant) -> None:
         ),
     ],
 )
-async def test__async_abort_entries_match(
+async def test_async_abort_entries_match(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
     matchers: dict[str, str],
@@ -3885,7 +3889,7 @@ async def test__async_abort_entries_match(
         ),
     ],
 )
-async def test__async_abort_entries_match_options_flow(
+async def test_async_abort_entries_match_options_flow(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
     matchers: dict[str, str],
@@ -4726,14 +4730,15 @@ async def test_unhashable_unique_id(
     """Test the ConfigEntryItems user dict handles unhashable unique_id."""
     entries = config_entries.ConfigEntryItems(hass)
     entry = config_entries.ConfigEntry(
-        version=1,
-        minor_version=1,
+        data={},
         domain="test",
         entry_id="mock_id",
-        title="title",
-        data={},
+        minor_version=1,
+        options={},
         source="test",
+        title="title",
         unique_id=unique_id,
+        version=1,
     )
 
     entries[entry.entry_id] = entry
@@ -4757,14 +4762,15 @@ async def test_hashable_non_string_unique_id(
     """Test the ConfigEntryItems user dict handles hashable non string unique_id."""
     entries = config_entries.ConfigEntryItems(hass)
     entry = config_entries.ConfigEntry(
-        version=1,
-        minor_version=1,
+        data={},
         domain="test",
         entry_id="mock_id",
-        title="title",
-        data={},
+        minor_version=1,
+        options={},
         source="test",
+        title="title",
         unique_id=unique_id,
+        version=1,
     )
 
     entries[entry.entry_id] = entry
