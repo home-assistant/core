@@ -26,14 +26,14 @@
       "salt_right_side_percentage": {
         "name": "Salt right side percentage"
       },
-      "salt_left_side_remaining_days": {
-        "name": "Salt left side days remaining"
+      "salt_left_side_time_remaining": {
+        "name": "Salt left side time remaining"
       },
-      "salt_right_side_remaining_days": {
-        "name": "Salt right side days remaining"
+      "salt_right_side_time_remaining": {
+        "name": "Salt right side time remaining"
       },
       "wifi_level": {
-        "name": "WiFi level",
+        "name": "Wi-Fi level",
         "state": {
           "low": "Low",
           "medium": "Medium",

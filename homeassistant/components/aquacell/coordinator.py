@@ -22,7 +22,7 @@ from .const import CONF_REFRESH_TOKEN, UPDATE_INTERVAL
 _LOGGER = logging.getLogger(__name__)
 
 
-class AquacellCoordinator(DataUpdateCoordinator[list[Softener]]):
+class AquacellCoordinator(DataUpdateCoordinator[dict[str, Softener]]):
     """My aquacell coordinator."""
 
     config_entry: ConfigEntry
@@ -41,38 +41,41 @@ class AquacellCoordinator(DataUpdateCoordinator[list[Softener]]):
         self.password = self.config_entry.data[CONF_PASSWORD]
         self.aquacell_api = aquacell_api
 
-    async def _async_update_data(self) -> list[Softener]:
+    async def _async_update_data(self) -> dict[str, Softener]:
         """Fetch data from API endpoint.
 
         This is the place to pre-process the data to lookup tables
         so entities can quickly look up their data.
         """
+
+        if self.refresh_token is None:
+            raise ConfigEntryError("No token available.")
+
+        async with asyncio.timeout(10):
+            _LOGGER.debug("Logging in using: %s", self.refresh_token)
+
+            try:
+                await self.aquacell_api.authenticate_refresh(self.refresh_token)
+            except AuthenticationFailed as err:
+                _LOGGER.debug(
+                    "Authentication using refresh token failed due to: %s", err
+                )
+                _LOGGER.debug("Attempting to renew refresh token")
+                refresh_token = await self.aquacell_api.authenticate(
+                    self.email, self.password
+                )
+                self.refresh_token = refresh_token
+                self._update_config_entry_refresh_token()
+
+            _LOGGER.debug("Logged in, new token: %s", self.aquacell_api.id_token)
         try:
-            if self.refresh_token is None:
-                raise ConfigEntryError("No token available.")
-
-            async with asyncio.timeout(10):
-                _LOGGER.debug("Logging in using: %s", self.refresh_token)
-
-                try:
-                    await self.aquacell_api.authenticate_refresh(self.refresh_token)
-                except AuthenticationFailed as err:
-                    _LOGGER.debug(
-                        "Authentication using refresh token failed due to: %s", err
-                    )
-                    _LOGGER.debug("Attempting to renew refresh token")
-                    refresh_token = await self.aquacell_api.authenticate(
-                        self.email, self.password
-                    )
-                    self.refresh_token = refresh_token
-                    self._update_config_entry_refresh_token()
-
-                _LOGGER.debug("Logged in, new token: %s", self.aquacell_api.id_token)
-                return await self.aquacell_api.get_all_softeners()
+            softeners = await self.aquacell_api.get_all_softeners()
         except AuthenticationFailed as err:
             raise ConfigEntryAuthFailed from err
         except AquacellApiException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+        return {softener.dsn: softener for softener in softeners}
 
     def _update_config_entry_refresh_token(self) -> None:
         """Update or delete the refresh_token in the Config Entry."""

@@ -48,15 +48,15 @@ SENSORS: tuple[SoftenerSensorEntityDescription, ...] = (
         value_fn=lambda softener: softener.salt.rightPercent,
     ),
     SoftenerSensorEntityDescription(
-        key="salt_left_side_remaining_days",
-        translation_key="salt_left_side_remaining_days",
+        key="salt_left_side_time_remaining",
+        translation_key="salt_left_side_time_remaining",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.DAYS,
         value_fn=lambda softener: softener.salt.leftDays,
     ),
     SoftenerSensorEntityDescription(
-        key="salt_right_side_remaining_days",
-        translation_key="salt_right_side_remaining_days",
+        key="salt_right_side_time_remaining",
+        translation_key="salt_right_side_time_remaining",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.DAYS,
         value_fn=lambda softener: softener.salt.rightDays,
@@ -87,36 +87,31 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensors."""
-    for idx, _ in enumerate(config_entry.runtime_data.data):
-        async_add_entities(
-            SoftenerSensor(config_entry.runtime_data, sensor, idx) for sensor in SENSORS
-        )
+    softeners = config_entry.runtime_data.data
+    async_add_entities(
+        SoftenerSensor(config_entry.runtime_data, sensor, softener_key)
+        for sensor in SENSORS
+        for softener_key in softeners
+    )
 
 
 class SoftenerSensor(AquacellEntity, SensorEntity):
     """Softener sensor."""
 
     entity_description: SoftenerSensorEntityDescription
-    _softener_index: int
 
     def __init__(
         self,
         coordinator: AquacellCoordinator,
         description: SoftenerSensorEntityDescription,
-        softener_index: int,
+        softener_key: str,
     ) -> None:
         """Pass coordinator to CoordinatorEntity."""
-        super().__init__(coordinator, coordinator.data[softener_index], description)
+        super().__init__(coordinator, softener_key, description.key)
 
         self.entity_description = description
-        self._softener_index = softener_index
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.softener)
-
-    @property
-    def softener(self) -> Softener:
-        """Handle updated data from the coordinator."""
-        return self.coordinator.data[self._softener_index]

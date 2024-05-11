@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -26,28 +25,6 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(
-    hass: HomeAssistant, email: str, password: str
-) -> dict[str, Any]:
-    """Validate the user input allows us to connect."""
-
-    session = async_get_clientsession(hass)
-    api = AquacellApi(session)
-    refresh_token = None
-    try:
-        refresh_token = await api.authenticate(email, password)
-    except AuthenticationFailed as err:
-        raise InvalidAuth from err
-    except ApiException as err:
-        raise CannotConnect from err
-
-    return {
-        CONF_REFRESH_TOKEN: refresh_token,
-        CONF_EMAIL: email,
-        CONF_PASSWORD: password,
-    }
-
-
 class AquaCellConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Aquacell."""
 
@@ -59,25 +36,31 @@ class AquaCellConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            session = async_get_clientsession(self.hass)
+            api = AquacellApi(session)
             try:
-                info = await validate_input(
-                    self.hass, user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
+                refresh_token = await api.authenticate(
+                    user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
                 )
-                await self.async_set_unique_id(
-                    user_input[CONF_EMAIL].lower(), raise_on_progress=False
-                )
-                self._abort_if_unique_id_configured()
-            except CannotConnect:
+            except ApiException:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
+            except AuthenticationFailed:
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                await self.async_set_unique_id(
+                    user_input[CONF_EMAIL].lower(), raise_on_progress=False
+                )
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL],
-                    data=info,
+                    data={
+                        CONF_REFRESH_TOKEN: refresh_token,
+                        CONF_EMAIL: user_input[CONF_EMAIL],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
                 )
 
         return self.async_show_form(
