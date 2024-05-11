@@ -48,8 +48,6 @@ def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
 class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the Teslemetry API."""
 
-    name = "Teslemetry Vehicle"
-
     def __init__(
         self, hass: HomeAssistant, api: VehicleSpecific, product: dict
     ) -> None:
@@ -62,6 +60,7 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.api = api
         self.data = flatten(product)
+        self.updated_once = False
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using Teslemetry API."""
@@ -77,6 +76,7 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
 
+        self.updated_once = True
         return flatten(data)
 
 
@@ -92,6 +92,7 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
             update_interval=ENERGY_LIVE_INTERVAL,
         )
         self.api = api
+        self.updated_once = False
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Teslemetry API."""
@@ -110,6 +111,7 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
             wc["din"]: wc for wc in (data.get("wall_connectors") or [])
         }
 
+        self.updated_once = True
         return data
 
 
@@ -126,6 +128,7 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         )
         self.api = api
         self.data = product
+        self.updated_once = False
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Teslemetry API."""
@@ -139,4 +142,5 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
 
+        self.updated_once = True
         return flatten(data)
