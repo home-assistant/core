@@ -818,6 +818,12 @@ class ConfigEntry(Generic[_DataT]):
         if self.source == SOURCE_IGNORE:
             return
 
+        if not self.setup_lock.locked():
+            raise OperationNotAllowed(
+                f"The config entry {self.title} ({self.domain}) with entry_id"
+                f" {self.entry_id} cannot be removed because it is not locked"
+            )
+
         if not (integration := self._integration_for_domain):
             try:
                 integration = await loader.async_get_integration(hass, self.domain)
