@@ -90,9 +90,9 @@ def async_remove(hass: HomeAssistant, intent_type: str) -> None:
 
 
 @callback
-def async_get(hass: HomeAssistant) -> Iterable[tuple[str, IntentHandler]]:
+def async_get(hass: HomeAssistant) -> Iterable[IntentHandler]:
     """Return registered intents."""
-    return hass.data.get(DATA_KEY, {}).items()
+    return hass.data.get(DATA_KEY, {}).values()
 
 
 async def async_handle(
