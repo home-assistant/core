@@ -20,7 +20,7 @@ async def test_button(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Tests that the climate entity is correct."""
+    """Tests that the button entities are correct."""
 
     entry = await setup_platform(hass, [Platform.BUTTON])
     assert_entities(hass, entry.entry_id, entity_registry, snapshot, False)
@@ -37,7 +37,7 @@ async def test_button(
     ],
 )
 async def test_press(hass: HomeAssistant, name: str, func: str) -> None:
-    """Test pressing all the buttons."""
+    """Test pressing the API buttons."""
     await setup_platform(hass, [Platform.BUTTON])
 
     with patch(
