@@ -1119,7 +1119,7 @@ ibmiotf==0.3.4
 # homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==8.0.0
+ical==8.0.1
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -2093,7 +2093,7 @@ pyqwikswitch==0.93
 pyrail==0.0.3
 
 # homeassistant.components.rainbird
-pyrainbird==4.0.2
+pyrainbird==6.0.1
 
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2
@@ -2578,7 +2578,7 @@ smhi-pkg==1.0.16
 snapcast==2.3.6
 
 # homeassistant.components.sonos
-soco==0.30.3
+soco==0.30.4
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
