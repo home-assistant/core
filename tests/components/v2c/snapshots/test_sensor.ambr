@@ -1,5 +1,8 @@
 # serializer version: 1
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 7baa37fd30 (Refactor V2C tests (#117264))
 # name: test_sensor[sensor.evse_1_1_1_1_charge_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -255,6 +258,7 @@
     'last_updated': <ANY>,
     'state': '0.0',
   })
+<<<<<<< HEAD
 =======
 # name: test_sensor
   list([
@@ -548,4 +552,6 @@
 # name: test_sensor[sensor.evse_1_1_1_1_slave_error-state]
   None
 >>>>>>> 528e43e89b (add sensor tests)
+=======
+>>>>>>> 7baa37fd30 (Refactor V2C tests (#117264))
 # ---
