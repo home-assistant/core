@@ -1198,8 +1198,8 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         # a single config entry, but which already has an entry
         if (
             context.get("source") not in {SOURCE_IGNORE, SOURCE_REAUTH, SOURCE_UNIGNORE}
+            and self.config_entries.async_has_entries(handler, include_ignore=False)
             and await _support_single_config_entry_only(self.hass, handler)
-            and self.config_entries.async_entries(handler, include_ignore=False)
         ):
             return ConfigFlowResult(
                 type=data_entry_flow.FlowResultType.ABORT,
@@ -1303,9 +1303,9 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         # Avoid adding a config entry for a integration
         # that only supports a single config entry, but already has an entry
         if (
-            await _support_single_config_entry_only(self.hass, flow.handler)
+            self.config_entries.async_has_entries(flow.handler, include_ignore=False)
+            and await _support_single_config_entry_only(self.hass, flow.handler)
             and flow.context["source"] != SOURCE_IGNORE
-            and self.config_entries.async_entries(flow.handler, include_ignore=False)
         ):
             return ConfigFlowResult(
                 type=data_entry_flow.FlowResultType.ABORT,
@@ -1344,10 +1344,9 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
                 await flow.async_set_unique_id(None)
 
             # Find existing entry.
-            for check_entry in self.config_entries.async_entries(result["handler"]):
-                if check_entry.unique_id == flow.unique_id:
-                    existing_entry = check_entry
-                    break
+            existing_entry = self.config_entries.async_entry_for_domain_unique_id(
+                result["handler"], flow.unique_id
+            )
 
         # Unload the entry before setting up the new one.
         # We will remove it only after the other one is set up,
@@ -1573,6 +1572,21 @@ class ConfigEntries:
     def async_entry_ids(self) -> list[str]:
         """Return entry ids."""
         return list(self._entries.data)
+
+    @callback
+    def async_has_entries(
+        self, domain: str, include_ignore: bool = True, include_disabled: bool = True
+    ) -> bool:
+        """Return if there are entries for a domain."""
+        entries = self._entries.get_entries_for_domain(domain)
+        if include_ignore and include_disabled:
+            return bool(entries)
+        return any(
+            entry
+            for entry in entries
+            if (include_ignore or entry.source != SOURCE_IGNORE)
+            and (include_disabled or not entry.disabled_by)
+        )
 
     @callback
     def async_entries(
