@@ -575,7 +575,7 @@ dbus-fast==2.21.1
 debugpy==1.8.1
 
 # homeassistant.components.ecovacs
-deebot-client==7.1.0
+deebot-client==7.2.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1822,7 +1822,7 @@ pytradfri[async]==9.0.1
 pytrafikverket==0.3.10
 
 # homeassistant.components.v2c
-pytrydan==0.4.0
+pytrydan==0.6.0
 
 # homeassistant.components.usb
 pyudev==0.24.1

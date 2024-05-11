@@ -164,6 +164,7 @@ FLOWS = {
         "faa_delays",
         "fastdotcom",
         "fibaro",
+        "file",
         "filesize",
         "fireservicerota",
         "fitbit",
