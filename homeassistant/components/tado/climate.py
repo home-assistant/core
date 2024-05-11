@@ -529,9 +529,14 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
                 self._tado_zone_temp_offset[attr] = self._tado.data["device"][
                     self._device_id
                 ][TEMP_OFFSET][offset_key]
+        # self._current_tado_fan_speed = self._tado_zone_data.current_fan_speed
+
         self._current_tado_fan_speed = (
-            self._tado_zone_data.current_fan_speed
-        )  # To update after library update
+            self._tado_zone_data.current_fan_level
+            if self._tado_zone_data.current_fan_level is not None
+            else self._current_tado_fan_speed
+        )
+        _LOGGER.debug("Showing current fan speed %s", self._current_tado_fan_speed)
         self._current_tado_hvac_mode = self._tado_zone_data.current_hvac_mode
         self._current_tado_hvac_action = self._tado_zone_data.current_hvac_action
         self._current_tado_swing_mode = self._tado_zone_data.current_swing_mode
