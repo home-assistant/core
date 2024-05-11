@@ -22,6 +22,7 @@ from tests.common import MockConfigEntry, assert_setup_component
 async def test_bad_config(hass: HomeAssistant) -> None:
     """Test set up the platform with bad/missing config."""
     config = {notify.DOMAIN: {"name": "test", "platform": "file"}}
+    await async_setup_component(hass, "repairs", {})
     with assert_setup_component(0) as handle_config:
         assert await async_setup_component(hass, notify.DOMAIN, config)
         await hass.async_block_till_done()
