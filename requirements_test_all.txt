@@ -379,6 +379,9 @@ aiowithings==2.1.0
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
 
+# homeassistant.components.airgradient
+airgradient==0.4.0
+
 # homeassistant.components.airly
 airly==1.1.0
 
@@ -572,7 +575,7 @@ dbus-fast==2.21.1
 debugpy==1.8.1
 
 # homeassistant.components.ecovacs
-deebot-client==7.1.0
+deebot-client==7.2.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -778,7 +781,7 @@ glances-api==0.6.0
 goalzero==0.2.2
 
 # homeassistant.components.goodwe
-goodwe==0.3.4
+goodwe==0.3.5
 
 # homeassistant.components.google_mail
 # homeassistant.components.google_tasks
@@ -1819,7 +1822,7 @@ pytradfri[async]==9.0.1
 pytrafikverket==0.3.10
 
 # homeassistant.components.v2c
-pytrydan==0.4.0
+pytrydan==0.6.0
 
 # homeassistant.components.usb
 pyudev==0.24.1

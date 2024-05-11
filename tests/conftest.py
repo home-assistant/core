@@ -48,7 +48,7 @@ from homeassistant.components.websocket_api.auth import (
 )
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.config import YAML_CONFIG_FILE
-from homeassistant.config_entries import ConfigEntries, ConfigEntry
+from homeassistant.config_entries import ConfigEntries, ConfigEntry, ConfigEntryState
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HassJob, HomeAssistant
 from homeassistant.helpers import (
@@ -558,12 +558,18 @@ async def hass(
 
         # Config entries are not normally unloaded on HA shutdown. They are unloaded here
         # to ensure that they could, and to help track lingering tasks and timers.
-        await asyncio.gather(
-            *(
-                create_eager_task(config_entry.async_unload(hass))
-                for config_entry in hass.config_entries.async_entries()
+        loaded_entries = [
+            entry
+            for entry in hass.config_entries.async_entries()
+            if entry.state is ConfigEntryState.LOADED
+        ]
+        if loaded_entries:
+            await asyncio.gather(
+                *(
+                    create_eager_task(config_entry.async_unload(hass))
+                    for config_entry in loaded_entries
+                )
             )
-        )
 
         await hass.async_stop(force=True)
 
