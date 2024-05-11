@@ -14,6 +14,7 @@ from . import assert_entities, setup_platform
 from .const import COMMAND_OK
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_button(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -22,40 +23,48 @@ async def test_button(
     """Tests that the climate entity is correct."""
 
     entry = await setup_platform(hass, [Platform.BUTTON])
-    assert_entities(hass, entry.entry_id, entity_registry, snapshot)
+    assert_entities(hass, entry.entry_id, entity_registry, snapshot, False)
 
 
 @pytest.mark.parametrize(
-    ("entity", "func"),
+    ("name", "func"),
     [
-        ("button.test_wake", False),
-        ("button.test_flash_lights", "flash_lights"),
-        ("button.test_honk", "honk_horn"),
-        ("button.test_enable_keyless_driving", "remote_start_drive"),
-        ("button.test_boombox", "remote_boombox"),
-        ("button.test_homelink", "trigger_homelink"),
-        ("button.test_refresh", False),
+        ("flash_lights", "flash_lights"),
+        ("honk_horn", "honk_horn"),
+        ("keyless_driving", "remote_start_drive"),
+        ("play_fart", "remote_boombox"),
+        ("homelink", "trigger_homelink"),
     ],
 )
-async def test_press(hass: HomeAssistant, entity: str, func: str) -> None:
-    """Test pressing all the buttons"""
+async def test_press(hass: HomeAssistant, name: str, func: str) -> None:
+    """Test pressing all the buttons."""
     await setup_platform(hass, [Platform.BUTTON])
 
-    if func:
-        with patch(
-            f"tesla_fleet_api.VehicleSpecific.{func}", side_effect=COMMAND_OK
-        ) as command:
-            await hass.services.async_call(
-                BUTTON_DOMAIN,
-                SERVICE_PRESS,
-                {ATTR_ENTITY_ID: [entity]},
-                blocking=True,
-            )
-            assert command.assert_called_once()
-    else:
+    with patch(
+        f"homeassistant.components.teslemetry.VehicleSpecific.{func}",
+        return_value=COMMAND_OK,
+    ) as command:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: [entity]},
+            {ATTR_ENTITY_ID: [f"button.test_{name}"]},
             blocking=True,
         )
+        command.assert_called_once()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_refresh(hass: HomeAssistant) -> None:
+    """Test pressing the refresh button."""
+    await setup_platform(hass, [Platform.BUTTON])
+
+    with patch(
+        "homeassistant.components.teslemetry.TeslemetryVehicleDataCoordinator.async_request_refresh"
+    ) as command:
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: ["button.test_force_refresh"]},
+            blocking=True,
+        )
+        command.assert_called_once()
