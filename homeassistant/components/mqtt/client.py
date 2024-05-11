@@ -86,6 +86,13 @@ MIN_BUFFER_SIZE = 131072  # Minimum buffer size to use
 PREFERRED_BUFFER_SIZE = 2097152  # Set buffer limit to 2MB
 
 DISCOVERY_COOLDOWN = 5
+# The initial subscribe cooldown controls how long to wait to group
+# subscriptions together. This is to avoid making too many subscribe
+# requests in a short period of time. If the number is too low, the
+# system will be flooded with subscribe requests. If the number is too
+# high, we risk being flooded with responses to the subscribe requests
+# which can exceed the receive buffer size of the socket. To mitigate
+# this, we increase the receive buffer size of the socket as well.
 INITIAL_SUBSCRIBE_COOLDOWN = 0.5
 SUBSCRIBE_COOLDOWN = 0.1
 UNSUBSCRIBE_COOLDOWN = 0.1
@@ -536,16 +543,16 @@ class MQTT:
         new_buffer_size = PREFERRED_BUFFER_SIZE
         while True:
             try:
-                # Some operation systems do not allow us to set the preferred
+                # Some operating systems do not allow us to set the preferred
                 # buffer size. In that case we try some other size options.
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, new_buffer_size)
             except OSError as err:
                 if new_buffer_size <= MIN_BUFFER_SIZE:
                     _LOGGER.warning(
                         "Unable to increase the socket buffer size to %s; "
-                        "The connection may unstable if the MQTT broker sends "
-                        "data at volume or a large amount of subscribes is "
-                        "to be processed: %s",
+                        "The connection may be unstable if the MQTT broker "
+                        "sends data at volume or a large amount of subscriptions "
+                        "need to be processed: %s",
                         new_buffer_size,
                         err,
                     )
