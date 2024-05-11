@@ -353,10 +353,11 @@ async def async_test_home_assistant(
 
     hass.set_state(CoreState.running)
 
-    async def clear_instance(event):
+    @callback
+    def clear_instance(event):
         """Clear global instance."""
-        await asyncio.sleep(0)  # Give aiohttp one loop iteration to close
-        INSTANCES.remove(hass)
+        # Give aiohttp one loop iteration to close
+        hass.loop.call_soon(INSTANCES.remove, hass)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, clear_instance)
 
@@ -631,6 +632,7 @@ def mock_registry(
         registry.entities[key] = entry
 
     hass.data[er.DATA_REGISTRY] = registry
+    er.async_get.cache_clear()
     return registry
 
 
@@ -654,6 +656,7 @@ def mock_area_registry(
         registry.areas[key] = entry
 
     hass.data[ar.DATA_REGISTRY] = registry
+    ar.async_get.cache_clear()
     return registry
 
 
@@ -682,6 +685,7 @@ def mock_device_registry(
     registry.deleted_devices = dr.DeviceRegistryItems()
 
     hass.data[dr.DATA_REGISTRY] = registry
+    dr.async_get.cache_clear()
     return registry
 
 

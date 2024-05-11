@@ -11,11 +11,12 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import Integration, async_get_integrations
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import load_json_object
 
 from .translation import build_resources
 
-ICON_CACHE = "icon_cache"
+ICON_CACHE: HassKey[_IconsCache] = HassKey("icon_cache")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,7 +143,7 @@ async def async_get_icons(
         components = hass.config.top_level_components
 
     if ICON_CACHE in hass.data:
-        cache: _IconsCache = hass.data[ICON_CACHE]
+        cache = hass.data[ICON_CACHE]
     else:
         cache = hass.data[ICON_CACHE] = _IconsCache(hass)
 
