@@ -30,7 +30,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_energy',
-    'unique_id': 'c07478488415d694d1d38309d24c52b1_charge_energy',
+    'unique_id': 'da58ee91f38c2406c2a36d0a1a7f8569_charge_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -81,7 +81,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_power',
-    'unique_id': 'c07478488415d694d1d38309d24c52b1_charge_power',
+    'unique_id': 'da58ee91f38c2406c2a36d0a1a7f8569_charge_power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -133,7 +133,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_time',
-    'unique_id': 'c07478488415d694d1d38309d24c52b1_charge_time',
+    'unique_id': 'da58ee91f38c2406c2a36d0a1a7f8569_charge_time',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -184,7 +184,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'house_power',
-    'unique_id': 'c07478488415d694d1d38309d24c52b1_house_power',
+    'unique_id': 'da58ee91f38c2406c2a36d0a1a7f8569_house_power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -235,7 +235,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'fv_power',
-    'unique_id': 'c07478488415d694d1d38309d24c52b1_fv_power',
+    'unique_id': 'da58ee91f38c2406c2a36d0a1a7f8569_fv_power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
