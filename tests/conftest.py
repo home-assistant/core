@@ -568,7 +568,7 @@ async def hass(
                 *(
                     create_eager_task(
                         hass.config_entries.async_unload(config_entry.entry_id),
-                        loop=hass.loop
+                        loop=hass.loop,
                     )
                     for config_entry in loaded_entries
                 )
