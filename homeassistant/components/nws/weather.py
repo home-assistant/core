@@ -364,7 +364,7 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
             native_forecast_list = await self.async_forecast_twice_daily()
             nws_forecast = self.nws.forecast
         if native_forecast_list is None or nws_forecast is None:
-            converted_forecast_list = []
+            detailed_forecast_list: list[NWSForecast] | None = []
         else:
             # pylint: disable-next=protected-access
             converted_forecast_list = self._convert_forecast(native_forecast_list)

@@ -38,6 +38,22 @@
     }),
   })
 # ---
+# name: test_detailed_forecast_service_no_data[hourly]
+  dict({
+    'weather.abc': dict({
+      'forecast': list([
+      ]),
+    }),
+  })
+# ---
+# name: test_detailed_forecast_service_no_data[twice_daily]
+  dict({
+    'weather.abc': dict({
+      'forecast': list([
+      ]),
+    }),
+  })
+# ---
 # name: test_forecast_service[get_forecast]
   dict({
     'forecast': list([
