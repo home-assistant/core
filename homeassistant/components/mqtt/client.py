@@ -531,17 +531,13 @@ class MQTT:
                 self.hass, self._misc_loop(), name="mqtt misc loop"
             )
 
-    def _increase_recv_buffer_size(self, sock: SocketType) -> None:
-        """Increase the recv buffer size."""
-        if self._socket_buffersize is not None:
-            sock.setsockopt(
-                socket.SOL_SOCKET, socket.SO_RCVBUF, self._socket_buffersize
-            )
-            return
+    def _increase_socket_buffer_size(self, sock: SocketType) -> None:
+        """Increase the socket buffer size."""
         new_buffer_size = PREFERRED_BUFFER_SIZE
         while True:
             try:
-                # Some
+                # Some operation systems do not allow us to set the preferred
+                # buffer size. In that case we try some other size options.
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, new_buffer_size)
             except OSError as err:
                 if new_buffer_size <= MIN_BUFFER_SIZE:
@@ -556,7 +552,6 @@ class MQTT:
                     return
                 new_buffer_size //= 2
             else:
-                self._socket_buffersize = new_buffer_size
                 return
 
     def _on_socket_open(
@@ -575,7 +570,7 @@ class MQTT:
         fileno = sock.fileno()
         _LOGGER.debug("%s: connection opened %s", self.config_entry.title, fileno)
         if fileno > -1:
-            self._increase_recv_buffer_size(sock)
+            self._increase_socket_buffer_size(sock)
             self.loop.add_reader(sock, partial(self._async_reader_callback, client))
         self._async_start_misc_loop()
 
