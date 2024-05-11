@@ -12,6 +12,7 @@ from homeassistant.const import CONF_HOST
 from tests.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.v2c.const import DOMAIN
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
