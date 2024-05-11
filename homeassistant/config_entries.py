@@ -523,13 +523,13 @@ class ConfigEntry(Generic[_DataT]):
             ):
                 raise OperationNotAllowed(
                     f"The config entry {self.title} ({self.domain}) with entry_id"
-                    f" {self.entry_id} cannot be setup because is already loaded in the"
-                    f" {self.state} state"
+                    f" {self.entry_id} cannot be set up because it is already loaded "
+                    f"in the {self.state} state"
                 )
             if not self.setup_lock.locked():
                 raise OperationNotAllowed(
                     f"The config entry {self.title} ({self.domain}) with entry_id"
-                    f" {self.entry_id} cannot be setup because it is not locked"
+                    f" {self.entry_id} cannot be set up because it is not locked"
                 )
             self._async_set_state(hass, ConfigEntryState.SETUP_IN_PROGRESS, None)
 
@@ -1748,8 +1748,8 @@ class ConfigEntries:
         if entry.state is not ConfigEntryState.NOT_LOADED:
             raise OperationNotAllowed(
                 f"The config entry {entry.title} ({entry.domain}) with entry_id"
-                f" {entry.entry_id} cannot be setup because is already loaded in the"
-                f" {entry.state} state"
+                f" {entry.entry_id} cannot be set up because it is already loaded"
+                f" in the {entry.state} state"
             )
 
         # Setup Component if not set up yet
