@@ -61,7 +61,7 @@ async def test_component_translation_path(
     )
 
 
-def test__load_translations_files_by_language(
+def test_load_translations_files_by_language(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test the load translation files function."""
