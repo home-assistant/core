@@ -366,13 +366,6 @@ class EnsureJobAfterCooldown:
         self._async_cancel_timer()
         self._timer = self._loop.call_later(self._timeout, self.async_execute)
 
-    @callback
-    def async_flush(self) -> None:
-        """Flush the subscribe buffer and reschedule."""
-        self._async_cancel_timer()
-        self._timer = self._loop.call_later(self._timeout, self.async_execute)
-        self._task = create_eager_task(self._async_job())
-
     async def async_cleanup(self) -> None:
         """Cleanup any pending task."""
         self._async_cancel_timer()
