@@ -448,3 +448,42 @@ async def test_forecast_subscription_with_failing_coordinator(
     )
     msg = await client.receive_json()
     assert not msg["success"]
+
+
+@pytest.mark.parametrize(
+    ("forecast_type"),
+    [
+        "hourly",
+        "twice_daily",
+    ],
+)
+async def test_detailed_forecast_service(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
+    mock_simple_nws,
+    no_sensor,
+    forecast_type: str,
+) -> None:
+    """Test detailed forecast."""
+
+    entry = MockConfigEntry(
+        domain=nws.DOMAIN,
+        data=NWS_CONFIG,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    response = await hass.services.async_call(
+        nws.DOMAIN,
+        "get_detailed_forecasts",
+        {
+            "entity_id": "weather.abc",
+            "type": forecast_type,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot
