@@ -3,8 +3,8 @@
 import logging
 from urllib.parse import ParseResult, urlparse
 
-from requests.exceptions import HTTPError, Timeout
-from sunwatcher.solarlog.solarlog import SolarLog
+from solarlog_cli.solarlog_connector import SolarLogConnector
+from solarlog_cli.solarlog_exceptions import SolarLogConnectionError, SolarLogError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
@@ -29,6 +29,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for solarlog."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -42,15 +43,18 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _test_connection(self, host):
         """Check if we can connect to the Solar-Log device."""
+        solarlog = SolarLogConnector(host)
         try:
-            await self.hass.async_add_executor_job(SolarLog, host)
-        except (OSError, HTTPError, Timeout):
-            self._errors[CONF_HOST] = "cannot_connect"
-            _LOGGER.error(
-                "Could not connect to Solar-Log device at %s, check host ip address",
-                host,
-            )
+            await solarlog.test_connection()
+        except SolarLogConnectionError:
+            self._errors = {CONF_HOST: "cannot_connect"}
             return False
+        except SolarLogError:  # pylint: disable=broad-except
+            self._errors = {CONF_HOST: "unknown"}
+            return False
+        finally:
+            solarlog.client.close()
+
         return True
 
     async def async_step_user(self, user_input=None):
@@ -58,19 +62,20 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
         self._errors = {}
         if user_input is not None:
             # set some defaults in case we need to return to the form
-            name = slugify(user_input.get(CONF_NAME, DEFAULT_NAME))
-            host_entry = user_input.get(CONF_HOST, DEFAULT_HOST)
+            user_input[CONF_NAME] = slugify(user_input[CONF_NAME])
 
-            url = urlparse(host_entry, "http")
+            url = urlparse(user_input[CONF_HOST], "http")
             netloc = url.netloc or url.path
             path = url.path if url.netloc else ""
             url = ParseResult("http", netloc, path, *url[3:])
-            host = url.geturl()
+            user_input[CONF_HOST] = url.geturl()
 
-            if self._host_in_configuration_exists(host):
+            if self._host_in_configuration_exists(user_input[CONF_HOST]):
                 self._errors[CONF_HOST] = "already_configured"
-            elif await self._test_connection(host):
-                return self.async_create_entry(title=name, data={CONF_HOST: host})
+            elif await self._test_connection(user_input[CONF_HOST]):
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME], data=user_input
+                )
         else:
             user_input = {}
             user_input[CONF_NAME] = DEFAULT_NAME
@@ -86,6 +91,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_HOST, default=user_input.get(CONF_HOST, DEFAULT_HOST)
                     ): str,
+                    vol.Required("extended_data", default=False): bool,
                 }
             ),
             errors=self._errors,
@@ -93,14 +99,23 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input=None):
         """Import a config entry."""
-        host_entry = user_input.get(CONF_HOST, DEFAULT_HOST)
 
-        url = urlparse(host_entry, "http")
-        netloc = url.netloc or url.path
-        path = url.path if url.netloc else ""
-        url = ParseResult("http", netloc, path, *url[3:])
-        host = url.geturl()
+        if CONF_HOST in user_input:
+            url = urlparse(user_input[CONF_HOST], "http")
+            netloc = url.netloc or url.path
+            path = url.path if url.netloc else ""
+            url = ParseResult("http", netloc, path, *url[3:])
+            user_input[CONF_HOST] = url.geturl()
 
-        if self._host_in_configuration_exists(host):
-            return self.async_abort(reason="already_configured")
+            if self._host_in_configuration_exists(user_input[CONF_HOST]):
+                return self.async_abort(reason="already_configured")
+        else:
+            user_input |= {CONF_HOST: DEFAULT_HOST}
+
+        if CONF_NAME not in user_input:
+            user_input |= {CONF_NAME: DEFAULT_NAME}
+
+        if "extended_data" not in user_input:
+            user_input |= {"extended_data": False}
+
         return await self.async_step_user(user_input)
