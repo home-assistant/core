@@ -81,15 +81,15 @@
           "server_rtu_inactive244_timeout": "Server RTU inactive/timeout",
           "invalid_server": "Invalid server",
           "crc_error": "CRC error",
-          "fc_missmatch": "FC mismatch",
-          "server_id_missmatch": "Server id missmatch",
+          "fc_mismatch": "FC mismatch",
+          "server_id_mismatch": "Server id mismatch",
           "packet_length_error": "Packet length error",
           "parameter_count_error": "Parameter count error",
           "parameter_limit_error": "Parameter limit error",
           "request_queue_full": "Request queue full",
           "illegal_ip_or_port": "Illegal IP or port",
           "ip_connection_failed": "IP connection failed",
-          "tcp_head_missmatch": "TCP head missmatch",
+          "tcp_head_mismatch": "TCP head mismatch",
           "empty_message": "Empty message",
           "undefined_error": "Undefined error"
         }
