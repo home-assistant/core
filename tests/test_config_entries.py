@@ -1407,7 +1407,7 @@ async def test_entry_options(
     entry = MockConfigEntry(domain="test", data={"first": True}, options=None)
     entry.add_to_manager(manager)
 
-    class TestFlow:
+    class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
         @staticmethod
@@ -1420,25 +1420,24 @@ async def test_entry_options(
 
             return OptionsFlowHandler()
 
-        def async_supports_options_flow(self, entry: MockConfigEntry) -> bool:
-            """Test options flow."""
-            return True
+    with mock_config_flow("test", TestFlow):
+        flow = await manager.options.async_create_flow(
+            entry.entry_id, context={"source": "test"}, data=None
+        )
 
-    config_entries.HANDLERS["test"] = TestFlow()
-    flow = await manager.options.async_create_flow(
-        entry.entry_id, context={"source": "test"}, data=None
-    )
+        flow.handler = entry.entry_id  # Used to keep reference to config entry
 
-    flow.handler = entry.entry_id  # Used to keep reference to config entry
+        await manager.options.async_finish_flow(
+            flow,
+            {
+                "data": {"second": True},
+                "type": data_entry_flow.FlowResultType.CREATE_ENTRY,
+            },
+        )
 
-    await manager.options.async_finish_flow(
-        flow,
-        {"data": {"second": True}, "type": data_entry_flow.FlowResultType.CREATE_ENTRY},
-    )
-
-    assert entry.data == {"first": True}
-    assert entry.options == {"second": True}
-    assert entry.supports_options is True
+        assert entry.data == {"first": True}
+        assert entry.options == {"second": True}
+        assert entry.supports_options is True
 
 
 async def test_entry_options_abort(
@@ -1450,7 +1449,7 @@ async def test_entry_options_abort(
     entry = MockConfigEntry(domain="test", data={"first": True}, options=None)
     entry.add_to_manager(manager)
 
-    class TestFlow:
+    class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
         @staticmethod
@@ -1463,16 +1462,16 @@ async def test_entry_options_abort(
 
             return OptionsFlowHandler()
 
-    config_entries.HANDLERS["test"] = TestFlow()
-    flow = await manager.options.async_create_flow(
-        entry.entry_id, context={"source": "test"}, data=None
-    )
+    with mock_config_flow("test", TestFlow):
+        flow = await manager.options.async_create_flow(
+            entry.entry_id, context={"source": "test"}, data=None
+        )
 
-    flow.handler = entry.entry_id  # Used to keep reference to config entry
+        flow.handler = entry.entry_id  # Used to keep reference to config entry
 
-    assert await manager.options.async_finish_flow(
-        flow, {"type": data_entry_flow.FlowResultType.ABORT, "reason": "test"}
-    )
+        assert await manager.options.async_finish_flow(
+            flow, {"type": data_entry_flow.FlowResultType.ABORT, "reason": "test"}
+        )
 
 
 async def test_entry_options_unknown_config_entry(
