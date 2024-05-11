@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import logging
 
 from pytrydan import TrydanData
+from pytrydan.models.trydan import SlaveCommunicationState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -18,6 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 from .coordinator import V2CUpdateCoordinator
@@ -32,6 +34,8 @@ class V2CSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[TrydanData], StateType]
 
+
+_SLAVE_ERROR_OPTIONS = [error.name for error in SlaveCommunicationState]
 
 TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
@@ -80,6 +84,8 @@ TRYDAN_SENSORS = (
         translation_key="slave_error",
         value_fn=lambda evse_data: evse_data.slave_error.name,
         entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=_SLAVE_ERROR_OPTIONS,
     ),
     V2CSensorEntityDescription(
         key="battery_power",
