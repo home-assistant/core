@@ -6,6 +6,7 @@ CONF_ACTION = "action"
 CONF_AVAILABILITY_TEMPLATE = "availability_template"
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 CONF_TRIGGER = "trigger"
+CONF_CONDITION = "condition"
 
 DOMAIN = "template"
 
@@ -30,6 +31,5 @@ PLATFORMS = [
 
 CONF_AVAILABILITY = "availability"
 CONF_ATTRIBUTES = "attributes"
-CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 CONF_PICTURE = "picture"
 CONF_OBJECT_ID = "object_id"
