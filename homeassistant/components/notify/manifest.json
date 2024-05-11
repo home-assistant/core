@@ -2,7 +2,7 @@
   "domain": "notify",
   "name": "Notifications",
   "codeowners": ["@home-assistant/core"],
-  "dependencies": ["http", "repairs"],
+  "dependencies": ["repairs"],
   "documentation": "https://www.home-assistant.io/integrations/notify",
   "integration_type": "entity",
   "quality_scale": "internal"
