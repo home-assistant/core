@@ -692,6 +692,13 @@ async def test_entries_excludes_ignore_and_disabled(
         entry3,
         disabled_entry,
     ]
+    assert manager.async_has_entries("test") is True
+    assert manager.async_has_entries("test2") is True
+    assert manager.async_has_entries("test3") is True
+    assert manager.async_has_entries("ignored") is True
+    assert manager.async_has_entries("disabled") is True
+
+    assert manager.async_has_entries("not") is False
     assert manager.async_entries(include_ignore=False) == [
         entry,
         entry2a,
@@ -712,6 +719,10 @@ async def test_entries_excludes_ignore_and_disabled(
         entry2b,
         entry3,
     ]
+    assert manager.async_has_entries("test", include_ignore=False) is True
+    assert manager.async_has_entries("test2", include_ignore=False) is True
+    assert manager.async_has_entries("test3", include_ignore=False) is True
+    assert manager.async_has_entries("ignored", include_ignore=False) is False
 
     assert manager.async_entries(include_ignore=True) == [
         entry,
@@ -737,6 +748,10 @@ async def test_entries_excludes_ignore_and_disabled(
         entry3,
         disabled_entry,
     ]
+    assert manager.async_has_entries("test", include_disabled=False) is True
+    assert manager.async_has_entries("test2", include_disabled=False) is True
+    assert manager.async_has_entries("test3", include_disabled=False) is True
+    assert manager.async_has_entries("disabled", include_disabled=False) is False
 
 
 async def test_saving_and_loading(
