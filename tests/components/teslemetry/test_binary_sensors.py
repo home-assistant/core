@@ -17,7 +17,7 @@ async def test_binary_sensor(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Tests that the climate entity is correct."""
+    """Tests that the binary sensor entities are correct."""
 
     entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
@@ -25,11 +25,9 @@ async def test_binary_sensor(
 
 async def test_binary_sensor_offline(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
     mock_vehicle_data,
 ) -> None:
-    """Tests that the climate entity is correct."""
+    """Tests that the binary sensor entities are correct when offline."""
 
     mock_vehicle_data.side_effect = VehicleOffline
     await setup_platform(hass, [Platform.BINARY_SENSOR])
