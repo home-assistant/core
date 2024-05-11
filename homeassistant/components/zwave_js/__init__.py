@@ -182,13 +182,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Set up websocket API
     async_register_api(hass)
+    entry.runtime_data = {}
 
     # Create a task to allow the config entry to be unloaded before the driver is ready.
     # Unloading the config entry is needed if the client listen task errors.
     start_client_task = hass.async_create_task(start_client(hass, entry, client))
-    hass.data[DOMAIN].setdefault(entry.entry_id, {})[DATA_START_CLIENT_TASK] = (
-        start_client_task
-    )
+    entry.runtime_data[DATA_START_CLIENT_TASK] = start_client_task
 
     return True
 
@@ -197,9 +196,8 @@ async def start_client(
     hass: HomeAssistant, entry: ConfigEntry, client: ZwaveClient
 ) -> None:
     """Start listening with the client."""
-    entry_hass_data: dict = hass.data[DOMAIN].setdefault(entry.entry_id, {})
-    entry_hass_data[DATA_CLIENT] = client
-    driver_events = entry_hass_data[DATA_DRIVER_EVENTS] = DriverEvents(hass, entry)
+    entry.runtime_data[DATA_CLIENT] = client
+    driver_events = entry.runtime_data[DATA_DRIVER_EVENTS] = DriverEvents(hass, entry)
 
     async def handle_ha_shutdown(event: Event) -> None:
         """Handle HA shutdown."""
@@ -208,7 +206,7 @@ async def start_client(
     listen_task = asyncio.create_task(
         client_listen(hass, entry, client, driver_events.ready)
     )
-    entry_hass_data[DATA_CLIENT_LISTEN_TASK] = listen_task
+    entry.runtime_data[DATA_CLIENT_LISTEN_TASK] = listen_task
     entry.async_on_unload(
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown)
     )
@@ -935,11 +933,10 @@ async def client_listen(
 
 async def disconnect_client(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Disconnect client."""
-    data = hass.data[DOMAIN][entry.entry_id]
-    client: ZwaveClient = data[DATA_CLIENT]
-    listen_task: asyncio.Task = data[DATA_CLIENT_LISTEN_TASK]
-    start_client_task: asyncio.Task = data[DATA_START_CLIENT_TASK]
-    driver_events: DriverEvents = data[DATA_DRIVER_EVENTS]
+    client: ZwaveClient = entry.runtime_data[DATA_CLIENT]
+    listen_task: asyncio.Task = entry.runtime_data[DATA_CLIENT_LISTEN_TASK]
+    start_client_task: asyncio.Task = entry.runtime_data[DATA_START_CLIENT_TASK]
+    driver_events: DriverEvents = entry.runtime_data[DATA_DRIVER_EVENTS]
     listen_task.cancel()
     start_client_task.cancel()
     platform_setup_tasks = driver_events.platform_setup_tasks.values()
@@ -959,9 +956,8 @@ async def disconnect_client(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    info = hass.data[DOMAIN][entry.entry_id]
-    client: ZwaveClient = info[DATA_CLIENT]
-    driver_events: DriverEvents = info[DATA_DRIVER_EVENTS]
+    client: ZwaveClient = entry.runtime_data[DATA_CLIENT]
+    driver_events: DriverEvents = entry.runtime_data[DATA_DRIVER_EVENTS]
 
     tasks: list[Coroutine] = [
         hass.config_entries.async_forward_entry_unload(entry, platform)
@@ -973,10 +969,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if client.connected and client.driver:
         await async_disable_server_logging_if_needed(hass, entry, client.driver)
-    if DATA_CLIENT_LISTEN_TASK in info:
+    if DATA_CLIENT_LISTEN_TASK in entry.runtime_data:
         await disconnect_client(hass, entry)
-
-    hass.data[DOMAIN].pop(entry.entry_id)
 
     if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
         addon_manager: AddonManager = get_addon_manager(hass)
@@ -1016,8 +1010,7 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
-    entry_hass_data = hass.data[DOMAIN][config_entry.entry_id]
-    client: ZwaveClient = entry_hass_data[DATA_CLIENT]
+    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
 
     # Driver may not be ready yet so we can't allow users to remove a device since
     # we need to check if the device is still known to the controller
@@ -1037,7 +1030,7 @@ async def async_remove_config_entry_device(
     ):
         return False
 
-    controller_events: ControllerEvents = entry_hass_data[
+    controller_events: ControllerEvents = config_entry.runtime_data[
         DATA_DRIVER_EVENTS
     ].controller_events
     controller_events.registered_unique_ids.pop(device_entry.id, None)
