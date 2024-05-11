@@ -1734,7 +1734,7 @@ async def test_entry_setup_without_lock_raises(hass: HomeAssistant) -> None:
 
     with pytest.raises(
         config_entries.OperationNotAllowed,
-        match="cannot be set up because it is not locked",
+        match="cannot be set up because it does not hold the setup lock",
     ):
         await entry.async_setup(hass)
     assert len(async_setup.mock_calls) == 0
@@ -1764,7 +1764,7 @@ async def test_entry_unload_without_lock_raises(hass: HomeAssistant) -> None:
 
     with pytest.raises(
         config_entries.OperationNotAllowed,
-        match="cannot be unloaded because it is not locked",
+        match="cannot be unloaded because it does not hold the setup lock",
     ):
         await entry.async_unload(hass)
     assert len(async_setup.mock_calls) == 0
@@ -1794,7 +1794,7 @@ async def test_entry_remove_without_lock_raises(hass: HomeAssistant) -> None:
 
     with pytest.raises(
         config_entries.OperationNotAllowed,
-        match="cannot be removed because it is not locked",
+        match="cannot be removed because it does not hold the setup lock",
     ):
         await entry.async_remove(hass)
     assert len(async_setup.mock_calls) == 0
