@@ -64,7 +64,6 @@ async def test_form(
 )
 async def test_form_cannot_connect(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     side_effect: Exception,
     error: str,
     mock_v2c_client: AsyncMock,
