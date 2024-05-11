@@ -128,7 +128,7 @@ class AutomowerLawnMowerEntity(AutomowerControlEntity, LawnMowerEntity):
             ) from exception
 
     async def async_start_for(self, duration: int) -> None:
-        """Let the mower mow for a given period of time."""
+        """Let the mower mow for a given time."""
         try:
             await self.coordinator.api.commands.start_for(self.mower_id, duration)
         except ApiException as exception:
@@ -137,7 +137,7 @@ class AutomowerLawnMowerEntity(AutomowerControlEntity, LawnMowerEntity):
             ) from exception
 
     async def async_park_for(self, duration: int) -> None:
-        """Let the mower mow for a given period of time."""
+        """Let the mower park for a given time."""
         try:
             await self.coordinator.api.commands.park_for(self.mower_id, duration)
         except ApiException as exception:
