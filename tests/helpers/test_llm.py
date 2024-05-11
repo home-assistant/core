@@ -1,6 +1,6 @@
 """Tests for the llm helpers."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
@@ -14,102 +14,6 @@ from homeassistant.helpers import (
     intent,
     llm,
 )
-
-
-def test_async_register(hass: HomeAssistant) -> None:
-    """Test registering an llm tool and verifying it is stored correctly."""
-    tool = llm.Tool()
-    tool.name = "test_tool"
-    tool.description = "test_description"
-
-    llm.async_register_tool(hass, tool)
-
-    assert hass.data[llm.DATA_KEY]["test_tool"] == tool
-    assert list(llm.async_get_tools(hass)) == [tool]
-
-
-def test_async_register_overwrite(hass: HomeAssistant) -> None:
-    """Test registering multiple tools with the same name, ensuring the second time an exception is raised."""
-    tool1 = llm.Tool()
-    tool1.name = "test_tool"
-    tool1.description = "test_tool_1"
-    tool2 = llm.Tool()
-    tool2.name = "test_tool"
-    tool2.description = "test_tool_2"
-
-    llm.async_register_tool(hass, tool1)
-    with pytest.raises(HomeAssistantError):
-        llm.async_register_tool(hass, tool2)
-
-    assert hass.data[llm.DATA_KEY]["test_tool"] == tool1
-    assert list(llm.async_get_tools(hass)) == [tool1]
-
-
-def test_async_remove(hass: HomeAssistant) -> None:
-    """Test removing a tool and verifying it is no longer present in the Home Assistant data."""
-    tool = llm.Tool()
-    tool.name = "test_tool"
-    tool.description = "test_description"
-
-    llm.async_register_tool(hass, tool)
-    llm.async_remove_tool(hass, tool)
-
-    assert "test_tool" not in hass.data[llm.DATA_KEY]
-    assert list(llm.async_get_tools(hass)) == []
-
-
-def test_async_remove_no_existing_entry(hass: HomeAssistant) -> None:
-    """Test the removal of a non-existing tool from Home Assistant's data."""
-    tool = llm.Tool()
-    tool.name = "test_tool"
-    tool.description = "test_description"
-    llm.async_register_tool(hass, tool)
-
-    llm.async_remove_tool(hass, "test_tool2")
-
-    assert "test_tool" in hass.data[llm.DATA_KEY]
-    assert "test_tool2" not in hass.data[llm.DATA_KEY]
-    assert list(llm.async_get_tools(hass)) == [tool]
-
-
-def test_async_remove_no_existing(hass: HomeAssistant) -> None:
-    """Test the removal of a tool where no config exists."""
-
-    llm.async_remove_tool(hass, "test_tool2")
-    # simply shouldn't cause an exception
-
-    assert llm.DATA_KEY not in hass.data
-    assert list(llm.async_get_tools(hass)) == []
-
-
-async def test_call_tool(hass: HomeAssistant) -> None:
-    """Test calling an llm tool."""
-    tool = llm.Tool()
-    tool.name = "test_tool"
-    tool.description = "test_description"
-    tool.parameters = vol.Schema({"test_arg": str})
-    tool.async_call = AsyncMock(return_value={"result": "test_response"})
-
-    llm.async_register_tool(hass, tool)
-    test_context = Context()
-
-    tool_input = llm.ToolInput(
-        tool_name="test_tool",
-        tool_args={"test_arg": "test_value"},
-        platform="test_platform",
-        context=test_context,
-        user_prompt="test_text",
-        language="en",
-        agent_id="test_agent",
-        conversation_id="test_conversation_id",
-        device_id="test_device_id",
-        assistant="test_assistant",
-    )
-
-    response = await llm.async_call_tool(hass, tool_input)
-
-    tool.async_call.assert_awaited_once_with(hass, tool_input)
-    assert response == {"result": "test_response"}
 
 
 async def test_call_tool_no_existing(hass: HomeAssistant) -> None:
@@ -134,10 +38,24 @@ async def test_call_tool_no_existing(hass: HomeAssistant) -> None:
 
 async def test_intent_tool(hass: HomeAssistant) -> None:
     """Test IntentTool class."""
-    tool = llm.IntentTool("test_intent")
+    schema = vol.Schema(
+        {
+            vol.Optional("area"): cv.string,
+            vol.Optional("floor"): cv.string,
+        }
+    )
+
+    intent_handler = intent.IntentHandler()
+    intent_handler.intent_type = "test_intent"
+    intent_handler.slot_schema = schema
+
+    intent.async_register(hass, intent_handler)
+
+    assert len(list(llm.async_get_tools(hass))) == 1
+    tool = list(llm.async_get_tools(hass))[0]
     assert tool.name == "test_intent"
     assert tool.description == "Execute Home Assistant test_intent intent"
-    assert tool.parameters == vol.Schema({})
+    assert tool.parameters == schema
     assert str(tool) == "<IntentTool - test_intent>"
 
     test_context = Context()
@@ -145,7 +63,7 @@ async def test_intent_tool(hass: HomeAssistant) -> None:
     intent_response.matched_states = [State("light.matched", "on")]
     intent_response.unmatched_states = [State("light.unmatched", "on")]
     tool_input = llm.ToolInput(
-        tool_name="test_tool",
+        tool_name="test_intent",
         tool_args={"area": "kitchen", "floor": "ground_floor"},
         platform="test_platform",
         context=test_context,
@@ -160,7 +78,7 @@ async def test_intent_tool(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.helpers.intent.async_handle", return_value=intent_response
     ) as mock_intent_handle:
-        response = await tool.async_call(hass, tool_input)
+        response = await llm.async_call_tool(hass, tool_input)
 
     mock_intent_handle.assert_awaited_once_with(
         hass,
@@ -201,7 +119,16 @@ async def test_intent_tool_with_area_and_floor(
             vol.Optional("floor"): cv.string,
         }
     )
-    tool = llm.IntentTool("test_intent", schema)
+
+    intent_handler = intent.IntentHandler()
+    intent_handler.intent_type = "test_intent"
+    intent_handler.slot_schema = schema
+
+    intent.async_register(hass, intent_handler)
+
+    assert len(list(llm.async_get_tools(hass))) == 1
+    tool = list(llm.async_get_tools(hass))[0]
+    assert tool.name == "test_intent"
     assert tool.description == "Execute Home Assistant test_intent intent"
     assert tool.parameters == schema
 
@@ -216,7 +143,7 @@ async def test_intent_tool_with_area_and_floor(
     test_context = Context()
 
     tool_input = llm.ToolInput(
-        tool_name="test_tool",
+        tool_name="test_intent",
         tool_args={"test_arg": "test_value", "area": "küche", "floor": "ground floor"},
         platform="test_platform",
         context=test_context,
@@ -231,7 +158,7 @@ async def test_intent_tool_with_area_and_floor(
         "homeassistant.helpers.intent.async_handle",
         return_value=intent.IntentResponse("*"),
     ) as mock_intent_handle:
-        response = await tool.async_call(hass, tool_input)
+        response = await llm.async_call_tool(hass, tool_input)
 
     mock_intent_handle.assert_awaited_once_with(
         hass,

@@ -10,15 +10,15 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.weather.intent import INTENT_GET_WEATHER
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.hass_dict import HassKey
 
 from . import area_registry, floor_registry, intent
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_KEY: HassKey[dict[str, Tool]] = HassKey("llm_tool")
+IGNORE_INTENTS = [intent.INTENT_NEVERMIND, intent.INTENT_GET_STATE, INTENT_GET_WEATHER]
 
 
 @dataclass(slots=True)
@@ -55,46 +55,21 @@ class Tool:
 
 
 @callback
-def async_register_tool(hass: HomeAssistant, tool: Tool) -> None:
-    """Register an LLM tool with Home Assistant."""
-    if (tools := hass.data.get(DATA_KEY)) is None:
-        tools = hass.data[DATA_KEY] = {}
-
-    if tool.name in tools:
-        raise HomeAssistantError(f"Tool {tool.name} is already registered")
-
-    tools[tool.name] = tool
-
-
-@callback
-def async_remove_tool(hass: HomeAssistant, tool: Tool | str) -> None:
-    """Remove an LLM tool from Home Assistant."""
-    if (tools := hass.data.get(DATA_KEY)) is None:
-        return
-
-    if isinstance(tool, str):
-        tool_name = tool
-    else:
-        tool_name = tool.name
-
-    tools.pop(tool_name, None)
-
-
-@callback
 def async_get_tools(hass: HomeAssistant) -> Iterable[Tool]:
-    """Return a list of registered LLM tools."""
-    tools: dict[str, Tool] = hass.data.get(DATA_KEY, {})
-
-    return tools.values()
+    """Return a list of LLM tools."""
+    for intent_handler in intent.async_get(hass):
+        if intent_handler.intent_type not in IGNORE_INTENTS:
+            yield IntentTool(intent_handler)
 
 
 @callback
 async def async_call_tool(hass: HomeAssistant, tool_input: ToolInput) -> Any:
     """Call a LLM tool, validate args and return the response."""
-    try:
-        tool = hass.data[DATA_KEY][tool_input.tool_name]
-    except KeyError as err:
-        raise HomeAssistantError(f'Tool "{tool_input.tool_name}" not found') from err
+    for tool in async_get_tools(hass):
+        if tool.name == tool_input.tool_name:
+            break
+    else:
+        raise HomeAssistantError(f'Tool "{tool_input.tool_name}" not found')
 
     if tool_input.context is None:
         tool_input.context = Context()
@@ -109,13 +84,15 @@ class IntentTool(Tool):
 
     def __init__(
         self,
-        intent_type: str,
-        slot_schema: vol.Schema = vol.Schema({}),
+        intent_handler: intent.IntentHandler,
     ) -> None:
         """Init the class."""
-        self.name = intent_type
-        self.description = f"Execute Home Assistant {intent_type} intent"
-        self.parameters = slot_schema
+        if intent_handler.intent_type is None:
+            raise HomeAssistantError("intent type cannot be None")
+
+        self.name = intent_handler.intent_type
+        self.description = f"Execute Home Assistant {self.name} intent"
+        self.parameters = intent_handler.effective_slot_schema
 
     async def async_call(self, hass: HomeAssistant, tool_input: ToolInput) -> Any:
         """Handle the intent."""
