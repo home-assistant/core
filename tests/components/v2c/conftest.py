@@ -29,5 +29,5 @@ def mock_v2c_client() -> Generator[AsyncMock, None, None]:
         ),
     ):
         client = mock_client.return_value
-        client.get_data = {}
+        client.get_data.return_value = {}
         yield client
