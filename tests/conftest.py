@@ -566,7 +566,7 @@ async def hass(
         if loaded_entries:
             await asyncio.gather(
                 *(
-                    create_eager_task(config_entry.async_unload(hass))
+                    create_eager_task(config_entry.async_unload(hass), loop=hass.loop)
                     for config_entry in loaded_entries
                 )
             )

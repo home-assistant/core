@@ -1969,7 +1969,11 @@ class ConfigEntries:
             *(
                 create_eager_task(
                     self._async_forward_entry_setup(entry, platform, False),
-                    name=f"config entry forward setup {entry.title} {entry.domain} {entry.entry_id} {platform}",
+                    name=(
+                        f"config entry forward setup {entry.title} "
+                        f"{entry.domain} {entry.entry_id} {platform}"
+                    ),
+                    loop=self.hass.loop,
                 )
                 for platform in platforms
             )
@@ -2022,7 +2026,11 @@ class ConfigEntries:
                 *(
                     create_eager_task(
                         self.async_forward_entry_unload(entry, platform),
-                        name=f"config entry forward unload {entry.title} {entry.domain} {entry.entry_id} {platform}",
+                        name=(
+                            f"config entry forward unload {entry.title} "
+                            f"{entry.domain} {entry.entry_id} {platform}"
+                        ),
+                        loop=self.hass.loop,
                     )
                     for platform in platforms
                 )
