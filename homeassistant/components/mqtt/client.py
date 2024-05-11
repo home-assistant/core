@@ -82,6 +82,8 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+PREFERRED_BUFFER_SIZE = 2097152  # Set buffer limit to 2MB
+
 DISCOVERY_COOLDOWN = 5
 INITIAL_SUBSCRIBE_COOLDOWN = 3.0
 SUBSCRIBE_COOLDOWN = 0.1
@@ -364,6 +366,13 @@ class EnsureJobAfterCooldown:
         self._async_cancel_timer()
         self._timer = self._loop.call_later(self._timeout, self.async_execute)
 
+    @callback
+    def async_flush(self) -> None:
+        """Flush the subscribe buffer and reschedule."""
+        self._async_cancel_timer()
+        self._timer = self._loop.call_later(self._timeout, self.async_execute)
+        self._task = create_eager_task(self._async_job())
+
     async def async_cleanup(self) -> None:
         """Cleanup any pending task."""
         self._async_cancel_timer()
@@ -543,6 +552,7 @@ class MQTT:
         fileno = sock.fileno()
         _LOGGER.debug("%s: connection opened %s", self.config_entry.title, fileno)
         if fileno > -1:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, PREFERRED_BUFFER_SIZE)
             self.loop.add_reader(sock, partial(self._async_reader_callback, client))
         self._async_start_misc_loop()
 
