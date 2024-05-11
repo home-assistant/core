@@ -81,7 +81,7 @@
           "server_rtu_inactive244_timeout": "Server RTU inactive/timeout",
           "invalid_server": "Invalid server",
           "crc_error": "CRC error",
-          "fc_missmatch": "FC missmatch",
+          "fc_missmatch": "FC mismatch",
           "server_id_missmatch": "Server id missmatch",
           "packet_length_error": "Packet length error",
           "parameter_count_error": "Parameter count error",
