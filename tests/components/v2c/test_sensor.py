@@ -26,9 +26,6 @@ async def test_sensor(
         await init_integration(hass, mock_config_entry)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-
-async def test_state_error_enum() -> None:
-    """Test state error enum."""
     from homeassistant.components.v2c.sensor import _SLAVE_ERROR_OPTIONS
 
     assert [
