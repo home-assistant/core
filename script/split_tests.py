@@ -4,16 +4,20 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from math import ceil
 from pathlib import Path
 import subprocess
 import sys
 from typing import Final
 
+# Test weights are the relative time it takes to run a test vs
+# the average test. The average test is 1.
 TEST_WEIGHTS = {
     "tests/test_circular_imports.py": 40,
     "tests/test_bootstrap.py": 2,
+    "tests/components/sensor/test_recorder_missing_stats.py": 3,
+    "tests/components/sensor/test_recorder.py": 3,
 }
 
 
@@ -25,12 +29,14 @@ class Bucket:
     ):
         """Initialize bucket."""
         self.total_tests = 0
+        self.total_weighted_tests = 0
         self._paths: list[str] = []
 
     def add(self, part: TestFolder | TestFile) -> None:
         """Add tests to bucket."""
         part.add_to_bucket()
         self.total_tests += part.total_tests
+        self.total_weighted_tests += part.total_weighted_tests
         self._paths.append(str(part.path))
 
     def get_paths_line(self) -> str:
@@ -49,19 +55,22 @@ class BucketHolder:
 
     def split_tests(self, test_folder: TestFolder) -> None:
         """Split tests into buckets."""
-        digits = len(str(test_folder.total_tests))
+        digits = len(str(test_folder.total_weighted_tests))
         sorted_tests = sorted(
-            test_folder.get_all_flatten(), reverse=True, key=lambda x: x.total_tests
+            test_folder.get_all_flatten(),
+            reverse=True,
+            key=lambda x: x.total_weighted_tests,
         )
         for tests in sorted_tests:
-            print(f"{tests.total_tests:>{digits}} tests in {tests.path}")
+            print(f"{tests.total_weighted_tests:>{digits}} tests in {tests.path}")
             if tests.added_to_bucket:
                 # Already added to bucket
                 continue
 
-            smallest_bucket = min(self._buckets, key=lambda x: x.total_tests)
+            smallest_bucket = min(self._buckets, key=lambda x: x.total_weighted_tests)
             if (
-                smallest_bucket.total_tests + tests.total_tests < self._tests_per_bucket
+                smallest_bucket.total_weighted_tests + tests.total_weighted_tests
+                < self._tests_per_bucket
             ) or isinstance(tests, TestFile):
                 smallest_bucket.add(tests)
 
@@ -73,17 +82,21 @@ class BucketHolder:
         """Create output file."""
         with open("pytest_buckets.txt", "w") as file:
             for idx, bucket in enumerate(self._buckets):
-                print(f"Bucket {idx+1} has {bucket.total_tests} tests")
+                print(
+                    f"Bucket {idx+1} has {bucket.total_tests} tests"
+                    f" ({bucket.total_weighted_tests} weighted tests)"
+                )
                 file.write(bucket.get_paths_line())
 
 
-@dataclass
+@dataclass(slots=True)
 class TestFile:
     """Class represents a single test file and the number of tests it has."""
 
     total_tests: int
     path: Path
-    added_to_bucket: bool = field(default=False, init=False)
+    added_to_bucket: bool
+    total_weighted_tests: int
 
     def add_to_bucket(self) -> None:
         """Add test file to bucket."""
@@ -93,7 +106,7 @@ class TestFile:
 
     def __gt__(self, other: TestFile) -> bool:
         """Return if greater than."""
-        return self.total_tests > other.total_tests
+        return self.total_weighted_tests > other.total_weighted_tests
 
 
 class TestFolder:
@@ -103,11 +116,17 @@ class TestFolder:
         """Initialize test folder."""
         self.path: Final = path
         self.children: dict[Path, TestFolder | TestFile] = {}
+        self.total_tests = 0
+        self.total_weighted_tests = 0
+        self.frozen = False
 
-    @property
-    def total_tests(self) -> int:
-        """Return total tests."""
-        return sum([test.total_tests for test in self.children.values()])
+    def freeze(self) -> None:
+        """Freeze the object."""
+        self.total_tests = sum([test.total_tests for test in self.children.values()])
+        self.total_weighted_tests = sum(
+            [test.total_weighted_tests for test in self.children.values()]
+        )
+        self.frozen = True
 
     @property
     def added_to_bucket(self) -> bool:
@@ -129,6 +148,8 @@ class TestFolder:
 
     def add_test_file(self, file: TestFile) -> None:
         """Add test file to folder."""
+        if self.frozen:
+            raise ValueError("Folder is frozen")
         path = file.path
         relative_path = path.relative_to(self.path)
         if not relative_path.parts:
@@ -182,9 +203,11 @@ def collect_tests(path: Path) -> TestFolder:
             sys.exit(1)
 
         weight = TEST_WEIGHTS.get(file_path, 1)
-        file = TestFile(int(total_tests) * weight, Path(file_path))
+        total = int(total_tests)
+        file = TestFile(total, Path(file_path), False, total * weight)
         folder.add_test_file(file)
 
+    folder.freeze()
     return folder
 
 
@@ -215,13 +238,16 @@ def main() -> None:
 
     print("Collecting tests...")
     tests = collect_tests(arguments.path)
-    tests_per_bucket = ceil(tests.total_tests / arguments.bucket_count)
+    total_weighted_tests = tests.total_weighted_tests
+    total_tests = tests.total_tests
+    tests_per_bucket = ceil(total_weighted_tests / arguments.bucket_count)
 
     bucket_holder = BucketHolder(tests_per_bucket, arguments.bucket_count)
     print("Splitting tests...")
     bucket_holder.split_tests(tests)
 
-    print(f"Total tests: {tests.total_tests}")
+    print(f"Total tests: {total_tests}")
+    print(f"Total weighted tests: {total_weighted_tests}")
     print(f"Estimated tests per bucket: {tests_per_bucket}")
 
     bucket_holder.create_ouput_file()
