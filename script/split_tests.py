@@ -12,7 +12,7 @@ import sys
 from typing import Final
 
 TEST_WEIGHTS = {
-    "tests/test_circular_imports.py": 50,
+    "tests/test_circular_imports.py": 40,
     "tests/test_bootstrap.py": 2,
 }
 
