@@ -26,6 +26,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Define a config entry fixture."""
     return MockConfigEntry(
         domain=DOMAIN,
+        entry_id="da58ee91f38c2406c2a36d0a1a7f8569",
         title="EVSE 1.1.1.1",
         data={CONF_HOST: "1.1.1.1"},
     )
