@@ -1927,7 +1927,7 @@ async def test_reload_entry_with_restored_subscriptions(
     hass.config.components.add(mqtt.DOMAIN)
     mqtt_client_mock.connect.return_value = 0
     with patch("homeassistant.config.load_yaml_config_file", return_value={}):
-        await entry.async_setup(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
 
     await mqtt.async_subscribe(hass, "test-topic", record_calls)
     await mqtt.async_subscribe(hass, "wild/+/card", record_calls)
