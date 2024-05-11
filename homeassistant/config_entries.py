@@ -773,7 +773,7 @@ class ConfigEntry(Generic[_DataT]):
                 raise OperationNotAllowed(
                     f"The config entry {self.title} ({self.domain}) with entry_id"
                     f" {self.entry_id} cannot be unloaded because it does not hold "
-                   "the setup lock"
+                    "the setup lock"
                 )
 
             if not self.state.recoverable:
@@ -824,7 +824,7 @@ class ConfigEntry(Generic[_DataT]):
             raise OperationNotAllowed(
                 f"The config entry {self.title} ({self.domain}) with entry_id"
                 f" {self.entry_id} cannot be removed because it does not hold "
-               "the setup lock"
+                "the setup lock"
             )
 
         if not (integration := self._integration_for_domain):
