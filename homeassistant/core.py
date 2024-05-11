@@ -104,6 +104,7 @@ from .util.async_ import (
 )
 from .util.event_type import EventType
 from .util.executor import InterruptibleThreadPoolExecutor
+from .util.hass_dict import HassDict
 from .util.json import JsonObjectType
 from .util.read_only_dict import ReadOnlyDict
 from .util.timeout import TimeoutManager
@@ -406,7 +407,7 @@ class HomeAssistant:
         from . import loader
 
         # This is a dictionary that any component can store any data on.
-        self.data: dict[str, Any] = {}
+        self.data = HassDict()
         self.loop = asyncio.get_running_loop()
         self._tasks: set[asyncio.Future[Any]] = set()
         self._background_tasks: set[asyncio.Future[Any]] = set()
@@ -1202,7 +1203,7 @@ class HomeAssistant:
                 _LOGGER.exception(
                     "Task %s could not be canceled during final shutdown stage", task
                 )
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Task %s error during final shutdown stage", task)
 
         # Prevent run_callback_threadsafe from scheduling any additional
@@ -1230,12 +1231,11 @@ class HomeAssistant:
 
     def _cancel_cancellable_timers(self) -> None:
         """Cancel timer handles marked as cancellable."""
-        # pylint: disable-next=protected-access
-        handles: Iterable[asyncio.TimerHandle] = self.loop._scheduled  # type: ignore[attr-defined]
+        handles: Iterable[asyncio.TimerHandle] = self.loop._scheduled  # type: ignore[attr-defined] # noqa: SLF001
         for handle in handles:
             if (
                 not handle.cancelled()
-                and (args := handle._args)  # pylint: disable=protected-access
+                and (args := handle._args)  # noqa: SLF001
                 and type(job := args[0]) is HassJob
                 and job.cancel_on_shutdown
             ):
@@ -1347,7 +1347,7 @@ class Event(Generic[_DataT]):
             # _as_dict is marked as protected
             # to avoid callers outside of this module
             # from misusing it by mistake.
-            "context": self.context._as_dict,  # pylint: disable=protected-access
+            "context": self.context._as_dict,  # noqa: SLF001
         }
 
     def as_dict(self) -> ReadOnlyDict[str, Any]:
@@ -1542,7 +1542,7 @@ class EventBus:
                 try:
                     if event_data is None or not event_filter(event_data):
                         continue
-                except Exception:  # pylint: disable=broad-except
+                except Exception:
                     _LOGGER.exception("Error in event filter")
                     continue
 
@@ -1557,7 +1557,7 @@ class EventBus:
 
             try:
                 self._hass.async_run_hass_job(job, event)
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Error running job: %s", job)
 
     def listen(
@@ -1842,7 +1842,7 @@ class State:
             # _as_dict is marked as protected
             # to avoid callers outside of this module
             # from misusing it by mistake.
-            "context": self.context._as_dict,  # pylint: disable=protected-access
+            "context": self.context._as_dict,  # noqa: SLF001
         }
 
     def as_dict(
@@ -1897,7 +1897,7 @@ class State:
             # _as_dict is marked as protected
             # to avoid callers outside of this module
             # from misusing it by mistake.
-            context = state_context._as_dict  # pylint: disable=protected-access
+            context = state_context._as_dict  # noqa: SLF001
         compressed_state: CompressedState = {
             COMPRESSED_STATE_STATE: self.state,
             COMPRESSED_STATE_ATTRIBUTES: self.attributes,
@@ -2751,7 +2751,7 @@ class ServiceRegistry:
             )
         except asyncio.CancelledError:
             _LOGGER.debug("Service was cancelled: %s", service_call)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error executing service: %s", service_call)
 
     async def _execute_service(
@@ -2899,7 +2899,7 @@ class Config:
 
     def is_allowed_external_url(self, url: str) -> bool:
         """Check if an external URL is allowed."""
-        parsed_url = f"{str(yarl.URL(url))}/"
+        parsed_url = f"{yarl.URL(url)!s}/"
 
         return any(
             allowed
@@ -3078,7 +3078,7 @@ class Config:
             "elevation": self.elevation,
             # We don't want any integrations to use the name of the unit system
             # so we are using the private attribute here
-            "unit_system_v2": self.units._name,  # pylint: disable=protected-access
+            "unit_system_v2": self.units._name,  # noqa: SLF001
             "location_name": self.location_name,
             "time_zone": self.time_zone,
             "external_url": self.external_url,

@@ -124,13 +124,13 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PH: 'ph'>,
     'original_icon': None,
     'original_name': 'pH',
     'platform': 'ondilo_ico',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'ph',
+    'translation_key': None,
     'unique_id': 'W1122333044455-ph',
     'unit_of_measurement': None,
   })
@@ -138,6 +138,7 @@
 # name: test_sensors[sensor.pool_1_ph-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'ph',
       'friendly_name': 'Pool 1 pH',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -475,13 +476,13 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PH: 'ph'>,
     'original_icon': None,
     'original_name': 'pH',
     'platform': 'ondilo_ico',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'ph',
+    'translation_key': None,
     'unique_id': 'W2233304445566-ph',
     'unit_of_measurement': None,
   })
@@ -489,6 +490,7 @@
 # name: test_sensors[sensor.pool_2_ph-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'ph',
       'friendly_name': 'Pool 2 pH',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

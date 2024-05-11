@@ -56,6 +56,8 @@ build.json @home-assistant/supervisor
 /tests/components/agent_dvr/ @ispysoftware
 /homeassistant/components/air_quality/ @home-assistant/core
 /tests/components/air_quality/ @home-assistant/core
+/homeassistant/components/airgradient/ @airgradienthq @joostlek
+/tests/components/airgradient/ @airgradienthq @joostlek
 /homeassistant/components/airly/ @bieniu
 /tests/components/airly/ @bieniu
 /homeassistant/components/airnow/ @asymworks
@@ -88,8 +90,6 @@ build.json @home-assistant/supervisor
 /tests/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
 /homeassistant/components/amberelectric/ @madpilot
 /tests/components/amberelectric/ @madpilot
-/homeassistant/components/ambiclimate/ @danielhiversen
-/tests/components/ambiclimate/ @danielhiversen
 /homeassistant/components/ambient_network/ @thomaskistler
 /tests/components/ambient_network/ @thomaskistler
 /homeassistant/components/ambient_station/ @bachya
@@ -869,6 +869,8 @@ build.json @home-assistant/supervisor
 /tests/components/moehlenhoff_alpha2/ @j-a-n
 /homeassistant/components/monoprice/ @etsinko @OnFreund
 /tests/components/monoprice/ @etsinko @OnFreund
+/homeassistant/components/monzo/ @jakemartin-icl
+/tests/components/monzo/ @jakemartin-icl
 /homeassistant/components/moon/ @fabaff @frenck
 /tests/components/moon/ @fabaff @frenck
 /homeassistant/components/mopeka/ @bdraco

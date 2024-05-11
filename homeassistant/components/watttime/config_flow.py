@@ -97,7 +97,7 @@ class WattTimeConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors={"base": "invalid_auth"},
                 description_placeholders={CONF_USERNAME: username},
             )
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             LOGGER.exception("Unexpected exception while logging in: %s", err)
             return self.async_show_form(
                 step_id=error_step_id,
@@ -156,7 +156,7 @@ class WattTimeConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=STEP_COORDINATES_DATA_SCHEMA,
                 errors={CONF_LATITUDE: "unknown_coordinates"},
             )
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             LOGGER.exception("Unexpected exception while getting region: %s", err)
             return self.async_show_form(
                 step_id="coordinates",
