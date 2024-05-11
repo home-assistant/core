@@ -11,6 +11,11 @@ import subprocess
 import sys
 from typing import Final
 
+TEST_WEIGHTS = {
+    "tests/test_circular_imports.py": 50,
+    "tests/test_bootstrap.py": 2,
+}
+
 
 class Bucket:
     """Class to hold bucket."""
@@ -176,7 +181,8 @@ def collect_tests(path: Path) -> TestFolder:
             print(f"Unexpected line: {line}")
             sys.exit(1)
 
-        file = TestFile(int(total_tests), Path(file_path))
+        weight = TEST_WEIGHTS.get(file_path, 1)
+        file = TestFile(int(total_tests) * weight, Path(file_path))
         folder.add_test_file(file)
 
     return folder
