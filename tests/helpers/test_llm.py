@@ -79,8 +79,8 @@ async def test_intent_tool(hass: HomeAssistant) -> None:
         "test_platform",
         "test_intent",
         {
-            "area": {"value": "kitchen", "text": "kitchen"},
-            "floor": {"value": "ground_floor", "text": "ground_floor"},
+            "area": {"value": "kitchen"},
+            "floor": {"value": "ground_floor"},
         },
         "test_text",
         test_context,
