@@ -27,6 +27,7 @@ from .common import (
     MockModule,
     MockPlatform,
     get_test_config_dir,
+    mock_config_flow,
     mock_integration,
     mock_platform,
 )
@@ -1146,7 +1147,6 @@ async def test_bootstrap_empty_integrations(
 @pytest.fixture(name="mock_mqtt_config_flow")
 def mock_mqtt_config_flow_fixture() -> Generator[None, None, None]:
     """Mock MQTT config flow."""
-    original_mqtt = HANDLERS.get("mqtt")
 
     @HANDLERS.register("mqtt")
     class MockConfigFlow:
@@ -1155,11 +1155,8 @@ def mock_mqtt_config_flow_fixture() -> Generator[None, None, None]:
         VERSION = 1
         MINOR_VERSION = 1
 
-    yield
-    if original_mqtt:
-        HANDLERS["mqtt"] = original_mqtt
-    else:
-        HANDLERS.pop("mqtt")
+    with mock_config_flow("mqtt", MockConfigFlow):
+        yield
 
 
 @pytest.mark.parametrize("integration", ["mqtt_eventstream", "mqtt_statestream"])

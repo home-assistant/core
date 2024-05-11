@@ -1087,7 +1087,7 @@ home-assistant-intents==2024.4.24
 homeconnect==0.7.2
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.1.0
+homematicip==1.1.1
 
 # homeassistant.components.horizon
 horimote==0.4.1
@@ -1884,7 +1884,7 @@ pyialarm==2.2.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.5.3
+pyinsteon==1.6.1
 
 # homeassistant.components.intesishome
 pyintesishome==1.8.0
@@ -2875,7 +2875,7 @@ wirelesstagpy==0.8.1
 wled==0.17.0
 
 # homeassistant.components.wolflink
-wolf-comm==0.0.7
+wolf-comm==0.0.8
 
 # homeassistant.components.wyoming
 wyoming==1.5.3

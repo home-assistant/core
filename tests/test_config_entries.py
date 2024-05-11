@@ -692,6 +692,13 @@ async def test_entries_excludes_ignore_and_disabled(
         entry3,
         disabled_entry,
     ]
+    assert manager.async_has_entries("test") is True
+    assert manager.async_has_entries("test2") is True
+    assert manager.async_has_entries("test3") is True
+    assert manager.async_has_entries("ignored") is True
+    assert manager.async_has_entries("disabled") is True
+
+    assert manager.async_has_entries("not") is False
     assert manager.async_entries(include_ignore=False) == [
         entry,
         entry2a,
@@ -712,6 +719,10 @@ async def test_entries_excludes_ignore_and_disabled(
         entry2b,
         entry3,
     ]
+    assert manager.async_has_entries("test", include_ignore=False) is True
+    assert manager.async_has_entries("test2", include_ignore=False) is True
+    assert manager.async_has_entries("test3", include_ignore=False) is True
+    assert manager.async_has_entries("ignored", include_ignore=False) is False
 
     assert manager.async_entries(include_ignore=True) == [
         entry,
@@ -737,6 +748,10 @@ async def test_entries_excludes_ignore_and_disabled(
         entry3,
         disabled_entry,
     ]
+    assert manager.async_has_entries("test", include_disabled=False) is True
+    assert manager.async_has_entries("test2", include_disabled=False) is True
+    assert manager.async_has_entries("test3", include_disabled=False) is True
+    assert manager.async_has_entries("disabled", include_disabled=False) is False
 
 
 async def test_saving_and_loading(
@@ -1145,16 +1160,20 @@ async def test_update_entry_options_and_trigger_listener(
     """Test that we can update entry options and trigger listener."""
     entry = MockConfigEntry(domain="test", options={"first": True})
     entry.add_to_manager(manager)
+    update_listener_calls = []
 
     async def update_listener(hass, entry):
         """Test function."""
         assert entry.options == {"second": True}
+        update_listener_calls.append(None)
 
     entry.add_update_listener(update_listener)
 
     assert manager.async_update_entry(entry, options={"second": True}) is True
 
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert entry.options == {"second": True}
+    assert len(update_listener_calls) == 1
 
 
 async def test_setup_raise_not_ready(
@@ -1409,7 +1428,7 @@ async def test_entry_options(
     entry = MockConfigEntry(domain="test", data={"first": True}, options=None)
     entry.add_to_manager(manager)
 
-    class TestFlow:
+    class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
         @staticmethod
@@ -1422,25 +1441,24 @@ async def test_entry_options(
 
             return OptionsFlowHandler()
 
-        def async_supports_options_flow(self, entry: MockConfigEntry) -> bool:
-            """Test options flow."""
-            return True
+    with mock_config_flow("test", TestFlow):
+        flow = await manager.options.async_create_flow(
+            entry.entry_id, context={"source": "test"}, data=None
+        )
 
-    config_entries.HANDLERS["test"] = TestFlow()
-    flow = await manager.options.async_create_flow(
-        entry.entry_id, context={"source": "test"}, data=None
-    )
+        flow.handler = entry.entry_id  # Used to keep reference to config entry
 
-    flow.handler = entry.entry_id  # Used to keep reference to config entry
+        await manager.options.async_finish_flow(
+            flow,
+            {
+                "data": {"second": True},
+                "type": data_entry_flow.FlowResultType.CREATE_ENTRY,
+            },
+        )
 
-    await manager.options.async_finish_flow(
-        flow,
-        {"data": {"second": True}, "type": data_entry_flow.FlowResultType.CREATE_ENTRY},
-    )
-
-    assert entry.data == {"first": True}
-    assert entry.options == {"second": True}
-    assert entry.supports_options is True
+        assert entry.data == {"first": True}
+        assert entry.options == {"second": True}
+        assert entry.supports_options is True
 
 
 async def test_entry_options_abort(
@@ -1452,7 +1470,7 @@ async def test_entry_options_abort(
     entry = MockConfigEntry(domain="test", data={"first": True}, options=None)
     entry.add_to_manager(manager)
 
-    class TestFlow:
+    class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
         @staticmethod
@@ -1465,16 +1483,16 @@ async def test_entry_options_abort(
 
             return OptionsFlowHandler()
 
-    config_entries.HANDLERS["test"] = TestFlow()
-    flow = await manager.options.async_create_flow(
-        entry.entry_id, context={"source": "test"}, data=None
-    )
+    with mock_config_flow("test", TestFlow):
+        flow = await manager.options.async_create_flow(
+            entry.entry_id, context={"source": "test"}, data=None
+        )
 
-    flow.handler = entry.entry_id  # Used to keep reference to config entry
+        flow.handler = entry.entry_id  # Used to keep reference to config entry
 
-    assert await manager.options.async_finish_flow(
-        flow, {"type": data_entry_flow.FlowResultType.ABORT, "reason": "test"}
-    )
+        assert await manager.options.async_finish_flow(
+            flow, {"type": data_entry_flow.FlowResultType.ABORT, "reason": "test"}
+        )
 
 
 async def test_entry_options_unknown_config_entry(
@@ -2690,7 +2708,7 @@ async def test_manual_add_overrides_ignored_entry_singleton(
     assert p_entry.data == {"token": "supersecret"}
 
 
-async def test__async_current_entries_does_not_skip_ignore_non_user(
+async def test_async_current_entries_does_not_skip_ignore_non_user(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test that _async_current_entries does not skip ignore by default for non user step."""
@@ -2727,7 +2745,7 @@ async def test__async_current_entries_does_not_skip_ignore_non_user(
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test__async_current_entries_explicit_skip_ignore(
+async def test_async_current_entries_explicit_skip_ignore(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test that _async_current_entries can explicitly include ignore."""
@@ -2768,7 +2786,7 @@ async def test__async_current_entries_explicit_skip_ignore(
     assert p_entry.data == {"token": "supersecret"}
 
 
-async def test__async_current_entries_explicit_include_ignore(
+async def test_async_current_entries_explicit_include_ignore(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test that _async_current_entries can explicitly include ignore."""
@@ -3920,7 +3938,7 @@ async def test_scheduling_reload_unknown_entry(hass: HomeAssistant) -> None:
         ),
     ],
 )
-async def test__async_abort_entries_match(
+async def test_async_abort_entries_match(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
     matchers: dict[str, str],
@@ -4003,7 +4021,7 @@ async def test__async_abort_entries_match(
         ),
     ],
 )
-async def test__async_abort_entries_match_options_flow(
+async def test_async_abort_entries_match_options_flow(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
     matchers: dict[str, str],
@@ -4855,14 +4873,15 @@ async def test_unhashable_unique_id(
     """Test the ConfigEntryItems user dict handles unhashable unique_id."""
     entries = config_entries.ConfigEntryItems(hass)
     entry = config_entries.ConfigEntry(
-        version=1,
-        minor_version=1,
+        data={},
         domain="test",
         entry_id="mock_id",
-        title="title",
-        data={},
+        minor_version=1,
+        options={},
         source="test",
+        title="title",
         unique_id=unique_id,
+        version=1,
     )
 
     entries[entry.entry_id] = entry
@@ -4886,14 +4905,15 @@ async def test_hashable_non_string_unique_id(
     """Test the ConfigEntryItems user dict handles hashable non string unique_id."""
     entries = config_entries.ConfigEntryItems(hass)
     entry = config_entries.ConfigEntry(
-        version=1,
-        minor_version=1,
+        data={},
         domain="test",
         entry_id="mock_id",
-        title="title",
-        data={},
+        minor_version=1,
+        options={},
         source="test",
+        title="title",
         unique_id=unique_id,
+        version=1,
     )
 
     entries[entry.entry_id] = entry
