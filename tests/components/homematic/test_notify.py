@@ -61,6 +61,7 @@ async def test_setup_without_optional(hass: HomeAssistant) -> None:
 async def test_bad_config(hass: HomeAssistant) -> None:
     """Test invalid configuration."""
     config = {notify_comp.DOMAIN: {"name": "test", "platform": "homematic"}}
+    await async_setup_component(hass, "repairs", {})
     with assert_setup_component(0) as handle_config:
         assert await async_setup_component(hass, notify_comp.DOMAIN, config)
     assert not handle_config[notify_comp.DOMAIN]
