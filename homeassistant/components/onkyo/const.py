@@ -33,17 +33,6 @@ CONF_SOUND_MODE_LIST_DEFAULT = {
     "theater-dimensional": "Theater dimensional",
     "all-ch-stereo": "All channel stereo",
 }
-CONF_EISCP = "eiscp"
-CONF_EISCP_DEFAULT = {
-    "audyssey-dynamic-volume": [
-        "off",
-        "light",
-        "medium",
-        "heavy",
-    ]
-}
-
-OPTION_EISCP = "eiscp"
 
 ATTR_AUDIO_INFORMATION = "audio_information"
 ATTR_HDMI_OUTPUT = "hdmi_output"

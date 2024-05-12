@@ -23,8 +23,6 @@ from homeassistant.util.network import is_ip_address
 from .const import (
     BRAND_NAME,
     CONF_DEVICE,
-    CONF_EISCP,
-    CONF_EISCP_DEFAULT,
     CONF_MAXIMUM_VOLUME,
     CONF_MAXIMUM_VOLUME_DEFAULT,
     CONF_RECEIVER_MAXIMUM_VOLUME,
@@ -181,12 +179,6 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithConfigEntry):
             except vol.error.MultipleInvalid:
                 return self.async_abort(reason="invalid_sound_mode_list")
 
-            try:
-                SCHEMA_EISCP = vol.Schema({str: [str]})
-                SCHEMA_EISCP(user_input.get(CONF_EISCP))
-            except vol.error.MultipleInvalid:
-                return self.async_abort(reason="invalid_eiscp")
-
             return self.async_create_entry(data=user_input)
 
         options_schema = vol.Schema(
@@ -204,7 +196,6 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 vol.Required(
                     CONF_SOUND_MODE_LIST, default=CONF_SOUND_MODE_LIST_DEFAULT
                 ): ObjectSelector(),
-                vol.Required(CONF_EISCP, default=CONF_EISCP_DEFAULT): ObjectSelector(),
             }
         )
 
