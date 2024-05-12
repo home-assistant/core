@@ -14,7 +14,7 @@ from aioaquacell import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_REFRESH_TOKEN, UPDATE_INTERVAL
@@ -48,9 +48,6 @@ class AquacellCoordinator(DataUpdateCoordinator[dict[str, Softener]]):
         so entities can quickly look up their data.
         """
 
-        if self.refresh_token is None:
-            raise ConfigEntryError("No token available.")
-
         async with asyncio.timeout(10):
             _LOGGER.debug("Logging in using: %s", self.refresh_token)
 
@@ -71,7 +68,7 @@ class AquacellCoordinator(DataUpdateCoordinator[dict[str, Softener]]):
         try:
             softeners = await self.aquacell_api.get_all_softeners()
         except AuthenticationFailed as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryError from err
         except AquacellApiException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 

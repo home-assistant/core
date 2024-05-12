@@ -25,14 +25,14 @@ class AquacellEntity(CoordinatorEntity[AquacellCoordinator]):
 
         self.softener_key = softener_key
 
-        self._attr_unique_id = f"{self.softener.dsn}-{entity_key}"
+        self._attr_unique_id = f"{softener_key}-{entity_key}"
         self._attr_device_info = DeviceInfo(
             name=self.softener.name,
             hw_version=self.softener.fwVersion,
-            identifiers={(DOMAIN, str(self.softener.dsn))},
+            identifiers={(DOMAIN, str(softener_key))},
             manufacturer=self.softener.brand,
             model=self.softener.ssn,
-            serial_number=self.softener.dsn,
+            serial_number=softener_key,
         )
 
     @property

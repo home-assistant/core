@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_REFRESH_TOKEN, DOMAIN
@@ -57,9 +56,8 @@ class AquaCellConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL],
                     data={
+                        **user_input,
                         CONF_REFRESH_TOKEN: refresh_token,
-                        CONF_EMAIL: user_input[CONF_EMAIL],
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
                     },
                 )
 
@@ -68,11 +66,3 @@ class AquaCellConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=DATA_SCHEMA,
             errors=errors,
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
