@@ -33,7 +33,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import PlatformNotReady, ServiceValidationError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
@@ -393,7 +393,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     def unique_id(self) -> str | None:
         """Return an unique ID."""
         if self._sync_status is None:
-            return None
+            raise PlatformNotReady
         return f"{format_mac(self._sync_status.mac)}-{self.port}"
 
     async def async_trigger_sync_on_all(self):
