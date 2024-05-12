@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from aioaseko import Unit, Variable
 
 from homeassistant.components.sensor import (
@@ -21,59 +19,52 @@ from .const import DOMAIN
 from .coordinator import AsekoDataUpdateCoordinator
 from .entity import AsekoEntity
 
-
-@dataclass(frozen=True, kw_only=True)
-class AsekoSensorEntityDescription(SensorEntityDescription):
-    """Describes an Aseko binary sensor entity."""
-
-
 CONCENTRATION_KILOGRAMS_PER_CUBIC_METER = "kg/m³"
 CONCENTRATION_MILLIGRAMS_PER_LITER = "mg/l"
 GRAMS_PER_HOUR = "g/hour"
 
 UNIT_SENSORS = {
-    "airTemp": AsekoSensorEntityDescription(
+    "airTemp": SensorEntityDescription(
         key="air_temperature",
         translation_key="air_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
-    "waterTemp": AsekoSensorEntityDescription(
+    "waterTemp": SensorEntityDescription(
         key="water_temperature",
         translation_key="water_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
-    "ph": AsekoSensorEntityDescription(
+    "ph": SensorEntityDescription(
         key="ph",
-        translation_key="ph",
         device_class=SensorDeviceClass.PH,
     ),
-    "rx": AsekoSensorEntityDescription(
+    "rx": SensorEntityDescription(
         key="redox",
         translation_key="redox",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
         icon="mdi:test-tube",
     ),
-    "electrodePower": AsekoSensorEntityDescription(
+    "electrodePower": SensorEntityDescription(
         key="electrolyzer",
         translation_key="electrolyzer",
         native_unit_of_measurement=GRAMS_PER_HOUR,
         icon="mdi:lightning-bolt",
     ),
-    "clf": AsekoSensorEntityDescription(
+    "clf": SensorEntityDescription(
         key="free_chlorine",
         translation_key="free_chlorine",
         native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_LITER,
         icon="mdi:test-tube",
     ),
-    "salinity": AsekoSensorEntityDescription(
+    "salinity": SensorEntityDescription(
         key="salinity",
         translation_key="salinity",
         native_unit_of_measurement=CONCENTRATION_KILOGRAMS_PER_CUBIC_METER,
     ),
-    "waterLevel": AsekoSensorEntityDescription(
+    "waterLevel": SensorEntityDescription(
         key="water_level",
         translation_key="water_level",
         device_class=SensorDeviceClass.DISTANCE,
