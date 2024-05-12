@@ -19,7 +19,7 @@
         }
       },
       "reconfigure_confirm": {
-        "description": "Update your configuration information.",
+        "description": "Update your configuration information for {printer_name}.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },

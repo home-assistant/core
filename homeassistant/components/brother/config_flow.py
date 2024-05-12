@@ -191,6 +191,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_HOST, default=self.host): str,
                 }
             ),
+            description_placeholders={"printer_name": self.entry.title},
             errors=errors,
         )
 
