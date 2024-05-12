@@ -25,9 +25,12 @@ TEST_WEIGHTS = {
     "tests/components/hue/test_light_v2.py": 3,
     "tests/components/insteon/test_api_scenes.py": 5,
     "tests/components/rainforest_raven/test_coordinator.py": 5,
+    "tests/components/recorder/test_statistics_v23_migration.py": 2,
     "tests/components/sensor/test_recorder_missing_stats.py": 3,
     "tests/components/sensor/test_recorder.py": 2,
+    "tests/components/stream/test_ll_hls.py": 3,
     "tests/components/zha/test_discover.py": 3,
+    "tests/components/zha/test_gateway.py": 3,
     "tests/components/zha/test_cluster_handlers.py": 2,
 }
 
