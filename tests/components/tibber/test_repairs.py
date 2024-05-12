@@ -50,11 +50,11 @@ async def test_repair_flow(
     flow_id = data["flow_id"]
     assert data["step_id"] == "confirm"
 
+    # Simulate the users confirmed the repair flow
     url = RepairsFlowResourceView.url.format(flow_id=flow_id)
     resp = await http_client.post(url)
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
-    # Assert the confirm step in repair flow (create_entry)
     assert data["type"] == "create_entry"
     await hass.async_block_till_done()
 
