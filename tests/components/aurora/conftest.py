@@ -5,12 +5,10 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.aurora.const import (
-    DOMAIN, CONF_THRESHOLD,
-)
+from homeassistant.components.aurora.const import CONF_THRESHOLD, DOMAIN
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 
-from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -28,7 +26,7 @@ def mock_aurora_client() -> Generator[AsyncMock, None, None]:
     """Mock a Homeassistant Analytics client."""
     with (
         patch(
-            "homeassistant.components.aurora.AuroraForecast",
+            "homeassistant.components.aurora.coordinator.AuroraForecast",
             autospec=True,
         ) as mock_client,
         patch(
