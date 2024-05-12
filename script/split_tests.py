@@ -18,6 +18,8 @@ from typing import Final
 TEST_WEIGHTS = {
     "tests/test_circular_imports.py": 40,
     "tests/test_bootstrap.py": 2,
+    "tests/components/assist_pipeline/test_websocket.py": 3,
+    "tests/components/assist_pipeline/test_init.py": 3,
     "tests/components/conversation/test_default_agent.py": 5,
     "tests/components/conversation/test_init.py": 5,
     "tests/components/insteon/test_api_scenes.py": 5,
