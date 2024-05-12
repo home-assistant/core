@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from functools import partial
+from typing import Literal
 
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.clients import Clients
@@ -202,7 +203,7 @@ def async_device_state_value_fn(hub: UnifiHub, device: Device) -> str:
 
 @callback
 def async_client_wan_monitor_supported_fn(
-    wan: str, monitor_target: str, hub: UnifiHub, obj_id: str
+    wan: Literal["WAN", "WAN2"], monitor_target: str, hub: UnifiHub, obj_id: str
 ) -> bool:
     """Determine if a client supports WAN monitoring."""
     device = hub.api.devices[obj_id]
@@ -224,7 +225,7 @@ def async_client_wan_monitor_supported_fn(
 
 @callback
 def async_client_wan_monitor_latency(
-    wan: str, monitor_target: str, hub: UnifiHub, device: Device
+    wan: Literal["WAN", "WAN2"], monitor_target: str, hub: UnifiHub, device: Device
 ) -> int | None:
     """Retrieve the monitor target from WAN monitors."""
 
