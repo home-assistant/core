@@ -73,7 +73,11 @@ class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):  # pylint: disab
         await self.desk.disconnect()
 
     async def async_ensure_connection_state(self) -> None:
-        """Check if the expected connection state matches the current state and correct it if needed."""
+        """Check if the expected connection state matches the current state.
+
+        If the expected and current state don't match, calls connect/disconnect
+        as needed.
+        """
         if self._expected_connected:
             if not self.desk.is_connected:
                 _LOGGER.debug("Desk disconnected. Reconnecting")

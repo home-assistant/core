@@ -523,8 +523,14 @@ class ConfigEntry(Generic[_DataT]):
             ):
                 raise OperationNotAllowed(
                     f"The config entry {self.title} ({self.domain}) with entry_id"
-                    f" {self.entry_id} cannot be setup because is already loaded in the"
-                    f" {self.state} state"
+                    f" {self.entry_id} cannot be set up because it is already loaded "
+                    f"in the {self.state} state"
+                )
+            if not self.setup_lock.locked():
+                raise OperationNotAllowed(
+                    f"The config entry {self.title} ({self.domain}) with entry_id"
+                    f" {self.entry_id} cannot be set up because it does not hold "
+                    "the setup lock"
                 )
             self._async_set_state(hass, ConfigEntryState.SETUP_IN_PROGRESS, None)
 
@@ -763,6 +769,13 @@ class ConfigEntry(Generic[_DataT]):
         component = await integration.async_get_component()
 
         if domain_is_integration := self.domain == integration.domain:
+            if not self.setup_lock.locked():
+                raise OperationNotAllowed(
+                    f"The config entry {self.title} ({self.domain}) with entry_id"
+                    f" {self.entry_id} cannot be unloaded because it does not hold "
+                    "the setup lock"
+                )
+
             if not self.state.recoverable:
                 return False
 
@@ -806,6 +819,13 @@ class ConfigEntry(Generic[_DataT]):
         """Invoke remove callback on component."""
         if self.source == SOURCE_IGNORE:
             return
+
+        if not self.setup_lock.locked():
+            raise OperationNotAllowed(
+                f"The config entry {self.title} ({self.domain}) with entry_id"
+                f" {self.entry_id} cannot be removed because it does not hold "
+                "the setup lock"
+            )
 
         if not (integration := self._integration_for_domain):
             try:
@@ -1639,7 +1659,7 @@ class ConfigEntries:
             if not entry.state.recoverable:
                 unload_success = entry.state is not ConfigEntryState.FAILED_UNLOAD
             else:
-                unload_success = await self.async_unload(entry_id)
+                unload_success = await self.async_unload(entry_id, _lock=False)
 
             await entry.async_remove(self.hass)
 
@@ -1741,7 +1761,7 @@ class ConfigEntries:
 
         self._entries = entries
 
-    async def async_setup(self, entry_id: str) -> bool:
+    async def async_setup(self, entry_id: str, _lock: bool = True) -> bool:
         """Set up a config entry.
 
         Return True if entry has been successfully loaded.
@@ -1752,13 +1772,17 @@ class ConfigEntries:
         if entry.state is not ConfigEntryState.NOT_LOADED:
             raise OperationNotAllowed(
                 f"The config entry {entry.title} ({entry.domain}) with entry_id"
-                f" {entry.entry_id} cannot be setup because is already loaded in the"
-                f" {entry.state} state"
+                f" {entry.entry_id} cannot be set up because it is already loaded"
+                f" in the {entry.state} state"
             )
 
         # Setup Component if not set up yet
         if entry.domain in self.hass.config.components:
-            await entry.async_setup(self.hass)
+            if _lock:
+                async with entry.setup_lock:
+                    await entry.async_setup(self.hass)
+            else:
+                await entry.async_setup(self.hass)
         else:
             # Setting up the component will set up all its config entries
             result = await async_setup_component(
@@ -1772,7 +1796,7 @@ class ConfigEntries:
             entry.state is ConfigEntryState.LOADED  # type: ignore[comparison-overlap]
         )
 
-    async def async_unload(self, entry_id: str) -> bool:
+    async def async_unload(self, entry_id: str, _lock: bool = True) -> bool:
         """Unload a config entry."""
         if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
@@ -1783,6 +1807,10 @@ class ConfigEntries:
                 f" {entry.entry_id} cannot be unloaded because it is not in a"
                 f" recoverable state ({entry.state})"
             )
+
+        if _lock:
+            async with entry.setup_lock:
+                return await entry.async_unload(self.hass)
 
         return await entry.async_unload(self.hass)
 
@@ -1825,12 +1853,12 @@ class ConfigEntries:
             return entry.state is ConfigEntryState.LOADED
 
         async with entry.setup_lock:
-            unload_result = await self.async_unload(entry_id)
+            unload_result = await self.async_unload(entry_id, _lock=False)
 
             if not unload_result or entry.disabled_by:
                 return unload_result
 
-            return await self.async_setup(entry_id)
+            return await self.async_setup(entry_id, _lock=False)
 
     async def async_set_disabled_by(
         self, entry_id: str, disabled_by: ConfigEntryDisabler | None
@@ -1969,7 +1997,11 @@ class ConfigEntries:
             *(
                 create_eager_task(
                     self._async_forward_entry_setup(entry, platform, False),
-                    name=f"config entry forward setup {entry.title} {entry.domain} {entry.entry_id} {platform}",
+                    name=(
+                        f"config entry forward setup {entry.title} "
+                        f"{entry.domain} {entry.entry_id} {platform}"
+                    ),
+                    loop=self.hass.loop,
                 )
                 for platform in platforms
             )
@@ -2022,7 +2054,11 @@ class ConfigEntries:
                 *(
                     create_eager_task(
                         self.async_forward_entry_unload(entry, platform),
-                        name=f"config entry forward unload {entry.title} {entry.domain} {entry.entry_id} {platform}",
+                        name=(
+                            f"config entry forward unload {entry.title} "
+                            f"{entry.domain} {entry.entry_id} {platform}"
+                        ),
+                        loop=self.hass.loop,
                     )
                     for platform in platforms
                 )
