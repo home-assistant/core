@@ -7,13 +7,15 @@ from typing import Any
 from aioautomower.utils import structure_token
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN, NAME
 
 _LOGGER = logging.getLogger(__name__)
+
 CONF_USER_ID = "user_id"
+HUSQVARNA_DEV_PORTAL_URL = "https://developer.husqvarnagroup.cloud"
 
 
 class HusqvarnaConfigFlowHandler(
@@ -85,6 +87,8 @@ class HusqvarnaConfigFlowHandler(
             )
             return self.async_show_form(
                 step_id="missing_scope",
-                description_placeholders={CONF_CLIENT_ID: token_structured.client_id},
+                description_placeholders={
+                    "application_url": f"{HUSQVARNA_DEV_PORTAL_URL}/applications/{token_structured.client_id}"
+                },
             )
         return await self.async_step_user()
