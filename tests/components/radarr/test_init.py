@@ -71,7 +71,6 @@ async def test_device_info(
     assert device.sw_version == "10.0.0.34882"
 
 
-@pytest.mark.freeze_time("2021-12-03 00:00:00+00:00")
 async def test_update_failed(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -90,3 +89,8 @@ async def test_update_failed(
         await hass.async_block_till_done()
         assert updater.call_count == 2
         assert hass.states.get(entity).state == STATE_UNAVAILABLE
+
+    next_update = dt_util.utcnow() + timedelta(minutes=1)
+    async_fire_time_changed(hass, next_update)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity).state == "263.10"
