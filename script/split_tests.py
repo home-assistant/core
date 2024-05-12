@@ -25,7 +25,7 @@ TEST_WEIGHTS = {
     "tests/test_circular_imports.py": 45,
     "tests/test_bootstrap.py": 2,
     "tests/components/assist_pipeline/test_websocket.py": 2.5,
-    "tests/components/assist_pipeline/test_init.py": 3,
+    "tests/components/assist_pipeline/test_init.py": 2.5,
     "tests/components/bmw_connected_drive/test_diagnostics.py": 2,
     "tests/components/calendar/test_trigger.py": 2,
     "tests/components/comfoconnect/test_sensor.py": 2,
