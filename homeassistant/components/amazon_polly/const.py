@@ -150,7 +150,7 @@ SUPPORTED_VOICES: Final[list[str]] = [
 
 SUPPORTED_OUTPUT_FORMATS: Final[list[str]] = ["mp3", "ogg_vorbis", "pcm"]
 
-SUPPORTED_ENGINES: Final[list[str]] = ["neural", "standard"]
+SUPPORTED_ENGINES: Final[list[str]] = ["generative", "long-form", "neural", "standard"]
 
 SUPPORTED_SAMPLE_RATES: Final[list[str]] = ["8000", "16000", "22050", "24000"]
 
