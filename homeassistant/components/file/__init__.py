@@ -55,13 +55,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     # Import the YAML config into separate config entries
-    platforms_config: dict[str, list[ConfigType]] = {
+    platforms_config: dict[Platform, list[ConfigType]] = {
         domain: config[domain] for domain in PLATFORMS if domain in config
     }
     for domain, items in platforms_config.items():
         for item in items:
             if item[CONF_PLATFORM] == DOMAIN:
-                file_config_item = IMPORT_SCHEMA[Platform(domain)](item)
+                file_config_item = IMPORT_SCHEMA[domain](item)
                 file_config_item[CONF_PLATFORM] = domain
                 hass.async_create_task(
                     hass.config_entries.flow.async_init(
