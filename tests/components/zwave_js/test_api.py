@@ -1336,6 +1336,7 @@ async def test_get_provisioning_entries(
             "security_classes": [SecurityClass.S2_UNAUTHENTICATED],
             "requested_security_classes": None,
             "status": 0,
+            "protocol": None,
             "additional_properties": {"fake": "test"},
         }
     ]
@@ -1422,6 +1423,7 @@ async def test_parse_qr_code_string(
         "manufacturer_id": 1,
         "product_type": 1,
         "product_id": 1,
+        "protocol": None,
         "application_version": "test",
         "max_inclusion_request_interval": 1,
         "uuid": "test",
