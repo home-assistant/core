@@ -8,7 +8,6 @@ from homeassistant.components.repairs.websocket_api import (
     RepairsFlowIndexView,
     RepairsFlowResourceView,
 )
-from homeassistant.components.tibber import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
@@ -36,14 +35,14 @@ async def test_repair_flow(
     http_client = await hass_client()
     # Assert the issue is present
     assert issue_registry.async_get_issue(
-        domain=DOMAIN,
-        issue_id="migrate_notify",
+        domain="notify",
+        issue_id="migrate_notify_tibber",
     )
     assert len(issue_registry.issues) == 1
 
     url = RepairsFlowIndexView.url
     resp = await http_client.post(
-        url, json={"handler": DOMAIN, "issue_id": "migrate_notify"}
+        url, json={"handler": "notify", "issue_id": "migrate_notify_tibber"}
     )
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -61,7 +60,7 @@ async def test_repair_flow(
 
     # Assert the issue is no longer present
     assert not issue_registry.async_get_issue(
-        domain=DOMAIN,
-        issue_id="migrate_notify",
+        domain="notify",
+        issue_id="migrate_notify_tibber",
     )
     assert len(issue_registry.issues) == 0

@@ -13,6 +13,7 @@ from homeassistant.components.notify import (
     BaseNotificationService,
     NotifyEntity,
     NotifyEntityFeature,
+    migrate_notify_issue,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -21,7 +22,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as TIBBER_DOMAIN
-from .repairs import migrate_notify_issue
 
 
 async def async_get_service(
@@ -50,7 +50,7 @@ class TibberNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to Tibber devices."""
-        migrate_notify_issue(self.hass)
+        migrate_notify_issue(self.hass, TIBBER_DOMAIN, "Tibber", "2024.12.0")
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         try:
             await self._notify(title=title, message=message)

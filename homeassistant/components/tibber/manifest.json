@@ -3,7 +3,7 @@
   "name": "Tibber",
   "codeowners": ["@danielhiversen"],
   "config_flow": true,
-  "dependencies": ["recorder", "http", "repairs"],
+  "dependencies": ["recorder"],
   "documentation": "https://www.home-assistant.io/integrations/tibber",
   "iot_class": "cloud_polling",
   "loggers": ["tibber"],
