@@ -195,7 +195,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             error = RESULT_CONN_ERROR
 
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Unknown error connecting with AsusWrt router at %s using protocol %s",
                 host,
