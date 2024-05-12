@@ -53,22 +53,21 @@ async def async_setup_entry(
     )
 
     platform = entity_platform.async_get_current_platform()
-    if platform is not None:
-        platform.async_register_entity_service(
-            "start_for",
-            {
-                vol.Required("duration"): vol.Coerce(int),
-            },
-            "async_start_for",
-        )
+    platform.async_register_entity_service(
+        "start_for",
+        {
+            vol.Required("duration"): vol.Coerce(int),
+        },
+        "async_start_for",
+    )
 
-        platform.async_register_entity_service(
-            "park_for",
-            {
-                vol.Required("duration"): vol.Coerce(int),
-            },
-            "async_park_for",
-        )
+    platform.async_register_entity_service(
+        "park_for",
+        {
+            vol.Required("duration"): vol.Coerce(int),
+        },
+        "async_park_for",
+    )
 
 
 class AutomowerLawnMowerEntity(AutomowerControlEntity, LawnMowerEntity):
