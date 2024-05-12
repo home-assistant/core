@@ -1,5 +1,6 @@
 """Block blocking calls being done in asyncio."""
 
+import builtins
 from contextlib import suppress
 from http.client import HTTPConnection
 import importlib
@@ -45,11 +46,11 @@ def enable() -> None:
         time.sleep, strict=False, check_allowed=_check_sleep_call_allowed
     )
 
-    # Currently disabled. pytz doing I/O when getting timezone.
-    # Prevent files being opened inside the event loop
-    # builtins.open = protect_loop(builtins.open)
-
     if not _IN_TESTS:
+        # Prevent files being opened inside the event loop
+        builtins.open = protect_loop(  # type: ignore[assignment]
+            builtins.open, strict_core=False, strict=False
+        )
         # unittest uses `importlib.import_module` to do mocking
         # so we cannot protect it if we are running tests
         importlib.import_module = protect_loop(
