@@ -1,6 +1,6 @@
 """Husqvarna Automower lawn mower entity."""
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
 from typing import Any
@@ -47,7 +47,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def handle_sending_exception(
-    func: Callable[..., Coroutine[Any, Any, None]],
+    func: Callable[..., Awaitable[Any]],
 ) -> Callable[..., Coroutine[Any, Any, None]]:
     """Handle exceptions while sending a command."""
 
