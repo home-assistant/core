@@ -17,7 +17,7 @@ def async_create_issue(hass: HomeAssistant, entry_id: str) -> None:
         hass=hass,
         domain=DOMAIN,
         issue_id=_get_issue_id(entry_id),
-        is_fixable=False,
+        is_fixable=True,
         is_persistent=True,
         severity=ir.IssueSeverity.WARNING,
         learn_more_url="https://www.home-assistant.io/integrations/openweathermap/",
