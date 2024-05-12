@@ -4,6 +4,7 @@ from contextlib import suppress
 from http.client import HTTPConnection
 import importlib
 import sys
+import threading
 import time
 from typing import Any
 
@@ -25,7 +26,7 @@ def _check_sleep_call_allowed(mapped_args: dict[str, Any]) -> bool:
     # I/O and we are trying to avoid blocking calls.
     #
     # frame[0] is us
-    # frame[1] is check_loop
+    # frame[1] is raise_for_blocking_call
     # frame[2] is protected_loop_func
     # frame[3] is the offender
     with suppress(ValueError):
@@ -35,14 +36,18 @@ def _check_sleep_call_allowed(mapped_args: dict[str, Any]) -> bool:
 
 def enable() -> None:
     """Enable the detection of blocking calls in the event loop."""
+    loop_thread_id = threading.get_ident()
     # Prevent urllib3 and requests doing I/O in event loop
     HTTPConnection.putrequest = protect_loop(  # type: ignore[method-assign]
-        HTTPConnection.putrequest
+        HTTPConnection.putrequest, loop_thread_id=loop_thread_id
     )
 
     # Prevent sleeping in event loop. Non-strict since 2022.02
     time.sleep = protect_loop(
-        time.sleep, strict=False, check_allowed=_check_sleep_call_allowed
+        time.sleep,
+        strict=False,
+        check_allowed=_check_sleep_call_allowed,
+        loop_thread_id=loop_thread_id,
     )
 
     # Currently disabled. pytz doing I/O when getting timezone.
@@ -57,4 +62,5 @@ def enable() -> None:
             strict_core=False,
             strict=False,
             check_allowed=_check_import_call_allowed,
+            loop_thread_id=loop_thread_id,
         )
