@@ -43,14 +43,20 @@ async def test_load_unload_entry(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.parametrize(
+    ("scope"),
+    [
+        ("iam:read"),
+    ],
+)
 async def test_load_missing_scope(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
-    mock_missing_scope_config_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test if the entry starts an reauth with the missing token scope."""
-    await setup_integration(hass, mock_missing_scope_config_entry)
-    assert mock_missing_scope_config_entry.state is ConfigEntryState.SETUP_ERROR
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.parametrize(
