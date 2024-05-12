@@ -15,6 +15,7 @@ class AuroraEntity(CoordinatorEntity[AuroraDataUpdateCoordinator]):
     """Implementation of the base Aurora Entity."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(
         self,
