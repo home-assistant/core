@@ -6,10 +6,9 @@ import dataclasses
 from datetime import timedelta
 from functools import cache
 import logging
-from typing import TYPE_CHECKING, Any, Generic, Self, TypedDict, cast
+from typing import TYPE_CHECKING, Any, Generic, Self, TypedDict, TypeVar, cast
 
 from habluetooth import BluetoothScanningMode
-from typing_extensions import TypeVar
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -35,8 +34,6 @@ from .update_coordinator import BasePassiveBluetoothCoordinator
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from sensor_state_data import SensorUpdate  # noqa: F401
-
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
     from .models import BluetoothChange, BluetoothServiceInfoBleak
@@ -47,7 +44,7 @@ STORAGE_SAVE_INTERVAL = timedelta(minutes=15)
 PASSIVE_UPDATE_PROCESSOR = "passive_update_processor"
 
 _T = TypeVar("_T")
-_DataT = TypeVar("_DataT", default="SensorUpdate")
+_DataT = TypeVar("_DataT")
 
 
 @dataclasses.dataclass(slots=True, frozen=True)

@@ -7,11 +7,10 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any, TypeVar
 
 from bleak import BleakError
 from bluetooth_data_tools import monotonic_time_coarse
-from typing_extensions import TypeVar
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
@@ -19,13 +18,10 @@ from homeassistant.helpers.debounce import Debouncer
 from . import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
 from .passive_update_processor import PassiveBluetoothProcessorCoordinator
 
-if TYPE_CHECKING:
-    from sensor_state_data import SensorUpdate  # noqa: F401
-
 POLL_DEFAULT_COOLDOWN = 10
 POLL_DEFAULT_IMMEDIATE = True
 
-_DataT = TypeVar("_DataT", default="SensorUpdate")
+_DataT = TypeVar("_DataT")
 
 
 class ActiveBluetoothProcessorCoordinator(PassiveBluetoothProcessorCoordinator[_DataT]):

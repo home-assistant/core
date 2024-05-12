@@ -2,9 +2,9 @@
 
 from collections.abc import Callable
 from logging import Logger
+from typing import TypeVar
 
 from bthome_ble import BTHomeBluetoothDeviceData, SensorUpdate
-from typing_extensions import TypeVar
 
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
@@ -51,7 +51,9 @@ class BTHomePassiveBluetoothProcessorCoordinator(
         return self.entry.data.get(CONF_SLEEPY_DEVICE, self.device_data.sleepy_device)
 
 
-class BTHomePassiveBluetoothDataProcessor(PassiveBluetoothDataProcessor[_T]):
+class BTHomePassiveBluetoothDataProcessor(
+    PassiveBluetoothDataProcessor[_T, SensorUpdate]
+):
     """Define a BTHome Bluetooth Passive Update Data Processor."""
 
     coordinator: BTHomePassiveBluetoothProcessorCoordinator
