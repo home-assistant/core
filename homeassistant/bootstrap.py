@@ -427,7 +427,11 @@ async def async_from_config_dict(
     if not all(
         await asyncio.gather(
             *(
-                create_eager_task(async_setup_component(hass, domain, config))
+                create_eager_task(
+                    async_setup_component(hass, domain, config),
+                    name=f"bootstrap setup {domain}",
+                    loop=hass.loop,
+                )
                 for domain in CORE_INTEGRATIONS
             )
         )
