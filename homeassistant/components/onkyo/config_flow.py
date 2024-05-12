@@ -8,10 +8,10 @@ import eiscp
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.util.network import is_ip_address
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import BRAND_NAME, DOMAIN
 
 FlowInput = Mapping[str, Any] | None
 
@@ -64,7 +64,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         devices_name = {
             device.info[
                 "identifier"
-            ]: f"{DEFAULT_NAME} {device.info["model_name"]} ({device.host}:{device.port})"
+            ]: f"{BRAND_NAME} {device.info["model_name"]} ({device.host}:{device.port})"
             for host, device in self._discovered_devices.items()
             if device.info["identifier"] not in current_unique_ids
             and host not in current_hosts
@@ -95,6 +95,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 try:
                     receiver = eiscp.eISCP(user_input[CONF_HOST], user_input[CONF_PORT])
+                    # receiver.info["identifier"] += "TEST"
                     identifier = receiver.info["identifier"]
                 except TypeError:
                     # Info is None when connection fails
@@ -104,6 +105,8 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._abort_if_unique_id_configured(
                         updates={CONF_HOST: user_input[CONF_HOST]}
                     )
+
+                    user_input[CONF_NAME] = self._get_device_name(receiver)
                     return self.async_create_entry(
                         title=self._get_device_name(receiver),
                         data=user_input,

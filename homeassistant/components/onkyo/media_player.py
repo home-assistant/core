@@ -4,11 +4,9 @@ from __future__ import annotations
 
 import logging
 
-# from typing import Any
-# import eiscp
-# import homeassistant.helpers.config_validation as cv
-# import voluptuous as vol
-# from eiscp import eISCP
+import eiscp
+import voluptuous as vol
+
 from homeassistant.components.media_player import (
     DOMAIN,
     MediaPlayerDeviceClass,
@@ -17,101 +15,35 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant  # , ServiceCall
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
+from homeassistant.core import HomeAssistant, ServiceCall
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-# from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from .const import (
+    ATTR_HDMI_OUTPUT,
+    BRAND_NAME,
+    HDMI_OUTPUT_ACCEPTED_VALUES,
+    SERVICE_SELECT_HDMI_OUTPUT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the Onkyo Platform from config_flow."""
-    async_add_entities([TestEntity(config_entry)])
-
-
-SUPPORT_TEST = (
-    # MediaPlayerEntityFeature.VOLUME_SET
-    # | MediaPlayerEntityFeature.VOLUME_MUTE
-    MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
-    # | MediaPlayerEntityFeature.SELECT_SOURCE
-    # | MediaPlayerEntityFeature.SELECT_SOUND_MODE
+ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required(ATTR_HDMI_OUTPUT): vol.In(HDMI_OUTPUT_ACCEPTED_VALUES),
+    }
 )
 
-
-class TestEntity(MediaPlayerEntity):
-    """Representation of Test."""
-
-    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
-
-    _attr_has_entity_name = True
-
-    _attr_name = None
-
-    # _attr_supported_features = (
-    #     MediaPlayerEntityFeature.TURN_ON
-    #     | MediaPlayerEntityFeature.TURN_OFF
-    # )
-
-    def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize the Test device."""
-        super().__init__()
-
-        self._attr_unique_id = str(entry.unique_id)
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
-            manufacturer="Onkyo",  # TEDOEN to constant
-            model="TX-NR999",  # TEDOEN fetch from device
-            name="Jasper is de beste",  # TEDOEN ? entry.data[CONF_NAME],
-            # sw_version=self.coordinator.client.version,
-        )
-
-    @property
-    def supported_features(self) -> MediaPlayerEntityFeature:
-        """Flag media player features that are supported."""
-        _LOGGER.info("ONKYO: request features")
-        return SUPPORT_TEST
-
-    # async def async_update(self) -> None:
-    def update(self) -> None:
-        """Handle updating state."""
-
-        _LOGGER.info("ONKYO: update thy data")
-
-        if self._attr_state is None:
-            self._attr_state = MediaPlayerState.OFF
-        # self.async_write_ha_state()
-
-    # async def async_added_to_hass(self) -> None:
-    #     """Set config parameter when add to hass."""
-    #     await super().async_added_to_hass()
-
-    #     _LOGGER.info("ONKYO: added to hass")
-
-    # self._process_config()
-    # self.async_on_remove(
-    #     async_dispatcher_connect(
-    #         self.hass,
-    #         f"{SIGNAL_CONFIG_ENTITY}_{self._entry_id}",
-    #         self._process_config,
-    #     )
-    # )
-
-    async def async_turn_on(self) -> None:
-        """Instruct the receiver to turn on."""
-        _LOGGER.info("ONKYO: turn on")
-        self._attr_state = MediaPlayerState.ON
-
-    async def async_turn_off(self) -> None:
-        """Instruct the receiver to turn off."""
-        _LOGGER.info("ONKYO: turn off")
-        self._attr_state = MediaPlayerState.OFF
-
+SUPPORT_ONKYO = (
+    MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
+    # SUPPORT_ONKYO_WO_VOLUME
+    # | MediaPlayerEntityFeature.VOLUME_SET
+    # | MediaPlayerEntityFeature.VOLUME_MUTE
+    # | MediaPlayerEntityFeature.VOLUME_STEP
+)
 
 # CONF_SOURCES = "sources"
 # CONF_MAX_VOLUME = "max_volume"
@@ -177,23 +109,6 @@ class TestEntity(MediaPlayerEntity):
 # ATTR_VIDEO_INFORMATION = "video_information"
 # ATTR_VIDEO_OUT = "video_out"
 
-# ACCEPTED_VALUES = [
-#     "no",
-#     "analog",
-#     "yes",
-#     "out",
-#     "out-sub",
-#     "sub",
-#     "hdbaset",
-#     "both",
-#     "up",
-# ]
-# ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
-#     {
-#         vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-#         vol.Required(ATTR_HDMI_OUTPUT): vol.In(ACCEPTED_VALUES),
-#     }
-# )
 
 # SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
 
@@ -250,59 +165,78 @@ class TestEntity(MediaPlayerEntity):
 #     return out
 
 
-# add_entities(hosts, True)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Onkyo Platform from config_flow."""
 
-# if CONF_HOST in config and (host := config[CONF_HOST]) not in KNOWN_HOSTS:
-#     try:
-#         receiver = eiscp.eISCP(host)
-#         hosts.append(
-#             OnkyoDevice(
-#                 receiver,
-#                 config.get(CONF_SOURCES),
-#                 name=config.get(CONF_NAME),
-#                 max_volume=config.get(CONF_MAX_VOLUME),
-#                 receiver_max_volume=config.get(CONF_RECEIVER_MAX_VOLUME),
-#             )
-#         )
-#         KNOWN_HOSTS.append(host)
+    hosts: list[OnkyoDevice] = []
 
-#         zones = determine_zones(receiver)
+    def service_handle(service: ServiceCall) -> None:
+        """Handle for services."""
+        _LOGGER.error("Not yet operational")
+        # entity_ids = service.data[ATTR_ENTITY_ID]
+        # devices = [d for d in hosts if d.entity_id in entity_ids]
 
-#         # Add Zone2 if available
-#         if zones["zone2"]:
-#             _LOGGER.debug("Setting up zone 2")
-#             hosts.append(
-#                 OnkyoDeviceZone(
-#                     "2",
-#                     receiver,
-#                     config.get(CONF_SOURCES),
-#                     name=f"{config[CONF_NAME]} Zone 2",
-#                     max_volume=config.get(CONF_MAX_VOLUME),
-#                     receiver_max_volume=config.get(CONF_RECEIVER_MAX_VOLUME),
-#                 )
-#             )
-#         # Add Zone3 if available
-#         if zones["zone3"]:
-#             _LOGGER.debug("Setting up zone 3")
-#             hosts.append(
-#                 OnkyoDeviceZone(
-#                     "3",
-#                     receiver,
-#                     config.get(CONF_SOURCES),
-#                     name=f"{config[CONF_NAME]} Zone 3",
-#                     max_volume=config.get(CONF_MAX_VOLUME),
-#                     receiver_max_volume=config.get(CONF_RECEIVER_MAX_VOLUME),
-#                 )
-#             )
-#     except OSError:
-#         _LOGGER.error("Unable to connect to receiver at %s", host)
-# else:
-#     for receiver in eISCP.discover():
-#         if receiver.host not in KNOWN_HOSTS:
-#             hosts.append(OnkyoDevice(receiver, config.get(CONF_SOURCES)))
-#             KNOWN_HOSTS.append(receiver.host)
+        # for device in devices:
+        #     if service.service == SERVICE_SELECT_HDMI_OUTPUT:
+        #         device.select_output(service.data[ATTR_HDMI_OUTPUT])
 
-# add_entities(hosts, True)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SELECT_HDMI_OUTPUT,
+        service_handle,
+        schema=ONKYO_SELECT_OUTPUT_SCHEMA,
+    )
+
+    host = entry.data[CONF_HOST]
+    try:
+        receiver = eiscp.eISCP(host)
+        hosts.append(
+            OnkyoDevice(
+                entry,
+                receiver,
+                # config.get(CONF_SOURCES),
+                # name=config.get(CONF_NAME),
+                # max_volume=config.get(CONF_MAX_VOLUME),
+                # receiver_max_volume=config.get(CONF_RECEIVER_MAX_VOLUME),
+            )
+        )
+    except OSError:
+        _LOGGER.error("Unable to connect to receiver at %s", host)
+
+    #         zones = determine_zones(receiver)
+
+    #         # Add Zone2 if available
+    #         if zones["zone2"]:
+    #             _LOGGER.debug("Setting up zone 2")
+    #             hosts.append(
+    #                 OnkyoDeviceZone(
+    #                     "2",
+    #                     receiver,
+    #                     config.get(CONF_SOURCES),
+    #                     name=f"{config[CONF_NAME]} Zone 2",
+    #                     max_volume=config.get(CONF_MAX_VOLUME),
+    #                     receiver_max_volume=config.get(CONF_RECEIVER_MAX_VOLUME),
+    #                 )
+    #             )
+    #         # Add Zone3 if available
+    #         if zones["zone3"]:
+    #             _LOGGER.debug("Setting up zone 3")
+    #             hosts.append(
+    #                 OnkyoDeviceZone(
+    #                     "3",
+    #                     receiver,
+    #                     config.get(CONF_SOURCES),
+    #                     name=f"{config[CONF_NAME]} Zone 3",
+    #                     max_volume=config.get(CONF_MAX_VOLUME),
+    #                     receiver_max_volume=config.get(CONF_RECEIVER_MAX_VOLUME),
+    #                 )
+    #             )
+
+    async_add_entities(hosts, update_before_add=True)
 
 
 # def setup_platform(
@@ -382,213 +316,230 @@ class TestEntity(MediaPlayerEntity):
 #     add_entities(hosts, True)
 
 
-# class OnkyoDevice(MediaPlayerEntity):
-#     """Representation of an Onkyo device."""
+class OnkyoDevice(MediaPlayerEntity):
+    """Representation of an Onkyo device."""
 
-#     _attr_supported_features = SUPPORT_ONKYO
+    _attr_supported_features = SUPPORT_ONKYO
+    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
+    _attr_has_entity_name = True
 
-#     def __init__(
-#         self,
-#         receiver,
-#         sources,
-#         name=None,
-#         max_volume=SUPPORTED_MAX_VOLUME,
-#         receiver_max_volume=DEFAULT_RECEIVER_MAX_VOLUME,
-#     ):
-#         """Initialize the Onkyo Receiver."""
-#         self._receiver = receiver
-#         self._attr_is_volume_muted = False
-#         self._attr_volume_level = 0
-#         self._attr_state = MediaPlayerState.OFF
-#         if name:
-#             # not discovered
-#             self._attr_name = name
-#         else:
-#             # discovered
-#             self._attr_unique_id = (
-#                 f"{receiver.info['model_name']}_{receiver.info['identifier']}"
-#             )
-#             self._attr_name = self._attr_unique_id
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        receiver: eiscp.eISCP,
+        # sources,
+        # max_volume=SUPPORTED_MAX_VOLUME,
+        # receiver_max_volume=DEFAULT_RECEIVER_MAX_VOLUME,
+    ) -> None:
+        """Initialize the Onkyo Receiver."""
+        self._receiver = receiver
+        self._attr_is_volume_muted = False
+        self._attr_volume_level = 0
+        self._attr_state = MediaPlayerState.OFF
 
-#         self._max_volume = max_volume
-#         self._receiver_max_volume = receiver_max_volume
-#         self._attr_source_list = list(sources.values())
-#         self._source_mapping = sources
-#         self._reverse_mapping = {value: key for key, value in sources.items()}
-#         self._attr_extra_state_attributes = {}
-#         self._hdmi_out_supported = True
-#         self._audio_info_supported = True
-#         self._video_info_supported = True
+        self._attr_unique_id = str(entry.unique_id)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            manufacturer=BRAND_NAME,
+            model=receiver.info["model_name"],
+            name=entry.data[CONF_NAME],
+        )
 
-#     def command(self, command):
-#         """Run an eiscp command and catch connection errors."""
-#         try:
-#             result = self._receiver.command(command)
-#         except (ValueError, OSError, AttributeError, AssertionError):
-#             if self._receiver.command_socket:
-#                 self._receiver.command_socket = None
-#                 _LOGGER.debug("Resetting connection to %s", self.name)
-#             else:
-#                 _LOGGER.info("%s is disconnected. Attempting to reconnect", self.name)
-#             return False
-#         _LOGGER.debug("Result for %s: %s", command, result)
-#         return result
+        # self._max_volume = max_volume
+        # self._receiver_max_volume = receiver_max_volume
+        # self._attr_source_list = list(sources.values())
+        # self._source_mapping = sources
+        # self._reverse_mapping = {value: key for key, value in sources.items()}
+        # self._attr_extra_state_attributes = {}
+        # self._hdmi_out_supported = True
+        # self._audio_info_supported = True
+        # self._video_info_supported = True
 
-#     def update(self) -> None:
-#         """Get the latest state from the device."""
-#         status = self.command("system-power query")
+    # TEDOEN: disabled the entities to update when disabled to reduce network traffic
+    # async def async_added_to_hass(self) -> None:
+    #     """Set config parameter when add to hass."""
+    #     await super().async_added_to_hass()
 
-#         if not status:
-#             return
-#         if status[1] == "on":
-#             self._attr_state = MediaPlayerState.ON
-#         else:
-#             self._attr_state = MediaPlayerState.OFF
-#             self._attr_extra_state_attributes.pop(ATTR_AUDIO_INFORMATION, None)
-#             self._attr_extra_state_attributes.pop(ATTR_VIDEO_INFORMATION, None)
-#             self._attr_extra_state_attributes.pop(ATTR_PRESET, None)
-#             self._attr_extra_state_attributes.pop(ATTR_VIDEO_OUT, None)
-#             return
+    #     _LOGGER.info("ONKYO: added to hass")
 
-#         volume_raw = self.command("volume query")
-#         mute_raw = self.command("audio-muting query")
-#         current_source_raw = self.command("input-selector query")
-#         # If the following command is sent to a device with only one HDMI out,
-#         # the display shows 'Not Available'.
-#         # We avoid this by checking if HDMI out is supported
-#         if self._hdmi_out_supported:
-#             hdmi_out_raw = self.command("hdmi-output-selector query")
-#         else:
-#             hdmi_out_raw = []
-#         preset_raw = self.command("preset query")
-#         if self._audio_info_supported:
-#             audio_information_raw = self.command("audio-information query")
-#             self._parse_audio_information(audio_information_raw)
-#         if self._video_info_supported:
-#             video_information_raw = self.command("video-information query")
-#             self._parse_video_information(video_information_raw)
-#         if not (volume_raw and mute_raw and current_source_raw):
-#             return
+    # self._process_config()
+    # self.async_on_remove(
+    #     async_dispatcher_connect(
+    #         self.hass,
+    #         f"{SIGNAL_CONFIG_ENTITY}_{self._entry_id}",
+    #         self._process_config,
+    #     )
+    # )
 
-#         sources = _parse_onkyo_payload(current_source_raw)
+    def command(self, command):
+        """Run an eiscp command and catch connection errors."""
+        try:
+            result = self._receiver.command(command)
+        except (ValueError, OSError, AttributeError, AssertionError):
+            if self._receiver.command_socket:
+                self._receiver.command_socket = None
+                _LOGGER.debug("Resetting connection to %s", self.name)
+            else:
+                _LOGGER.info("%s is disconnected. Attempting to reconnect", self.name)
+            return False
+        _LOGGER.debug("Result for %s: %s", command, result)
+        return result
 
-#         for source in sources:
-#             if source in self._source_mapping:
-#                 self._attr_source = self._source_mapping[source]
-#                 break
-#             self._attr_source = "_".join(sources)
+    def update(self) -> None:
+        """Get the latest state from the device."""
+        status = self.command("system-power query")
 
-#         if preset_raw and self.source and self.source.lower() == "radio":
-#             self._attr_extra_state_attributes[ATTR_PRESET] = preset_raw[1]
-#         elif ATTR_PRESET in self._attr_extra_state_attributes:
-#             del self._attr_extra_state_attributes[ATTR_PRESET]
+        if not status:
+            return
+        if status[1] == "on":
+            self._attr_state = MediaPlayerState.ON
+        else:
+            self._attr_state = MediaPlayerState.OFF
+            # self._attr_extra_state_attributes.pop(ATTR_AUDIO_INFORMATION, None)
+            # self._attr_extra_state_attributes.pop(ATTR_VIDEO_INFORMATION, None)
+            # self._attr_extra_state_attributes.pop(ATTR_PRESET, None)
+            # self._attr_extra_state_attributes.pop(ATTR_VIDEO_OUT, None)
+            return
 
-#         self._attr_is_volume_muted = bool(mute_raw[1] == "on")
-#         #       AMP_VOL/MAX_RECEIVER_VOL*(MAX_VOL/100)
-#         self._attr_volume_level = volume_raw[1] / (
-#             self._receiver_max_volume * self._max_volume / 100
-#         )
+        # volume_raw = self.command("volume query")
+        # mute_raw = self.command("audio-muting query")
+        # current_source_raw = self.command("input-selector query")
+        # # If the following command is sent to a device with only one HDMI out,
+        # # the display shows 'Not Available'.
+        # # We avoid this by checking if HDMI out is supported
+        # if self._hdmi_out_supported:
+        #     hdmi_out_raw = self.command("hdmi-output-selector query")
+        # else:
+        #     hdmi_out_raw = []
+        # preset_raw = self.command("preset query")
+        # if self._audio_info_supported:
+        #     audio_information_raw = self.command("audio-information query")
+        #     self._parse_audio_information(audio_information_raw)
+        # if self._video_info_supported:
+        #     video_information_raw = self.command("video-information query")
+        #     self._parse_video_information(video_information_raw)
+        # if not (volume_raw and mute_raw and current_source_raw):
+        #     return
 
-#         if not hdmi_out_raw:
-#             return
-#         self._attr_extra_state_attributes[ATTR_VIDEO_OUT] = ",".join(hdmi_out_raw[1])
-#         if hdmi_out_raw[1] == "N/A":
-#             self._hdmi_out_supported = False
+        # sources = _parse_onkyo_payload(current_source_raw)
 
-#     def turn_off(self) -> None:
-#         """Turn the media player off."""
-#         self.command("system-power standby")
+        # for source in sources:
+        #     if source in self._source_mapping:
+        #         self._attr_source = self._source_mapping[source]
+        #         break
+        #     self._attr_source = "_".join(sources)
 
-#     def set_volume_level(self, volume: float) -> None:
-#         """Set volume level, input is range 0..1.
+        # if preset_raw and self.source and self.source.lower() == "radio":
+        #     self._attr_extra_state_attributes[ATTR_PRESET] = preset_raw[1]
+        # elif ATTR_PRESET in self._attr_extra_state_attributes:
+        #     del self._attr_extra_state_attributes[ATTR_PRESET]
 
-#         However full volume on the amp is usually far too loud so allow the user to
-#         specify the upper range with CONF_MAX_VOLUME. We change as per max_volume
-#         set by user. This means that if max volume is 80 then full volume in HA will
-#         give 80% volume on the receiver. Then we convert that to the correct scale
-#         for the receiver.
-#         """
-#         #        HA_VOL * (MAX VOL / 100) * MAX_RECEIVER_VOL
-#         self.command(
-#             "volume"
-#             f" {int(volume * (self._max_volume / 100) * self._receiver_max_volume)}"
-#         )
+        # self._attr_is_volume_muted = bool(mute_raw[1] == "on")
+        # #       AMP_VOL/MAX_RECEIVER_VOL*(MAX_VOL/100)
+        # self._attr_volume_level = volume_raw[1] / (
+        #     self._receiver_max_volume * self._max_volume / 100
+        # )
 
-#     def volume_up(self) -> None:
-#         """Increase volume by 1 step."""
-#         self.command("volume level-up")
+        # if not hdmi_out_raw:
+        #     return
+        # self._attr_extra_state_attributes[ATTR_VIDEO_OUT] = ",".join(hdmi_out_raw[1])
+        # if hdmi_out_raw[1] == "N/A":
+        #     self._hdmi_out_supported = False
 
-#     def volume_down(self) -> None:
-#         """Decrease volume by 1 step."""
-#         self.command("volume level-down")
+    def turn_on(self) -> None:
+        """Turn the media player on."""
+        self.command("system-power on")
 
-#     def mute_volume(self, mute: bool) -> None:
-#         """Mute (true) or unmute (false) media player."""
-#         if mute:
-#             self.command("audio-muting on")
-#         else:
-#             self.command("audio-muting off")
+    def turn_off(self) -> None:
+        """Turn the media player off."""
+        self.command("system-power standby")
 
-#     def turn_on(self) -> None:
-#         """Turn the media player on."""
-#         self.command("system-power on")
+    # def set_volume_level(self, volume: float) -> None:
+    #     """Set volume level, input is range 0..1.
 
-#     def select_source(self, source: str) -> None:
-#         """Set the input source."""
-#         if self.source_list and source in self.source_list:
-#             source = self._reverse_mapping[source]
-#         self.command(f"input-selector {source}")
+    #     However full volume on the amp is usually far too loud so allow the user to
+    #     specify the upper range with CONF_MAX_VOLUME. We change as per max_volume
+    #     set by user. This means that if max volume is 80 then full volume in HA will
+    #     give 80% volume on the receiver. Then we convert that to the correct scale
+    #     for the receiver.
+    #     """
+    #     #        HA_VOL * (MAX VOL / 100) * MAX_RECEIVER_VOL
+    #     self.command(
+    #         "volume"
+    #         f" {int(volume * (self._max_volume / 100) * self._receiver_max_volume)}"
+    #     )
 
-#     def play_media(
-#         self, media_type: MediaType | str, media_id: str, **kwargs: Any
-#     ) -> None:
-#         """Play radio station by preset number."""
-#         source = self._reverse_mapping[self._attr_source]
-#         if media_type.lower() == "radio" and source in DEFAULT_PLAYABLE_SOURCES:
-#             self.command(f"preset {media_id}")
+    # def volume_up(self) -> None:
+    #     """Increase volume by 1 step."""
+    #     self.command("volume level-up")
 
-#     def select_output(self, output):
-#         """Set hdmi-out."""
-#         self.command(f"hdmi-output-selector={output}")
+    # def volume_down(self) -> None:
+    #     """Decrease volume by 1 step."""
+    #     self.command("volume level-down")
 
-#     def _parse_audio_information(self, audio_information_raw):
-#         values = _parse_onkyo_payload(audio_information_raw)
-#         if values is False:
-#             self._audio_info_supported = False
-#             return
+    # def mute_volume(self, mute: bool) -> None:
+    #     """Mute (true) or unmute (false) media player."""
+    #     if mute:
+    #         self.command("audio-muting on")
+    #     else:
+    #         self.command("audio-muting off")
 
-#         if values:
-#             info = {
-#                 "format": _tuple_get(values, 1),
-#                 "input_frequency": _tuple_get(values, 2),
-#                 "input_channels": _tuple_get(values, 3),
-#                 "listening_mode": _tuple_get(values, 4),
-#                 "output_channels": _tuple_get(values, 5),
-#                 "output_frequency": _tuple_get(values, 6),
-#             }
-#             self._attr_extra_state_attributes[ATTR_AUDIO_INFORMATION] = info
-#         else:
-#             self._attr_extra_state_attributes.pop(ATTR_AUDIO_INFORMATION, None)
+    # def select_source(self, source: str) -> None:
+    #     """Set the input source."""
+    #     if self.source_list and source in self.source_list:
+    #         source = self._reverse_mapping[source]
+    #     self.command(f"input-selector {source}")
 
-#     def _parse_video_information(self, video_information_raw):
-#         values = _parse_onkyo_payload(video_information_raw)
-#         if values is False:
-#             self._video_info_supported = False
-#             return
+    # def play_media(
+    #     self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    # ) -> None:
+    #     """Play radio station by preset number."""
+    #     source = self._reverse_mapping[self._attr_source]
+    #     if media_type.lower() == "radio" and source in DEFAULT_PLAYABLE_SOURCES:
+    #         self.command(f"preset {media_id}")
 
-#         if values:
-#             info = {
-#                 "input_resolution": _tuple_get(values, 1),
-#                 "input_color_schema": _tuple_get(values, 2),
-#                 "input_color_depth": _tuple_get(values, 3),
-#                 "output_resolution": _tuple_get(values, 5),
-#                 "output_color_schema": _tuple_get(values, 6),
-#                 "output_color_depth": _tuple_get(values, 7),
-#                 "picture_mode": _tuple_get(values, 8),
-#             }
-#             self._attr_extra_state_attributes[ATTR_VIDEO_INFORMATION] = info
-#         else:
-#             self._attr_extra_state_attributes.pop(ATTR_VIDEO_INFORMATION, None)
+    # def select_output(self, output):
+    #     """Set hdmi-out."""
+    #     self.command(f"hdmi-output-selector={output}")
+
+    # def _parse_audio_information(self, audio_information_raw):
+    #     values = _parse_onkyo_payload(audio_information_raw)
+    #     if values is False:
+    #         self._audio_info_supported = False
+    #         return
+
+    #     if values:
+    #         info = {
+    #             "format": _tuple_get(values, 1),
+    #             "input_frequency": _tuple_get(values, 2),
+    #             "input_channels": _tuple_get(values, 3),
+    #             "listening_mode": _tuple_get(values, 4),
+    #             "output_channels": _tuple_get(values, 5),
+    #             "output_frequency": _tuple_get(values, 6),
+    #         }
+    #         self._attr_extra_state_attributes[ATTR_AUDIO_INFORMATION] = info
+    #     else:
+    #         self._attr_extra_state_attributes.pop(ATTR_AUDIO_INFORMATION, None)
+
+    # def _parse_video_information(self, video_information_raw):
+    #     values = _parse_onkyo_payload(video_information_raw)
+    #     if values is False:
+    #         self._video_info_supported = False
+    #         return
+
+    #     if values:
+    #         info = {
+    #             "input_resolution": _tuple_get(values, 1),
+    #             "input_color_schema": _tuple_get(values, 2),
+    #             "input_color_depth": _tuple_get(values, 3),
+    #             "output_resolution": _tuple_get(values, 5),
+    #             "output_color_schema": _tuple_get(values, 6),
+    #             "output_color_depth": _tuple_get(values, 7),
+    #             "picture_mode": _tuple_get(values, 8),
+    #         }
+    #         self._attr_extra_state_attributes[ATTR_VIDEO_INFORMATION] = info
+    #     else:
+    #         self._attr_extra_state_attributes.pop(ATTR_VIDEO_INFORMATION, None)
 
 
 # class OnkyoDeviceZone(OnkyoDevice):
