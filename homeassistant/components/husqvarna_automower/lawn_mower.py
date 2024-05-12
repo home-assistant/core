@@ -24,13 +24,8 @@ from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerControlEntity
 
-SUPPORT_STATE_SERVICES = (
-    LawnMowerEntityFeature.DOCK
-    | LawnMowerEntityFeature.PAUSE
-    | LawnMowerEntityFeature.START_MOWING
-)
-
 DOCKED_ACTIVITIES = (MowerActivities.PARKED_IN_CS, MowerActivities.CHARGING)
+EXCEPTION_TEXT = "Failed to send command: {exception}"
 MOWING_ACTIVITIES = (
     MowerActivities.MOWING,
     MowerActivities.LEAVING,
@@ -41,7 +36,11 @@ PAUSED_STATES = [
     MowerStates.WAIT_UPDATING,
     MowerStates.WAIT_POWER_UP,
 ]
-
+SUPPORT_STATE_SERVICES = (
+    LawnMowerEntityFeature.DOCK
+    | LawnMowerEntityFeature.PAUSE
+    | LawnMowerEntityFeature.START_MOWING
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +56,7 @@ def handle_sending_exception(
             return await func(self, *args, **kwargs)
         except ApiException as exception:
             raise HomeAssistantError(
-                f"Command couldn't be sent to the command queue: {exception}"
+                EXCEPTION_TEXT.format(exception=exception)
             ) from exception
 
     return wrapper

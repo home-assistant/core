@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
+from homeassistant.components.husqvarna_automower.lawn_mower import EXCEPTION_TEXT
 from homeassistant.components.lawn_mower import LawnMowerActivity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -95,7 +96,4 @@ async def test_lawn_mower_commands(
             service_data=service_data,
             blocking=True,
         )
-    assert (
-        str(exc_info.value)
-        == "Command couldn't be sent to the command queue: Test error"
-    )
+    assert str(exc_info.value) == EXCEPTION_TEXT.format(exception="Test error")
