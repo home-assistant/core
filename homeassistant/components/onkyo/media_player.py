@@ -18,7 +18,12 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -38,6 +43,7 @@ from .const import (
     CONF_SOURCES_DEFAULT,
     DEFAULT_PLAYABLE_SOURCES,
     HDMI_OUTPUT_ACCEPTED_VALUES,
+    SERVICE_EISCP_COMMAND,
     SERVICE_SELECT_HDMI_OUTPUT,
 )
 
@@ -47,6 +53,12 @@ ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
         vol.Required(ATTR_HDMI_OUTPUT): vol.In(HDMI_OUTPUT_ACCEPTED_VALUES),
+    }
+)
+ONKYO_EISCP_COMMAND_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required("command"): str,
     }
 )
 
@@ -126,14 +138,25 @@ async def async_setup_entry(
 
     hosts: list[OnkyoDevice] = []
 
-    def service_handle(service: ServiceCall) -> None:
+    def service_handle(call: ServiceCall) -> ServiceResponse:
         """Handle for services."""
-        entity_ids = service.data[ATTR_ENTITY_ID]
+        entity_ids = call.data[ATTR_ENTITY_ID]
         devices = [d for d in hosts if d.entity_id in entity_ids]
 
+        test = ""
         for device in devices:
-            if service.service == SERVICE_SELECT_HDMI_OUTPUT:
-                device.select_output(service.data[ATTR_HDMI_OUTPUT])
+            if call.service == SERVICE_SELECT_HDMI_OUTPUT:
+                device.select_output(call.data[ATTR_HDMI_OUTPUT])
+
+            # TEDOEN: try catch fouten
+            if call.service == SERVICE_EISCP_COMMAND:
+                test = device.command(call.data["command"])
+                _LOGGER.warning(test)
+
+        if call.return_response:
+            return {"responses": [test]}
+
+        return None
 
     hass.services.async_register(
         DOMAIN,
@@ -142,7 +165,18 @@ async def async_setup_entry(
         schema=ONKYO_SELECT_OUTPUT_SCHEMA,
     )
 
-    # TEDOEN: EISCP command
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_EISCP_COMMAND,
+        service_handle,
+        supports_response=SupportsResponse.OPTIONAL,
+        schema=ONKYO_EISCP_COMMAND_SCHEMA,
+    )
+
+    # service: media_player.onkyo_eiscp_command
+    # entity_id: media_player.tx_nr525_0009b0ce8acf
+    # data:
+    #   command: volume=query
 
     host = entry.data[CONF_HOST]
     try:
