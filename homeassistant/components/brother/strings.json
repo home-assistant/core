@@ -36,7 +36,7 @@
     "abort": {
       "unsupported_model": "This printer model is not supported.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "not_the_same_device": "The IP address of another Brother printer was used."
+      "another_device": "The IP address of another Brother printer was used."
     }
   },
   "entity": {

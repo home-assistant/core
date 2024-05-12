@@ -8,7 +8,11 @@ import pytest
 
 from homeassistant.components import zeroconf
 from homeassistant.components.brother.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    SOURCE_USER,
+    SOURCE_ZEROCONF,
+)
 from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -18,6 +22,7 @@ from . import init_integration
 from tests.common import MockConfigEntry
 
 CONFIG = {CONF_HOST: "127.0.0.1", CONF_TYPE: "laser"}
+PRINTER_DATA = json.loads(load_fixture("printer_data.json", "brother"))
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -248,3 +253,148 @@ async def test_zeroconf_confirm_create_entry(
     assert result["title"] == "HL-L2340DW 0123456789"
     assert result["data"][CONF_HOST] == "127.0.0.1"
     assert result["data"][CONF_TYPE] == "laser"
+
+
+async def test_reconfigure_successful(hass: HomeAssistant, mock_brother_client: AsyncMock, mock_config_entry: MockConfigEntry) -> None:
+    """Test starting a reconfigure flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_RECONFIGURE,
+            "entry_id": mock_config_entry.entry_id,
+        },
+        data=mock_config_entry.data,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm"
+
+    with (
+        patch("brother.Brother.initialize"),
+        patch(
+            "brother.Brother._get_data",
+            return_value=PRINTER_DATA,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "10.10.10.10"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_HOST: "10.10.10.10",
+        CONF_TYPE: "laser",
+    }
+
+
+@pytest.mark.parametrize(
+    ("exc", "base_error"),
+    [
+        (ConnectionError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
+        (SnmpError("error"), "snmp_error"),
+    ],
+)
+async def test_reconfigure_not_successful(
+    hass: HomeAssistant, exc: Exception, base_error: str, mock_brother_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test starting a reconfigure flow but no connection found."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_RECONFIGURE,
+            "entry_id": mock_config_entry.entry_id,
+        },
+        data=mock_config_entry.data,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm"
+
+    with (
+        patch("brother.Brother.initialize"),
+        patch("brother.Brother._get_data", side_effect=exc),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "10.10.10.10"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm"
+    assert result["errors"] == {"base": base_error}
+
+    with (
+        patch("brother.Brother.initialize"),
+        patch(
+            "brother.Brother._get_data",
+            return_value=PRINTER_DATA,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "10.10.10.10"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_HOST: "10.10.10.10",
+        CONF_TYPE: "laser",
+    }
+
+
+async def test_reconfigure_invalid_hostname(hass: HomeAssistant, mock_brother_client: AsyncMock, mock_config_entry: MockConfigEntry) -> None:
+    """Test starting a reconfigure flow but no connection found."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_RECONFIGURE,
+            "entry_id": mock_config_entry.entry_id,
+        },
+        data=mock_config_entry.data,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "invalid/hostname"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm"
+    assert result["errors"] == {CONF_HOST: "wrong_host"}
+
+
+async def test_reconfigure_not_the_same_device(hass: HomeAssistant) -> None:
+    """Test starting the reconfiguration process, but with a different printer."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_RECONFIGURE,
+            "entry_id": mock_config_entry.entry_id,
+        },
+        data=entry.data,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm"
+
+    with (
+        patch("brother.Brother.initialize"),
+        patch(
+            "brother.Brother._get_data",
+            return_value=PRINTER_DATA,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "10.10.10.10"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "another_device"

@@ -168,11 +168,9 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except SnmpError:
                 errors["base"] = "snmp_error"
-            except UnsupportedModelError:
-                return self.async_abort(reason="unsupported_model")
             else:
                 if serial.lower() != self.entry.unique_id:
-                    return self.async_abort(reason="not_the_same_device")
+                    return self.async_abort(reason="another_device")
 
                 self.hass.config_entries.async_update_entry(
                     self.entry,
