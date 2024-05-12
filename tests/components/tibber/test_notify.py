@@ -8,7 +8,7 @@ import pytest
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.tibber import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 
 
 async def test_notification_services(
@@ -44,13 +44,13 @@ async def test_notification_services(
 
     calls.side_effect = TimeoutError
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(HomeAssistantError):
         # Test legacy notify service
         service = "tibber"
         service_data = {"message": "The message", "title": "A title"}
         await hass.services.async_call("notify", service, service_data, blocking=True)
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(HomeAssistantError):
         # Test notify entity service
         service = "send_message"
         service_data = {

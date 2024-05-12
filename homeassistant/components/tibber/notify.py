@@ -17,7 +17,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -38,7 +38,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Tibber notification entity."""
-    async_add_entities([TibberNotificationEntity()])
+    async_add_entities([TibberNotificationEntity(entry.entry_id)])
 
 
 class TibberNotificationService(BaseNotificationService):
@@ -55,7 +55,7 @@ class TibberNotificationService(BaseNotificationService):
         try:
             await self._notify(title=title, message=message)
         except TimeoutError as exc:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=TIBBER_DOMAIN, translation_key="send_message_timeout"
             ) from exc
 
@@ -64,9 +64,12 @@ class TibberNotificationEntity(NotifyEntity):
     """Implement the notification entity service for Tibber."""
 
     _attr_supported_features = NotifyEntityFeature.TITLE
-    _attr_unique_id = f"{TIBBER_DOMAIN}_notify"
     _attr_name = TIBBER_DOMAIN
     _attr_icon = "mdi:message-flash"
+
+    def __init__(self, unique_id: str) -> None:
+        """Initialize Tibber notify entity."""
+        self._attr_unique_id = unique_id
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to Tibber devices."""
@@ -76,6 +79,6 @@ class TibberNotificationEntity(NotifyEntity):
                 title or ATTR_TITLE_DEFAULT, message
             )
         except TimeoutError as exc:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=TIBBER_DOMAIN, translation_key="send_message_timeout"
             ) from exc
