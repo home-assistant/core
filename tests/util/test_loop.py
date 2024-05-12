@@ -1,9 +1,11 @@
 """Tests for async util methods from Python source."""
 
+import threading
 from unittest.mock import Mock, patch
 
 import pytest
 
+from homeassistant.core import HomeAssistant
 from homeassistant.util import loop as haloop
 
 from tests.common import extract_stack_to_frame
@@ -178,17 +180,20 @@ async def test_check_loop_async_custom(caplog: pytest.LogCaptureFixture) -> None
     ) in caplog.text
 
 
-def test_check_loop_sync(caplog: pytest.LogCaptureFixture) -> None:
+async def test_check_loop_sync(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test check_loop does nothing when called from thread."""
-    haloop.check_loop(banned_function)
+    func = haloop.protect_loop(banned_function, threading.get_ident())
+    await hass.async_add_executor_job(func)
     assert "Detected blocking call inside the event loop" not in caplog.text
 
 
-def test_protect_loop_sync() -> None:
+async def test_protect_loop_async() -> None:
     """Test protect_loop calls check_loop."""
     func = Mock()
     with patch("homeassistant.util.loop.check_loop") as mock_check_loop:
-        haloop.protect_loop(func)(1, test=2)
+        haloop.protect_loop(func, threading.get_ident())(1, test=2)
     mock_check_loop.assert_called_once_with(
         func,
         strict=True,
