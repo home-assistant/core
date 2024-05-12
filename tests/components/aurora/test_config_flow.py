@@ -47,7 +47,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, mock_setup_entry: AsyncM
     )
 
     with patch(
-        "homeassistant.components.aurora.AuroraForecast.get_forecast_data",
+        "homeassistant.components.aurora.config_flow.AuroraForecast.get_forecast_data",
         side_effect=ClientError,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -68,7 +68,7 @@ async def test_with_unknown_error(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.aurora.AuroraForecast.get_forecast_data",
+        "homeassistant.components.aurora.config_flow.AuroraForecast.get_forecast_data",
         side_effect=Exception,
     ):
         result = await hass.config_entries.flow.async_configure(
