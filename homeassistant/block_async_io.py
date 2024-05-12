@@ -67,6 +67,7 @@ def enable() -> None:
             strict_core=False,
             strict=False,
             check_allowed=_check_file_allowed,
+            loop_thread_id=loop_thread_id,
         )
         # unittest uses `importlib.import_module` to do mocking
         # so we cannot protect it if we are running tests
