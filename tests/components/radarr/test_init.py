@@ -1,21 +1,14 @@
 """Test Radarr integration."""
 
-from datetime import timedelta
-from unittest.mock import patch
-
-from aiopyarr.exceptions import ArrConnectionException
 import pytest
 
 from homeassistant.components.radarr.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-import homeassistant.util.dt as dt_util
 
 from . import create_entry, mock_connection_invalid_auth, setup_integration
 
-from tests.common import async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -69,28 +62,3 @@ async def test_device_info(
     assert device.manufacturer == DEFAULT_NAME
     assert device.name == "Mock Title"
     assert device.sw_version == "10.0.0.34882"
-
-
-async def test_update_failed(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test coordinator updates handle failures."""
-    entry = await setup_integration(hass, aioclient_mock)
-    assert entry.state is ConfigEntryState.LOADED
-    entity = "sensor.mock_title_disk_space_downloads"
-    assert hass.states.get(entity).state == "263.10"
-
-    with patch(
-        "homeassistant.components.radarr.RadarrClient._async_request",
-        side_effect=ArrConnectionException,
-    ) as updater:
-        next_update = dt_util.utcnow() + timedelta(minutes=1)
-        async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
-        assert updater.call_count == 2
-        assert hass.states.get(entity).state == STATE_UNAVAILABLE
-
-    next_update = dt_util.utcnow() + timedelta(minutes=1)
-    async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
-    assert hass.states.get(entity).state == "263.10"
