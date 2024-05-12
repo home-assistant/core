@@ -167,7 +167,7 @@ class AmazonPollyProvider(Provider):
     @property
     def default_options(self) -> dict[str, str]:
         """Return dict include default options."""
-        return {CONF_VOICE: self.default_voice}
+        return {CONF_VOICE: self.default_voice, CONF_ENGINE: self.default_engine}
 
     @property
     def supported_options(self) -> list[str]:
