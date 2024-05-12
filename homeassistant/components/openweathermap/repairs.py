@@ -7,7 +7,7 @@ from .const import DOMAIN
 
 
 def _get_issue_id(entry_id: str) -> str:
-    return "deprecated_v25_" + entry_id
+    return f"deprecated_v25_{entry_id}"
 
 
 @callback
