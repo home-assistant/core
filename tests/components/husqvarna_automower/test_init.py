@@ -48,13 +48,9 @@ async def test_load_missing_scope(
     mock_automower_client: AsyncMock,
     mock_missing_scope_config_entry: MockConfigEntry,
 ) -> None:
-    """Test if the entry still gets loaded with the missing token scope."""
+    """Test if the entry start an reauth with the missing token scope."""
     await setup_integration(hass, mock_missing_scope_config_entry)
-    assert mock_missing_scope_config_entry.state is ConfigEntryState.LOADED
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    result = flows[0]
-    assert result["step_id"] == "missing_scope"
+    assert mock_missing_scope_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.parametrize(

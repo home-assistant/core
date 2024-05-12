@@ -295,10 +295,10 @@ async def test_reauth_wrong_account(
 
 
 @pytest.mark.parametrize(
-    ("user_id", "reason", "scope"),
+    ("reason", "scope"),
     [
-        (USER_ID, "reauth_successful", "iam:read amc:api"),
-        (USER_ID, "missing_amc_scope", "iam:read"),
+        ("reauth_successful", "iam:read amc:api"),
+        ("missing_amc_scope", "iam:read"),
     ],
 )
 async def test_reauth_missing_scope(
@@ -309,7 +309,6 @@ async def test_reauth_missing_scope(
     current_request_with_host: None,
     mock_automower_client: AsyncMock,
     jwt,
-    user_id: str,
     reason: str,
     scope: str,
 ) -> None:
@@ -351,7 +350,7 @@ async def test_reauth_missing_scope(
             "expires_in": 86399,
             "refresh_token": "mock-refresh-token",
             "provider": "husqvarna",
-            "user_id": user_id,
+            "user_id": USER_ID,
             "token_type": "Bearer",
             "expires_at": 1697753347,
         },
