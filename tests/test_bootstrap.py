@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Generator, Iterable
+import contextlib
 import glob
 import os
 import sys
@@ -1019,13 +1020,16 @@ async def test_warning_logged_on_wrap_up_timeout(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we log a warning on bootstrap timeout."""
+    task: asyncio.Task | None = None
 
     def gen_domain_setup(domain):
         async def async_setup(hass, config):
-            async def _not_marked_background_task():
-                await asyncio.sleep(0.1)
+            nonlocal task
 
-            hass.async_create_task(_not_marked_background_task())
+            async def _not_marked_background_task():
+                await asyncio.sleep(2)
+
+            task = hass.async_create_task(_not_marked_background_task())
             return True
 
         return async_setup
@@ -1041,8 +1045,10 @@ async def test_warning_logged_on_wrap_up_timeout(
 
     with patch.object(bootstrap, "WRAP_UP_TIMEOUT", 0):
         await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
-        await hass.async_block_till_done()
 
+    task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await task
     assert "Setup timed out for bootstrap" in caplog.text
     assert "waiting on" in caplog.text
     assert "_not_marked_background_task" in caplog.text
