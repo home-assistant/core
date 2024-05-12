@@ -1195,11 +1195,15 @@ def disable_translations_once(translations_once):
 @pytest.fixture
 def mock_zeroconf() -> Generator[None, None, None]:
     """Mock zeroconf."""
-    from zeroconf import DNSCache  # pylint: disable=import-outside-toplevel
+    from zeroconf import DNSCache, Zeroconf  # pylint: disable=import-outside-toplevel
+    from zeroconf.asyncio import AsyncServiceBrowser
 
     with (
-        patch("homeassistant.components.zeroconf.HaZeroconf", autospec=True) as mock_zc,
-        patch("homeassistant.components.zeroconf.AsyncServiceBrowser", autospec=True),
+        patch("homeassistant.components.zeroconf.HaZeroconf", spec=Zeroconf) as mock_zc,
+        patch(
+            "homeassistant.components.zeroconf.AsyncServiceBrowser",
+            spec=AsyncServiceBrowser,
+        ),
     ):
         zc = mock_zc.return_value
         # DNSCache has strong Cython type checks, and MagicMock does not work
