@@ -50,87 +50,102 @@ CONF_SAMPLE_RATE: Final = "sample_rate"
 CONF_TEXT_TYPE: Final = "text_type"
 
 SUPPORTED_VOICES: Final[list[str]] = [
-    "Aditi",  # Hindi
-    "Amy",  # English (British)
-    "Aria",  # English (New Zealand), Neural
-    "Arlet",  # Catalan, Neural
-    "Arthur",  # English, Neural
+    "Aditi",  # Indian English
+    "Adriano",  # Italian
+    "Amy",  # British English
+    "Andrés",  # Mexican Spanish
+    "Aria",  # New Zealand English
+    "Arlet",  # Catalan
+    "Arthur",  # British English
     "Astrid",  # Swedish
-    "Ayanda",  # English (South African), Neural
+    "Ayanda",  # South African English
     "Bianca",  # Italian
-    "Brian",  # English (British)
-    "Camila",  # Portuguese, Brazilian
+    "Brian",  # British English
+    "Burcu",  # Turkish
+    "Céline",  # French
+    "Camila",  # Brazilian Portuguese
     "Carla",  # Italian
     "Carmen",  # Romanian
-    "Celine",  # French
-    "Chantal",  # French Canadian
-    "Conchita",  # Spanish (European)
-    "Cristiano",  # Portuguese (European)
-    "Daniel",  # German, Neural
-    "Dora",  # Icelandic
-    "Elin",  # Swedish, Neural
-    "Emma",  # English
-    "Enrique",  # Spanish (European)
+    "Chantal",  # Canadian French
+    "Conchita",  # Castilian Spanish
+    "Cristiano",  # Portuguese
+    "Dóra",  # Icelandic
+    "Daniel",  # German
+    "Danielle",  # US English
+    "Elin",  # Swedish
+    "Emma",  # British English
+    "Enrique",  # Castilian Spanish
     "Ewa",  # Polish
     "Filiz",  # Turkish
-    "Gabrielle",  # French (Canadian)
-    "Geraint",  # English Welsh
+    "Gabrielle",  # Canadian French
+    "Geraint",  # Welsh English
     "Giorgio",  # Italian
+    "Gregory",  # US English
     "Gwyneth",  # Welsh
-    "Hala",  # Arabic (Gulf), Neural
-    "Hannah",  # German (Austrian), Neural
+    "Hala",  # Gulf Arabic
+    "Hannah",  # Austrian German
     "Hans",  # German
-    "Hiujin",  # Chinese (Cantonese), Neural
-    "Ida",  # Norwegian, Neural
-    "Ines",  # Portuguese, European
-    "Ivy",  # English
+    "Hiujin",  # Cantonese
+    "Ida",  # Norwegian
+    "Inês",  # Portuguese
+    "Isabelle",  # Belgian French
+    "Ivy",  # US English
     "Jacek",  # Polish
     "Jan",  # Polish
-    "Joanna",  # English
-    "Joey",  # English
-    "Justin",  # English
-    "Kajal",  # English (Indian)/Hindi (Bilingual ), Neural
+    "Joanna",  # US English
+    "Joey",  # US English
+    "Justin",  # US English
+    "Kajal",  # Indian English
     "Karl",  # Icelandic
-    "Kendra",  # English
-    "Kevin",  # English, Neural
-    "Kimberly",  # English
-    "Laura",  # Dutch, Neural
-    "Lea",  # French
-    "Liam",  # Canadian French, Neural
+    "Kazuha",  # Japanese
+    "Kendra",  # US English
+    "Kevin",  # US English
+    "Kimberly",  # US English
+    "Léa",  # French
+    "Laura",  # Dutch
+    "Liam",  # Canadian French
+    "Lisa",  # Belgian Dutch
     "Liv",  # Norwegian
     "Lotte",  # Dutch
-    "Lucia",  # Spanish European
-    "Lupe",  # Spanish US
+    "Lucia",  # Castilian Spanish
+    "Lupe",  # US Spanish
     "Mads",  # Danish
     "Maja",  # Polish
     "Marlene",  # German
     "Mathieu",  # French
-    "Matthew",  # English
+    "Matthew",  # US English
     "Maxim",  # Russian
-    "Mia",  # Spanish Mexican
-    "Miguel",  # Spanish US
+    "Mia",  # Mexican Spanish
+    "Miguel",  # US Spanish
     "Mizuki",  # Japanese
     "Naja",  # Danish
-    "Nicole",  # English Australian
-    "Ola",  # Polish, Neural
-    "Olivia",  # Female, Australian, Neural
-    "Penelope",  # Spanish US
-    "Pedro",  # Spanish US, Neural
-    "Raveena",  # English, Indian
-    "Ricardo",  # Portuguese (Brazilian)
+    "Niamh",  # Irish English
+    "Nicole",  # Australian English
+    "Ola",  # Polish
+    "Olivia",  # Australian English
+    "Pedro",  # US Spanish
+    "Penélope",  # US Spanish
+    "Rémi",  # French
+    "Raveena",  # Indian English
+    "Ricardo",  # Brazilian Portuguese
     "Ruben",  # Dutch
-    "Russell",  # English (Australian)
-    "Ruth",  # English, Neural
-    "Salli",  # English
+    "Russell",  # Australian English
+    "Ruth",  # US English
+    "Salli",  # US English
     "Seoyeon",  # Korean
-    "Stephen",  # English, Neural
+    "Sergio",  # Castilian Spanish
+    "Sofie",  # Danish
+    "Stephen",  # US English
     "Suvi",  # Finnish
     "Takumi",  # Japanese
     "Tatyana",  # Russian
+    "Thiago",  # Brazilian Portuguese
+    "Tomoko",  # Japanese
     "Vicki",  # German
-    "Vitoria",  # Portuguese, Brazilian
+    "Vitória",  # Brazilian Portuguese
+    "Zayd",  # Gulf Arabic
     "Zeina",  # Arabic
-    "Zhiyu",  # Chinese
+    "Zhiyu",  # Chinese Mandarin
 ]
 
 SUPPORTED_OUTPUT_FORMATS: Final[list[str]] = ["mp3", "ogg_vorbis", "pcm"]
