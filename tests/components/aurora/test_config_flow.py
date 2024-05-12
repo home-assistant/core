@@ -47,7 +47,7 @@ async def test_full_flow(
         (Exception, "unknown"),
     ],
 )
-async def test_form_cannot_connect(
+async def test_form_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_aurora_client: AsyncMock,
