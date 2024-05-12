@@ -442,7 +442,7 @@ async def async_setup_entry(
             ),
             (  # Add energy site info
                 TeslemetryEnergyInfoSensorEntity(energysite, description)
-                for energysite in data.energysites
+                for energysite in entry.runtime_data.energysites
                 for description in ENERGY_INFO_DESCRIPTIONS
                 if description.key in energysite.info_coordinator.data
             ),
