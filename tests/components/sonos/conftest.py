@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import pytest
 from soco import SoCo
 from soco.alarms import Alarms
+from soco.data_structures import DidlFavorite, SearchResult
 from soco.events_base import Event as SonosEvent
 
 from homeassistant.components import ssdp, zeroconf
@@ -304,6 +305,14 @@ def config_fixture():
     return {DOMAIN: {MP_DOMAIN: {CONF_HOSTS: ["192.168.42.2"]}}}
 
 
+@pytest.fixture(name="sonos_favorites")
+def sonos_favorites_fixture() -> SearchResult:
+    """Create sonos favorites fixture."""
+    favorites = load_json_value_fixture("sonos_favorites.json", "sonos")
+    favorite_list = [DidlFavorite.from_dict(fav) for fav in favorites]
+    return SearchResult(favorite_list, "favorites", 3, 3, 1)
+
+
 class MockMusicServiceItem:
     """Mocks a Soco MusicServiceItem."""
 
@@ -435,7 +444,7 @@ def music_library_browse_categories() -> list[MockMusicServiceItem]:
     return list_from_json_fixture("music_library_categories.json")
 
 
-@pytest.fixture(name="music_library")
+@pytest.fixture(name="music_library)
 def music_library_fixture(music_library_browse_categories):
     """Create music_library fixture."""
     music_library = MagicMock()
@@ -616,7 +625,7 @@ def mock_get_source_ip(mock_get_source_ip):
     return mock_get_source_ip
 
 
-@pytest.fixture(name="zgs_discovery", scope="session")
+@pytest.fixture(name="zgs_discovery", scope="package")
 def zgs_discovery_fixture():
     """Load ZoneGroupState discovery payload and return it."""
     return load_fixture("sonos/zgs_discovery.xml")

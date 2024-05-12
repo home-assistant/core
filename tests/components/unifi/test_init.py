@@ -5,7 +5,6 @@ from unittest.mock import patch
 
 from aiounifi.models.message import MessageKey
 
-from homeassistant import loader
 from homeassistant.components import unifi
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
@@ -23,6 +22,7 @@ from .test_hub import DEFAULT_CONFIG_ENTRY_ID, setup_unifi_integration
 
 from tests.common import flush_store
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import WebSocketGenerator
 
 
 async def test_setup_with_no_config(hass: HomeAssistant) -> None:
@@ -121,6 +121,7 @@ async def test_remove_config_entry_device(
     aioclient_mock: AiohttpClientMocker,
     device_registry: dr.DeviceRegistry,
     mock_unifi_websocket,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Verify removing a device manually."""
     client_1 = {
@@ -173,31 +174,39 @@ async def test_remove_config_entry_device(
         devices_response=[device_1],
     )
 
-    integration = await loader.async_get_integration(hass, config_entry.domain)
-    component = await integration.async_get_component()
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
 
-    # Remove a client
-    mock_unifi_websocket(message=MessageKey.CLIENT_REMOVED, data=[client_2])
-    await hass.async_block_till_done()
-
-    # Try to remove an active client: not allowed
+    # Try to remove an active client from UI: not allowed
     device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, client_1["mac"])}
     )
-    assert not await component.async_remove_config_entry_device(
-        hass, config_entry, device_entry
+    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    assert not response["success"]
+    assert device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, client_1["mac"])}
     )
-    # Try to remove an active device: not allowed
+
+    # Try to remove an active device from UI: not allowed
     device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, device_1["mac"])}
     )
-    assert not await component.async_remove_config_entry_device(
-        hass, config_entry, device_entry
+    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    assert not response["success"]
+    assert device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, device_1["mac"])}
     )
-    # Try to remove an inactive client: allowed
+
+    # Remove a client from Unifi API
+    mock_unifi_websocket(message=MessageKey.CLIENT_REMOVED, data=[client_2])
+    await hass.async_block_till_done()
+
+    # Try to remove an inactive client from UI: allowed
     device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, client_2["mac"])}
     )
-    assert await component.async_remove_config_entry_device(
-        hass, config_entry, device_entry
+    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    assert response["success"]
+    assert not device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, client_2["mac"])}
     )

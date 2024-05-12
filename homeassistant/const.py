@@ -14,6 +14,7 @@ from .helpers.deprecation import (
     dir_with_deprecated_constants,
 )
 from .util.event_type import EventType
+from .util.hass_dict import HassKey
 from .util.signal_type import SignalType
 
 if TYPE_CHECKING:
@@ -22,7 +23,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
-MINOR_VERSION: Final = 5
+MINOR_VERSION: Final = 6
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -1625,7 +1626,7 @@ SIGNAL_BOOTSTRAP_INTEGRATIONS: SignalType[dict[str, float]] = SignalType(
 
 
 # hass.data key for logging information.
-KEY_DATA_LOGGING = "logging"
+KEY_DATA_LOGGING: HassKey[str] = HassKey("logging")
 
 
 # Date/Time formats

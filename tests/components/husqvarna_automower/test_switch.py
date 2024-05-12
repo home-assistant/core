@@ -76,7 +76,7 @@ async def test_switch_commands(
         service_data={"entity_id": "switch.test_mower_1_enable_schedule"},
         blocking=True,
     )
-    mocked_method = getattr(mock_automower_client, aioautomower_command)
+    mocked_method = getattr(mock_automower_client.commands, aioautomower_command)
     assert len(mocked_method.mock_calls) == 1
 
     mocked_method.side_effect = ApiException("Test error")
