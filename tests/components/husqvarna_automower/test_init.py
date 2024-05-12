@@ -51,6 +51,10 @@ async def test_load_missing_scope(
     """Test if the entry still gets loaded with the missing token scope."""
     await setup_integration(hass, mock_missing_scope_config_entry)
     assert mock_missing_scope_config_entry.state is ConfigEntryState.LOADED
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    result = flows[0]
+    assert result["step_id"] == "missing_scope"
 
 
 @pytest.mark.parametrize(
