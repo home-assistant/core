@@ -24,9 +24,9 @@ def _check_import_call_allowed(mapped_args: dict[str, Any]) -> bool:
 
 def _check_file_allowed(mapped_args: dict[str, Any]) -> bool:
     # If the file is in /proc we can ignore it.
-    return bool(
-        (args := mapped_args.get("args")) and args[0].startswith(ALLOWED_FILE_PREFIXES)
-    )
+    args = mapped_args["args"]
+    path = args[0] if type(args[0]) is str else str(args[0])  # noqa: E721
+    return path.startswith(ALLOWED_FILE_PREFIXES)
 
 
 def _check_sleep_call_allowed(mapped_args: dict[str, Any]) -> bool:

@@ -2,7 +2,9 @@
 
 import contextlib
 import importlib
+from pathlib import Path, PurePosixPath
 import time
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -214,5 +216,22 @@ async def test_protect_open(caplog: pytest.LogCaptureFixture) -> None:
     block_async_io.enable()
     with contextlib.suppress(FileNotFoundError):
         open("/config/data_not_exist").close()
+
+    assert "Detected blocking call to open with args" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/config/data_not_exist",
+        Path("/config/data_not_exist"),
+        PurePosixPath("/config/data_not_exist"),
+    ],
+)
+async def test_protect_open_path(path: Any, caplog: pytest.LogCaptureFixture) -> None:
+    """Test opening a file by path in the event loop logs."""
+    block_async_io.enable()
+    with contextlib.suppress(FileNotFoundError):
+        open(path).close()
 
     assert "Detected blocking call to open with args" in caplog.text
