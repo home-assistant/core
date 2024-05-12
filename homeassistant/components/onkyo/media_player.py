@@ -46,6 +46,7 @@ from .const import (
     MAXIMUM_UPDATE_RETRIES,
     SERVICE_EISCP_COMMAND,
     SERVICE_SELECT_HDMI_OUTPUT,
+    TIMEOUT_MESSAGE,
 )
 from .entity import OnkyoEntity
 
@@ -100,35 +101,35 @@ def _tuple_get(tup, index, default=None):
     return (tup[index : index + 1] or [default])[0]
 
 
-# def determine_zones(receiver):
-#     """Determine what zones are available for the receiver."""
-#     out = {"zone2": False, "zone3": False}
-#     try:
-#         _LOGGER.debug("Checking for zone 2 capability")
-#         response = receiver.raw("ZPWQSTN")
-#         if response != "ZPWN/A":  # Zone 2 Available
-#             out["zone2"] = True
-#         else:
-#             _LOGGER.debug("Zone 2 not available")
-#     except ValueError as error:
-#         if str(error) != TIMEOUT_MESSAGE:
-#             raise
-#         _LOGGER.debug("Zone 2 timed out, assuming no functionality")
-#     try:
-#         _LOGGER.debug("Checking for zone 3 capability")
-#         response = receiver.raw("PW3QSTN")
-#         if response != "PW3N/A":
-#             out["zone3"] = True
-#         else:
-#             _LOGGER.debug("Zone 3 not available")
-#     except ValueError as error:
-#         if str(error) != TIMEOUT_MESSAGE:
-#             raise
-#         _LOGGER.debug("Zone 3 timed out, assuming no functionality")
-#     except AssertionError:
-#         _LOGGER.error("Zone 3 detection failed")
+def determine_zones(receiver):
+    """Determine what zones are available for the receiver."""
+    out = {"zone2": False, "zone3": False}
+    try:
+        _LOGGER.debug("Checking for zone 2 capability")
+        response = receiver.raw("ZPWQSTN")
+        if response != "ZPWN/A":  # Zone 2 Available
+            out["zone2"] = True
+        else:
+            _LOGGER.debug("Zone 2 not available")
+    except ValueError as error:
+        if str(error) != TIMEOUT_MESSAGE:
+            raise
+        _LOGGER.debug("Zone 2 timed out, assuming no functionality")
+    try:
+        _LOGGER.debug("Checking for zone 3 capability")
+        response = receiver.raw("PW3QSTN")
+        if response != "PW3N/A":  # Zone 3 Available
+            out["zone3"] = True
+        else:
+            _LOGGER.debug("Zone 3 not available")
+    except ValueError as error:
+        if str(error) != TIMEOUT_MESSAGE:
+            raise
+        _LOGGER.debug("Zone 3 timed out, assuming no functionality")
+    except AssertionError:
+        _LOGGER.error("Zone 3 detection failed")
 
-#     return out
+    return out
 
 
 async def async_setup_entry(
@@ -173,7 +174,7 @@ async def async_setup_entry(
         name=SERVICE_EISCP_COMMAND,
         schema=ONKYO_EISCP_COMMAND_SCHEMA,
         func=command_service,
-        supports_response=SupportsResponse.OPTIONAL,
+        supports_response=SupportsResponse.ONLY,
     )
 
     host = entry.data[CONF_HOST]
@@ -185,117 +186,34 @@ async def async_setup_entry(
                 receiver,
             )
         )
+
+        zones = determine_zones(receiver)
+
+        # Add Zone2 if available
+        if zones["zone2"]:
+            _LOGGER.debug("Setting up zone 2")
+            hosts.append(
+                OnkyoDeviceZone(
+                    entry,
+                    receiver,
+                    2,
+                )
+            )
+        # Add Zone3 if available
+        if zones["zone3"]:
+            _LOGGER.debug("Setting up zone 3")
+            hosts.append(
+                OnkyoDeviceZone(
+                    entry,
+                    receiver,
+                    3,
+                )
+            )
     except OSError:
         _LOGGER.error("Unable to connect to receiver at %s", host)
         raise
 
-    #         zones = determine_zones(receiver)
-
-    #         # Add Zone2 if available
-    #         if zones["zone2"]:
-    #             _LOGGER.debug("Setting up zone 2")
-    #             hosts.append(
-    #                 OnkyoDeviceZone(
-    #                     "2",
-    #                     receiver,
-    #                     config.get(CONF_SOURCES),
-    #                     name=f"{config[CONF_NAME]} Zone 2",
-    #                     max_volume=config.get(CONF_MAX_VOLUME),
-    #                     receiver_max_volume=config.get(CONF_RECEIVER_MAX_VOLUME),
-    #                 )
-    #             )
-    #         # Add Zone3 if available
-    #         if zones["zone3"]:
-    #             _LOGGER.debug("Setting up zone 3")
-    #             hosts.append(
-    #                 OnkyoDeviceZone(
-    #                     "3",
-    #                     receiver,
-    #                     config.get(CONF_SOURCES),
-    #                     name=f"{config[CONF_NAME]} Zone 3",
-    #                     max_volume=config.get(CONF_MAX_VOLUME),
-    #                     receiver_max_volume=config.get(CONF_RECEIVER_MAX_VOLUME),
-    #                 )
-    #             )
-
     async_add_entities(hosts, update_before_add=True)
-
-
-# def setup_platform(
-#     hass: HomeAssistant,
-#     config: ConfigType,
-#     add_entities: AddEntitiesCallback,
-#     discovery_info: DiscoveryInfoType | None = None,
-# ) -> None:
-#     """Set up the Onkyo platform."""
-#     hosts: list[OnkyoDevice] = []
-
-#     def service_handle(service: ServiceCall) -> None:
-#         """Handle for services."""
-#         entity_ids = service.data[ATTR_ENTITY_ID]
-#         devices = [d for d in hosts if d.entity_id in entity_ids]
-
-#         for device in devices:
-#             if service.service == SERVICE_SELECT_HDMI_OUTPUT:
-#                 device.select_output(service.data[ATTR_HDMI_OUTPUT])
-
-#     hass.services.register(
-#         DOMAIN,
-#         SERVICE_SELECT_HDMI_OUTPUT,
-#         service_handle,
-#         schema=ONKYO_SELECT_OUTPUT_SCHEMA,
-#     )
-
-#     if CONF_HOST in config and (host := config[CONF_HOST]) not in KNOWN_HOSTS:
-#         try:
-#             receiver = eiscp.eISCP(host)
-#             hosts.append(
-#                 OnkyoDevice(
-#                     receiver,
-#                     config.get(CONF_SOURCES),
-#                     name=config.get(CONF_NAME),
-#                     max_volume=config.get(CONF_MAX_VOLUME),
-#                     receiver_max_volume=config.get(CONF_RECEIVER_MAX_VOLUME),
-#                 )
-#             )
-#             KNOWN_HOSTS.append(host)
-
-#             zones = determine_zones(receiver)
-
-#             # Add Zone2 if available
-#             if zones["zone2"]:
-#                 _LOGGER.debug("Setting up zone 2")
-#                 hosts.append(
-#                     OnkyoDeviceZone(
-#                         "2",
-#                         receiver,
-#                         config.get(CONF_SOURCES),
-#                         name=f"{config[CONF_NAME]} Zone 2",
-#                         max_volume=config.get(CONF_MAX_VOLUME),
-#                         receiver_max_volume=config.get(CONF_RECEIVER_MAX_VOLUME),
-#                     )
-#                 )
-#             # Add Zone3 if available
-#             if zones["zone3"]:
-#                 _LOGGER.debug("Setting up zone 3")
-#                 hosts.append(
-#                     OnkyoDeviceZone(
-#                         "3",
-#                         receiver,
-#                         config.get(CONF_SOURCES),
-#                         name=f"{config[CONF_NAME]} Zone 3",
-#                         max_volume=config.get(CONF_MAX_VOLUME),
-#                         receiver_max_volume=config.get(CONF_RECEIVER_MAX_VOLUME),
-#                     )
-#                 )
-#         except OSError:
-#             _LOGGER.error("Unable to connect to receiver at %s", host)
-#     else:
-#         for receiver in eISCP.discover():
-#             if receiver.host not in KNOWN_HOSTS:
-#                 hosts.append(OnkyoDevice(receiver, config.get(CONF_SOURCES)))
-#                 KNOWN_HOSTS.append(receiver.host)
-#     add_entities(hosts, True)
 
 
 class OnkyoDevice(OnkyoEntity, MediaPlayerEntity):
@@ -538,119 +456,118 @@ class OnkyoDevice(OnkyoEntity, MediaPlayerEntity):
             self._attr_extra_state_attributes.pop(ATTR_VIDEO_INFORMATION, None)
 
 
-# class OnkyoDeviceZone(OnkyoDevice):
-#     """Representation of an Onkyo device's extra zone."""
+class OnkyoDeviceZone(OnkyoDevice):
+    """Representation of an Onkyo device's extra zone."""
 
-#     def __init__(
-#         self,
-#         zone,
-#         receiver,
-#         sources,
-#         name=None,
-#         max_volume=SUPPORTED_MAX_VOLUME,
-#         receiver_max_volume=DEFAULT_RECEIVER_MAX_VOLUME,
-#     ):
-#         """Initialize the Zone with the zone identifier."""
-#         self._zone = zone
-#         self._supports_volume = True
-#         super().__init__(receiver, sources, name, max_volume, receiver_max_volume)
+    def __init__(self, entry: ConfigEntry, receiver: eiscp.eISCP, zone: int) -> None:
+        """Initialize the Zone with the zone identifier."""
+        self._zone: int = zone
+        self._supports_volume: bool = True
+        super().__init__(entry, receiver)
 
-#     def update(self) -> None:
-#         """Get the latest state from the device."""
-#         status = self.command(f"zone{self._zone}.power=query")
+        self._attr_unique_id = f"{self._attr_unique_id}_zone{self._zone}"
 
-#         if not status:
-#             return
-#         if status[1] == "on":
-#             self._attr_state = MediaPlayerState.ON
-#         else:
-#             self._attr_state = MediaPlayerState.OFF
-#             return
+    @property
+    def name(self):
+        """Name of the zone with its number."""
+        return f"Zone {self._zone}"
 
-#         volume_raw = self.command(f"zone{self._zone}.volume=query")
-#         mute_raw = self.command(f"zone{self._zone}.muting=query")
-#         current_source_raw = self.command(f"zone{self._zone}.selector=query")
-#         preset_raw = self.command(f"zone{self._zone}.preset=query")
-#         # If we received a source value, but not a volume value
-#         # it's likely this zone permanently does not support volume.
-#         if current_source_raw and not volume_raw:
-#             self._supports_volume = False
+    def update(self) -> None:
+        """Get the latest state from the device."""
+        status = self.command(f"zone{self._zone}.power=query")
 
-#         if not (volume_raw and mute_raw and current_source_raw):
-#             return
+        if not status:
+            return
+        if status[1] == "on":
+            self._attr_state = MediaPlayerState.ON
+        else:
+            self._attr_state = MediaPlayerState.OFF
+            return
 
-#         # It's possible for some players to have zones set to HDMI with
-#         # no sound control. In this case, the string `N/A` is returned.
-#         self._supports_volume = isinstance(volume_raw[1], (float, int))
+        volume_raw = self.command(f"zone{self._zone}.volume=query")
+        mute_raw = self.command(f"zone{self._zone}.muting=query")
+        current_source_raw = self.command(f"zone{self._zone}.selector=query")
+        preset_raw = self.command(f"zone{self._zone}.preset=query")
+        # If we received a source value, but not a volume value
+        # it's likely this zone permanently does not support volume.
+        if current_source_raw and not volume_raw:
+            self._supports_volume = False
 
-#         # eiscp can return string or tuple. Make everything tuples.
-#         if isinstance(current_source_raw[1], str):
-#             current_source_tuples = (current_source_raw[0], (current_source_raw[1],))
-#         else:
-#             current_source_tuples = current_source_raw
+        if not (volume_raw and mute_raw and current_source_raw):
+            return
 
-#         for source in current_source_tuples[1]:
-#             if source in self._source_mapping:
-#                 self._attr_source = self._source_mapping[source]
-#                 break
-#             self._attr_source = "_".join(current_source_tuples[1])
-#         self._attr_is_volume_muted = bool(mute_raw[1] == "on")
-#         if preset_raw and self.source and self.source.lower() == "radio":
-#             self._attr_extra_state_attributes[ATTR_PRESET] = preset_raw[1]
-#         elif ATTR_PRESET in self._attr_extra_state_attributes:
-#             del self._attr_extra_state_attributes[ATTR_PRESET]
-#         if self._supports_volume:
-#             # AMP_VOL/MAX_RECEIVER_VOL*(MAX_VOL/100)
-#             self._attr_volume_level = (
-#                 volume_raw[1] / self._receiver_max_volume * (self._max_volume / 100)
-#             )
+        # It's possible for some players to have zones set to HDMI with
+        # no sound control. In this case, the string `N/A` is returned.
+        self._supports_volume = isinstance(volume_raw[1], (float, int))
 
-#     @property
-#     def supported_features(self) -> MediaPlayerEntityFeature:
-#         """Return media player features that are supported."""
-#         if self._supports_volume:
-#             return SUPPORT_ONKYO
-#         return SUPPORT_ONKYO_WO_VOLUME
+        # eiscp can return string or tuple. Make everything tuples.
+        if isinstance(current_source_raw[1], str):
+            current_source_tuples = (current_source_raw[0], (current_source_raw[1],))
+        else:
+            current_source_tuples = current_source_raw
 
-#     def turn_off(self) -> None:
-#         """Turn the media player off."""
-#         self.command(f"zone{self._zone}.power=standby")
+        for source in current_source_tuples[1]:
+            if source in self._source_mapping:
+                self._attr_source = self._source_mapping[source]
+                break
+            self._attr_source = "_".join(current_source_tuples[1])
+        self._attr_is_volume_muted = bool(mute_raw[1] == "on")
+        if preset_raw and self.source and self.source.lower() == "radio":
+            self._attr_extra_state_attributes[ATTR_PRESET] = preset_raw[1]
+        elif ATTR_PRESET in self._attr_extra_state_attributes:
+            del self._attr_extra_state_attributes[ATTR_PRESET]
+        if self._supports_volume:
+            # AMP_VOL/MAX_RECEIVER_VOL*(MAX_VOL/100)
+            self._attr_volume_level = (
+                volume_raw[1] / self._receiver_max_volume * (self._max_volume / 100)
+            )
 
-#     def set_volume_level(self, volume: float) -> None:
-#         """Set volume level, input is range 0..1.
+    @property
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Return media player features that are supported."""
+        if self._supports_volume:
+            return SUPPORT_ONKYO
+        return SUPPORT_ONKYO_WO_VOLUME
 
-#         However full volume on the amp is usually far too loud so allow the user to
-#         specify the upper range with CONF_MAX_VOLUME. We change as per max_volume
-#         set by user. This means that if max volume is 80 then full volume in HA
-#         will give 80% volume on the receiver. Then we convert that to the correct
-#         scale for the receiver.
-#         """
-#         # HA_VOL * (MAX VOL / 100) * MAX_RECEIVER_VOL
-#         self.command(
-#             f"zone{self._zone}.volume={int(volume * (self._max_volume / 100) * self._receiver_max_volume)}"
-#         )
+    def turn_off(self) -> None:
+        """Turn the media player off."""
+        self.command(f"zone{self._zone}.power=standby")
 
-#     def volume_up(self) -> None:
-#         """Increase volume by 1 step."""
-#         self.command(f"zone{self._zone}.volume=level-up")
+    def set_volume_level(self, volume: float) -> None:
+        """Set volume level, input is range 0..1.
 
-#     def volume_down(self) -> None:
-#         """Decrease volume by 1 step."""
-#         self.command(f"zone{self._zone}.volume=level-down")
+        However full volume on the amp is usually far too loud so allow the user to
+        specify the upper range with CONF_MAX_VOLUME. We change as per max_volume
+        set by user. This means that if max volume is 80 then full volume in HA
+        will give 80% volume on the receiver. Then we convert that to the correct
+        scale for the receiver.
+        """
+        # HA_VOL * (MAX VOL / 100) * MAX_RECEIVER_VOL
+        self.command(
+            f"zone{self._zone}.volume={int(volume * (self._max_volume / 100) * self._receiver_max_volume)}"
+        )
 
-#     def mute_volume(self, mute: bool) -> None:
-#         """Mute (true) or unmute (false) media player."""
-#         if mute:
-#             self.command(f"zone{self._zone}.muting=on")
-#         else:
-#             self.command(f"zone{self._zone}.muting=off")
+    def volume_up(self) -> None:
+        """Increase volume by 1 step."""
+        self.command(f"zone{self._zone}.volume=level-up")
 
-#     def turn_on(self) -> None:
-#         """Turn the media player on."""
-#         self.command(f"zone{self._zone}.power=on")
+    def volume_down(self) -> None:
+        """Decrease volume by 1 step."""
+        self.command(f"zone{self._zone}.volume=level-down")
 
-#     def select_source(self, source: str) -> None:
-#         """Set the input source."""
-#         if self.source_list and source in self.source_list:
-#             source = self._reverse_mapping[source]
-#         self.command(f"zone{self._zone}.selector={source}")
+    def mute_volume(self, mute: bool) -> None:
+        """Mute (true) or unmute (false) media player."""
+        if mute:
+            self.command(f"zone{self._zone}.muting=on")
+        else:
+            self.command(f"zone{self._zone}.muting=off")
+
+    def turn_on(self) -> None:
+        """Turn the media player on."""
+        self.command(f"zone{self._zone}.power=on")
+
+    def select_source(self, source: str) -> None:
+        """Set the input source."""
+        if self.source_list and source in self.source_list:
+            source = self._reverse_source_mapping[source]
+        self.command(f"zone{self._zone}.selector={source}")
