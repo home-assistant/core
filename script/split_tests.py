@@ -63,6 +63,8 @@ TEST_WEIGHTS = {
     "tests/components/zha/test_device_action.py": 2,
     "tests/components/zha/test_discover.py": 3,
     "tests/components/zha/test_gateway.py": 3,
+    "tests/components/zwave_js/test_services.py": 2,
+    "tests/components/zwave_js/test_siren.py": 2,
     "tests/helpers/test_intent.py": 2,
     "tests/util/test_executor.py": 2,
 }
