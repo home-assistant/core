@@ -1,5 +1,6 @@
 """Tests for async util methods from Python source."""
 
+import contextlib
 import importlib
 import time
 from unittest.mock import Mock, patch
@@ -198,3 +199,20 @@ async def test_protect_loop_importlib_import_module_in_integration(
         "Detected blocking call to import_module inside the event loop by "
         "integration 'hue' at homeassistant/components/hue/light.py, line 23"
     ) in caplog.text
+
+
+async def test_protect_loop_open(caplog: pytest.LogCaptureFixture) -> None:
+    """Test open of a file in /proc is not reported."""
+    block_async_io.enable()
+    with contextlib.suppress(FileNotFoundError):
+        open("/proc/does_not_exist").close()
+    assert "Detected blocking call to open with args" not in caplog.text
+
+
+async def test_protect_open(caplog: pytest.LogCaptureFixture) -> None:
+    """Test opening a file in the event loop logs."""
+    block_async_io.enable()
+    with contextlib.suppress(FileNotFoundError):
+        open("/config/data_not_exist").close()
+
+    assert "Detected blocking call to open with args" in caplog.text
