@@ -236,8 +236,7 @@ async def test_browse_media_library_albums(
         "media_content_id": "A:ALBUM/A%20Hard%20Day's%20Night",
         "can_play": True,
         "can_expand": True,
-        # Note: The "'" that was returned by Sonos has been URL encoded as %27 properly.
-        "thumbnail": "http://192.168.42.2:1400/getaa?u=x-file-cifs://192.168.42.100/music/The%20Beatles/A%20Hard%20Day%27s%20Night/01%20A%20Hard%20Day%27s%20Night%201.m4a&v=53",
+        "thumbnail": "http://192.168.42.2:1400/getaa?u=x-file-cifs://192.168.42.100/music/The%20Beatles/A%20Hard%20Day's%20Night/01%20A%20Hard%20Day's%20Night%201.m4a&v=53",
         "children_media_class": None,
     }
     assert first_album in response["result"]["children"]
