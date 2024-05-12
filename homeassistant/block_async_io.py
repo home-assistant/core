@@ -1,5 +1,6 @@
 """Block blocking calls being done in asyncio."""
 
+import builtins
 from contextlib import suppress
 from http.client import HTTPConnection
 import importlib
@@ -13,10 +14,19 @@ from .util.loop import protect_loop
 
 _IN_TESTS = "unittest" in sys.modules
 
+ALLOWED_FILE_PREFIXES = ("/proc",)
+
 
 def _check_import_call_allowed(mapped_args: dict[str, Any]) -> bool:
     # If the module is already imported, we can ignore it.
     return bool((args := mapped_args.get("args")) and args[0] in sys.modules)
+
+
+def _check_file_allowed(mapped_args: dict[str, Any]) -> bool:
+    # If the file is in /proc we can ignore it.
+    args = mapped_args["args"]
+    path = args[0] if type(args[0]) is str else str(args[0])  # noqa: E721
+    return path.startswith(ALLOWED_FILE_PREFIXES)
 
 
 def _check_sleep_call_allowed(mapped_args: dict[str, Any]) -> bool:
@@ -50,11 +60,15 @@ def enable() -> None:
         loop_thread_id=loop_thread_id,
     )
 
-    # Currently disabled. pytz doing I/O when getting timezone.
-    # Prevent files being opened inside the event loop
-    # builtins.open = protect_loop(builtins.open)
-
     if not _IN_TESTS:
+        # Prevent files being opened inside the event loop
+        builtins.open = protect_loop(  # type: ignore[assignment]
+            builtins.open,
+            strict_core=False,
+            strict=False,
+            check_allowed=_check_file_allowed,
+            loop_thread_id=loop_thread_id,
+        )
         # unittest uses `importlib.import_module` to do mocking
         # so we cannot protect it if we are running tests
         importlib.import_module = protect_loop(
