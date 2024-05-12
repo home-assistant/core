@@ -9,7 +9,6 @@ import eiscp
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    DOMAIN,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -24,7 +23,8 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -139,44 +139,41 @@ async def async_setup_entry(
     """Set up the Onkyo Platform from config_flow."""
 
     hosts: list[OnkyoDevice] = []
+    platform = entity_platform.async_get_current_platform()
 
-    def service_handle(call: ServiceCall) -> ServiceResponse:
+    def select_output_service(
+        entity: OnkyoDevice, call: ServiceCall
+    ) -> ServiceResponse:
         """Handle for services."""
-        entity_ids = call.data[ATTR_ENTITY_ID]
-        devices = [d for d in hosts if d.entity_id in entity_ids]
-
-        responses = []
-        for device in devices:
-            if call.service == SERVICE_SELECT_HDMI_OUTPUT:
-                device.select_output(call.data[ATTR_HDMI_OUTPUT])
-
-            if call.service == SERVICE_EISCP_COMMAND:
-                response = device.command(call.data["command"])
-                if not response:
-                    response = "Request failed"
-                else:
-                    key, value = response
-                    response = f"{key}: {value}"
-                responses.append(response)
-
-        if call.return_response:
-            return {"responses": responses}
-
+        entity.select_output(call.data[ATTR_HDMI_OUTPUT])
         return None
 
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SELECT_HDMI_OUTPUT,
-        service_handle,
+    platform.async_register_entity_service(
+        name=SERVICE_SELECT_HDMI_OUTPUT,
         schema=ONKYO_SELECT_OUTPUT_SCHEMA,
+        func=select_output_service,
     )
 
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_EISCP_COMMAND,
-        service_handle,
-        supports_response=SupportsResponse.OPTIONAL,
+    def command_service(entity: OnkyoDevice, call: ServiceCall) -> ServiceResponse:
+        """Handle for services."""
+
+        raw_response = entity.command(call.data["command"])
+        if not raw_response:
+            raise HomeAssistantError("Request failed")
+
+        key, _ = raw_response
+        value = _parse_onkyo_payload(raw_response)
+
+        if len(value) == 1:
+            value = value[0]
+
+        return {key: value}
+
+    platform.async_register_entity_service(
+        name=SERVICE_EISCP_COMMAND,
         schema=ONKYO_EISCP_COMMAND_SCHEMA,
+        func=command_service,
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
     host = entry.data[CONF_HOST]
@@ -192,7 +189,6 @@ async def async_setup_entry(
         _LOGGER.error("Unable to connect to receiver at %s", host)
         raise
 
-    # TEDOEN: listening modes
     #         zones = determine_zones(receiver)
 
     #         # Add Zone2 if available
@@ -407,18 +403,20 @@ class OnkyoDevice(OnkyoEntity, MediaPlayerEntity):
             return
 
         sources = _parse_onkyo_payload(current_source_raw)
-        for source in sources:
-            if source in self._source_mapping:
-                self._attr_source = self._source_mapping[source]
-                break
-            self._attr_source = "_".join(sources)
+        if sources:
+            for source in sources:
+                if source in self._source_mapping:
+                    self._attr_source = self._source_mapping[source]
+                    break
+                self._attr_source = "_".join(sources)
 
         sound_modes = _parse_onkyo_payload(current_sound_mode_raw)
-        for sound_mode in sound_modes:
-            if sound_mode in self._sound_mode_list_mapping:
-                self._attr_sound_mode = self._sound_mode_list_mapping[sound_mode]
-                break
-            self._attr_sound_mode = "_".join(sound_modes)
+        if sound_modes:
+            for sound_mode in sound_modes:
+                if sound_mode in self._sound_mode_list_mapping:
+                    self._attr_sound_mode = self._sound_mode_list_mapping[sound_mode]
+                    break
+                self._attr_sound_mode = "_".join(sound_modes)
 
         if preset_raw and self.source and self.source.lower() == "radio":
             self._attr_extra_state_attributes[ATTR_PRESET] = preset_raw[1]

@@ -1,0 +1,32 @@
+onkyo_eiscp_command:
+  target:
+    device:
+    entity:
+      integration: onkyo
+  fields:
+    command:
+      required: true
+      default: power=query
+      selector:
+        text:
+
+onkyo_select_hdmi_output:
+  target:
+    device:
+    entity:
+      integration: onkyo
+  fields:
+    hdmi_output:
+      required: true
+      selector:
+        select:
+          options:
+            - "no"
+            - "analog"
+            - "yes"
+            - "out"
+            - "out-sub"
+            - "sub"
+            - "hdbaset"
+            - "both"
+            - "up"

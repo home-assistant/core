@@ -37,49 +37,25 @@
     }
   },
   "services": {
-    "publish": {
-      "name": "Publish",
-      "description": "Publishes a message to an MQTT topic.",
+    "onkyo_eiscp_command": {
+      "name": "Onkyo eISCP command",
+      "description": "Sends a eISCP command to the selected receiver.",
       "fields": {
-        "topic": {
-          "name": "Topic",
-          "description": "Topic to publish to."
-        },
-        "payload": {
-          "name": "Payload",
-          "description": "The payload to publish."
-        },
-        "payload_template": {
-          "name": "Payload template",
-          "description": "Template to render as a payload value. If a payload is provided, the template is ignored."
-        },
-        "qos": {
-          "name": "QoS",
-          "description": "Quality of Service to use. 0: At most once. 1: At least once. 2: Exactly once."
-        },
-        "retain": {
-          "name": "Retain",
-          "description": "If the message should have the retain flag set. If set, the broker stores the most recent message on a topic."
+        "command": {
+          "name": "Command",
+          "description": "The onkyo eISCP command to send."
         }
       }
     },
-    "dump": {
-      "name": "Export",
-      "description": "Writes all messages on a specific topic into the `mqtt_dump.txt` file in your configuration folder.",
+    "onkyo_select_hdmi_output": {
+      "name": "Onkyo Select HDMI output",
+      "description": "Change to the specified HDMI output on the selected receiver.",
       "fields": {
-        "topic": {
-          "name": "[%key:component::mqtt::services::publish::fields::topic::name%]",
-          "description": "Topic to listen to."
-        },
-        "duration": {
-          "name": "Duration",
-          "description": "How long we should listen for messages in seconds."
+        "hdmi_output": {
+          "name": "HDMI Output",
+          "description": "The HDMI output to use."
         }
       }
-    },
-    "reload": {
-      "name": "[%key:common::action::reload%]",
-      "description": "Reloads MQTT entities from the YAML-configuration."
     }
   }
 }
