@@ -128,7 +128,6 @@ async def async_setup_entry(
 
     def service_handle(service: ServiceCall) -> None:
         """Handle for services."""
-        _LOGGER.error("Not yet operational")
         entity_ids = service.data[ATTR_ENTITY_ID]
         devices = [d for d in hosts if d.entity_id in entity_ids]
 
