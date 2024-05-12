@@ -161,7 +161,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                await validate_input(self.hass, user_input)
+                _, serial = await validate_input(self.hass, user_input)
             except InvalidHost:
                 errors[CONF_HOST] = "wrong_host"
             except (ConnectionError, TimeoutError):
@@ -171,6 +171,9 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
             except UnsupportedModelError:
                 return self.async_abort(reason="unsupported_model")
             else:
+                if serial.lower() != self.entry.unique_id:
+                    return self.async_abort(reason="not_the_same_device")
+
                 self.hass.config_entries.async_update_entry(
                     self.entry,
                     data={
