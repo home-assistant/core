@@ -31,7 +31,7 @@ def _get_line_from_cache(filename: str, lineno: int) -> str:
     return (linecache.getline(filename, lineno) or "?").strip()
 
 
-def check_loop(
+def raise_for_blocking_call(
     func: Callable[..., Any],
     check_allowed: Callable[[dict[str, Any]], bool] | None = None,
     strict: bool = True,
@@ -126,7 +126,7 @@ def protect_loop(
     @functools.wraps(func)
     def protected_loop_func(*args: _P.args, **kwargs: _P.kwargs) -> _R:
         if threading.get_ident() == loop_thread_id:
-            check_loop(
+            raise_for_blocking_call(
                 func,
                 strict=strict,
                 strict_core=strict_core,

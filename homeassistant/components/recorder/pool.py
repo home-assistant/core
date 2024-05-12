@@ -15,7 +15,7 @@ from sqlalchemy.pool import (
 )
 
 from homeassistant.helpers.frame import report
-from homeassistant.util.loop import check_loop
+from homeassistant.util.loop import raise_for_blocking_call
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,12 +94,12 @@ class RecorderPool(SingletonThreadPool, NullPool):
             asyncio.get_running_loop()
         except RuntimeError:
             return self._do_get_db_connection_protected()
-        check_loop(
+        raise_for_blocking_call(
             self._do_get_db_connection_protected,
             strict=True,
             advise_msg=ADVISE_MSG,
         )
-        # check_loop will raise an exception
+        # raise_for_blocking_call will raise an exception
 
     def _do_get_db_connection_protected(self) -> ConnectionPoolEntry:
         report(

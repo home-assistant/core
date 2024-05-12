@@ -26,7 +26,7 @@ def _check_sleep_call_allowed(mapped_args: dict[str, Any]) -> bool:
     # I/O and we are trying to avoid blocking calls.
     #
     # frame[0] is us
-    # frame[1] is check_loop
+    # frame[1] is raise_for_blocking_call
     # frame[2] is protected_loop_func
     # frame[3] is the offender
     with suppress(ValueError):
