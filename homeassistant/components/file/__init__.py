@@ -94,6 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # New notify entities are being setup through the config entry,
         # but during the deprecation period we want to keep the legacy notify platform,
         # so we forward the setup config through discovery.
+        # Only the entities from yaml will still be available as legacy service.
         hass.async_create_task(
             discovery.async_load_platform(
                 hass,
