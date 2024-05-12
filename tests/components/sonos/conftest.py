@@ -445,10 +445,13 @@ def music_library_browse_categories() -> list[MockMusicServiceItem]:
 
 
 @pytest.fixture(name="music_library")
-def music_library_fixture(music_library_browse_categories):
+def music_library_fixture(
+    sonos_favorites: SearchResult,
+    music_library_browse_categories: list[MockMusicServiceItem],
+) -> Mock:
     """Create music_library fixture."""
     music_library = MagicMock()
-    music_library.get_sonos_favorites.return_value.update_id = 1
+    music_library.get_sonos_favorites.return_value = sonos_favorites
     music_library.browse_by_idstring = Mock(side_effect=mock_browse_by_idstring)
     music_library.get_music_library_information = mock_get_music_library_information
     music_library.browse = Mock(return_value=music_library_browse_categories)
