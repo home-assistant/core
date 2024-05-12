@@ -44,6 +44,8 @@ class UpdateCoordinatorDataType:
 class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     """Queries router running Vodafone Station firmware."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -136,8 +138,6 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         """123."""
         entity_reg: er.EntityRegistry = er.async_get(self.hass)
 
-        assert self.config_entry
-
         ha_entity_reg_list: list[er.RegistryEntry] = er.async_entries_for_config_entry(
             entity_reg, self.config_entry.entry_id
         )
@@ -190,7 +190,9 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 include_disabled_entities=True,
             ):
                 _LOGGER.info("Removing device: %s", device_entry.name)
-                device_reg.async_remove_device(device_entry.id)
+                device_reg.async_update_device(
+                    device_entry.id, remove_config_entry_id=self.config_entry.entry_id
+                )
 
     @property
     def signal_device_new(self) -> str:
