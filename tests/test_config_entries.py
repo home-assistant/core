@@ -1581,6 +1581,7 @@ async def test_entry_unload_succeed(
     """Test that we can unload an entry."""
     entry = MockConfigEntry(domain="comp", state=config_entries.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
+    entry.runtime_data = 2
 
     async_unload_entry = AsyncMock(return_value=True)
 
@@ -1589,6 +1590,7 @@ async def test_entry_unload_succeed(
     assert await manager.async_unload(entry.entry_id)
     assert len(async_unload_entry.mock_calls) == 1
     assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert not hasattr(entry, "runtime_data")
 
 
 @pytest.mark.parametrize(
