@@ -52,7 +52,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_devices: dict[str, eiscp.eISCP] = {}
 
     def _get_device_name(self, receiver: eiscp.eISCP) -> str:
-        return f'{receiver.info["model_name"]} ({receiver.info[EISCP_IDENTIFIER]})'
+        return f'{receiver.info["model_name"]} {receiver.info[EISCP_IDENTIFIER]}'
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

@@ -129,12 +129,12 @@ async def async_setup_entry(
     def service_handle(service: ServiceCall) -> None:
         """Handle for services."""
         _LOGGER.error("Not yet operational")
-        # entity_ids = service.data[ATTR_ENTITY_ID]
-        # devices = [d for d in hosts if d.entity_id in entity_ids]
+        entity_ids = service.data[ATTR_ENTITY_ID]
+        devices = [d for d in hosts if d.entity_id in entity_ids]
 
-        # for device in devices:
-        #     if service.service == SERVICE_SELECT_HDMI_OUTPUT:
-        #         device.select_output(service.data[ATTR_HDMI_OUTPUT])
+        for device in devices:
+            if service.service == SERVICE_SELECT_HDMI_OUTPUT:
+                device.select_output(service.data[ATTR_HDMI_OUTPUT])
 
     hass.services.async_register(
         DOMAIN,
@@ -273,6 +273,7 @@ class OnkyoDevice(MediaPlayerEntity):
     _attr_supported_features = SUPPORT_ONKYO
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, entry: ConfigEntry, receiver: eiscp.eISCP) -> None:
         """Initialize the Onkyo Receiver."""
