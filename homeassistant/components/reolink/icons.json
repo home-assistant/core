@@ -263,7 +263,7 @@
       },
       "pir_enabled": {
         "default": "mdi:motion-sensor"
-      }
+      },
       "pir_reduce_alarm": {
         "default": "mdi:motion-sensor"
       }
