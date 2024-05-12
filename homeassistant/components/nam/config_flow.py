@@ -250,7 +250,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                config = await async_get_config(self.hass, self.host)
+                config = await async_get_config(self.hass, user_input[CONF_HOST])
             except (ApiError, ClientConnectorError, TimeoutError):
                 errors["base"] = "cannot_connect"
             else:
