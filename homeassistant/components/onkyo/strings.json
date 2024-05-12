@@ -17,5 +17,67 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "maximum_volume": "Maximum volume limit (%)",
+          "receiver_max_volume": "Receiver maximum volume (80 for older models, 200 for current)",
+          "sources": "List of input sources this receiver supports (eiscp argument: display value)",
+          "eiscp": "List of additional eiscp channels (eiscp argument: list of options)"
+        }
+      }
+    },
+    "abort": {
+      "invalid_sources": "Sources should be a list of key: value pairs.",
+      "invalid_eiscp": "eiscp should be a list of key: list items."
+    }
+  },
+  "services": {
+    "publish": {
+      "name": "Publish",
+      "description": "Publishes a message to an MQTT topic.",
+      "fields": {
+        "topic": {
+          "name": "Topic",
+          "description": "Topic to publish to."
+        },
+        "payload": {
+          "name": "Payload",
+          "description": "The payload to publish."
+        },
+        "payload_template": {
+          "name": "Payload template",
+          "description": "Template to render as a payload value. If a payload is provided, the template is ignored."
+        },
+        "qos": {
+          "name": "QoS",
+          "description": "Quality of Service to use. 0: At most once. 1: At least once. 2: Exactly once."
+        },
+        "retain": {
+          "name": "Retain",
+          "description": "If the message should have the retain flag set. If set, the broker stores the most recent message on a topic."
+        }
+      }
+    },
+    "dump": {
+      "name": "Export",
+      "description": "Writes all messages on a specific topic into the `mqtt_dump.txt` file in your configuration folder.",
+      "fields": {
+        "topic": {
+          "name": "[%key:component::mqtt::services::publish::fields::topic::name%]",
+          "description": "Topic to listen to."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "How long we should listen for messages in seconds."
+        }
+      }
+    },
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads MQTT entities from the YAML-configuration."
+    }
   }
 }
