@@ -13,10 +13,19 @@ from .util.loop import protect_loop
 
 _IN_TESTS = "unittest" in sys.modules
 
+ALLOWED_FILE_PREFIXES = ("/proc",)
+
 
 def _check_import_call_allowed(mapped_args: dict[str, Any]) -> bool:
     # If the module is already imported, we can ignore it.
     return bool((args := mapped_args.get("args")) and args[0] in sys.modules)
+
+
+def _check_file_allowed(mapped_args: dict[str, Any]) -> bool:
+    # If the file is in /proc we can ignore it.
+    return bool(
+        (args := mapped_args.get("args")) and args[0].startswith(ALLOWED_FILE_PREFIXES)
+    )
 
 
 def _check_sleep_call_allowed(mapped_args: dict[str, Any]) -> bool:
@@ -49,7 +58,10 @@ def enable() -> None:
     if not _IN_TESTS:
         # Prevent files being opened inside the event loop
         builtins.open = protect_loop(  # type: ignore[assignment]
-            builtins.open, strict_core=False, strict=False
+            builtins.open,
+            strict_core=False,
+            strict=False,
+            check_allowed=_check_file_allowed,
         )
         # unittest uses `importlib.import_module` to do mocking
         # so we cannot protect it if we are running tests
