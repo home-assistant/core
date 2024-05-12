@@ -802,6 +802,8 @@ class ConfigEntry(Generic[_DataT]):
             if domain_is_integration:
                 if result:
                     self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
+                    if hasattr(self, "runtime_data"):
+                        object.__delattr__(self, "runtime_data")
 
                 await self._async_process_on_unload(hass)
         except Exception as exc:
