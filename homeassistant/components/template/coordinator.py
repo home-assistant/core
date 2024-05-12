@@ -31,9 +31,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         """Instantiate trigger data."""
         super().__init__(hass, _LOGGER, name="Trigger Update Coordinator")
         self.config = config
-        self._cond_func: Callable[[TemplateVarsType | None], bool] = (
-            lambda variables=None: True
-        )
+        self._cond_func: Callable[[TemplateVarsType | None], bool] | None = None
         self._unsub_start: Callable[[], None] | None = None
         self._unsub_trigger: Callable[[], None] | None = None
         self._script: Script | None = None
@@ -106,15 +104,11 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
 
     async def _setup_condition_checker(
         self,
-    ) -> Callable[[TemplateVarsType | None], bool]:
+    ) -> Callable[[TemplateVarsType | None], bool] | None:
         cond_configs = self.config[CONF_CONDITION]
         checks: list[condition.ConditionCheckerType] = []
         for cond_config in cond_configs:
-            try:
-                checks.append(await condition.async_from_config(self.hass, cond_config))
-            except HomeAssistantError as ex:
-                _LOGGER.warning("Invalid condition: %s", ex)
-                self._cond_func = lambda variables=None: True
+            checks.append(await condition.async_from_config(self.hass, cond_config))
 
         def check_conditions(variables: TemplateVarsType | None = None) -> bool:
             """AND all conditions."""
@@ -158,7 +152,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         self._execute_update(run_variables, context)
 
     async def _check_condition(self, run_variables, context=None) -> bool:
-        condition_result = self._cond_func(run_variables)
+        condition_result = self._cond_func(run_variables) if self._cond_func else True
         if condition_result is False:
             _LOGGER.debug(
                 "Conditions not met, aborting template trigger update. Condition summary: %s",
