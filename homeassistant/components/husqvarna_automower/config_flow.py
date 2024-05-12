@@ -15,7 +15,7 @@ from .const import DOMAIN, NAME
 _LOGGER = logging.getLogger(__name__)
 
 CONF_USER_ID = "user_id"
-HUSQVARNA_DEV_PORTAL_URL = "https://developer.husqvarnagroup.cloud"
+HUSQVARNA_DEV_PORTAL_URL = "https://developer.husqvarnagroup.cloud/applications"
 
 
 class HusqvarnaConfigFlowHandler(
@@ -88,7 +88,7 @@ class HusqvarnaConfigFlowHandler(
             return self.async_show_form(
                 step_id="missing_scope",
                 description_placeholders={
-                    "application_url": f"{HUSQVARNA_DEV_PORTAL_URL}/applications/{token_structured.client_id}"
+                    "application_url": f"{HUSQVARNA_DEV_PORTAL_URL}/{token_structured.client_id}"
                 },
             )
         return await self.async_step_user()
