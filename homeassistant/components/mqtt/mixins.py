@@ -817,7 +817,7 @@ class MqttDiscoveryDeviceUpdate(ABC):
             self._remove_device_updated = async_track_device_registry_updated_event(
                 hass, device_id, self._async_device_removed
             )
-        _LOGGER.info(
+        _LOGGER.debug(
             "%s %s has been initialized",
             self.log_name,
             discovery_hash,
@@ -837,7 +837,7 @@ class MqttDiscoveryDeviceUpdate(ABC):
     ) -> None:
         """Handle discovery update."""
         discovery_hash = get_discovery_hash(self._discovery_data)
-        _LOGGER.info(
+        _LOGGER.debug(
             "Got update for %s with hash: %s '%s'",
             self.log_name,
             discovery_hash,
@@ -847,8 +847,8 @@ class MqttDiscoveryDeviceUpdate(ABC):
             discovery_payload
             and discovery_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
         ):
-            _LOGGER.info(
-                "%s %s updating",
+            _LOGGER.debug(
+                "Updating %s with hash %s",
                 self.log_name,
                 discovery_hash,
             )
@@ -864,7 +864,7 @@ class MqttDiscoveryDeviceUpdate(ABC):
             )
             await self._async_tear_down()
             send_discovery_done(self.hass, self._discovery_data)
-            _LOGGER.info(
+            _LOGGER.debug(
                 "%s %s has been removed",
                 self.log_name,
                 discovery_hash,
@@ -872,7 +872,7 @@ class MqttDiscoveryDeviceUpdate(ABC):
         else:
             # Normal update without change
             send_discovery_done(self.hass, self._discovery_data)
-            _LOGGER.info(
+            _LOGGER.debug(
                 "%s %s no changes",
                 self.log_name,
                 discovery_hash,

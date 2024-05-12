@@ -1203,7 +1203,6 @@ omit =
     homeassistant/components/screenlogic/light.py
     homeassistant/components/screenlogic/number.py
     homeassistant/components/screenlogic/sensor.py
-    homeassistant/components/screenlogic/services.py
     homeassistant/components/screenlogic/switch.py
     homeassistant/components/scsgate/*
     homeassistant/components/sendgrid/notify.py
@@ -1441,7 +1440,6 @@ omit =
     homeassistant/components/thinkingcleaner/*
     homeassistant/components/thomson/device_tracker.py
     homeassistant/components/tibber/__init__.py
-    homeassistant/components/tibber/notify.py
     homeassistant/components/tibber/sensor.py
     homeassistant/components/tikteck/light.py
     homeassistant/components/tile/__init__.py

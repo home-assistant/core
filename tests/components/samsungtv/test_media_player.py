@@ -1369,7 +1369,7 @@ async def test_upnp_shutdown(
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
 
-    assert await entry.async_unload(hass)
+    assert await hass.config_entries.async_unload(entry.entry_id)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_UNAVAILABLE
