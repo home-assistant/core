@@ -66,7 +66,7 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
                 if "403" in str(ex):
                     errors["base"] = "invalid_auth"
-            except Exception as ex:  # pylint:disable=broad-except
+            except Exception as ex:  # noqa: BLE001
                 LOGGER.exception("Unknown exception: %s", ex)
                 errors["base"] = "unknown"
             if not errors:

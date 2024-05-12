@@ -1,6 +1,7 @@
 """Config flow for Tedee integration."""
 
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 from pytedee_async import (
@@ -17,6 +18,8 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN, NAME
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -47,7 +50,8 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_api_key"
             except TedeeClientException:
                 errors[CONF_HOST] = "invalid_host"
-            except TedeeDataUpdateException:
+            except TedeeDataUpdateException as exc:
+                _LOGGER.error("Error during local bridge discovery: %s", exc)
                 errors["base"] = "cannot_connect"
             else:
                 if self.reauth_entry:

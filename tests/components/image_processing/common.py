@@ -21,4 +21,4 @@ def scan(hass, entity_id=ENTITY_MATCH_ALL):
 def async_scan(hass, entity_id=ENTITY_MATCH_ALL):
     """Force process of all cameras or given entity."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_SCAN, data))
+    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_SCAN, data))

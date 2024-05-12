@@ -99,6 +99,27 @@ async def test_create_label(
         "name": "MOCKERY",
     }
 
+    await client.send_json_auto_id(
+        {
+            "name": "MAGIC",
+            "type": "config/label_registry/create",
+            "color": "indigo",
+            "description": "This is the third label",
+            "icon": "mdi:three",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert len(label_registry.labels) == 3
+    assert msg["result"] == {
+        "color": "indigo",
+        "description": "This is the third label",
+        "icon": "mdi:three",
+        "label_id": "magic",
+        "name": "MAGIC",
+    }
+
 
 async def test_create_label_with_name_already_in_use(
     client: MockHAClientWebSocket,
@@ -208,6 +229,28 @@ async def test_update_label(
         "icon": None,
         "label_id": "mock",
         "name": "UPDATED AGAIN",
+    }
+
+    await client.send_json_auto_id(
+        {
+            "label_id": label.label_id,
+            "name": "UPDATED YET AGAIN",
+            "icon": None,
+            "color": "primary",
+            "description": None,
+            "type": "config/label_registry/update",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert len(label_registry.labels) == 1
+    assert msg["result"] == {
+        "color": "primary",
+        "description": None,
+        "icon": None,
+        "label_id": "mock",
+        "name": "UPDATED YET AGAIN",
     }
 
 

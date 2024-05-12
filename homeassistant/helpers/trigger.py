@@ -30,6 +30,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 from homeassistant.util.async_ import create_eager_task
+from homeassistant.util.hass_dict import HassKey
 
 from .typing import ConfigType, TemplateVarsType
 
@@ -42,7 +43,9 @@ _PLATFORM_ALIASES = {
     "time": "homeassistant",
 }
 
-DATA_PLUGGABLE_ACTIONS = "pluggable_actions"
+DATA_PLUGGABLE_ACTIONS: HassKey[defaultdict[tuple, PluggableActionsEntry]] = HassKey(
+    "pluggable_actions"
+)
 
 
 class TriggerProtocol(Protocol):
@@ -138,9 +141,8 @@ class PluggableAction:
     def async_get_registry(hass: HomeAssistant) -> dict[tuple, PluggableActionsEntry]:
         """Return the pluggable actions registry."""
         if data := hass.data.get(DATA_PLUGGABLE_ACTIONS):
-            return data  # type: ignore[no-any-return]
-        data = defaultdict(PluggableActionsEntry)
-        hass.data[DATA_PLUGGABLE_ACTIONS] = data
+            return data
+        data = hass.data[DATA_PLUGGABLE_ACTIONS] = defaultdict(PluggableActionsEntry)
         return data
 
     @staticmethod

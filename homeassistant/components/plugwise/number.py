@@ -76,15 +76,12 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
 
-    entities: list[PlugwiseNumberEntity] = []
-    for device_id, device in coordinator.data.devices.items():
-        for description in NUMBER_TYPES:
-            if description.key in device:
-                entities.append(
-                    PlugwiseNumberEntity(coordinator, device_id, description)
-                )
-
-    async_add_entities(entities)
+    async_add_entities(
+        PlugwiseNumberEntity(coordinator, device_id, description)
+        for device_id, device in coordinator.data.devices.items()
+        for description in NUMBER_TYPES
+        if description.key in device
+    )
 
 
 class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):

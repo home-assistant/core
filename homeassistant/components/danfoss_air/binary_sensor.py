@@ -33,12 +33,13 @@ def setup_platform(
         ["Danfoss Air Away Mode Active", ReadCommand.away_mode, None],
     ]
 
-    dev = []
-
-    for sensor in sensors:
-        dev.append(DanfossAirBinarySensor(data, sensor[0], sensor[1], sensor[2]))
-
-    add_entities(dev, True)
+    add_entities(
+        (
+            DanfossAirBinarySensor(data, sensor[0], sensor[1], sensor[2])
+            for sensor in sensors
+        ),
+        True,
+    )
 
 
 class DanfossAirBinarySensor(BinarySensorEntity):

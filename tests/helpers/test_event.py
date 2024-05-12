@@ -15,12 +15,11 @@ import pytest
 
 from homeassistant.const import MATCH_ALL
 import homeassistant.core as ha
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     TrackStates,
     TrackTemplate,
     TrackTemplateResult,
@@ -1768,7 +1767,7 @@ async def test_track_template_result_complex(hass: HomeAssistant) -> None:
 
     info = async_track_template_result(
         hass,
-        [TrackTemplate(template_complex, None, timedelta(seconds=0))],
+        [TrackTemplate(template_complex, None, 0)],
         specific_run_callback,
     )
     await hass.async_block_till_done()
@@ -2179,7 +2178,7 @@ async def test_track_template_result_iterator(hass: HomeAssistant) -> None:
                     hass,
                 ),
                 None,
-                timedelta(seconds=0),
+                0,
             )
         ],
         iterator_callback,
@@ -2210,7 +2209,7 @@ async def test_track_template_result_iterator(hass: HomeAssistant) -> None:
                     hass,
                 ),
                 None,
-                timedelta(seconds=0),
+                0,
             )
         ],
         filter_callback,
@@ -2417,7 +2416,7 @@ async def test_track_template_rate_limit(hass: HomeAssistant) -> None:
 
     info = async_track_template_result(
         hass,
-        [TrackTemplate(template_refresh, None, timedelta(seconds=0.1))],
+        [TrackTemplate(template_refresh, None, 0.1)],
         refresh_listener,
     )
     await hass.async_block_till_done()
@@ -2435,7 +2434,7 @@ async def test_track_template_rate_limit(hass: HomeAssistant) -> None:
     assert refresh_runs == [0, 1]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125)
     with patch(
-        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+        "homeassistant.helpers.ratelimit.time.time", return_value=next_time.timestamp()
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
@@ -2448,7 +2447,7 @@ async def test_track_template_rate_limit(hass: HomeAssistant) -> None:
     assert refresh_runs == [0, 1, 2]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 2)
     with patch(
-        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+        "homeassistant.helpers.ratelimit.time.time", return_value=next_time.timestamp()
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
@@ -2485,7 +2484,7 @@ async def test_track_template_rate_limit_super(hass: HomeAssistant) -> None:
         hass,
         [
             TrackTemplate(template_availability, None),
-            TrackTemplate(template_refresh, None, timedelta(seconds=0.1)),
+            TrackTemplate(template_refresh, None, 0.1),
         ],
         refresh_listener,
         has_super_template=True,
@@ -2508,7 +2507,7 @@ async def test_track_template_rate_limit_super(hass: HomeAssistant) -> None:
     assert refresh_runs == [0, 1]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125)
     with patch(
-        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+        "homeassistant.helpers.ratelimit.time.time", return_value=next_time.timestamp()
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
@@ -2525,7 +2524,7 @@ async def test_track_template_rate_limit_super(hass: HomeAssistant) -> None:
     assert refresh_runs == [0, 1, 4]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 2)
     with patch(
-        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+        "homeassistant.helpers.ratelimit.time.time", return_value=next_time.timestamp()
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
@@ -2560,8 +2559,8 @@ async def test_track_template_rate_limit_super_2(hass: HomeAssistant) -> None:
     info = async_track_template_result(
         hass,
         [
-            TrackTemplate(template_availability, None, timedelta(seconds=0.1)),
-            TrackTemplate(template_refresh, None, timedelta(seconds=0.1)),
+            TrackTemplate(template_availability, None, 0.1),
+            TrackTemplate(template_refresh, None, 0.1),
         ],
         refresh_listener,
         has_super_template=True,
@@ -2581,7 +2580,7 @@ async def test_track_template_rate_limit_super_2(hass: HomeAssistant) -> None:
     assert refresh_runs == [1]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125)
     with patch(
-        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+        "homeassistant.helpers.ratelimit.time.time", return_value=next_time.timestamp()
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
@@ -2597,7 +2596,7 @@ async def test_track_template_rate_limit_super_2(hass: HomeAssistant) -> None:
     assert refresh_runs == [1]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 2)
     with patch(
-        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+        "homeassistant.helpers.ratelimit.time.time", return_value=next_time.timestamp()
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
@@ -2632,7 +2631,7 @@ async def test_track_template_rate_limit_super_3(hass: HomeAssistant) -> None:
     info = async_track_template_result(
         hass,
         [
-            TrackTemplate(template_availability, None, timedelta(seconds=0.1)),
+            TrackTemplate(template_availability, None, 0.1),
             TrackTemplate(template_refresh, None),
         ],
         refresh_listener,
@@ -2654,7 +2653,7 @@ async def test_track_template_rate_limit_super_3(hass: HomeAssistant) -> None:
     assert refresh_runs == [1, 2]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125)
     with patch(
-        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+        "homeassistant.helpers.ratelimit.time.time", return_value=next_time.timestamp()
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
@@ -2671,7 +2670,7 @@ async def test_track_template_rate_limit_super_3(hass: HomeAssistant) -> None:
     assert refresh_runs == [1, 2]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 2)
     with patch(
-        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+        "homeassistant.helpers.ratelimit.time.time", return_value=next_time.timestamp()
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
@@ -2701,7 +2700,7 @@ async def test_track_template_rate_limit_suppress_listener(hass: HomeAssistant) 
 
     info = async_track_template_result(
         hass,
-        [TrackTemplate(template_refresh, None, timedelta(seconds=0.1))],
+        [TrackTemplate(template_refresh, None, 0.1)],
         refresh_listener,
     )
     await hass.async_block_till_done()
@@ -2733,7 +2732,7 @@ async def test_track_template_rate_limit_suppress_listener(hass: HomeAssistant) 
     assert refresh_runs == [0, 1]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125)
     with patch(
-        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+        "homeassistant.helpers.ratelimit.time.time", return_value=next_time.timestamp()
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
@@ -2760,7 +2759,7 @@ async def test_track_template_rate_limit_suppress_listener(hass: HomeAssistant) 
     }
     next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 2)
     with patch(
-        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+        "homeassistant.helpers.ratelimit.time.time", return_value=next_time.timestamp()
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
@@ -2801,7 +2800,7 @@ async def test_track_template_rate_limit_five(hass: HomeAssistant) -> None:
 
     info = async_track_template_result(
         hass,
-        [TrackTemplate(template_refresh, None, timedelta(seconds=5))],
+        [TrackTemplate(template_refresh, None, 5)],
         refresh_listener,
     )
     await hass.async_block_till_done()
@@ -2928,7 +2927,7 @@ async def test_specifically_referenced_entity_is_not_rate_limited(
 
     info = async_track_template_result(
         hass,
-        [TrackTemplate(template_refresh, None, timedelta(seconds=5))],
+        [TrackTemplate(template_refresh, None, 5)],
         refresh_listener,
     )
     await hass.async_block_till_done()
@@ -2976,8 +2975,8 @@ async def test_track_two_templates_with_different_rate_limits(
     info = async_track_template_result(
         hass,
         [
-            TrackTemplate(template_one, None, timedelta(seconds=0.1)),
-            TrackTemplate(template_five, None, timedelta(seconds=5)),
+            TrackTemplate(template_one, None, 0.1),
+            TrackTemplate(template_five, None, 5),
         ],
         refresh_listener,
     )
@@ -3001,7 +3000,7 @@ async def test_track_two_templates_with_different_rate_limits(
     assert refresh_runs[template_five] == [0, 1]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 1)
     with patch(
-        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+        "homeassistant.helpers.ratelimit.time.time", return_value=next_time.timestamp()
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
@@ -3194,7 +3193,7 @@ async def test_async_track_template_result_multiple_templates_mixing_domain(
             TrackTemplate(template_1, None),
             TrackTemplate(template_2, None),
             TrackTemplate(template_3, None),
-            TrackTemplate(template_4, None, timedelta(seconds=0)),
+            TrackTemplate(template_4, None, 0),
         ],
         refresh_listener,
     )
@@ -4805,3 +4804,36 @@ async def test_async_track_device_registry_updated_event_with_a_callback_that_th
     unsub2()
 
     assert event_data[0] == {"action": "create", "device_id": device_id}
+
+
+async def test_track_state_change_deprecated(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test track_state_change is deprecated."""
+    async_track_state_change(
+        hass, "light.Bowl", lambda entity_id, old_state, new_state: None, "on", "off"
+    )
+
+    assert (
+        "Detected code that calls `async_track_state_change` instead "
+        "of `async_track_state_change_event` which is deprecated and "
+        "will be removed in Home Assistant 2025.5. Please report this issue."
+    ) in caplog.text
+
+
+async def test_track_point_in_time_repr(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test track point in time."""
+
+    @ha.callback
+    def _raise_exception(_):
+        raise RuntimeError("something happened and its poorly described")
+
+    async_track_point_in_utc_time(hass, _raise_exception, dt_util.utcnow())
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Exception in callback _TrackPointUTCTime" in caplog.text
+    assert "._raise_exception" in caplog.text
+    await hass.async_block_till_done(wait_background_tasks=True)

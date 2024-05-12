@@ -45,19 +45,14 @@ from .const import (
 from .coordinator import PicnicUpdateCoordinator
 
 
-@dataclass(frozen=True)
-class PicnicRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class PicnicSensorEntityDescription(SensorEntityDescription):
+    """Describes Picnic sensor entity."""
 
     data_type: Literal[
         "cart_data", "slot_data", "next_delivery_data", "last_order_data"
     ]
     value_fn: Callable[[Any], StateType | datetime]
-
-
-@dataclass(frozen=True)
-class PicnicSensorEntityDescription(SensorEntityDescription, PicnicRequiredKeysMixin):
-    """Describes Picnic sensor entity."""
 
     entity_registry_enabled_default: bool = False
 
