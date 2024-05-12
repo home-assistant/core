@@ -1,5 +1,6 @@
 """A pool for sqlite connections."""
 
+import asyncio
 import logging
 import threading
 import traceback
@@ -86,15 +87,19 @@ class RecorderPool(SingletonThreadPool, NullPool):
         if threading.get_ident() in self.recorder_and_worker_thread_ids:
             super().dispose()
 
-    def _do_get(self) -> ConnectionPoolEntry:
+    def _do_get(self) -> ConnectionPoolEntry:  # type: ignore[return]
         if threading.get_ident() in self.recorder_and_worker_thread_ids:
             return super()._do_get()
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return self._do_get_db_connection_protected()
         check_loop(
             self._do_get_db_connection_protected,
             strict=True,
             advise_msg=ADVISE_MSG,
         )
-        return self._do_get_db_connection_protected()
+        # check_loop will raise an exception
 
     def _do_get_db_connection_protected(self) -> ConnectionPoolEntry:
         report(
