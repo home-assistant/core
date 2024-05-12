@@ -107,7 +107,7 @@ class FakeBleakClientRaisesOnConnect(BaseFakeBleakClient):
 
     async def connect(self, *args, **kwargs):
         """Connect."""
-        raise Exception("Test exception")
+        raise ConnectionError("Test exception")
 
 
 def _generate_ble_device_and_adv_data(
@@ -304,8 +304,9 @@ async def test_release_slot_on_connect_exception(
     ):
         ble_device = hci0_device_advs["00:00:00:00:00:01"][0]
         client = bleak.BleakClient(ble_device)
-        with pytest.raises(Exception):
-            assert await client.connect() is False
+        with pytest.raises(ConnectionError) as exc_info:
+            await client.connect()
+        assert str(exc_info.value) == "Test exception"
         assert allocate_slot_mock.call_count == 1
         assert release_slot_mock.call_count == 1
 

@@ -109,11 +109,9 @@ async def websocket_detect_config(
     # We don't want any integrations to use the name of the unit system
     # so we are using the private attribute here
     if location_info.use_metric:
-        # pylint: disable-next=protected-access
-        info["unit_system"] = unit_system._CONF_UNIT_SYSTEM_METRIC
+        info["unit_system"] = unit_system._CONF_UNIT_SYSTEM_METRIC  # noqa: SLF001
     else:
-        # pylint: disable-next=protected-access
-        info["unit_system"] = unit_system._CONF_UNIT_SYSTEM_US_CUSTOMARY
+        info["unit_system"] = unit_system._CONF_UNIT_SYSTEM_US_CUSTOMARY  # noqa: SLF001
 
     if location_info.latitude:
         info["latitude"] = location_info.latitude

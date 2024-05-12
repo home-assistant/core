@@ -7,7 +7,7 @@ import asyncio
 from dataclasses import dataclass
 from functools import cached_property
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
@@ -39,7 +39,6 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import ToggleEntity
@@ -532,15 +531,16 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
+        script = self.script
         attrs = {
-            ATTR_LAST_TRIGGERED: self.script.last_triggered,
-            ATTR_MODE: self.script.script_mode,
-            ATTR_CUR: self.script.runs,
+            ATTR_LAST_TRIGGERED: script.last_triggered,
+            ATTR_MODE: script.script_mode,
+            ATTR_CUR: script.runs,
         }
-        if self.script.supports_max:
-            attrs[ATTR_MAX] = self.script.max_runs
-        if self.script.last_action:
-            attrs[ATTR_LAST_ACTION] = self.script.last_action
+        if script.supports_max:
+            attrs[ATTR_MAX] = script.max_runs
+        if script.last_action:
+            attrs[ATTR_LAST_ACTION] = script.last_action
         return attrs
 
     @property
@@ -660,9 +660,13 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
 
     async def async_added_to_hass(self) -> None:
         """Restore last triggered on startup and register service."""
+        if TYPE_CHECKING:
+            assert self.unique_id is not None
+            assert self.registry_entry is not None
 
-        unique_id = cast(str, self.unique_id)
-        self.hass.services.async_register(
+        unique_id = self.unique_id
+        hass = self.hass
+        hass.services.async_register(
             DOMAIN,
             unique_id,
             self._service_handler,
@@ -672,15 +676,16 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
 
         # Register the service description
         service_desc = {
-            CONF_NAME: cast(er.RegistryEntry, self.registry_entry).name or self.name,
+            CONF_NAME: self.registry_entry.name or self.name,
             CONF_DESCRIPTION: self.description,
             CONF_FIELDS: self.fields,
         }
-        async_set_service_schema(self.hass, DOMAIN, unique_id, service_desc)
+        async_set_service_schema(hass, DOMAIN, unique_id, service_desc)
 
-        if state := await self.async_get_last_state():
-            if last_triggered := state.attributes.get("last_triggered"):
-                self.script.last_triggered = parse_datetime(last_triggered)
+        if (state := await self.async_get_last_state()) and (
+            last_triggered := state.attributes.get("last_triggered")
+        ):
+            self.script.last_triggered = parse_datetime(last_triggered)
 
     async def async_will_remove_from_hass(self):
         """Stop script and remove service when it will be removed from HA."""
