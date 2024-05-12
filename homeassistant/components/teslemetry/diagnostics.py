@@ -8,8 +8,6 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-
 VEHICLE_REDACT = [
     "id",
     "user_id",
@@ -32,12 +30,9 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    vehicles = [
-        x.coordinator.data for x in hass.data[DOMAIN][config_entry.entry_id].vehicles
-    ]
+    vehicles = [x.coordinator.data for x in config_entry.runtime_data.vehicles]
     energysites = [
-        x.live_coordinator.data
-        for x in hass.data[DOMAIN][config_entry.entry_id].energysites
+        x.live_coordinator.data for x in config_entry.runtime_data.energysites
     ]
 
     # Return only the relevant children

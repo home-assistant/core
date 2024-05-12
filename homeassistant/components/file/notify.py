@@ -76,7 +76,7 @@ class FileNotificationService(BaseNotificationService):
                 else:
                     text = f"{message}\n"
                 file.write(text)
-        except Exception as exc:
+        except OSError as exc:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="write_access_failed",

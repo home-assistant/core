@@ -9,6 +9,7 @@ from functools import partial
 from itertools import chain
 import logging
 import logging.handlers
+import mimetypes
 from operator import contains, itemgetter
 import os
 import platform
@@ -371,23 +372,24 @@ def open_hass_ui(hass: core.HomeAssistant) -> None:
         )
 
 
+def _init_blocking_io_modules_in_executor() -> None:
+    """Initialize modules that do blocking I/O in executor."""
+    # Cache the result of platform.uname().processor in the executor.
+    # Multiple modules call this function at startup which
+    # executes a blocking subprocess call. This is a problem for the
+    # asyncio event loop. By priming the cache of uname we can
+    # avoid the blocking call in the event loop.
+    _ = platform.uname().processor
+    # Initialize the mimetypes module to avoid blocking calls
+    # to the filesystem to load the mime.types file.
+    mimetypes.init()
+
+
 async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
-    """Load the registries and cache the result of platform.uname().processor."""
+    """Load the registries and modules that will do blocking I/O."""
     if DATA_REGISTRIES_LOADED in hass.data:
         return
     hass.data[DATA_REGISTRIES_LOADED] = None
-
-    def _cache_uname_processor() -> None:
-        """Cache the result of platform.uname().processor in the executor.
-
-        Multiple modules call this function at startup which
-        executes a blocking subprocess call. This is a problem for the
-        asyncio event loop. By primeing the cache of uname we can
-        avoid the blocking call in the event loop.
-        """
-        _ = platform.uname().processor
-
-    # Load the registries and cache the result of platform.uname().processor
     translation.async_setup(hass)
     entity.async_setup(hass)
     template.async_setup(hass)
@@ -400,7 +402,7 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
         create_eager_task(floor_registry.async_load(hass)),
         create_eager_task(issue_registry.async_load(hass)),
         create_eager_task(label_registry.async_load(hass)),
-        hass.async_add_executor_job(_cache_uname_processor),
+        hass.async_add_executor_job(_init_blocking_io_modules_in_executor),
         create_eager_task(template.async_load_custom_templates(hass)),
         create_eager_task(restore_state.async_load(hass)),
         create_eager_task(hass.config_entries.async_initialize()),
