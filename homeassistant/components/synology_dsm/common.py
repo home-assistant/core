@@ -29,7 +29,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
-    CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
@@ -119,7 +118,7 @@ class SynoApi:
             self._entry.data[CONF_USERNAME],
             self._entry.data[CONF_PASSWORD],
             self._entry.data[CONF_SSL],
-            timeout=self._entry.options.get(CONF_TIMEOUT) or DEFAULT_TIMEOUT,
+            timeout=DEFAULT_TIMEOUT,
             device_token=self._entry.data.get(CONF_DEVICE_TOKEN),
         )
         await self.async_login()

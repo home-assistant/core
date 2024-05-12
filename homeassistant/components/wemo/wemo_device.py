@@ -142,6 +142,8 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-en
 
     async def async_shutdown(self) -> None:
         """Unregister push subscriptions and remove from coordinators dict."""
+        if self._shutdown_requested:
+            return
         await super().async_shutdown()
         if TYPE_CHECKING:
             # mypy doesn't known that the device_id is set in async_setup.
@@ -210,7 +212,7 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-en
             if self.last_update_success:
                 _LOGGER.exception("Subscription callback failed")
                 self.last_update_success = False
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:
             self.last_exception = err
             self.last_update_success = False
             _LOGGER.exception("Unexpected error fetching %s data", self.name)

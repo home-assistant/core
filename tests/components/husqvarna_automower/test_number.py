@@ -35,7 +35,7 @@ async def test_number_commands(
         service_data={"value": "3"},
         blocking=True,
     )
-    mocked_method = mock_automower_client.set_cutting_height
+    mocked_method = mock_automower_client.commands.set_cutting_height
     assert len(mocked_method.mock_calls) == 1
 
     mocked_method.side_effect = ApiException("Test error")
@@ -68,7 +68,9 @@ async def test_number_workarea_commands(
     values[TEST_MOWER_ID].work_areas[123456].cutting_height = 75
     mock_automower_client.get_status.return_value = values
     mocked_method = AsyncMock()
-    setattr(mock_automower_client, "set_cutting_height_workarea", mocked_method)
+    setattr(
+        mock_automower_client.commands, "set_cutting_height_workarea", mocked_method
+    )
     await hass.services.async_call(
         domain="number",
         service="set_value",
