@@ -6,8 +6,9 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.aurora.const import (
-    DOMAIN,
+    DOMAIN, CONF_THRESHOLD,
 )
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 
 from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
 
@@ -23,33 +24,20 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_analytics_client() -> Generator[AsyncMock, None, None]:
+def mock_aurora_client() -> Generator[AsyncMock, None, None]:
     """Mock a Homeassistant Analytics client."""
     with (
         patch(
-            "homeassistant.components.aurora.HomeassistantAnalyticsClient",
+            "homeassistant.components.aurora.AuroraForecast",
             autospec=True,
         ) as mock_client,
         patch(
-            "homeassistant.components.analytics_insights.config_flow.HomeassistantAnalyticsClient",
+            "homeassistant.components.aurora.config_flow.AuroraForecast",
             new=mock_client,
         ),
     ):
         client = mock_client.return_value
-        client.get_current_analytics.return_value = CurrentAnalytics.from_json(
-            load_fixture("analytics_insights/current_data.json")
-        )
-        integrations = load_json_object_fixture("analytics_insights/integrations.json")
-        client.get_integrations.return_value = {
-            key: Integration.from_dict(value) for key, value in integrations.items()
-        }
-        custom_integrations = load_json_object_fixture(
-            "analytics_insights/custom_integrations.json"
-        )
-        client.get_custom_integrations.return_value = {
-            key: CustomIntegration.from_dict(value)
-            for key, value in custom_integrations.items()
-        }
+        client.get_forecast_data.return_value = 42
         yield client
 
 
@@ -58,10 +46,12 @@ def mock_config_entry() -> MockConfigEntry:
     """Mock a config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title="Homeassistant Analytics",
-        data={},
+        title="Aurora visibility",
+        data={
+            CONF_LATITUDE: -10,
+            CONF_LONGITUDE: 10.2,
+        },
         options={
-            CONF_TRACKED_INTEGRATIONS: ["youtube", "spotify", "myq"],
-            CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
+            CONF_THRESHOLD: 75,
         },
     )
