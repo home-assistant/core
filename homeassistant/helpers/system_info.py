@@ -74,7 +74,7 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
         info_object["user"] = None
 
     if platform.system() == "Darwin":
-        info_object["os_version"] = await get_mac_ver(hass)
+        info_object["os_version"] = await async_get_mac_ver(hass)
     elif platform.system() == "Linux":
         info_object["docker"] = is_docker_env()
 
