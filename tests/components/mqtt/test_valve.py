@@ -1014,7 +1014,7 @@ async def test_controlling_valve_by_position_optimistic(
         (100, "127", 100, STATE_OPEN),
     ],
 )
-async def test_controlling_valve_optimistic_alt_trange_by_set_valve_position(
+async def test_controlling_valve_optimistic_alt_range_by_set_valve_position(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     position: int,
