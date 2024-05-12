@@ -34,7 +34,6 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.variance import ignore_variance
 
-from .const import DOMAIN
 from .entity import (
     TeslemetryEnergyInfoEntity,
     TeslemetryEnergyLiveEntity,
@@ -417,7 +416,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Teslemetry sensor platform from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     async_add_entities(
         chain(
