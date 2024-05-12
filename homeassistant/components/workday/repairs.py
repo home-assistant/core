@@ -139,7 +139,7 @@ class HolidayFixFlow(RepairsFlow):
                 await self.hass.async_add_executor_job(
                     validate_custom_dates, new_options
                 )
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 errors["remove_holidays"] = "remove_holiday_error"
             else:
                 self.hass.config_entries.async_update_entry(

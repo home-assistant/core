@@ -192,7 +192,7 @@
     "service_not_found": {
       "message": "Service {domain}.{service} not found."
     },
-    "service_does_not_supports_reponse": {
+    "service_does_not_support_response": {
       "message": "A service which does not return responses can't be called with {return_response}."
     },
     "service_lacks_response_request": {

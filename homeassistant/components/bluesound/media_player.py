@@ -934,7 +934,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         selected_source = items[0]
         url = f"Play?url={selected_source['url']}&preset_id&image={selected_source['image']}"
 
-        if "is_raw_url" in selected_source and selected_source["is_raw_url"]:
+        if selected_source.get("is_raw_url"):
             url = selected_source["url"]
 
         return await self.send_bluesound_command(url)

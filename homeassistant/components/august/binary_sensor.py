@@ -22,14 +22,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from . import AugustData
-from .const import ACTIVITY_UPDATE_INTERVAL, DOMAIN
+from . import AugustConfigEntry, AugustData
+from .const import ACTIVITY_UPDATE_INTERVAL
 from .entity import AugustEntityMixin
 
 _LOGGER = logging.getLogger(__name__)
@@ -154,11 +153,11 @@ SENSOR_TYPES_DOORBELL: tuple[AugustDoorbellBinarySensorEntityDescription, ...] =
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AugustConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the August binary sensors."""
-    data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     entities: list[BinarySensorEntity] = []
 
     for door in data.locks:

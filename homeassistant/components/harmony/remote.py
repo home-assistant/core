@@ -138,7 +138,7 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
 
         _LOGGER.debug("%s: Harmony Hub added", self._data.name)
 
-        self.async_on_remove(self._clear_disconnection_delay)
+        self.async_on_remove(self._async_clear_disconnection_delay)
         self._setup_callbacks()
 
         self.async_on_remove(

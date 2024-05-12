@@ -76,7 +76,8 @@ async def test_run_callback_threadsafe(hass: HomeAssistant) -> None:
         nonlocal it_ran
         it_ran = True
 
-    assert hasync.run_callback_threadsafe(hass.loop, callback)
+    with patch.dict(hass.loop.__dict__, {"_thread_ident": -1}):
+        assert hasync.run_callback_threadsafe(hass.loop, callback)
     assert it_ran is False
 
     # Verify that async_block_till_done will flush
@@ -95,6 +96,7 @@ async def test_callback_is_always_scheduled(hass: HomeAssistant) -> None:
     hasync.shutdown_run_callback_threadsafe(hass.loop)
 
     with (
+        patch.dict(hass.loop.__dict__, {"_thread_ident": -1}),
         patch.object(hass.loop, "call_soon_threadsafe") as mock_call_soon_threadsafe,
         pytest.raises(RuntimeError),
     ):

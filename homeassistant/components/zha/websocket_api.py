@@ -1314,7 +1314,7 @@ def async_load_api(hass: HomeAssistant) -> None:
                 manufacturer=manufacturer,
             )
         else:
-            raise ValueError(f"Device with IEEE {str(ieee)} not found")
+            raise ValueError(f"Device with IEEE {ieee!s} not found")
 
         _LOGGER.debug(
             (
@@ -1394,7 +1394,7 @@ def async_load_api(hass: HomeAssistant) -> None:
                 manufacturer,
             )
         else:
-            raise ValueError(f"Device with IEEE {str(ieee)} not found")
+            raise ValueError(f"Device with IEEE {ieee!s} not found")
 
     async_register_admin_service(
         hass,
