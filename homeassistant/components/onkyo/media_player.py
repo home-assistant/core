@@ -17,7 +17,7 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -25,7 +25,6 @@ from homeassistant.core import (
     SupportsResponse,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -34,7 +33,6 @@ from .const import (
     ATTR_PRESET,
     ATTR_VIDEO_INFORMATION,
     ATTR_VIDEO_OUT,
-    BRAND_NAME,
     CONF_MAXIMUM_VOLUME,
     CONF_MAXIMUM_VOLUME_DEFAULT,
     CONF_RECEIVER_MAXIMUM_VOLUME,
@@ -43,9 +41,11 @@ from .const import (
     CONF_SOURCES_DEFAULT,
     DEFAULT_PLAYABLE_SOURCES,
     HDMI_OUTPUT_ACCEPTED_VALUES,
+    MAXIMUM_UPDATE_RETRIES,
     SERVICE_EISCP_COMMAND,
     SERVICE_SELECT_HDMI_OUTPUT,
 )
+from .entity import OnkyoEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,7 +66,6 @@ SUPPORT_ONKYO_WO_VOLUME = (
     MediaPlayerEntityFeature.TURN_ON
     | MediaPlayerEntityFeature.TURN_OFF
     | MediaPlayerEntityFeature.SELECT_SOURCE
-    | MediaPlayerEntityFeature.PLAY
     | MediaPlayerEntityFeature.PLAY_MEDIA
 )
 SUPPORT_ONKYO = (
@@ -143,18 +142,22 @@ async def async_setup_entry(
         entity_ids = call.data[ATTR_ENTITY_ID]
         devices = [d for d in hosts if d.entity_id in entity_ids]
 
-        test = ""
+        responses = []
         for device in devices:
             if call.service == SERVICE_SELECT_HDMI_OUTPUT:
                 device.select_output(call.data[ATTR_HDMI_OUTPUT])
 
-            # TEDOEN: try catch fouten
             if call.service == SERVICE_EISCP_COMMAND:
-                test = device.command(call.data["command"])
-                _LOGGER.warning(test)
+                response = device.command(call.data["command"])
+                if not response:
+                    response = "Request failed"
+                else:
+                    key, value = response
+                    response = f"{key}: {value}"
+                responses.append(response)
 
         if call.return_response:
-            return {"responses": [test]}
+            return {"responses": responses}
 
         return None
 
@@ -173,11 +176,6 @@ async def async_setup_entry(
         schema=ONKYO_EISCP_COMMAND_SCHEMA,
     )
 
-    # service: media_player.onkyo_eiscp_command
-    # entity_id: media_player.tx_nr525_0009b0ce8acf
-    # data:
-    #   command: volume=query
-
     host = entry.data[CONF_HOST]
     try:
         receiver = eiscp.eISCP(host)
@@ -191,6 +189,7 @@ async def async_setup_entry(
         _LOGGER.error("Unable to connect to receiver at %s", host)
         raise
 
+    # TEDOEN: listening modes
     #         zones = determine_zones(receiver)
 
     #         # Add Zone2 if available
@@ -300,29 +299,25 @@ async def async_setup_entry(
 #     add_entities(hosts, True)
 
 
-class OnkyoDevice(MediaPlayerEntity):
+class OnkyoDevice(OnkyoEntity, MediaPlayerEntity):
     """Representation of an Onkyo device."""
 
     _attr_supported_features = SUPPORT_ONKYO
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
-    _attr_has_entity_name = True
+
     _attr_name = None
 
     def __init__(self, entry: ConfigEntry, receiver: eiscp.eISCP) -> None:
         """Initialize the Onkyo Receiver."""
+        super().__init__(entry.data)
+
         self._receiver = receiver
+        self._failed_updates = 0
+
+        self._model_name = entry.data[CONF_MODEL]
         self._attr_is_volume_muted = False
         self._attr_volume_level = 0
         self._attr_state = MediaPlayerState.OFF
-        self._model_name = receiver.info["model_name"]
-
-        self._attr_unique_id = str(entry.unique_id)
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
-            manufacturer=BRAND_NAME,
-            model=self._model_name,
-            name=entry.data[CONF_NAME],
-        )
 
         self._max_volume = (
             entry.options.get(CONF_MAXIMUM_VOLUME) or CONF_MAXIMUM_VOLUME_DEFAULT
@@ -339,26 +334,8 @@ class OnkyoDevice(MediaPlayerEntity):
 
         self._attr_extra_state_attributes = {}
         self._hdmi_out_supported = True
-        self._hdmi_out_supported = False
         self._audio_info_supported = True
         self._video_info_supported = True
-
-    # TEDOEN: check to implement disjointed flow (ask, receive random answer later on_message)
-    # TEDOEN: disabled the entities to update when disabled to reduce network traffic
-    # async def async_added_to_hass(self) -> None:
-    #     """Set config parameter when add to hass."""
-    #     await super().async_added_to_hass()
-
-    #     _LOGGER.info("ONKYO: added to hass")
-
-    # self._process_config()
-    # self.async_on_remove(
-    #     async_dispatcher_connect(
-    #         self.hass,
-    #         f"{SIGNAL_CONFIG_ENTITY}_{self._entry_id}",
-    #         self._process_config,
-    #     )
-    # )
 
     def command(self, command):
         """Run an eiscp command and catch connection errors."""
@@ -379,7 +356,13 @@ class OnkyoDevice(MediaPlayerEntity):
         status = self.command("system-power query")
 
         if not status:
+            self._failed_updates += 1
+            if self._failed_updates > MAXIMUM_UPDATE_RETRIES:
+                self._attr_available = False
             return
+
+        self._failed_updates = 0
+        self._attr_available = True
         if status[1] == "on":
             self._attr_state = MediaPlayerState.ON
         else:
@@ -400,6 +383,7 @@ class OnkyoDevice(MediaPlayerEntity):
             hdmi_out_raw = self.command("hdmi-output-selector query")
         else:
             hdmi_out_raw = []
+
         preset_raw = self.command("preset query")
         if self._audio_info_supported:
             audio_information_raw = self.command("audio-information query")
@@ -429,6 +413,7 @@ class OnkyoDevice(MediaPlayerEntity):
         )
 
         if not hdmi_out_raw:
+            self._hdmi_out_supported = False
             return
         self._attr_extra_state_attributes[ATTR_VIDEO_OUT] = ",".join(hdmi_out_raw[1])
         if hdmi_out_raw[1] == "N/A":

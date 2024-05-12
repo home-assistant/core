@@ -14,7 +14,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
     OptionsFlowWithConfigEntry,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_NAME, CONF_PORT
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import ObjectSelector
@@ -51,8 +51,18 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_devices: dict[str, eiscp.eISCP] = {}
 
-    def _get_device_name(self, receiver: eiscp.eISCP) -> str:
-        return f'{receiver.info["model_name"]} {receiver.info[EISCP_IDENTIFIER]}'
+    def _createOnkyoEntry(self, receiver: eiscp.eISCP):
+        name = f"{receiver.info[EISCP_MODEL_NAME]} {receiver.info[EISCP_IDENTIFIER]}"
+        return self.async_create_entry(
+            title=name,
+            data={
+                CONF_HOST: receiver.host,
+                CONF_PORT: receiver.port,
+                CONF_NAME: name,
+                CONF_MODEL: receiver.info[EISCP_MODEL_NAME],
+                CONF_MAC: receiver.info[EISCP_IDENTIFIER],
+            },
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -80,14 +90,8 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._abort_if_unique_id_configured(
                         updates={CONF_HOST: user_input[CONF_HOST]}
                     )
+                    return self._createOnkyoEntry(receiver)
 
-                    return self.async_create_entry(
-                        title=self._get_device_name(receiver),
-                        data={
-                            CONF_HOST: user_input[CONF_HOST],
-                            CONF_NAME: self._get_device_name(receiver),
-                        },
-                    )
                 finally:
                     receiver.disconnect()
 
@@ -113,10 +117,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                 receiver.info[EISCP_IDENTIFIER], raise_on_progress=False
             )
 
-            name = self._get_device_name(receiver)
-            return self.async_create_entry(
-                title=name, data={CONF_HOST: receiver.host, CONF_NAME: name}
-            )
+            return self._createOnkyoEntry(receiver)
 
         current_unique_ids = self._async_current_ids()
         current_hosts = {

@@ -36,6 +36,8 @@ CONF_EISCP_DEFAULT = {
     ]
 }
 
+OPTION_EISCP = "eiscp"
+
 ATTR_AUDIO_INFORMATION = "audio_information"
 ATTR_HDMI_OUTPUT = "hdmi_output"
 ATTR_EISCP_COMMAND = "eiscp_command"
@@ -46,6 +48,7 @@ ATTR_VIDEO_OUT = "video_out"
 DEFAULT_PLAYABLE_SOURCES = ("fm", "am", "tuner")
 
 TIMEOUT_MESSAGE = "Timeout waiting for response."
+MAXIMUM_UPDATE_RETRIES = 3
 
 SERVICE_EISCP_COMMAND = "onkyo_eiscp_command"
 SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
