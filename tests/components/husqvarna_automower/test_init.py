@@ -48,11 +48,9 @@ async def test_load_missing_scope(
     mock_automower_client: AsyncMock,
     mock_missing_scope_config_entry: MockConfigEntry,
 ) -> None:
-    """Test load and unload entry."""
+    """Test if the entry still gets loaded with the missing token scope."""
     await setup_integration(hass, mock_missing_scope_config_entry)
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-
-    assert entry.state is ConfigEntryState.LOADED
+    assert mock_missing_scope_config_entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(
