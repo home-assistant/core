@@ -35,6 +35,7 @@ TEST_WEIGHTS = {
     "tests/components/dlna_dmr/test_init.py": 2,
     "tests/components/hue/test_light_v2.py": 3,
     "tests/components/husqvarna_automower/test_number.py": 2,
+    "tests/components/insteon/test_api_aldb.py": 2,
     "tests/components/insteon/test_api_scenes.py": 5,
     "tests/components/lamarzocco/test_diagnostics.py": 2,
     "tests/components/local_calendar/test_diagnostics.py": 2,
