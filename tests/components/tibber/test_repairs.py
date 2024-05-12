@@ -54,8 +54,8 @@ async def test_repair_flow(
     resp = await http_client.post(url)
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
+    # Assert the confirm step in repair flow (create_entry)
     assert data["type"] == "create_entry"
-    # Test confirm step in repair flow
     await hass.async_block_till_done()
 
     # Assert the issue is no longer present
