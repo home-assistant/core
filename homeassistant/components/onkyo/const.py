@@ -26,6 +26,13 @@ CONF_SOURCES_DEFAULT = {
     "video7": "Video 7",
     "fm": "Radio",
 }
+CONF_SOUND_MODE_LIST = "sound_mode_list"
+CONF_SOUND_MODE_LIST_DEFAULT = {
+    "pure-audio": "Pure audio",
+    "direct": "Direct",
+    "theater-dimensional": "Theater dimensional",
+    "all-ch-stereo": "All channel stereo",
+}
 CONF_EISCP = "eiscp"
 CONF_EISCP_DEFAULT = {
     "audyssey-dynamic-volume": [

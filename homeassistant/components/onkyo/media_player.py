@@ -37,6 +37,8 @@ from .const import (
     CONF_MAXIMUM_VOLUME_DEFAULT,
     CONF_RECEIVER_MAXIMUM_VOLUME,
     CONF_RECEIVER_MAXIMUM_VOLUME_DEFAULT,
+    CONF_SOUND_MODE_LIST,
+    CONF_SOUND_MODE_LIST_DEFAULT,
     CONF_SOURCES,
     CONF_SOURCES_DEFAULT,
     DEFAULT_PLAYABLE_SOURCES,
@@ -65,6 +67,7 @@ ONKYO_EISCP_COMMAND_SCHEMA = vol.Schema(
 SUPPORT_ONKYO_WO_VOLUME = (
     MediaPlayerEntityFeature.TURN_ON
     | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.SELECT_SOUND_MODE
     | MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.PLAY_MEDIA
 )
@@ -328,10 +331,16 @@ class OnkyoDevice(OnkyoEntity, MediaPlayerEntity):
         )
         self._source_mapping = entry.options.get(CONF_SOURCES) or CONF_SOURCES_DEFAULT
         self._attr_source_list = list(self._source_mapping.values())
-        self._reverse_mapping = {
+        self._reverse_source_mapping = {
             value: key for key, value in self._source_mapping.items()
         }
-
+        self._sound_mode_list_mapping = (
+            entry.options.get(CONF_SOUND_MODE_LIST) or CONF_SOUND_MODE_LIST_DEFAULT
+        )
+        self._attr_sound_mode_list = list(self._sound_mode_list_mapping.values())
+        self._reverse_sound_mode_list_mapping = {
+            value: key for key, value in self._sound_mode_list_mapping.items()
+        }
         self._attr_extra_state_attributes = {}
         self._hdmi_out_supported = True
         self._audio_info_supported = True
@@ -376,6 +385,7 @@ class OnkyoDevice(OnkyoEntity, MediaPlayerEntity):
         volume_raw = self.command("volume query")
         mute_raw = self.command("audio-muting query")
         current_source_raw = self.command("input-selector query")
+        current_sound_mode_raw = self.command("listening-mode query")
         # If the following command is sent to a device with only one HDMI out,
         # the display shows 'Not Available'.
         # We avoid this by checking if HDMI out is supported
@@ -400,6 +410,13 @@ class OnkyoDevice(OnkyoEntity, MediaPlayerEntity):
                 self._attr_source = self._source_mapping[source]
                 break
             self._attr_source = "_".join(sources)
+
+        sound_modes = _parse_onkyo_payload(current_sound_mode_raw)
+        for sound_mode in sound_modes:
+            if sound_mode in self._sound_mode_list_mapping:
+                self._attr_sound_mode = self._sound_mode_list_mapping[sound_mode]
+                break
+            self._attr_sound_mode = "_".join(sound_modes)
 
         if preset_raw and self.source and self.source.lower() == "radio":
             self._attr_extra_state_attributes[ATTR_PRESET] = preset_raw[1]
@@ -460,14 +477,20 @@ class OnkyoDevice(OnkyoEntity, MediaPlayerEntity):
     def select_source(self, source: str) -> None:
         """Set the input source."""
         if self.source_list and source in self.source_list:
-            source = self._reverse_mapping[source]
+            source = self._reverse_source_mapping[source]
         self.command(f"input-selector {source}")
+
+    def select_sound_mode(self, sound_mode: str) -> None:
+        """Set the sound mode."""
+        if self.sound_mode_list and sound_mode in self.sound_mode_list:
+            sound_mode = self._reverse_sound_mode_list_mapping[sound_mode]
+        self.command(f"listening-mode {sound_mode}")
 
     def play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play radio station by preset number."""
-        source = self._reverse_mapping[self._attr_source]
+        source = self._reverse_source_mapping[self._attr_source]
         if media_type.lower() == "radio" and source in DEFAULT_PLAYABLE_SOURCES:
             self.command(f"preset {media_id}")
 

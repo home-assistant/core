@@ -29,6 +29,8 @@ from .const import (
     CONF_MAXIMUM_VOLUME_DEFAULT,
     CONF_RECEIVER_MAXIMUM_VOLUME,
     CONF_RECEIVER_MAXIMUM_VOLUME_DEFAULT,
+    CONF_SOUND_MODE_LIST,
+    CONF_SOUND_MODE_LIST_DEFAULT,
     CONF_SOURCES,
     CONF_SOURCES_DEFAULT,
     DOMAIN,
@@ -174,6 +176,12 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 return self.async_abort(reason="invalid_sources")
 
             try:
+                SCHEMA_SOUND_MODE_LIST = vol.Schema({str: str})
+                SCHEMA_SOUND_MODE_LIST(user_input.get(CONF_SOUND_MODE_LIST))
+            except vol.error.MultipleInvalid:
+                return self.async_abort(reason="invalid_sound_mode_list")
+
+            try:
                 SCHEMA_EISCP = vol.Schema({str: [str]})
                 SCHEMA_EISCP(user_input.get(CONF_EISCP))
             except vol.error.MultipleInvalid:
@@ -192,6 +200,9 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 ): vol.All(cv.positive_int, vol.In([80, 200])),
                 vol.Required(
                     CONF_SOURCES, default=CONF_SOURCES_DEFAULT
+                ): ObjectSelector(),
+                vol.Required(
+                    CONF_SOUND_MODE_LIST, default=CONF_SOUND_MODE_LIST_DEFAULT
                 ): ObjectSelector(),
                 vol.Required(CONF_EISCP, default=CONF_EISCP_DEFAULT): ObjectSelector(),
             }
