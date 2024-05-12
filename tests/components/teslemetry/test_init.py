@@ -10,6 +10,7 @@ from tesla_fleet_api.exceptions import (
 )
 
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
+from homeassistant.components.teslemetry.models import TeslemetryData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -30,9 +31,11 @@ async def test_load_unload(hass: HomeAssistant) -> None:
 
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.LOADED
+    assert isinstance(entry.runtime_data, TeslemetryData)
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.NOT_LOADED
+    assert not hasattr(entry, "runtime_data")
 
 
 @pytest.mark.parametrize(("side_effect", "state"), ERRORS)
