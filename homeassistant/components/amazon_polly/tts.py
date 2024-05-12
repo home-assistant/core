@@ -128,7 +128,9 @@ def get_engine(
         for engine in voice.get("SupportedEngines"):
             all_engines[engine].add(voice_id)
 
-    return AmazonPollyProvider(polly_client, config, supported_languages, all_voices, all_engines)
+    return AmazonPollyProvider(
+        polly_client, config, supported_languages, all_voices, all_engines
+    )
 
 
 class AmazonPollyProvider(Provider):
