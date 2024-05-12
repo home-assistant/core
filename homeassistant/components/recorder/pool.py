@@ -93,7 +93,10 @@ class RecorderPool(SingletonThreadPool, NullPool):
         try:
             asyncio.get_running_loop()
         except RuntimeError:
+            # Not in an event loop but not in the recorder or worker thread
+            # which is allowed but discouraged since its much slower
             return self._do_get_db_connection_protected()
+        # In the event loop, raise an exception
         raise_for_blocking_call(
             self._do_get_db_connection_protected,
             strict=True,
