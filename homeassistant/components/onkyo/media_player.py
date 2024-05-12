@@ -350,12 +350,14 @@ class OnkyoDevice(OnkyoEntity, MediaPlayerEntity):
         """Run an eiscp command and catch connection errors."""
         try:
             result = self._receiver.command(command)
-        except (ValueError, OSError, AttributeError, AssertionError):
+        except (ValueError, OSError, AttributeError, AssertionError, TypeError):
             if self._receiver.command_socket:
                 self._receiver.command_socket = None
-                _LOGGER.debug("Resetting connection to %s", self.name)
+                _LOGGER.debug("Resetting connection to %s", self.unique_id)
             else:
-                _LOGGER.info("%s is disconnected. Attempting to reconnect", self.name)
+                _LOGGER.info(
+                    "%s is disconnected. Attempting to reconnect", self.unique_id
+                )
             return False
         _LOGGER.debug("Result for %s: %s", command, result)
         return result
