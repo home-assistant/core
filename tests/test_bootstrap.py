@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Generator, Iterable
+import contextlib
 import glob
 import os
 import sys
@@ -33,6 +34,13 @@ from .common import (
 )
 
 VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
+
+
+@pytest.fixture(autouse=True)
+def disable_installed_check() -> Generator[None, None, None]:
+    """Disable package installed check."""
+    with patch("homeassistant.util.package.is_installed", return_value=True):
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -686,11 +694,11 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
     log_no_color = Mock()
 
     async def _async_setup_that_blocks_startup(*args, **kwargs):
-        await asyncio.sleep(0.6)
+        await asyncio.sleep(0.2)
         return True
 
     with (
-        patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.3),
+        patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.1),
         patch.object(bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.05),
         patch(
             "homeassistant.components.frontend.async_setup",
@@ -957,10 +965,10 @@ async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(
     def gen_domain_setup(domain):
         async def async_setup(hass, config):
             order.append(domain)
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.05)
 
             async def _background_task():
-                await asyncio.sleep(0.2)
+                await asyncio.sleep(0.1)
 
             await hass.async_create_task(_background_task())
             return True
@@ -992,7 +1000,7 @@ async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(
     async_dispatcher_connect(
         hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, _bootstrap_integrations
     )
-    with patch.object(bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.05):
+    with patch.object(bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.025):
         await bootstrap._async_set_up_integrations(
             hass, {"normal_integration": {}, "an_after_dep": {}}
         )
@@ -1012,13 +1020,16 @@ async def test_warning_logged_on_wrap_up_timeout(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we log a warning on bootstrap timeout."""
+    task: asyncio.Task | None = None
 
     def gen_domain_setup(domain):
         async def async_setup(hass, config):
-            async def _not_marked_background_task():
-                await asyncio.sleep(0.2)
+            nonlocal task
 
-            hass.async_create_task(_not_marked_background_task())
+            async def _not_marked_background_task():
+                await asyncio.sleep(2)
+
+            task = hass.async_create_task(_not_marked_background_task())
             return True
 
         return async_setup
@@ -1034,8 +1045,10 @@ async def test_warning_logged_on_wrap_up_timeout(
 
     with patch.object(bootstrap, "WRAP_UP_TIMEOUT", 0):
         await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
-        await hass.async_block_till_done()
 
+    task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await task
     assert "Setup timed out for bootstrap" in caplog.text
     assert "waiting on" in caplog.text
     assert "_not_marked_background_task" in caplog.text
