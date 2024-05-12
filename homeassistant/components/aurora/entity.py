@@ -1,14 +1,10 @@
 """The aurora component."""
 
-import logging
-
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, DOMAIN
 from .coordinator import AuroraDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class AuroraEntity(CoordinatorEntity[AuroraDataUpdateCoordinator]):
