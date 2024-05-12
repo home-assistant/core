@@ -16,6 +16,9 @@ from typing import Final
 # the average test. The average test is 1.
 #
 # These tests are generally the slowest tests in the test suite.
+# Some of these tests have unmocked calls or other problems that
+# make them slow. Some of them are just very large.
+#
 # If they are sped up, the weights should be adjusted or removed.
 #
 TEST_WEIGHTS = {
