@@ -1,6 +1,9 @@
 """Husqvarna Automower lawn mower entity."""
 
+from collections.abc import Callable, Coroutine
+import functools
 import logging
+from typing import Any
 
 from aioautomower.exceptions import ApiException
 from aioautomower.model import MowerActivities, MowerStates
@@ -41,6 +44,23 @@ PAUSED_STATES = [
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def handle_sending_exception(
+    func: Callable[..., Coroutine[Any, Any, None]],
+) -> Callable[..., Coroutine[Any, Any, None]]:
+    """Handle exceptions while sending a command."""
+
+    @functools.wraps(func)
+    async def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
+        try:
+            return await func(self, *args, **kwargs)
+        except ApiException as exception:
+            raise HomeAssistantError(
+                f"Command couldn't be sent to the command queue: {exception}"
+            ) from exception
+
+    return wrapper
 
 
 async def async_setup_entry(
@@ -99,47 +119,27 @@ class AutomowerLawnMowerEntity(AutomowerControlEntity, LawnMowerEntity):
             return LawnMowerActivity.DOCKED
         return LawnMowerActivity.ERROR
 
+    @handle_sending_exception
     async def async_start_mowing(self) -> None:
         """Resume schedule."""
-        try:
-            await self.coordinator.api.commands.resume_schedule(self.mower_id)
-        except ApiException as exception:
-            raise HomeAssistantError(
-                f"Command couldn't be sent to the command queue: {exception}"
-            ) from exception
+        await self.coordinator.api.commands.resume_schedule(self.mower_id)
 
+    @handle_sending_exception
     async def async_pause(self) -> None:
         """Pauses the mower."""
-        try:
-            await self.coordinator.api.commands.pause_mowing(self.mower_id)
-        except ApiException as exception:
-            raise HomeAssistantError(
-                f"Command couldn't be sent to the command queue: {exception}"
-            ) from exception
+        await self.coordinator.api.commands.pause_mowing(self.mower_id)
 
+    @handle_sending_exception
     async def async_dock(self) -> None:
         """Parks the mower until next schedule."""
-        try:
-            await self.coordinator.api.commands.park_until_next_schedule(self.mower_id)
-        except ApiException as exception:
-            raise HomeAssistantError(
-                f"Command couldn't be sent to the command queue: {exception}"
-            ) from exception
+        await self.coordinator.api.commands.park_until_next_schedule(self.mower_id)
 
+    @handle_sending_exception
     async def async_start_for(self, duration: int) -> None:
         """Let the mower mow for a given time."""
-        try:
-            await self.coordinator.api.commands.start_for(self.mower_id, duration)
-        except ApiException as exception:
-            raise HomeAssistantError(
-                f"Command couldn't be sent to the command queue: {exception}"
-            ) from exception
+        await self.coordinator.api.commands.start_for(self.mower_id, duration)
 
+    @handle_sending_exception
     async def async_park_for(self, duration: int) -> None:
         """Let the mower park for a given time."""
-        try:
-            await self.coordinator.api.commands.park_for(self.mower_id, duration)
-        except ApiException as exception:
-            raise HomeAssistantError(
-                f"Command couldn't be sent to the command queue: {exception}"
-            ) from exception
+        await self.coordinator.api.commands.park_for(self.mower_id, duration)
