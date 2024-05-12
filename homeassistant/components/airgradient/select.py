@@ -37,8 +37,8 @@ CONFIG_CONTROL_ENTITY = AirGradientSelectEntityDescription(
 
 PROTECTED_SELECT_TYPES: tuple[AirGradientSelectEntityDescription, ...] = (
     AirGradientSelectEntityDescription(
-        key="temperature_unit",
-        translation_key="temperature_unit",
+        key="display_temperature_unit",
+        translation_key="display_temperature_unit",
         options=[x.value for x in TemperatureUnit],
         value_fn=lambda config: config.temperature_unit,
         set_value_fn=lambda client, value: client.set_temperature_unit(
@@ -103,5 +103,8 @@ class AirGradientProtectedSelect(AirGradientSelect):
             self.coordinator.data.configuration_control
             is not ConfigurationControl.LOCAL
         ):
-            raise ServiceValidationError("Configuration control is not set to local")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_local_configuration",
+            )
         await super().async_select_option(option)
