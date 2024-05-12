@@ -444,7 +444,7 @@ def music_library_browse_categories() -> list[MockMusicServiceItem]:
     return list_from_json_fixture("music_library_categories.json")
 
 
-@pytest.fixture(name="music_library)
+@pytest.fixture(name="music_library")
 def music_library_fixture(music_library_browse_categories):
     """Create music_library fixture."""
     music_library = MagicMock()
