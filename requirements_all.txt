@@ -1167,10 +1167,7 @@ isal==1.6.1
 ismartgate==5.0.1
 
 # homeassistant.components.abode
-jaraco.abode==3.3.0
-
-# homeassistant.components.abode
-jaraco.functools==3.9.0
+jaraco.abode==5.1.2
 
 # homeassistant.components.jellyfin
 jellyfin-apiclient-python==1.9.2
