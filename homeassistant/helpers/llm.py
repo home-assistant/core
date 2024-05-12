@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant.components.weather.intent import INTENT_GET_WEATHER
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.json import JsonObjectType
 
 from . import intent
 
@@ -31,9 +32,6 @@ class ToolInput:
     context: Context | None
     user_prompt: str | None
     language: str | None
-    agent_id: str | None
-    conversation_id: str | None
-    device_id: str | None
     assistant: str | None
 
 
@@ -45,7 +43,9 @@ class Tool:
     parameters: vol.Schema = vol.Schema({})
 
     @abstractmethod
-    async def async_call(self, hass: HomeAssistant, tool_input: ToolInput) -> Any:
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput
+    ) -> JsonObjectType:
         """Call the tool."""
         raise NotImplementedError
 
@@ -63,7 +63,7 @@ def async_get_tools(hass: HomeAssistant) -> Iterable[Tool]:
 
 
 @callback
-async def async_call_tool(hass: HomeAssistant, tool_input: ToolInput) -> Any:
+async def async_call_tool(hass: HomeAssistant, tool_input: ToolInput) -> JsonObjectType:
     """Call a LLM tool, validate args and return the response."""
     for tool in async_get_tools(hass):
         if tool.name == tool_input.tool_name:
@@ -94,7 +94,9 @@ class IntentTool(Tool):
         self.description = f"Execute Home Assistant {self.name} intent"
         self.parameters = intent_handler.effective_slot_schema
 
-    async def async_call(self, hass: HomeAssistant, tool_input: ToolInput) -> Any:
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput
+    ) -> JsonObjectType:
         """Handle the intent."""
         slots = {key: {"value": val} for key, val in tool_input.tool_args.items()}
 
