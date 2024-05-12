@@ -15,6 +15,9 @@ from typing import Final
 # Test weights are the relative time it takes to run a test vs
 # the average test. The average test is 1.
 #
+# These tests are generally the slowest tests in the test suite.
+# If they are sped up, the weights should be adjusted or removed.
+#
 TEST_WEIGHTS = {
     "tests/test_circular_imports.py": 40,
     "tests/test_bootstrap.py": 2,
