@@ -519,20 +519,20 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     @property
     def swing_mode(self) -> str | None:
         """Active swing mode for the device."""
-        some_tuple = (
+        swing_modes_tuple = (
             self._current_tado_swing_mode,
             self._current_tado_vertical_swing,
             self._current_tado_horizontal_swing,
         )
-        if some_tuple == (TADO_SWING_OFF, TADO_SWING_OFF, TADO_SWING_OFF):
+        if swing_modes_tuple == (TADO_SWING_OFF, TADO_SWING_OFF, TADO_SWING_OFF):
             return TADO_TO_HA_SWING_MODE_MAP[TADO_SWING_OFF]
-        if some_tuple == (TADO_SWING_ON, TADO_SWING_OFF, TADO_SWING_OFF):
+        if swing_modes_tuple == (TADO_SWING_ON, TADO_SWING_OFF, TADO_SWING_OFF):
             return TADO_TO_HA_SWING_MODE_MAP[TADO_SWING_ON]
-        if some_tuple == (TADO_SWING_OFF, TADO_SWING_ON, TADO_SWING_OFF):
+        if swing_modes_tuple == (TADO_SWING_OFF, TADO_SWING_ON, TADO_SWING_OFF):
             return SWING_VERTICAL
-        if some_tuple == (TADO_SWING_OFF, TADO_SWING_OFF, TADO_SWING_ON):
+        if swing_modes_tuple == (TADO_SWING_OFF, TADO_SWING_OFF, TADO_SWING_ON):
             return SWING_HORIZONTAL
-        if some_tuple == (TADO_SWING_OFF, TADO_SWING_ON, TADO_SWING_ON):
+        if swing_modes_tuple == (TADO_SWING_OFF, TADO_SWING_ON, TADO_SWING_ON):
             return SWING_BOTH
 
         return TADO_TO_HA_SWING_MODE_MAP[TADO_SWING_OFF]
@@ -600,7 +600,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._current_tado_fan_speed = (
             self._tado_zone_data.current_fan_level
             if self._tado_zone_data.current_fan_level is not None
-            else self._current_tado_fan_speed
+            else self._tado_zone_data.current_fan_speed
         )
 
         self._current_tado_hvac_mode = self._tado_zone_data.current_hvac_mode
