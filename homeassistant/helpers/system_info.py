@@ -29,7 +29,7 @@ def is_official_image() -> bool:
 
 
 @singleton(_DATA_MAC_VER)
-async def get_mac_ver(hass: HomeAssistant) -> str:
+async def async_get_mac_ver(hass: HomeAssistant) -> str:
     """Return the macOS version."""
     return (await hass.async_add_executor_job(platform.mac_ver))[0]
 
