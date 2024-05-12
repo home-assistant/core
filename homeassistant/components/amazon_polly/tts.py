@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import logging
 from collections import defaultdict
+import logging
 from typing import Any, Final
 
 import boto3
