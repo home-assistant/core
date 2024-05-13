@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any, cast
 
 from jaraco.abode.devices.switch import Switch
-from jaraco.abode.helpers.constants import TYPE_SWITCH, TYPE_VALVE
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -16,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import AbodeAutomation, AbodeDevice, AbodeSystem
 from .const import DOMAIN
 
-DEVICE_TYPES = [TYPE_SWITCH, TYPE_VALVE]
+DEVICE_TYPES = ["switch", "valve"]
 
 
 async def async_setup_entry(
