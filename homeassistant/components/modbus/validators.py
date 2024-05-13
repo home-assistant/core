@@ -33,7 +33,6 @@ from .const import (
     CONF_FAN_MODE_REGISTER,
     CONF_FAN_MODE_VALUES,
     CONF_HVAC_MODE_REGISTER,
-    CONF_HVAC_ONOFF_REGISTER,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_RETRIES,
@@ -273,45 +272,6 @@ def duplicate_swing_mode_validator(config: dict[str, Any]) -> dict:
     return config
 
 
-def check_hvac_target_temp_registers(config: dict) -> dict:
-    """Check conflicts among HVAC target temperature registers and HVAC ON/OFF, HVAC register, Fan Modes, Swing Modes."""
-
-    if (
-        CONF_HVAC_MODE_REGISTER in config
-        and config[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS] in config[CONF_TARGET_TEMP]
-    ):
-        wrn = f"{CONF_HVAC_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_HVAC_MODE_REGISTER} is not loaded!"
-        _LOGGER.warning(wrn)
-        del config[CONF_HVAC_MODE_REGISTER]
-    if (
-        CONF_HVAC_ONOFF_REGISTER in config
-        and config[CONF_HVAC_ONOFF_REGISTER] in config[CONF_TARGET_TEMP]
-    ):
-        wrn = f"{CONF_HVAC_ONOFF_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_HVAC_ONOFF_REGISTER} is not loaded!"
-        _LOGGER.warning(wrn)
-        del config[CONF_HVAC_ONOFF_REGISTER]
-    if (
-        CONF_FAN_MODE_REGISTER in config
-        and config[CONF_FAN_MODE_REGISTER][CONF_ADDRESS] in config[CONF_TARGET_TEMP]
-    ):
-        wrn = f"{CONF_FAN_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_FAN_MODE_REGISTER} is not loaded!"
-        _LOGGER.warning(wrn)
-        del config[CONF_FAN_MODE_REGISTER]
-
-    if CONF_SWING_MODE_REGISTER in config:
-        regToTest = (
-            config[CONF_SWING_MODE_REGISTER][CONF_ADDRESS]
-            if isinstance(config[CONF_SWING_MODE_REGISTER][CONF_ADDRESS], int)
-            else config[CONF_SWING_MODE_REGISTER][CONF_ADDRESS][0]
-        )
-        if regToTest in config[CONF_TARGET_TEMP]:
-            wrn = f"{CONF_SWING_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_SWING_MODE_REGISTER} is not loaded!"
-            _LOGGER.warning(wrn)
-            del config[CONF_SWING_MODE_REGISTER]
-
-    return config
-
-
 def register_int_list_validator(value: Any) -> Any:
     """Check if a register (CONF_ADRESS) is an int or a list having only 1 register."""
     if isinstance(value, int) and value >= 0:
@@ -423,6 +383,7 @@ def validate_entity(
         )
     name = f"{component}.{entity[CONF_NAME]}"
     addr = f"{hub_name}{entity[CONF_ADDRESS]}"
+    regCounter = 1
     scan_interval = entity.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     if 0 < scan_interval < 5:
         err = (
@@ -444,12 +405,25 @@ def validate_entity(
     addr += f"_{inx}"
     loc_addr: set[str] = {addr}
     if CONF_TARGET_TEMP in entity:
-        loc_addr.add(f"{hub_name}{entity[CONF_TARGET_TEMP]}_{inx}")
+        if isinstance(entity[CONF_TARGET_TEMP], int):
+            loc_addr.add(f"{hub_name}{entity[CONF_TARGET_TEMP]}_{inx}")
+            regCounter = regCounter + 1
+        else:
+            for reg in entity[CONF_TARGET_TEMP]:
+                loc_addr.add(f"{hub_name}{reg}_{inx}")
+            regCounter = regCounter + len(loc_addr) - 1
     if CONF_HVAC_MODE_REGISTER in entity:
+        regCounter = regCounter + 1
         loc_addr.add(f"{hub_name}{entity[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS]}_{inx}")
     if CONF_FAN_MODE_REGISTER in entity:
-        loc_addr.add(f"{hub_name}{entity[CONF_FAN_MODE_REGISTER][CONF_ADDRESS]}_{inx}")
+        regCounter = regCounter + 1
+        loc_addr.add(
+            f"{hub_name}{entity[CONF_FAN_MODE_REGISTER][CONF_ADDRESS]
+                         if isinstance(entity[CONF_FAN_MODE_REGISTER][CONF_ADDRESS],int)
+                         else entity[CONF_FAN_MODE_REGISTER][CONF_ADDRESS][0]}_{inx}"
+        )
     if CONF_SWING_MODE_REGISTER in entity:
+        regCounter = regCounter + 1
         loc_addr.add(
             f"{hub_name}{entity[CONF_SWING_MODE_REGISTER][CONF_ADDRESS]
                          if isinstance(entity[CONF_SWING_MODE_REGISTER][CONF_ADDRESS],int)
@@ -480,6 +454,18 @@ def validate_entity(
                 "",
             ],
             f"Modbus {hub_name}/{name} is duplicate, second entry not loaded!",
+        )
+        return False
+    if len(loc_addr) != regCounter:
+        modbus_create_issue(
+            hass,
+            "entity_conflict_addresses",
+            [
+                f"{hub_name}/{name}",
+                "",
+                "",
+            ],
+            f"Modbus {hub_name}/{name} has conflicting shared addresses. Entry not loaded!",
         )
         return False
     ent_names.add(name)
