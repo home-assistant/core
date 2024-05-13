@@ -462,7 +462,7 @@ class ConfigEntry(Generic[_DataT]):
 
     @property
     def supports_reconfigure(self) -> bool:
-        """Return if entry supports config options."""
+        """Return if entry supports reconfigure step."""
         if self._supports_reconfigure is None and (
             handler := HANDLERS.get(self.domain)
         ):
@@ -490,7 +490,7 @@ class ConfigEntry(Generic[_DataT]):
             "supports_options": self.supports_options,
             "supports_remove_device": self.supports_remove_device or False,
             "supports_unload": self.supports_unload or False,
-            "supports_reconfigure": self.supports_reconfigure or False,
+            "supports_reconfigure": self.supports_reconfigure,
             "pref_disable_new_entities": self.pref_disable_new_entities,
             "pref_disable_polling": self.pref_disable_polling,
             "disabled_by": self.disabled_by,
