@@ -1,0 +1,133 @@
+# serializer version: 1
+# name: test_sensor[connected_plc_devices-async_get_network_overview-interval2]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Connected PLC devices',
+      'icon': 'mdi:lan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_connected_plc_devices',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_sensor[connected_plc_devices-async_get_network_overview-interval2].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_connected_plc_devices',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:lan',
+    'original_name': 'Connected PLC devices',
+    'platform': 'devolo_home_network',
+    'supported_features': 0,
+    'translation_key': 'connected_plc_devices',
+    'unique_id': '1234567890_connected_plc_devices',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[connected_wifi_clients-async_get_wifi_connected_station-interval0]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Connected Wifi clients',
+      'icon': 'mdi:wifi',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_connected_wifi_clients',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_sensor[connected_wifi_clients-async_get_wifi_connected_station-interval0].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_title_connected_wifi_clients',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:wifi',
+    'original_name': 'Connected Wifi clients',
+    'platform': 'devolo_home_network',
+    'supported_features': 0,
+    'translation_key': 'connected_wifi_clients',
+    'unique_id': '1234567890_connected_wifi_clients',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[neighboring_wifi_networks-async_get_wifi_neighbor_access_points-interval1]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Neighboring Wifi networks',
+      'icon': 'mdi:wifi-marker',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_neighboring_wifi_networks',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_sensor[neighboring_wifi_networks-async_get_wifi_neighbor_access_points-interval1].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_neighboring_wifi_networks',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:wifi-marker',
+    'original_name': 'Neighboring Wifi networks',
+    'platform': 'devolo_home_network',
+    'supported_features': 0,
+    'translation_key': 'neighboring_wifi_networks',
+    'unique_id': '1234567890_neighboring_wifi_networks',
+    'unit_of_measurement': None,
+  })
+# ---

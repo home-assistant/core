@@ -1,0 +1,37 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'device_info': dict({
+      'device_api': True,
+      'features': list([
+        'intmtg1',
+        'led',
+        'reset',
+        'restart',
+        'update',
+        'wifi1',
+      ]),
+      'firmware': '5.6.1',
+      'mt_number': '2730',
+      'plcnet_api': True,
+      'product': 'dLAN pro 1200+ WiFi ac',
+    }),
+    'entry': dict({
+      'data': dict({
+        'ip_address': '192.0.2.1',
+        'password': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'domain': 'devolo_home_network',
+      'entry_id': '123456',
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Mock Title',
+      'unique_id': None,
+      'version': 1,
+    }),
+  })
+# ---

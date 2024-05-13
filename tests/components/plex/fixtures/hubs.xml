@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MediaContainer size="8" allowSync="1" identifier="com.plexapp.plugins.library">
+<Hub hubKey="/library/metadata/1,35" key="/hubs/home/continueWatching" title="Continue Watching" type="mixed" hubIdentifier="home.continue" context="hub.home.continue" size="2" more="1" style="hero" promoted="1">
+
+<Video ratingKey="1" key="/library/metadata/1" guid="plex://movie/5d776b85594b2b001e6dc641" studio="Studio Entertainment" type="movie" title="Movie 1" librarySectionTitle="Movies" librarySectionID="1" librarySectionKey="/library/sections/1" contentRating="R" summary="Some elaborate summary." rating="9.0" audienceRating="9.5"  viewCount="1"  lastViewedAt="1505969509" year="2000" tagline="Witty saying." thumb="/library/metadata/1/thumb/1590245989" art="/library/metadata/1/art/1590245989" duration="9000000" originallyAvailableAt="2000-01-01" addedAt="1377829261" updatedAt="1590245989" audienceRatingImage="rottentomatoes://image.rating.upright" chapterSource="agent" primaryExtraKey="/library/metadata/195540" ratingImage="rottentomatoes://image.rating.ripe">
+<Media aspectRatio="2.35" audioChannels="6" audioCodec="dca" audioProfile="dts" bitrate="7500" container="mkv" duration="9000000" height="544" id="2637" videoCodec="h264" videoFrameRate="24p" videoProfile="high" videoResolution="720" width="1280" />
+<Part audioProfile="dts" container="mkv" duration="9000000" file="/storage/videos/video.mkv" id="4631" key="/library/parts/4631/1215643935/file.mkv" size="8500000000" videoProfile="high" />
+<Stream bitDepth="8" bitrate="6000" chromaLocation="left" chromaSubsampling="4:2:0" codec="h264" codedHeight="544" codedWidth="1280" default="1" displayTitle="720p (H.264)" extendedDisplayTitle="x264 @ 6000 kbps (720p H.264)" frameRate="23.976" hasScalingMatrix="0" height="544" id="21428" index="0" language="English" languageCode="eng" level="51" profile="high" refFrames="8" scanType="progressive" streamType="1" title="x264 @ 6000 kbps" width="1280" />
+<Stream audioChannelLayout="5.1(side)" bitDepth="16" bitrate="1500" channels="6" codec="dca" default="1" displayTitle="English (DTS 5.1)" extendedDisplayTitle="DTS 5.1 @ 1500 kbps (English)" id="21429" index="1" language="English" languageCode="eng" profile="dts" samplingRate="48000" selected="1" streamType="2" title="DTS 5.1 @ 1500 kbps" />
+<Stream codec="srt" default="1" displayTitle="English (SRT)" extendedDisplayTitle="English (SRT)" id="21430" index="2" language="English" languageCode="eng" streamType="3" />
+<Genre count="119" filter="genre=25578" id="25578" tag="Sci-Fi" />
+<Genre count="197" filter="genre=87" id="87" tag="Action" />
+<Director count="4" filter="director=100" id="100" tag="Famous Director" />
+<Writer count="2" filter="writer=50000" id="50000" tag="A Writer" />
+<Producer count="3" filter="producer=2000" id="2000" tag="Dr. Producer" />
+<Country count="452" filter="country=1105" id="1105" tag="USA" />
+<Role count="25" filter="actor=1" id="1" role="Character 1" tag="Actor 1" thumb="http://4.3.2.1/t/p/original/1.jpg" />
+<Role count="2" filter="actor=2" id="2" role="Character 2" tag="Actor 2" thumb="http://4.3.2.1/t/p/original/2.jpg" />
+<Role filter="actor=3" id="3" role="Character 3" tag="Actor 3" thumb="http://4.3.2.1/t/p/original/3.jpg" />
+</Video>
+<Video ratingKey="35" key="/library/metadata/35" parentRatingKey="20" grandparentRatingKey="30" guid="plex://episode/60d5ff1c4a0721002c4e5d75" parentGuid="plex://season/606b5e359efaef002c04bcdd" grandparentGuid="plex://show/5d9c07f7e98e47001eb03fc7" type="episode" title="Episode 5" grandparentKey="/library/metadata/30" parentKey="/library/metadata/20" grandparentTitle="TV Show" parentTitle="Season 1" contentRating="G" summary="Elaborate episode summary." index="5" parentIndex="1" audienceRating="8.0" viewCount="1" lastViewedAt="1631590710" parentYear="2021" thumb="/library/metadata/35/thumb/1631586401" art="/library/metadata/30/art/1630011134" parentThumb="/library/metadata/20/thumb/1630011155" grandparentThumb="/library/metadata/30/thumb/1630011134" grandparentArt="/library/metadata/30/art/1630011134" grandparentTheme="/library/metadata/30/theme/1630011134" duration="3421936" originallyAvailableAt="2021-09-19" addedAt="1631586399" updatedAt="1631586401" audienceRatingImage="themoviedb://image.rating">
+<Media id="396946" duration="3421936" bitrate="14119" width="1920" height="1080" aspectRatio="1.78" audioChannels="6" audioCodec="eac3" videoCodec="h264" videoResolution="1080" container="mkv" videoFrameRate="24p" videoProfile="high">
+<Part id="397384" key="/library/parts/397384/1631586385/file.mkv" duration="3421936" file="/storage/tvshows/TV Show/Season 1/Episode 5.mkv" size="6040228848" container="mkv" videoProfile="high" />
+</Media>
+<Genre tag="Action" />
+<Genre tag="Animated" />
+<Role tag="Some Actor" />
+<Role tag="Another One" />
+</Video>
+</Hub>
+
+<Hub key="/hubs/home/recentlyAdded?type=8" title="Recently Added Music" type="album" hubIdentifier="home.music.recent" context="hub.home.music.recent" size="0" more="0" style="shelf" promoted="1">
+</Hub>
+
+<Hub hubKey="/library/metadata/203184,203180,203181,203182,203183,203178" key="/hubs/home/recentlyAdded?type=13" title="Recently Added Photos" type="photo" hubIdentifier="home.photos.recent" context="hub.home.photos.recent" size="6" more="0" style="shelf" promoted="1">
+<Photo ratingKey="203184" key="/library/metadata/203184" guid="com.plexapp.agents.none://203184?lang=en" type="photo" title="tmpENmh_T" librarySectionTitle="Photos" librarySectionID="11" librarySectionKey="/library/sections/11" summary="" index="1" year="2021" thumb="/library/metadata/203184/thumb/1616695947" originallyAvailableAt="2021-03-25" addedAt="1616695947" updatedAt="1616695947" createdAtAccuracy="local" createdAtTZOffset="-18000">
+</Photo>
+<Photo ratingKey="203180" key="/library/metadata/203180" parentRatingKey="203179" guid="com.plexapp.agents.none://203180?lang=en" type="photo" title="1 (1)" parentKey="/library/metadata/203179" librarySectionTitle="Photos" librarySectionID="11" librarySectionKey="/library/sections/11" summary="" index="1" year="2021" thumb="/library/metadata/203180/thumb/1616695149" originallyAvailableAt="2021-03-20" addedAt="1616694060" updatedAt="1616695149" createdAtAccuracy="local" createdAtTZOffset="-18000">
+</Photo>
+<Photo ratingKey="203181" key="/library/metadata/203181" parentRatingKey="203179" guid="com.plexapp.agents.none://203181?lang=en" type="photo" title="2 (1)" parentKey="/library/metadata/203179" librarySectionTitle="Photos" librarySectionID="11" librarySectionKey="/library/sections/11" summary="" index="1" year="2021" thumb="/library/metadata/203181/thumb/1616695149" originallyAvailableAt="2021-03-20" addedAt="1616694060" updatedAt="1616695149" createdAtAccuracy="local" createdAtTZOffset="-18000">
+</Photo>
+<Photo ratingKey="203182" key="/library/metadata/203182" parentRatingKey="203179" guid="com.plexapp.agents.none://203182?lang=en" type="photo" title="3" parentKey="/library/metadata/203179" librarySectionTitle="Photos" librarySectionID="11" librarySectionKey="/library/sections/11" summary="" index="1" year="2021" thumb="/library/metadata/203182/thumb/1616695149" originallyAvailableAt="2021-03-20" addedAt="1616694060" updatedAt="1616695149" createdAtAccuracy="local" createdAtTZOffset="-18000">
+</Photo>
+<Photo ratingKey="203183" key="/library/metadata/203183" parentRatingKey="203179" guid="com.plexapp.agents.none://203183?lang=en" type="photo" title="4" parentKey="/library/metadata/203179" librarySectionTitle="Photos" librarySectionID="11" librarySectionKey="/library/sections/11" summary="" index="1" year="2021" thumb="/library/metadata/203183/thumb/1616695149" originallyAvailableAt="2021-03-20" addedAt="1616694060" updatedAt="1616695149" createdAtAccuracy="local" createdAtTZOffset="-18000">
+</Photo>
+<Photo ratingKey="203178" key="/library/metadata/203178" guid="com.plexapp.agents.none://203178?lang=en" type="photo" title="tsy-4" librarySectionTitle="Photos" librarySectionID="11" librarySectionKey="/library/sections/11" summary="" index="1" year="2017" thumb="/library/metadata/203178/thumb/1616695149" originallyAvailableAt="2017-04-11" addedAt="1491918998" updatedAt="1616695149" createdAtAccuracy="local" createdAtTZOffset="-18000">
+</Photo>
+</Hub>
+
+<Hub key="/hubs/home/recentlyAdded?type=1&amp;personal=1" title="Recently Added Videos" type="clip" hubIdentifier="home.videos.recent" context="hub.home.videos.recent" size="0" more="0" style="shelf" promoted="1">
+</Hub>
+
+<Hub hubKey="/library/metadata/500,501" key="/playlists/all?type=15&amp;sort=lastViewedAt:desc&amp;playlistType=video,audio" title="Recent Playlists" type="playlist" hubIdentifier="home.playlists" context="hub.home.playlists" size="2" more="0" style="shelf" promoted="1">
+<Playlist ratingKey="500" key="/playlists/500/items" guid="com.plexapp.agents.none://9a8f4a48-dd89-40e0-955b-286285350fdf" type="playlist" title="Playlist 1" summary="" smart="0" playlistType="video" composite="/playlists/500/composite/1597983847" viewCount="2" lastViewedAt="1568512403" duration="5054000" leafCount="1" addedAt="1505969338" updatedAt="1597983847">
+</Playlist>
+<Playlist ratingKey="501" key="/playlists/501/items" guid="com.plexapp.agents.none://9a8f4a48-dd89-40e0-955b-286285350fdf" type="playlist" title="Playlist 2" summary="" smart="0" playlistType="video" composite="/playlists/501/composite/1597983847" viewCount="5" lastViewedAt="1568512403" duration="5054000" leafCount="1" addedAt="1505969339" updatedAt="1597983847">
+</Playlist>
+</Hub>
+</MediaContainer>

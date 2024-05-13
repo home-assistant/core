@@ -1,0 +1,10 @@
+<MediaContainer size="8" allowSync="0" art="/:/resources/movie-fanart.jpg" content="secondary" identifier="com.plexapp.plugins.library" mediaTagPrefix="/system/bundle/media/flags/" mediaTagVersion="1603922053" thumb="/:/resources/video.png" title1="Movies" viewGroup="secondary" viewMode="65592">
+<Directory default="asc" defaultDirection="asc" descKey="titleSort:desc" firstCharacterKey="/library/sections/1/firstCharacter" key="titleSort" title="Title" />
+<Directory defaultDirection="desc" descKey="originallyAvailableAt:desc" key="originallyAvailableAt" title="Release Date" />
+<Directory defaultDirection="desc" descKey="rating:desc" key="rating" title="Critic Rating" />
+<Directory defaultDirection="desc" descKey="audienceRating:desc" key="audienceRating" title="Audience Rating" />
+<Directory defaultDirection="desc" descKey="duration:desc" key="duration" title="Duration" />
+<Directory defaultDirection="desc" descKey="addedAt:desc" key="addedAt" title="Date Added" />
+<Directory defaultDirection="desc" descKey="lastViewedAt:desc" key="lastViewedAt" title="Date Viewed" />
+<Directory defaultDirection="asc" descKey="mediaHeight:desc" key="mediaHeight" title="Resolution" />
+</MediaContainer>

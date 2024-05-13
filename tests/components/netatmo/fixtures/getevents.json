@@ -1,0 +1,151 @@
+{
+  "body": {
+    "home": {
+      "id": "91763b24c43d3e344f424e8b",
+      "events": [
+        {
+          "id": "11111111111111111f7763a6d",
+          "type": "outdoor",
+          "time": 1645794709,
+          "module_id": "12:34:56:00:a5:a4",
+          "video_id": "11111111-2222-3333-4444-b42f0fc4cfad",
+          "video_status": "available",
+          "subevents": [
+            {
+              "id": "11111111-2222-3333-4444-013560107fce",
+              "type": "human",
+              "time": 1645794709,
+              "verified": true,
+              "offset": 0,
+              "snapshot": {
+                "url": "https://netatmocameraimage.blob.core.windows.net/production/000000a722374"
+              },
+              "vignette": {
+                "url": "https://netatmocameraimage.blob.core.windows.net/production/0000009625c0f"
+              },
+              "message": "Person erfasst"
+            },
+            {
+              "id": "11111111-2222-3333-4444-0b0bc962df43",
+              "type": "vehicle",
+              "time": 1645794716,
+              "verified": true,
+              "offset": 15,
+              "snapshot": {
+                "url": "https://netatmocameraimage.blob.core.windows.net/production/00000033f9f96"
+              },
+              "vignette": {
+                "url": "https://netatmocameraimage.blob.core.windows.net/production/000000cba08af"
+              },
+              "message": "Fahrzeug erfasst"
+            },
+            {
+              "id": "11111111-2222-3333-4444-129e72195968",
+              "type": "human",
+              "time": 1645794716,
+              "verified": true,
+              "offset": 15,
+              "snapshot": {
+                "filename": "vod/11111/events/22222/snapshot_129e72195968.jpg"
+              },
+              "vignette": {
+                "filename": "vod/11111/events/22222/vignette_129e72195968.jpg"
+              },
+              "message": "Person erfasst"
+            },
+            {
+              "id": "11111111-2222-3333-4444-dae4d7e4f24e",
+              "type": "human",
+              "time": 1645794718,
+              "verified": true,
+              "offset": 17,
+              "snapshot": {
+                "filename": "vod/11111/events/22222/snapshot_dae4d7e4f24e.jpg"
+              },
+              "vignette": {
+                "filename": "vod/11111/events/22222/vignette_dae4d7e4f24e.jpg"
+              },
+              "message": "Person erfasst"
+            }
+          ]
+        },
+        {
+          "id": "1111111111111111e7e40c353",
+          "type": "connection",
+          "time": 1645784799,
+          "module_id": "12:34:56:00:a5:a4",
+          "message": "Front verbunden"
+        },
+        {
+          "id": "11111111111111144e3115860",
+          "type": "boot",
+          "time": 1645784775,
+          "module_id": "12:34:56:00:a5:a4",
+          "message": "Front gestartet"
+        },
+        {
+          "id": "11111111111111169804049ca",
+          "type": "disconnection",
+          "time": 1645773806,
+          "module_id": "12:34:56:00:a5:a4",
+          "message": "Front getrennt"
+        },
+        {
+          "id": "1111111111111117cb8147ffd",
+          "type": "outdoor",
+          "time": 1645712826,
+          "module_id": "12:34:56:00:a5:a4",
+          "video_id": "11111111-2222-3333-4444-5091e1903f8d",
+          "video_status": "available",
+          "subevents": [
+            {
+              "id": "11111111-2222-3333-4444-b7d28e3ccc38",
+              "type": "human",
+              "time": 1645712826,
+              "verified": true,
+              "offset": 0,
+              "snapshot": {
+                "url": "https://netatmocameraimage.blob.core.windows.net/production/000000a0ca642"
+              },
+              "vignette": {
+                "url": "https://netatmocameraimage.blob.core.windows.net/production/00000031b0ed4"
+              },
+              "message": "Person erfasst"
+            }
+          ]
+        },
+        {
+          "id": "1111111111111119df3d2de6",
+          "type": "person_home",
+          "time": 1645902000,
+          "module_id": "12:34:56:00:f1:62",
+          "message": "Home Assistant Cloud definiert John Doe und Jane Doe als \"Zu Hause\""
+        },
+        {
+          "id": "1111111111111112c91b3628",
+          "type": "person",
+          "time": 1645901266,
+          "module_id": "12:34:56:00:f1:62",
+          "snapshot": {
+            "url": "https://netatmocameraimage.blob.core.windows.net/production/0000081d4f42875d9"
+          },
+          "video_id": "11111111-2222-3333-4444-314d161525db",
+          "video_status": "available",
+          "message": "<b>John Doe</b> gesehen",
+          "person_id": "91827374-7e04-5298-83ad-a0cb8372dff1",
+          "out_of_sight": false
+        },
+        {
+          "id": "1111111111111115166b1283",
+          "type": "tag_open",
+          "time": 1645897638,
+          "module_id": "12:34:56:00:86:99",
+          "message": "Window Hall: immer noch offen"
+        }
+      ]
+    }
+  },
+  "status": "ok",
+  "time_exec": 0.24369096755981445,
+  "time_server": 1645897231
+}

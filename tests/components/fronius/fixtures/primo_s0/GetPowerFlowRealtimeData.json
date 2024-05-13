@@ -1,0 +1,45 @@
+{
+  "Body": {
+    "Data": {
+      "Inverters": {
+        "1": {
+          "DT": 76,
+          "E_Day": 22502,
+          "E_Total": 17114930,
+          "E_Year": 7532753.5,
+          "P": 886
+        },
+        "2": {
+          "DT": 81,
+          "E_Day": 14222,
+          "E_Total": 5795989.5,
+          "E_Year": 3596179.75,
+          "P": 948
+        }
+      },
+      "Site": {
+        "E_Day": 36724,
+        "E_Total": 22910919.5,
+        "E_Year": 11128933.25,
+        "Meter_Location": "load",
+        "Mode": "vague-meter",
+        "P_Akku": null,
+        "P_Grid": 384.93491437299008,
+        "P_Load": -2218.9349143729901,
+        "P_PV": 1834,
+        "rel_Autonomy": 82.652266550064084,
+        "rel_SelfConsumption": 100
+      },
+      "Version": "12"
+    }
+  },
+  "Head": {
+    "RequestArguments": {},
+    "Status": {
+      "Code": 0,
+      "Reason": "",
+      "UserMessage": ""
+    },
+    "Timestamp": "2021-12-09T15:34:06-03:00"
+  }
+}

@@ -1,0 +1,335 @@
+# serializer version: 1
+# name: test_numbers[number.wled_rgb_light_segment_1_intensity-42-intensity]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'WLED RGB Light Segment 1 Intensity',
+      'max': 255,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.wled_rgb_light_segment_1_intensity',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '64',
+  })
+# ---
+# name: test_numbers[number.wled_rgb_light_segment_1_intensity-42-intensity].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.wled_rgb_light_segment_1_intensity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Segment 1 Intensity',
+    'platform': 'wled',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aabbccddeeff_intensity_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[number.wled_rgb_light_segment_1_intensity-42-intensity].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': 'http://127.0.0.1',
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'esp8266',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wled',
+        'aabbccddeeff',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'WLED',
+    'model': 'DIY light',
+    'name': 'WLED RGB Light',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': '0.8.5',
+    'via_device_id': None,
+  })
+# ---
+# name: test_numbers[number.wled_rgb_light_segment_1_speed-42-speed]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'WLED RGB Light Segment 1 Speed',
+      'icon': 'mdi:speedometer',
+      'max': 255,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.wled_rgb_light_segment_1_speed',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '16',
+  })
+# ---
+# name: test_numbers[number.wled_rgb_light_segment_1_speed-42-speed].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.wled_rgb_light_segment_1_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:speedometer',
+    'original_name': 'Segment 1 Speed',
+    'platform': 'wled',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aabbccddeeff_speed_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[number.wled_rgb_light_segment_1_speed-42-speed].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': 'http://127.0.0.1',
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'esp8266',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wled',
+        'aabbccddeeff',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'WLED',
+    'model': 'DIY light',
+    'name': 'WLED RGB Light',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': '0.8.5',
+    'via_device_id': None,
+  })
+# ---
+# name: test_speed_state[number.wled_rgb_light_segment_1_intensity-42-intensity]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'WLED RGB Light Segment 1 Intensity',
+      'max': 255,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.wled_rgb_light_segment_1_intensity',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '64',
+  })
+# ---
+# name: test_speed_state[number.wled_rgb_light_segment_1_intensity-42-intensity].1
+  EntityRegistryEntrySnapshot({
+    '_display_repr': <UndefinedType._singleton: 0>,
+    '_partial_repr': <UndefinedType._singleton: 0>,
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.wled_rgb_light_segment_1_intensity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Segment 1 Intensity',
+    'platform': 'wled',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aabbccddeeff_intensity_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_speed_state[number.wled_rgb_light_segment_1_intensity-42-intensity].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': 'http://127.0.0.1',
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'esp8266',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wled',
+        'aabbccddeeff',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'WLED',
+    'model': 'DIY light',
+    'name': 'WLED RGB Light',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': '0.8.5',
+    'via_device_id': None,
+  })
+# ---
+# name: test_speed_state[number.wled_rgb_light_segment_1_speed-42-speed]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'WLED RGB Light Segment 1 Speed',
+      'icon': 'mdi:speedometer',
+      'max': 255,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.wled_rgb_light_segment_1_speed',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '16',
+  })
+# ---
+# name: test_speed_state[number.wled_rgb_light_segment_1_speed-42-speed].1
+  EntityRegistryEntrySnapshot({
+    '_display_repr': <UndefinedType._singleton: 0>,
+    '_partial_repr': <UndefinedType._singleton: 0>,
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.wled_rgb_light_segment_1_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:speedometer',
+    'original_name': 'Segment 1 Speed',
+    'platform': 'wled',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aabbccddeeff_speed_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_speed_state[number.wled_rgb_light_segment_1_speed-42-speed].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': 'http://127.0.0.1',
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'esp8266',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wled',
+        'aabbccddeeff',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'WLED',
+    'model': 'DIY light',
+    'name': 'WLED RGB Light',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': '0.8.5',
+    'via_device_id': None,
+  })
+# ---

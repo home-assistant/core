@@ -1,0 +1,1800 @@
+[
+  {
+    "aid": 6623462389072572,
+    "services": [
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 37,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue dimmer switch"
+          },
+          {
+            "format": "string",
+            "iid": 35,
+            "perms": ["pr"],
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "value": "RWL021"
+          },
+          {
+            "format": "string",
+            "iid": 34,
+            "perms": ["pr"],
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "value": "Philips"
+          },
+          {
+            "format": "string",
+            "iid": 84,
+            "perms": ["pr"],
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "value": "45.1.17846"
+          },
+          {
+            "format": "string",
+            "iid": 50,
+            "perms": ["pr"],
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "value": "6623462389072572"
+          },
+          {
+            "format": "bool",
+            "iid": 22,
+            "perms": ["pw"],
+            "type": "00000014-0000-1000-8000-0026BB765291"
+          }
+        ],
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 65591,
+            "perms": ["pr"],
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "value": "1.1.0"
+          }
+        ],
+        "iid": 65535,
+        "type": "000000A2-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 644245094436,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue dimmer switch battery"
+          },
+          {
+            "format": "uint8",
+            "iid": 644245094505,
+            "maxValue": 100,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "00000068-0000-1000-8000-0026BB765291",
+            "unit": "percentage",
+            "value": 100
+          },
+          {
+            "format": "uint8",
+            "iid": 644245094522,
+            "maxValue": 1,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "value": 0
+          },
+          {
+            "format": "uint8",
+            "iid": 644245094544,
+            "maxValue": 2,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "0000008F-0000-1000-8000-0026BB765291",
+            "value": 2
+          },
+          {
+            "description": "ID to uniquely identify service within a single accessory",
+            "format": "string",
+            "iid": 644245149880,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "D8B76298-42E7-5FFD-B1D6-1782D9A1F936",
+            "value": "6623462389072572"
+          }
+        ],
+        "iid": 644245094400,
+        "type": "00000096-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 588410585124,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue dimmer switch button 1"
+          },
+          {
+            "format": "uint8",
+            "iid": 588410585204,
+            "maxValue": 0,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "00000073-0000-1000-8000-0026BB765291",
+            "value": null
+          },
+          {
+            "format": "uint8",
+            "iid": 588410585292,
+            "minStep": 1,
+            "minValue": 1,
+            "perms": ["pr"],
+            "type": "000000CB-0000-1000-8000-0026BB765291",
+            "value": 1
+          },
+          {
+            "description": "ID to uniquely identify service within a single accessory",
+            "format": "string",
+            "iid": 588410640568,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "D8B76298-42E7-5FFD-B1D6-1782D9A1F936",
+            "value": "6623462389072572"
+          }
+        ],
+        "iid": 588410585088,
+        "linked": [256],
+        "type": "00000089-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "uint8",
+            "iid": 462,
+            "maxValue": 1,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr"],
+            "type": "000000CD-0000-1000-8000-0026BB765291",
+            "value": 1
+          }
+        ],
+        "iid": 256,
+        "type": "000000CC-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 588410650660,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue dimmer switch button 2"
+          },
+          {
+            "format": "uint8",
+            "iid": 588410650740,
+            "maxValue": 0,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "00000073-0000-1000-8000-0026BB765291",
+            "value": null
+          },
+          {
+            "format": "uint8",
+            "iid": 588410650828,
+            "minStep": 1,
+            "minValue": 1,
+            "perms": ["pr"],
+            "type": "000000CB-0000-1000-8000-0026BB765291",
+            "value": 2
+          },
+          {
+            "description": "ID to uniquely identify service within a single accessory",
+            "format": "string",
+            "iid": 588410706104,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "D8B76298-42E7-5FFD-B1D6-1782D9A1F936",
+            "value": "6623462389072572"
+          }
+        ],
+        "iid": 588410650624,
+        "linked": [256],
+        "type": "00000089-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 588410716196,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue dimmer switch button 3"
+          },
+          {
+            "format": "uint8",
+            "iid": 588410716276,
+            "maxValue": 0,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "00000073-0000-1000-8000-0026BB765291",
+            "value": null
+          },
+          {
+            "format": "uint8",
+            "iid": 588410716364,
+            "minStep": 1,
+            "minValue": 1,
+            "perms": ["pr"],
+            "type": "000000CB-0000-1000-8000-0026BB765291",
+            "value": 3
+          },
+          {
+            "description": "ID to uniquely identify service within a single accessory",
+            "format": "string",
+            "iid": 588410771640,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "D8B76298-42E7-5FFD-B1D6-1782D9A1F936",
+            "value": "6623462389072572"
+          }
+        ],
+        "iid": 588410716160,
+        "linked": [256],
+        "type": "00000089-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 588410781732,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue dimmer switch button 4"
+          },
+          {
+            "format": "uint8",
+            "iid": 588410781812,
+            "maxValue": 0,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "00000073-0000-1000-8000-0026BB765291",
+            "value": null
+          },
+          {
+            "format": "uint8",
+            "iid": 588410781900,
+            "minStep": 1,
+            "minValue": 1,
+            "perms": ["pr"],
+            "type": "000000CB-0000-1000-8000-0026BB765291",
+            "value": 4
+          },
+          {
+            "description": "ID to uniquely identify service within a single accessory",
+            "format": "string",
+            "iid": 588410837176,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "D8B76298-42E7-5FFD-B1D6-1782D9A1F936",
+            "value": "6623462389072572"
+          }
+        ],
+        "iid": 588410781696,
+        "linked": [256],
+        "type": "00000089-0000-1000-8000-0026BB765291"
+      }
+    ]
+  },
+  {
+    "aid": 1,
+    "services": [
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 2,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Philips hue - 482544"
+          },
+          {
+            "format": "string",
+            "iid": 4,
+            "perms": ["pr"],
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "value": "BSB002"
+          },
+          {
+            "format": "string",
+            "iid": 3,
+            "perms": ["pr"],
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "value": "Philips Lighting"
+          },
+          {
+            "format": "string",
+            "iid": 8,
+            "perms": ["pr"],
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "value": "1.32.1932126170"
+          },
+          {
+            "format": "string",
+            "iid": 6,
+            "perms": ["pr"],
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "value": "123456"
+          },
+          {
+            "format": "bool",
+            "iid": 7,
+            "perms": ["pw"],
+            "type": "00000014-0000-1000-8000-0026BB765291"
+          }
+        ],
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 65591,
+            "perms": ["pr"],
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "value": "1.1.0"
+          }
+        ],
+        "iid": 65535,
+        "type": "000000A2-0000-1000-8000-0026BB765291"
+      }
+    ]
+  },
+  {
+    "aid": 6623462378982941,
+    "services": [
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 5,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue white lamp"
+          },
+          {
+            "format": "string",
+            "iid": 4,
+            "perms": ["pr"],
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "value": "LWB010"
+          },
+          {
+            "format": "string",
+            "iid": 3,
+            "perms": ["pr"],
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "value": "Philips"
+          },
+          {
+            "format": "string",
+            "iid": 112,
+            "perms": ["pr"],
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "value": "1.46.13"
+          },
+          {
+            "format": "string",
+            "iid": 11,
+            "perms": ["pr"],
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "value": "6623462378982941"
+          },
+          {
+            "format": "bool",
+            "iid": 6,
+            "perms": ["pw"],
+            "type": "00000014-0000-1000-8000-0026BB765291"
+          }
+        ],
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 65591,
+            "perms": ["pr"],
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "value": "1.1.0"
+          }
+        ],
+        "iid": 65535,
+        "type": "000000A2-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 2817,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue white lamp"
+          },
+          {
+            "format": "bool",
+            "iid": 2822,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "value": false
+          },
+          {
+            "format": "int",
+            "iid": 2823,
+            "maxValue": 100,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000008-0000-1000-8000-0026BB765291",
+            "unit": "percentage",
+            "value": 100
+          },
+          {
+            "description": "ID to uniquely identify service within a single accessory",
+            "format": "string",
+            "iid": 2827,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "D8B76298-42E7-5FFD-B1D6-1782D9A1F936",
+            "value": "6623462378982941"
+          }
+        ],
+        "iid": 2816,
+        "type": "00000043-0000-1000-8000-0026BB765291"
+      }
+    ]
+  },
+  {
+    "aid": 6623462378983942,
+    "services": [
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 5,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue white lamp"
+          },
+          {
+            "format": "string",
+            "iid": 4,
+            "perms": ["pr"],
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "value": "LWB010"
+          },
+          {
+            "format": "string",
+            "iid": 3,
+            "perms": ["pr"],
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "value": "Philips"
+          },
+          {
+            "format": "string",
+            "iid": 112,
+            "perms": ["pr"],
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "value": "1.46.13"
+          },
+          {
+            "format": "string",
+            "iid": 11,
+            "perms": ["pr"],
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "value": "6623462378983942"
+          },
+          {
+            "format": "bool",
+            "iid": 6,
+            "perms": ["pw"],
+            "type": "00000014-0000-1000-8000-0026BB765291"
+          }
+        ],
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 65591,
+            "perms": ["pr"],
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "value": "1.1.0"
+          }
+        ],
+        "iid": 65535,
+        "type": "000000A2-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 2817,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue white lamp"
+          },
+          {
+            "format": "bool",
+            "iid": 2822,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "value": false
+          },
+          {
+            "format": "int",
+            "iid": 2823,
+            "maxValue": 100,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000008-0000-1000-8000-0026BB765291",
+            "unit": "percentage",
+            "value": 100
+          },
+          {
+            "description": "ID to uniquely identify service within a single accessory",
+            "format": "string",
+            "iid": 2827,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "D8B76298-42E7-5FFD-B1D6-1782D9A1F936",
+            "value": "6623462378983942"
+          }
+        ],
+        "iid": 2816,
+        "type": "00000043-0000-1000-8000-0026BB765291"
+      }
+    ]
+  },
+  {
+    "aid": 6623462379123707,
+    "services": [
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 5,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue white lamp"
+          },
+          {
+            "format": "string",
+            "iid": 4,
+            "perms": ["pr"],
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "value": "LWB010"
+          },
+          {
+            "format": "string",
+            "iid": 3,
+            "perms": ["pr"],
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "value": "Philips"
+          },
+          {
+            "format": "string",
+            "iid": 112,
+            "perms": ["pr"],
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "value": "1.46.13"
+          },
+          {
+            "format": "string",
+            "iid": 11,
+            "perms": ["pr"],
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "value": "6623462379123707"
+          },
+          {
+            "format": "bool",
+            "iid": 6,
+            "perms": ["pw"],
+            "type": "00000014-0000-1000-8000-0026BB765291"
+          }
+        ],
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 65591,
+            "perms": ["pr"],
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "value": "1.1.0"
+          }
+        ],
+        "iid": 65535,
+        "type": "000000A2-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 2817,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue white lamp"
+          },
+          {
+            "format": "bool",
+            "iid": 2822,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "value": false
+          },
+          {
+            "format": "int",
+            "iid": 2823,
+            "maxValue": 100,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000008-0000-1000-8000-0026BB765291",
+            "unit": "percentage",
+            "value": 100
+          },
+          {
+            "description": "ID to uniquely identify service within a single accessory",
+            "format": "string",
+            "iid": 2827,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "D8B76298-42E7-5FFD-B1D6-1782D9A1F936",
+            "value": "6623462379123707"
+          }
+        ],
+        "iid": 2816,
+        "type": "00000043-0000-1000-8000-0026BB765291"
+      }
+    ]
+  },
+  {
+    "aid": 6623462379122122,
+    "services": [
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 5,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue white lamp"
+          },
+          {
+            "format": "string",
+            "iid": 4,
+            "perms": ["pr"],
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "value": "LWB010"
+          },
+          {
+            "format": "string",
+            "iid": 3,
+            "perms": ["pr"],
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "value": "Philips"
+          },
+          {
+            "format": "string",
+            "iid": 112,
+            "perms": ["pr"],
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "value": "1.46.13"
+          },
+          {
+            "format": "string",
+            "iid": 11,
+            "perms": ["pr"],
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "value": "6623462379122122"
+          },
+          {
+            "format": "bool",
+            "iid": 6,
+            "perms": ["pw"],
+            "type": "00000014-0000-1000-8000-0026BB765291"
+          }
+        ],
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 65591,
+            "perms": ["pr"],
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "value": "1.1.0"
+          }
+        ],
+        "iid": 65535,
+        "type": "000000A2-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 2817,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue white lamp"
+          },
+          {
+            "format": "bool",
+            "iid": 2822,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "value": false
+          },
+          {
+            "format": "int",
+            "iid": 2823,
+            "maxValue": 100,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000008-0000-1000-8000-0026BB765291",
+            "unit": "percentage",
+            "value": 70
+          },
+          {
+            "description": "ID to uniquely identify service within a single accessory",
+            "format": "string",
+            "iid": 2827,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "D8B76298-42E7-5FFD-B1D6-1782D9A1F936",
+            "value": "6623462379122122"
+          }
+        ],
+        "iid": 2816,
+        "type": "00000043-0000-1000-8000-0026BB765291"
+      }
+    ]
+  },
+  {
+    "aid": 6623462385996792,
+    "services": [
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 5,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue white lamp"
+          },
+          {
+            "format": "string",
+            "iid": 4,
+            "perms": ["pr"],
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "value": "LWB010"
+          },
+          {
+            "format": "string",
+            "iid": 3,
+            "perms": ["pr"],
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "value": "Philips"
+          },
+          {
+            "format": "string",
+            "iid": 112,
+            "perms": ["pr"],
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "value": "1.46.13"
+          },
+          {
+            "format": "string",
+            "iid": 11,
+            "perms": ["pr"],
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "value": "6623462385996792"
+          },
+          {
+            "format": "bool",
+            "iid": 6,
+            "perms": ["pw"],
+            "type": "00000014-0000-1000-8000-0026BB765291"
+          }
+        ],
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 65591,
+            "perms": ["pr"],
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "value": "1.1.0"
+          }
+        ],
+        "iid": 65535,
+        "type": "000000A2-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 2817,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue white lamp"
+          },
+          {
+            "format": "bool",
+            "iid": 2822,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "value": false
+          },
+          {
+            "format": "int",
+            "iid": 2823,
+            "maxValue": 100,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000008-0000-1000-8000-0026BB765291",
+            "unit": "percentage",
+            "value": 100
+          },
+          {
+            "description": "ID to uniquely identify service within a single accessory",
+            "format": "string",
+            "iid": 2827,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "D8B76298-42E7-5FFD-B1D6-1782D9A1F936",
+            "value": "6623462385996792"
+          }
+        ],
+        "iid": 2816,
+        "type": "00000043-0000-1000-8000-0026BB765291"
+      }
+    ]
+  },
+  {
+    "aid": 6623462383114193,
+    "services": [
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 5,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue white lamp"
+          },
+          {
+            "format": "string",
+            "iid": 4,
+            "perms": ["pr"],
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "value": "LWB010"
+          },
+          {
+            "format": "string",
+            "iid": 3,
+            "perms": ["pr"],
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "value": "Philips"
+          },
+          {
+            "format": "string",
+            "iid": 112,
+            "perms": ["pr"],
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "value": "1.46.13"
+          },
+          {
+            "format": "string",
+            "iid": 11,
+            "perms": ["pr"],
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "value": "6623462383114193"
+          },
+          {
+            "format": "bool",
+            "iid": 6,
+            "perms": ["pw"],
+            "type": "00000014-0000-1000-8000-0026BB765291"
+          }
+        ],
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 65591,
+            "perms": ["pr"],
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "value": "1.1.0"
+          }
+        ],
+        "iid": 65535,
+        "type": "000000A2-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 2817,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue white lamp"
+          },
+          {
+            "format": "bool",
+            "iid": 2822,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "value": false
+          },
+          {
+            "format": "int",
+            "iid": 2823,
+            "maxValue": 100,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000008-0000-1000-8000-0026BB765291",
+            "unit": "percentage",
+            "value": 20
+          },
+          {
+            "description": "ID to uniquely identify service within a single accessory",
+            "format": "string",
+            "iid": 2827,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "D8B76298-42E7-5FFD-B1D6-1782D9A1F936",
+            "value": "6623462383114193"
+          }
+        ],
+        "iid": 2816,
+        "type": "00000043-0000-1000-8000-0026BB765291"
+      }
+    ]
+  },
+  {
+    "aid": 6623462383114163,
+    "services": [
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 5,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue white lamp"
+          },
+          {
+            "format": "string",
+            "iid": 4,
+            "perms": ["pr"],
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "value": "LWB010"
+          },
+          {
+            "format": "string",
+            "iid": 3,
+            "perms": ["pr"],
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "value": "Philips"
+          },
+          {
+            "format": "string",
+            "iid": 112,
+            "perms": ["pr"],
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "value": "1.46.13"
+          },
+          {
+            "format": "string",
+            "iid": 11,
+            "perms": ["pr"],
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "value": "6623462383114163"
+          },
+          {
+            "format": "bool",
+            "iid": 6,
+            "perms": ["pw"],
+            "type": "00000014-0000-1000-8000-0026BB765291"
+          }
+        ],
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 65591,
+            "perms": ["pr"],
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "value": "1.1.0"
+          }
+        ],
+        "iid": 65535,
+        "type": "000000A2-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 2817,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue white lamp"
+          },
+          {
+            "format": "bool",
+            "iid": 2822,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "value": false
+          },
+          {
+            "format": "int",
+            "iid": 2823,
+            "maxValue": 100,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000008-0000-1000-8000-0026BB765291",
+            "unit": "percentage",
+            "value": 100
+          },
+          {
+            "description": "ID to uniquely identify service within a single accessory",
+            "format": "string",
+            "iid": 2827,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "D8B76298-42E7-5FFD-B1D6-1782D9A1F936",
+            "value": "6623462383114163"
+          }
+        ],
+        "iid": 2816,
+        "type": "00000043-0000-1000-8000-0026BB765291"
+      }
+    ]
+  },
+  {
+    "aid": 6623462412413293,
+    "services": [
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 5,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue ambiance spot"
+          },
+          {
+            "format": "string",
+            "iid": 4,
+            "perms": ["pr"],
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "value": "LTW013"
+          },
+          {
+            "format": "string",
+            "iid": 3,
+            "perms": ["pr"],
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "value": "Philips"
+          },
+          {
+            "format": "string",
+            "iid": 112,
+            "perms": ["pr"],
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "value": "1.46.13"
+          },
+          {
+            "format": "string",
+            "iid": 11,
+            "perms": ["pr"],
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "value": "6623462412413293"
+          },
+          {
+            "format": "bool",
+            "iid": 6,
+            "perms": ["pw"],
+            "type": "00000014-0000-1000-8000-0026BB765291"
+          }
+        ],
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 65591,
+            "perms": ["pr"],
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "value": "1.1.0"
+          }
+        ],
+        "iid": 65535,
+        "type": "000000A2-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 2817,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue ambiance spot"
+          },
+          {
+            "format": "bool",
+            "iid": 2822,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "value": true
+          },
+          {
+            "format": "int",
+            "iid": 2823,
+            "maxValue": 100,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000008-0000-1000-8000-0026BB765291",
+            "unit": "percentage",
+            "value": 100
+          },
+          {
+            "description": "Color Temperature",
+            "format": "uint32",
+            "iid": 3017,
+            "maxValue": 454,
+            "minStep": 1,
+            "minValue": 153,
+            "perms": ["pr", "pw", "ev"],
+            "type": "000000CE-0000-1000-8000-0026BB765291",
+            "value": 366
+          },
+          {
+            "description": "ID to uniquely identify service within a single accessory",
+            "format": "string",
+            "iid": 2827,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "D8B76298-42E7-5FFD-B1D6-1782D9A1F936",
+            "value": "6623462412413293"
+          }
+        ],
+        "iid": 2816,
+        "type": "00000043-0000-1000-8000-0026BB765291"
+      }
+    ]
+  },
+  {
+    "aid": 6623462412411853,
+    "services": [
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 5,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue ambiance spot"
+          },
+          {
+            "format": "string",
+            "iid": 4,
+            "perms": ["pr"],
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "value": "LTW013"
+          },
+          {
+            "format": "string",
+            "iid": 3,
+            "perms": ["pr"],
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "value": "Philips"
+          },
+          {
+            "format": "string",
+            "iid": 112,
+            "perms": ["pr"],
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "value": "1.46.13"
+          },
+          {
+            "format": "string",
+            "iid": 11,
+            "perms": ["pr"],
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "value": "6623462412411853"
+          },
+          {
+            "format": "bool",
+            "iid": 6,
+            "perms": ["pw"],
+            "type": "00000014-0000-1000-8000-0026BB765291"
+          }
+        ],
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 65591,
+            "perms": ["pr"],
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "value": "1.1.0"
+          }
+        ],
+        "iid": 65535,
+        "type": "000000A2-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 2817,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue ambiance spot"
+          },
+          {
+            "format": "bool",
+            "iid": 2822,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "value": true
+          },
+          {
+            "format": "int",
+            "iid": 2823,
+            "maxValue": 100,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000008-0000-1000-8000-0026BB765291",
+            "unit": "percentage",
+            "value": 100
+          },
+          {
+            "description": "Color Temperature",
+            "format": "uint32",
+            "iid": 3017,
+            "maxValue": 454,
+            "minStep": 1,
+            "minValue": 153,
+            "perms": ["pr", "pw", "ev"],
+            "type": "000000CE-0000-1000-8000-0026BB765291",
+            "value": 366
+          },
+          {
+            "description": "ID to uniquely identify service within a single accessory",
+            "format": "string",
+            "iid": 2827,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "D8B76298-42E7-5FFD-B1D6-1782D9A1F936",
+            "value": "6623462412411853"
+          }
+        ],
+        "iid": 2816,
+        "type": "00000043-0000-1000-8000-0026BB765291"
+      }
+    ]
+  },
+  {
+    "aid": 6623462403233419,
+    "services": [
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 5,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue ambiance candle"
+          },
+          {
+            "format": "string",
+            "iid": 4,
+            "perms": ["pr"],
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "value": "LTW012"
+          },
+          {
+            "format": "string",
+            "iid": 3,
+            "perms": ["pr"],
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "value": "Philips"
+          },
+          {
+            "format": "string",
+            "iid": 112,
+            "perms": ["pr"],
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "value": "1.46.13"
+          },
+          {
+            "format": "string",
+            "iid": 11,
+            "perms": ["pr"],
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "value": "6623462403233419"
+          },
+          {
+            "format": "bool",
+            "iid": 6,
+            "perms": ["pw"],
+            "type": "00000014-0000-1000-8000-0026BB765291"
+          }
+        ],
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 65591,
+            "perms": ["pr"],
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "value": "1.1.0"
+          }
+        ],
+        "iid": 65535,
+        "type": "000000A2-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 2817,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue ambiance candle"
+          },
+          {
+            "format": "bool",
+            "iid": 2822,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "value": false
+          },
+          {
+            "format": "int",
+            "iid": 2823,
+            "maxValue": 100,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000008-0000-1000-8000-0026BB765291",
+            "unit": "percentage",
+            "value": 100
+          },
+          {
+            "description": "Color Temperature",
+            "format": "uint32",
+            "iid": 3017,
+            "maxValue": 454,
+            "minStep": 1,
+            "minValue": 153,
+            "perms": ["pr", "pw", "ev"],
+            "type": "000000CE-0000-1000-8000-0026BB765291",
+            "value": 366
+          },
+          {
+            "description": "ID to uniquely identify service within a single accessory",
+            "format": "string",
+            "iid": 2827,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "D8B76298-42E7-5FFD-B1D6-1782D9A1F936",
+            "value": "6623462403233419"
+          }
+        ],
+        "iid": 2816,
+        "type": "00000043-0000-1000-8000-0026BB765291"
+      }
+    ]
+  },
+  {
+    "aid": 6623462403113447,
+    "services": [
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 5,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue ambiance candle"
+          },
+          {
+            "format": "string",
+            "iid": 4,
+            "perms": ["pr"],
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "value": "LTW012"
+          },
+          {
+            "format": "string",
+            "iid": 3,
+            "perms": ["pr"],
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "value": "Philips"
+          },
+          {
+            "format": "string",
+            "iid": 112,
+            "perms": ["pr"],
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "value": "1.46.13"
+          },
+          {
+            "format": "string",
+            "iid": 11,
+            "perms": ["pr"],
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "value": "6623462403113447"
+          },
+          {
+            "format": "bool",
+            "iid": 6,
+            "perms": ["pw"],
+            "type": "00000014-0000-1000-8000-0026BB765291"
+          }
+        ],
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 65591,
+            "perms": ["pr"],
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "value": "1.1.0"
+          }
+        ],
+        "iid": 65535,
+        "type": "000000A2-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 2817,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue ambiance candle"
+          },
+          {
+            "format": "bool",
+            "iid": 2822,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "value": false
+          },
+          {
+            "format": "int",
+            "iid": 2823,
+            "maxValue": 100,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000008-0000-1000-8000-0026BB765291",
+            "unit": "percentage",
+            "value": 35
+          },
+          {
+            "description": "Color Temperature",
+            "format": "uint32",
+            "iid": 3017,
+            "maxValue": 454,
+            "minStep": 1,
+            "minValue": 153,
+            "perms": ["pr", "pw", "ev"],
+            "type": "000000CE-0000-1000-8000-0026BB765291",
+            "value": 366
+          },
+          {
+            "description": "ID to uniquely identify service within a single accessory",
+            "format": "string",
+            "iid": 2827,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "D8B76298-42E7-5FFD-B1D6-1782D9A1F936",
+            "value": "6623462403113447"
+          }
+        ],
+        "iid": 2816,
+        "type": "00000043-0000-1000-8000-0026BB765291"
+      }
+    ]
+  },
+  {
+    "aid": 6623462395276939,
+    "services": [
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 5,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue ambiance candle"
+          },
+          {
+            "format": "string",
+            "iid": 4,
+            "perms": ["pr"],
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "value": "LTW012"
+          },
+          {
+            "format": "string",
+            "iid": 3,
+            "perms": ["pr"],
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "value": "Philips"
+          },
+          {
+            "format": "string",
+            "iid": 112,
+            "perms": ["pr"],
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "value": "1.46.13"
+          },
+          {
+            "format": "string",
+            "iid": 11,
+            "perms": ["pr"],
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "value": "6623462395276939"
+          },
+          {
+            "format": "bool",
+            "iid": 6,
+            "perms": ["pw"],
+            "type": "00000014-0000-1000-8000-0026BB765291"
+          }
+        ],
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 65591,
+            "perms": ["pr"],
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "value": "1.1.0"
+          }
+        ],
+        "iid": 65535,
+        "type": "000000A2-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 2817,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue ambiance candle"
+          },
+          {
+            "format": "bool",
+            "iid": 2822,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "value": false
+          },
+          {
+            "format": "int",
+            "iid": 2823,
+            "maxValue": 100,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000008-0000-1000-8000-0026BB765291",
+            "unit": "percentage",
+            "value": 100
+          },
+          {
+            "description": "Color Temperature",
+            "format": "uint32",
+            "iid": 3017,
+            "maxValue": 454,
+            "minStep": 1,
+            "minValue": 153,
+            "perms": ["pr", "pw", "ev"],
+            "type": "000000CE-0000-1000-8000-0026BB765291",
+            "value": 366
+          },
+          {
+            "description": "ID to uniquely identify service within a single accessory",
+            "format": "string",
+            "iid": 2827,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "D8B76298-42E7-5FFD-B1D6-1782D9A1F936",
+            "value": "6623462395276939"
+          }
+        ],
+        "iid": 2816,
+        "type": "00000043-0000-1000-8000-0026BB765291"
+      }
+    ]
+  },
+  {
+    "aid": 6623462395276914,
+    "services": [
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 5,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue ambiance candle"
+          },
+          {
+            "format": "string",
+            "iid": 4,
+            "perms": ["pr"],
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "value": "LTW012"
+          },
+          {
+            "format": "string",
+            "iid": 3,
+            "perms": ["pr"],
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "value": "Philips"
+          },
+          {
+            "format": "string",
+            "iid": 112,
+            "perms": ["pr"],
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "value": "1.46.13"
+          },
+          {
+            "format": "string",
+            "iid": 11,
+            "perms": ["pr"],
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "value": "6623462395276914"
+          },
+          {
+            "format": "bool",
+            "iid": 6,
+            "perms": ["pw"],
+            "type": "00000014-0000-1000-8000-0026BB765291"
+          }
+        ],
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 65591,
+            "perms": ["pr"],
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "value": "1.1.0"
+          }
+        ],
+        "iid": 65535,
+        "type": "000000A2-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 2817,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hue ambiance candle"
+          },
+          {
+            "format": "bool",
+            "iid": 2822,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "value": false
+          },
+          {
+            "format": "int",
+            "iid": 2823,
+            "maxValue": 100,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000008-0000-1000-8000-0026BB765291",
+            "unit": "percentage",
+            "value": 100
+          },
+          {
+            "description": "Color Temperature",
+            "format": "uint32",
+            "iid": 3017,
+            "maxValue": 454,
+            "minStep": 1,
+            "minValue": 153,
+            "perms": ["pr", "pw", "ev"],
+            "type": "000000CE-0000-1000-8000-0026BB765291",
+            "value": 366
+          },
+          {
+            "description": "ID to uniquely identify service within a single accessory",
+            "format": "string",
+            "iid": 2827,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "D8B76298-42E7-5FFD-B1D6-1782D9A1F936",
+            "value": "6623462395276914"
+          }
+        ],
+        "iid": 2816,
+        "type": "00000043-0000-1000-8000-0026BB765291"
+      }
+    ]
+  }
+]

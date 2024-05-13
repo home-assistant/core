@@ -1,0 +1,14 @@
+{
+  "channels": [
+    {
+      "active": true,
+      "created": 1412047948.579029,
+      "description": "Sample channel.",
+      "iden": "ujxPklLhvyKsjAvkMyTVh6",
+      "image_url": "https://dl.pushbulletusercontent.com/abc123/image.jpg",
+      "modified": 1412047948.579031,
+      "name": "Sample channel",
+      "tag": "sample-channel"
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "Type": "pollen",
+  "ForecastDate": "2018-06-12T00:00:00-04:00",
+  "Location": {
+    "ZIP": "12345",
+    "City": "SCHENECTADY",
+    "State": "NY",
+    "periods": [
+      {
+        "Triggers": [
+          {
+            "LGID": 272,
+            "Name": "Juniper",
+            "Genus": "Juniperus",
+            "PlantType": "Tree"
+          },
+          {
+            "LGID": 346,
+            "Name": "Grasses",
+            "Genus": "Grasses",
+            "PlantType": "Grass"
+          },
+          {
+            "LGID": 63,
+            "Name": "Chenopods",
+            "Genus": "Chenopods",
+            "PlantType": "Ragweed"
+          }
+        ],
+        "Period": "0001-01-01T00:00:00",
+        "Type": "Yesterday",
+        "Index": 7.2
+      },
+      {
+        "Triggers": [
+          {
+            "LGID": 272,
+            "Name": "Juniper",
+            "Genus": "Juniperus",
+            "PlantType": "Tree"
+          },
+          {
+            "LGID": 346,
+            "Name": "Grasses",
+            "Genus": "Grasses",
+            "PlantType": "Grass"
+          },
+          {
+            "LGID": 63,
+            "Name": "Chenopods",
+            "Genus": "Chenopods",
+            "PlantType": "Ragweed"
+          }
+        ],
+        "Period": "0001-01-01T00:00:00",
+        "Type": "Today",
+        "Index": 6.6
+      },
+      {
+        "Triggers": [
+          {
+            "LGID": 272,
+            "Name": "Juniper",
+            "Genus": "Juniperus",
+            "PlantType": "Tree"
+          },
+          {
+            "LGID": 346,
+            "Name": "Grasses",
+            "Genus": "Grasses",
+            "PlantType": "Grass"
+          },
+          {
+            "LGID": 63,
+            "Name": "Chenopods",
+            "Genus": "Chenopods",
+            "PlantType": "Ragweed"
+          }
+        ],
+        "Period": "0001-01-01T00:00:00",
+        "Type": "Tomorrow",
+        "Index": 6.3
+      }
+    ],
+    "DisplayLocation": "Schenectady, NY"
+  }
+}

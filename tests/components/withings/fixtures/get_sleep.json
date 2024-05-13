@@ -1,0 +1,60 @@
+{
+  "more": false,
+  "offset": 0,
+  "series": [
+    {
+      "timezone": "UTC",
+      "model": 32,
+      "startdate": 1548979200,
+      "enddate": 1548979200,
+      "date": 1548979200,
+      "modified": 12345,
+      "data": {
+        "breathing_disturbances_intensity": 110,
+        "deepsleepduration": 111,
+        "durationtosleep": 112,
+        "durationtowakeup": 113,
+        "hr_average": 114,
+        "hr_max": 115,
+        "hr_min": 116,
+        "lightsleepduration": 117,
+        "remsleepduration": 118,
+        "rr_average": 119,
+        "rr_max": 120,
+        "rr_min": 121,
+        "sleep_score": 122,
+        "snoring": 123,
+        "snoringepisodecount": 124,
+        "wakeupcount": 125,
+        "wakeupduration": 126
+      }
+    },
+    {
+      "timezone": "UTC",
+      "model": 32,
+      "startdate": 1548979200,
+      "enddate": 1548979200,
+      "date": 1548979200,
+      "modified": 12345,
+      "data": {
+        "breathing_disturbances_intensity": 210,
+        "deepsleepduration": 211,
+        "durationtosleep": 212,
+        "durationtowakeup": 213,
+        "hr_average": 214,
+        "hr_max": 215,
+        "hr_min": 216,
+        "lightsleepduration": 217,
+        "remsleepduration": 218,
+        "rr_average": 219,
+        "rr_max": 220,
+        "rr_min": 221,
+        "sleep_score": 222,
+        "snoring": 223,
+        "snoringepisodecount": 224,
+        "wakeupcount": 225,
+        "wakeupduration": 226
+      }
+    }
+  ]
+}

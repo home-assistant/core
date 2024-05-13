@@ -1,0 +1,7 @@
+sensor:
+  - platform: history_stats
+    entity_id: binary_sensor.test_id
+    name: second_test
+    state: "on"
+    start: "{{ as_timestamp(now()) - 3600 }}"
+    end: "{{ now() }}"

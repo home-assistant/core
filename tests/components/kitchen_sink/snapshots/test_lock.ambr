@@ -1,0 +1,49 @@
+# serializer version: 1
+# name: test_states
+  set({
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Another basic lock',
+        'supported_features': <LockEntityFeature: 0>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'lock.another_basic_lock',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unlocked',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Another openable lock',
+        'supported_features': <LockEntityFeature: 1>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'lock.another_openable_lock',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unlocked',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Basic lock',
+        'supported_features': <LockEntityFeature: 0>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'lock.basic_lock',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'locked',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Openable lock',
+        'supported_features': <LockEntityFeature: 1>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'lock.openable_lock',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'locked',
+    }),
+  })
+# ---

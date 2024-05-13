@@ -1,0 +1,33 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'api_key': '**REDACTED**',
+        'location': '',
+      }),
+      'disabled_by': None,
+      'domain': 'co2signal',
+      'entry_id': '904a74160aa6f335526706bee85dfb83',
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Mock Title',
+      'unique_id': None,
+      'version': 1,
+    }),
+    'data': dict({
+      'countryCode': 'FR',
+      'data': dict({
+        'carbonIntensity': 45.98623190095805,
+        'fossilFuelPercentage': 5.461182741937103,
+      }),
+      'status': 'ok',
+      'units': dict({
+        'carbonIntensity': 'gCO2eq/kWh',
+      }),
+    }),
+  })
+# ---
