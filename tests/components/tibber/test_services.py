@@ -58,7 +58,7 @@ async def test_service_validation(
     error: type[Exception],
     error_message: str,
 ) -> None:
-    """Test the easyEnergy Service."""
+    """Test the Tibber Service."""
 
     with pytest.raises(error, match=error_message):
         await hass.services.async_call(
