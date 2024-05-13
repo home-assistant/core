@@ -404,7 +404,13 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 ClimateEntityFeature.TURN_ON
             )
 
-        if (modes := self.hvac_modes) and len(modes) >= 2 and HVACMode.OFF in modes:
+        if (
+            (modes := self.hvac_modes)
+            and len(modes) >= 2
+            and HVACMode.OFF in modes
+            and not supported_features & ClimateEntityFeature.TURN_ON
+            and not supported_features & ClimateEntityFeature.TURN_OFF
+        ):
             # turn_on/off implicitly supported by including more modes than 1 and one of these
             # are HVACMode.OFF
             _modes = [_mode for _mode in modes if _mode is not None]
