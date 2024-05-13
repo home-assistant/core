@@ -417,7 +417,7 @@ async def test_keepalive(
     )
 
 
-async def test2_keepalive(hass, monkeypatch, caplog):
+async def test_keepalive_2(hass, monkeypatch, caplog):
     """Validate very short keepalive values."""
     keepalive_value = 30
     domain = RFLINK_DOMAIN
@@ -443,7 +443,7 @@ async def test2_keepalive(hass, monkeypatch, caplog):
     )
 
 
-async def test3_keepalive(hass, monkeypatch, caplog):
+async def test_keepalive_3(hass, monkeypatch, caplog):
     """Validate keepalive=0 value."""
     domain = RFLINK_DOMAIN
     config = {

@@ -277,6 +277,11 @@ ZEROCONF = {
             "domain": "romy",
         },
     ],
+    "_airgradient._tcp.local.": [
+        {
+            "domain": "airgradient",
+        },
+    ],
     "_airplay._tcp.local.": [
         {
             "domain": "apple_tv",
