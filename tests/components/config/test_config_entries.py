@@ -1207,13 +1207,16 @@ async def test_two_step_subentry_flow(hass: HomeAssistant, client) -> None:
         def async_get_subentry_flow(config_entry):
             class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
                 async def async_step_init(self, user_input=None):
-                    return self.async_show_form(
-                        step_id="finish", data_schema=vol.Schema({"enabled": bool})
-                    )
+                    return await self.async_step_finish()
 
                 async def async_step_finish(self, user_input=None):
-                    return self.async_create_entry(
-                        title="Mock title", data=user_input, subentry_id="test"
+                    if user_input:
+                        return self.async_create_entry(
+                            title="Mock title", data=user_input, subentry_id="test"
+                        )
+
+                    return self.async_show_form(
+                        step_id="finish", data_schema=vol.Schema({"enabled": bool})
                     )
 
             return SubentryFlowHandler()
@@ -1231,33 +1234,39 @@ async def test_two_step_subentry_flow(hass: HomeAssistant, client) -> None:
 
         assert resp.status == HTTPStatus.OK
         data = await resp.json()
-        flow_id = data.pop("flow_id")
-        assert data == {
-            "type": "form",
-            "handler": "test1",
-            "step_id": "finish",
+        flow_id = data["flow_id"]
+        expected_data = {
             "data_schema": [{"name": "enabled", "type": "boolean"}],
             "description_placeholders": None,
             "errors": None,
+            "flow_id": flow_id,
+            "handler": "test1",
             "last_step": None,
             "preview": None,
+            "step_id": "finish",
+            "type": "form",
         }
+        assert data == expected_data
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+        resp = await client.get(f"/api/config/config_entries/subentries/flow/{flow_id}")
+        assert resp.status == HTTPStatus.OK
+        data = await resp.json()
+        assert data == expected_data
+
         resp = await client.post(
             f"/api/config/config_entries/subentries/flow/{flow_id}",
             json={"enabled": True},
         )
         assert resp.status == HTTPStatus.OK
         data = await resp.json()
-        data.pop("flow_id")
         assert data == {
-            "handler": "test1",
-            "type": "create_entry",
-            "title": "Mock title",
-            "description": None,
             "description_placeholders": None,
+            "description": None,
+            "flow_id": flow_id,
+            "handler": "test1",
             "subentry_id": "test",
+            "title": "Mock title",
+            "type": "create_entry",
         }
 
 
@@ -2781,6 +2790,21 @@ async def test_list_subentries(
         "subentries": {"test": {"title": "Mock title"}},
     }
 
+    # Try listing subentries for an unknown entry
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/subentries/list",
+            "entry_id": "no_such_entry",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "not_found",
+        "message": "Config entry not found",
+    }
+
 
 async def test_delete_subentry(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
@@ -2826,4 +2850,36 @@ async def test_delete_subentry(
     assert response["success"]
     assert response["result"] == {
         "subentries": {},
+    }
+
+    # Try deleting the subentry again
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/subentries/delete",
+            "entry_id": entry.entry_id,
+            "subentry_id": "test",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "not_found",
+        "message": "Config subentry not found",
+    }
+
+    # Try deleting subentry from an unknown entry
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/subentries/delete",
+            "entry_id": "no_such_entry",
+            "subentry_id": "test",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "not_found",
+        "message": "Config entry not found",
     }

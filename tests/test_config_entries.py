@@ -1838,7 +1838,7 @@ async def test_create_entry_subentries(
 async def test_entry_subentry(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
-    """Test that we can add a subentry to en entry."""
+    """Test that we can add a subentry to an entry."""
     mock_integration(hass, MockModule("test"))
     mock_platform(hass, "test.config_flow", None)
     entry = MockConfigEntry(domain="test", data={"first": True})
@@ -1880,6 +1880,92 @@ async def test_entry_subentry(
             "test": config_entries.ConfigSubentry({"second": True}, "Mock title")
         }
         assert entry.supports_subentries is True
+
+
+async def test_entry_subentry_non_string(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test adding an invalid subentry to an entry."""
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    entry = MockConfigEntry(domain="test", data={"first": True})
+    entry.add_to_manager(manager)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        @staticmethod
+        @callback
+        def async_get_subentry_flow(config_entry):
+            """Test subentry flow."""
+
+            class SubentryFlowHandler(data_entry_flow.FlowHandler):
+                """Test subentry flow handler."""
+
+            return SubentryFlowHandler()
+
+    with mock_config_flow("test", TestFlow):
+        flow = await manager.subentries.async_create_flow(
+            entry.entry_id, context={"source": "test"}, data=None
+        )
+
+        flow.handler = entry.entry_id  # Used to keep reference to config entry
+
+        with pytest.raises(HomeAssistantError):
+            await manager.subentries.async_finish_flow(
+                flow,
+                {
+                    "data": {"second": True},
+                    "subentry_id": 123,
+                    "title": "Mock title",
+                    "type": data_entry_flow.FlowResultType.CREATE_ENTRY,
+                },
+            )
+
+
+async def test_entry_subentry_duplicate(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test adding a duplicated subentry to an entry."""
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    entry = MockConfigEntry(
+        domain="test",
+        data={"first": True},
+        subentries={"test": {"data": {}, "title": "Mock title"}},
+    )
+    entry.add_to_manager(manager)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        @staticmethod
+        @callback
+        def async_get_subentry_flow(config_entry):
+            """Test subentry flow."""
+
+            class SubentryFlowHandler(data_entry_flow.FlowHandler):
+                """Test subentry flow handler."""
+
+            return SubentryFlowHandler()
+
+    with mock_config_flow("test", TestFlow):
+        flow = await manager.subentries.async_create_flow(
+            entry.entry_id, context={"source": "test"}, data=None
+        )
+
+        flow.handler = entry.entry_id  # Used to keep reference to config entry
+
+        with pytest.raises(HomeAssistantError):
+            await manager.subentries.async_finish_flow(
+                flow,
+                {
+                    "data": {"second": True},
+                    "subentry_id": "test",
+                    "title": "Mock title",
+                    "type": data_entry_flow.FlowResultType.CREATE_ENTRY,
+                },
+            )
 
 
 async def test_entry_subentry_abort(
@@ -1926,6 +2012,70 @@ async def test_entry_subentry_unknown_config_entry(
     with pytest.raises(config_entries.UnknownEntry):
         await manager.subentries.async_create_flow(
             "blah", context={"source": "test"}, data=None
+        )
+
+
+async def test_entry_subentry_deleted_config_entry(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test attempting to finish a subentry flow for a deleted config entry."""
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    entry = MockConfigEntry(domain="test", data={"first": True})
+    entry.add_to_manager(manager)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        @staticmethod
+        @callback
+        def async_get_subentry_flow(config_entry):
+            """Test subentry flow."""
+
+            class SubentryFlowHandler(data_entry_flow.FlowHandler):
+                """Test subentry flow handler."""
+
+            return SubentryFlowHandler()
+
+    with mock_config_flow("test", TestFlow):
+        flow = await manager.subentries.async_create_flow(
+            entry.entry_id, context={"source": "test"}, data=None
+        )
+
+        flow.handler = entry.entry_id  # Used to keep reference to config entry
+
+        await hass.config_entries.async_remove(entry.entry_id)
+
+        with pytest.raises(config_entries.UnknownEntry):
+            await manager.subentries.async_finish_flow(
+                flow,
+                {
+                    "data": {"second": True},
+                    "subentry_id": "test",
+                    "title": "Mock title",
+                    "type": data_entry_flow.FlowResultType.CREATE_ENTRY,
+                },
+            )
+
+
+async def test_entry_subentry_unsupported(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test attempting to start a subentry flow for a config entry without support."""
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    entry = MockConfigEntry(domain="test", data={"first": True})
+    entry.add_to_manager(manager)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+    with (
+        mock_config_flow("test", TestFlow),
+        pytest.raises(data_entry_flow.UnknownHandler),
+    ):
+        await manager.subentries.async_create_flow(
+            entry.entry_id, context={"source": "test"}, data=None
         )
 
 
