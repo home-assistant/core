@@ -28,6 +28,7 @@ from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
 
 PLATFORMS: Final = [
     Platform.CLIMATE,
+    Platform.DEVICE_TRACKER,
     Platform.SELECT,
     Platform.SENSOR,
 ]
