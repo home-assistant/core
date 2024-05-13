@@ -118,7 +118,7 @@ async def test_invalid_topic(
 
 @pytest.mark.parametrize(
     "discovery_topic",
-    ("homeassistant/binary_sensor/bla/config", "homeassistant/device/bla/config"),
+    ["homeassistant/binary_sensor/bla/config", "homeassistant/device/bla/config"],
 )
 async def test_invalid_json(
     hass: HomeAssistant,
@@ -2290,7 +2290,6 @@ async def test_discovery_dispatcher_signal_type_messages(
         ),
     ],
 )
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
 async def test_shared_state_topic(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
