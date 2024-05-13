@@ -41,7 +41,6 @@ FILE_SENSOR_SCHEMA = vol.Schema(
 
 FILE_NOTIFY_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): TEXT_SELECTOR,
         vol.Required(CONF_FILE_PATH): TEXT_SELECTOR,
         vol.Optional(CONF_TIMESTAMP, default=False): BOOLEAN_SELECTOR,
     }
@@ -79,8 +78,7 @@ class FileConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             if not await self.validate_file_path(user_input[CONF_FILE_PATH]):
                 errors[CONF_FILE_PATH] = "not_allowed"
             else:
-                name: str = user_input.get(CONF_NAME, DEFAULT_NAME)
-                title = f"{name} [{user_input[CONF_FILE_PATH]}]"
+                title = f"{DEFAULT_NAME} [{user_input[CONF_FILE_PATH]}]"
                 return self.async_create_entry(data=user_input, title=title)
 
         return self.async_show_form(
