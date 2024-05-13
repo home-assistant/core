@@ -62,10 +62,6 @@ class ADXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error(exp)
             return {"base": "cannot_connect"}
 
-        except Exception as exp:  # pylint: disable=broad-except
-            _LOGGER.error(exp)
-            return {"base": "unknown"}
-
         return None
 
     async def async_step_user(

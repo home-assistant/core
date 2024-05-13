@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.azure_data_explorer.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from .const import BASE_CONFIG
 
@@ -32,13 +33,12 @@ async def test_config_flow(hass, mock_setup_entry) -> None:
     [
         (KustoServiceError("test"), "cannot_connect"),
         (KustoAuthenticationError("test", Exception), "invalid_auth"),
-        (Exception(), "unknown"),
     ],
 )
 async def test_config_flow_errors(
     test_input,
     expected,
-    hass,
+    hass: HomeAssistant,
     mock_execute_query,
 ) -> None:
     """Test we handle connection KustoServiceError."""
