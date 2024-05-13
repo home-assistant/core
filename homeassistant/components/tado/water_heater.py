@@ -32,6 +32,7 @@ from .const import (
     TYPE_HOT_WATER,
 )
 from .entity import TadoZoneEntity
+from .helper import decide_overlay_mode
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -277,7 +278,8 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
             self._tado.set_zone_off(self.zone_id, CONST_OVERLAY_MANUAL, TYPE_HOT_WATER)
             return
 
-        overlay_mode = self._tado.decide_overlay_mode(
+        overlay_mode = decide_overlay_mode(
+            tado=self._tado,
             duration=duration,
             zone_id=self.zone_id,
         )

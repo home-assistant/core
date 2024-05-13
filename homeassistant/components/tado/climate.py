@@ -65,6 +65,7 @@ from .const import (
     TYPE_HEATING,
 )
 from .entity import TadoZoneEntity
+from .helper import decide_overlay_mode
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -596,7 +597,8 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             self._tado.reset_zone_overlay(self.zone_id)
             return
 
-        overlay_mode = self._tado.decide_overlay_mode(
+        overlay_mode = decide_overlay_mode(
+            tado=self._tado,
             duration=duration,
             overlay_mode=overlay_mode,
             zone_id=self.zone_id,

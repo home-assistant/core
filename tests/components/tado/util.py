@@ -2,7 +2,7 @@
 
 import requests_mock
 
-from homeassistant.components.tado import DOMAIN, TadoConnector
+from homeassistant.components.tado import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -165,8 +165,3 @@ async def async_init_integration(
         if not skip_setup:
             await hass.config_entries.async_setup(entry.entry_id)
             await hass.async_block_till_done()
-
-
-def dummy_tado_connector(hass: HomeAssistant, fallback) -> HomeAssistant:
-    """Return dummy tado connector."""
-    return TadoConnector(hass, username="dummy", password="dummy", fallback=fallback)
