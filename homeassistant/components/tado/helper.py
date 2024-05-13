@@ -1,4 +1,4 @@
-"""Helper for Tado."""
+"""Helper methods for Tado."""
 
 from . import TadoConnector
 from .const import (

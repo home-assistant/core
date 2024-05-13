@@ -1,4 +1,4 @@
-"""Overlay method selection tests."""
+"""Helper method tests."""
 
 from unittest.mock import patch
 
