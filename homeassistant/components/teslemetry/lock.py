@@ -47,10 +47,6 @@ class TeslemetryVehicleLockEntity(TeslemetryVehicleEntity, LockEntity):
         """Update entity attributes."""
         self._attr_is_locked = self._value
 
-    def _async_value_from_stream(self, value) -> None:
-        """Update entity value from stream."""
-        self._attr_is_locked = value
-
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the doors."""
         self.raise_for_scope()
@@ -85,10 +81,6 @@ class TeslemetryCableLockEntity(TeslemetryVehicleEntity, LockEntity):
         if self._value is None:
             self._attr_is_locked = None
         self._attr_is_locked = self._value == ENGAGED
-
-    def _async_value_from_stream(self, value) -> None:
-        """Update entity value from stream."""
-        self._attr_is_locked = value == ENGAGED
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Charge cable Lock cannot be manually locked."""
