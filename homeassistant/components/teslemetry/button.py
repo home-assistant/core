@@ -13,7 +13,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .entity import TeslemetryVehicleEntity
 from .models import TeslemetryVehicleData
 
@@ -53,17 +52,19 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Teslemetry Button platform from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         chain(
             (
                 TeslemetryButtonEntity(vehicle, description)
-                for vehicle in data.vehicles
+                for vehicle in entry.runtime_data.vehicles
                 for description in DESCRIPTIONS
-                if Scope.VEHICLE_CMDS in data.scopes
+                if Scope.VEHICLE_CMDS in entry.runtime_data.scopes
             ),
-            (TeslemetryRefreshButtonEntity(vehicle) for vehicle in data.vehicles),
+            (
+                TeslemetryRefreshButtonEntity(vehicle)
+                for vehicle in entry.runtime_data.vehicles
+            ),
         )
     )
 
