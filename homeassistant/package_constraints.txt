@@ -24,7 +24,7 @@ cached_ipaddress==0.3.0
 certifi>=2021.5.30
 ciso8601==2.3.1
 cryptography==42.0.5
-dbus-fast==2.21.1
+dbus-fast==2.21.2
 fnv-hash-fast==0.5.0
 ha-av==10.1.1
 ha-ffmpeg==3.2.0

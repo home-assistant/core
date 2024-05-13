@@ -163,18 +163,5 @@
         }
       }
     }
-  },
-  "issues": {
-    "migrate_notify": {
-      "title": "Migration of Ecobee notify service",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "description": "The Ecobee `notify` service has been migrated. A new `notify` entity per Thermostat is available now.\n\nUpdate any automations to use the new `notify.send_message` exposed by these new entities. When this is done, fix this issue and restart Home Assistant.",
-            "title": "Disable legacy Ecobee notify service"
-          }
-        }
-      }
-    }
   }
 }

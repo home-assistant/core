@@ -26,6 +26,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from . import MockConnection, async_add_model
 
@@ -196,7 +197,7 @@ async def test_set_temperature_supported_cooling(
     ]
     mock_connection.write_coil.reset_mock()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             PLATFORM_DOMAIN,
             SERVICE_SET_TEMPERATURE,
@@ -268,8 +269,8 @@ async def test_set_temperature_unsupported_cooling(
         call(CoilData(coil_setpoint_heat, 22))
     ]
 
-    # Attempt to set temperature to cool should raise ValueError
-    with pytest.raises(ValueError):
+    # Attempt to set temperature to cool should raise ServiceValidationError
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             PLATFORM_DOMAIN,
             SERVICE_SET_TEMPERATURE,
@@ -362,7 +363,7 @@ async def test_set_invalid_hvac_mode(
     _setup_climate_group(coils, model, climate_id)
 
     await async_add_model(hass, model)
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             PLATFORM_DOMAIN,
             SERVICE_SET_HVAC_MODE,

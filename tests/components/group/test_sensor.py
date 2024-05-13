@@ -48,6 +48,7 @@ MAX_VALUE = max(VALUES)
 MEAN = statistics.mean(VALUES)
 MEDIAN = statistics.median(VALUES)
 RANGE = max(VALUES) - min(VALUES)
+STDEV = statistics.stdev(VALUES)
 SUM_VALUE = sum(VALUES)
 PRODUCT_VALUE = prod(VALUES)
 
@@ -61,6 +62,7 @@ PRODUCT_VALUE = prod(VALUES)
         ("median", MEDIAN, {}),
         ("last", VALUES[2], {ATTR_LAST_ENTITY_ID: "sensor.test_3"}),
         ("range", RANGE, {}),
+        ("stdev", STDEV, {}),
         ("sum", SUM_VALUE, {}),
         ("product", PRODUCT_VALUE, {}),
     ],
