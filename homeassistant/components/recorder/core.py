@@ -372,13 +372,6 @@ class Recorder(threading.Thread):
         """Add an executor job from within the event loop."""
         return self.hass.loop.run_in_executor(self._db_executor, target, *args)
 
-    def _stop_executor(self) -> None:
-        """Stop the executor."""
-        if self._db_executor is None:
-            return
-        self._db_executor.shutdown()
-        self._db_executor = None
-
     @callback
     def _async_check_queue(self, *_: Any) -> None:
         """Periodic check of the queue size to ensure we do not exhaust memory.
@@ -1504,5 +1497,8 @@ class Recorder(threading.Thread):
         try:
             self._end_session()
         finally:
+            if self._db_executor:
+                self._db_executor.shutdown(join_threads_or_timeout=False)
             self._close_connection()
-            self._stop_executor()
+            if self._db_executor:
+                self._db_executor.join_threads_or_timeout()
