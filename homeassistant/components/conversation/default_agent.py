@@ -29,11 +29,6 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_listen_entity_updates,
     async_should_expose,
 )
-from homeassistant.components.intent.timers import (
-    TimerEventType,
-    TimerInfo,
-    async_register_timer_handler,
-)
 from homeassistant.const import EVENT_STATE_CHANGED, MATCH_ALL
 from homeassistant.helpers import (
     area_registry as ar,
@@ -49,13 +44,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_added_domain
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
-from .const import (
-    ATTR_LANGUAGE,
-    ATTR_TEXT,
-    DEFAULT_EXPOSED_ATTRIBUTES,
-    DOMAIN,
-    SERVICE_PROCESS,
-)
+from .const import DEFAULT_EXPOSED_ATTRIBUTES, DOMAIN
 from .entity import ConversationEntity
 from .models import ConversationInput, ConversationResult
 
@@ -152,19 +141,6 @@ async def async_setup_default_agent(
         async_track_state_added_domain(hass, MATCH_ALL, async_entity_state_listener)
 
     start.async_at_started(hass, async_hass_started)
-
-    async def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
-        """Forward Assist command from timer to process service."""
-        if (event_type != TimerEventType.FINISHED) or (not timer.assist_command):
-            return
-
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_PROCESS,
-            {ATTR_TEXT: timer.assist_command, ATTR_LANGUAGE: timer.language},
-        )
-
-    async_register_timer_handler(hass, handle_timer)
 
 
 class DefaultAgent(ConversationEntity):
@@ -446,9 +422,7 @@ class DefaultAgent(ConversationEntity):
         language: str,
     ) -> RecognizeResult | None:
         """Search intents for a match to user input."""
-        name_result: RecognizeResult | None = None
-        best_results: list[RecognizeResult] = []
-        best_text_chunks_matched: int | None = None
+        maybe_result: RecognizeResult | None = None
         for result in recognize_all(
             user_input.text,
             lang_intents.intents,
@@ -457,30 +431,16 @@ class DefaultAgent(ConversationEntity):
             language=language,
         ):
             if "name" in result.entities:
-                name_result = result
+                return result
 
-            if (best_text_chunks_matched is None) or (
-                result.text_chunks_matched > best_text_chunks_matched
-            ):
-                # Only overwrite if more literal text was matched.
-                # This causes wildcards to match last.
-                best_results = [result]
-                best_text_chunks_matched = result.text_chunks_matched
-            elif result.text_chunks_matched == best_text_chunks_matched:
-                # Accumulate results with the same number of literal text matched.
-                # We will resolve the ambiguity below.
-                best_results.append(result)
+            # Keep looking in case an entity has the same name
+            maybe_result = result
 
-        if name_result is not None:
-            # Prioritize matches with entity names above area names
-            return name_result
-
-        if best_results:
+        if maybe_result is not None:
             # Successful strict match
-            return best_results[0]
+            return maybe_result
 
         # Try again with missing entities enabled
-        maybe_result: RecognizeResult | None = None
         best_num_unmatched_entities = 0
         for result in recognize_all(
             user_input.text,

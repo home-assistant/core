@@ -1,6 +1,5 @@
 """Test for the default agent."""
 
-import asyncio
 from collections import defaultdict
 from unittest.mock import AsyncMock, patch
 
@@ -1091,33 +1090,3 @@ async def test_same_aliased_entities_in_different_areas(
         hass, "how many lights are on?", None, Context(), None
     )
     assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER
-
-
-async def test_timer_assist_command(hass: HomeAssistant, init_components) -> None:
-    """Test executing an Assist command after a timer finishes."""
-    assert await async_setup_component(hass, "light", {})
-
-    hass.states.async_set("light.kitchen", "off")
-    light_on_event = asyncio.Event()
-
-    async def handle_turn_on(call) -> None:
-        if call.data["entity_id"] == "light.kitchen":
-            light_on_event.set()
-
-    hass.services.async_register(HASS_DOMAIN, "turn_on", handle_turn_on)
-
-    # Ask Assist to execute command when timer is finished
-    result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_START_TIMER,
-        {
-            "seconds": {"value": 0},
-            "assist_command": {"value": "turn on kitchen light"},
-        },
-    )
-    assert result.response_type == intent.IntentResponseType.ACTION_DONE
-
-    # Wait for service call to turn on light
-    async with asyncio.timeout(1):
-        await light_on_event.wait()

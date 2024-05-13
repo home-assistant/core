@@ -68,9 +68,6 @@ class TimerInfo:
     is_active: bool = True
     """True if timer is ticking down."""
 
-    assist_command: str | None = None
-    """Optional Assist command to execute when timers is finished (same language as timer)."""
-
     area_id: str | None = None
     """Id of area that the device belongs to."""
 
@@ -191,7 +188,6 @@ class TimerManager:
         language: str,
         device_id: str | None,
         name: str | None = None,
-        assist_command: str | None = None,
     ) -> str:
         """Start a timer."""
         total_seconds = 0
@@ -217,7 +213,6 @@ class TimerManager:
             device_id=device_id,
             created_at=created_at,
             updated_at=created_at,
-            assist_command=assist_command,
         )
 
         # Fill in area/floor info
@@ -241,13 +236,12 @@ class TimerManager:
         )
 
         _LOGGER.debug(
-            "Timer started: id=%s, name=%s, hours=%s, minutes=%s, seconds=%s, assist_command=%s, device_id=%s",
+            "Timer started: id=%s, name=%s, hours=%s, minutes=%s, seconds=%s, device_id=%s",
             timer_id,
             name,
             hours,
             minutes,
             seconds,
-            assist_command,
             device_id,
         )
 
@@ -628,7 +622,6 @@ class StartTimerIntentHandler(intent.IntentHandler):
         vol.Required(vol.Any("hours", "minutes", "seconds")): cv.positive_int,
         vol.Optional("name"): cv.string,
         vol.Optional("device_id"): cv.string,
-        vol.Optional("assist_command"): str,
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -657,10 +650,6 @@ class StartTimerIntentHandler(intent.IntentHandler):
         if "seconds" in slots:
             seconds = int(slots["seconds"]["value"])
 
-        assist_command: str | None = None
-        if "assist_command" in slots:
-            assist_command = slots["assist_command"]["value"]
-
         await timer_manager.start_timer(
             hours,
             minutes,
@@ -668,7 +657,6 @@ class StartTimerIntentHandler(intent.IntentHandler):
             language=intent_obj.language,
             device_id=device_id,
             name=name,
-            assist_command=assist_command,
         )
 
         return intent_obj.create_response()
