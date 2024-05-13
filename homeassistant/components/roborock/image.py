@@ -9,7 +9,7 @@ from roborock import RoborockCommand
 from vacuum_map_parser_base.config.color import ColorsPalette
 from vacuum_map_parser_base.config.image_config import ImageConfig
 from vacuum_map_parser_base.config.size import Sizes
-from vacuum_map_parser_base.map_data import CalibrationPoints, Room
+from vacuum_map_parser_base.map_data import CalibrationPoints
 from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
 
 from homeassistant.components.image import ImageEntity
@@ -23,9 +23,6 @@ import homeassistant.util.dt as dt_util
 
 from .const import (
     ATTR_CALIBRATION_POINTS,
-    ATTR_IS_SELECTED,
-    ATTR_MAP_FLAG,
-    ATTR_ROOMS,
     DOMAIN,
     IMAGE_CACHE_INTERVAL,
     IMAGE_DRAWABLES,
@@ -58,6 +55,7 @@ async def async_setup_entry(
 class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
     """A class to let you visualize the map."""
 
+    _unrecorded_attributes = frozenset({ATTR_CALIBRATION_POINTS})
     _attr_has_entity_name = True
 
     def __init__(
@@ -78,7 +76,6 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         self._attr_image_last_updated = dt_util.utcnow()
         self.map_flag = map_flag
         self.calibration_points: CalibrationPoints | None = None
-        self.rooms: dict[int, Room] | None = None
         self.cached_map = self._create_image(starting_map)
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
@@ -124,7 +121,6 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         img_byte_arr = io.BytesIO()
         parsed_map.image.data.save(img_byte_arr, format="PNG")
         self.calibration_points = parsed_map.calibration()
-        self.rooms = parsed_map.rooms
         return img_byte_arr.getvalue()
 
     @property
@@ -132,9 +128,6 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         """Return the state attributes."""
         return {
             ATTR_CALIBRATION_POINTS: self.calibration_points,
-            ATTR_IS_SELECTED: self.is_selected,
-            ATTR_MAP_FLAG: self.map_flag,
-            ATTR_ROOMS: self.rooms,
         }
 
 
