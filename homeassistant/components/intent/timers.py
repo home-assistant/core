@@ -47,9 +47,6 @@ class TimerInfo:
     device_id: str | None
     """Id of the device where the timer was set."""
 
-    task: asyncio.Task
-    """Background task sleeping until timer is finished."""
-
     start_hours: int | None
     """Number of hours the timer should run as given by the user."""
 
@@ -98,6 +95,37 @@ class TimerInfo:
 
         return self.name.strip().casefold()
 
+    def cancel(self) -> None:
+        """Cancel the timer."""
+        self.seconds = 0
+        self.updated_at = time.monotonic_ns()
+        self.is_active = False
+
+    def pause(self) -> None:
+        """Pause the timer."""
+        self.seconds = self.seconds_left
+        self.updated_at = time.monotonic_ns()
+        self.is_active = False
+
+    def unpause(self) -> None:
+        """Unpause the timer."""
+        self.updated_at = time.monotonic_ns()
+        self.is_active = True
+
+    def add_time(self, seconds: int) -> None:
+        """Add time to the timer.
+
+        Seconds may be negative to remove time instead.
+        """
+        self.seconds = max(0, self.seconds_left + seconds)
+        self.updated_at = time.monotonic_ns()
+
+    def finish(self) -> None:
+        """Finish the timer."""
+        self.seconds = 0
+        self.updated_at = time.monotonic_ns()
+        self.is_active = False
+
 
 class TimerEventType(StrEnum):
     """Event type in timer handler."""
@@ -145,6 +173,7 @@ class TimerManager:
 
         # timer id -> timer
         self.timers: dict[str, TimerInfo] = {}
+        self.timer_tasks: dict[str, asyncio.Task] = {}
 
         self.handlers: list[TimerHandler] = []
 
@@ -188,10 +217,6 @@ class TimerManager:
             seconds=total_seconds,
             language=language,
             device_id=device_id,
-            task=self.hass.async_create_background_task(
-                self._wait_for_timer(timer_id, total_seconds, created_at),
-                name=f"Timer {timer_id}",
-            ),
             created_at=created_at,
             updated_at=created_at,
             assist_command=assist_command,
@@ -206,6 +231,10 @@ class TimerManager:
                 timer.floor_id = area.floor_id
 
         self.timers[timer_id] = timer
+        self.timer_tasks[timer_id] = self.hass.async_create_background_task(
+            self._wait_for_timer(timer_id, total_seconds, created_at),
+            name=f"Timer {timer_id}",
+        )
 
         await asyncio.gather(
             *(handler(TimerEventType.STARTED, timer) for handler in self.handlers)
@@ -243,10 +272,10 @@ class TimerManager:
         if timer is None:
             return
 
-        timer.seconds = 0
-        timer.updated_at = time.monotonic_ns()
+        timer.cancel()
         if timer.is_active:
-            timer.task.cancel()
+            task = self.timer_tasks.pop(timer_id)
+            task.cancel()
 
         await asyncio.gather(
             *(handler(TimerEventType.CANCELLED, timer) for handler in self.handlers)
@@ -267,13 +296,13 @@ class TimerManager:
 
         timer = self.timers.get(timer_id)
         if timer is None:
-            return
+            raise TimerNotFoundError
 
-        timer.seconds = max(0, timer.seconds_left + seconds)
-        timer.updated_at = time.monotonic_ns()
+        timer.add_time(seconds)
         if timer.is_active:
-            timer.task.cancel()
-            timer.task = self.hass.async_create_background_task(
+            task = self.timer_tasks.pop(timer_id)
+            task.cancel()
+            self.timer_tasks[timer_id] = self.hass.async_create_background_task(
                 self._wait_for_timer(timer_id, timer.seconds, timer.updated_at),
                 name=f"Timer {timer_id}",
             )
@@ -309,10 +338,9 @@ class TimerManager:
         if (timer is None) or (not timer.is_active):
             return
 
-        timer.seconds = timer.seconds_left
-        timer.updated_at = time.monotonic_ns()
-        timer.is_active = False
-        timer.task.cancel()
+        timer.pause()
+        task = self.timer_tasks.pop(timer_id)
+        task.cancel()
 
         await asyncio.gather(
             *(handler(TimerEventType.UPDATED, timer) for handler in self.handlers)
@@ -332,9 +360,8 @@ class TimerManager:
         if (timer is None) or timer.is_active:
             return
 
-        timer.is_active = True
-        timer.updated_at = time.monotonic_ns()
-        timer.task = self.hass.async_create_background_task(
+        timer.unpause()
+        self.timer_tasks[timer_id] = self.hass.async_create_background_task(
             self._wait_for_timer(timer_id, timer.seconds_left, timer.updated_at),
             name=f"Timer {timer.id}",
         )
@@ -353,13 +380,9 @@ class TimerManager:
 
     async def _timer_finished(self, timer_id: str) -> None:
         """Call event handlers when a timer finishes."""
-        timer = self.timers.pop(timer_id, None)
-        if timer is None:
-            return
+        timer = self.timers.pop(timer_id)
 
-        # Force seconds left to 0
-        timer.seconds = 0
-        timer.updated_at = time.monotonic_ns()
+        timer.finish()
         await asyncio.gather(
             *(handler(TimerEventType.FINISHED, timer) for handler in self.handlers)
         )
