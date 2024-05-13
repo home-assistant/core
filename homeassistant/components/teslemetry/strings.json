@@ -166,8 +166,14 @@
       "vehicle_state_tpms_pressure_rr": {
         "name": "Tire pressure rear right"
       },
+      "version": {
+        "name": "version"
+      },
       "vin": {
         "name": "Vehicle"
+      },
+      "vpp_backup_reserve_percent": {
+        "name": "VPP backup reserve"
       },
       "wall_connector_fault_state": {
         "name": "Fault state code"

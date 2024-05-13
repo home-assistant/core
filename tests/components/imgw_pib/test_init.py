@@ -1,6 +1,6 @@
 """Test init of IMGW-PIB integration."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from imgw_pib import ApiError
 
@@ -15,13 +15,14 @@ from tests.common import MockConfigEntry
 
 async def test_config_not_ready(
     hass: HomeAssistant,
-    mock_imgw_pib_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test for setup failure if the connection to the service fails."""
-    mock_imgw_pib_client.get_hydrological_data.side_effect = ApiError("API Error")
-
-    await init_integration(hass, mock_config_entry)
+    with patch(
+        "homeassistant.components.imgw_pib.ImgwPib.create",
+        side_effect=ApiError("API Error"),
+    ):
+        await init_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
