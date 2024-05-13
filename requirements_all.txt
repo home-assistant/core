@@ -146,7 +146,7 @@ adax==0.4.0
 adb-shell[async]==0.4.4
 
 # homeassistant.components.alarmdecoder
-adext==0.4.2
+adext==0.4.3
 
 # homeassistant.components.adguard
 adguardhome==0.6.3

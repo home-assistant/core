@@ -22,6 +22,8 @@ from .const import (
     SIGNAL_RFX_MESSAGE,
     SIGNAL_ZONE_FAULT,
     SIGNAL_ZONE_RESTORE,
+    DATA_AD,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,6 +43,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up for AlarmDecoder sensor."""
 
+    client = hass.data[DOMAIN][entry.entry_id][DATA_AD]
     zones = entry.options.get(OPTIONS_ZONES, DEFAULT_ZONE_OPTIONS)
 
     entities = []
@@ -53,7 +56,7 @@ async def async_setup_entry(
         relay_addr = zone_info.get(CONF_RELAY_ADDR)
         relay_chan = zone_info.get(CONF_RELAY_CHAN)
         entity = AlarmDecoderBinarySensor(
-            zone_num, zone_name, zone_type, zone_rfid, zone_loop, relay_addr, relay_chan
+            client, zone_num, zone_name, zone_type, zone_rfid, zone_loop, relay_addr, relay_chan
         )
         entities.append(entity)
 
@@ -63,10 +66,12 @@ async def async_setup_entry(
 class AlarmDecoderBinarySensor(BinarySensorEntity):
     """Representation of an AlarmDecoder binary sensor."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(
         self,
+        client,
         zone_number,
         zone_name,
         zone_type,
@@ -76,6 +81,8 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
         relay_chan,
     ):
         """Initialize the binary_sensor."""
+        self._attr_unique_id = f"{client.serial_number}-zone-{zone_number}"
+        self._client = client
         self._zone_number = int(zone_number)
         self._zone_type = zone_type
         self._attr_name = zone_name
@@ -112,6 +119,15 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
                 self.hass, SIGNAL_REL_MESSAGE, self._rel_message_callback
             )
         )
+
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {(DOMAIN, self._client.serial_number)},
+            "manufacturer": "NuTech",
+            "serial_number": self._client.serial_number,
+            "sw_version": self._client.version_number,
+        }
 
     def _fault_callback(self, zone):
         """Update the zone's state, if needed."""

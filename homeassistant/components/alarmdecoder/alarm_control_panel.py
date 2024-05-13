@@ -79,6 +79,7 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
     """Representation of an AlarmDecoder-based alarm panel."""
 
     _attr_name = "Alarm Panel"
+    _attr_has_entity_name = True
     _attr_should_poll = False
     _attr_code_format = CodeFormat.NUMBER
     _attr_supported_features = (
@@ -89,10 +90,21 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
 
     def __init__(self, client, auto_bypass, code_arm_required, alt_night_mode):
         """Initialize the alarm panel."""
+        self._attr_unique_id = f"{client.serial_number}-panel"
         self._client = client
         self._auto_bypass = auto_bypass
         self._attr_code_arm_required = code_arm_required
         self._alt_night_mode = alt_night_mode
+
+
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {(DOMAIN, self._client.serial_number)},
+            "manufacturer": "NuTech",
+            "serial_number": self._client.serial_number,
+            "sw_version": self._client.version_number,
+        }
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
