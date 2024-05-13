@@ -100,7 +100,6 @@ async def async_load(hass: HomeAssistant) -> None:
     """Load the restore state task."""
     restore_state = async_get(hass)
     await restore_state.async_setup()
-    hass.data[DATA_RESTORE_STATE] = restore_state
 
 
 @callback
