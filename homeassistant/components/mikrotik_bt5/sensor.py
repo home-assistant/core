@@ -105,7 +105,6 @@ def _sensor_device_info_to_hass(
 ) -> DeviceInfo:
     """Convert a sensor device info to hass device info."""
     hass_device_info = DeviceInfo({})
-    # if adv.valid and adv.readings.name:
     hass_device_info[ATTR_NAME] = "BT5 " + adv.address.upper()
     hass_device_info[ATTR_MANUFACTURER] = MIKROTIK_MANUFACTURER_NAME
     return hass_device_info
