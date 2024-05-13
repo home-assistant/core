@@ -75,11 +75,11 @@ async def async_setup_entry(
     hpid = f"{host}:{port}"
 
     groups: list[MediaPlayerEntity] = [
-        SnapcastGroupDevice(group, snapcast_server, hpid, config_entry.entry_id)
+        SnapcastGroupDevice(group, snapcast_server, hpid)
         for group in snapcast_server.groups
     ]
     clients: list[MediaPlayerEntity] = [
-        SnapcastClientDevice(client, snapcast_server, hpid, config_entry.entry_id)
+        SnapcastClientDevice(client, snapcast_server, hpid)
         for client in snapcast_server.clients
     ]
     async_add_entities(clients + groups)
@@ -119,12 +119,11 @@ class SnapcastBaseDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, device, server, entry_id) -> None:
+    def __init__(self, device, server) -> None:
         """Initialize the base device."""
         self._attr_available = True
         self._device = device
         self._server = server
-        self._entry_id = entry_id
         self._attr_media_content_type = MediaType.MUSIC
         self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
@@ -275,20 +274,20 @@ class SnapcastBaseDevice(MediaPlayerEntity):
 class SnapcastGroupDevice(SnapcastBaseDevice):
     """Representation of a Snapcast group device."""
 
-    def __init__(self, group, server, uid_part, entry_id) -> None:
+    def __init__(self, group, server, uid_part) -> None:
         """Initialize the Snapcast group device."""
-        super().__init__(group, server, entry_id)
+        super().__init__(group, server)
         self._attr_unique_id = (
             f"{GROUP_PREFIX}{uid_part}_{self.current_group.identifier}"
         )
 
     def _append(self) -> None:
         """Add self to group list."""
-        self.hass.data[DOMAIN][self._entry_id].groups.append(self)
+        self._server.groups.append(self)
 
     def _remove(self) -> None:
         """Remove self from group list."""
-        self.hass.data[DOMAIN][self._entry_id].groups.remove(self)
+        self._server.groups.remove(self)
 
     @property
     def current_group(self):
@@ -311,19 +310,19 @@ class SnapcastGroupDevice(SnapcastBaseDevice):
 class SnapcastClientDevice(SnapcastBaseDevice):
     """Representation of a Snapcast client device."""
 
-    def __init__(self, client, server, uid_part, entry_id) -> None:
+    def __init__(self, client, server, uid_part) -> None:
         """Initialize the Snapcast client device."""
-        super().__init__(client, server, entry_id)
+        super().__init__(client, server)
         # Note: Host part is needed, when using multiple snapservers
         self._attr_unique_id = f"{CLIENT_PREFIX}{uid_part}_{self._device.identifier}"
 
     def _append(self) -> None:
         """Add self to client list."""
-        self.hass.data[DOMAIN][self._entry_id].clients.append(self)
+        self._server.clients.append(self)
 
     def _remote(self) -> None:
         """Remove self from client list."""
-        self.hass.data[DOMAIN][self._entry_id].clients.remove(self)
+        self._server.clients.remove(self)
 
     @property
     def current_group(self):
@@ -365,9 +364,7 @@ class SnapcastClientDevice(SnapcastBaseDevice):
     async def async_join(self, master) -> None:
         """Join the group of the master player."""
         master_entity = next(
-            entity
-            for entity in self.hass.data[DOMAIN][self._entry_id].clients
-            if entity.entity_id == master
+            entity for entity in self._server.clients if entity.entity_id == master
         )
         if not isinstance(master_entity, SnapcastClientDevice):
             raise TypeError("Master is not a client device. Can only join clients.")
