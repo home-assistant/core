@@ -82,20 +82,7 @@ class RoborockStorage:
 
     async def async_save_map(self, map_name: str, content: bytes) -> None:
         """Write map if it should be updated."""
-        map_entry = self._data.get(map_name)
-        if not self._should_update(map_entry):
-            return None
-        filename = self._get_map_filename(map_name)
-        self._data[map_name] = RoborockMapEntry(map_name, dt_util.utcnow().timestamp())
-
-        try:
-            await self._hass.async_add_executor_job(self._save_map, filename, content)
-        except OSError as err:
-            _LOGGER.error("Unable to write map file: %s %s", filename, err)
-            # We don't want the _data dict to be updated with incorrect information
-            # Revert it if it previously existed.
-            if map_entry is not None:
-                self._data[map_name] = map_entry
+        await self.async_save_maps([(map_name, content)])
 
     async def async_save_maps(self, maps: list[tuple[str, bytes]]):
         """Write maps - update regardless. Should be called as background task."""

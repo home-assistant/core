@@ -221,7 +221,7 @@ async def create_coordinator_maps(
             storage_updates.append((map_info.name, roborock_map.cached_map))
     hass.async_create_background_task(
         roborock_storage.async_save_maps(storage_updates),
-        f"init_map_save_{coord.roborock_device_info.device.duid}",
+        f"{DOMAIN}_init_map_save_{coord.roborock_device_info.device.duid}",
     )
     if len(coord.maps) != 1:
         # Set the map back to the map the user previously had selected so that it
