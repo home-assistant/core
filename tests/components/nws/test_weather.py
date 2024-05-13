@@ -478,7 +478,7 @@ async def test_detailed_forecast_service(
 
     response = await hass.services.async_call(
         nws.DOMAIN,
-        "get_detailed_forecasts",
+        "get_forecasts_extra",
         {
             "entity_id": "weather.abc",
             "type": forecast_type,
@@ -519,7 +519,7 @@ async def test_detailed_forecast_service_no_data(
 
     response = await hass.services.async_call(
         nws.DOMAIN,
-        "get_detailed_forecasts",
+        "get_forecasts_extra",
         {
             "entity_id": "weather.abc",
             "type": forecast_type,

@@ -29,9 +29,9 @@
     }
   },
   "services": {
-    "get_detailed_forecasts": {
-      "name": "Get detailed forecasts",
-      "description": "Get detailed weather forecasts.",
+    "get_forecasts_extra": {
+      "name": "Get extra forecasts data.",
+      "description": "Get extra data for weather forecasts.",
       "fields": {
         "type": {
           "name": "Forecast type",

@@ -1,5 +1,5 @@
 {
   "services": {
-    "get_detailed_forecasts": "mdi:weather-cloudy-clock"
+    "get_forecasts_extra": "mdi:weather-cloudy-clock"
   }
 }

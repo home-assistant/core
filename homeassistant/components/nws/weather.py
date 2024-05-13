@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from functools import partial
 from types import MappingProxyType
-from typing import Any, cast, overload
+from typing import Any, Required, TypedDict, cast, overload
 
 import voluptuous as vol
 
@@ -43,7 +43,6 @@ from homeassistant.core import (
 from homeassistant.helpers import entity_platform, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
-from homeassistant.util.json import JsonValueType
 from homeassistant.util.unit_conversion import SpeedConverter, TemperatureConverter
 
 from . import NWSData, base_unique_id, device_info
@@ -58,19 +57,6 @@ from .const import (
 )
 
 PARALLEL_UPDATES = 0
-
-# List of NWS supported keys in weather entity model
-WEATHER_FORECAST_KEYS: tuple[str, ...] = (
-    ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_HUMIDITY,
-    ATTR_FORECAST_IS_DAYTIME,
-    ATTR_FORECAST_NATIVE_DEW_POINT,
-    ATTR_FORECAST_NATIVE_TEMP,
-    ATTR_FORECAST_NATIVE_WIND_SPEED,
-    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_TIME,
-    ATTR_FORECAST_WIND_BEARING,
-)
 
 
 def convert_condition(time: str, weather: tuple[tuple[str, int | None], ...]) -> str:
@@ -117,23 +103,20 @@ async def async_setup_entry(
     platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
-        "get_detailed_forecasts",
+        "get_forecasts_extra",
         {vol.Required("type"): vol.In(("hourly", "twice_daily"))},
-        "async_get_forecasts_service",
-        required_features=[
-            WeatherEntityFeature.FORECAST_DAILY,
-            WeatherEntityFeature.FORECAST_HOURLY,
-            WeatherEntityFeature.FORECAST_TWICE_DAILY,
-        ],
+        "async_get_forecasts_extra_service",
         supports_response=SupportsResponse.ONLY,
     )
 
     async_add_entities([NWSWeather(entry.data, nws_data)], False)
 
 
-class NWSForecast(Forecast):
-    """Forecast with extra fields needed for NWS."""
+class ExtraForecast(TypedDict, total=False):
+    """Forecast extra fields from  NWS."""
 
+    datetime: Required[str]
+    is_daytime: bool | None
     detailed_description: str | None
 
 
@@ -318,18 +301,42 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
             forecast.append(data)
         return forecast
 
-    def _add_to_forecast(
-        self, forecast: list[Forecast], nws_forecast: list[dict[str, Any]]
-    ) -> list[NWSForecast]:
-        full_forecast: list[NWSForecast] = cast(list[NWSForecast], forecast.copy())
-        for forecast_entry, nws_forecast_entry in zip(
-            full_forecast, nws_forecast, strict=True
-        ):
-            forecast_entry[ATTR_FORECAST_DETAILED_DESCRIPTION] = nws_forecast_entry.get(
+    @overload
+    def _forecast_extra(
+        self,
+        nws_forecast: None,
+        mode: str,
+    ) -> None: ...
+
+    @overload
+    def _forecast_extra(
+        self,
+        nws_forecast: list[dict[str, Any]],
+        mode: str,
+    ) -> list[ExtraForecast]: ...
+
+    def _forecast_extra(
+        self,
+        nws_forecast: list[dict[str, Any]] | None,
+        mode: str,
+    ) -> list[ExtraForecast] | None:
+        """Return forecast."""
+        if nws_forecast is None:
+            return None
+        forecast: list[ExtraForecast] = []
+        for forecast_entry in nws_forecast:
+            # context attributes in common
+            data: ExtraForecast = {
+                ATTR_FORECAST_TIME: cast(str, forecast_entry.get("startTime")),
+            }
+            if mode == DAYNIGHT:
+                data[ATTR_FORECAST_IS_DAYTIME] = forecast_entry.get("isDaytime")
+            # extra attributes
+            data[ATTR_FORECAST_DETAILED_DESCRIPTION] = forecast_entry.get(
                 "detailedForecast"
             )
-
-        return full_forecast
+            forecast.append(data)
+        return forecast
 
     @callback
     def _async_forecast_hourly(self) -> list[Forecast] | None:
@@ -352,22 +359,15 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
             if (coordinator := self.forecast_coordinators[forecast_type]) is not None:
                 await coordinator.async_request_refresh()
 
-    async def async_get_forecasts_service(self, type) -> ServiceResponse:
-        """Get weather forecast."""
+    async def async_get_forecasts_extra_service(self, type) -> ServiceResponse:
+        """Get extra weather forecast."""
         if type == "hourly":
-            native_forecast_list = await self.async_forecast_hourly()
-            nws_forecast = self.nws.forecast_hourly
+            nws_forecast = self._forecast_extra(self.nws.forecast_hourly, HOURLY)
         else:
-            native_forecast_list = await self.async_forecast_twice_daily()
-            nws_forecast = self.nws.forecast
-        if native_forecast_list is None or nws_forecast is None:
-            detailed_forecast_list: list[NWSForecast] | None = []
-        else:
-            # pylint: disable-next=protected-access
-            converted_forecast_list = self._convert_forecast(native_forecast_list)
-            detailed_forecast_list = self._add_to_forecast(
-                cast(list[Forecast], converted_forecast_list), nws_forecast
-            )
+            nws_forecast = self._forecast_extra(self.nws.forecast, DAYNIGHT)
+        if nws_forecast is None:
+            nws_forecast = []
+
         return {
-            "forecast": cast(JsonValueType, detailed_forecast_list),
+            "forecast": nws_forecast,
         }

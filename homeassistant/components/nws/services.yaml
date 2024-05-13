@@ -1,4 +1,4 @@
-get_detailed_forecasts:
+get_forecasts_extra:
   target:
     entity:
       domain: weather
