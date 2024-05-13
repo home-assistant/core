@@ -168,8 +168,6 @@ class TimerManager:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize timer manager."""
         self.hass = hass
-        self.area_registry = ar.async_get(hass)
-        self.device_registry = dr.async_get(hass)
 
         # timer id -> timer
         self.timers: dict[str, TimerInfo] = {}
@@ -223,10 +221,12 @@ class TimerManager:
         )
 
         # Fill in area/floor info
-        if device_id and (device := self.device_registry.async_get(device_id)):
+        device_registry = dr.async_get(self.hass)
+        if device_id and (device := device_registry.async_get(device_id)):
             timer.area_id = device.area_id
+            area_registry = ar.async_get(self.hass)
             if device.area_id and (
-                area := self.area_registry.async_get_area(device.area_id)
+                area := area_registry.async_get_area(device.area_id)
             ):
                 timer.floor_id = area.floor_id
 
@@ -270,7 +270,7 @@ class TimerManager:
         """Cancel a timer."""
         timer = self.timers.pop(timer_id, None)
         if timer is None:
-            return
+            raise TimerNotFoundError
 
         timer.cancel()
         if timer.is_active:
@@ -335,7 +335,11 @@ class TimerManager:
     async def pause_timer(self, timer_id: str) -> None:
         """Pauses a timer."""
         timer = self.timers.get(timer_id)
-        if (timer is None) or (not timer.is_active):
+        if timer is None:
+            raise TimerNotFoundError
+
+        if not timer.is_active:
+            # Already paused
             return
 
         timer.pause()
@@ -357,7 +361,11 @@ class TimerManager:
     async def unpause_timer(self, timer_id: str) -> None:
         """Unpause a timer."""
         timer = self.timers.get(timer_id)
-        if (timer is None) or timer.is_active:
+        if timer is None:
+            raise TimerNotFoundError
+
+        if timer.is_active:
+            # Already unpaused
             return
 
         timer.unpause()
@@ -476,10 +484,12 @@ def _find_timer(hass: HomeAssistant, slots: dict[str, Any]) -> TimerInfo:
             return matching_device_timers[0]
 
         # Try area/floor
+        device_registry = dr.async_get(hass)
+        area_registry = ar.async_get(hass)
         if (
-            (device := timer_manager.device_registry.async_get(device_id))
+            (device := device_registry.async_get(device_id))
             and device.area_id
-            and (area := timer_manager.area_registry.async_get_area(device.area_id))
+            and (area := area_registry.async_get_area(device.area_id))
         ):
             # Try area
             matching_area_timers = [
@@ -571,11 +581,13 @@ def _find_timers(hass: HomeAssistant, slots: dict[str, Any]) -> list[TimerInfo]:
 
     # Use device id to order remaining timers
     device_id: str = slots["device_id"]["value"]
-    device = timer_manager.device_registry.async_get(device_id)
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get(device_id)
     if (device is None) or (device.area_id is None):
         return matching_timers
 
-    area = timer_manager.area_registry.async_get_area(device.area_id)
+    area_registry = ar.async_get(hass)
+    area = area_registry.async_get_area(device.area_id)
     if area is None:
         return matching_timers
 

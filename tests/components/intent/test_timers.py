@@ -8,6 +8,8 @@ from homeassistant.components.intent.timers import (
     MultipleTimersMatchedError,
     TimerEventType,
     TimerInfo,
+    TimerManager,
+    TimerNotFoundError,
     async_register_timer_handler,
 )
 from homeassistant.const import ATTR_DEVICE_ID
@@ -812,3 +814,23 @@ async def test_ordinal(hass: HomeAssistant) -> None:
 
     async with asyncio.timeout(1):
         await cancelled_event.wait()
+
+
+async def test_timer_not_found(hass: HomeAssistant) -> None:
+    """Test invalid timer ids raise TimerNotFoundError."""
+    timer_manager = TimerManager(hass)
+
+    with pytest.raises(TimerNotFoundError):
+        await timer_manager.cancel_timer("does-not-exist")
+
+    with pytest.raises(TimerNotFoundError):
+        await timer_manager.add_time("does-not-exist", 1)
+
+    with pytest.raises(TimerNotFoundError):
+        await timer_manager.remove_time("does-not-exist", 1)
+
+    with pytest.raises(TimerNotFoundError):
+        await timer_manager.pause_timer("does-not-exist")
+
+    with pytest.raises(TimerNotFoundError):
+        await timer_manager.unpause_timer("does-not-exist")
