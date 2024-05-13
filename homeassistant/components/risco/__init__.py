@@ -38,7 +38,9 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    CONF_CONCURRENCY,
     DATA_COORDINATOR,
+    DEFAULT_CONCURRENCY,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     EVENTS_COORDINATOR,
@@ -85,7 +87,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data = entry.data
-    risco = RiscoLocal(data[CONF_HOST], data[CONF_PORT], data[CONF_PIN])
+    concurrency = entry.options.get(CONF_CONCURRENCY, DEFAULT_CONCURRENCY)
+    risco = RiscoLocal(
+        data[CONF_HOST], data[CONF_PORT], data[CONF_PIN], concurrency=concurrency
+    )
 
     try:
         await risco.connect()
@@ -96,7 +101,7 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         return False
 
     async def _error(error: Exception) -> None:
-        _LOGGER.error("Error in Risco library: %s", error)
+        _LOGGER.error("Error in Risco library", exc_info=error)
 
     entry.async_on_unload(risco.add_error_handler(_error))
 

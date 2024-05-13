@@ -103,7 +103,7 @@ async def test_bluetooth(
 
     # Inject the service info will trigger the flow to start
     inject_bluetooth_service_info(hass, WATER_TIMER_SERVICE_INFO)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     result = next(iter(hass.config_entries.flow.async_progress_by_handler(DOMAIN)))
 

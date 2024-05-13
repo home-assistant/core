@@ -106,7 +106,7 @@ def _figure_out_source(
         # and since this code is running in the event loop, we need to avoid
         # blocking I/O.
 
-        frame = sys._getframe(4)  # pylint: disable=protected-access
+        frame = sys._getframe(4)  # noqa: SLF001
         #
         # We use _getframe with 4 to skip the following frames:
         #
@@ -152,10 +152,10 @@ def _safe_get_message(record: logging.LogRecord) -> str:
     """
     try:
         return record.getMessage()
-    except Exception as ex:  # pylint: disable=broad-except
+    except Exception as ex:  # noqa: BLE001
         try:
             return f"Bad logger message: {record.msg} ({record.args})"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             return f"Bad logger message: {ex}"
 
 

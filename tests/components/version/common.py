@@ -43,7 +43,7 @@ async def mock_get_version_update(
     freezer: FrozenDateTimeFactory,
     version: str = MOCK_VERSION,
     data: dict[str, Any] = MOCK_VERSION_DATA,
-    side_effect: Exception = None,
+    side_effect: Exception | None = None,
 ) -> None:
     """Mock getting version."""
     with patch(

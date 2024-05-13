@@ -19,7 +19,7 @@ async def test_unload_entry(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert setup_entry.state is ConfigEntryState.LOADED
     with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.async_release"
+        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.async_release"
     ) as mock_disconnect:
         assert await hass.config_entries.async_unload(setup_entry.entry_id)
         await hass.async_block_till_done()
@@ -37,7 +37,7 @@ async def test_config_entry_not_ready(
             "homeassistant.components.roborock.RoborockApiClient.get_home_data",
         ),
         patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
             side_effect=RoborockException(),
         ),
     ):
@@ -55,7 +55,7 @@ async def test_config_entry_not_ready_home_data(
             side_effect=RoborockException(),
         ),
         patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
             side_effect=RoborockException(),
         ),
     ):
@@ -68,7 +68,7 @@ async def test_get_networking_fails(
 ) -> None:
     """Test that when networking fails, we attempt to retry."""
     with patch(
-        "homeassistant.components.roborock.RoborockMqttClient.get_networking",
+        "homeassistant.components.roborock.RoborockMqttClientV1.get_networking",
         side_effect=RoborockException(),
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -80,7 +80,7 @@ async def test_get_networking_fails_none(
 ) -> None:
     """Test that when networking returns None, we attempt to retry."""
     with patch(
-        "homeassistant.components.roborock.RoborockMqttClient.get_networking",
+        "homeassistant.components.roborock.RoborockMqttClientV1.get_networking",
         return_value=None,
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -93,11 +93,11 @@ async def test_cloud_client_fails_props(
     """Test that if networking succeeds, but we can't communicate with the vacuum, we can't get props, fail."""
     with (
         patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClient.ping",
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.ping",
             side_effect=RoborockException(),
         ),
         patch(
-            "homeassistant.components.roborock.coordinator.RoborockMqttClient.get_prop",
+            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_prop",
             side_effect=RoborockException(),
         ),
     ):
@@ -110,7 +110,7 @@ async def test_local_client_fails_props(
 ) -> None:
     """Test that if networking succeeds, but we can't communicate locally with the vacuum, we can't get props, fail."""
     with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
+        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
         side_effect=RoborockException(),
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -122,7 +122,7 @@ async def test_fails_maps_continue(
 ) -> None:
     """Test that if we fail to get the maps, we still setup."""
     with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_multi_maps_list",
+        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_multi_maps_list",
         side_effect=RoborockException(),
     ):
         await async_setup_component(hass, DOMAIN, {})

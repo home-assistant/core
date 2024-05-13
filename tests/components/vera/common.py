@@ -58,8 +58,8 @@ class ControllerConfig(NamedTuple):
 
 
 def new_simple_controller_config(
-    config: dict = None,
-    options: dict = None,
+    config: dict | None = None,
+    options: dict | None = None,
     config_source=ConfigSource.CONFIG_FLOW,
     serial_number="1111",
     devices: tuple[pv.VeraDevice, ...] = (),

@@ -26,6 +26,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.util.event_type import EventType
 
 from .const import ALWAYS_CONTINUOUS_DOMAINS, AUTOMATION_EVENTS, BUILT_IN_EVENTS, DOMAIN
 from .models import LogbookConfig
@@ -63,7 +64,7 @@ def _async_config_entries_for_ids(
 
 def async_determine_event_types(
     hass: HomeAssistant, entity_ids: list[str] | None, device_ids: list[str] | None
-) -> tuple[str, ...]:
+) -> tuple[EventType[Any] | str, ...]:
     """Reduce the event types based on the entity ids and device ids."""
     logbook_config: LogbookConfig = hass.data[DOMAIN]
     external_events = logbook_config.external_events
@@ -81,7 +82,7 @@ def async_determine_event_types(
     # to add them since we have historically included
     # them when matching only on entities
     #
-    intrested_event_types: set[str] = {
+    intrested_event_types: set[EventType[Any] | str] = {
         external_event
         for external_event, domain_call in external_events.items()
         if domain_call[0] in interested_domains
@@ -160,7 +161,7 @@ def async_subscribe_events(
     hass: HomeAssistant,
     subscriptions: list[CALLBACK_TYPE],
     target: Callable[[Event[Any]], None],
-    event_types: tuple[str, ...],
+    event_types: tuple[EventType[Any] | str, ...],
     entities_filter: Callable[[str], bool] | None,
     entity_ids: list[str] | None,
     device_ids: list[str] | None,
@@ -175,8 +176,7 @@ def async_subscribe_events(
         target, entities_filter, entity_ids, device_ids
     )
     subscriptions.extend(
-        hass.bus.async_listen(event_type, event_forwarder, run_immediately=True)
-        for event_type in event_types
+        hass.bus.async_listen(event_type, event_forwarder) for event_type in event_types
     )
 
     if device_ids and not entity_ids:
@@ -210,7 +210,6 @@ def async_subscribe_events(
         hass.bus.async_listen(
             EVENT_STATE_CHANGED,
             _forward_state_events_filtered,
-            run_immediately=True,
         )
     )
 
