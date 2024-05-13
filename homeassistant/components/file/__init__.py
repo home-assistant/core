@@ -12,6 +12,13 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
+from .notify import PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA
+from .sensor import PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA
+
+IMPORT_SCHEMA = {
+    Platform.SENSOR: SENSOR_PLATFORM_SCHEMA,
+    Platform.NOTIFY: NOTIFY_PLATFORM_SCHEMA,
+}
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -23,6 +30,7 @@ YAML_PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the file integration."""
 
+    hass.data[DOMAIN] = config
     if hass.config_entries.async_entries(DOMAIN):
         # We skip import in case we already have config entries
         return True
@@ -51,12 +59,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for domain, items in platforms_config.items():
         for item in items:
             if item[CONF_PLATFORM] == DOMAIN:
-                item[CONF_PLATFORM] = domain
+                file_config_item = IMPORT_SCHEMA[domain](item)
+                file_config_item[CONF_PLATFORM] = domain
                 hass.async_create_task(
                     hass.config_entries.flow.async_init(
                         DOMAIN,
                         context={"source": SOURCE_IMPORT},
-                        data=item,
+                        data=file_config_item,
                     )
                 )
 
@@ -90,7 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 Platform.NOTIFY,
                 DOMAIN,
                 config,
-                {},
+                hass.data[DOMAIN],
             )
         )
 

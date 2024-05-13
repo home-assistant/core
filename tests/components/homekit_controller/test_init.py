@@ -70,7 +70,7 @@ async def test_async_remove_entry(hass: HomeAssistant) -> None:
     assert hkid in hass.data[ENTITY_MAP].storage_data
 
     # Remove it via config entry and number of pairings should go down
-    await helper.config_entry.async_remove(hass)
+    await hass.config_entries.async_remove(helper.config_entry.entry_id)
     assert len(controller.pairings) == 0
 
     assert hkid not in hass.data[ENTITY_MAP].storage_data

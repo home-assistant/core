@@ -300,7 +300,7 @@ async def _async_setup_component(
         # If for some reason the background task in bootstrap was too slow
         # or the integration was added after bootstrap, we will load them here.
         load_translations_task = create_eager_task(
-            translation.async_load_integrations(hass, integration_set)
+            translation.async_load_integrations(hass, integration_set), loop=hass.loop
         )
     # Validate all dependencies exist and there are no circular dependencies
     if not await integration.resolve_dependencies():
@@ -448,7 +448,11 @@ async def _async_setup_component(
             *(
                 create_eager_task(
                     entry.async_setup_locked(hass, integration=integration),
-                    name=f"config entry setup {entry.title} {entry.domain} {entry.entry_id}",
+                    name=(
+                        f"config entry setup {entry.title} {entry.domain} "
+                        f"{entry.entry_id}"
+                    ),
+                    loop=hass.loop,
                 )
                 for entry in entries
             )
