@@ -31,6 +31,14 @@
                 }
             }
         },
+        "device_tracker": {
+            "location": {
+                "name": "Location"
+            },
+            "route": {
+                "name": "Route"
+            }
+        },
         "select": {
             "climate_state_seat_heater_left": {
                 "name": "Seat heater front left",
@@ -118,22 +126,6 @@
                     "backup": "Backup",
                     "self_consumption": "Self consumption"
                 }
-            }
-        },
-        "device_tracker": {
-            "location": {
-                "name": "Location",
-                "state_attributes": {
-                    "heading": {
-                        "name": "Heading"
-                    },
-                    "speed": {
-                        "name": "Speed"
-                    }
-                }
-            },
-            "route": {
-                "name": "Route"
             }
         },
         "sensor": {
