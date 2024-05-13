@@ -98,8 +98,7 @@ class StoredState:
 
 async def async_load(hass: HomeAssistant) -> None:
     """Load the restore state task."""
-    restore_state = async_get(hass)
-    await restore_state.async_setup()
+    await async_get(hass).async_setup()
 
 
 @callback
