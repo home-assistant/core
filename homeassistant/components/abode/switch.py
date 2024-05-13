@@ -87,4 +87,4 @@ class AbodeAutomationSwitch(AbodeAutomation, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return True if the automation is enabled."""
-        return bool(self._automation.is_enabled)
+        return bool(self._automation.enabled)
