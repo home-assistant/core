@@ -45,7 +45,7 @@ class MikroTikSensorEntityDescription(SensorEntityDescription):
     # Restrict the type to satisfy the type checker and catch attempts
     # to use UNDEFINED in the entity descriptions.
     name: str | None = None
-    value: float | None = None
+    value: Callable[[Any], Any] = lambda a : None
 
 
 SENSOR_DESCRIPTIONS = {
