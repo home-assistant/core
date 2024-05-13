@@ -303,19 +303,19 @@ class ConfigEntry(Generic[_DataT]):
     def __init__(
         self,
         *,
-        version: int,
-        minor_version: int,
-        domain: str,
-        title: str,
         data: Mapping[str, Any],
-        source: str,
+        disabled_by: ConfigEntryDisabler | None = None,
+        domain: str,
+        entry_id: str | None = None,
+        minor_version: int,
+        options: Mapping[str, Any] | None,
         pref_disable_new_entities: bool | None = None,
         pref_disable_polling: bool | None = None,
-        options: Mapping[str, Any] | None = None,
-        unique_id: str | None = None,
-        entry_id: str | None = None,
+        source: str,
         state: ConfigEntryState = ConfigEntryState.NOT_LOADED,
-        disabled_by: ConfigEntryDisabler | None = None,
+        title: str,
+        unique_id: str | None,
+        version: int,
     ) -> None:
         """Initialize a config entry."""
         _setter = object.__setattr__
@@ -935,18 +935,18 @@ class ConfigEntry(Generic[_DataT]):
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this entry."""
         return {
-            "entry_id": self.entry_id,
-            "version": self.version,
-            "minor_version": self.minor_version,
-            "domain": self.domain,
-            "title": self.title,
             "data": dict(self.data),
+            "disabled_by": self.disabled_by,
+            "domain": self.domain,
+            "entry_id": self.entry_id,
+            "minor_version": self.minor_version,
             "options": dict(self.options),
             "pref_disable_new_entities": self.pref_disable_new_entities,
             "pref_disable_polling": self.pref_disable_polling,
             "source": self.source,
+            "title": self.title,
             "unique_id": self.unique_id,
-            "disabled_by": self.disabled_by,
+            "version": self.version,
         }
 
     @callback
@@ -1374,14 +1374,14 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
             await self.config_entries.async_unload(existing_entry.entry_id)
 
         entry = ConfigEntry(
-            version=result["version"],
-            minor_version=result["minor_version"],
-            domain=result["handler"],
-            title=result["title"],
             data=result["data"],
+            domain=result["handler"],
+            minor_version=result["minor_version"],
             options=result["options"],
             source=flow.context["source"],
+            title=result["title"],
             unique_id=flow.unique_id,
+            version=result["version"],
         )
 
         await self.config_entries.async_add(entry)
@@ -2440,8 +2440,8 @@ class ConfigFlow(ConfigEntryBaseFlow):
             description_placeholders=description_placeholders,
         )
 
-        result["options"] = options or {}
         result["minor_version"] = self.MINOR_VERSION
+        result["options"] = options or {}
         result["version"] = self.VERSION
 
         return result
