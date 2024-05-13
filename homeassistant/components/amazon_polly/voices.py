@@ -1,10 +1,12 @@
-"""Get all supported voices from Amazon Polly"""
+"""Get all supported voices from Amazon Polly."""
 
 import boto3
 from pydantic import BaseModel, Field
 
 
 class AmazonPollyVoice(BaseModel):
+    """Amazon Polly Voice."""
+
     id: str = Field(alias="Id")
     name: str = Field(alias="Name")
     gender: str = Field(alias="Gender")
@@ -17,17 +19,15 @@ class AmazonPollyVoice(BaseModel):
 
 
 def get_all_voices(client: boto3.client) -> list[AmazonPollyVoice]:
+    """Get list of all supported voices from Amazon Polly."""
     response = client.describe_voices()
     return [AmazonPollyVoice.validate(voice) for voice in response["Voices"]]
 
 
-def main() -> None:
+if __name__ == "__main__":
     client = boto3.client("polly")
     voices = get_all_voices(client)
-    print(voices)
     for voice in sorted(voices, key=lambda x: x.id):
-        print(f'"{voice.id}", # {voice.language_name} ({voice.language_code})')
-
-
-if __name__ == "__main__":
-    main()
+        print(  # noqa: T201
+            f'"{voice.id}", # {voice.language_name} ({voice.language_code})'
+        )
