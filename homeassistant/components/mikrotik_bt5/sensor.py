@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
-from typing import Callable
 
 from mikrotik_bt5 import MikrotikBeacon
 
@@ -145,14 +145,12 @@ async def async_setup_entry(
     ][entry.entry_id]
     processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
     entry.async_on_unload(
-        processor.async_add_entities_listener(
-            MikroTikSensorEntityDescription, async_add_entities
-        )
+        processor.async_add_entities_listener(MikroTikSensorEntity, async_add_entities)
     )
     entry.async_on_unload(coordinator.async_register_processor(processor))
 
 
-class MikroTikSensorEntityDescription(
+class MikroTikSensorEntity(
     PassiveBluetoothProcessorEntity[
         PassiveBluetoothDataProcessor[float | int | None, MikrotikBeacon],
     ],
