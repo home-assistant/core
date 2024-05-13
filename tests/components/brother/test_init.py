@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.brother.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 
 from . import init_integration
@@ -23,10 +23,7 @@ async def test_async_setup_entry(
     """Test a successful setup entry."""
     await init_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.hl_l2340dw_status")
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == "waiting"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_config_not_ready(
