@@ -118,9 +118,6 @@ HANDLERS: Registry[str, type[ConfigFlow]] = Registry()
 STORAGE_KEY = "core.config_entries"
 STORAGE_VERSION = 1
 
-# Deprecated since 0.73
-PATH_CONFIG = ".config_entries.json"
-
 SAVE_DELAY = 1
 
 DISCOVERY_COOLDOWN = 1
@@ -1711,13 +1708,7 @@ class ConfigEntries:
 
     async def async_initialize(self) -> None:
         """Initialize config entry config."""
-        # Migrating for config entries stored before 0.73
-        config = await storage.async_migrator(
-            self.hass,
-            self.hass.config.path(PATH_CONFIG),
-            self._store,
-            old_conf_migrate_func=_old_conf_migrator,
-        )
+        config = await self._store.async_load()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
 
@@ -2105,11 +2096,6 @@ class ConfigEntries:
         if entry.domain not in self.hass.config.components:
             return False
         return entry.state == ConfigEntryState.LOADED
-
-
-async def _old_conf_migrator(old_config: dict[str, Any]) -> dict[str, Any]:
-    """Migrate the pre-0.73 config format to the latest version."""
-    return {"entries": old_config}
 
 
 @callback
