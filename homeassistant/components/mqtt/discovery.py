@@ -226,7 +226,7 @@ def _valid_origin_info(discovery_payload: MQTTDiscoveryPayload) -> bool:
         return True
     try:
         MQTT_ORIGIN_INFO_SCHEMA(discovery_payload[CONF_ORIGIN])
-    except Exception as exc:  # pylint: disable=broad-except
+    except Exception as exc:  # noqa:BLE001
         _LOGGER.warning(
             "Unable to parse origin information " "from discovery message: %s, got %s",
             exc,
@@ -317,7 +317,7 @@ async def async_start(  # noqa: C901
             for component_id, config in component_configs.items():
                 component = config.pop(CONF_PLATFORM)
                 component_node_id = (
-                    " ".join((component_id, node_id)) if node_id else component_id
+                    f"{component_id} {node_id}" if node_id else component_id
                 )
                 _replace_all_abbreviations(config)
                 discovery_payload = MQTTDiscoveryPayload(config)
@@ -336,9 +336,7 @@ async def async_start(  # noqa: C901
             _LOGGER.debug(
                 "Process device discovery payload %s", device_discovery_payload
             )
-            device_discovery_id = (
-                " ".join((node_id, object_id)) if node_id else object_id
-            )
+            device_discovery_id = f"{node_id} {object_id}" if node_id else object_id
             message = f"Processing device discovery for '{device_discovery_id}'"
             async_log_discovery_origin_info(
                 message, MQTTDiscoveryPayload(device_discovery_payload)
@@ -373,7 +371,7 @@ async def async_start(  # noqa: C901
                 _replace_topic_base(discovery_payload)
 
             # If present, the node_id will be included in the discovered object id
-            discovery_id = " ".join((node_id, object_id)) if node_id else object_id
+            discovery_id = f"{node_id} {object_id}" if node_id else object_id
             discovery_hash = (component, discovery_id)
 
             if discovery_payload:
