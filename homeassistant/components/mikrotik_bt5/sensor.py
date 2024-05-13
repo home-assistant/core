@@ -67,7 +67,7 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement="m/s²",
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:axis-arrow"
+        icon="mdi:axis-arrow",
     ),
     "battery": MikroTikSensorEntityDescription(
         key="battery",
@@ -113,7 +113,7 @@ def _sensor_device_info_to_hass(
 
 def sensor_update_to_bluetooth_data_update(
     adv: MikrotikBeacon,
-) -> PassiveBluetoothDataUpdate:
+) -> PassiveBluetoothDataUpdate[Any]:
     """Convert a sensor update to a Bluetooth data update."""
     data: dict[PassiveBluetoothEntityKey, Any] = {}
     names: dict[PassiveBluetoothEntityKey, str | None] = {}
@@ -140,9 +140,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the MikroTik BT5 tags sensors."""
-    coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinator: PassiveBluetoothProcessorCoordinator[MikrotikBeacon] = hass.data[
+        DOMAIN
+    ][entry.entry_id]
     processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
     entry.async_on_unload(
         processor.async_add_entities_listener(
@@ -153,7 +153,9 @@ async def async_setup_entry(
 
 
 class MikroTikSensorEntityDescription(
-    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[float | int | None]],
+    PassiveBluetoothProcessorEntity[
+        PassiveBluetoothDataProcessor[float | int | None, MikrotikBeacon],
+    ],
     SensorEntity,
 ):
     """Representation of an MikroTik BT5 tag."""
