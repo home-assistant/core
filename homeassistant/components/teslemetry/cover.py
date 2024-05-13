@@ -70,10 +70,13 @@ class TeslemetryWindowEntity(TeslemetryVehicleEntity, CoverEntity):
         rd = self.get("vehicle_state_rd_window")
         rp = self.get("vehicle_state_rp_window")
 
-        if fd or fp or rd or rp == OPEN:
+        # Any open set to open
+        if OPEN in (fd, fp, rd, rp):
             self._attr_is_closed = False
-        elif fd and fp and rd and rp == CLOSED:
+        # All closed set to closed
+        elif CLOSED == fd == fp == rd == rp:
             self._attr_is_closed = True
+        # Otherwise, set to unknown
         else:
             self._attr_is_closed = None
 
