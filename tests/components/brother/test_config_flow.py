@@ -84,8 +84,11 @@ async def test_errors(
 async def test_unsupported_model_error(hass: HomeAssistant) -> None:
     """Test unsupported printer model error."""
     with (
-        patch("brother.Brother.initialize"),
-        patch("brother.Brother._get_data", side_effect=UnsupportedModelError("error")),
+        patch("homeassistant.components.brother.Brother.initialize"),
+        patch(
+            "homeassistant.components.brother.Brother._get_data",
+            side_effect=UnsupportedModelError("error"),
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
@@ -139,8 +142,8 @@ async def test_zeroconf_exception(
 async def test_zeroconf_unsupported_model(hass: HomeAssistant) -> None:
     """Test unsupported printer model error."""
     with (
-        patch("brother.Brother.initialize"),
-        patch("brother.Brother._get_data") as mock_get_data,
+        patch("homeassistant.components.brother.Brother.initialize"),
+        patch("homeassistant.components.brother.Brother._get_data") as mock_get_data,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -195,8 +198,8 @@ async def test_zeroconf_no_probe_existing_device(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN, unique_id="0123456789", data=CONFIG)
     entry.add_to_hass(hass)
     with (
-        patch("brother.Brother.initialize"),
-        patch("brother.Brother._get_data") as mock_get_data,
+        patch("homeassistant.components.brother.Brother.initialize"),
+        patch("homeassistant.components.brother.Brother._get_data") as mock_get_data,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

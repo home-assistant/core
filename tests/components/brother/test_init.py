@@ -47,7 +47,7 @@ async def test_error_on_init(
     hass: HomeAssistant, exc: Exception, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test for error on init."""
-    with patch("brother.Brother.create", side_effect=exc):
+    with patch("homeassistant.components.brother.Brother.create", side_effect=exc):
         await init_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
