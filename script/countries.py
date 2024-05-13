@@ -24,5 +24,7 @@ Path("homeassistant/generated/countries.py").write_text(
             "COUNTRIES": countries,
         },
         generator=generator_string,
+        annotations={"COUNTRIES": "Final[set[str]]"},
+        typing_imports=["Final"],
     )
 )

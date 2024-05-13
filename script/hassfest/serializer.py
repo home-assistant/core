@@ -87,6 +87,7 @@ def format_python_namespace(
     *,
     annotations: dict[str, str] | None = None,
     generator: str = DEFAULT_GENERATOR,
+    typing_imports: list[str] | None = None,
 ) -> str:
     """Generate a nicely formatted "namespace" file.
 
@@ -104,4 +105,6 @@ def format_python_namespace(
     if annotations:
         # If we had any annotations, add the __future__ import.
         code = f"from __future__ import annotations\n{code}"
+    if typing_imports:
+        code = f"from typing import {','.join(sorted(typing_imports))}\n{code}"
     return format_python(code, generator=generator)
