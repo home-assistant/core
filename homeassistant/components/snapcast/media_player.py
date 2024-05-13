@@ -9,9 +9,11 @@ from snapcast.control.server import Snapserver
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -73,11 +75,11 @@ async def async_setup_entry(
     hpid = f"{host}:{port}"
 
     groups: list[MediaPlayerEntity] = [
-        SnapcastGroupDevice(group, hpid, config_entry.entry_id)
+        SnapcastGroupDevice(group, snapcast_server, hpid, config_entry.entry_id)
         for group in snapcast_server.groups
     ]
     clients: list[MediaPlayerEntity] = [
-        SnapcastClientDevice(client, hpid, config_entry.entry_id)
+        SnapcastClientDevice(client, snapcast_server, hpid, config_entry.entry_id)
         for client in snapcast_server.clients
     ]
     async_add_entities(clients + groups)
@@ -117,11 +119,14 @@ class SnapcastBaseDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, device, entry_id) -> None:
+    def __init__(self, device, server, entry_id) -> None:
         """Initialize the base device."""
         self._attr_available = True
         self._device = device
+        self._server = server
         self._entry_id = entry_id
+        self._attr_media_content_type = MediaType.MUSIC
+        self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
     def _append(self) -> None:
         """Add self to appropriate list."""
@@ -202,13 +207,77 @@ class SnapcastBaseDevice(MediaPlayerEntity):
         await self._device.restore()
         self.async_write_ha_state()
 
+    def _get_metadata(self, key):
+        """Get metadata from the current stream."""
+        if metadata := self._server.stream(self.current_group.stream).metadata:
+            return metadata.get(key, None)
+
+        return None
+
+    @property
+    def media_title(self) -> str | None:
+        """Title of current playing media."""
+        return self._get_metadata("title")
+
+    @property
+    def media_image_url(self) -> str | None:
+        """Image url of current playing media."""
+        return self._get_metadata("artUrl")
+
+    @property
+    def media_artist(self) -> str | None:
+        """Artist of current playing media, music track only."""
+        if artists := self._get_metadata("artist"):
+            return artists[0]
+
+        return None
+
+    @property
+    def media_album_name(self) -> str | None:
+        """Album name of current playing media, music track only."""
+        return self._get_metadata("album")
+
+    @property
+    def media_album_artist(self) -> str | None:
+        """Album artist of current playing media, music track only."""
+        if artists := self._get_metadata("albumArtist"):
+            return artists[0]
+
+        return None
+
+    @property
+    def media_track(self) -> int | None:
+        """Track number of current playing media, music track only."""
+        if value := self._get_metadata("trackNumber") is not None:
+            return int(value)
+
+        return None
+
+    @property
+    def media_duration(self) -> int | None:
+        """Duration of current playing media in seconds."""
+        if value := self._get_metadata("duration") is not None:
+            return int(value)
+
+        return None
+
+    @property
+    def media_position(self) -> int | None:
+        """Position of current playing media in seconds."""
+        # Position is part of properties object, not metadata object
+        if properties := self._server.stream(self.current_group.stream).properties:
+            if value := properties.get("position", None) is not None:
+                return int(value)
+
+        return None
+
 
 class SnapcastGroupDevice(SnapcastBaseDevice):
     """Representation of a Snapcast group device."""
 
-    def __init__(self, group, uid_part, entry_id) -> None:
+    def __init__(self, group, server, uid_part, entry_id) -> None:
         """Initialize the Snapcast group device."""
-        super().__init__(group, entry_id)
+        super().__init__(group, server, entry_id)
         self._attr_unique_id = (
             f"{GROUP_PREFIX}{uid_part}_{self.current_group.identifier}"
         )
@@ -242,9 +311,9 @@ class SnapcastGroupDevice(SnapcastBaseDevice):
 class SnapcastClientDevice(SnapcastBaseDevice):
     """Representation of a Snapcast client device."""
 
-    def __init__(self, client, uid_part, entry_id) -> None:
+    def __init__(self, client, server, uid_part, entry_id) -> None:
         """Initialize the Snapcast client device."""
-        super().__init__(client, entry_id)
+        super().__init__(client, server, entry_id)
         # Note: Host part is needed, when using multiple snapservers
         self._attr_unique_id = f"{CLIENT_PREFIX}{uid_part}_{self._device.identifier}"
 
