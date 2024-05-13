@@ -566,7 +566,10 @@ async def hass(
         if loaded_entries:
             await asyncio.gather(
                 *(
-                    create_eager_task(config_entry.async_unload(hass))
+                    create_eager_task(
+                        hass.config_entries.async_unload(config_entry.entry_id),
+                        loop=hass.loop,
+                    )
                     for config_entry in loaded_entries
                 )
             )
@@ -1163,6 +1166,31 @@ def mock_get_source_ip() -> Generator[patch, None, None]:
         yield patcher
     finally:
         patcher.stop()
+
+
+@pytest.fixture(autouse=True, scope="session")
+def translations_once() -> Generator[patch, None, None]:
+    """Only load translations once per session."""
+    from homeassistant.helpers.translation import _TranslationsCacheData
+
+    cache = _TranslationsCacheData({}, {})
+    patcher = patch(
+        "homeassistant.helpers.translation._TranslationsCacheData",
+        return_value=cache,
+    )
+    patcher.start()
+    try:
+        yield patcher
+    finally:
+        patcher.stop()
+
+
+@pytest.fixture
+def disable_translations_once(translations_once):
+    """Override loading translations once."""
+    translations_once.stop()
+    yield
+    translations_once.start()
 
 
 @pytest.fixture

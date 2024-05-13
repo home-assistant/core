@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from asyncio import get_running_loop
 from collections.abc import Callable
 from contextlib import suppress
 import functools
 import linecache
 import logging
+import threading
 from typing import Any, ParamSpec, TypeVar
 
 from homeassistant.core import HomeAssistant, async_get_hass
@@ -31,7 +31,7 @@ def _get_line_from_cache(filename: str, lineno: int) -> str:
     return (linecache.getline(filename, lineno) or "?").strip()
 
 
-def check_loop(
+def raise_for_blocking_call(
     func: Callable[..., Any],
     check_allowed: Callable[[dict[str, Any]], bool] | None = None,
     strict: bool = True,
@@ -44,15 +44,6 @@ def check_loop(
     The default advisory message is 'Use `await hass.async_add_executor_job()'
     Set `advise_msg` to an alternate message if the solution differs.
     """
-    try:
-        get_running_loop()
-        in_loop = True
-    except RuntimeError:
-        in_loop = False
-
-    if not in_loop:
-        return
-
     if check_allowed is not None and check_allowed(mapped_args):
         return
 
@@ -125,6 +116,7 @@ def check_loop(
 
 def protect_loop(
     func: Callable[_P, _R],
+    loop_thread_id: int,
     strict: bool = True,
     strict_core: bool = True,
     check_allowed: Callable[[dict[str, Any]], bool] | None = None,
@@ -133,14 +125,15 @@ def protect_loop(
 
     @functools.wraps(func)
     def protected_loop_func(*args: _P.args, **kwargs: _P.kwargs) -> _R:
-        check_loop(
-            func,
-            strict=strict,
-            strict_core=strict_core,
-            check_allowed=check_allowed,
-            args=args,
-            kwargs=kwargs,
-        )
+        if threading.get_ident() == loop_thread_id:
+            raise_for_blocking_call(
+                func,
+                strict=strict,
+                strict_core=strict_core,
+                check_allowed=check_allowed,
+                args=args,
+                kwargs=kwargs,
+            )
         return func(*args, **kwargs)
 
     return protected_loop_func

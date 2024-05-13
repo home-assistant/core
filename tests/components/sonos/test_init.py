@@ -213,6 +213,8 @@ async def test_async_poll_manual_hosts_1(
             not in caplog.text
         )
 
+    await hass.async_block_till_done(wait_background_tasks=True)
+
 
 async def test_async_poll_manual_hosts_2(
     hass: HomeAssistant,
@@ -236,6 +238,8 @@ async def test_async_poll_manual_hosts_2(
             f"Could not get visible Sonos devices from {soco_2.ip_address}"
             in caplog.text
         )
+
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def test_async_poll_manual_hosts_3(
@@ -261,6 +265,8 @@ async def test_async_poll_manual_hosts_3(
             in caplog.text
         )
 
+    await hass.async_block_till_done(wait_background_tasks=True)
+
 
 async def test_async_poll_manual_hosts_4(
     hass: HomeAssistant,
@@ -284,6 +290,8 @@ async def test_async_poll_manual_hosts_4(
             f"Could not get visible Sonos devices from {soco_2.ip_address}"
             not in caplog.text
         )
+
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 class SpeakerActivity:
@@ -348,6 +356,8 @@ async def test_async_poll_manual_hosts_5(
             assert "Activity on Living Room" in caplog.text
             assert "Activity on Bedroom" in caplog.text
 
+    await hass.async_block_till_done(wait_background_tasks=True)
+
 
 async def test_async_poll_manual_hosts_6(
     hass: HomeAssistant,
@@ -386,6 +396,8 @@ async def test_async_poll_manual_hosts_6(
             assert speaker_1_activity.call_count == 0
             assert speaker_2_activity.call_count == 0
 
+    await hass.async_block_till_done(wait_background_tasks=True)
+
 
 async def test_async_poll_manual_hosts_7(
     hass: HomeAssistant,
@@ -413,6 +425,8 @@ async def test_async_poll_manual_hosts_7(
     assert "media_player.garage" in entity_registry.entities
     assert "media_player.studio" in entity_registry.entities
 
+    await hass.async_block_till_done(wait_background_tasks=True)
+
 
 async def test_async_poll_manual_hosts_8(
     hass: HomeAssistant,
@@ -439,3 +453,4 @@ async def test_async_poll_manual_hosts_8(
     assert "media_player.basement" in entity_registry.entities
     assert "media_player.garage" in entity_registry.entities
     assert "media_player.studio" in entity_registry.entities
+    await hass.async_block_till_done(wait_background_tasks=True)

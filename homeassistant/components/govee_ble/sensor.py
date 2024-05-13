@@ -124,7 +124,7 @@ async def async_setup_entry(
 
 class GoveeBluetoothSensorEntity(
     PassiveBluetoothProcessorEntity[
-        PassiveBluetoothDataProcessor[float | int | str | None]
+        PassiveBluetoothDataProcessor[float | int | str | None, SensorUpdate]
     ],
     SensorEntity,
 ):
