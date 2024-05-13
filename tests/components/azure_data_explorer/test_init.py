@@ -15,6 +15,7 @@ from homeassistant.components.azure_data_explorer.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -22,19 +23,22 @@ from . import FilterTest
 from .const import AZURE_DATA_EXPLORER_PATH, BASE_CONFIG_FULL, BASIC_OPTIONS
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.components.azure_data_explorer.conftest import mock_entry_fixture_managed
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @pytest.mark.freeze_time("2024-01-01 00:00:00")
 async def test_put_event_on_queue_with_managed_client(
-    hass,
-    mock_managed_streaming,
+    hass: HomeAssistant,
+    entry_managed,
+    mock_managed_streaming: mock_entry_fixture_managed,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test listening to events from Hass. and writing to ADX with managed client."""
 
     hass.states.async_set("sensor.test_sensor", STATE_ON)
+
     await hass.async_block_till_done()
 
     async_fire_time_changed(hass, datetime(2024, 1, 1, 0, 1, 0))
@@ -57,9 +61,9 @@ async def test_put_event_on_queue_with_managed_client(
     ids=["KustoServiceError", "KustoAuthenticationError"],
 )
 async def test_put_event_on_queue_with_managed_client_with_errors(
-    hass,
+    hass: HomeAssistant,
     entry_managed,
-    mock_managed_streaming,
+    mock_managed_streaming: mock_entry_fixture_managed,
     sideeffect,
     log_message,
     caplog: pytest.LogCaptureFixture,
@@ -69,6 +73,7 @@ async def test_put_event_on_queue_with_managed_client_with_errors(
     mock_managed_streaming.side_effect = sideeffect
 
     hass.states.async_set("sensor.test_sensor", STATE_ON)
+    await hass.async_block_till_done()
 
     async_fire_time_changed(hass, datetime(2024, 1, 1, 0, 0, 0))
 
@@ -78,13 +83,15 @@ async def test_put_event_on_queue_with_managed_client_with_errors(
 
 
 async def test_put_event_on_queue_with_queueing_client(
-    hass,
+    hass: HomeAssistant,
     entry_queued,
     mock_queued_ingest,
 ) -> None:
     """Test listening to events from Hass. and writing to ADX with managed client."""
 
     hass.states.async_set("sensor.test_sensor", STATE_ON)
+
+    await hass.async_block_till_done()
 
     async_fire_time_changed(
         hass, utcnow() + timedelta(seconds=entry_queued.options[CONF_SEND_INTERVAL])
@@ -95,7 +102,7 @@ async def test_put_event_on_queue_with_queueing_client(
     assert type(mock_queued_ingest.call_args.args[0]) is StreamDescriptor
 
 
-async def test_import(hass) -> None:
+async def test_import(hass: HomeAssistant) -> None:
     """Test the popping of the filter and further import of the config."""
     config = {
         DOMAIN: {
@@ -117,7 +124,7 @@ async def test_import(hass) -> None:
 
 
 async def test_unload_entry(
-    hass,
+    hass: HomeAssistant,
     entry_managed,
     mock_managed_streaming,
 ) -> None:
@@ -135,7 +142,7 @@ async def test_unload_entry(
 
 @pytest.mark.freeze_time("2024-01-01 00:00:00")
 async def test_late_event(
-    hass,
+    hass: HomeAssistant,
     entry_with_one_event,
     mock_managed_streaming,
 ) -> None:
@@ -218,10 +225,9 @@ async def test_late_event(
     ids=["allowlist", "denylist", "filtered_allowlist", "filtered_denylist"],
 )
 async def test_filter(
-    hass,
+    hass: HomeAssistant,
     entry_managed,
     tests,
-    filter_schema,
     mock_managed_streaming,
 ) -> None:
     """Test different filters.
@@ -232,6 +238,7 @@ async def test_filter(
     for test in tests:
         mock_managed_streaming.reset_mock()
         hass.states.async_set(test.entity_id, STATE_ON)
+        await hass.async_block_till_done()
         async_fire_time_changed(
             hass,
             utcnow() + timedelta(seconds=entry_managed.options[CONF_SEND_INTERVAL]),
@@ -247,7 +254,7 @@ async def test_filter(
     ids=["None_event", "Mailformed_event"],
 )
 async def test_event(
-    hass,
+    hass: HomeAssistant,
     entry_managed,
     mock_managed_streaming,
     event,
