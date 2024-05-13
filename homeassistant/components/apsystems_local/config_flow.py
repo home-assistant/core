@@ -5,7 +5,7 @@ from APsystemsEZ1 import APsystemsEZ1M
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_DEVICE_ID, CONF_IP_ADDRESS, CONF_NAME
+from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
@@ -35,17 +35,13 @@ class APsystemsLocalAPIFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 session = async_get_clientsession(self.hass, False)
                 api = APsystemsEZ1M(user_input[CONF_IP_ADDRESS], session=session)
                 device_info = await api.get_device_info()
-                user_input[CONF_DEVICE_ID] = device_info.deviceId
-                user_input[CONF_NAME] = (
-                    "Solar"  # Set default name, can be changed later if desired easily
-                )
-                await self.async_set_unique_id(user_input[CONF_DEVICE_ID])
+                await self.async_set_unique_id(device_info.deviceId)
             except (TimeoutError, client_exceptions.ClientConnectionError) as exception:
                 LOGGER.warning(exception)
                 _errors["base"] = "connection_refused"
             else:
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME],
+                    title="Solar",
                     data=user_input,
                 )
         return self.async_show_form(

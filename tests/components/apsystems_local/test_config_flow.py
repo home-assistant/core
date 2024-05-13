@@ -1,6 +1,6 @@
 """Test the APsystems Local API config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.apsystems_local.const import DOMAIN
@@ -40,15 +40,16 @@ async def test_form_cannot_connect_and_recover(
         "homeassistant.components.apsystems_local.config_flow.APsystemsEZ1M",
         return_value=AsyncMock(),
     ) as mock_api:
-        mock_api.return_value.get_device_info = AsyncMock(True)
+        ret_data = MagicMock()
+        ret_data.deviceId = "MY_SERIAL_NUMBER"
+        mock_api.return_value.get_device_info = AsyncMock(return_value=ret_data)
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_IP_ADDRESS: "127.0.0.1",
             },
         )
-        # AiohttpClientMockResponse does not have .ok
-        # So, I check if it's coming that far and fail if that's not the case
+        assert result2["result"].unique_id == "MY_SERIAL_NUMBER"
         assert result2.get("type") == FlowResultType.CREATE_ENTRY
         assert result2["data"].get(CONF_IP_ADDRESS) == "127.0.0.1"
 
@@ -81,7 +82,9 @@ async def test_form_create_success(hass: HomeAssistant, mock_setup_entry) -> Non
         "homeassistant.components.apsystems_local.config_flow.APsystemsEZ1M",
         return_value=AsyncMock(),
     ) as mock_api:
-        mock_api.return_value.get_device_info = AsyncMock(True)
+        ret_data = MagicMock()
+        ret_data.deviceId = "MY_SERIAL_NUMBER"
+        mock_api.return_value.get_device_info = AsyncMock(return_value=ret_data)
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -89,7 +92,6 @@ async def test_form_create_success(hass: HomeAssistant, mock_setup_entry) -> Non
                 CONF_IP_ADDRESS: "127.0.0.1",
             },
         )
-        # AiohttpClientMockResponse does not have .ok
-        # So, I check if it's coming that far and fail if that's not the case
+        assert result["result"].unique_id == "MY_SERIAL_NUMBER"
         assert result.get("type") == FlowResultType.CREATE_ENTRY
         assert result["data"].get(CONF_IP_ADDRESS) == "127.0.0.1"

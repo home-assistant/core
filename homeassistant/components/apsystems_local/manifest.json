@@ -1,6 +1,6 @@
 {
   "domain": "apsystems_local",
-  "name": "APsystems Local API",
+  "name": "APsystems",
   "codeowners": ["@mawoka-myblock", "@SonnenladenGmbH"],
   "config_flow": true,
   "dependencies": [],
