@@ -87,7 +87,7 @@ class OSOEnergyBinarySensor(
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.entity_data)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update all data for OSO Energy."""
         await self.osoenergy.session.update_data()
         self.entity_data = await self.osoenergy.binary_sensor.get_sensor(
