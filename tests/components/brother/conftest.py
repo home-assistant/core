@@ -1,7 +1,7 @@
 """Test fixtures for brother."""
 
 from collections.abc import Generator
-import datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 from brother import BrotherSensors
@@ -63,7 +63,7 @@ BROTHER_DATA = BrotherSensors(
     pf_kit_mp_remaining_life=None,
     pf_kit_mp_remaining_pages=None,
     status="waiting",
-    uptime=datetime.datetime(2024, 3, 3, 15, 4, 24, tzinfo=datetime.UTC),
+    uptime=datetime(2024, 3, 3, 15, 4, 24, tzinfo=UTC),
     yellow_counter=None,
     yellow_drum_counter=1611,
     yellow_drum_remaining_life=92,
