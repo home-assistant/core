@@ -1,26 +1,17 @@
 """Tests for intent timers."""
 
 import asyncio
-from typing import Any
 
 import pytest
 
 from homeassistant.components.intent.timers import (
-    ATTR_DEVICE_ID,
-    ATTR_ID,
-    ATTR_NAME,
-    ATTR_PAUSED,
-    ATTR_SECONDS_LEFT,
-    ATTR_START_HOURS,
-    ATTR_START_MINUTES,
-    ATTR_START_SECONDS,
-    EVENT_INTENT_TIMER_CANCELLED,
-    EVENT_INTENT_TIMER_FINISHED,
-    EVENT_INTENT_TIMER_STARTED,
-    EVENT_INTENT_TIMER_UPDATED,
     MultipleTimersMatchedError,
+    TimerEventType,
+    TimerInfo,
+    async_register_timer_handler,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -43,35 +34,24 @@ async def test_start_finish_timer(hass: HomeAssistant) -> None:
 
     timer_id: str | None = None
 
-    async def started_listener(event: Event) -> None:
+    async def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         nonlocal timer_id
-        timer_id = event.data[ATTR_ID]
 
-        assert event.data[ATTR_NAME] == timer_name
-        assert event.data[ATTR_DEVICE_ID] == device_id
-        assert event.data[ATTR_START_HOURS] == 0
-        assert event.data[ATTR_START_MINUTES] == 0
-        assert event.data[ATTR_START_SECONDS] == 0
-        assert (
-            event.data[ATTR_SECONDS_LEFT]
-            == (60 * 60 * event.data[ATTR_START_HOURS])
-            + (60 * event.data[ATTR_START_MINUTES])
-            + event.data[ATTR_START_SECONDS]
-        )
-        started_event.set()
+        assert timer.name == timer_name
+        assert timer.device_id == device_id
+        assert timer.start_hours is None
+        assert timer.start_minutes is None
+        assert timer.start_seconds == 0
+        assert timer.seconds_left == 0
 
-    async def finished_listener(event: Event) -> None:
-        assert event.data[ATTR_ID] == timer_id
-        assert event.data[ATTR_NAME] == timer_name
-        assert event.data[ATTR_DEVICE_ID] == device_id
-        assert event.data[ATTR_START_HOURS] == 0
-        assert event.data[ATTR_START_MINUTES] == 0
-        assert event.data[ATTR_START_SECONDS] == 0
-        assert event.data[ATTR_SECONDS_LEFT] == 0
-        finished_event.set()
+        if event_type == TimerEventType.STARTED:
+            timer_id = timer.id
+            started_event.set()
+        elif event_type == TimerEventType.FINISHED:
+            assert timer.id == timer_id
+            finished_event.set()
 
-    hass.bus.async_listen(EVENT_INTENT_TIMER_STARTED, started_listener)
-    hass.bus.async_listen(EVENT_INTENT_TIMER_FINISHED, finished_listener)
+    async_register_timer_handler(hass, handle_timer)
 
     result = await intent.async_handle(
         hass,
@@ -101,40 +81,32 @@ async def test_cancel_timer(hass: HomeAssistant) -> None:
 
     timer_id: str | None = None
 
-    async def started_listener(event: Event) -> None:
+    async def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         nonlocal timer_id
-        timer_id = event.data[ATTR_ID]
+
+        assert timer.device_id == device_id
+        assert timer.start_hours == 1
+        assert timer.start_minutes == 2
+        assert timer.start_seconds == 3
 
         if timer_name is not None:
-            assert event.data[ATTR_NAME] == timer_name
+            assert timer.name == timer_name
 
-        assert event.data[ATTR_DEVICE_ID] == device_id
-        assert event.data[ATTR_START_HOURS] == 1
-        assert event.data[ATTR_START_MINUTES] == 2
-        assert event.data[ATTR_START_SECONDS] == 3
-        assert (
-            event.data[ATTR_SECONDS_LEFT]
-            == (60 * 60 * event.data[ATTR_START_HOURS])
-            + (60 * event.data[ATTR_START_MINUTES])
-            + event.data[ATTR_START_SECONDS]
-        )
-        started_event.set()
+        if event_type == TimerEventType.STARTED:
+            timer_id = timer.id
+            assert (
+                timer.seconds_left
+                == (60 * 60 * timer.start_hours)
+                + (60 * timer.start_minutes)
+                + timer.start_seconds
+            )
+            started_event.set()
+        elif event_type == TimerEventType.CANCELLED:
+            assert timer.id == timer_id
+            assert timer.seconds_left == 0
+            cancelled_event.set()
 
-    async def cancelled_listener(event: Event) -> None:
-        assert event.data[ATTR_ID] == timer_id
-
-        if timer_name is not None:
-            assert event.data[ATTR_NAME] == timer_name
-
-        assert event.data[ATTR_DEVICE_ID] == device_id
-        assert event.data[ATTR_START_HOURS] == 1
-        assert event.data[ATTR_START_MINUTES] == 2
-        assert event.data[ATTR_START_SECONDS] == 3
-        assert event.data[ATTR_SECONDS_LEFT] > 0
-        cancelled_event.set()
-
-    hass.bus.async_listen(EVENT_INTENT_TIMER_STARTED, started_listener)
-    hass.bus.async_listen(EVENT_INTENT_TIMER_CANCELLED, cancelled_listener)
+    async_register_timer_handler(hass, handle_timer)
 
     # Cancel by starting time
     result = await intent.async_handle(
@@ -213,34 +185,38 @@ async def test_increase_timer(hass: HomeAssistant) -> None:
 
     timer_name = "test timer"
     timer_id: str | None = None
-    original_total_seconds = 0
+    original_total_seconds = -1
 
-    async def started_listener(event: Event) -> None:
+    async def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         nonlocal timer_id, original_total_seconds
-        timer_id = event.data[ATTR_ID]
-        original_total_seconds = (
-            (60 * 60 * event.data[ATTR_START_HOURS])
-            + (60 * event.data[ATTR_START_MINUTES])
-            + event.data[ATTR_START_SECONDS]
-        )
-        started_event.set()
 
-    async def updated_listener(event: Event) -> None:
-        assert event.data[ATTR_ID] == timer_id
-        assert event.data[ATTR_NAME] == timer_name
-        assert event.data[ATTR_DEVICE_ID] == device_id
-        assert event.data[ATTR_START_HOURS] == 1
-        assert event.data[ATTR_START_MINUTES] == 2
-        assert event.data[ATTR_START_SECONDS] == 3
-        assert event.data[ATTR_SECONDS_LEFT] > original_total_seconds
-        updated_event.set()
+        assert timer.device_id == device_id
+        assert timer.start_hours == 1
+        assert timer.start_minutes == 2
+        assert timer.start_seconds == 3
 
-    async def cancelled_listener(event: Event) -> None:
-        cancelled_event.set()
+        if timer_name is not None:
+            assert timer.name == timer_name
 
-    hass.bus.async_listen(EVENT_INTENT_TIMER_STARTED, started_listener)
-    hass.bus.async_listen(EVENT_INTENT_TIMER_UPDATED, updated_listener)
-    hass.bus.async_listen(EVENT_INTENT_TIMER_CANCELLED, cancelled_listener)
+        if event_type == TimerEventType.STARTED:
+            timer_id = timer.id
+            original_total_seconds = (
+                (60 * 60 * timer.start_hours)
+                + (60 * timer.start_minutes)
+                + timer.start_seconds
+            )
+            started_event.set()
+        elif event_type == TimerEventType.UPDATED:
+            assert timer.id == timer_id
+
+            # Timer was increased
+            assert timer.seconds_left > original_total_seconds
+            updated_event.set()
+        elif event_type == TimerEventType.CANCELLED:
+            assert timer.id == timer_id
+            cancelled_event.set()
+
+    async_register_timer_handler(hass, handle_timer)
 
     result = await intent.async_handle(
         hass,
@@ -306,32 +282,37 @@ async def test_decrease_timer(hass: HomeAssistant) -> None:
     timer_id: str | None = None
     original_total_seconds = 0
 
-    async def started_listener(event: Event) -> None:
+    async def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         nonlocal timer_id, original_total_seconds
-        timer_id = event.data[ATTR_ID]
-        original_total_seconds = (
-            (60 * 60 * event.data[ATTR_START_HOURS])
-            + (60 * event.data[ATTR_START_MINUTES])
-            + event.data[ATTR_START_SECONDS]
-        )
-        started_event.set()
 
-    async def updated_listener(event: Event) -> None:
-        assert event.data[ATTR_ID] == timer_id
-        assert event.data[ATTR_NAME] == timer_name
-        assert event.data[ATTR_DEVICE_ID] == device_id
-        assert event.data[ATTR_START_HOURS] == 1
-        assert event.data[ATTR_START_MINUTES] == 2
-        assert event.data[ATTR_START_SECONDS] == 3
-        assert event.data[ATTR_SECONDS_LEFT] <= original_total_seconds - 30
-        updated_event.set()
+        assert timer.device_id == device_id
+        assert timer.start_hours == 1
+        assert timer.start_minutes == 2
+        assert timer.start_seconds == 3
 
-    async def cancelled_listener(event: Event) -> None:
-        cancelled_event.set()
+        if timer_name is not None:
+            assert timer.name == timer_name
 
-    hass.bus.async_listen(EVENT_INTENT_TIMER_STARTED, started_listener)
-    hass.bus.async_listen(EVENT_INTENT_TIMER_UPDATED, updated_listener)
-    hass.bus.async_listen(EVENT_INTENT_TIMER_CANCELLED, cancelled_listener)
+        if event_type == TimerEventType.STARTED:
+            timer_id = timer.id
+            original_total_seconds = (
+                (60 * 60 * timer.start_hours)
+                + (60 * timer.start_minutes)
+                + timer.start_seconds
+            )
+            started_event.set()
+        elif event_type == TimerEventType.UPDATED:
+            assert timer.id == timer_id
+
+            # Timer was decreased
+            assert timer.seconds_left <= (original_total_seconds - 30)
+
+            updated_event.set()
+        elif event_type == TimerEventType.CANCELLED:
+            assert timer.id == timer_id
+            cancelled_event.set()
+
+    async_register_timer_handler(hass, handle_timer)
 
     result = await intent.async_handle(
         hass,
@@ -395,27 +376,35 @@ async def test_decrease_timer_below_zero(hass: HomeAssistant) -> None:
     timer_id: str | None = None
     original_total_seconds = 0
 
-    async def started_listener(event: Event) -> None:
+    async def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         nonlocal timer_id, original_total_seconds
-        timer_id = event.data[ATTR_ID]
-        original_total_seconds = (
-            (60 * 60 * event.data[ATTR_START_HOURS])
-            + (60 * event.data[ATTR_START_MINUTES])
-            + event.data[ATTR_START_SECONDS]
-        )
-        started_event.set()
 
-    async def updated_listener(event: Event) -> None:
-        assert event.data[ATTR_ID] == timer_id
-        assert event.data[ATTR_SECONDS_LEFT] == 0
-        updated_event.set()
+        assert timer.device_id is None
+        assert timer.name is None
+        assert timer.start_hours == 1
+        assert timer.start_minutes == 2
+        assert timer.start_seconds == 3
 
-    async def finished_listener(event: Event) -> None:
-        finished_event.set()
+        if event_type == TimerEventType.STARTED:
+            timer_id = timer.id
+            original_total_seconds = (
+                (60 * 60 * timer.start_hours)
+                + (60 * timer.start_minutes)
+                + timer.start_seconds
+            )
+            started_event.set()
+        elif event_type == TimerEventType.UPDATED:
+            assert timer.id == timer_id
 
-    hass.bus.async_listen(EVENT_INTENT_TIMER_STARTED, started_listener)
-    hass.bus.async_listen(EVENT_INTENT_TIMER_UPDATED, updated_listener)
-    hass.bus.async_listen(EVENT_INTENT_TIMER_FINISHED, finished_listener)
+            # Timer was decreased below zero
+            assert timer.seconds_left == 0
+
+            updated_event.set()
+        elif event_type == TimerEventType.FINISHED:
+            assert timer.id == timer_id
+            finished_event.set()
+
+    async_register_timer_handler(hass, handle_timer)
 
     result = await intent.async_handle(
         hass,
@@ -588,13 +577,16 @@ async def test_disambiguation(
 
     # Listen for timer cancellation
     cancelled_event = asyncio.Event()
-    cancelled_data: dict[str, Any] = {}
+    timer_info: TimerInfo | None = None
 
-    async def cancelled_listener(event: Event) -> None:
-        cancelled_data.update(event.data)
-        cancelled_event.set()
+    async def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+        nonlocal timer_info
 
-    hass.bus.async_listen(EVENT_INTENT_TIMER_CANCELLED, cancelled_listener)
+        if event_type == TimerEventType.CANCELLED:
+            timer_info = timer
+            cancelled_event.set()
+
+    async_register_timer_handler(hass, handle_timer)
 
     # Alice: cancel my timer
     result = await intent.async_handle(
@@ -609,8 +601,9 @@ async def test_disambiguation(
         await cancelled_event.wait()
 
     # Verify this is the 3 minute timer from Alice
-    assert cancelled_data.get(ATTR_DEVICE_ID) == device_alice.id
-    assert cancelled_data.get(ATTR_START_MINUTES) == 3
+    assert timer_info is not None
+    assert timer_info.device_id == device_alice.id
+    assert timer_info.start_minutes == 3
 
     # Cancel Bob's timer
     result = await intent.async_handle(
@@ -688,7 +681,7 @@ async def test_disambiguation(
 
     # Alice cancels the study timer from study
     cancelled_event.clear()
-    cancelled_data.clear()
+    timer_info = None
     result = await intent.async_handle(
         hass,
         "test",
@@ -698,8 +691,9 @@ async def test_disambiguation(
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
     # Verify this is the 3 minute timer from Alice in the study
-    assert cancelled_data.get(ATTR_DEVICE_ID) == device_alice.id
-    assert cancelled_data.get(ATTR_START_MINUTES) == 3
+    assert timer_info is not None
+    assert timer_info.device_id == device_alice.id
+    assert timer_info.start_minutes == 3
 
     # Trying to cancel the remaining two timers without area/floor info fails
     with pytest.raises(MultipleTimersMatchedError):
@@ -712,7 +706,7 @@ async def test_disambiguation(
 
     # Alice cancels the bedroom timer from study (same floor)
     cancelled_event.clear()
-    cancelled_data.clear()
+    timer_info = None
     result = await intent.async_handle(
         hass,
         "test",
@@ -722,8 +716,9 @@ async def test_disambiguation(
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
     # Verify this is the 3 minute timer from Alice in the bedroom
-    assert cancelled_data.get(ATTR_DEVICE_ID) == device_alice_2.id
-    assert cancelled_data.get(ATTR_START_MINUTES) == 3
+    assert timer_info is not None
+    assert timer_info.device_id == device_alice_2.id
+    assert timer_info.start_minutes == 3
 
 
 async def test_pause_unpause_timer(hass: HomeAssistant) -> None:
@@ -735,15 +730,14 @@ async def test_pause_unpause_timer(hass: HomeAssistant) -> None:
 
     expected_paused = False
 
-    async def started_listener(event: Event) -> None:
-        started_event.set()
+    async def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+        if event_type == TimerEventType.STARTED:
+            started_event.set()
+        elif event_type == TimerEventType.UPDATED:
+            assert timer.is_paused == expected_paused
+            updated_event.set()
 
-    async def updated_listener(event: Event) -> None:
-        assert event.data[ATTR_PAUSED] == expected_paused
-        updated_event.set()
-
-    hass.bus.async_listen(EVENT_INTENT_TIMER_STARTED, started_listener)
-    hass.bus.async_listen(EVENT_INTENT_TIMER_UPDATED, updated_listener)
+    async_register_timer_handler(hass, handle_timer)
 
     result = await intent.async_handle(
         hass, "test", intent.INTENT_SET_TIMER, {"minutes": {"value": 5}}
@@ -781,15 +775,14 @@ async def test_ordinal(hass: HomeAssistant) -> None:
     timer_ids: list[str] = []
     ordinal = 1
 
-    async def started_listener(event: Event) -> None:
-        timer_ids.append(event.data[ATTR_ID])
-        started_event.set()
+    async def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+        if event_type == TimerEventType.STARTED:
+            timer_ids.append(timer.id)
+            started_event.set()
+        elif event_type == TimerEventType.CANCELLED:
+            cancelled_event.set()
 
-    async def cancelled_listener(event: Event) -> None:
-        cancelled_event.set()
-
-    hass.bus.async_listen(EVENT_INTENT_TIMER_STARTED, started_listener)
-    hass.bus.async_listen(EVENT_INTENT_TIMER_CANCELLED, cancelled_listener)
+    async_register_timer_handler(hass, handle_timer)
 
     # Set three 5 minute timers
     for _ in range(3):

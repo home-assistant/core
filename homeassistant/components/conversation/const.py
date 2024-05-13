@@ -12,5 +12,3 @@ ATTR_CONVERSATION_ID = "conversation_id"
 
 SERVICE_PROCESS = "process"
 SERVICE_RELOAD = "reload"
-
-ASSIST_COMMAND = "assist_command"

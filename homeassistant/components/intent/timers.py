@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from enum import StrEnum
 from functools import cached_property
 import logging
 import time
@@ -21,20 +23,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.util import ulid
 
-from .const import (
-    ATTR_DATA,
-    ATTR_LANGUAGE,
-    ATTR_PAUSED,
-    ATTR_SECONDS_LEFT,
-    ATTR_START_HOURS,
-    ATTR_START_MINUTES,
-    ATTR_START_SECONDS,
-    EVENT_INTENT_TIMER_CANCELLED,
-    EVENT_INTENT_TIMER_FINISHED,
-    EVENT_INTENT_TIMER_STARTED,
-    EVENT_INTENT_TIMER_UPDATED,
-    TIMER_DATA,
-)
+from .const import TIMER_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,8 +71,8 @@ class TimerInfo:
     is_paused: bool = False
     """True if timer is currently paused."""
 
-    data: dict[str, Any] | None = None
-    """Extra data attached to timer that is passed to events."""
+    assist_command: str | None = None
+    """Optional Assist command to execute when timers is finished (same language as timer)."""
 
     area_id: str | None = None
     """Id of area that the device belongs to."""
@@ -109,20 +98,24 @@ class TimerInfo:
 
         return self.name.strip().casefold()
 
-    def to_event(self) -> dict[str, Any]:
-        """Convert to event data."""
-        return {
-            ATTR_ID: self.id,
-            ATTR_NAME: self.name or "",
-            ATTR_DEVICE_ID: self.device_id or "",
-            ATTR_SECONDS_LEFT: self.seconds_left,
-            ATTR_START_HOURS: self.start_hours or 0,
-            ATTR_START_MINUTES: self.start_minutes or 0,
-            ATTR_START_SECONDS: self.start_seconds or 0,
-            ATTR_PAUSED: self.is_paused,
-            ATTR_LANGUAGE: self.language,
-            ATTR_DATA: self.data or {},
-        }
+
+class TimerEventType(StrEnum):
+    """Event type in timer handler."""
+
+    STARTED = "started"
+    """Timer has started."""
+
+    UPDATED = "updated"
+    """Timer has been increased, decreased, paused, or unpaused."""
+
+    CANCELLED = "cancelled"
+    """Timer has been cancelled."""
+
+    FINISHED = "finished"
+    """Timer finished without being cancelled."""
+
+
+TimerHandler = Callable[[TimerEventType, TimerInfo], Coroutine[None, None, Any]]
 
 
 class TimerNotFoundError(intent.IntentHandleError):
@@ -153,6 +146,16 @@ class TimerManager:
         # timer id -> timer
         self.timers: dict[str, TimerInfo] = {}
 
+        self.handlers: list[TimerHandler] = []
+
+    def register_handler(self, handler: TimerHandler) -> Callable[[], None]:
+        """Register a timer handler.
+
+        Returns a callable to unregister.
+        """
+        self.handlers.append(handler)
+        return lambda: self.handlers.remove(handler)
+
     async def start_timer(
         self,
         hours: int | None,
@@ -161,7 +164,7 @@ class TimerManager:
         language: str,
         device_id: str | None,
         name: str | None = None,
-        data: dict[str, Any] | None = None,
+        assist_command: str | None = None,
     ) -> str:
         """Start a timer."""
         total_seconds = 0
@@ -191,7 +194,7 @@ class TimerManager:
             ),
             created_at=created_at,
             updated_at=created_at,
-            data=data,
+            assist_command=assist_command,
         )
 
         # Fill in area/floor info
@@ -204,16 +207,18 @@ class TimerManager:
 
         self.timers[timer_id] = timer
 
-        self.hass.bus.async_fire(EVENT_INTENT_TIMER_STARTED, timer.to_event())
+        await asyncio.gather(
+            *(handler(TimerEventType.STARTED, timer) for handler in self.handlers)
+        )
 
         _LOGGER.debug(
-            "Timer started: id=%s, name=%s, hours=%s, minutes=%s, seconds=%s, data=%s, device_id=%s",
+            "Timer started: id=%s, name=%s, hours=%s, minutes=%s, seconds=%s, assist_command=%s, device_id=%s",
             timer_id,
             name,
             hours,
             minutes,
             seconds,
-            data,
+            assist_command,
             device_id,
         )
 
@@ -238,15 +243,14 @@ class TimerManager:
         if timer is None:
             return
 
-        # Capture event data before cancellation to get accurate seconds_left
-        event_data = timer.to_event()
-
         timer.seconds = 0
         timer.updated_at = time.monotonic_ns()
         if not timer.is_paused:
             timer.task.cancel()
 
-        self.hass.bus.async_fire(EVENT_INTENT_TIMER_CANCELLED, event_data)
+        await asyncio.gather(
+            *(handler(TimerEventType.CANCELLED, timer) for handler in self.handlers)
+        )
 
         _LOGGER.debug(
             "Timer cancelled: id=%s, name=%s, seconds_left=%s, device_id=%s",
@@ -274,7 +278,9 @@ class TimerManager:
                 name=f"Timer {timer_id}",
             )
 
-        self.hass.bus.async_fire(EVENT_INTENT_TIMER_UPDATED, timer.to_event())
+        await asyncio.gather(
+            *(handler(TimerEventType.UPDATED, timer) for handler in self.handlers)
+        )
 
         if seconds > 0:
             log_verb = "increased"
@@ -308,7 +314,9 @@ class TimerManager:
         timer.is_paused = True
         timer.task.cancel()
 
-        self.hass.bus.async_fire(EVENT_INTENT_TIMER_UPDATED, timer.to_event())
+        await asyncio.gather(
+            *(handler(TimerEventType.UPDATED, timer) for handler in self.handlers)
+        )
 
         _LOGGER.debug(
             "Timer paused: id=%s, name=%s, seconds_left=%s, device_id=%s",
@@ -331,7 +339,9 @@ class TimerManager:
             name=f"Timer {timer.id}",
         )
 
-        self.hass.bus.async_fire(EVENT_INTENT_TIMER_UPDATED, timer.to_event())
+        await asyncio.gather(
+            *(handler(TimerEventType.UPDATED, timer) for handler in self.handlers)
+        )
 
         _LOGGER.debug(
             "Timer unpaused: id=%s, name=%s, seconds_left=%s, device_id=%s",
@@ -350,7 +360,9 @@ class TimerManager:
         # Force seconds left to 0
         timer.seconds = 0
         timer.updated_at = time.monotonic_ns()
-        self.hass.bus.async_fire(EVENT_INTENT_TIMER_FINISHED, timer.to_event())
+        await asyncio.gather(
+            *(handler(TimerEventType.FINISHED, timer) for handler in self.handlers)
+        )
 
         _LOGGER.debug(
             "Timer finished: id=%s, name=%s, device_id=%s",
@@ -358,6 +370,20 @@ class TimerManager:
             timer.name,
             timer.device_id,
         )
+
+
+def async_register_timer_handler(
+    hass: HomeAssistant, handler: TimerHandler
+) -> Callable[[], None]:
+    """Register a handler for timer events.
+
+    Returns a callable to unregister.
+    """
+    timer_manager: TimerManager = hass.data[TIMER_DATA]
+    return timer_manager.register_handler(handler)
+
+
+# -----------------------------------------------------------------------------
 
 
 def _find_timer(hass: HomeAssistant, slots: dict[str, Any]) -> TimerInfo:
@@ -567,7 +593,7 @@ class SetTimerIntentHandler(intent.IntentHandler):
         vol.Required(vol.Any("hours", "minutes", "seconds")): cv.positive_int,
         vol.Optional("name"): cv.string,
         vol.Optional("device_id"): cv.string,
-        vol.Optional("data"): dict,
+        vol.Optional("assist_command"): str,
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -596,9 +622,9 @@ class SetTimerIntentHandler(intent.IntentHandler):
         if "seconds" in slots:
             seconds = int(slots["seconds"]["value"])
 
-        data: dict[str, Any] | None = None
-        if "data" in slots:
-            data = slots["data"]["value"]
+        assist_command: str | None = None
+        if "assist_command" in slots:
+            assist_command = slots["assist_command"]["value"]
 
         await timer_manager.start_timer(
             hours,
@@ -607,7 +633,7 @@ class SetTimerIntentHandler(intent.IntentHandler):
             language=intent_obj.language,
             device_id=device_id,
             name=name,
-            data=data,
+            assist_command=assist_command,
         )
 
         return intent_obj.create_response()
@@ -755,16 +781,22 @@ class TimerStatusIntentHandler(intent.IntentHandler):
             minutes, seconds = divmod(total_seconds, 60)
             hours, minutes = divmod(minutes, 60)
 
-            timer_status = timer.to_event()
-            timer_status.update(
+            statuses.append(
                 {
+                    ATTR_ID: timer.id,
+                    ATTR_NAME: timer.name or "",
+                    ATTR_DEVICE_ID: timer.device_id or "",
+                    "language": timer.language,
+                    "start_hours": timer.start_hours or 0,
+                    "start_minutes": timer.start_minutes or 0,
+                    "start_seconds": timer.start_seconds or 0,
+                    "is_paused": timer.is_paused,
                     "hours_left": hours,
                     "minutes_left": minutes,
                     "seconds_left": seconds,
                     "total_seconds_left": total_seconds,
                 }
             )
-            statuses.append(timer_status)
 
         response = intent_obj.create_response()
         response.async_set_speech_slots({"timers": statuses})

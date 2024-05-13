@@ -29,7 +29,11 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_listen_entity_updates,
     async_should_expose,
 )
-from homeassistant.components.intent.timers import EVENT_INTENT_TIMER_FINISHED
+from homeassistant.components.intent.timers import (
+    TimerEventType,
+    TimerInfo,
+    async_register_timer_handler,
+)
 from homeassistant.const import EVENT_STATE_CHANGED, MATCH_ALL
 from homeassistant.helpers import (
     area_registry as ar,
@@ -46,7 +50,6 @@ from homeassistant.helpers.event import async_track_state_added_domain
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .const import (
-    ASSIST_COMMAND,
     ATTR_LANGUAGE,
     ATTR_TEXT,
     DEFAULT_EXPOSED_ATTRIBUTES,
@@ -150,17 +153,18 @@ async def async_setup_default_agent(
 
     start.async_at_started(hass, async_hass_started)
 
-    async def timer_finished_listener(event: core.Event) -> None:
-        """Forward command from timer to process service."""
-        timer_data = event.data.get("data", {})
-        if command := timer_data.get(ASSIST_COMMAND):
-            await hass.services.async_call(
-                DOMAIN,
-                SERVICE_PROCESS,
-                {ATTR_TEXT: command, ATTR_LANGUAGE: event.data[ATTR_LANGUAGE]},
-            )
+    async def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+        """Forward Assist command from timer to process service."""
+        if (event_type != TimerEventType.FINISHED) or (not timer.assist_command):
+            return
 
-    hass.bus.async_listen(EVENT_INTENT_TIMER_FINISHED, timer_finished_listener)
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PROCESS,
+            {ATTR_TEXT: timer.assist_command, ATTR_LANGUAGE: timer.language},
+        )
+
+    async_register_timer_handler(hass, handle_timer)
 
 
 class DefaultAgent(ConversationEntity):
@@ -363,24 +367,10 @@ class DefaultAgent(ConversationEntity):
 
         # Add entities from match
         for entity in result.entities_list:
-            if "." in entity.name:
-                # a.b.c -> {"a": {"b": "c": {"value": ..., "text": ...}}}
-                name_parts = entity.name.split(".")
-                current_dict = slots
-                for name_part in name_parts[:-1]:
-                    current_dict = current_dict.setdefault(name_part, {})
-
-                current_dict[name_parts[-1]] = entity.value
-                slot_name = name_parts[0]
-                slot_text = entity.text or entity.value
-                slot_value = slots[slot_name]
-            else:
-                # {"name": {"value": ..., "text": ...}}
-                slot_name = entity.name
-                slot_value = entity.value
-                slot_text = entity.text or entity.value
-
-            slots[slot_name] = {"value": slot_value, "text": slot_text}
+            slots[entity.name] = {
+                "value": entity.value,
+                "text": entity.text or entity.value,
+            }
 
         try:
             intent_response = await intent.async_handle(
