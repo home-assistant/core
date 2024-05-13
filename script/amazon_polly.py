@@ -1,7 +1,11 @@
-"""Get all supported voices from Amazon Polly."""
+"""Helper script to update supported languages for Amazone Polly text-to-speech (TTS)."""
+
+from pathlib import Path
 
 import boto3
 from pydantic import BaseModel, Field
+
+from .hassfest.serializer import format_python_namespace
 
 
 class AmazonPollyVoice(BaseModel):
@@ -24,9 +28,20 @@ def get_all_voices(client: boto3.client) -> list[AmazonPollyVoice]:
     return [AmazonPollyVoice.validate(voice) for voice in response["Voices"]]
 
 
-if __name__ == "__main__":
-    voices = get_all_voices(boto3.client("polly"))
-    for voice in sorted(voices, key=lambda x: x.id):
-        print(  # noqa: T201
-            f'"{voice.id}", # {voice.language_name} ({voice.language_code})'
-        )
+polly_client = boto3.client("polly")
+supported_voices = [v.id for v in get_all_voices(polly_client)]
+supported_regions = sorted(boto3.session.Session().get_available_regions("polly"))
+
+Path("homeassistant/generated/amazon_polly.py").write_text(
+    format_python_namespace(
+        {
+            "SUPPORTED_VOICES": supported_voices,
+            "SUPPORTED_REGIONS": supported_regions,
+        },
+        annotations={
+            "SUPPORTED_VOICES": "list[str]",
+            "SUPPORTED_REGIONS": "list[str]",
+        },
+        generator="script.amazon_polly",
+    )
+)
