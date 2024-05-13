@@ -169,7 +169,9 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
             self.language = user_input.language
             self.assistant = TextAssistant(credentials, self.language)
 
-        resp = self.assistant.assist(user_input.text)
+        resp = await self.hass.async_add_executor_job(
+            self.assistant.assist, user_input.text
+        )
         text_response = resp[0] or "<empty response>"
 
         intent_response = intent.IntentResponse(language=user_input.language)

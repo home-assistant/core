@@ -66,10 +66,12 @@ _ReturnFuncType = Callable[[_AsusWrtBridgeT], Coroutine[Any, Any, dict[str, Any]
 
 def handle_errors_and_zip(
     exceptions: type[Exception] | tuple[type[Exception], ...], keys: list[str] | None
-) -> Callable[[_FuncType], _ReturnFuncType]:
+) -> Callable[[_FuncType[_AsusWrtBridgeT]], _ReturnFuncType[_AsusWrtBridgeT]]:
     """Run library methods and zip results or manage exceptions."""
 
-    def _handle_errors_and_zip(func: _FuncType) -> _ReturnFuncType:
+    def _handle_errors_and_zip(
+        func: _FuncType[_AsusWrtBridgeT],
+    ) -> _ReturnFuncType[_AsusWrtBridgeT]:
         """Run library methods and zip results or manage exceptions."""
 
         @functools.wraps(func)
