@@ -1,7 +1,8 @@
 """The file component."""
 
+from homeassistant.components.notify import migrate_notify_issue
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_FILE_PATH, CONF_PLATFORM, Platform
+from homeassistant.const import CONF_FILE_PATH, CONF_NAME, CONF_PLATFORM, Platform
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -22,9 +23,7 @@ IMPORT_SCHEMA = {
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-PLATFORMS = [Platform.SENSOR]
-
-YAML_PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
+PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -34,6 +33,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if hass.config_entries.async_entries(DOMAIN):
         # We skip import in case we already have config entries
         return True
+    # The use of the legacy notify service was deprecated with HA Core 2024.6.0
+    # and will be removed with HA Core 2024.12
+    migrate_notify_issue(hass, DOMAIN, "File", "2024.12.0")
     # The YAML config was imported with HA Core 2024.6.0 and will be removed with
     # HA Core 2024.12
     ir.async_create_issue(
@@ -53,8 +55,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     # Import the YAML config into separate config entries
-    platforms_config = {
-        domain: config[domain] for domain in YAML_PLATFORMS if domain in config
+    platforms_config: dict[Platform, list[ConfigType]] = {
+        domain: config[domain] for domain in PLATFORMS if domain in config
     }
     for domain, items in platforms_config.items():
         for item in items:
@@ -85,14 +87,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             translation_placeholders={"filename": filepath},
         )
 
-    if entry.data[CONF_PLATFORM] in PLATFORMS:
-        await hass.config_entries.async_forward_entry_setups(
-            entry, [Platform(entry.data[CONF_PLATFORM])]
-        )
-    else:
-        # The notify platform is not yet set up as entry, so
-        # forward setup config through discovery to ensure setup notify service.
-        # This is needed as long as the legacy service is not migrated
+    await hass.config_entries.async_forward_entry_setups(
+        entry, [Platform(entry.data[CONF_PLATFORM])]
+    )
+    if entry.data[CONF_PLATFORM] == Platform.NOTIFY and CONF_NAME in entry.data:
+        # New notify entities are being setup through the config entry,
+        # but during the deprecation period we want to keep the legacy notify platform,
+        # so we forward the setup config through discovery.
+        # Only the entities from yaml will still be available as legacy service.
         hass.async_create_task(
             discovery.async_load_platform(
                 hass,
