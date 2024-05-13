@@ -425,7 +425,7 @@ aprslib==0.7.2
 aranet4==2.3.3
 
 # homeassistant.components.arcam_fmj
-arcam-fmj==1.4.0
+arcam-fmj==1.5.1
 
 # homeassistant.components.asterisk_mbox
 asterisk_mbox==0.5.0
