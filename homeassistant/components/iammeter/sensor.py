@@ -84,7 +84,7 @@ def _migrate_to_new_unique_id(
                 else f"{serial_number}_{name_list[idx]}_{phase_list[row]}"
             )
             entity_id = ent_reg.async_get_entity_id(
-                Platform.SENSOR, DOMAIN, old_unique_id
+                DOMAIN, Platform.SENSOR, old_unique_id
             )
             if entity_id is not None:
                 try:
@@ -159,7 +159,6 @@ class IammeterSensor(update_coordinator.CoordinatorEntity, SensorEntity):
 
     entity_description: IammeterSensorEntityDescription
     _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(
         self,

@@ -829,6 +829,9 @@ gspread==5.5.0
 # homeassistant.components.profiler
 guppy3==3.1.4.post1
 
+# homeassistant.components.iammeter
+iammeter==0.2.1
+
 # homeassistant.components.iaqualink
 h2==4.1.0
 
