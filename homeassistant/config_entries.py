@@ -69,6 +69,7 @@ from .setup import (
 from .util import uuid as uuid_util
 from .util.async_ import create_eager_task
 from .util.decorator import Registry
+from .util.enum import try_parse_enum
 
 if TYPE_CHECKING:
     from .components.bluetooth import BluetoothServiceInfoBleak
@@ -117,6 +118,7 @@ HANDLERS: Registry[str, type[ConfigFlow]] = Registry()
 
 STORAGE_KEY = "core.config_entries"
 STORAGE_VERSION = 1
+STORAGE_VERSION_MINOR = 2
 
 SAVE_DELAY = 1
 
@@ -1550,6 +1552,51 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         return self._domain_unique_id_index.get(domain, {}).get(unique_id)
 
 
+class ConfigEntryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
+    """Class to help storing config entry data."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize storage class."""
+        super().__init__(
+            hass,
+            STORAGE_VERSION,
+            STORAGE_KEY,
+            minor_version=STORAGE_VERSION_MINOR,
+        )
+
+    async def _async_migrate_func(
+        self,
+        old_major_version: int,
+        old_minor_version: int,
+        old_data: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Migrate to the new version."""
+        data = old_data
+        if old_major_version == 1 and old_minor_version < 2:
+            # Version 1.2 implements migration and freezes the available keys
+            for entry in data["entries"]:
+                # Populate keys which were introduced before version 1.2
+
+                pref_disable_new_entities = entry.get("pref_disable_new_entities")
+                if pref_disable_new_entities is None and "system_options" in entry:
+                    pref_disable_new_entities = entry.get("system_options", {}).get(
+                        "disable_new_entities"
+                    )
+
+                entry.setdefault("disabled_by", entry.get("disabled_by"))
+                entry.setdefault("minor_version", entry.get("minor_version", 1))
+                entry.setdefault("options", entry.get("options", {}))
+                entry.setdefault("pref_disable_new_entities", pref_disable_new_entities)
+                entry.setdefault(
+                    "pref_disable_polling", entry.get("pref_disable_polling")
+                )
+                entry.setdefault("unique_id", entry.get("unique_id"))
+
+        if old_major_version > 1:
+            raise NotImplementedError
+        return data
+
+
 class ConfigEntries:
     """Manage the configuration entries.
 
@@ -1563,9 +1610,7 @@ class ConfigEntries:
         self.options = OptionsFlowManager(hass)
         self._hass_config = hass_config
         self._entries = ConfigEntryItems(hass)
-        self._store = storage.Store[dict[str, list[dict[str, Any]]]](
-            hass, STORAGE_VERSION, STORAGE_KEY
-        )
+        self._store = ConfigEntryStore(hass)
         EntityRegistryDisabledHandler(hass).async_setup()
 
     @callback
@@ -1718,37 +1763,21 @@ class ConfigEntries:
 
         entries: ConfigEntryItems = ConfigEntryItems(self.hass)
         for entry in config["entries"]:
-            pref_disable_new_entities = entry.get("pref_disable_new_entities")
-
-            # Between 0.98 and 2021.6 we stored 'disable_new_entities' in a
-            # system options dictionary.
-            if pref_disable_new_entities is None and "system_options" in entry:
-                pref_disable_new_entities = entry.get("system_options", {}).get(
-                    "disable_new_entities"
-                )
-
-            domain = entry["domain"]
             entry_id = entry["entry_id"]
 
             config_entry = ConfigEntry(
-                version=entry["version"],
-                minor_version=entry.get("minor_version", 1),
-                domain=domain,
-                entry_id=entry_id,
                 data=entry["data"],
+                disabled_by=try_parse_enum(ConfigEntryDisabler, entry["disabled_by"]),
+                domain=entry["domain"],
+                entry_id=entry_id,
+                minor_version=entry["minor_version"],
+                options=entry["options"],
+                pref_disable_new_entities=entry["pref_disable_new_entities"],
+                pref_disable_polling=entry["pref_disable_polling"],
                 source=entry["source"],
                 title=entry["title"],
-                # New in 0.89
-                options=entry.get("options"),
-                # New in 0.104
-                unique_id=entry.get("unique_id"),
-                # New in 2021.3
-                disabled_by=ConfigEntryDisabler(entry["disabled_by"])
-                if entry.get("disabled_by")
-                else None,
-                # New in 2021.6
-                pref_disable_new_entities=pref_disable_new_entities,
-                pref_disable_polling=entry.get("pref_disable_polling"),
+                unique_id=entry["unique_id"],
+                version=entry["version"],
             )
             entries[entry_id] = config_entry
 
