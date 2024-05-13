@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN, TeslemetryState
+from .const import TeslemetryState
 from .entity import (
     TeslemetryEnergyInfoEntity,
     TeslemetryEnergyLiveEntity,
@@ -177,24 +177,23 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Teslemetry binary sensor platform from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         chain(
             (  # Vehicles
                 TeslemetryVehicleBinarySensorEntity(vehicle, description)
-                for vehicle in data.vehicles
+                for vehicle in entry.runtime_data.vehicles
                 for description in VEHICLE_DESCRIPTIONS
             ),
             (  # Energy Site Live
                 TeslemetryEnergyLiveBinarySensorEntity(energysite, description)
-                for energysite in data.energysites
+                for energysite in entry.runtime_data.energysites
                 for description in ENERGY_LIVE_DESCRIPTIONS
                 if energysite.info_coordinator.data.get("components_battery")
             ),
             (  # Energy Site Info
                 TeslemetryEnergyInfoBinarySensorEntity(energysite, description)
-                for energysite in data.energysites
+                for energysite in entry.runtime_data.energysites
                 for description in ENERGY_INFO_DESCRIPTIONS
                 if energysite.info_coordinator.data.get("components_battery")
             ),
