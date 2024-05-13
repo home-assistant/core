@@ -1504,5 +1504,5 @@ class Recorder(threading.Thread):
         try:
             self._end_session()
         finally:
-            self._stop_executor()
             self._close_connection()
+            self._stop_executor()

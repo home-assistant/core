@@ -216,8 +216,8 @@ async def test_shutdown_closes_connections(
     instance = recorder.get_instance(hass)
     await instance.async_db_ready
     await hass.async_block_till_done()
-    pool = instance.engine.pool
-    pool.shutdown = Mock()
+    pool = instance.engine
+    pool.dispose = Mock()
 
     def _ensure_connected():
         with session_scope(hass=hass, read_only=True) as session:
@@ -228,7 +228,7 @@ async def test_shutdown_closes_connections(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
     await hass.async_block_till_done()
 
-    assert len(pool.shutdown.mock_calls) == 1
+    assert len(pool.dispose.mock_calls) == 1
     with pytest.raises(RuntimeError):
         assert instance.get_session()
 
