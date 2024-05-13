@@ -46,7 +46,9 @@ async def test_sensors_bt5_v1(
     accel_sensor = hass.states.get("sensor.bt5_aa_bb_cc_dd_ee_ff_acceleration")
     accel_sensor_attrs = accel_sensor.attributes
     assert 0.358520 <= float(accel_sensor.state) <= 0.358530
-    assert accel_sensor_attrs[ATTR_FRIENDLY_NAME] == "BT5 AA:BB:CC:DD:EE:FF Acceleration"
+    assert (
+        accel_sensor_attrs[ATTR_FRIENDLY_NAME] == "BT5 AA:BB:CC:DD:EE:FF Acceleration"
+    )
     assert accel_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "m/s²"
     assert accel_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
@@ -91,7 +93,9 @@ async def test_sensors_bt5_v1_no_temperature(
     accel_sensor = hass.states.get("sensor.bt5_aa_bb_cc_dd_ee_ff_acceleration")
     accel_sensor_attrs = accel_sensor.attributes
     assert 1.328760 <= float(accel_sensor.state) <= 1.328770
-    assert accel_sensor_attrs[ATTR_FRIENDLY_NAME] == "BT5 AA:BB:CC:DD:EE:FF Acceleration"
+    assert (
+        accel_sensor_attrs[ATTR_FRIENDLY_NAME] == "BT5 AA:BB:CC:DD:EE:FF Acceleration"
+    )
     assert accel_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "m/s²"
     assert accel_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 

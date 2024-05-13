@@ -18,7 +18,7 @@ from homeassistant.data_entry_flow import AbortFlow
 
 from .const import DOMAIN
 
-SUPPORTED_VERSIONS = [0,1]
+SUPPORTED_VERSIONS = [0, 1]
 
 
 def _title(discovery_info: BluetoothServiceInfoBleak) -> str:
