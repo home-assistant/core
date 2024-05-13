@@ -166,11 +166,10 @@ async def test_shutdown_before_startup_finishes(
         await hass.async_block_till_done()
         await hass.async_stop()
 
-    def _run_information_with_session():
-        instance.recorder_and_worker_thread_ids.add(threading.get_ident())
-        return run_information_with_session(session)
-
-    run_info = await instance.async_add_executor_job(_run_information_with_session)
+    # The database executor is shutdown so we must run the
+    # query in the main thread for testing
+    instance.recorder_and_worker_thread_ids.add(threading.get_ident())
+    run_info = run_information_with_session(session)
 
     assert run_info.run_id == 1
     assert run_info.start is not None
