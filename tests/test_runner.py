@@ -157,7 +157,7 @@ async def test_unhandled_exception_traceback(
     assert "_unhandled_exception" in caplog.text
 
 
-def test__enable_posix_spawn() -> None:
+def test_enable_posix_spawn() -> None:
     """Test that we can enable posix_spawn on musllinux."""
 
     def _mock_sys_tags_any() -> Iterator[packaging.tags.Tag]:
