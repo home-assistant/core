@@ -113,9 +113,9 @@ def get_engine(
 
     all_voices: dict[str, dict[str, str]] = {}
 
-    all_voices_req = polly_client.describe_voices()
-
     all_engines: dict[str, set[str]] = defaultdict(set)
+
+    all_voices_req = polly_client.describe_voices()
 
     for voice in all_voices_req.get("Voices", []):
         voice_id: str | None = voice.get("Id")
