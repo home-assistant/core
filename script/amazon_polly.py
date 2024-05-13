@@ -28,9 +28,13 @@ def get_all_voices(client: boto3.client) -> list[AmazonPollyVoice]:
     return [AmazonPollyVoice.validate(voice) for voice in response["Voices"]]
 
 
-polly_client = boto3.client("polly")
-supported_voices = [v.id for v in get_all_voices(polly_client)]
-supported_regions = sorted(boto3.session.Session().get_available_regions("polly"))
+supported_regions = sorted(
+    boto3.session.Session().get_available_regions(service_name="polly")
+)
+
+polly_client = boto3.client(service_name="polly", region_name="us-east-1")
+voices = get_all_voices(polly_client)
+supported_voices = sorted([v.id for v in voices])
 
 Path("homeassistant/generated/amazon_polly.py").write_text(
     format_python_namespace(
