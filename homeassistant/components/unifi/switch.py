@@ -147,7 +147,7 @@ async def async_poe_port_control_fn(hub: UnifiHub, obj_id: str, target: bool) ->
     port = hub.api.ports[obj_id]
     on_state = "auto" if port.raw["poe_caps"] != 8 else "passthrough"
     state = on_state if target else "off"
-    hub.async_queue_poe_port_command(mac, int(index), state)
+    hub.queue_poe_port_command(mac, int(index), state)
 
 
 async def async_port_forward_control_fn(
