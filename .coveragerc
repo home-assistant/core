@@ -1375,6 +1375,7 @@ omit =
     homeassistant/components/switchbot_cloud/climate.py
     homeassistant/components/switchbot_cloud/coordinator.py
     homeassistant/components/switchbot_cloud/entity.py
+    homeassistant/components/switchbot_cloud/sensor.py
     homeassistant/components/switchbot_cloud/switch.py
     homeassistant/components/switchmate/switch.py
     homeassistant/components/syncthing/__init__.py
