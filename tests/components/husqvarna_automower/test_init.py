@@ -54,7 +54,7 @@ async def test_load_missing_scope(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test if the entry starts an reauth with the missing token scope."""
+    """Test if the entry starts a reauth with the missing token scope."""
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
