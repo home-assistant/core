@@ -4,7 +4,7 @@ from collections.abc import Generator
 from datetime import timedelta
 import logging
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -124,7 +124,7 @@ def mock_queued_ingest() -> Generator[mock_entry_fixture_queued, Any, Any]:
 
 
 @pytest.fixture(autouse=True)
-def mock_execute_query() -> Generator[Any, Any, Any]:
+def mock_execute_query() -> Generator[Mock, Any, Any]:
     """Mock KustoClient execute_query."""
     with patch(
         "azure.kusto.data.KustoClient.execute_query",
