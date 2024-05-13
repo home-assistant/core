@@ -31,6 +31,7 @@ env:
   UV_CACHE_VERSION: 1
   DEFAULT_PYTHON: "3.12"
   ALL_PYTHON_VERSIONS: "['3.12']"
+  UV_CACHE_DIR: /tmp/uv-cache
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
