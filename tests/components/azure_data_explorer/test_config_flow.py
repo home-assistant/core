@@ -6,7 +6,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.azure_data_explorer.const import DOMAIN
 
-from .const import BASE_CONFIG, UPDATE_OPTIONS
+from .const import BASE_CONFIG
 
 
 async def test_config_flow(hass, mock_setup_entry) -> None:
@@ -76,20 +76,3 @@ async def test_config_flow_errors(
     await hass.async_block_till_done()
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-
-
-async def test_options_flow(hass, entry_managed) -> None:
-    """Test options flow."""
-    result = await hass.config_entries.options.async_init(entry_managed.entry_id)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-    assert result["last_step"]
-
-    updated = await hass.config_entries.options.async_configure(
-        result["flow_id"], UPDATE_OPTIONS
-    )
-    assert updated["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert updated["data"] == UPDATE_OPTIONS
-
-    await hass.async_block_till_done()

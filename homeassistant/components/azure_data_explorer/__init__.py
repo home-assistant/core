@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from datetime import datetime
 import json
 import logging
-from typing import Any
 
 from azure.kusto.data.exceptions import KustoAuthenticationError, KustoServiceError
 import voluptuous as vol
@@ -75,7 +74,6 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Do the setup based on the config entry and the filter from yaml."""
-    # hass.data.setdefault(DOMAIN, {DATA_FILTER: FILTER_SCHEMA({})})
     adx = AzureDataExplorer(hass, entry)
     try:
         await adx.test_connection()
@@ -87,14 +85,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     hass.data[DOMAIN][DATA_HUB] = adx
-    entry.async_on_unload(entry.add_update_listener(async_update_listener))
     await adx.async_start()
     return True
-
-
-async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update listener for options."""
-    hass.data[DOMAIN][DATA_HUB].update_options(entry.options)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -149,10 +141,6 @@ class AzureDataExplorer:
             self._listener_remover()
         self._shutdown = True
         await self.async_send(None)
-
-    def update_options(self, new_options: dict[str, Any]) -> None:
-        """Update options."""
-        self._client_secret = new_options[CONF_APP_REG_SECRET]
 
     async def test_connection(self) -> None:
         """Test the connection to the Azure Data Explorer service."""

@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.core import callback
 
 from . import AzureDataExplorerClient
 from .const import (
@@ -69,14 +68,6 @@ class ADXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return None
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> ADXOptionsFlowHandler:
-        """Get the options flow for this handler."""
-        return ADXOptionsFlowHandler(config_entry)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -97,29 +88,5 @@ class ADXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
-            last_step=True,
-        )
-
-
-class ADXOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
-    """Handle azure adx options."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the ADX options."""
-        if user_input is not None:
-            return self.async_create_entry(data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_APP_REG_SECRET,
-                        default=self.options.get(CONF_APP_REG_SECRET),
-                    ): str
-                }
-            ),
             last_step=True,
         )

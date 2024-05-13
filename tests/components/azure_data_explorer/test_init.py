@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from azure.kusto.data.exceptions import KustoAuthenticationError, KustoServiceError
 from azure.kusto.ingest import StreamDescriptor
@@ -23,7 +23,6 @@ from . import FilterTest
 from .const import AZURE_DATA_EXPLORER_PATH, BASE_CONFIG_FULL, BASIC_OPTIONS
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.azure_data_explorer.conftest import mock_entry_fixture_managed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 async def test_put_event_on_queue_with_managed_client(
     hass: HomeAssistant,
     entry_managed,
-    mock_managed_streaming: mock_entry_fixture_managed,
+    mock_managed_streaming: Mock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test listening to events from Hass. and writing to ADX with managed client."""
@@ -63,7 +62,7 @@ async def test_put_event_on_queue_with_managed_client(
 async def test_put_event_on_queue_with_managed_client_with_errors(
     hass: HomeAssistant,
     entry_managed,
-    mock_managed_streaming: mock_entry_fixture_managed,
+    mock_managed_streaming: Mock,
     sideeffect,
     log_message,
     caplog: pytest.LogCaptureFixture,
@@ -85,7 +84,7 @@ async def test_put_event_on_queue_with_managed_client_with_errors(
 async def test_put_event_on_queue_with_queueing_client(
     hass: HomeAssistant,
     entry_queued,
-    mock_queued_ingest,
+    mock_queued_ingest: Mock,
 ) -> None:
     """Test listening to events from Hass. and writing to ADX with managed client."""
 
@@ -126,7 +125,7 @@ async def test_import(hass: HomeAssistant) -> None:
 async def test_unload_entry(
     hass: HomeAssistant,
     entry_managed,
-    mock_managed_streaming,
+    mock_managed_streaming: Mock,
 ) -> None:
     """Test being able to unload an entry.
 
@@ -144,7 +143,7 @@ async def test_unload_entry(
 async def test_late_event(
     hass: HomeAssistant,
     entry_with_one_event,
-    mock_managed_streaming,
+    mock_managed_streaming: Mock,
 ) -> None:
     """Test the check on late events."""
     with patch(
@@ -228,7 +227,7 @@ async def test_filter(
     hass: HomeAssistant,
     entry_managed,
     tests,
-    mock_managed_streaming,
+    mock_managed_streaming: Mock,
 ) -> None:
     """Test different filters.
 
@@ -256,7 +255,7 @@ async def test_filter(
 async def test_event(
     hass: HomeAssistant,
     entry_managed,
-    mock_managed_streaming,
+    mock_managed_streaming: Mock,
     event,
 ) -> None:
     """Test listening to events from Hass. and getting an event with a newline in the state."""
