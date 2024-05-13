@@ -262,6 +262,7 @@ class ConfigFlowResult(FlowResult, total=False):
     """Typed result dict for config flow."""
 
     minor_version: int
+    options: Mapping[str, Any]
     version: int
 
 
