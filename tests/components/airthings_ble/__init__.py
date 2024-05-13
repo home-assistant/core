@@ -97,6 +97,7 @@ WAVE_SERVICE_INFO = BluetoothServiceInfoBleak(
     ),
     connectable=True,
     time=0,
+    tx_power=0,
 )
 
 VIEW_PLUS_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -141,6 +142,7 @@ VIEW_PLUS_SERVICE_INFO = BluetoothServiceInfoBleak(
     ),
     connectable=True,
     time=0,
+    tx_power=0,
 )
 
 UNKNOWN_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -161,6 +163,7 @@ UNKNOWN_SERVICE_INFO = BluetoothServiceInfoBleak(
     ),
     connectable=True,
     time=0,
+    tx_power=0,
 )
 
 WAVE_DEVICE_INFO = AirthingsDevice(
@@ -235,11 +238,10 @@ def create_entry(hass):
 
 def create_device(entry: ConfigEntry, device_registry: DeviceRegistry):
     """Create a device for the given entry."""
-    device = device_registry.async_get_or_create(
+    return device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(CONNECTION_BLUETOOTH, WAVE_SERVICE_INFO.address)},
         manufacturer="Airthings AS",
         name="Airthings Wave Plus (123456)",
         model="Wave Plus",
     )
-    return device

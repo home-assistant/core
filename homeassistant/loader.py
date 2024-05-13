@@ -11,6 +11,7 @@ from collections.abc import Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
 import functools as ft
+from functools import cached_property
 import importlib
 import logging
 import os
@@ -38,18 +39,15 @@ from .generated.mqtt import MQTT
 from .generated.ssdp import SSDP
 from .generated.usb import USB
 from .generated.zeroconf import HOMEKIT, ZEROCONF
+from .util.hass_dict import HassKey
 from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 if TYPE_CHECKING:
-    from functools import cached_property
-
     # The relative imports below are guarded by TYPE_CHECKING
     # because they would cause a circular import otherwise.
     from .config_entries import ConfigEntry
     from .helpers import device_registry as dr
     from .helpers.typing import ConfigType
-else:
-    from .backports.functools import cached_property
 
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
@@ -93,14 +91,25 @@ class BlockedIntegration:
 
 BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
     # Added in 2024.3.0 because of https://github.com/home-assistant/core/issues/112464
-    "start_time": BlockedIntegration(AwesomeVersion("1.1.7"), "breaks Home Assistant")
+    "start_time": BlockedIntegration(AwesomeVersion("1.1.7"), "breaks Home Assistant"),
+    # Added in 2024.5.1 because of
+    # https://community.home-assistant.io/t/psa-2024-5-upgrade-failure-and-dreame-vacuum-custom-integration/724612
+    "dreame_vacuum": BlockedIntegration(
+        AwesomeVersion("1.0.4"), "crashes Home Assistant"
+    ),
 }
 
-DATA_COMPONENTS = "components"
-DATA_INTEGRATIONS = "integrations"
-DATA_MISSING_PLATFORMS = "missing_platforms"
-DATA_CUSTOM_COMPONENTS = "custom_components"
-DATA_PRELOAD_PLATFORMS = "preload_platforms"
+DATA_COMPONENTS: HassKey[dict[str, ModuleType | ComponentProtocol]] = HassKey(
+    "components"
+)
+DATA_INTEGRATIONS: HassKey[dict[str, Integration | asyncio.Future[None]]] = HassKey(
+    "integrations"
+)
+DATA_MISSING_PLATFORMS: HassKey[dict[str, bool]] = HassKey("missing_platforms")
+DATA_CUSTOM_COMPONENTS: HassKey[
+    dict[str, Integration] | asyncio.Future[dict[str, Integration]]
+] = HassKey("custom_components")
+DATA_PRELOAD_PLATFORMS: HassKey[list[str]] = HassKey("preload_platforms")
 PACKAGE_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_BUILTIN = "homeassistant.components"
 CUSTOM_WARNING = (
@@ -296,9 +305,7 @@ async def async_get_custom_components(
     hass: HomeAssistant,
 ) -> dict[str, Integration]:
     """Return cached list of custom integrations."""
-    comps_or_future: (
-        dict[str, Integration] | asyncio.Future[dict[str, Integration]] | None
-    ) = hass.data.get(DATA_CUSTOM_COMPONENTS)
+    comps_or_future = hass.data.get(DATA_CUSTOM_COMPONENTS)
 
     if comps_or_future is None:
         future = hass.data[DATA_CUSTOM_COMPONENTS] = hass.loop.create_future()
@@ -620,7 +627,7 @@ async def async_get_mqtt(hass: HomeAssistant) -> dict[str, list[str]]:
 @callback
 def async_register_preload_platform(hass: HomeAssistant, platform_name: str) -> None:
     """Register a platform to be preloaded."""
-    preload_platforms: list[str] = hass.data[DATA_PRELOAD_PLATFORMS]
+    preload_platforms = hass.data[DATA_PRELOAD_PLATFORMS]
     if platform_name not in preload_platforms:
         preload_platforms.append(platform_name)
 
@@ -744,14 +751,11 @@ class Integration:
             self._all_dependencies_resolved = True
             self._all_dependencies = set()
 
-        platforms_to_preload: list[str] = hass.data[DATA_PRELOAD_PLATFORMS]
-        self._platforms_to_preload = platforms_to_preload
+        self._platforms_to_preload = hass.data[DATA_PRELOAD_PLATFORMS]
         self._component_future: asyncio.Future[ComponentProtocol] | None = None
         self._import_futures: dict[str, asyncio.Future[ModuleType]] = {}
-        cache: dict[str, ModuleType | ComponentProtocol] = hass.data[DATA_COMPONENTS]
-        self._cache = cache
-        missing_platforms_cache: dict[str, bool] = hass.data[DATA_MISSING_PLATFORMS]
-        self._missing_platforms_cache = missing_platforms_cache
+        self._cache = hass.data[DATA_COMPONENTS]
+        self._missing_platforms_cache = hass.data[DATA_MISSING_PLATFORMS]
         self._top_level_files = top_level_files or set()
         _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
 
@@ -979,6 +983,8 @@ class Integration:
                 comp = await self.hass.async_add_import_executor_job(
                     self._get_component, True
                 )
+            except ModuleNotFoundError:
+                raise
             except ImportError as ex:
                 load_executor = False
                 _LOGGER.debug(
@@ -1118,6 +1124,8 @@ class Integration:
                                 self._load_platforms, platform_names
                             )
                         )
+                    except ModuleNotFoundError:
+                        raise
                     except ImportError as ex:
                         _LOGGER.debug(
                             "Failed to import %s platforms %s in executor",
@@ -1227,7 +1235,7 @@ class Integration:
         appropriate locks.
         """
         full_name = f"{self.domain}.{platform_name}"
-        cache: dict[str, ModuleType] = self.hass.data[DATA_COMPONENTS]
+        cache = self.hass.data[DATA_COMPONENTS]
         try:
             cache[full_name] = self._import_platform(platform_name)
         except ModuleNotFoundError:
@@ -1253,7 +1261,7 @@ class Integration:
                 f"Exception importing {self.pkg_path}.{platform_name}"
             ) from err
 
-        return cache[full_name]
+        return cast(ModuleType, cache[full_name])
 
     def _import_platform(self, platform_name: str) -> ModuleType:
         """Import the platform.
@@ -1290,7 +1298,7 @@ def _resolve_integrations_from_root(
     for domain in domains:
         try:
             integration = Integration.resolve_from_root(hass, root_module, domain)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error loading integration: %s", domain)
         else:
             if integration:
@@ -1305,8 +1313,6 @@ def async_get_loaded_integration(hass: HomeAssistant, domain: str) -> Integratio
     Raises IntegrationNotLoaded if the integration is not loaded.
     """
     cache = hass.data[DATA_INTEGRATIONS]
-    if TYPE_CHECKING:
-        cache = cast(dict[str, Integration | asyncio.Future[None]], cache)
     int_or_fut = cache.get(domain, _UNDEF)
     # Integration is never subclassed, so we can check for type
     if type(int_or_fut) is Integration:
@@ -1316,6 +1322,9 @@ def async_get_loaded_integration(hass: HomeAssistant, domain: str) -> Integratio
 
 async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration:
     """Get integration."""
+    cache = hass.data[DATA_INTEGRATIONS]
+    if type(int_or_fut := cache.get(domain, _UNDEF)) is Integration:
+        return int_or_fut
     integrations_or_excs = await async_get_integrations(hass, [domain])
     int_or_exc = integrations_or_excs[domain]
     if isinstance(int_or_exc, Integration):
@@ -1331,8 +1340,6 @@ async def async_get_integrations(
     results: dict[str, Integration | Exception] = {}
     needed: dict[str, asyncio.Future[None]] = {}
     in_progress: dict[str, asyncio.Future[None]] = {}
-    if TYPE_CHECKING:
-        cache = cast(dict[str, Integration | asyncio.Future[None]], cache)
     for domain in domains:
         int_or_fut = cache.get(domain, _UNDEF)
         # Integration is never subclassed, so we can check for type
@@ -1346,7 +1353,7 @@ async def async_get_integrations(
             needed[domain] = cache[domain] = hass.loop.create_future()
 
     if in_progress:
-        await asyncio.gather(*in_progress.values())
+        await asyncio.wait(in_progress.values())
         for domain in in_progress:
             # When we have waited and it's _UNDEF, it doesn't exist
             # We don't cache that it doesn't exist, or else people can't fix it
@@ -1437,10 +1444,9 @@ def _load_file(
     Only returns it if also found to be valid.
     Async friendly.
     """
-    cache: dict[str, ComponentProtocol] = hass.data[DATA_COMPONENTS]
-    module: ComponentProtocol | None
+    cache = hass.data[DATA_COMPONENTS]
     if module := cache.get(comp_or_platform):
-        return module
+        return cast(ComponentProtocol, module)
 
     for path in (f"{base}.{comp_or_platform}" for base in base_paths):
         try:

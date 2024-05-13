@@ -18,6 +18,7 @@ from homeassistant.components.version.const import (
     VERSION_SOURCE_PYPI,
     VERSION_SOURCE_VERSIONS,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -31,7 +32,7 @@ from tests.common import async_fire_time_changed
 async def test_reload_config_entry(hass: HomeAssistant) -> None:
     """Test reloading the config entry."""
     config_entry = await setup_version_integration(hass)
-    assert config_entry.state == config_entries.ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     with patch(
         "pyhaversion.HaVersion.get_version",
@@ -44,7 +45,7 @@ async def test_reload_config_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     entry = hass.config_entries.async_get_entry(config_entry.entry_id)
-    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_basic_form(hass: HomeAssistant) -> None:

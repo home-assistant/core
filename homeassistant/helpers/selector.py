@@ -98,6 +98,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
     from homeassistant.components.light import LightEntityFeature
     from homeassistant.components.lock import LockEntityFeature
     from homeassistant.components.media_player import MediaPlayerEntityFeature
+    from homeassistant.components.notify import NotifyEntityFeature
     from homeassistant.components.remote import RemoteEntityFeature
     from homeassistant.components.siren import SirenEntityFeature
     from homeassistant.components.todo import TodoListEntityFeature
@@ -119,6 +120,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
         "LightEntityFeature": LightEntityFeature,
         "LockEntityFeature": LockEntityFeature,
         "MediaPlayerEntityFeature": MediaPlayerEntityFeature,
+        "NotifyEntityFeature": NotifyEntityFeature,
         "RemoteEntityFeature": RemoteEntityFeature,
         "SirenEntityFeature": SirenEntityFeature,
         "TodoListEntityFeature": TodoListEntityFeature,

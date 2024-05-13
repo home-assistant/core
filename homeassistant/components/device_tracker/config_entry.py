@@ -18,7 +18,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    DeviceInfo,
+    EventDeviceRegistryUpdatedData,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -101,7 +104,7 @@ def _async_register_mac(
     data = hass.data[data_key] = {mac: (domain, unique_id)}
 
     @callback
-    def handle_device_event(ev: Event) -> None:
+    def handle_device_event(ev: Event[EventDeviceRegistryUpdatedData]) -> None:
         """Enable the online status entity for the mac of a newly created device."""
         # Only for new devices
         if ev.data["action"] != "create":
@@ -156,9 +159,7 @@ def _async_register_mac(
         # Enable entity
         ent_reg.async_update_entity(entity_id, disabled_by=None)
 
-    hass.bus.async_listen(
-        dr.EVENT_DEVICE_REGISTRY_UPDATED, handle_device_event, run_immediately=True
-    )
+    hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, handle_device_event)
 
 
 class BaseTrackerEntity(Entity):

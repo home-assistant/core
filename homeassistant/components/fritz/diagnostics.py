@@ -21,7 +21,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
 
-    diag_data = {
+    return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "device_info": {
             "model": avm_wrapper.model,
@@ -51,5 +51,3 @@ async def async_get_config_entry_diagnostics(
             "wan_link_properties": await avm_wrapper.async_get_wan_link_properties(),
         },
     }
-
-    return diag_data

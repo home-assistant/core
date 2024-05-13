@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from functools import partial
+from functools import cached_property, partial
 import logging
-from typing import TYPE_CHECKING, Any, Final, final
+from typing import Any, Final, final
 
 import voluptuous as vol
 
@@ -49,11 +49,6 @@ from .const import (  # noqa: F401
     AlarmControlPanelEntityFeature,
     CodeFormat,
 )
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 _LOGGER: Final = logging.getLogger(__name__)
 

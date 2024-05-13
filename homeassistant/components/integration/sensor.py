@@ -28,7 +28,13 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTime,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -36,10 +42,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -78,7 +81,9 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
-            vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
+            vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Any(
+                None, vol.Coerce(int)
+            ),
             vol.Optional(CONF_UNIT_PREFIX): vol.In(UNIT_PREFIXES),
             vol.Optional(CONF_UNIT_TIME, default=UnitOfTime.HOURS): vol.In(UNIT_TIME),
             vol.Remove(CONF_UNIT_OF_MEASUREMENT): cv.string,
@@ -256,10 +261,14 @@ async def async_setup_entry(
         # Before we had support for optional selectors, "none" was used for selecting nothing
         unit_prefix = None
 
+    round_digits = config_entry.options.get(CONF_ROUND_DIGITS)
+    if round_digits:
+        round_digits = int(round_digits)
+
     integral = IntegrationSensor(
         integration_method=config_entry.options[CONF_METHOD],
         name=config_entry.title,
-        round_digits=int(config_entry.options[CONF_ROUND_DIGITS]),
+        round_digits=round_digits,
         source_entity=source_entity_id,
         unique_id=config_entry.entry_id,
         unit_prefix=unit_prefix,
@@ -280,7 +289,7 @@ async def async_setup_platform(
     integral = IntegrationSensor(
         integration_method=config[CONF_METHOD],
         name=config.get(CONF_NAME),
-        round_digits=config[CONF_ROUND_DIGITS],
+        round_digits=config.get(CONF_ROUND_DIGITS),
         source_entity=config[CONF_SOURCE_SENSOR],
         unique_id=config.get(CONF_UNIQUE_ID),
         unit_prefix=config.get(CONF_UNIT_PREFIX),
@@ -301,7 +310,7 @@ class IntegrationSensor(RestoreSensor):
         *,
         integration_method: str,
         name: str | None,
-        round_digits: int,
+        round_digits: int | None,
         source_entity: str,
         unique_id: str | None,
         unit_prefix: str | None,
@@ -325,6 +334,7 @@ class IntegrationSensor(RestoreSensor):
         self._source_entity: str = source_entity
         self._last_valid_state: Decimal | None = None
         self._attr_device_info = device_info
+        self._attr_suggested_display_precision = round_digits or 2
 
     def _calculate_unit(self, source_unit: str) -> str:
         """Multiply source_unit with time unit of the integral.
@@ -451,7 +461,7 @@ class IntegrationSensor(RestoreSensor):
     @property
     def native_value(self) -> Decimal | None:
         """Return the state of the sensor."""
-        if isinstance(self._state, Decimal):
+        if isinstance(self._state, Decimal) and self._round_digits:
             return round(self._state, self._round_digits)
         return self._state
 
@@ -463,11 +473,9 @@ class IntegrationSensor(RestoreSensor):
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes of the sensor."""
-        state_attr = {
+        return {
             ATTR_SOURCE_ID: self._source_entity,
         }
-
-        return state_attr
 
     @property
     def extra_restore_state_data(self) -> IntegrationSensorExtraStoredData:

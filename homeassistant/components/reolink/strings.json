@@ -28,7 +28,7 @@
       "api_error": "API error occurred",
       "cannot_connect": "Failed to connect, check the IP address of the camera",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "not_admin": "User needs to be admin, user ''{username}'' has authorisation level ''{userlevel}''",
+      "not_admin": "User needs to be admin, user \"{username}\" has authorisation level \"{userlevel}\"",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "webhook_exception": "Home Assistant URL is not available, go to Settings > System > Network > Home Assistant URL and correct the URLs, see {more_info}"
     },

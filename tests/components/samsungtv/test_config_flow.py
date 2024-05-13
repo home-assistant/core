@@ -43,6 +43,7 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
@@ -1770,7 +1771,7 @@ async def test_form_reauth_websocket(hass: HomeAssistant) -> None:
     """Test reauthenticate websocket."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRYDATA_WS)
     entry.add_to_hass(hass)
-    assert entry.state == config_entries.ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -1787,7 +1788,7 @@ async def test_form_reauth_websocket(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
-    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.usefixtures("rest_api")
@@ -1860,7 +1861,7 @@ async def test_form_reauth_encrypted(hass: HomeAssistant) -> None:
 
     entry = MockConfigEntry(domain=DOMAIN, data=encrypted_entry_data)
     entry.add_to_hass(hass)
-    assert entry.state == config_entries.ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -1908,7 +1909,7 @@ async def test_form_reauth_encrypted(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
-        assert entry.state == config_entries.ConfigEntryState.LOADED
+        assert entry.state is ConfigEntryState.LOADED
 
     authenticator_mock.assert_called_once()
     assert authenticator_mock.call_args[0] == ("fake_host",)

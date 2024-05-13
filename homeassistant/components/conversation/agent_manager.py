@@ -84,7 +84,7 @@ async def async_converse(
         language = hass.config.language
 
     _LOGGER.debug("Processing in %s: %s", language, text)
-    result = await method(
+    return await method(
         ConversationInput(
             text=text,
             context=context,
@@ -93,7 +93,6 @@ async def async_converse(
             language=language,
         )
     )
-    return result
 
 
 class AgentManager:

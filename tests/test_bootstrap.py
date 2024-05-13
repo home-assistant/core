@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Generator, Iterable
+import contextlib
 import glob
 import os
 import sys
@@ -13,7 +14,7 @@ import pytest
 from homeassistant import bootstrap, loader, runner
 import homeassistant.config as config_util
 from homeassistant.config_entries import HANDLERS, ConfigEntry
-from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
+from homeassistant.const import CONF_DEBUG, SIGNAL_BOOTSTRAP_INTEGRATIONS
 from homeassistant.core import CoreState, HomeAssistant, async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -27,11 +28,19 @@ from .common import (
     MockModule,
     MockPlatform,
     get_test_config_dir,
+    mock_config_flow,
     mock_integration,
     mock_platform,
 )
 
 VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
+
+
+@pytest.fixture(autouse=True)
+def disable_installed_check() -> Generator[None, None, None]:
+    """Disable package installed check."""
+    with patch("homeassistant.util.package.is_installed", return_value=True):
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -44,7 +53,7 @@ async def apply_stop_hass(stop_hass: None) -> None:
     """Make sure all hass are stopped."""
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="module", autouse=True)
 def mock_http_start_stop() -> Generator[None, None, None]:
     """Mock HTTP start and stop."""
     with (
@@ -110,6 +119,48 @@ async def test_empty_setup(hass: HomeAssistant) -> None:
     await bootstrap.async_from_config_dict({}, hass)
     for domain in bootstrap.CORE_INTEGRATIONS:
         assert domain in hass.config.components, domain
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_config_does_not_turn_off_debug(hass: HomeAssistant) -> None:
+    """Test that config does not turn off debug if its turned on by runtime config."""
+    # Mock that its turned on from RuntimeConfig
+    hass.config.debug = True
+
+    await bootstrap.async_from_config_dict({CONF_DEBUG: False}, hass)
+    assert hass.config.debug is True
+
+
+@pytest.mark.parametrize("hass_config", [{"frontend": {}}])
+async def test_asyncio_debug_on_turns_hass_debug_on(
+    mock_hass_config: None,
+    mock_enable_logging: Mock,
+    mock_is_virtual_env: Mock,
+    mock_mount_local_lib_path: AsyncMock,
+    mock_ensure_config_exists: AsyncMock,
+    mock_process_ha_config_upgrade: Mock,
+) -> None:
+    """Test that asyncio debug turns on hass debug."""
+    asyncio.get_running_loop().set_debug(True)
+
+    verbose = Mock()
+    log_rotate_days = Mock()
+    log_file = Mock()
+    log_no_color = Mock()
+
+    hass = await bootstrap.async_setup_hass(
+        runner.RuntimeConfig(
+            config_dir=get_test_config_dir(),
+            verbose=verbose,
+            log_rotate_days=log_rotate_days,
+            log_file=log_file,
+            log_no_color=log_no_color,
+            skip_pip=True,
+            recovery_mode=False,
+        ),
+    )
+
+    assert hass.config.debug is True
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -599,6 +650,7 @@ async def test_setup_hass(
                 log_no_color=log_no_color,
                 skip_pip=True,
                 recovery_mode=False,
+                debug=True,
             ),
         )
 
@@ -618,6 +670,9 @@ async def test_setup_hass(
     assert len(mock_mount_local_lib_path.mock_calls) == 1
     assert len(mock_ensure_config_exists.mock_calls) == 1
     assert len(mock_process_ha_config_upgrade.mock_calls) == 1
+
+    # debug in RuntimeConfig should set it it in hass.config
+    assert hass.config.debug is True
 
     assert hass == async_get_hass()
 
@@ -639,11 +694,11 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
     log_no_color = Mock()
 
     async def _async_setup_that_blocks_startup(*args, **kwargs):
-        await asyncio.sleep(0.6)
+        await asyncio.sleep(0.2)
         return True
 
     with (
-        patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.3),
+        patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.1),
         patch.object(bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.05),
         patch(
             "homeassistant.components.frontend.async_setup",
@@ -910,10 +965,10 @@ async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(
     def gen_domain_setup(domain):
         async def async_setup(hass, config):
             order.append(domain)
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.05)
 
             async def _background_task():
-                await asyncio.sleep(0.2)
+                await asyncio.sleep(0.1)
 
             await hass.async_create_task(_background_task())
             return True
@@ -945,7 +1000,7 @@ async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(
     async_dispatcher_connect(
         hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, _bootstrap_integrations
     )
-    with patch.object(bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.05):
+    with patch.object(bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.025):
         await bootstrap._async_set_up_integrations(
             hass, {"normal_integration": {}, "an_after_dep": {}}
         )
@@ -965,13 +1020,16 @@ async def test_warning_logged_on_wrap_up_timeout(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we log a warning on bootstrap timeout."""
+    task: asyncio.Task | None = None
 
     def gen_domain_setup(domain):
         async def async_setup(hass, config):
-            async def _not_marked_background_task():
-                await asyncio.sleep(0.2)
+            nonlocal task
 
-            hass.async_create_task(_not_marked_background_task())
+            async def _not_marked_background_task():
+                await asyncio.sleep(2)
+
+            task = hass.async_create_task(_not_marked_background_task())
             return True
 
         return async_setup
@@ -987,8 +1045,10 @@ async def test_warning_logged_on_wrap_up_timeout(
 
     with patch.object(bootstrap, "WRAP_UP_TIMEOUT", 0):
         await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
-        await hass.async_block_till_done()
 
+    task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await task
     assert "Setup timed out for bootstrap" in caplog.text
     assert "waiting on" in caplog.text
     assert "_not_marked_background_task" in caplog.text
@@ -1097,16 +1157,10 @@ async def test_bootstrap_empty_integrations(
     await hass.async_block_till_done()
 
 
-@pytest.mark.parametrize("integration", ["mqtt_eventstream", "mqtt_statestream"])
-@pytest.mark.parametrize("load_registries", [False])
-async def test_bootstrap_dependencies(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    integration: str,
-) -> None:
-    """Test dependencies are set up correctly,."""
+@pytest.fixture(name="mock_mqtt_config_flow")
+def mock_mqtt_config_flow_fixture() -> Generator[None, None, None]:
+    """Mock MQTT config flow."""
 
-    # Prepare MQTT config entry
     @HANDLERS.register("mqtt")
     class MockConfigFlow:
         """Mock the MQTT config flow."""
@@ -1114,6 +1168,19 @@ async def test_bootstrap_dependencies(
         VERSION = 1
         MINOR_VERSION = 1
 
+    with mock_config_flow("mqtt", MockConfigFlow):
+        yield
+
+
+@pytest.mark.parametrize("integration", ["mqtt_eventstream", "mqtt_statestream"])
+@pytest.mark.parametrize("load_registries", [False])
+async def test_bootstrap_dependencies(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    integration: str,
+    mock_mqtt_config_flow: None,
+) -> None:
+    """Test dependencies are set up correctly,."""
     entry = MockConfigEntry(domain="mqtt", data={"broker": "test-broker"})
     entry.add_to_hass(hass)
 
@@ -1398,3 +1465,13 @@ async def test_setup_does_base_platforms_first(hass: HomeAssistant) -> None:
     # only that they are setup before other integrations.
     assert set(order[1:3]) == {"sensor", "binary_sensor"}
     assert order[3:] == ["root", "first_dep", "second_dep"]
+
+
+def test_should_rollover_is_always_false():
+    """Test that shouldRollover always returns False."""
+    assert (
+        bootstrap._RotatingFileHandlerWithoutShouldRollOver(
+            "any.log", delay=True
+        ).shouldRollover(Mock())
+        is False
+    )

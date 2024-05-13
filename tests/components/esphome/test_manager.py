@@ -607,7 +607,7 @@ async def test_connection_aborted_wrong_device(
         "esphome", context={"source": config_entries.SOURCE_DHCP}, data=service_info
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == "192.168.43.184"
     await hass.async_block_till_done()

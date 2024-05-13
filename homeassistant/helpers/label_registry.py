@@ -5,10 +5,12 @@ from __future__ import annotations
 from collections.abc import Iterable
 import dataclasses
 from dataclasses import dataclass
-from typing import Literal, TypedDict, cast
+from typing import Literal, TypedDict
 
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.util import slugify
+from homeassistant.util.event_type import EventType
+from homeassistant.util.hass_dict import HassKey
 
 from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryEntry,
@@ -16,13 +18,32 @@ from .normalized_name_base_registry import (
     normalize_name,
 )
 from .registry import BaseRegistry
+from .singleton import singleton
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
-DATA_REGISTRY = "label_registry"
-EVENT_LABEL_REGISTRY_UPDATED = "label_registry_updated"
+DATA_REGISTRY: HassKey[LabelRegistry] = HassKey("label_registry")
+EVENT_LABEL_REGISTRY_UPDATED: EventType[EventLabelRegistryUpdatedData] = EventType(
+    "label_registry_updated"
+)
 STORAGE_KEY = "core.label_registry"
 STORAGE_VERSION_MAJOR = 1
+
+
+class _LabelStoreData(TypedDict):
+    """Data type for individual label. Used in LabelRegistryStoreData."""
+
+    color: str | None
+    description: str | None
+    icon: str | None
+    label_id: str
+    name: str
+
+
+class LabelRegistryStoreData(TypedDict):
+    """Store data type for LabelRegistry."""
+
+    labels: list[_LabelStoreData]
 
 
 class EventLabelRegistryUpdatedData(TypedDict):
@@ -45,7 +66,7 @@ class LabelEntry(NormalizedNameBaseRegistryEntry):
     icon: str | None = None
 
 
-class LabelRegistry(BaseRegistry):
+class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
     """Class to hold a registry of labels."""
 
     labels: NormalizedNameBaseRegistryItems[LabelEntry]
@@ -54,7 +75,7 @@ class LabelRegistry(BaseRegistry):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the label registry."""
         self.hass = hass
-        self._store: Store[dict[str, list[dict[str, str | None]]]] = Store(
+        self._store = Store(
             hass,
             STORAGE_VERSION_MAJOR,
             STORAGE_KEY,
@@ -100,6 +121,7 @@ class LabelRegistry(BaseRegistry):
         description: str | None = None,
     ) -> LabelEntry:
         """Create a new label."""
+        self.hass.verify_event_loop_thread("async_create")
         if label := self.async_get_label_by_name(name):
             raise ValueError(
                 f"The name {name} ({label.normalized_name}) is already in use"
@@ -118,7 +140,7 @@ class LabelRegistry(BaseRegistry):
         label_id = label.label_id
         self.labels[label_id] = label
         self.async_schedule_save()
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_LABEL_REGISTRY_UPDATED,
             EventLabelRegistryUpdatedData(
                 action="create",
@@ -130,8 +152,9 @@ class LabelRegistry(BaseRegistry):
     @callback
     def async_delete(self, label_id: str) -> None:
         """Delete label."""
+        self.hass.verify_event_loop_thread("async_delete")
         del self.labels[label_id]
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_LABEL_REGISTRY_UPDATED,
             EventLabelRegistryUpdatedData(
                 action="remove",
@@ -169,10 +192,11 @@ class LabelRegistry(BaseRegistry):
         if not changes:
             return old
 
+        self.hass.verify_event_loop_thread("async_update")
         new = self.labels[label_id] = dataclasses.replace(old, **changes)  # type: ignore[arg-type]
 
         self.async_schedule_save()
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_LABEL_REGISTRY_UPDATED,
             EventLabelRegistryUpdatedData(
                 action="update",
@@ -189,10 +213,6 @@ class LabelRegistry(BaseRegistry):
 
         if data is not None:
             for label in data["labels"]:
-                # Check if the necessary keys are present
-                if label["label_id"] is None or label["name"] is None:
-                    continue
-
                 normalized_name = normalize_name(label["name"])
                 labels[label["label_id"]] = LabelEntry(
                     color=label["color"],
@@ -207,7 +227,7 @@ class LabelRegistry(BaseRegistry):
         self._label_data = labels.data
 
     @callback
-    def _data_to_save(self) -> dict[str, list[dict[str, str | None]]]:
+    def _data_to_save(self) -> LabelRegistryStoreData:
         """Return data of label registry to store in a file."""
         return {
             "labels": [
@@ -224,13 +244,13 @@ class LabelRegistry(BaseRegistry):
 
 
 @callback
+@singleton(DATA_REGISTRY)
 def async_get(hass: HomeAssistant) -> LabelRegistry:
     """Get label registry."""
-    return cast(LabelRegistry, hass.data[DATA_REGISTRY])
+    return LabelRegistry(hass)
 
 
 async def async_load(hass: HomeAssistant) -> None:
     """Load label registry."""
     assert DATA_REGISTRY not in hass.data
-    hass.data[DATA_REGISTRY] = LabelRegistry(hass)
-    await hass.data[DATA_REGISTRY].async_load()
+    await async_get(hass).async_load()
