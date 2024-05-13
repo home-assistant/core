@@ -18,6 +18,7 @@ SITE_INFO = load_json_object_fixture("site_info.json", DOMAIN)
 
 COMMAND_OK = {"response": {"result": True, "reason": ""}}
 COMMAND_REASON = {"response": {"result": False, "reason": "already closed"}}
+COMMAND_IGNORED_REASON = {"response": {"result": False, "reason": "already_set"}}
 COMMAND_NOREASON = {"response": {"result": False}}  # Unexpected
 COMMAND_ERROR = {
     "response": None,

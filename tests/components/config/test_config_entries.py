@@ -22,6 +22,7 @@ from tests.common import (
     MockConfigEntry,
     MockModule,
     MockUser,
+    mock_config_flow,
     mock_integration,
     mock_platform,
 )
@@ -49,7 +50,25 @@ async def client(hass, hass_client) -> TestClient:
     return await hass_client()
 
 
-async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
+@pytest.fixture
+async def mock_flow():
+    """Mock a config flow."""
+
+    class Comp1ConfigFlow(ConfigFlow):
+        """Config flow with options flow."""
+
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            """Get options flow."""
+
+    with mock_config_flow("comp1", Comp1ConfigFlow):
+        yield
+
+
+async def test_get_entries(
+    hass: HomeAssistant, client, clear_handlers, mock_flow
+) -> None:
     """Test get entries."""
     mock_integration(hass, MockModule("comp1"))
     mock_integration(
@@ -64,21 +83,6 @@ async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
     mock_integration(
         hass, MockModule("comp5", partial_manifest={"integration_type": "service"})
     )
-
-    @HANDLERS.register("comp1")
-    class Comp1ConfigFlow:
-        """Config flow with options flow."""
-
-        @staticmethod
-        @callback
-        def async_get_options_flow(config_entry):
-            """Get options flow."""
-
-        @classmethod
-        @callback
-        def async_supports_options_flow(cls, config_entry):
-            """Return options flow support for this handler."""
-            return True
 
     config_entry_flow.register_discovery_flow("comp2", "Comp 2", lambda: None)
 
