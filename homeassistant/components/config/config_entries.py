@@ -46,6 +46,13 @@ def async_setup(hass: HomeAssistant) -> bool:
     hass.http.register_view(OptionManagerFlowIndexView(hass.config_entries.options))
     hass.http.register_view(OptionManagerFlowResourceView(hass.config_entries.options))
 
+    hass.http.register_view(
+        SubentryManagerFlowIndexView(hass.config_entries.subentries)
+    )
+    hass.http.register_view(
+        SubentryManagerFlowResourceView(hass.config_entries.subentries)
+    )
+
     websocket_api.async_register_command(hass, config_entries_get)
     websocket_api.async_register_command(hass, config_entry_disable)
     websocket_api.async_register_command(hass, config_entry_get_single)
@@ -53,6 +60,9 @@ def async_setup(hass: HomeAssistant) -> bool:
     websocket_api.async_register_command(hass, config_entries_subscribe)
     websocket_api.async_register_command(hass, config_entries_progress)
     websocket_api.async_register_command(hass, ignore_config_flow)
+
+    websocket_api.async_register_command(hass, config_subentry_delete)
+    websocket_api.async_register_command(hass, config_subentry_list)
 
     return True
 
@@ -269,6 +279,48 @@ class OptionManagerFlowResourceView(
 
     url = "/api/config/config_entries/options/flow/{flow_id}"
     name = "api:config:config_entries:options:flow:resource"
+
+    @require_admin(
+        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    )
+    async def get(self, request: web.Request, /, flow_id: str) -> web.Response:
+        """Get the current state of a data_entry_flow."""
+        return await super().get(request, flow_id)
+
+    @require_admin(
+        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    )
+    async def post(self, request: web.Request, flow_id: str) -> web.Response:
+        """Handle a POST request."""
+        return await super().post(request, flow_id)
+
+
+class SubentryManagerFlowIndexView(
+    FlowManagerIndexView[config_entries.ConfigSubentryFlowManager]
+):
+    """View to create subentry flows."""
+
+    url = "/api/config/config_entries/subentries/flow"
+    name = "api:config:config_entries:subentries:flow"
+
+    @require_admin(
+        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    )
+    async def post(self, request: web.Request) -> web.Response:
+        """Handle a POST request.
+
+        handler in request is entry_id.
+        """
+        return await super().post(request)
+
+
+class SubentryManagerFlowResourceView(
+    FlowManagerResourceView[config_entries.ConfigSubentryFlowManager]
+):
+    """View to interact with the subentry flow manager."""
+
+    url = "/api/config/config_entries/subentries/flow/{flow_id}"
+    name = "api:config:config_entries:subentries:flow:resource"
 
     @require_admin(
         error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
@@ -588,3 +640,61 @@ async def _async_matching_config_entries_json_fragments(
         )
         or (filter_is_not_helper and entry.domain not in integrations)
     ]
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        "type": "config_entries/subentries/list",
+        "entry_id": str,
+    }
+)
+@websocket_api.async_response
+async def config_subentry_list(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """List subentries of a config entry."""
+    entry = get_entry(hass, connection, msg["entry_id"], msg["id"])
+    if entry is None:
+        return
+
+    result = {
+        "subentries": {
+            subentry_id: {"title": subentry.title}
+            for subentry_id, subentry in entry.subentries.items()
+        }
+    }
+    connection.send_result(msg["id"], result)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        "type": "config_entries/subentries/delete",
+        "entry_id": str,
+        "subentry_id": str,
+    }
+)
+@websocket_api.async_response
+async def config_subentry_delete(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Delete a subentry of a config entry."""
+    entry = get_entry(hass, connection, msg["entry_id"], msg["id"])
+    if entry is None:
+        return
+
+    hass.config_entries.async_update_entry(
+        entry,
+        subentries={
+            subentry_id: subentry
+            for subentry_id, subentry in entry.subentries.items()
+            if subentry_id != msg["subentry_id"]
+        },
+    )
+
+    connection.send_result(msg["id"])
