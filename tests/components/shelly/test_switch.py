@@ -78,7 +78,7 @@ async def test_block_motion_switch(
 
     # Make device online
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert get_entity_state(hass, entity_id) == STATE_ON
 
