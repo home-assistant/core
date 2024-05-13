@@ -1110,10 +1110,10 @@ async def test_timer_assist_command(hass: HomeAssistant, init_components) -> Non
     result = await intent.async_handle(
         hass,
         "test",
-        intent.INTENT_SET_TIMER,
+        intent.INTENT_START_TIMER,
         {
             "seconds": {"value": 0},
-            "data": {"value": {"assist_command": "turn on kitchen light"}},
+            "assist_command": {"value": "turn on kitchen light"},
         },
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE

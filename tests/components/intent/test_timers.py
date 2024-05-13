@@ -56,7 +56,7 @@ async def test_start_finish_timer(hass: HomeAssistant) -> None:
     result = await intent.async_handle(
         hass,
         "test",
-        intent.INTENT_SET_TIMER,
+        intent.INTENT_START_TIMER,
         {
             "name": {"value": timer_name},
             "device_id": {"value": device_id},
@@ -112,7 +112,7 @@ async def test_cancel_timer(hass: HomeAssistant) -> None:
     result = await intent.async_handle(
         hass,
         "test",
-        intent.INTENT_SET_TIMER,
+        intent.INTENT_START_TIMER,
         {
             "device_id": {"value": device_id},
             "hours": {"value": 1},
@@ -148,7 +148,7 @@ async def test_cancel_timer(hass: HomeAssistant) -> None:
     result = await intent.async_handle(
         hass,
         "test",
-        intent.INTENT_SET_TIMER,
+        intent.INTENT_START_TIMER,
         {
             "device_id": {"value": device_id},
             "name": {"value": timer_name},
@@ -221,7 +221,7 @@ async def test_increase_timer(hass: HomeAssistant) -> None:
     result = await intent.async_handle(
         hass,
         "test",
-        intent.INTENT_SET_TIMER,
+        intent.INTENT_START_TIMER,
         {
             "device_id": {"value": device_id},
             "name": {"value": timer_name},
@@ -317,7 +317,7 @@ async def test_decrease_timer(hass: HomeAssistant) -> None:
     result = await intent.async_handle(
         hass,
         "test",
-        intent.INTENT_SET_TIMER,
+        intent.INTENT_START_TIMER,
         {
             "device_id": {"value": device_id},
             "name": {"value": timer_name},
@@ -409,7 +409,7 @@ async def test_decrease_timer_below_zero(hass: HomeAssistant) -> None:
     result = await intent.async_handle(
         hass,
         "test",
-        intent.INTENT_SET_TIMER,
+        intent.INTENT_START_TIMER,
         {
             "hours": {"value": 1},
             "minutes": {"value": 2},
@@ -451,7 +451,7 @@ async def test_find_timer_failed(hass: HomeAssistant) -> None:
     result = await intent.async_handle(
         hass,
         "test",
-        intent.INTENT_SET_TIMER,
+        intent.INTENT_START_TIMER,
         {"name": {"value": "pizza"}, "minutes": {"value": 5}},
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
@@ -535,7 +535,7 @@ async def test_disambiguation(
     result = await intent.async_handle(
         hass,
         "test",
-        intent.INTENT_SET_TIMER,
+        intent.INTENT_START_TIMER,
         {"device_id": {"value": device_alice.id}, "minutes": {"value": 3}},
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
@@ -544,7 +544,7 @@ async def test_disambiguation(
     result = await intent.async_handle(
         hass,
         "test",
-        intent.INTENT_SET_TIMER,
+        intent.INTENT_START_TIMER,
         {"device_id": {"value": device_bob.id}, "minutes": {"value": 3}},
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
@@ -641,7 +641,7 @@ async def test_disambiguation(
     result = await intent.async_handle(
         hass,
         "test",
-        intent.INTENT_SET_TIMER,
+        intent.INTENT_START_TIMER,
         {"device_id": {"value": device_alice.id}, "minutes": {"value": 3}},
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
@@ -650,7 +650,7 @@ async def test_disambiguation(
     result = await intent.async_handle(
         hass,
         "test",
-        intent.INTENT_SET_TIMER,
+        intent.INTENT_START_TIMER,
         {"device_id": {"value": device_alice_2.id}, "minutes": {"value": 3}},
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
@@ -659,7 +659,7 @@ async def test_disambiguation(
     result = await intent.async_handle(
         hass,
         "test",
-        intent.INTENT_SET_TIMER,
+        intent.INTENT_START_TIMER,
         {"device_id": {"value": device_bob.id}, "minutes": {"value": 3}},
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
@@ -740,7 +740,7 @@ async def test_pause_unpause_timer(hass: HomeAssistant) -> None:
     async_register_timer_handler(hass, handle_timer)
 
     result = await intent.async_handle(
-        hass, "test", intent.INTENT_SET_TIMER, {"minutes": {"value": 5}}
+        hass, "test", intent.INTENT_START_TIMER, {"minutes": {"value": 5}}
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -788,7 +788,7 @@ async def test_ordinal(hass: HomeAssistant) -> None:
     for _ in range(3):
         started_event.clear()
         result = await intent.async_handle(
-            hass, "test", intent.INTENT_SET_TIMER, {"minutes": {"value": 5}}
+            hass, "test", intent.INTENT_START_TIMER, {"minutes": {"value": 5}}
         )
         assert result.response_type == intent.IntentResponseType.ACTION_DONE
 

@@ -585,10 +585,10 @@ def _get_total_seconds(slots: dict[str, Any]) -> int:
     return total_seconds
 
 
-class SetTimerIntentHandler(intent.IntentHandler):
+class StartTimerIntentHandler(intent.IntentHandler):
     """Intent handler for starting a new timer."""
 
-    intent_type = intent.INTENT_SET_TIMER
+    intent_type = intent.INTENT_START_TIMER
     slot_schema = {
         vol.Required(vol.Any("hours", "minutes", "seconds")): cv.positive_int,
         vol.Optional("name"): cv.string,

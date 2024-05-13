@@ -44,7 +44,7 @@ from .timers import (
     DecreaseTimerIntentHandler,
     IncreaseTimerIntentHandler,
     PauseTimerIntentHandler,
-    SetTimerIntentHandler,
+    StartTimerIntentHandler,
     TimerManager,
     TimerStatusIntentHandler,
     UnpauseTimerIntentHandler,
@@ -86,7 +86,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         NevermindIntentHandler(),
     )
     intent.async_register(hass, SetPositionIntentHandler())
-    intent.async_register(hass, SetTimerIntentHandler())
+    intent.async_register(hass, StartTimerIntentHandler())
     intent.async_register(hass, CancelTimerIntentHandler())
     intent.async_register(hass, IncreaseTimerIntentHandler())
     intent.async_register(hass, DecreaseTimerIntentHandler())
