@@ -178,11 +178,6 @@ class SnapcastBaseDevice(MediaPlayerEntity):
             self.async_write_ha_state()
 
     @property
-    def volume_level(self) -> float | None:
-        """Return the volume level."""
-        return self._device.volume / 100
-
-    @property
     def is_volume_muted(self) -> bool:
         """Volume muted."""
         return self._device.muted
@@ -191,6 +186,11 @@ class SnapcastBaseDevice(MediaPlayerEntity):
         """Send the mute command."""
         await self._device.set_muted(mute)
         self.async_write_ha_state()
+
+    @property
+    def volume_level(self) -> float | None:
+        """Return the volume level."""
+        return self._device.volume / 100
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
