@@ -25,8 +25,7 @@ def get_all_voices(client: boto3.client) -> list[AmazonPollyVoice]:
 
 
 if __name__ == "__main__":
-    client = boto3.client("polly")
-    voices = get_all_voices(client)
+    voices = get_all_voices(boto3.client("polly"))
     for voice in sorted(voices, key=lambda x: x.id):
         print(  # noqa: T201
             f'"{voice.id}", # {voice.language_name} ({voice.language_code})'
