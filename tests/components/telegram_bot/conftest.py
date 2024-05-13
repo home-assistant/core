@@ -33,7 +33,7 @@ def config_webhooks():
                 CONF_API_KEY: "1234567890:ABC",
                 CONF_ALLOWED_CHAT_IDS: [
                     # "me"
-                    12345678,
+                    {12345678: "d759909bf2954ef4b3faeac81baecfe0"},
                     # Some chat
                     -123456789,
                 ],
@@ -52,7 +52,7 @@ def config_polling():
                 CONF_API_KEY: "1234567890:ABC",
                 CONF_ALLOWED_CHAT_IDS: [
                     # "me"
-                    12345678,
+                    {12345678: "d759909bf2954ef4b3faeac81baecfe0"},
                     # Some chat
                     -123456789,
                 ],

@@ -70,6 +70,7 @@ async def test_webhook_endpoint_generates_telegram_text_event(
     assert len(events) == 1
     assert events[0].data["text"] == update_message_text["message"]["text"]
     assert isinstance(events[0].context, Context)
+    assert events[0].context.user_id == "d759909bf2954ef4b3faeac81baecfe0"
 
 
 async def test_webhook_endpoint_generates_telegram_command_event(
@@ -97,6 +98,7 @@ async def test_webhook_endpoint_generates_telegram_command_event(
     assert len(events) == 1
     assert events[0].data["command"] == update_message_command["message"]["text"]
     assert isinstance(events[0].context, Context)
+    assert events[0].context.user_id == "d759909bf2954ef4b3faeac81baecfe0"
 
 
 async def test_webhook_endpoint_generates_telegram_callback_event(
@@ -124,6 +126,7 @@ async def test_webhook_endpoint_generates_telegram_callback_event(
     assert len(events) == 1
     assert events[0].data["data"] == update_callback_query["callback_query"]["data"]
     assert isinstance(events[0].context, Context)
+    assert events[0].context.user_id == "d759909bf2954ef4b3faeac81baecfe0"
 
 
 async def test_polling_platform_message_text_update(
@@ -166,6 +169,7 @@ async def test_polling_platform_message_text_update(
     assert len(events) == 1
     assert events[0].data["text"] == update_message_text["message"]["text"]
     assert isinstance(events[0].context, Context)
+    assert events[0].context.user_id == "d759909bf2954ef4b3faeac81baecfe0"
 
 
 async def test_webhook_endpoint_unauthorized_update_doesnt_generate_telegram_text_event(

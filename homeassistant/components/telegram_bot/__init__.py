@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping, Sequence
 import io
 from ipaddress import ip_network
 import logging
@@ -126,6 +127,24 @@ PARSER_PLAIN_TEXT = "plain_text"
 
 DEFAULT_TRUSTED_NETWORKS = [ip_network("149.154.160.0/20"), ip_network("91.108.4.0/22")]
 
+
+def ensure_dict(val: Any) -> Mapping[Any, Any]:
+    """Make sure the result is a dict."""
+    if val is None:
+        return {}
+    if isinstance(val, Mapping):
+        return val
+    if isinstance(val, Sequence) and not isinstance(val, str):
+        res: dict[Any, Any] = {}
+        for x in val:
+            if isinstance(x, Mapping):
+                res.update(x)
+            else:
+                res[x] = None
+        return res
+    return {val: None}
+
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
@@ -138,7 +157,7 @@ CONFIG_SCHEMA = vol.Schema(
                         ),
                         vol.Required(CONF_API_KEY): cv.string,
                         vol.Required(CONF_ALLOWED_CHAT_IDS): vol.All(
-                            cv.ensure_list, [vol.Coerce(int)]
+                            ensure_dict, {vol.Coerce(int): vol.Maybe(cv.string)}
                         ),
                         vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
                         vol.Optional(CONF_PROXY_URL): cv.string,
@@ -522,7 +541,7 @@ class TelegramNotificationService:
 
     def __init__(self, hass, bot, allowed_chat_ids, parser):
         """Initialize the service."""
-        self.allowed_chat_ids = allowed_chat_ids
+        self.allowed_chat_ids = list(allowed_chat_ids.keys())
         self._default_user = self.allowed_chat_ids[0]
         self._last_message_id = {user: None for user in self.allowed_chat_ids}
         self._parsers = {
@@ -1049,7 +1068,7 @@ class BaseTelegramBotEntity:
             _LOGGER.warning("Unhandled update: %s", update)
             return True
 
-        event_context = Context()
+        event_context = self._get_event_context(update)
 
         _LOGGER.debug("Firing event %s: %s", event_type, event_data)
         self.hass.bus.async_fire(event_type, event_data, context=event_context)
@@ -1112,6 +1131,14 @@ class BaseTelegramBotEntity:
         event_data.update(self._get_command_event_data(callback_query.data))
 
         return event_type, event_data
+
+    def _get_event_context(self, update: Update) -> Context:
+        from_user = update.effective_user.id if update.effective_user else None
+        from_chat = update.effective_chat.id if update.effective_chat else None
+        user_id = self.allowed_chat_ids.get(from_chat)
+        user_id = self.allowed_chat_ids.get(from_user, user_id)
+
+        return Context(user_id=user_id)
 
     def authorize_update(self, update: Update) -> bool:
         """Make sure either user or chat is in allowed_chat_ids."""
