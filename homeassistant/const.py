@@ -1237,10 +1237,10 @@ FCFS: Final = "fcfs"
 FCFS_POST: Final = "fcfs_post"
 JIT: Final = "jit"
 TIMELINE: Final = "tl"
-SCHEDULING_POLICY: Final = "scheduling_policy"
+CONF_SCHEDULING_POLICY: Final = "scheduling_policy"
 
 
-RESCHEDULING_POLICY: Final = "rescheduling_policy"
+CONF_RESCHEDULING_POLICY: Final = "rescheduling_policy"
 OPTIMALW: Final = "optimalw"
 OPTIMALWO: Final = "optimalwo"
 RV: Final = "rv"
@@ -1249,21 +1249,21 @@ SJFWO: Final = "sjfwo"
 SJFW: Final = "sjfw"
 NONE: Final = "none"
 
-RESCHEDULING_TRIGGER: Final = "rescheduling_trigger"
+CONF_RESCHEDULING_TRIGGER: Final = "rescheduling_trigger"
 REACTIVE: Final = "reactive"
 ANTICIPATORY: Final = "anticipatory"
 PROACTIVE: Final = "proactive"
 
-RESCHEDULING_WINDOW: Final = "rescheduling_window"
+CONF_RESCHEDULING_WINDOW: Final = "rescheduling_window"
 
-ROUTINE_PRIORITY_POLICY: Final = "routine_priority_policy"
+CONF_ROUTINE_PRIORITY_POLICY: Final = "routine_priority_policy"
 SHORTEST: Final = "shortest"
 LONGEST: Final = "longest"
 EARLIEST: Final = "earliest"
 LATEST: Final = "latest"
 RANDOM: Final = "random"
 
-OPTIMAL_SCHEDULE_METRIC: Final = "optimal_schedule_metric"
+CONF_OPTIMAL_SCHEDULE_METRIC: Final = "optimal_schedule_metric"
 MIN_LENGTH: Final = "min_length"
 MIN_AVG_RTN_WAIT_TIME: Final = "min_avg_rtn_wait_time"
 MIN_P95_RTN_WAIT_TIME: Final = "min_p95_rtn_wait_time"
@@ -1274,6 +1274,9 @@ MIN_AVG_IDLE_TIME: Final = "min_avg_idle_time"
 MIN_P95_IDLE_TIME: Final = "min_p95_idle_time"
 MAX_AVG_PARALLELISM: Final = "max_avg_parallelism"
 MAX_P05_PARALLELISM: Final = "max_p05_parallelism"
+
+CONF_ROUTINE_ARRIVAL_FILENAME: Final = "routine_arrival_filename"
+CONF_RECORD_RESULTS: Final = "record_results"
 
 RESCHEDULING_ESTIMATION: Final = "rescheduling_estimation"
 

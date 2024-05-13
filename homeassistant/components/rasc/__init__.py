@@ -1,12 +1,23 @@
 """The rasc integration."""
 from __future__ import annotations
 
+import datetime
 import logging
+import os
+import shutil
 
 import voluptuous as vol
 
 from homeassistant.const import (
     ANTICIPATORY,
+    CONF_OPTIMAL_SCHEDULE_METRIC,
+    CONF_RECORD_RESULTS,
+    CONF_RESCHEDULING_POLICY,
+    CONF_RESCHEDULING_TRIGGER,
+    CONF_RESCHEDULING_WINDOW,
+    CONF_ROUTINE_ARRIVAL_FILENAME,
+    CONF_ROUTINE_PRIORITY_POLICY,
+    CONF_SCHEDULING_POLICY,
     DOMAIN_RASCALRESCHEDULER,
     DOMAIN_RASCALSCHEDULER,
     EARLIEST,
@@ -33,7 +44,6 @@ from homeassistant.const import (
     MIN_P95_RTN_WAIT_TIME,
     MIN_RTN_EXEC_TIME_STD_DEV,
     NONE,
-    OPTIMAL_SCHEDULE_METRIC,
     OPTIMALW,
     OPTIMALWO,
     PROACTIVE,
@@ -42,12 +52,7 @@ from homeassistant.const import (
     RESCHEDULE_SOME,
     RESCHEDULING_ACCURACY,
     RESCHEDULING_ESTIMATION,
-    RESCHEDULING_POLICY,
-    RESCHEDULING_TRIGGER,
-    RESCHEDULING_WINDOW,
-    ROUTINE_PRIORITY_POLICY,
     RV,
-    SCHEDULING_POLICY,
     SHORTEST,
     SJFW,
     SJFWO,
@@ -98,22 +103,26 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional(SCHEDULING_POLICY, default=TIMELINE): vol.In(
+                vol.Optional(CONF_SCHEDULING_POLICY, default=TIMELINE): vol.In(
                     supported_scheduling_policies
                 ),
-                vol.Optional(RESCHEDULING_POLICY, default=SJFW): vol.In(
+                vol.Optional(CONF_RESCHEDULING_POLICY, default=SJFW): vol.In(
                     supported_rescheduling_policies
                 ),
-                vol.Optional(RESCHEDULING_TRIGGER, default=PROACTIVE): vol.In(
+                vol.Optional(CONF_RESCHEDULING_TRIGGER, default=PROACTIVE): vol.In(
                     supported_rescheduling_triggers
                 ),
                 vol.Optional(
-                    OPTIMAL_SCHEDULE_METRIC, default=MIN_AVG_RTN_LATENCY
+                    CONF_OPTIMAL_SCHEDULE_METRIC, default=MIN_AVG_RTN_LATENCY
                 ): vol.In(supported_optimal_metrics),
-                vol.Optional(RESCHEDULING_WINDOW, default=10.0): cv.positive_float,
-                vol.Optional(ROUTINE_PRIORITY_POLICY, default=EARLIEST): vol.In(
+                vol.Optional(CONF_RESCHEDULING_WINDOW, default=10.0): cv.positive_float,
+                vol.Optional(CONF_ROUTINE_PRIORITY_POLICY, default=EARLIEST): vol.In(
                     supported_routine_priority_policies
                 ),
+                vol.Optional(
+                    CONF_ROUTINE_ARRIVAL_FILENAME, default="datasets/arrival.csv"
+                ): cv.string,
+                vol.Optional(CONF_RECORD_RESULTS, default=True): cv.boolean,
                 vol.Optional(RESCHEDULING_ESTIMATION, default=True): cv.boolean,
                 vol.Optional(RESCHEDULING_ACCURACY, default=RESCHEDULE_ALL): vol.In(
                     supported_rescheduling_accuracies
@@ -129,16 +138,55 @@ CONFIG_SCHEMA = vol.Schema(
 LOGGER.level = logging.DEBUG
 
 
+def _create_result_dir() -> str:
+    """Create the result directory."""
+    if not os.path.exists("results"):
+        os.mkdir("results")
+
+    result_dirname = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
+    result_dirpath = os.path.join("results", result_dirname)
+    if os.path.isdir(result_dirpath):
+        shutil.rmtree(result_dirpath)
+    os.mkdir(result_dirpath)
+    return result_dirpath
+
+
+def _save_rasc_configs(configs: ConfigType, result_dir: str) -> None:
+    """Save the rasc configurations."""
+    with open(f"results/{result_dir}/rasc_config.yaml", "w", encoding="utf-8") as f:
+        for key, value in configs.items():
+            f.write(f"{key}: {value}\n")
+
+
+def parse_routine_arrival_dataset(routine_arrival_filename: str) -> None:
+    """Parse the routine arrival dataset."""
+    rasc_pathname = "homeassistant/components/rasc"
+    routine_arrival_pathname = os.path.join(rasc_pathname, routine_arrival_filename)
+    if not os.path.exists(routine_arrival_pathname):
+        LOGGER.error("The routine arrival dataset does not exist")
+        return
+    with open(routine_arrival_pathname, encoding="utf-8") as f:
+        for line in f:
+            arrival_time, routine_id = line.split()
+            LOGGER.debug(line)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the RASC component."""
+    result_dir = _create_result_dir()
+    _save_rasc_configs(config[DOMAIN], result_dir)
+    routine_arrival_filename = config[DOMAIN][CONF_ROUTINE_ARRIVAL_FILENAME]
+    if routine_arrival_filename:
+        parse_routine_arrival_dataset(routine_arrival_filename)
+
     component = hass.data[DOMAIN] = RASCAbstraction(LOGGER, DOMAIN, hass)
     LOGGER.debug("RASC config: %s", config[DOMAIN])
     scheduler = hass.data[DOMAIN_RASCALSCHEDULER] = RascalScheduler(
-        hass, config[DOMAIN]
+        hass, config[DOMAIN], result_dir
     )
-    if config[DOMAIN][RESCHEDULING_POLICY] != NONE:
+    if config[DOMAIN][CONF_RESCHEDULING_POLICY] != NONE:
         rescheduler = hass.data[DOMAIN_RASCALRESCHEDULER] = RascalRescheduler(
-            hass, scheduler, config[DOMAIN]
+            hass, scheduler, config[DOMAIN], result_dir
         )
         scheduler.reschedule_handler = rescheduler.handle_event
 

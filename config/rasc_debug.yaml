@@ -8,6 +8,8 @@ optimal_schedule_metric: "min_avg_rtn_latency"
 # max_avg_parallelism, max_p05_parallelism
 rescheduling_window: 30
 routine_priority_policy: "earliest" # from shortest, longest, earliest, latest
+record_results: true
+routine_arrival_filename: "datasets/arrival.csv"
 # rescheduling_estimation: true
 # rescheduling_accuracy: "reschedule_all"
 # mthresh: 1

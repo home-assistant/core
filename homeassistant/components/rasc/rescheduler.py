@@ -12,6 +12,13 @@ from homeassistant.const import (
     ANTICIPATORY,
     ATTR_ACTION_ID,
     ATTR_ENTITY_ID,
+    CONF_OPTIMAL_SCHEDULE_METRIC,
+    CONF_RECORD_RESULTS,
+    CONF_RESCHEDULING_POLICY,
+    CONF_RESCHEDULING_TRIGGER,
+    CONF_RESCHEDULING_WINDOW,
+    CONF_ROUTINE_PRIORITY_POLICY,
+    CONF_SCHEDULING_POLICY,
     CONF_TYPE,
     EARLIEST,
     EARLY_START,
@@ -30,7 +37,6 @@ from homeassistant.const import (
     MIN_P95_RTN_LATENCY,
     MIN_P95_RTN_WAIT_TIME,
     MIN_RTN_EXEC_TIME_STD_DEV,
-    OPTIMAL_SCHEDULE_METRIC,
     OPTIMALW,
     OPTIMALWO,
     PROACTIVE,
@@ -39,12 +45,7 @@ from homeassistant.const import (
     REACTIVE,
     RESCHEDULING_ACCURACY,
     RESCHEDULING_ESTIMATION,
-    RESCHEDULING_POLICY,
-    RESCHEDULING_TRIGGER,
-    RESCHEDULING_WINDOW,
-    ROUTINE_PRIORITY_POLICY,
     RV,
-    SCHEDULING_POLICY,
     SHORTEST,
     SJFW,
     SJFWO,
@@ -183,7 +184,12 @@ class BaseRescheduler(TimeLineScheduler):
             await task
         return self._lineage_table
 
-    def RV(self, st_time: datetime, window: timedelta = timedelta(0)) -> LineageTable:
+    def RV(
+        self,
+        st_time: datetime,
+        metrics: ScheduleMetrics,
+        window: timedelta = timedelta(0),
+    ) -> LineageTable:
         """Reschedule actions using the RV resource reclamation algorithm.
 
         Go through the scheduled actions in the lineage table in total chronological
@@ -194,6 +200,8 @@ class BaseRescheduler(TimeLineScheduler):
         """
         lock_queues = self._lineage_table.lock_queues
         free_slots = self._lineage_table.free_slots
+        rv_metrics = ScheduleMetrics(sm=metrics)
+        rv_metrics.set_rescheduling_policy(RV)
 
         # introduce a heap to keep track of the earliest action to be rescheduled
         # the heap will be ordered by the start time of the action
@@ -296,12 +304,22 @@ class BaseRescheduler(TimeLineScheduler):
                 )
                 action_lock.move_to(action_st, action_end)
 
+                # update the schedule metrics
+                rv_metrics.record_scheduled_action_start(
+                    action_st, entity_id, action.action_id
+                )
+                rv_metrics.record_scheduled_action_end(
+                    action_end, entity_id, action.action_id
+                )
+
                 next_action_lock = lock_queues[entity_id].next(action_id)
                 if not next_action_lock:
                     continue
                 heapq.heappush(next_action_heap, next_action_lock)
 
             visited.add(action_id)
+
+        rv_metrics.save_metrics()
 
         return self._lineage_table
 
@@ -781,6 +799,7 @@ class BaseRescheduler(TimeLineScheduler):
         entities: set[str],
         serializability_guarantee: bool,
         immutable_serialization_order: Optional[list[str]],
+        metrics: ScheduleMetrics,
         # window: timedelta
     ) -> tuple[LineageTable, Queue[str, RoutineInfo]]:
         """Shortest Job First rescheduling w/ and w/o routine serializability guarantee.
@@ -813,6 +832,9 @@ class BaseRescheduler(TimeLineScheduler):
 
         Return the updated lineage table.
         """
+        # copy the schedule metrics
+        sjf_metrics = ScheduleMetrics(sm=metrics)
+
         # initialize the new serialization order, if desired
         if serializability_guarantee:
             old_serialization_order = Queue[str, RoutineInfo]()
@@ -974,19 +996,33 @@ class BaseRescheduler(TimeLineScheduler):
                 if not wait_queues[entity_id]:
                     to_remove.add(entity_id)
                     continue
+
+                # update the schedule metrics
+                sjf_metrics.record_scheduled_action_start(
+                    action_st, entity_id, shortest_action.action_id
+                )
                 # only update the next slot if the action has a duration and
                 # the action's new schedule created no holes
                 if (
                     action_st != next_slots[entity_id]
                     and not shortest_action.duration[entity_id]
                 ):
+                    sjf_metrics.record_scheduled_action_end(
+                        action_st, entity_id, shortest_action.action_id
+                    )
                     continue
                 next_slots[entity_id] = action_st + shortest_action.duration[entity_id]
+
+                sjf_metrics.record_scheduled_action_end(
+                    next_slots[entity_id], entity_id, shortest_action.action_id
+                )
 
             for entity_id in to_remove:
                 wait_queues.pop(entity_id)
 
         self._cleanup_serialization_order_dependencies(visited)
+
+        sjf_metrics.save_metrics()
 
         return self._lineage_table, self._serialization_order
 
@@ -1208,8 +1244,10 @@ class BaseRescheduler(TimeLineScheduler):
         # window: timedelta
     ) -> tuple[LineageTable, Queue[str, RoutineInfo]]:
         """Optimal rescheduling with and without routine serializability guarantee."""
+        rescheduling_policy = OPTIMALWO
 
         if serializability_guarantee:
+            rescheduling_policy = OPTIMALW
             old_serialization_order = self._serialization_order
             serialization_order = Queue[str, RoutineInfo]()
             if immutable_serialization_order is None:
@@ -1309,6 +1347,9 @@ class BaseRescheduler(TimeLineScheduler):
         )
         output_lock_queues(best_lt.lock_queues)
         output_serialization_order(best_so)
+
+        best_metric.set_rescheduling_policy(rescheduling_policy)
+        best_metric.save_metrics()
         return best_lt, best_so
 
     def _identify_first_common_idle_time_after(
@@ -2208,26 +2249,33 @@ class RascalRescheduler:
         _reschedacc (str): Flag indicating if rescheduling accuracy is enabled.
         _scheduling_policy (str): The scheduling policy.
         _rescheduler (BaseRescheduler): The rescheduler instance.
+        _timer_handles (dict[str, tuple[Optional[str], Optional[Callable[[], None]]]): Overtime timers
+        _record_results (bool): Flag indicating if results are recorded.
+        _result_dir (str): The directory to store the results.
         _mthresh (float): The M threshold.
         _mithresh (float): The Mi threshold per processor.
         _mis (dict[str, float]): The dictionary of entity IDs and their mis.
     """
 
     def __init__(
-        self, hass: HomeAssistant, scheduler: RascalScheduler, config: ConfigType
+        self,
+        hass: HomeAssistant,
+        scheduler: RascalScheduler,
+        config: ConfigType,
+        result_dir: str,
     ) -> None:
         """Initialize the rescheduler."""
         self._hass = hass
         self._scheduler = scheduler
-        self._resched_policy: str = config[RESCHEDULING_POLICY]
+        self._resched_policy: str = config[CONF_RESCHEDULING_POLICY]
         scheduler._metrics.set_rescheduling_policy(self._resched_policy)
-        self._resched_trigger: str = config[RESCHEDULING_TRIGGER]
-        self._optimal_sched_metric: str = config[OPTIMAL_SCHEDULE_METRIC]
-        self._resched_window: str = config[RESCHEDULING_WINDOW]
-        self._routine_priority: str = config[ROUTINE_PRIORITY_POLICY]
+        self._resched_trigger: str = config[CONF_RESCHEDULING_TRIGGER]
+        self._optimal_sched_metric: str = config[CONF_OPTIMAL_SCHEDULE_METRIC]
+        self._resched_window: str = config[CONF_RESCHEDULING_WINDOW]
+        self._routine_priority: str = config[CONF_ROUTINE_PRIORITY_POLICY]
         self._estimation: bool = config[RESCHEDULING_ESTIMATION]
         self._resched_accuracy: str = config[RESCHEDULING_ACCURACY]
-        self._scheduling_policy: str = config[SCHEDULING_POLICY]
+        self._scheduling_policy: str = config[CONF_SCHEDULING_POLICY]
         self._rescheduler = BaseRescheduler(
             self._hass,
             scheduler.lineage_table,
@@ -2242,6 +2290,9 @@ class RascalRescheduler:
             entity_id: (None, None)
             for entity_id in scheduler._lineage_table.lock_queues
         }
+        self._record_results = config[CONF_RECORD_RESULTS]
+        if self._record_results:
+            self._result_dir = result_dir
         if self._estimation:
             self._mthresh: float = config["mthresh"]
             self._mithresh: float = config["mithresh"]
@@ -2360,7 +2411,7 @@ class RascalRescheduler:
                 raise ValueError("Failed to move device schedules.")
 
         if self._resched_policy in (RV):
-            new_lt = self._rescheduler.RV(new_end_time)
+            new_lt = self._rescheduler.RV(new_end_time, self._scheduler.metrics)
         if self._resched_policy in (EARLY_START):
             new_lt = self._rescheduler.early_start()
         if self._resched_policy in (SJFWO, SJFW, OPTIMALW, OPTIMALWO):
@@ -2409,12 +2460,32 @@ class RascalRescheduler:
                     descheduled_source_action_ids,
                 )
             if self._resched_policy in (SJFWO, SJFW):
+                # compare to optimal
+                self._rescheduler.optimal(
+                    descheduled_source_action_ids,
+                    descheduled_actions,
+                    affected_entities,
+                    serializability,
+                    immutable_serialization_order if serializability else None,
+                    self._scheduler.metrics,
+                )
+                self._apply_schedule(old_lt, old_so)
+
+                # compare to RV
+                if self._resched_policy in (SJFW):
+                    success = await self._move_device_schedules(old_end_time, diff)
+                    if not success:
+                        raise ValueError("Failed to move device schedules.")
+                    self._rescheduler.RV(new_end_time, self._scheduler.metrics)
+                    self._apply_schedule(old_lt, old_so)
+
                 new_lt, new_so = self._rescheduler.sjf(
                     descheduled_source_action_ids,
                     descheduled_actions,
                     affected_entities,
                     serializability,
                     immutable_serialization_order if serializability else None,
+                    self._scheduler.metrics,
                 )
             elif self._resched_policy in (OPTIMALW, OPTIMALWO):
                 new_lt, new_so = self._rescheduler.optimal(

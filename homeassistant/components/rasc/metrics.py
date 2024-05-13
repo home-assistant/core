@@ -56,19 +56,21 @@ class ScheduleMetrics:
 
     def __init__(
         self,
-        scheduling_policy: Optional[str] = None,
+        rescheduling_policy: Optional[str] = None,
+        result_dir: Optional[str] = None,
         sm: Optional["ScheduleMetrics"] = None,
     ) -> None:
         """Initialize the schedule's metrics.
 
         Args:
-            scheduling_policy: The scheduling policy used in the schedule.
+            rescheduling_policy: The rescheduling policy used in the schedule.
+            result_dir: The directory to save the schedule metrics.
             sm: A `ScheduleMetrics` object to copy from.
-
         """
-        if scheduling_policy:
-            self._scheduling_policy = scheduling_policy
-            self._rescheduling_policy: Optional[str] = None
+        if rescheduling_policy and result_dir:
+            self._rescheduling_policy = rescheduling_policy
+            self._result_dir = result_dir
+            self._version = 0
             self._arrival_times = dict[str, datetime]()
             self._remaining_actions = dict[str, set[str]]()
             self._start_times = dict[str, datetime]()
@@ -83,8 +85,9 @@ class ScheduleMetrics:
             self._idle_times = dict[str, timedelta]()
             self._parallelism = dict[datetime, int]()
         elif sm:
-            self._scheduling_policy = sm._scheduling_policy
             self._rescheduling_policy = sm._rescheduling_policy
+            self._result_dir = sm._result_dir
+            self._version = sm._version
             self._arrival_times = copy.deepcopy(sm._arrival_times)
             self._remaining_actions = copy.deepcopy(sm._remaining_actions)
             self._start_times = copy.deepcopy(sm._start_times)
@@ -106,8 +109,6 @@ class ScheduleMetrics:
             rescheduling_policy: The rescheduling policy to set.
 
         """
-        if self._rescheduling_policy:
-            return
         self._rescheduling_policy = rescheduling_policy
 
     def record_routine_arrival(
@@ -514,6 +515,24 @@ class ScheduleMetrics:
         if metric == MAX_P05_PARALLELISM:
             return self.p05_parallelism
         raise ValueError(f"Metric {metric} is not supported.")
+
+    def save_metrics(self, final: bool = False) -> None:
+        """Save the schedule metrics to a file."""
+        self._version += 1
+        if final:
+            filename = "schedule_metrics"
+        else:
+            filename = f"{self._rescheduling_policy}_metrics_{self._version}"
+        with open(f"{self._result_dir}/{filename}.txt", "w", encoding="utf-8") as f:
+            f.write(f"Schedule Length: {self.schedule_length}\n")
+            f.write(f"Average Wait Time: {self.avg_wait_time}\n")
+            f.write(f"95th Percentile Wait Time: {self.p95_wait_time}\n")
+            f.write(f"Average Latency: {self.avg_latency}\n")
+            f.write(f"95th Percentile Latency: {self.p95_latency}\n")
+            f.write(f"Average Idle Time: {self.avg_idle_time}\n")
+            f.write(f"95th Percentile Idle Time: {self.p95_idle_time}\n")
+            f.write(f"Average Parallelism: {self.avg_parallelism}\n")
+            f.write(f"5th Percentile Parallelism: {self.p05_parallelism}\n")
 
     def remove_action_times(self) -> None:
         """Remove the action times of all entities."""
