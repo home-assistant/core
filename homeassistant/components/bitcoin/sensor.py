@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_CURRENCY = "USD"
 
-SCAN_INTERVAL = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=1)
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
