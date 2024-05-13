@@ -68,8 +68,8 @@ class TimerInfo:
     language: str
     """Language of command used to set the timer."""
 
-    is_paused: bool = False
-    """True if timer is currently paused."""
+    is_active: bool = True
+    """True if timer is ticking down."""
 
     assist_command: str | None = None
     """Optional Assist command to execute when timers is finished (same language as timer)."""
@@ -83,7 +83,7 @@ class TimerInfo:
     @property
     def seconds_left(self) -> int:
         """Return number of seconds left on the timer."""
-        if self.is_paused:
+        if not self.is_active:
             return self.seconds
 
         now = time.monotonic_ns()
@@ -245,7 +245,7 @@ class TimerManager:
 
         timer.seconds = 0
         timer.updated_at = time.monotonic_ns()
-        if not timer.is_paused:
+        if timer.is_active:
             timer.task.cancel()
 
         await asyncio.gather(
@@ -271,7 +271,7 @@ class TimerManager:
 
         timer.seconds = max(0, timer.seconds_left + seconds)
         timer.updated_at = time.monotonic_ns()
-        if not timer.is_paused:
+        if timer.is_active:
             timer.task.cancel()
             timer.task = self.hass.async_create_background_task(
                 self._wait_for_timer(timer_id, timer.seconds, timer.updated_at),
@@ -306,12 +306,12 @@ class TimerManager:
     async def pause_timer(self, timer_id: str) -> None:
         """Pauses a timer."""
         timer = self.timers.get(timer_id)
-        if (timer is None) or timer.is_paused:
+        if (timer is None) or (not timer.is_active):
             return
 
         timer.seconds = timer.seconds_left
         timer.updated_at = time.monotonic_ns()
-        timer.is_paused = True
+        timer.is_active = False
         timer.task.cancel()
 
         await asyncio.gather(
@@ -329,10 +329,10 @@ class TimerManager:
     async def unpause_timer(self, timer_id: str) -> None:
         """Unpause a timer."""
         timer = self.timers.get(timer_id)
-        if (timer is None) or (not timer.is_paused):
+        if (timer is None) or timer.is_active:
             return
 
-        timer.is_paused = False
+        timer.is_active = True
         timer.updated_at = time.monotonic_ns()
         timer.task = self.hass.async_create_background_task(
             self._wait_for_timer(timer_id, timer.seconds_left, timer.updated_at),
@@ -790,7 +790,7 @@ class TimerStatusIntentHandler(intent.IntentHandler):
                     "start_hours": timer.start_hours or 0,
                     "start_minutes": timer.start_minutes or 0,
                     "start_seconds": timer.start_seconds or 0,
-                    "is_paused": timer.is_paused,
+                    "is_active": timer.is_active,
                     "hours_left": hours,
                     "minutes_left": minutes,
                     "seconds_left": seconds,

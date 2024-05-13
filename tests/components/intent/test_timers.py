@@ -728,13 +728,13 @@ async def test_pause_unpause_timer(hass: HomeAssistant) -> None:
     started_event = asyncio.Event()
     updated_event = asyncio.Event()
 
-    expected_paused = False
+    expected_active = True
 
     async def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         if event_type == TimerEventType.STARTED:
             started_event.set()
         elif event_type == TimerEventType.UPDATED:
-            assert timer.is_paused == expected_paused
+            assert timer.is_active == expected_active
             updated_event.set()
 
     async_register_timer_handler(hass, handle_timer)
@@ -748,7 +748,7 @@ async def test_pause_unpause_timer(hass: HomeAssistant) -> None:
         await started_event.wait()
 
     # Pause the timer
-    expected_paused = True
+    expected_active = False
     result = await intent.async_handle(hass, "test", intent.INTENT_PAUSE_TIMER, {})
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -757,7 +757,7 @@ async def test_pause_unpause_timer(hass: HomeAssistant) -> None:
 
     # Unpause the timer
     updated_event.clear()
-    expected_paused = False
+    expected_active = True
     result = await intent.async_handle(hass, "test", intent.INTENT_UNPAUSE_TIMER, {})
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
