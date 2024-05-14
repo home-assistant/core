@@ -241,7 +241,7 @@ class TeslemetryExportRuleSelectEntity(TeslemetryEnergyInfoEntity, SelectEntity)
         data: TeslemetryEnergyData,
         scopes: list[Scope],
     ) -> None:
-        """Initialize the operation mode select entity."""
+        """Initialize the export rules select entity."""
         self.scoped = Scope.ENERGY_CMDS in scopes
         super().__init__(data, "components_customer_preferred_export_rule")
 
