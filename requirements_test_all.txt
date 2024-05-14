@@ -416,7 +416,7 @@ anthemav==1.4.1
 apple_weatherkit==1.1.2
 
 # homeassistant.components.apprise
-apprise==1.7.4
+apprise==1.8.0
 
 # homeassistant.components.aprs
 aprslib==0.7.2
@@ -800,7 +800,7 @@ google-nest-sdm==3.0.4
 googlemaps==2.5.1
 
 # homeassistant.components.tailwind
-gotailwind==0.2.2
+gotailwind==0.2.3
 
 # homeassistant.components.govee_ble
 govee-ble==0.31.2
@@ -1408,7 +1408,7 @@ pyecoforest==0.4.0
 pyeconet==0.1.22
 
 # homeassistant.components.efergy
-pyefergy==22.1.1
+pyefergy==22.5.0
 
 # homeassistant.components.energenie_power_sockets
 pyegps==0.2.5
@@ -2180,6 +2180,9 @@ velbus-aio==2024.4.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
+
+# homeassistant.components.viam
+viam-sdk==0.17.0
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.5.0

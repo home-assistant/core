@@ -1,0 +1,171 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Authenticate with Viam",
+        "description": "Select which credential type to use.",
+        "data": {
+          "credential_type": "Credential type"
+        }
+      },
+      "auth": {
+        "title": "[%key:component::viam::config::step::user::title%]",
+        "description": "Provide the credentials for communicating with the Viam service.",
+        "data": {
+          "api_id": "API key ID",
+          "api_key": "API key",
+          "address": "Robot address",
+          "secret": "Robot secret"
+        },
+        "data_description": {
+          "address": "Find this under the Code Sample tab in the app.",
+          "secret": "Find this under the Code Sample tab in the app when 'include secret' is enabled."
+        }
+      },
+      "robot": {
+        "data": {
+          "robot": "Select a robot"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "selector": {
+    "credential_type": {
+      "options": {
+        "api-key": "Org API key",
+        "robot-location-secret": "Robot location secret"
+      }
+    }
+  },
+  "exceptions": {
+    "entry_not_found": {
+      "message": "No Viam config entries found"
+    },
+    "entry_not_loaded": {
+      "message": "{config_entry_title} is not loaded"
+    },
+    "invalid_config_entry": {
+      "message": "Invalid config entry provided. Got {config_entry}"
+    },
+    "unloaded_config_entry": {
+      "message": "Invalid config entry provided. {config_entry} is not loaded."
+    },
+    "robot_credentials_required": {
+      "message": "The robot address is required for this connection type."
+    },
+    "robot_credentials_not_found": {
+      "message": "The necessary credentials for the RobotClient could not be found."
+    }
+  },
+  "services": {
+    "capture_data": {
+      "name": "Capture data",
+      "description": "Send arbitrary tabular data to Viam for analytics and model training.",
+      "fields": {
+        "values": {
+          "name": "Values",
+          "description": "List of tabular data to send to Viam."
+        },
+        "component_name": {
+          "name": "Component name",
+          "description": "The name of the configured robot component to use."
+        },
+        "component_type": {
+          "name": "Component type",
+          "description": "The type of the associated component."
+        }
+      }
+    },
+    "capture_image": {
+      "name": "Capture image",
+      "description": "Send images to Viam for analytics and model training.",
+      "fields": {
+        "filepath": {
+          "name": "Filepath",
+          "description": "Local file path to the image you wish to reference."
+        },
+        "camera": {
+          "name": "Camera entity",
+          "description": "The camera entity from which an image is captured."
+        },
+        "file_name": {
+          "name": "File name",
+          "description": "The name of the file that will be displayed in the metadata within Viam."
+        },
+        "component_name": {
+          "name": "Component name",
+          "description": "The name of the configured robot component to use."
+        }
+      }
+    },
+    "get_classifications": {
+      "name": "Classify images",
+      "description": "Get a list of classifications from an image.",
+      "fields": {
+        "classifier_name": {
+          "name": "Classifier name",
+          "description": "Name of classifier vision service configured in Viam"
+        },
+        "confidence": {
+          "name": "Confidence",
+          "description": "Threshold for filtering results returned by the service"
+        },
+        "count": {
+          "name": "Classification count",
+          "description": "Number of classifications to return from the service"
+        },
+        "robot_address": {
+          "name": "Robot address",
+          "description": "If authenticated using an Org API key, provide the robot address associated with the configured vision service."
+        },
+        "robot_secret": {
+          "name": "Robot secret",
+          "description": "If authenticated using an Org API key, provide the robot location secret associated with the configured vision service."
+        },
+        "filepath": {
+          "name": "Filepath",
+          "description": "Local file path to the image you wish to reference."
+        },
+        "camera": {
+          "name": "Camera entity",
+          "description": "The camera entity from which an image is captured."
+        }
+      }
+    },
+    "get_detections": {
+      "name": "Detect objects in images",
+      "description": "Get a list of detected objects from an image.",
+      "fields": {
+        "detector_name": {
+          "name": "Detector name",
+          "description": "Name of detector vision service configured in Viam"
+        },
+        "confidence": {
+          "name": "Confidence",
+          "description": "Threshold for filtering results returned by the service"
+        },
+        "robot_address": {
+          "name": "Robot address",
+          "description": "If authenticated using an Org API key, provide the robot address associated with the configured vision service."
+        },
+        "robot_secret": {
+          "name": "Robot secret",
+          "description": "If authenticated using an Org API key, provide the robot location secret associated with the configured vision service."
+        },
+        "filepath": {
+          "name": "Filepath",
+          "description": "Local file path to the image you wish to reference."
+        },
+        "camera": {
+          "name": "Camera entity",
+          "description": "The camera entity from which an image is captured."
+        }
+      }
+    }
+  }
+}
