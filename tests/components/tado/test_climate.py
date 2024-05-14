@@ -81,7 +81,7 @@ async def test_smartac_with_swing(hass: HomeAssistant) -> None:
         "min_temp": 16.0,
         "preset_mode": "auto",
         "preset_modes": ["away", "home", "auto"],
-        "swing_modes": ["off", "on"],
+        "swing_modes": ["on", "off"],
         "supported_features": 441,
         "target_temp_step": 1.0,
         "temperature": 20.0,

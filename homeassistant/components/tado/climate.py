@@ -172,7 +172,7 @@ def create_climate_entity(
                 or capabilities[mode].get("horizontalSwing")
             ):
                 support_flags |= ClimateEntityFeature.SWING_MODE
-                supported_swing_modes = [TADO_TO_HA_SWING_MODE_MAP[TADO_SWING_OFF]]
+                supported_swing_modes = []
                 if capabilities[mode].get("swings"):
                     supported_swing_modes.append(
                         TADO_TO_HA_SWING_MODE_MAP[TADO_SWING_ON]
@@ -186,6 +186,7 @@ def create_climate_entity(
                     and SWING_HORIZONTAL in supported_swing_modes
                 ):
                     supported_swing_modes.append(SWING_BOTH)
+                supported_swing_modes.append(TADO_TO_HA_SWING_MODE_MAP[TADO_SWING_OFF])
 
             if not capabilities[mode].get("fanSpeeds") and not capabilities[mode].get(
                 "fanLevel"
@@ -743,14 +744,15 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         swing = None
         vertical_swing = None
         horizontal_swing = None
-        if self.supported_features & ClimateEntityFeature.SWING_MODE:
-            if self._attr_swing_modes is not None:
-                if SWING_VERTICAL in self._attr_swing_modes:
-                    vertical_swing = self._current_tado_vertical_swing
-                if SWING_HORIZONTAL in self._attr_swing_modes:
-                    horizontal_swing = self._current_tado_horizontal_swing
-                if vertical_swing is None and horizontal_swing is None:
-                    swing = self._current_tado_swing_mode
+        if (
+            self.supported_features & ClimateEntityFeature.SWING_MODE
+        ) and self._attr_swing_modes is not None:
+            if SWING_VERTICAL in self._attr_swing_modes:
+                vertical_swing = self._current_tado_vertical_swing
+            if SWING_HORIZONTAL in self._attr_swing_modes:
+                horizontal_swing = self._current_tado_horizontal_swing
+            if vertical_swing is None and horizontal_swing is None:
+                swing = self._current_tado_swing_mode
 
         self._tado.set_zone_overlay(
             zone_id=self.zone_id,
@@ -761,7 +763,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             mode=self._current_tado_hvac_mode,
             fan_speed=fan_speed,  # api defaults to not sending fanSpeed if None specified
             swing=swing,  # api defaults to not sending swing if None specified
-            fan_level=fan_level,
-            vertical_swing=vertical_swing,
-            horizontal_swing=horizontal_swing,  # api defaults to not sending fanLevel if None specified
+            fan_level=fan_level,  # api defaults to not sending fanLevel if fanSpeend not None
+            vertical_swing=vertical_swing,  # api defaults to not sending verticalSwing if swing not None
+            horizontal_swing=horizontal_swing,  # api defaults to not sending horizontalSwing if swing not None
         )
