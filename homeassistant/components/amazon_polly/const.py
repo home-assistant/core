@@ -14,19 +14,19 @@ CONF_OUTPUT_FORMAT: Final = "output_format"
 CONF_SAMPLE_RATE: Final = "sample_rate"
 CONF_TEXT_TYPE: Final = "text_type"
 
-SUPPORTED_OUTPUT_FORMATS: Final[list[str]] = ["mp3", "ogg_vorbis", "pcm"]
+SUPPORTED_OUTPUT_FORMATS: Final[set[str]] = {"mp3", "ogg_vorbis", "pcm"}
 
-SUPPORTED_ENGINES: Final[list[str]] = ["generative", "long-form", "neural", "standard"]
+SUPPORTED_ENGINES: Final[set[str]] = {"generative", "long-form", "neural", "standard"}
 
-SUPPORTED_SAMPLE_RATES: Final[list[str]] = ["8000", "16000", "22050", "24000"]
+SUPPORTED_SAMPLE_RATES: Final[set[str]] = {"8000", "16000", "22050", "24000"}
 
-SUPPORTED_SAMPLE_RATES_MAP: Final[dict[str, list[str]]] = {
-    "mp3": ["8000", "16000", "22050", "24000"],
-    "ogg_vorbis": ["8000", "16000", "22050"],
-    "pcm": ["8000", "16000"],
+SUPPORTED_SAMPLE_RATES_MAP: Final[dict[str, set[str]]] = {
+    "mp3": {"8000", "16000", "22050", "24000"},
+    "ogg_vorbis": {"8000", "16000", "22050"},
+    "pcm": {"8000", "16000"},
 }
 
-SUPPORTED_TEXT_TYPES: Final[list[str]] = ["text", "ssml"]
+SUPPORTED_TEXT_TYPES: Final[set[str]] = {"text", "ssml"}
 
 CONTENT_TYPE_EXTENSIONS: Final[dict[str, str]] = {
     "audio/mpeg": "mp3",

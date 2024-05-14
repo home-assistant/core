@@ -28,13 +28,13 @@ def get_all_voices(client: boto3.client) -> list[AmazonPollyVoice]:
     return [AmazonPollyVoice.validate(voice) for voice in response["Voices"]]
 
 
-supported_regions = sorted(
+supported_regions = set(
     boto3.session.Session().get_available_regions(service_name="polly")
 )
 
 polly_client = boto3.client(service_name="polly", region_name="us-east-1")
 voices = get_all_voices(polly_client)
-supported_voices = sorted([v.id for v in voices])
+supported_voices = set({v.id for v in voices})
 
 Path("homeassistant/generated/amazon_polly.py").write_text(
     format_python_namespace(
@@ -43,8 +43,8 @@ Path("homeassistant/generated/amazon_polly.py").write_text(
             "SUPPORTED_REGIONS": supported_regions,
         },
         annotations={
-            "SUPPORTED_VOICES": "list[str]",
-            "SUPPORTED_REGIONS": "list[str]",
+            "SUPPORTED_VOICES": "set[str]",
+            "SUPPORTED_REGIONS": "set[str]",
         },
         generator="script.amazon_polly",
     )
