@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, setup_platform
-from .const import COMMAND_OK
+from .const import COMMAND_OK, VEHICLE_DATA_ALT
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -45,11 +45,9 @@ async def test_select_offline(
     assert state.state == STATE_UNKNOWN
 
 
-async def test_select_services(
-    hass: HomeAssistant,
-) -> None:
+async def test_select_services(hass: HomeAssistant, mock_vehicle_data) -> None:
     """Tests that the select services work."""
-
+    mock_vehicle_data.return_value = VEHICLE_DATA_ALT
     await setup_platform(hass, [Platform.SELECT])
 
     entity_id = "select.test_seat_heater_front_left"
@@ -82,8 +80,7 @@ async def test_select_services(
         assert state.state == LOW
         call.assert_called_once()
 
-    return
-    entity_id = "select.test_operation_mode"
+    entity_id = "select.energy_site_operation_mode"
     with patch(
         "homeassistant.components.teslemetry.EnergySpecific.operation",
         return_value=COMMAND_OK,
@@ -91,14 +88,17 @@ async def test_select_services(
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: EnergyOperationMode.AUTONOMOUS},
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_OPTION: EnergyOperationMode.AUTONOMOUS.value,
+            },
             blocking=True,
         )
         state = hass.states.get(entity_id)
-        assert state.state == EnergyOperationMode.AUTONOMOUS
+        assert state.state == EnergyOperationMode.AUTONOMOUS.value
         call.assert_called_once()
 
-    entity_id = "select.test_export_mode"
+    entity_id = "select.energy_site_allow_export"
     with patch(
         "homeassistant.components.teslemetry.EnergySpecific.grid_import_export",
         return_value=COMMAND_OK,
@@ -106,9 +106,9 @@ async def test_select_services(
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: EnergyExportMode.BATTERY_OK},
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: EnergyExportMode.BATTERY_OK.value},
             blocking=True,
         )
         state = hass.states.get(entity_id)
-        assert state.state == EnergyExportMode.BATTERY_OK
+        assert state.state == EnergyExportMode.BATTERY_OK.value
         call.assert_called_once()

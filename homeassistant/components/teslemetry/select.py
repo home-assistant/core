@@ -139,10 +139,6 @@ class TeslemetrySeatHeaterSelectEntity(TeslemetryVehicleEntity, SelectEntity):
         else:
             self._attr_current_option = self._attr_options[value]
 
-    def _async_value_from_stream(self, value) -> None:
-        """Update the value of the entity."""
-        self._attr_current_option = value
-
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         self.raise_for_scope()
