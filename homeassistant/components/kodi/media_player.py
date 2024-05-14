@@ -642,7 +642,7 @@ class KodiEntity(MediaPlayerEntity):
         if hdr_type == "":
             state_attr["dynamic_range"] = "sdr"
         else:
-            state_attr["hdr_type"] = hdr_type
+            state_attr["dynamic_range"] = hdr_type
 
         return state_attr
 
