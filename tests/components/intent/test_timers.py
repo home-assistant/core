@@ -65,9 +65,9 @@ async def test_start_finish_timer(hass: HomeAssistant, init_components) -> None:
         intent.INTENT_START_TIMER,
         {
             "name": {"value": timer_name},
-            "device_id": {"value": device_id},
             "seconds": {"value": 0},
         },
+        device_id=device_id,
     )
 
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
@@ -118,11 +118,11 @@ async def test_cancel_timer(hass: HomeAssistant, init_components) -> None:
         "test",
         intent.INTENT_START_TIMER,
         {
-            "device_id": {"value": device_id},
             "hours": {"value": 1},
             "minutes": {"value": 2},
             "seconds": {"value": 3},
         },
+        device_id=device_id,
     )
 
     async with asyncio.timeout(1):
@@ -154,12 +154,12 @@ async def test_cancel_timer(hass: HomeAssistant, init_components) -> None:
         "test",
         intent.INTENT_START_TIMER,
         {
-            "device_id": {"value": device_id},
             "name": {"value": timer_name},
             "hours": {"value": 1},
             "minutes": {"value": 2},
             "seconds": {"value": 3},
         },
+        device_id=device_id,
     )
 
     async with asyncio.timeout(1):
@@ -225,12 +225,12 @@ async def test_increase_timer(hass: HomeAssistant, init_components) -> None:
         "test",
         intent.INTENT_START_TIMER,
         {
-            "device_id": {"value": device_id},
             "name": {"value": timer_name},
             "hours": {"value": 1},
             "minutes": {"value": 2},
             "seconds": {"value": 3},
         },
+        device_id=device_id,
     )
 
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
@@ -244,7 +244,6 @@ async def test_increase_timer(hass: HomeAssistant, init_components) -> None:
         "test",
         intent.INTENT_INCREASE_TIMER,
         {
-            "device_id": {"value": device_id},
             "start_hours": {"value": 1},
             "start_minutes": {"value": 2},
             "start_seconds": {"value": 3},
@@ -252,6 +251,7 @@ async def test_increase_timer(hass: HomeAssistant, init_components) -> None:
             "minutes": {"value": 5},
             "seconds": {"value": 30},
         },
+        device_id=device_id,
     )
 
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
@@ -321,12 +321,12 @@ async def test_decrease_timer(hass: HomeAssistant, init_components) -> None:
         "test",
         intent.INTENT_START_TIMER,
         {
-            "device_id": {"value": device_id},
             "name": {"value": timer_name},
             "hours": {"value": 1},
             "minutes": {"value": 2},
             "seconds": {"value": 3},
         },
+        device_id=device_id,
     )
 
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
@@ -340,12 +340,12 @@ async def test_decrease_timer(hass: HomeAssistant, init_components) -> None:
         "test",
         intent.INTENT_DECREASE_TIMER,
         {
-            "device_id": {"value": device_id},
             "start_hours": {"value": 1},
             "start_minutes": {"value": 2},
             "start_seconds": {"value": 3},
             "seconds": {"value": 30},
         },
+        device_id=device_id,
     )
 
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
@@ -535,7 +535,8 @@ async def test_disambiguation(
         hass,
         "test",
         intent.INTENT_START_TIMER,
-        {"device_id": {"value": device_alice_study.id}, "minutes": {"value": 3}},
+        {"minutes": {"value": 3}},
+        device_id=device_alice_study.id,
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -544,16 +545,14 @@ async def test_disambiguation(
         hass,
         "test",
         intent.INTENT_START_TIMER,
-        {"device_id": {"value": device_bob_kitchen_1.id}, "minutes": {"value": 3}},
+        {"minutes": {"value": 3}},
+        device_id=device_bob_kitchen_1.id,
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
     # Alice should hear her timer listed first
     result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_TIMER_STATUS,
-        {"device_id": {"value": device_alice_study.id}},
+        hass, "test", intent.INTENT_TIMER_STATUS, {}, device_id=device_alice_study.id
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
     timers = result.speech_slots.get("timers", [])
@@ -563,10 +562,7 @@ async def test_disambiguation(
 
     # Bob should hear his timer listed first
     result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_TIMER_STATUS,
-        {"device_id": {"value": device_bob_kitchen_1.id}},
+        hass, "test", intent.INTENT_TIMER_STATUS, {}, device_id=device_bob_kitchen_1.id
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
     timers = result.speech_slots.get("timers", [])
@@ -589,10 +585,7 @@ async def test_disambiguation(
 
     # Alice: cancel my timer
     result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_CANCEL_TIMER,
-        {"device_id": {"value": device_alice_study.id}},
+        hass, "test", intent.INTENT_CANCEL_TIMER, {}, device_id=device_alice_study.id
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -606,10 +599,7 @@ async def test_disambiguation(
 
     # Cancel Bob's timer
     result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_CANCEL_TIMER,
-        {"device_id": {"value": device_bob_kitchen_1.id}},
+        hass, "test", intent.INTENT_CANCEL_TIMER, {}, device_id=device_bob_kitchen_1.id
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -645,7 +635,8 @@ async def test_disambiguation(
         hass,
         "test",
         intent.INTENT_START_TIMER,
-        {"device_id": {"value": device_alice_study.id}, "minutes": {"value": 3}},
+        {"minutes": {"value": 3}},
+        device_id=device_alice_study.id,
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -654,10 +645,8 @@ async def test_disambiguation(
         hass,
         "test",
         intent.INTENT_START_TIMER,
-        {
-            "device_id": {"value": device_alice_bedroom.id},
-            "minutes": {"value": 3},
-        },
+        {"minutes": {"value": 3}},
+        device_id=device_alice_bedroom.id,
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -666,7 +655,8 @@ async def test_disambiguation(
         hass,
         "test",
         intent.INTENT_START_TIMER,
-        {"device_id": {"value": device_bob_kitchen_1.id}, "minutes": {"value": 3}},
+        {"minutes": {"value": 3}},
+        device_id=device_bob_kitchen_1.id,
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -675,17 +665,15 @@ async def test_disambiguation(
         hass,
         "test",
         intent.INTENT_START_TIMER,
-        {"device_id": {"value": device_bob_living_room.id}, "minutes": {"value": 3}},
+        {"minutes": {"value": 3}},
+        device_id=device_bob_living_room.id,
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
     # Alice should hear the timer in her area first, then on her floor, then
     # elsewhere.
     result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_TIMER_STATUS,
-        {"device_id": {"value": device_alice_study.id}},
+        hass, "test", intent.INTENT_TIMER_STATUS, {}, device_id=device_alice_study.id
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
     timers = result.speech_slots.get("timers", [])
@@ -699,10 +687,7 @@ async def test_disambiguation(
     cancelled_event.clear()
     timer_info = None
     result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_CANCEL_TIMER,
-        {"device_id": {"value": device_alice_study.id}},
+        hass, "test", intent.INTENT_CANCEL_TIMER, {}, device_id=device_alice_study.id
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -727,10 +712,7 @@ async def test_disambiguation(
     cancelled_event.clear()
     timer_info = None
     result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_CANCEL_TIMER,
-        {"device_id": {"value": device_alice_study.id}},
+        hass, "test", intent.INTENT_CANCEL_TIMER, {}, device_id=device_alice_study.id
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -756,10 +738,7 @@ async def test_disambiguation(
     cancelled_event.clear()
     timer_info = None
     result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_CANCEL_TIMER,
-        {"device_id": {"value": device_bob_kitchen_2.id}},
+        hass, "test", intent.INTENT_CANCEL_TIMER, {}, device_id=device_bob_kitchen_2.id
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -774,10 +753,7 @@ async def test_disambiguation(
     cancelled_event.clear()
     timer_info = None
     result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_CANCEL_TIMER,
-        {"device_id": {"value": device_bob_kitchen_2.id}},
+        hass, "test", intent.INTENT_CANCEL_TIMER, {}, device_id=device_bob_kitchen_2.id
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 

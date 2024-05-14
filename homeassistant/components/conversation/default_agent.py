@@ -335,18 +335,13 @@ class DefaultAgent(ConversationEntity):
         assert lang_intents is not None
 
         # Slot values to pass to the intent
-        slots: dict[str, Any] = {}
-
-        # Automatically add device id
-        if user_input.device_id is not None:
-            slots["device_id"] = user_input.device_id
-
-        # Add entities from match
-        for entity in result.entities_list:
-            slots[entity.name] = {
+        slots: dict[str, Any] = {
+            entity.name: {
                 "value": entity.value,
                 "text": entity.text or entity.value,
             }
+            for entity in result.entities_list
+        }
 
         try:
             intent_response = await intent.async_handle(
