@@ -43,6 +43,13 @@ INTENT_TOGGLE = "HassToggle"
 INTENT_GET_STATE = "HassGetState"
 INTENT_NEVERMIND = "HassNevermind"
 INTENT_SET_POSITION = "HassSetPosition"
+INTENT_START_TIMER = "HassStartTimer"
+INTENT_CANCEL_TIMER = "HassCancelTimer"
+INTENT_INCREASE_TIMER = "HassIncreaseTimer"
+INTENT_DECREASE_TIMER = "HassDecreaseTimer"
+INTENT_PAUSE_TIMER = "HassPauseTimer"
+INTENT_UNPAUSE_TIMER = "HassUnpauseTimer"
+INTENT_TIMER_STATUS = "HassTimerStatus"
 
 SLOT_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
@@ -57,7 +64,8 @@ SPEECH_TYPE_SSML = "ssml"
 def async_register(hass: HomeAssistant, handler: IntentHandler) -> None:
     """Register an intent with Home Assistant."""
     if (intents := hass.data.get(DATA_KEY)) is None:
-        intents = hass.data[DATA_KEY] = {}
+        intents = {}
+        hass.data[DATA_KEY] = intents
 
     assert handler.intent_type is not None, "intent_type cannot be None"
 
@@ -140,6 +148,11 @@ class InvalidSlotInfo(IntentError):
 
 class IntentHandleError(IntentError):
     """Error while handling intent."""
+
+    def __init__(self, message: str = "", response_key: str | None = None) -> None:
+        """Initialize error."""
+        super().__init__(message)
+        self.response_key = response_key
 
 
 class IntentUnexpectedError(IntentError):
@@ -1207,6 +1220,7 @@ class IntentResponse:
         self.failed_results: list[IntentResponseTarget] = []
         self.matched_states: list[State] = []
         self.unmatched_states: list[State] = []
+        self.speech_slots: dict[str, Any] = {}
 
         if (self.intent is not None) and (self.intent.category == IntentCategory.QUERY):
             # speech will be the answer to the query
@@ -1281,6 +1295,11 @@ class IntentResponse:
         """Set entity states that were matched or not matched during intent handling (query)."""
         self.matched_states = matched_states
         self.unmatched_states = unmatched_states or []
+
+    @callback
+    def async_set_speech_slots(self, speech_slots: dict[str, Any]) -> None:
+        """Set slots that will be used in the response template of the default agent."""
+        self.speech_slots = speech_slots
 
     @callback
     def as_dict(self) -> dict[str, Any]:
