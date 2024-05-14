@@ -640,7 +640,7 @@ class KodiEntity(MediaPlayerEntity):
             self._item.get("streamdetails", {}).get("video", [{}])[0].get("hdrtype")
         )
         if hdr_type == "":
-            state_attr["hdr_type"] = "sdr"
+            state_attr["dynamic_range"] = "sdr"
         else:
             state_attr["hdr_type"] = hdr_type
 
