@@ -59,7 +59,7 @@ class TeslemetryDeviceTrackerEntity(TeslemetryVehicleEntity, TrackerEntity):
         return self.get(self.lon_key)
 
     @property
-    def source_type(self) -> SourceType | str:
+    def source_type(self) -> SourceType:
         """Return the source type of the device tracker."""
         return SourceType.GPS
 
