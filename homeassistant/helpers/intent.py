@@ -57,7 +57,8 @@ SPEECH_TYPE_SSML = "ssml"
 def async_register(hass: HomeAssistant, handler: IntentHandler) -> None:
     """Register an intent with Home Assistant."""
     if (intents := hass.data.get(DATA_KEY)) is None:
-        intents = hass.data[DATA_KEY] = {}
+        intents = {}
+        hass.data[DATA_KEY] = intents
 
     assert handler.intent_type is not None, "intent_type cannot be None"
 
@@ -89,6 +90,7 @@ async def async_handle(
     context: Context | None = None,
     language: str | None = None,
     assistant: str | None = None,
+    device_id: str | None = None,
 ) -> IntentResponse:
     """Handle an intent."""
     handler = hass.data.get(DATA_KEY, {}).get(intent_type)
@@ -111,6 +113,7 @@ async def async_handle(
         context=context,
         language=language,
         assistant=assistant,
+        device_id=device_id,
     )
 
     try:
@@ -1103,6 +1106,7 @@ class Intent:
         "language",
         "category",
         "assistant",
+        "device_id",
     ]
 
     def __init__(
@@ -1116,6 +1120,7 @@ class Intent:
         language: str,
         category: IntentCategory | None = None,
         assistant: str | None = None,
+        device_id: str | None = None,
     ) -> None:
         """Initialize an intent."""
         self.hass = hass
@@ -1127,6 +1132,7 @@ class Intent:
         self.language = language
         self.category = category
         self.assistant = assistant
+        self.device_id = device_id
 
     @callback
     def create_response(self) -> IntentResponse:

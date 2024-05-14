@@ -350,6 +350,7 @@ class DefaultAgent(ConversationEntity):
                 user_input.context,
                 language,
                 assistant=DOMAIN,
+                device_id=user_input.device_id,
             )
         except intent.MatchFailedError as match_error:
             # Intent was valid, but no entities matched the constraints.
