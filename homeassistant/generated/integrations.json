@@ -7109,6 +7109,11 @@
     }
   },
   "helper": {
+    "binary_sensor_as_x": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
     "counter": {
       "integration_type": "helper",
       "config_flow": false
@@ -7208,6 +7213,7 @@
   "translated_name": [
     "alert",
     "aurora",
+    "binary_sensor_as_x",
     "cert_expiry",
     "counter",
     "cpuspeed",

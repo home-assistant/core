@@ -5,6 +5,7 @@ To update, run python3 -m script.hassfest
 
 FLOWS = {
     "helper": [
+        "binary_sensor_as_x",
         "derivative",
         "group",
         "integration",

@@ -1,0 +1,14 @@
+{
+  "title": "Change device type of a binary sensor",
+  "config": {
+    "step": {
+      "user": {
+        "description": "Pick a binary sensor that you want to show up in Home Assistant as a cover. The original binary sensor will be hidden.",
+        "data": {
+          "entity_id": "Binary sensor",
+          "target_domain": "New Type"
+        }
+      }
+    }
+  }
+}
