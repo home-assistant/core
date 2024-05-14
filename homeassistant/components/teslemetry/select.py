@@ -166,7 +166,7 @@ class TeslemetryWheelHeaterSelectEntity(TeslemetryVehicleEntity, SelectEntity):
         data: TeslemetryVehicleData,
         scoped: bool,
     ) -> None:
-        """Initialize the vehicle seat select entity."""
+        """Initialize the vehicle steering wheel select entity."""
         self.scoped = scoped
         super().__init__(
             data,
