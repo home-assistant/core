@@ -136,7 +136,7 @@ def get_webhook_handler(
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    if entry.version > 1:
+    if config_entry.version > 1:
         # This means the user has downgraded from a future version
         return False
 
