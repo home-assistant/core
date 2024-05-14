@@ -1,4 +1,4 @@
-"""Media Player platform for Teslemetry integration."""
+"""Media player platform for Teslemetry integration."""
 
 from __future__ import annotations
 
@@ -39,7 +39,7 @@ async def async_setup_entry(
 
 
 class TeslemetryMediaEntity(TeslemetryVehicleEntity, MediaPlayerEntity):
-    """Vehicle Location Media Class."""
+    """Vehicle media player class."""
 
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_supported_features = (
