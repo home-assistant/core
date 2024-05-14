@@ -1,9 +1,19 @@
 """Common fixtures for the Aquacell tests."""
 
 from collections.abc import Generator
+from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
+from aioaquacell import AquacellApi, Softener
 import pytest
+
+from homeassistant.components.aquacell.const import (
+    CONF_REFRESH_TOKEN_CREATION_TIME,
+    DOMAIN,
+)
+
+from tests.common import MockConfigEntry, load_json_array_fixture
+from tests.components.aquacell import TEST_CONFIG_ENTRY
 
 
 @pytest.fixture
@@ -17,7 +27,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 @pytest.fixture
 def mock_aquacell_api() -> Generator[AsyncMock, None, None]:
-    """Build a fixture for the Aquacell API that authenticates successfully."""
+    """Build a fixture for the Aquacell API that authenticates successfully and returns a single softener."""
     with (
         patch(
             "homeassistant.components.aquacell.AquacellApi",
@@ -28,6 +38,33 @@ def mock_aquacell_api() -> Generator[AsyncMock, None, None]:
             new=mock_client,
         ),
     ):
-        mock_aquacell_api = mock_client.return_value
+        mock_aquacell_api: AquacellApi = mock_client.return_value
         mock_aquacell_api.authenticate.return_value = "refresh-token"
+
+        softeners_dict = load_json_array_fixture(
+            "aquacell/get_all_softeners_one_softener.json"
+        )
+
+        softeners = [Softener(softener) for softener in softeners_dict]
+        mock_aquacell_api.get_all_softeners.return_value = softeners
+
         yield mock_aquacell_api
+
+
+@pytest.fixture
+def mock_config_entry_expired() -> MockConfigEntry:
+    """Mock a config entry."""
+    return MockConfigEntry(domain=DOMAIN, title="Aquacell", data=TEST_CONFIG_ENTRY)
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Mock a config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Aquacell",
+        data={
+            **TEST_CONFIG_ENTRY,
+            CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
+        },
+    )

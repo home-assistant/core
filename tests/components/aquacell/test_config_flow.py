@@ -5,13 +5,13 @@ from unittest.mock import AsyncMock
 from aioaquacell import ApiException, AuthenticationFailed
 import pytest
 
-from homeassistant.components.aquacell.const import DOMAIN
+from homeassistant.components.aquacell.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_EMAIL
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.components.aquacell import TEST_RESULT_DATA, TEST_USER_INPUT
+from tests.components.aquacell import TEST_CONFIG_ENTRY, TEST_USER_INPUT
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -33,8 +33,10 @@ async def test_form(
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == TEST_RESULT_DATA[CONF_EMAIL]
-    assert result2["data"] == {**TEST_RESULT_DATA}
+    assert result2["title"] == TEST_CONFIG_ENTRY[CONF_EMAIL]
+    assert result2["data"][CONF_EMAIL] == TEST_CONFIG_ENTRY[CONF_EMAIL]
+    assert result2["data"][CONF_PASSWORD] == TEST_CONFIG_ENTRY[CONF_PASSWORD]
+    assert result2["data"][CONF_REFRESH_TOKEN] == TEST_CONFIG_ENTRY[CONF_REFRESH_TOKEN]
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -75,6 +77,8 @@ async def test_form_exceptions(
     await hass.async_block_till_done()
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == TEST_RESULT_DATA[CONF_EMAIL]
-    assert result3["data"] == {**TEST_RESULT_DATA}
+    assert result3["title"] == TEST_CONFIG_ENTRY[CONF_EMAIL]
+    assert result3["data"][CONF_EMAIL] == TEST_CONFIG_ENTRY[CONF_EMAIL]
+    assert result3["data"][CONF_PASSWORD] == TEST_CONFIG_ENTRY[CONF_PASSWORD]
+    assert result3["data"][CONF_REFRESH_TOKEN] == TEST_CONFIG_ENTRY[CONF_REFRESH_TOKEN]
     assert len(mock_setup_entry.mock_calls) == 1
