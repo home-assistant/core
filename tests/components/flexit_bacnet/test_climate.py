@@ -8,10 +8,8 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 from tests.components.flexit_bacnet import setup_with_selected_platforms
-
-ENTITY_CLIMATE = "climate.device_name"
 
 
 async def test_climate_entity(
@@ -24,5 +22,4 @@ async def test_climate_entity(
     """Test the initial parameters."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
-    assert hass.states.get(ENTITY_CLIMATE) == snapshot
-    assert entity_registry.async_get(ENTITY_CLIMATE) == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -27,7 +26,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import HomeAssistantTuyaData
+from . import TuyaConfigEntry
 from .base import ElectricityTypeData, EnumTypeData, IntegerTypeData, TuyaEntity
 from .const import (
     DEVICE_CLASS_UNITS,
@@ -1075,10 +1074,10 @@ SENSORS["pc"] = SENSORS["kg"]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: TuyaConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Tuya sensor dynamically through Tuya discovery."""
-    hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
+    hass_data = entry.runtime_data
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
