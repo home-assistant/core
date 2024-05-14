@@ -48,6 +48,7 @@ from homeassistant.util.unit_conversion import SpeedConverter, TemperatureConver
 from . import NWSData, base_unique_id, device_info
 from .const import (
     ATTR_FORECAST_DETAILED_DESCRIPTION,
+    ATTR_FORECAST_DEWPOINT,
     ATTRIBUTION,
     CONDITION_CLASSES,
     DAYNIGHT,
@@ -115,9 +116,12 @@ async def async_setup_entry(
 class ExtraForecast(TypedDict, total=False):
     """Forecast extra fields from  NWS."""
 
+    # common attributes
     datetime: Required[str]
     is_daytime: bool | None
+    # extra attributes
     detailed_description: str | None
+    dewpoint: float | None
 
 
 def _calculate_unique_id(entry_data: MappingProxyType[str, Any], mode: str) -> str:
@@ -325,16 +329,16 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
             return None
         forecast: list[ExtraForecast] = []
         for forecast_entry in nws_forecast:
-            # context attributes in common
             data: ExtraForecast = {
                 ATTR_FORECAST_TIME: cast(str, forecast_entry.get("startTime")),
             }
             if mode == DAYNIGHT:
                 data[ATTR_FORECAST_IS_DAYTIME] = forecast_entry.get("isDaytime")
-            # extra attributes
-            data[ATTR_FORECAST_DETAILED_DESCRIPTION] = forecast_entry.get(
-                "detailedForecast"
-            )
+
+                data[ATTR_FORECAST_DETAILED_DESCRIPTION] = forecast_entry.get(
+                    "detailedForecast"
+                )
+            data[ATTR_FORECAST_DEWPOINT] = forecast_entry.get("dewpoint")
             forecast.append(data)
         return forecast
 
