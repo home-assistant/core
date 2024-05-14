@@ -27,19 +27,17 @@ class SeatHeaterDescription(SelectEntityDescription):
     """Seat Header entity description."""
 
     position: Seat
-    avaliable_fn: Callable
+    available_fn: Callable[[TeslemetrySeatHeaterSelectEntity], bool] = lambda _: True
 
 
 SEAT_HEATER_DESCRIPTIONS: tuple[SeatHeaterDescription, ...] = (
     SeatHeaterDescription(
         key="climate_state_seat_heater_left",
         position=Seat.FRONT_LEFT,
-        avaliable_fn=lambda _: True,
     ),
     SeatHeaterDescription(
         key="climate_state_seat_heater_right",
         position=Seat.FRONT_RIGHT,
-        avaliable_fn=lambda _: True,
     ),
     SeatHeaterDescription(
         key="climate_state_seat_heater_rear_left",
