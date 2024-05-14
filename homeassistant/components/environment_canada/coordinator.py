@@ -1,6 +1,7 @@
 """Coordinator for the Environment Canada (EC) component."""
 
 import logging
+import xml.etree.ElementTree as et
 
 from env_canada import ec_exc
 
