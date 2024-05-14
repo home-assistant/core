@@ -180,6 +180,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/binary_sensor/ @home-assistant/core
 /tests/components/binary_sensor/ @home-assistant/core
 /homeassistant/components/binary_sensor_as_x/ @home-assistant/core @tetele
+/tests/components/binary_sensor_as_x/ @home-assistant/core @tetele
 /homeassistant/components/bizkaibus/ @UgaitzEtxebarria
 /homeassistant/components/blebox/ @bbx-a @riokuu @swistakm
 /tests/components/blebox/ @bbx-a @riokuu @swistakm
