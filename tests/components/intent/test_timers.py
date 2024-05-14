@@ -248,6 +248,8 @@ async def test_increase_timer(hass: HomeAssistant, init_components) -> None:
             "start_hours": {"value": 1},
             "start_minutes": {"value": 2},
             "start_seconds": {"value": 3},
+            "hours": {"value": 1},
+            "minutes": {"value": 5},
             "seconds": {"value": 30},
         },
     )
@@ -255,7 +257,7 @@ async def test_increase_timer(hass: HomeAssistant, init_components) -> None:
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
     async with asyncio.timeout(1):
-        await started_event.wait()
+        await updated_event.wait()
 
     # Cancel the timer
     result = await intent.async_handle(
@@ -506,12 +508,12 @@ async def test_disambiguation(
     area_study = area_registry.async_update(
         area_study.id, floor_id=floor_upstairs.floor_id
     )
-    device_alice = device_registry.async_get_or_create(
+    device_alice_study = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections=set(),
         identifiers={("test", "alice")},
     )
-    device_registry.async_update_device(device_alice.id, area_id=area_study.id)
+    device_registry.async_update_device(device_alice_study.id, area_id=area_study.id)
 
     # Bob is downstairs in the kitchen
     floor_downstairs = floor_registry.async_create("downstairs")
@@ -519,19 +521,21 @@ async def test_disambiguation(
     area_kitchen = area_registry.async_update(
         area_kitchen.id, floor_id=floor_downstairs.floor_id
     )
-    device_bob = device_registry.async_get_or_create(
+    device_bob_kitchen_1 = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections=set(),
         identifiers={("test", "bob")},
     )
-    device_registry.async_update_device(device_bob.id, area_id=area_kitchen.id)
+    device_registry.async_update_device(
+        device_bob_kitchen_1.id, area_id=area_kitchen.id
+    )
 
     # Alice: set a 3 minute timer
     result = await intent.async_handle(
         hass,
         "test",
         intent.INTENT_START_TIMER,
-        {"device_id": {"value": device_alice.id}, "minutes": {"value": 3}},
+        {"device_id": {"value": device_alice_study.id}, "minutes": {"value": 3}},
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -540,7 +544,7 @@ async def test_disambiguation(
         hass,
         "test",
         intent.INTENT_START_TIMER,
-        {"device_id": {"value": device_bob.id}, "minutes": {"value": 3}},
+        {"device_id": {"value": device_bob_kitchen_1.id}, "minutes": {"value": 3}},
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -549,26 +553,26 @@ async def test_disambiguation(
         hass,
         "test",
         intent.INTENT_TIMER_STATUS,
-        {"device_id": {"value": device_alice.id}},
+        {"device_id": {"value": device_alice_study.id}},
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
     timers = result.speech_slots.get("timers", [])
     assert len(timers) == 2
-    assert timers[0].get(ATTR_DEVICE_ID) == device_alice.id
-    assert timers[1].get(ATTR_DEVICE_ID) == device_bob.id
+    assert timers[0].get(ATTR_DEVICE_ID) == device_alice_study.id
+    assert timers[1].get(ATTR_DEVICE_ID) == device_bob_kitchen_1.id
 
     # Bob should hear his timer listed first
     result = await intent.async_handle(
         hass,
         "test",
         intent.INTENT_TIMER_STATUS,
-        {"device_id": {"value": device_bob.id}},
+        {"device_id": {"value": device_bob_kitchen_1.id}},
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
     timers = result.speech_slots.get("timers", [])
     assert len(timers) == 2
-    assert timers[0].get(ATTR_DEVICE_ID) == device_bob.id
-    assert timers[1].get(ATTR_DEVICE_ID) == device_alice.id
+    assert timers[0].get(ATTR_DEVICE_ID) == device_bob_kitchen_1.id
+    assert timers[1].get(ATTR_DEVICE_ID) == device_alice_study.id
 
     # Listen for timer cancellation
     cancelled_event = asyncio.Event()
@@ -588,7 +592,7 @@ async def test_disambiguation(
         hass,
         "test",
         intent.INTENT_CANCEL_TIMER,
-        {"device_id": {"value": device_alice.id}},
+        {"device_id": {"value": device_alice_study.id}},
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -597,7 +601,7 @@ async def test_disambiguation(
 
     # Verify this is the 3 minute timer from Alice
     assert timer_info is not None
-    assert timer_info.device_id == device_alice.id
+    assert timer_info.device_id == device_alice_study.id
     assert timer_info.start_minutes == 3
 
     # Cancel Bob's timer
@@ -605,7 +609,7 @@ async def test_disambiguation(
         hass,
         "test",
         intent.INTENT_CANCEL_TIMER,
-        {"device_id": {"value": device_bob.id}},
+        {"device_id": {"value": device_bob_kitchen_1.id}},
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -614,30 +618,34 @@ async def test_disambiguation(
     area_bedroom = area_registry.async_update(
         area_bedroom.id, floor_id=floor_upstairs.floor_id
     )
-    device_alice_2 = device_registry.async_get_or_create(
+    device_alice_bedroom = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections=set(),
         identifiers={("test", "alice-2")},
     )
-    device_registry.async_update_device(device_alice_2.id, area_id=area_bedroom.id)
+    device_registry.async_update_device(
+        device_alice_bedroom.id, area_id=area_bedroom.id
+    )
 
     area_living_room = area_registry.async_create("living_room")
     area_living_room = area_registry.async_update(
         area_living_room.id, floor_id=floor_downstairs.floor_id
     )
-    device_bob_2 = device_registry.async_get_or_create(
+    device_bob_living_room = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections=set(),
         identifiers={("test", "bob-2")},
     )
-    device_registry.async_update_device(device_bob_2.id, area_id=area_living_room.id)
+    device_registry.async_update_device(
+        device_bob_living_room.id, area_id=area_living_room.id
+    )
 
     # Alice: set a 3 minute timer (study)
     result = await intent.async_handle(
         hass,
         "test",
         intent.INTENT_START_TIMER,
-        {"device_id": {"value": device_alice.id}, "minutes": {"value": 3}},
+        {"device_id": {"value": device_alice_study.id}, "minutes": {"value": 3}},
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -646,7 +654,10 @@ async def test_disambiguation(
         hass,
         "test",
         intent.INTENT_START_TIMER,
-        {"device_id": {"value": device_alice_2.id}, "minutes": {"value": 3}},
+        {
+            "device_id": {"value": device_alice_bedroom.id},
+            "minutes": {"value": 3},
+        },
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -655,7 +666,16 @@ async def test_disambiguation(
         hass,
         "test",
         intent.INTENT_START_TIMER,
-        {"device_id": {"value": device_bob.id}, "minutes": {"value": 3}},
+        {"device_id": {"value": device_bob_kitchen_1.id}, "minutes": {"value": 3}},
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    # Bob: set a 3 minute timer (living room)
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_START_TIMER,
+        {"device_id": {"value": device_bob_living_room.id}, "minutes": {"value": 3}},
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -665,14 +685,15 @@ async def test_disambiguation(
         hass,
         "test",
         intent.INTENT_TIMER_STATUS,
-        {"device_id": {"value": device_alice.id}},
+        {"device_id": {"value": device_alice_study.id}},
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
     timers = result.speech_slots.get("timers", [])
-    assert len(timers) == 3
-    assert timers[0].get(ATTR_DEVICE_ID) == device_alice.id
-    assert timers[1].get(ATTR_DEVICE_ID) == device_alice_2.id
-    assert timers[2].get(ATTR_DEVICE_ID) == device_bob.id
+    assert len(timers) == 4
+    assert timers[0].get(ATTR_DEVICE_ID) == device_alice_study.id
+    assert timers[1].get(ATTR_DEVICE_ID) == device_alice_bedroom.id
+    assert timers[2].get(ATTR_DEVICE_ID) == device_bob_kitchen_1.id
+    assert timers[3].get(ATTR_DEVICE_ID) == device_bob_living_room.id
 
     # Alice cancels the study timer from study
     cancelled_event.clear()
@@ -681,13 +702,16 @@ async def test_disambiguation(
         hass,
         "test",
         intent.INTENT_CANCEL_TIMER,
-        {"device_id": {"value": device_alice.id}},
+        {"device_id": {"value": device_alice_study.id}},
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
+    async with asyncio.timeout(1):
+        await cancelled_event.wait()
+
     # Verify this is the 3 minute timer from Alice in the study
     assert timer_info is not None
-    assert timer_info.device_id == device_alice.id
+    assert timer_info.device_id == device_alice_study.id
     assert timer_info.start_minutes == 3
 
     # Trying to cancel the remaining two timers without area/floor info fails
@@ -706,13 +730,62 @@ async def test_disambiguation(
         hass,
         "test",
         intent.INTENT_CANCEL_TIMER,
-        {"device_id": {"value": device_alice.id}},
+        {"device_id": {"value": device_alice_study.id}},
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
+    async with asyncio.timeout(1):
+        await cancelled_event.wait()
+
     # Verify this is the 3 minute timer from Alice in the bedroom
     assert timer_info is not None
-    assert timer_info.device_id == device_alice_2.id
+    assert timer_info.device_id == device_alice_bedroom.id
+    assert timer_info.start_minutes == 3
+
+    # Add a second device in the kitchen
+    device_bob_kitchen_2 = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections=set(),
+        identifiers={("test", "bob-3")},
+    )
+    device_registry.async_update_device(
+        device_bob_kitchen_2.id, area_id=area_kitchen.id
+    )
+
+    # Bob cancels the kitchen timer from a different device
+    cancelled_event.clear()
+    timer_info = None
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_CANCEL_TIMER,
+        {"device_id": {"value": device_bob_kitchen_2.id}},
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    async with asyncio.timeout(1):
+        await cancelled_event.wait()
+
+    assert timer_info is not None
+    assert timer_info.device_id == device_bob_kitchen_1.id
+    assert timer_info.start_minutes == 3
+
+    # Bob cancels the living room timer from the kitchen
+    cancelled_event.clear()
+    timer_info = None
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_CANCEL_TIMER,
+        {"device_id": {"value": device_bob_kitchen_2.id}},
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    async with asyncio.timeout(1):
+        await cancelled_event.wait()
+
+    assert timer_info is not None
+    assert timer_info.device_id == device_bob_living_room.id
     assert timer_info.start_minutes == 3
 
 
@@ -748,6 +821,12 @@ async def test_pause_unpause_timer(hass: HomeAssistant, init_components) -> None
     async with asyncio.timeout(1):
         await updated_event.wait()
 
+    # Pausing again will not fire the event
+    updated_event.clear()
+    result = await intent.async_handle(hass, "test", intent.INTENT_PAUSE_TIMER, {})
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+    assert not updated_event.is_set()
+
     # Unpause the timer
     updated_event.clear()
     expected_active = True
@@ -756,6 +835,12 @@ async def test_pause_unpause_timer(hass: HomeAssistant, init_components) -> None
 
     async with asyncio.timeout(1):
         await updated_event.wait()
+
+    # Unpausing again will not fire the event
+    updated_event.clear()
+    result = await intent.async_handle(hass, "test", intent.INTENT_UNPAUSE_TIMER, {})
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+    assert not updated_event.is_set()
 
 
 async def test_timer_not_found(hass: HomeAssistant) -> None:
@@ -788,12 +873,12 @@ async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> 
 
         if event_type == TimerEventType.STARTED:
             num_started += 1
-            if num_started == 3:
+            if num_started == 4:
                 started_event.set()
 
     async_register_timer_handler(hass, handle_timer)
 
-    # Start three timers with names
+    # Start timers with names
     result = await intent.async_handle(
         hass,
         "test",
@@ -818,9 +903,24 @@ async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> 
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_START_TIMER,
+        {"name": {"value": "chicken"}, "hours": {"value": 2}, "seconds": {"value": 30}},
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
     # Wait for all timers to start
     async with asyncio.timeout(1):
         await started_event.wait()
+
+    # No constraints returns all timers
+    result = await intent.async_handle(hass, "test", intent.INTENT_TIMER_STATUS, {})
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+    timers = result.speech_slots.get("timers", [])
+    assert len(timers) == 4
+    assert {t.get(ATTR_NAME) for t in timers} == {"pizza", "cookies", "chicken"}
 
     # Get status of cookie timer
     result = await intent.async_handle(
@@ -848,3 +948,58 @@ async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> 
     assert timers[0].get(ATTR_NAME) == "pizza"
     assert timers[1].get(ATTR_NAME) == "pizza"
     assert {timers[0].get("start_minutes"), timers[1].get("start_minutes")} == {10, 15}
+
+    # Get status of one pizza timer
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_TIMER_STATUS,
+        {"name": {"value": "pizza"}, "start_minutes": {"value": 10}},
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+    timers = result.speech_slots.get("timers", [])
+    assert len(timers) == 1
+    assert timers[0].get(ATTR_NAME) == "pizza"
+    assert timers[0].get("start_minutes") == 10
+
+    # Get status of one chicken timer
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_TIMER_STATUS,
+        {
+            "name": {"value": "chicken"},
+            "start_hours": {"value": 2},
+            "start_seconds": {"value": 30},
+        },
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+    timers = result.speech_slots.get("timers", [])
+    assert len(timers) == 1
+    assert timers[0].get(ATTR_NAME) == "chicken"
+    assert timers[0].get("start_hours") == 2
+    assert timers[0].get("start_minutes") == 0
+    assert timers[0].get("start_seconds") == 30
+
+    # Wrong name results in an empty list
+    result = await intent.async_handle(
+        hass, "test", intent.INTENT_TIMER_STATUS, {"name": {"value": "does-not-exist"}}
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+    timers = result.speech_slots.get("timers", [])
+    assert len(timers) == 0
+
+    # Wrong start time results in an empty list
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_TIMER_STATUS,
+        {
+            "start_hours": {"value": 100},
+            "start_minutes": {"value": 100},
+            "start_seconds": {"value": 100},
+        },
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+    timers = result.speech_slots.get("timers", [])
+    assert len(timers) == 0
