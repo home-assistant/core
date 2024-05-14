@@ -320,7 +320,7 @@ class SnapcastClientDevice(SnapcastBaseDevice):
         """Add self to client list."""
         self._server.clients.append(self)
 
-    def _remote(self) -> None:
+    def _remove(self) -> None:
         """Remove self from client list."""
         self._server.clients.remove(self)
 
