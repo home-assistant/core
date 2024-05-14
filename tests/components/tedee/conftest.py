@@ -31,7 +31,8 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_WEBHOOK_ID: WEBHOOK_ID,
         },
         unique_id="0000-0000",
-        version=2,
+        version=1,
+        minor_version=2,
     )
 
 

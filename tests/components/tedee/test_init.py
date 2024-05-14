@@ -207,6 +207,18 @@ async def test_webhook_post(
     assert resp.status == expected_code
 
 
+async def test_config_flow_entry_migrate_2_1(hass: HomeAssistant) -> None:
+    """Test that config entry fails setup if the version is from the future."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+
+
 async def test_migration(
     hass: HomeAssistant,
     mock_tedee: MagicMock,

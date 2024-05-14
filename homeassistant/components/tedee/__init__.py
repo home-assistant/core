@@ -142,12 +142,12 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
     version = config_entry.version
     minor_version = config_entry.minor_version
-    _LOGGER.debug(
-        "Migrating Tedee config entry from version %s.%s", version, minor_version
-    )
 
     if version == 1 and minor_version == 1:
+        _LOGGER.debug(
+            "Migrating Tedee config entry from version %s.%s", version, minor_version
+        )
         data = {**config_entry.data, CONF_WEBHOOK_ID: webhook_generate_id()}
         hass.config_entries.async_update_entry(config_entry, data=data, minor_version=2)
-        _LOGGER.debug("Migration to version 1.1 successful")
+        _LOGGER.debug("Migration to version 1.2 successful")
     return True
