@@ -144,6 +144,14 @@ async def test_telegram_trigger_dpt_option(
     assert test_call.data["trigger"]["value"] == expected_value
     assert test_call.data["trigger"]["unit"] == expected_unit
 
+    await knx.receive_read("0/0/1")
+
+    assert len(calls) == 1
+    test_call = calls.pop()
+    assert test_call.data["catch_all"] == "telegram - 0/0/1"
+    assert test_call.data["trigger"]["value"] is None
+    assert test_call.data["trigger"]["unit"] is None
+
 
 @pytest.mark.parametrize(
     "group_value_options",
