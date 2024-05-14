@@ -1408,7 +1408,7 @@ pyecoforest==0.4.0
 pyeconet==0.1.22
 
 # homeassistant.components.efergy
-pyefergy==22.1.1
+pyefergy==22.5.0
 
 # homeassistant.components.energenie_power_sockets
 pyegps==0.2.5
