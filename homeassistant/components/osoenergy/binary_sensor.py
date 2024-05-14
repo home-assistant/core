@@ -48,7 +48,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up OSO Energy binary sensor."""
-    osoenergy = hass.data[DOMAIN][entry.entry_id]
+    osoenergy: OSOEnergy = hass.data[DOMAIN][entry.entry_id]
     devices = osoenergy.session.device_list.get("binary_sensor")
     entities = []
     if devices:
