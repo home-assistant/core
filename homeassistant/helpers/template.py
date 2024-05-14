@@ -59,7 +59,6 @@ from homeassistant.const import (
     UnitOfLength,
 )
 from homeassistant.core import (
-    DOMAIN as HA_DOMAIN,
     Context,
     HomeAssistant,
     State,
@@ -77,6 +76,7 @@ from homeassistant.util import (
     slugify as slugify_util,
 )
 from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.thread import ThreadWithException
@@ -100,9 +100,13 @@ _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
 DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
-_ENVIRONMENT = "template.environment"
-_ENVIRONMENT_LIMITED = "template.environment_limited"
-_ENVIRONMENT_STRICT = "template.environment_strict"
+_ENVIRONMENT: HassKey[TemplateEnvironment] = HassKey("template.environment")
+_ENVIRONMENT_LIMITED: HassKey[TemplateEnvironment] = HassKey(
+    "template.environment_limited"
+)
+_ENVIRONMENT_STRICT: HassKey[TemplateEnvironment] = HassKey(
+    "template.environment_strict"
+)
 _HASS_LOADER = "template.hass_loader"
 
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
@@ -512,8 +516,7 @@ class Template:
             wanted_env = _ENVIRONMENT_STRICT
         else:
             wanted_env = _ENVIRONMENT
-        ret: TemplateEnvironment | None = self.hass.data.get(wanted_env)
-        if ret is None:
+        if (ret := self.hass.data.get(wanted_env)) is None:
             ret = self.hass.data[wanted_env] = TemplateEnvironment(
                 self.hass, self._limited, self._strict, self._log_fn
             )
@@ -667,7 +670,7 @@ class Template:
                 _render_with_context(self.template, compiled, **kwargs)
             except TimeoutError:
                 pass
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 self._exc_info = sys.exc_info()
             finally:
                 self.hass.loop.call_soon_threadsafe(finish_event.set)
@@ -703,15 +706,14 @@ class Template:
 
         render_info = RenderInfo(self)
 
-        # pylint: disable=protected-access
         if self.is_static:
-            render_info._result = self.template.strip()
-            render_info._freeze_static()
+            render_info._result = self.template.strip()  # noqa: SLF001
+            render_info._freeze_static()  # noqa: SLF001
             return render_info
 
         token = _render_info.set(render_info)
         try:
-            render_info._result = self.async_render(
+            render_info._result = self.async_render(  # noqa: SLF001
                 variables, strict=strict, log_fn=log_fn, **kwargs
             )
         except TemplateError as ex:
@@ -719,7 +721,7 @@ class Template:
         finally:
             _render_info.reset(token)
 
-        render_info._freeze()
+        render_info._freeze()  # noqa: SLF001
         return render_info
 
     def render_with_possible_json_value(self, value, error_value=_SENTINEL):
@@ -1170,7 +1172,7 @@ def _state_generator(
     #
     container: Iterable[State]
     if domain is None:
-        container = states._states.values()  # pylint: disable=protected-access
+        container = states._states.values()  # noqa: SLF001
     else:
         container = states.async_all(domain)
     for state in container:
@@ -1886,6 +1888,17 @@ def multiply(value, amount, default=_SENTINEL):
         return default
 
 
+def add(value, amount, default=_SENTINEL):
+    """Filter to convert value to float and add it."""
+    try:
+        return float(value) + amount
+    except (ValueError, TypeError):
+        # If value can't be converted to float
+        if default is _SENTINEL:
+            raise_no_default("add", value)
+        return default
+
+
 def logarithm(value, base=math.e, default=_SENTINEL):
     """Filter and function to get logarithm of the value with a specific base."""
     try:
@@ -2477,33 +2490,15 @@ def relative_time(hass: HomeAssistant, value: Any) -> Any:
     The age can be in second, minute, hour, day, month or year. Only the
     biggest unit is considered, e.g. if it's 2 days and 3 hours, "2 days" will
     be returned.
-    Make sure date is not in the future, or else it will return None.
+    If the input datetime is in the future,
+    the input datetime will be returned.
 
     If the input are not a datetime object the input will be returned unmodified.
+
+    Note: This template function is deprecated in favor of `time_until`, but is still
+    supported so as not to break old templates.
     """
 
-    def warn_relative_time_deprecated() -> None:
-        ir = issue_registry.async_get(hass)
-        issue_id = "template_function_relative_time_deprecated"
-        if ir.async_get_issue(HA_DOMAIN, issue_id):
-            return
-        issue_registry.async_create_issue(
-            hass,
-            HA_DOMAIN,
-            issue_id,
-            breaks_in_ha_version="2024.11.0",
-            is_fixable=False,
-            severity=issue_registry.IssueSeverity.WARNING,
-            translation_key=issue_id,
-            translation_placeholders={
-                "relative_time": "relative_time()",
-                "time_since": "time_since()",
-                "time_until": "time_until()",
-            },
-        )
-        _LOGGER.warning("Template function 'relative_time' is deprecated")
-
-    warn_relative_time_deprecated()
     if (render_info := _render_info.get()) is not None:
         render_info.has_time = True
 
@@ -2744,6 +2739,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.add_extension("jinja2.ext.loopcontrols")
         self.filters["round"] = forgiving_round
         self.filters["multiply"] = multiply
+        self.filters["add"] = add
         self.filters["log"] = logarithm
         self.filters["sin"] = sine
         self.filters["cos"] = cosine

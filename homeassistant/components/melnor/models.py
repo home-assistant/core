@@ -42,7 +42,7 @@ class MelnorDataUpdateCoordinator(DataUpdateCoordinator[Device]):  # pylint: dis
         return self._device
 
 
-class MelnorBluetoothEntity(CoordinatorEntity[MelnorDataUpdateCoordinator]):  # pylint: disable=hass-enforce-coordinator-module
+class MelnorBluetoothEntity(CoordinatorEntity[MelnorDataUpdateCoordinator]):
     """Base class for melnor entities."""
 
     _device: Device
