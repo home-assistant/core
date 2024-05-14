@@ -46,9 +46,7 @@ async def __get_prices(call: ServiceCall, *, hass: HomeAssistant) -> ServiceResp
     tibber_prices: dict[str, Any] = {}
 
     for tibber_home in tibber_connection.get_homes(only_active=True):
-        home_nickname = (
-            tibber_home.info["viewer"]["home"]["appNickname"].replace('"', "").strip()
-        )
+        home_nickname = tibber_home.name
         price_data = await get_prices(tibber_home)
 
         selected_data = [
