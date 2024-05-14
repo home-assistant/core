@@ -164,9 +164,7 @@ class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
                 abort_reason = "reauth_successful"
 
             if config_entry:
-                hub: UnifiHub | None = self.hass.data.get(UNIFI_DOMAIN, {}).get(
-                    config_entry.entry_id
-                )
+                hub = config_entry.runtime_data
 
                 if hub and hub.available:
                     return self.async_abort(reason="already_configured")

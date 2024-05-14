@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 
 import aiounifi
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import (
@@ -122,15 +121,14 @@ class UnifiHub:
 
     @staticmethod
     async def async_config_entry_updated(
-        hass: HomeAssistant, config_entry: ConfigEntry
+        hass: HomeAssistant, config_entry: UnifiConfigEntry
     ) -> None:
         """Handle signals of config entry being updated.
 
         If config entry is updated due to reauth flow
         the entry might already have been reset and thus is not available.
         """
-        if not (hub := hass.data[UNIFI_DOMAIN].get(config_entry.entry_id)):
-            return
+        hub = config_entry.runtime_data
         hub.config = UnifiConfig.from_config_entry(config_entry)
         async_dispatcher_send(hass, hub.signal_options_update)
 
