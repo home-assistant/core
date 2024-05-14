@@ -83,7 +83,9 @@ class HomeAssistantSnapcast:
                 groups.append(hass_groups[group.identifier])
                 hass_groups[group.identifier].async_schedule_update_ha_state()
             else:
-                new_groups.append(SnapcastGroupDevice(group, self.hpid, self._entry_id))
+                new_groups.append(
+                    SnapcastGroupDevice(group, self.server, self.hpid, self._entry_id)
+                )
         new_clients: list[MediaPlayerEntity] = []
         clients: list[MediaPlayerEntity] = []
         hass_clients = {c.identifier: c for c in self.clients}
@@ -93,7 +95,7 @@ class HomeAssistantSnapcast:
                 hass_clients[client.identifier].async_schedule_update_ha_state()
             else:
                 new_clients.append(
-                    SnapcastClientDevice(client, self.hpid, self._entry_id)
+                    SnapcastClientDevice(client, self.server, self.hpid, self._entry_id)
                 )
         del_entities: list[MediaPlayerEntity] = [
             x for x in self.groups if x not in groups
@@ -139,5 +141,5 @@ class HomeAssistantSnapcast:
         """
         if not self.hass_async_add_entities:
             return
-        clients = [SnapcastClientDevice(client, self.hpid, self._entry_id)]
+        clients = [SnapcastClientDevice(client, self.server, self.hpid, self._entry_id)]
         self.hass_async_add_entities(clients)
