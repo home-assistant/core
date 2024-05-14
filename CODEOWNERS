@@ -632,6 +632,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/ialarm/ @RyuzakiKK
 /tests/components/ialarm/ @RyuzakiKK
 /homeassistant/components/iammeter/ @lewei50
+/tests/components/iammeter/ @lewei50
 /homeassistant/components/iaqualink/ @flz
 /tests/components/iaqualink/ @flz
 /homeassistant/components/ibeacon/ @bdraco
