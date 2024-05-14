@@ -60,7 +60,7 @@ async def test_devices(
     devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 
     for device in devices:
-        assert device == snapshot(name=f"{device.id}-device")
+        assert device == snapshot(name=f"{device.identifiers}")
 
 
 # Vehicle Coordinator

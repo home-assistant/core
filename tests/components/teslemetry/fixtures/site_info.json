@@ -97,7 +97,7 @@
       "system_alerts_enabled": true
     },
     "version": "23.44.0 eb113390",
-    "battery_count": 3,
+    "battery_count": 2,
     "tou_settings": {
       "optimization_strategy": "economics",
       "schedule": [

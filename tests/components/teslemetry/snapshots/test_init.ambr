@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_devices[1b5f91b943118e4b2261967ad7eb9167-device]
+# name: test_devices[{('teslemetry', '123456')}]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -13,23 +13,23 @@
     'identifiers': set({
       tuple(
         'teslemetry',
-        'abd-123',
+        '123456',
       ),
     }),
     'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Tesla',
-    'model': None,
-    'name': 'Wall Connector',
+    'model': 'Tesla Backup Gateway 2, Powerwall 2',
+    'name': 'Energy Site',
     'name_by_user': None,
-    'serial_number': '123',
+    'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': None,
   })
 # ---
-# name: test_devices[1fcdab2ebba80b8364fbfb06fd300e3e-device]
+# name: test_devices[{('teslemetry', 'LRW3F7EK4KC700000')}]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -59,157 +59,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_devices[433c34f54d8a4c90f9d5b202be1b7c8f-device]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': 'https://teslemetry.com/console',
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'teslemetry',
-        'LRW3F7EK4KC700000',
-      ),
-    }),
-    'is_new': False,
-    'labels': set({
-    }),
-    'manufacturer': 'Tesla',
-    'model': 'Model 3',
-    'name': 'Test',
-    'name_by_user': None,
-    'serial_number': 'LRW3F7EK4KC700000',
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_devices[7e0f367246b94bb9eaaecd32b4909d5f-device]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': 'https://teslemetry.com/console',
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'teslemetry',
-        'bcd-234',
-      ),
-    }),
-    'is_new': False,
-    'labels': set({
-    }),
-    'manufacturer': 'Tesla',
-    'model': None,
-    'name': 'Wall Connector',
-    'name_by_user': None,
-    'serial_number': '234',
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': <ANY>,
-  })
-# ---
-# name: test_devices[9c3ae015fc745c11adddd4da3e429427-device]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': 'https://teslemetry.com/console',
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'teslemetry',
-        'bcd-234',
-      ),
-    }),
-    'is_new': False,
-    'labels': set({
-    }),
-    'manufacturer': 'Tesla',
-    'model': None,
-    'name': 'Wall Connector',
-    'name_by_user': None,
-    'serial_number': '234',
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': <ANY>,
-  })
-# ---
-# name: test_devices[a57fdbbf4549931033220d38a73358da-device]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': 'https://teslemetry.com/console',
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'teslemetry',
-        '123456',
-      ),
-    }),
-    'is_new': False,
-    'labels': set({
-    }),
-    'manufacturer': 'Tesla',
-    'model': 'Powerwall 2, Tesla Backup Gateway 2',
-    'name': 'Energy Site',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_devices[f02c7e3eeb190f7ee413be87f2827f16-device]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': 'https://teslemetry.com/console',
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'teslemetry',
-        '123456',
-      ),
-    }),
-    'is_new': False,
-    'labels': set({
-    }),
-    'manufacturer': 'Tesla',
-    'model': 'Powerwall 2, Tesla Backup Gateway 2',
-    'name': 'Energy Site',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_devices[f56a5ce7004d3eb028333882827720d0-device]
+# name: test_devices[{('teslemetry', 'abd-123')}]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -234,6 +84,36 @@
     'name': 'Wall Connector',
     'name_by_user': None,
     'serial_number': '123',
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_devices[{('teslemetry', 'bcd-234')}]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': 'https://teslemetry.com/console',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'teslemetry',
+        'bcd-234',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Tesla',
+    'model': None,
+    'name': 'Wall Connector',
+    'name_by_user': None,
+    'serial_number': '234',
     'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
