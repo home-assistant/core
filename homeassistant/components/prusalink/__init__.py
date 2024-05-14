@@ -201,7 +201,7 @@ class JobUpdateCoordinator(PrusaLinkUpdateCoordinator[JobInfo]):  # pylint: disa
         return await self.api.get_job()
 
 
-class PrusaLinkEntity(CoordinatorEntity[PrusaLinkUpdateCoordinator]):  # pylint: disable=hass-enforce-coordinator-module
+class PrusaLinkEntity(CoordinatorEntity[PrusaLinkUpdateCoordinator]):
     """Defines a base PrusaLink entity."""
 
     _attr_has_entity_name = True

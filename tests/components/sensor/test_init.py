@@ -1146,6 +1146,14 @@ async def test_unit_conversion_priority_precision(
         suggested_display_precision=suggested_precision,
         suggested_unit_of_measurement=suggested_unit,
     )
+    entity4 = MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        suggested_display_precision=None,
+        unique_id="very_unique_4",
+    )
     setup_test_component_platform(
         hass,
         sensor.DOMAIN,
@@ -1154,6 +1162,7 @@ async def test_unit_conversion_priority_precision(
             entity1,
             entity2,
             entity3,
+            entity4,
         ],
     )
 
@@ -1228,6 +1237,21 @@ async def test_unit_conversion_priority_precision(
     await hass.async_block_till_done()
     assert float(async_rounded_state(hass, entity0.entity_id, state)) == pytest.approx(
         round(custom_state, 4)
+    )
+
+    # Set a display_precision without having suggested_display_precision
+    entity_registry.async_update_entity_options(
+        entity4.entity_id,
+        "sensor",
+        {"display_precision": 4},
+    )
+    entry4 = entity_registry.async_get(entity4.entity_id)
+    assert "suggested_display_precision" not in entry4.options["sensor"]
+    assert entry4.options["sensor"]["display_precision"] == 4
+    await hass.async_block_till_done()
+    state = hass.states.get(entity4.entity_id)
+    assert float(async_rounded_state(hass, entity4.entity_id, state)) == pytest.approx(
+        round(automatic_state, 4)
     )
 
 
@@ -1592,6 +1616,41 @@ async def test_suggested_precision_option_update(
             "suggested_unit_of_measurement": suggested_unit,
         },
     }
+
+
+async def test_suggested_precision_option_removal(
+    hass: HomeAssistant,
+) -> None:
+    """Test suggested precision stored in the registry is removed."""
+
+    entity_registry = er.async_get(hass)
+
+    # Pre-register entities
+    entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
+    entity_registry.async_update_entity_options(
+        entry.entity_id,
+        "sensor",
+        {
+            "suggested_display_precision": 1,
+        },
+    )
+
+    entity0 = MockSensor(
+        name="Test",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        native_value="1.5",
+        suggested_display_precision=None,
+        unique_id="very_unique",
+    )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    # Assert the suggested precision is no longer stored in the registry
+    entry = entity_registry.async_get(entity0.entity_id)
+    assert entry.options.get("sensor", {}).get("suggested_display_precision") is None
 
 
 @pytest.mark.parametrize(

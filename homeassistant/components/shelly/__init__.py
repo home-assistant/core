@@ -16,7 +16,6 @@ from aioshelly.exceptions import (
 from aioshelly.rpc_device import RpcDevice
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -35,7 +34,6 @@ from .const import (
     BLOCK_WRONG_SLEEP_PERIOD,
     CONF_COAP_PORT,
     CONF_SLEEP_PERIOD,
-    DATA_CONFIG_ENTRY,
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
     LOGGER,
@@ -44,11 +42,11 @@ from .const import (
 )
 from .coordinator import (
     ShellyBlockCoordinator,
+    ShellyConfigEntry,
     ShellyEntryData,
     ShellyRestCoordinator,
     ShellyRpcCoordinator,
     ShellyRpcPollingCoordinator,
-    get_entry_data,
 )
 from .utils import (
     async_create_issue_unsupported_firmware,
@@ -102,15 +100,13 @@ CONFIG_SCHEMA: Final = vol.Schema({DOMAIN: COAP_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Shelly component."""
-    hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
-
     if (conf := config.get(DOMAIN)) is not None:
-        hass.data[DOMAIN][CONF_COAP_PORT] = conf[CONF_COAP_PORT]
+        hass.data[DOMAIN] = {CONF_COAP_PORT: conf[CONF_COAP_PORT]}
 
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> bool:
     """Set up Shelly from a config entry."""
     # The custom component for Shelly devices uses shelly domain as well as core
     # integration. If the user removes the custom component but doesn't remove the
@@ -127,7 +123,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         return False
 
-    get_entry_data(hass)[entry.entry_id] = ShellyEntryData()
+    entry.runtime_data = ShellyEntryData()
 
     if get_device_entry_gen(entry) in RPC_GENERATIONS:
         return await _async_setup_rpc_entry(hass, entry)
@@ -135,7 +131,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await _async_setup_block_entry(hass, entry)
 
 
-async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def _async_setup_block_entry(
+    hass: HomeAssistant, entry: ShellyConfigEntry
+) -> bool:
     """Set up Shelly block based device from a config entry."""
     options = ConnectionOptions(
         entry.data[CONF_HOST],
@@ -163,7 +161,7 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         device_entry = None
 
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
-    shelly_entry_data = get_entry_data(hass)[entry.entry_id]
+    shelly_entry_data = entry.runtime_data
 
     # Some old firmware have a wrong sleep period hardcoded value.
     # Following code block will force the right value for affected devices
@@ -220,7 +218,7 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
     return True
 
 
-async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> bool:
     """Set up Shelly RPC based device from a config entry."""
     options = ConnectionOptions(
         entry.data[CONF_HOST],
@@ -249,7 +247,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
         device_entry = None
 
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
-    shelly_entry_data = get_entry_data(hass)[entry.entry_id]
+    shelly_entry_data = entry.runtime_data
 
     if sleep_period == 0:
         # Not a sleeping device, finish setup
@@ -290,9 +288,9 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> bool:
     """Unload a config entry."""
-    shelly_entry_data = get_entry_data(hass)[entry.entry_id]
+    shelly_entry_data = entry.runtime_data
 
     platforms = RPC_SLEEPING_PLATFORMS
     if not entry.data.get(CONF_SLEEP_PERIOD):
@@ -310,7 +308,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     # and if we setup again, we will fix anything that is
                     # in an inconsistent state at that time.
                     await shelly_entry_data.rpc.shutdown()
-            get_entry_data(hass).pop(entry.entry_id)
 
         return unload_ok
 
@@ -331,6 +328,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, platforms):
         if shelly_entry_data.block:
             shelly_entry_data.block.shutdown()
-        get_entry_data(hass).pop(entry.entry_id)
 
     return unload_ok

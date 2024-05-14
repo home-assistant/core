@@ -18,7 +18,6 @@ from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfLength, UnitOf
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
@@ -298,7 +297,7 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         key="next_start_timestamp",
         translation_key="next_start_timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: dt_util.as_local(data.planner.next_start_datetime),
+        value_fn=lambda data: data.planner.next_start_datetime,
     ),
     AutomowerSensorEntityDescription(
         key="error",
