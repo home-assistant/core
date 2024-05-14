@@ -14,7 +14,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID, ATTR_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     area_registry as ar,
     config_validation as cv,
@@ -284,13 +284,13 @@ class TimerManager:
 
     def add_time(self, timer_id: str, seconds: int) -> None:
         """Add time to a timer."""
-        if seconds == 0:
-            # Don't bother cancelling and recreating the timer task
-            return
-
         timer = self.timers.get(timer_id)
         if timer is None:
             raise TimerNotFoundError
+
+        if seconds == 0:
+            # Don't bother cancelling and recreating the timer task
+            return
 
         timer.add_time(seconds)
         if timer.is_active:
@@ -393,6 +393,7 @@ class TimerManager:
         )
 
 
+@callback
 def async_register_timer_handler(
     hass: HomeAssistant, handler: TimerHandler
 ) -> Callable[[], None]:

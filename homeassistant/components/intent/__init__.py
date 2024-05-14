@@ -48,11 +48,17 @@ from .timers import (
     TimerManager,
     TimerStatusIntentHandler,
     UnpauseTimerIntentHandler,
+    async_register_timer_handler,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+__all__ = [
+    "async_register_timer_handler",
+    "DOMAIN",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
