@@ -81,7 +81,7 @@ async def setup_airvisual_pro_fixture(hass, config, pro):
             return_value=pro,
         ),
         patch("homeassistant.components.airvisual_pro.NodeSamba", return_value=pro),
-        patch("homeassistant.components.airvisual.PLATFORMS", []),
+        patch("homeassistant.components.airvisual_pro.PLATFORMS", []),
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

@@ -92,8 +92,10 @@ jobs:
         uses: actions/checkout@v4.1.4
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
-        run: >-
-          echo "key=venv-${{ env.CACHE_VERSION }}-${{
+        run: |
+          # Include HA_SHORT_VERSION to force the immediate creation
+          # of a new uv cache entry after a version bump.
+          echo "key=venv-${{ env.CACHE_VERSION }}-${{ env.HA_SHORT_VERSION }}-${{
             hashFiles('requirements_test.txt', 'requirements_test_pre_commit.txt') }}-${{
             hashFiles('requirements.txt') }}-${{
             hashFiles('requirements_all.txt') }}-${{
@@ -1104,7 +1106,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@v4.3.0
+        uses: codecov/codecov-action@v4.3.1
         with:
           fail_ci_if_error: true
           flags: full-suite
@@ -1238,7 +1240,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v4.3.0
+        uses: codecov/codecov-action@v4.3.1
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}

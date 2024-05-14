@@ -12,15 +12,13 @@ from yalexs.lock import Lock, LockStatus
 from yalexs.util import get_latest_activity, update_lock_detail_from_activity
 
 from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.dt as dt_util
 
-from . import AugustData
-from .const import DOMAIN
+from . import AugustConfigEntry, AugustData
 from .entity import AugustEntityMixin
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,11 +28,11 @@ LOCK_JAMMED_ERR = 531
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AugustConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up August locks."""
-    data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     async_add_entities(AugustLock(data, lock) for lock in data.locks)
 
 

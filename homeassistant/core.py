@@ -104,6 +104,7 @@ from .util.async_ import (
 )
 from .util.event_type import EventType
 from .util.executor import InterruptibleThreadPoolExecutor
+from .util.hass_dict import HassDict
 from .util.json import JsonObjectType
 from .util.read_only_dict import ReadOnlyDict
 from .util.timeout import TimeoutManager
@@ -406,7 +407,7 @@ class HomeAssistant:
         from . import loader
 
         # This is a dictionary that any component can store any data on.
-        self.data: dict[str, Any] = {}
+        self.data = HassDict()
         self.loop = asyncio.get_running_loop()
         self._tasks: set[asyncio.Future[Any]] = set()
         self._background_tasks: set[asyncio.Future[Any]] = set()
@@ -438,7 +439,10 @@ class HomeAssistant:
 
             # frame is a circular import, so we import it here
             frame.report(
-                f"calls {what} from a thread",
+                f"calls {what} from a thread. "
+                "For more information, see "
+                "https://developers.home-assistant.io/docs/asyncio_thread_safety/"
+                f"#{what.replace('.', '')}",
                 error_if_core=True,
                 error_if_integration=True,
             )
@@ -577,9 +581,7 @@ class HomeAssistant:
         if TYPE_CHECKING:
             target = cast(Callable[[*_Ts], Any], target)
         self.loop.call_soon_threadsafe(
-            functools.partial(
-                self._async_add_hass_job, HassJob(target), *args, eager_start=True
-            )
+            functools.partial(self._async_add_hass_job, HassJob(target), *args)
         )
 
     @overload
@@ -650,7 +652,7 @@ class HomeAssistant:
         # https://github.com/home-assistant/core/pull/71960
         if TYPE_CHECKING:
             target = cast(Callable[[*_Ts], Coroutine[Any, Any, _R] | _R], target)
-        return self._async_add_hass_job(HassJob(target), *args, eager_start=eager_start)
+        return self._async_add_hass_job(HassJob(target), *args)
 
     @overload
     @callback
@@ -700,9 +702,7 @@ class HomeAssistant:
             error_if_core=False,
         )
 
-        return self._async_add_hass_job(
-            hassjob, *args, eager_start=eager_start, background=background
-        )
+        return self._async_add_hass_job(hassjob, *args, background=background)
 
     @overload
     @callback
@@ -710,7 +710,6 @@ class HomeAssistant:
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R]],
         *args: Any,
-        eager_start: bool = False,
         background: bool = False,
     ) -> asyncio.Future[_R] | None: ...
 
@@ -720,7 +719,6 @@ class HomeAssistant:
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
-        eager_start: bool = False,
         background: bool = False,
     ) -> asyncio.Future[_R] | None: ...
 
@@ -729,7 +727,6 @@ class HomeAssistant:
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
-        eager_start: bool = False,
         background: bool = False,
     ) -> asyncio.Future[_R] | None:
         """Add a HassJob from within the event loop.
@@ -751,16 +748,11 @@ class HomeAssistant:
                 hassjob.target = cast(
                     Callable[..., Coroutine[Any, Any, _R]], hassjob.target
                 )
-            # Use loop.create_task
-            # to avoid the extra function call in asyncio.create_task.
-            if eager_start:
-                task = create_eager_task(
-                    hassjob.target(*args), name=hassjob.name, loop=self.loop
-                )
-                if task.done():
-                    return task
-            else:
-                task = self.loop.create_task(hassjob.target(*args), name=hassjob.name)
+            task = create_eager_task(
+                hassjob.target(*args), name=hassjob.name, loop=self.loop
+            )
+            if task.done():
+                return task
         elif hassjob.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
@@ -785,7 +777,9 @@ class HomeAssistant:
         target: target to call.
         """
         self.loop.call_soon_threadsafe(
-            functools.partial(self.async_create_task, target, name, eager_start=True)
+            functools.partial(
+                self.async_create_task_internal, target, name, eager_start=True
+            )
         )
 
     @callback
@@ -796,6 +790,37 @@ class HomeAssistant:
         eager_start: bool = True,
     ) -> asyncio.Task[_R]:
         """Create a task from within the event loop.
+
+        This method must be run in the event loop. If you are using this in your
+        integration, use the create task methods on the config entry instead.
+
+        target: target to call.
+        """
+        # We turned on asyncio debug in April 2024 in the dev containers
+        # in the hope of catching some of the issues that have been
+        # reported. It will take a while to get all the issues fixed in
+        # custom components.
+        #
+        # In 2025.5 we should guard the `verify_event_loop_thread`
+        # check with a check for the `hass.config.debug` flag being set as
+        # long term we don't want to be checking this in production
+        # environments since it is a performance hit.
+        self.verify_event_loop_thread("hass.async_create_task")
+        return self.async_create_task_internal(target, name, eager_start)
+
+    @callback
+    def async_create_task_internal(
+        self,
+        target: Coroutine[Any, Any, _R],
+        name: str | None = None,
+        eager_start: bool = True,
+    ) -> asyncio.Task[_R]:
+        """Create a task from within the event loop, internal use only.
+
+        This method is intended to only be used by core internally
+        and should not be considered a stable API. We will make
+        breaking changes to this function in the future and it
+        should not be used in integrations.
 
         This method must be run in the event loop. If you are using this in your
         integration, use the create task methods on the config entry instead.
@@ -914,9 +939,7 @@ class HomeAssistant:
             hassjob.target(*args)
             return None
 
-        return self._async_add_hass_job(
-            hassjob, *args, eager_start=True, background=background
-        )
+        return self._async_add_hass_job(hassjob, *args, background=background)
 
     @overload
     @callback
@@ -1183,7 +1206,7 @@ class HomeAssistant:
                 _LOGGER.exception(
                     "Task %s could not be canceled during final shutdown stage", task
                 )
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Task %s error during final shutdown stage", task)
 
         # Prevent run_callback_threadsafe from scheduling any additional
@@ -1211,12 +1234,11 @@ class HomeAssistant:
 
     def _cancel_cancellable_timers(self) -> None:
         """Cancel timer handles marked as cancellable."""
-        # pylint: disable-next=protected-access
-        handles: Iterable[asyncio.TimerHandle] = self.loop._scheduled  # type: ignore[attr-defined]
+        handles: Iterable[asyncio.TimerHandle] = self.loop._scheduled  # type: ignore[attr-defined] # noqa: SLF001
         for handle in handles:
             if (
                 not handle.cancelled()
-                and (args := handle._args)  # pylint: disable=protected-access
+                and (args := handle._args)  # noqa: SLF001
                 and type(job := args[0]) is HassJob
                 and job.cancel_on_shutdown
             ):
@@ -1328,7 +1350,7 @@ class Event(Generic[_DataT]):
             # _as_dict is marked as protected
             # to avoid callers outside of this module
             # from misusing it by mistake.
-            "context": self.context._as_dict,  # pylint: disable=protected-access
+            "context": self.context._as_dict,  # noqa: SLF001
         }
 
     def as_dict(self) -> ReadOnlyDict[str, Any]:
@@ -1408,6 +1430,7 @@ class _OneTimeListener(Generic[_DataT]):
 EMPTY_LIST: list[Any] = []
 
 
+@functools.lru_cache
 def _verify_event_type_length_or_raise(event_type: EventType[_DataT] | str) -> None:
     """Verify the length of the event type and raise if too long."""
     if len(event_type) > MAX_LENGTH_EVENT_EVENT_TYPE:
@@ -1473,7 +1496,7 @@ class EventBus:
         This method must be run in the event loop.
         """
         _verify_event_type_length_or_raise(event_type)
-        self._hass.verify_event_loop_thread("async_fire")
+        self._hass.verify_event_loop_thread("hass.bus.async_fire")
         return self.async_fire_internal(
             event_type, event_data, origin, context, time_fired
         )
@@ -1491,7 +1514,7 @@ class EventBus:
 
         This method is intended to only be used by core internally
         and should not be considered a stable API. We will make
-        breaking change to this function in the future and it
+        breaking changes to this function in the future and it
         should not be used in integrations.
 
         This method must be run in the event loop.
@@ -1522,7 +1545,7 @@ class EventBus:
                 try:
                     if event_data is None or not event_filter(event_data):
                         continue
-                except Exception:  # pylint: disable=broad-except
+                except Exception:
                     _LOGGER.exception("Error in event filter")
                     continue
 
@@ -1537,7 +1560,7 @@ class EventBus:
 
             try:
                 self._hass.async_run_hass_job(job, event)
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Error running job: %s", job)
 
     def listen(
@@ -1770,6 +1793,12 @@ class State:
         self.context = context or Context()
         self.state_info = state_info
         self.domain, self.object_id = split_entity_id(self.entity_id)
+        # The recorder or the websocket_api will always call the timestamps,
+        # so we will set the timestamp values here to avoid the overhead of
+        # the function call in the property we know will always be called.
+        self.last_updated_timestamp = self.last_updated.timestamp()
+        if self.last_changed == self.last_updated:
+            self.__dict__["last_changed_timestamp"] = self.last_updated_timestamp
 
     @cached_property
     def name(self) -> str:
@@ -1781,8 +1810,6 @@ class State:
     @cached_property
     def last_changed_timestamp(self) -> float:
         """Timestamp of last change."""
-        if self.last_changed == self.last_updated:
-            return self.last_updated_timestamp
         return self.last_changed.timestamp()
 
     @cached_property
@@ -1791,11 +1818,6 @@ class State:
         if self.last_reported == self.last_updated:
             return self.last_updated_timestamp
         return self.last_reported.timestamp()
-
-    @cached_property
-    def last_updated_timestamp(self) -> float:
-        """Timestamp of last update."""
-        return self.last_updated.timestamp()
 
     @cached_property
     def _as_dict(self) -> dict[str, Any]:
@@ -1823,7 +1845,7 @@ class State:
             # _as_dict is marked as protected
             # to avoid callers outside of this module
             # from misusing it by mistake.
-            "context": self.context._as_dict,  # pylint: disable=protected-access
+            "context": self.context._as_dict,  # noqa: SLF001
         }
 
     def as_dict(
@@ -1878,7 +1900,7 @@ class State:
             # _as_dict is marked as protected
             # to avoid callers outside of this module
             # from misusing it by mistake.
-            context = state_context._as_dict  # pylint: disable=protected-access
+            context = state_context._as_dict  # noqa: SLF001
         compressed_state: CompressedState = {
             COMPRESSED_STATE_STATE: self.state,
             COMPRESSED_STATE_ATTRIBUTES: self.attributes,
@@ -2205,6 +2227,7 @@ class StateMachine:
         force_update: bool = False,
         context: Context | None = None,
         state_info: StateInfo | None = None,
+        timestamp: float | None = None,
     ) -> None:
         """Set the state of an entity, add entity if it does not exist.
 
@@ -2244,7 +2267,8 @@ class StateMachine:
         # timestamp implementation:
         # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6387
         # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6323
-        timestamp = time.time()
+        if timestamp is None:
+            timestamp = time.time()
         now = dt_util.utc_from_timestamp(timestamp)
 
         if same_state and same_attr:
@@ -2264,8 +2288,6 @@ class StateMachine:
             return
 
         if context is None:
-            if TYPE_CHECKING:
-                assert timestamp is not None
             context = Context(id=ulid_at_time(timestamp))
 
         if same_attr:
@@ -2487,7 +2509,7 @@ class ServiceRegistry:
 
         This method must be run in the event loop.
         """
-        self._hass.verify_event_loop_thread("async_register")
+        self._hass.verify_event_loop_thread("hass.services.async_register")
         self._async_register(
             domain, service, service_func, schema, supports_response, job_type
         )
@@ -2546,7 +2568,7 @@ class ServiceRegistry:
 
         This method must be run in the event loop.
         """
-        self._hass.verify_event_loop_thread("async_remove")
+        self._hass.verify_event_loop_thread("hass.services.async_remove")
         self._async_remove(domain, service)
 
     @callback
@@ -2696,7 +2718,7 @@ class ServiceRegistry:
 
         coro = self._execute_service(handler, service_call)
         if not blocking:
-            self._hass.async_create_task(
+            self._hass.async_create_task_internal(
                 self._run_service_call_catch_exceptions(coro, service_call),
                 f"service call background {service_call.domain}.{service_call.service}",
                 eager_start=True,
@@ -2732,7 +2754,7 @@ class ServiceRegistry:
             )
         except asyncio.CancelledError:
             _LOGGER.debug("Service was cancelled: %s", service_call)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error executing service: %s", service_call)
 
     async def _execute_service(
@@ -2880,7 +2902,7 @@ class Config:
 
     def is_allowed_external_url(self, url: str) -> bool:
         """Check if an external URL is allowed."""
-        parsed_url = f"{str(yarl.URL(url))}/"
+        parsed_url = f"{yarl.URL(url)!s}/"
 
         return any(
             allowed
@@ -3059,7 +3081,7 @@ class Config:
             "elevation": self.elevation,
             # We don't want any integrations to use the name of the unit system
             # so we are using the private attribute here
-            "unit_system_v2": self.units._name,  # pylint: disable=protected-access
+            "unit_system_v2": self.units._name,  # noqa: SLF001
             "location_name": self.location_name,
             "time_zone": self.time_zone,
             "external_url": self.external_url,
