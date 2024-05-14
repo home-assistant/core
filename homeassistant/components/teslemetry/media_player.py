@@ -90,7 +90,7 @@ class TeslemetryMediaEntity(TeslemetryVehicleEntity, MediaPlayerEntity):
             self._attr_media_duration = None
 
         if duration and (
-            position := self.get("vehicle_state_media_info_now_playing_position")
+            position := self.get("vehicle_state_media_info_now_playing_elapsed")
         ):
             self._attr_media_position = position / 1000
         else:
@@ -146,4 +146,4 @@ class TeslemetryMediaEntity(TeslemetryVehicleEntity, MediaPlayerEntity):
         """Send previous track command."""
         self.raise_for_scope()
         await self.wake_up_if_asleep()
-        await self.handle_command(self.api.media_previous_track())
+        await self.handle_command(self.api.media_prev_track())
