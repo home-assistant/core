@@ -84,7 +84,7 @@ class AbodeSystem:
     logout_listener: CALLBACK_TYPE | None = None
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Abode component."""
     setup_hass_services(hass)
     return True
@@ -177,15 +177,15 @@ def setup_hass_services(hass: HomeAssistant) -> None:
             signal = f"abode_trigger_automation_{entity_id}"
             dispatcher_send(hass, signal)
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_SETTINGS, change_setting, schema=CHANGE_SETTING_SCHEMA
     )
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_CAPTURE_IMAGE, capture_image, schema=CAPTURE_IMAGE_SCHEMA
     )
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_TRIGGER_AUTOMATION, trigger_automation, schema=AUTOMATION_SCHEMA
     )
 
