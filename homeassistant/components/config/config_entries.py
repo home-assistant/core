@@ -697,11 +697,11 @@ async def config_subentry_delete(
 
     hass.config_entries.async_update_entry(
         entry,
-        subentries={
-            subentry_id: subentry
-            for subentry_id, subentry in entry.subentries.items()
-            if subentry_id != subentry_id_to_delete
-        },
+        subentries=[
+            subentry
+            for subentry in entry.subentries.values()
+            if subentry.subentry_id != subentry_id_to_delete
+        ],
     )
 
     connection.send_result(msg["id"])
