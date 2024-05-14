@@ -53,30 +53,6 @@
       "state": {
         "name": "Status"
       },
-      "stream_automaticblindspotcamera": {
-        "name": "AutomaticBlindSpotCamera"
-      },
-      "stream_automaticemergencybrakingoff": {
-        "name": "AutomaticEmergencyBrakingOff"
-      },
-      "stream_blindspotcollisionwarningchime": {
-        "name": "BlindSpotCollisionWarningChime"
-      },
-      "stream_bmsfullchargecomplete": {
-        "name": "BmsFullchargecomplete"
-      },
-      "stream_brakepedal": {
-        "name": "BrakePedal"
-      },
-      "stream_chargeenablerequest": {
-        "name": "ChargeEnableRequest"
-      },
-      "stream_chargeportcoldweathermode": {
-        "name": "ChargePortColdWeatherMode"
-      },
-      "stream_servicemode": {
-        "name": "ServiceMode"
-      },
       "vehicle_state_dashcam_state": {
         "name": "Dashcam"
       },
