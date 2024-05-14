@@ -32,6 +32,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, entity
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 from .const import ATTRIBUTION, CONF_POLLING, DOMAIN, LOGGER
 
@@ -83,6 +84,12 @@ class AbodeSystem:
     logout_listener: CALLBACK_TYPE | None = None
 
 
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Abode component."""
+    setup_hass_services(hass)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Abode integration from a config entry."""
     username = entry.data[CONF_USERNAME]
@@ -111,7 +118,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     await setup_hass_events(hass)
-    await hass.async_add_executor_job(setup_hass_services, hass)
     await hass.async_add_executor_job(setup_abode_events, hass)
 
     return True
@@ -119,10 +125,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.services.async_remove(DOMAIN, SERVICE_SETTINGS)
-    hass.services.async_remove(DOMAIN, SERVICE_CAPTURE_IMAGE)
-    hass.services.async_remove(DOMAIN, SERVICE_TRIGGER_AUTOMATION)
-
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     await hass.async_add_executor_job(hass.data[DOMAIN].abode.events.stop)
