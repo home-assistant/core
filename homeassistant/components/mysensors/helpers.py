@@ -152,7 +152,7 @@ def get_child_schema(
     """Return a child schema."""
     set_req = gateway.const.SetReq
     child_schema = child.get_schema(gateway.protocol_version)
-    schema = child_schema.extend(
+    return child_schema.extend(
         {
             vol.Required(
                 set_req[name].value, msg=invalid_msg(gateway, child, name)
@@ -161,7 +161,6 @@ def get_child_schema(
         },
         extra=vol.ALLOW_EXTRA,
     )
-    return schema
 
 
 def invalid_msg(

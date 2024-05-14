@@ -299,7 +299,7 @@
     }),
   })
 # ---
-# name: test_diagnostics[HWE-SKT]
+# name: test_diagnostics[HWE-SKT-11]
   dict({
     'data': dict({
       'data': dict({
@@ -365,6 +365,93 @@
       'device': dict({
         'api_version': 'v1',
         'firmware_version': '3.03',
+        'product_name': 'Energy Socket',
+        'product_type': 'HWE-SKT',
+        'serial': '**REDACTED**',
+      }),
+      'state': dict({
+        'brightness': 255,
+        'power_on': True,
+        'switch_lock': False,
+      }),
+      'system': dict({
+        'cloud_enabled': True,
+      }),
+    }),
+    'entry': dict({
+      'ip_address': '**REDACTED**',
+      'product_name': 'Product name',
+      'product_type': 'product_type',
+      'serial': '**REDACTED**',
+    }),
+  })
+# ---
+# name: test_diagnostics[HWE-SKT-21]
+  dict({
+    'data': dict({
+      'data': dict({
+        'active_apparent_power_l1_va': None,
+        'active_apparent_power_l2_va': None,
+        'active_apparent_power_l3_va': None,
+        'active_apparent_power_va': 666.768,
+        'active_current_a': 2.346,
+        'active_current_l1_a': None,
+        'active_current_l2_a': None,
+        'active_current_l3_a': None,
+        'active_frequency_hz': 50.005,
+        'active_liter_lpm': None,
+        'active_power_average_w': None,
+        'active_power_factor': 0.81688,
+        'active_power_factor_l1': None,
+        'active_power_factor_l2': None,
+        'active_power_factor_l3': None,
+        'active_power_l1_w': 543.312,
+        'active_power_l2_w': None,
+        'active_power_l3_w': None,
+        'active_power_w': 543.312,
+        'active_reactive_power_l1_var': None,
+        'active_reactive_power_l2_var': None,
+        'active_reactive_power_l3_var': None,
+        'active_reactive_power_var': 123.456,
+        'active_tariff': None,
+        'active_voltage_l1_v': None,
+        'active_voltage_l2_v': None,
+        'active_voltage_l3_v': None,
+        'active_voltage_v': 231.539,
+        'any_power_fail_count': None,
+        'external_devices': None,
+        'gas_timestamp': None,
+        'gas_unique_id': None,
+        'long_power_fail_count': None,
+        'meter_model': None,
+        'monthly_power_peak_timestamp': None,
+        'monthly_power_peak_w': None,
+        'smr_version': None,
+        'total_energy_export_kwh': 85.951,
+        'total_energy_export_t1_kwh': 85.951,
+        'total_energy_export_t2_kwh': None,
+        'total_energy_export_t3_kwh': None,
+        'total_energy_export_t4_kwh': None,
+        'total_energy_import_kwh': 30.511,
+        'total_energy_import_t1_kwh': 30.511,
+        'total_energy_import_t2_kwh': None,
+        'total_energy_import_t3_kwh': None,
+        'total_energy_import_t4_kwh': None,
+        'total_gas_m3': None,
+        'total_liter_m3': None,
+        'unique_meter_id': None,
+        'voltage_sag_l1_count': None,
+        'voltage_sag_l2_count': None,
+        'voltage_sag_l3_count': None,
+        'voltage_swell_l1_count': None,
+        'voltage_swell_l2_count': None,
+        'voltage_swell_l3_count': None,
+        'wifi_ssid': '**REDACTED**',
+        'wifi_strength': 100,
+      }),
+      'device': dict({
+        'api_version': 'v1',
+        'firmware_version': '4.07',
         'product_name': 'Energy Socket',
         'product_type': 'HWE-SKT',
         'serial': '**REDACTED**',
@@ -457,7 +544,9 @@
         'serial': '**REDACTED**',
       }),
       'state': None,
-      'system': None,
+      'system': dict({
+        'cloud_enabled': True,
+      }),
     }),
     'entry': dict({
       'ip_address': '**REDACTED**',

@@ -133,9 +133,9 @@ class ZHAGateway:
         self._groups: dict[int, ZHAGroup] = {}
         self.application_controller: ControllerApplication = None
         self.coordinator_zha_device: ZHADevice = None  # type: ignore[assignment]
-        self._device_registry: collections.defaultdict[
-            EUI64, list[EntityReference]
-        ] = collections.defaultdict(list)
+        self._device_registry: collections.defaultdict[EUI64, list[EntityReference]] = (
+            collections.defaultdict(list)
+        )
         self._log_levels: dict[str, dict[str, int]] = {
             DEBUG_LEVEL_ORIGINAL: async_capture_log_levels(),
             DEBUG_LEVEL_CURRENT: async_capture_log_levels(),
@@ -269,7 +269,7 @@ class ZHAGateway:
             delta_msg = "not known"
             if zha_device.last_seen is not None:
                 delta = round(time.time() - zha_device.last_seen)
-                delta_msg = f"{str(timedelta(seconds=delta))} ago"
+                delta_msg = f"{timedelta(seconds=delta)!s} ago"
             _LOGGER.debug(
                 (
                     "[%s](%s) restored as '%s', last seen: %s,"
@@ -296,7 +296,7 @@ class ZHAGateway:
     @property
     def radio_concurrency(self) -> int:
         """Maximum configured radio concurrency."""
-        return self.application_controller._concurrent_requests_semaphore.max_value  # pylint: disable=protected-access
+        return self.application_controller._concurrent_requests_semaphore.max_value  # noqa: SLF001
 
     async def async_fetch_updated_state_mains(self) -> None:
         """Fetch updated state for mains powered devices."""
@@ -470,7 +470,7 @@ class ZHAGateway:
         if zha_device is not None:
             device_info = zha_device.zha_device_info
             zha_device.async_cleanup_handles()
-            async_dispatcher_send(self.hass, f"{SIGNAL_REMOVE}_{str(zha_device.ieee)}")
+            async_dispatcher_send(self.hass, f"{SIGNAL_REMOVE}_{zha_device.ieee!s}")
             self.hass.async_create_task(
                 self._async_remove_device(zha_device, entity_refs),
                 "ZHAGateway._async_remove_device",
@@ -870,7 +870,10 @@ class LogRelayHandler(logging.Handler):
     def emit(self, record: LogRecord) -> None:
         """Relay log message via dispatcher."""
         entry = LogEntry(
-            record, self.paths_re, figure_out_source=record.levelno >= logging.WARN
+            record,
+            self.paths_re,
+            formatter=self.formatter,
+            figure_out_source=record.levelno >= logging.WARNING,
         )
         async_dispatcher_send(
             self.hass,

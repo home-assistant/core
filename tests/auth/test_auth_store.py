@@ -201,13 +201,13 @@ async def test_system_groups_store_id_and_name(
 async def test_loading_only_once(hass: HomeAssistant) -> None:
     """Test only one storage load is allowed."""
     store = auth_store.AuthStore(hass)
-    with patch(
-        "homeassistant.helpers.entity_registry.async_get"
-    ) as mock_ent_registry, patch(
-        "homeassistant.helpers.device_registry.async_get"
-    ) as mock_dev_registry, patch(
-        "homeassistant.helpers.storage.Store.async_load", return_value=None
-    ) as mock_load:
+    with (
+        patch("homeassistant.helpers.entity_registry.async_get") as mock_ent_registry,
+        patch("homeassistant.helpers.device_registry.async_get") as mock_dev_registry,
+        patch(
+            "homeassistant.helpers.storage.Store.async_load", return_value=None
+        ) as mock_load,
+    ):
         await store.async_load()
         with pytest.raises(RuntimeError, match="Auth storage is already loaded"):
             await store.async_load()
@@ -305,3 +305,24 @@ async def test_loading_does_not_write_right_away(
     # Once for the task
     await hass.async_block_till_done()
     assert hass_storage[auth_store.STORAGE_KEY] != {}
+
+
+async def test_add_remove_user_affects_tokens(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test adding and removing a user removes the tokens."""
+    store = auth_store.AuthStore(hass)
+    await store.async_load()
+    user = await store.async_create_user("Test User")
+    assert user.name == "Test User"
+    refresh_token = await store.async_create_refresh_token(
+        user, "client_id", "access_token_expiration"
+    )
+    assert user.refresh_tokens == {refresh_token.id: refresh_token}
+    assert await store.async_get_user(user.id) == user
+    assert store.async_get_refresh_token(refresh_token.id) == refresh_token
+    assert store.async_get_refresh_token_by_token(refresh_token.token) == refresh_token
+    await store.async_remove_user(user)
+    assert store.async_get_refresh_token(refresh_token.id) is None
+    assert store.async_get_refresh_token_by_token(refresh_token.token) is None
+    assert user.refresh_tokens == {}
