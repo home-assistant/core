@@ -76,7 +76,6 @@ from .const import (
     CONF_DATA_COLLECTION_OPTED_IN,
     DATA_CLIENT,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
-    LOGGER,
     USER_AGENT,
 )
 from .helpers import (
@@ -171,7 +170,6 @@ MINIMUM_QR_STRING_LENGTH = 52
 
 def convert_planned_provisioning_entry(info: dict) -> ProvisioningEntry:
     """Handle provisioning entry dict to ProvisioningEntry."""
-    LOGGER.error(info)
     return ProvisioningEntry(
         dsk=info[DSK],
         security_classes=info[SECURITY_CLASSES],
