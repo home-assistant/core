@@ -44,40 +44,31 @@ SEAT_HEATER_DESCRIPTIONS: tuple[SeatHeaterDescription, ...] = (
     SeatHeaterDescription(
         key="climate_state_seat_heater_rear_left",
         position=Seat.REAR_LEFT,
-        avaliable_fn=lambda self: self.get("vehicle_config_rear_seat_heaters", False)
-        != 0,
+        avaliable_fn=lambda self: self.get("vehicle_config_rear_seat_heaters") != 0,
         entity_registry_enabled_default=False,
     ),
     SeatHeaterDescription(
         key="climate_state_seat_heater_rear_center",
         position=Seat.REAR_CENTER,
-        avaliable_fn=lambda self: not self.exactly(
-            0, "vehicle_config_rear_seat_heaters"
-        ),
+        avaliable_fn=lambda self: self.get("vehicle_config_rear_seat_heaters") != 0,
         entity_registry_enabled_default=False,
     ),
     SeatHeaterDescription(
         key="climate_state_seat_heater_rear_right",
         position=Seat.REAR_RIGHT,
-        avaliable_fn=lambda self: not self.exactly(
-            0, "vehicle_config_rear_seat_heaters"
-        ),
+        avaliable_fn=lambda self: self.get("vehicle_config_rear_seat_heaters") != 0,
         entity_registry_enabled_default=False,
     ),
     SeatHeaterDescription(
         key="climate_state_seat_heater_third_row_left",
         position=Seat.THIRD_LEFT,
-        avaliable_fn=lambda self: not self.exactly(
-            "None", "vehicle_config_third_row_seats"
-        ),
+        avaliable_fn=lambda self: self.get("vehicle_config_third_row_seats") != "None",
         entity_registry_enabled_default=False,
     ),
     SeatHeaterDescription(
         key="climate_state_seat_heater_third_row_right",
         position=Seat.THIRD_RIGHT,
-        avaliable_fn=lambda self: not self.exactly(
-            "None", "vehicle_config_third_row_seats"
-        ),
+        avaliable_fn=lambda self: self.get("vehicle_config_third_row_seats") != "None",
         entity_registry_enabled_default=False,
     ),
 )
@@ -154,7 +145,7 @@ class TeslemetrySeatHeaterSelectEntity(TeslemetryVehicleEntity, SelectEntity):
         await self.wake_up_if_asleep()
         level = self._attr_options.index(option)
         # AC must be on to turn on seat heater
-        if not self.get("climate_state_is_climate_on"):
+        if level and not self.get("climate_state_is_climate_on"):
             await self.handle_command(self.api.auto_conditioning_start())
         await self.handle_command(
             self.api.remote_seat_heater_request(self.entity_description.position, level)
@@ -199,7 +190,7 @@ class TeslemetryWheelHeaterSelectEntity(TeslemetryVehicleEntity, SelectEntity):
         await self.wake_up_if_asleep()
         level = self._attr_options.index(option)
         # AC must be on to turn on seat heater
-        if not self.get("climate_state_is_climate_on"):
+        if level and not self.get("climate_state_is_climate_on"):
             await self.handle_command(self.api.auto_conditioning_start())
         await self.handle_command(
             self.api.remote_steering_wheel_heat_level_request(level)
