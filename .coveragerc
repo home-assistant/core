@@ -1377,6 +1377,7 @@ omit =
     homeassistant/components/switchbot_cloud/climate.py
     homeassistant/components/switchbot_cloud/coordinator.py
     homeassistant/components/switchbot_cloud/entity.py
+    homeassistant/components/switchbot_cloud/sensor.py
     homeassistant/components/switchbot_cloud/switch.py
     homeassistant/components/switchmate/switch.py
     homeassistant/components/syncthing/__init__.py
@@ -1440,7 +1441,6 @@ omit =
     homeassistant/components/thinkingcleaner/*
     homeassistant/components/thomson/device_tracker.py
     homeassistant/components/tibber/__init__.py
-    homeassistant/components/tibber/notify.py
     homeassistant/components/tibber/sensor.py
     homeassistant/components/tikteck/light.py
     homeassistant/components/tile/__init__.py

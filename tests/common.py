@@ -979,34 +979,34 @@ class MockConfigEntry(config_entries.ConfigEntry):
     def __init__(
         self,
         *,
-        domain="test",
         data=None,
-        version=1,
-        minor_version=1,
+        disabled_by=None,
+        domain="test",
         entry_id=None,
-        source=config_entries.SOURCE_USER,
-        title="Mock Title",
-        state=None,
-        options={},
+        minor_version=1,
+        options=None,
         pref_disable_new_entities=None,
         pref_disable_polling=None,
-        unique_id=None,
-        disabled_by=None,
         reason=None,
+        source=config_entries.SOURCE_USER,
+        state=None,
+        title="Mock Title",
+        unique_id=None,
+        version=1,
     ) -> None:
         """Initialize a mock config entry."""
         kwargs = {
-            "entry_id": entry_id or uuid_util.random_uuid_hex(),
-            "domain": domain,
             "data": data or {},
+            "disabled_by": disabled_by,
+            "domain": domain,
+            "entry_id": entry_id or uuid_util.random_uuid_hex(),
+            "minor_version": minor_version,
+            "options": options or {},
             "pref_disable_new_entities": pref_disable_new_entities,
             "pref_disable_polling": pref_disable_polling,
-            "options": options,
-            "version": version,
-            "minor_version": minor_version,
             "title": title,
             "unique_id": unique_id,
-            "disabled_by": disabled_by,
+            "version": version,
         }
         if source is not None:
             kwargs["source"] = source
@@ -1175,6 +1175,7 @@ def mock_restore_cache(hass: HomeAssistant, states: Sequence[State]) -> None:
     _LOGGER.debug("Restore cache: %s", data.last_states)
     assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
 
+    restore_state.async_get.cache_clear()
     hass.data[key] = data
 
 
@@ -1202,6 +1203,7 @@ def mock_restore_cache_with_extra_data(
     _LOGGER.debug("Restore cache: %s", data.last_states)
     assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
 
+    restore_state.async_get.cache_clear()
     hass.data[key] = data
 
 

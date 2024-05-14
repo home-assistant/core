@@ -683,27 +683,27 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # Reconstruct a DeviceInfo dict from the arguments.
         # When we upgrade to Python 3.12, we can change this method to instead
         # accept kwargs typed as a DeviceInfo dict (PEP 692)
-        device_info: DeviceInfo = {}
-        for key, val in (
-            ("configuration_url", configuration_url),
-            ("connections", connections),
-            ("default_manufacturer", default_manufacturer),
-            ("default_model", default_model),
-            ("default_name", default_name),
-            ("entry_type", entry_type),
-            ("hw_version", hw_version),
-            ("identifiers", identifiers),
-            ("manufacturer", manufacturer),
-            ("model", model),
-            ("name", name),
-            ("serial_number", serial_number),
-            ("suggested_area", suggested_area),
-            ("sw_version", sw_version),
-            ("via_device", via_device),
-        ):
-            if val is UNDEFINED:
-                continue
-            device_info[key] = val  # type: ignore[literal-required]
+        device_info: DeviceInfo = {  # type: ignore[assignment]
+            key: val
+            for key, val in (
+                ("configuration_url", configuration_url),
+                ("connections", connections),
+                ("default_manufacturer", default_manufacturer),
+                ("default_model", default_model),
+                ("default_name", default_name),
+                ("entry_type", entry_type),
+                ("hw_version", hw_version),
+                ("identifiers", identifiers),
+                ("manufacturer", manufacturer),
+                ("model", model),
+                ("name", name),
+                ("serial_number", serial_number),
+                ("suggested_area", suggested_area),
+                ("sw_version", sw_version),
+                ("via_device", via_device),
+            )
+            if val is not UNDEFINED
+        }
 
         device_info_type = _validate_device_info(config_entry, device_info)
 
