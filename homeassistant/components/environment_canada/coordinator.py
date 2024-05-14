@@ -1,20 +1,13 @@
 """Coordinator for the Environment Canada (EC) component."""
 
-from datetime import timedelta
 import logging
-import xml.etree.ElementTree as et
 
 from env_canada import ec_exc
 
-from homeassistant.const import Platform
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
-DEFAULT_RADAR_UPDATE_INTERVAL = timedelta(minutes=5)
-DEFAULT_WEATHER_UPDATE_INTERVAL = timedelta(minutes=5)
-
-PLATFORMS = [Platform.CAMERA, Platform.SENSOR, Platform.WEATHER]
 
 _LOGGER = logging.getLogger(__name__)
 
