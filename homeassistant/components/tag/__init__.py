@@ -230,7 +230,6 @@ class TagEntity(Entity):
         self._tag_id = tag_id
         self._last_device_id: str | None = device_id
         self._last_scanned = last_scanned
-        self._attr_unique_id = tag_id
 
         self._state_info = {
             "unrecorded_attributes": self._Entity__combined_unrecorded_attributes  # type: ignore[attr-defined]
