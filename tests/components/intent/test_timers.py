@@ -40,7 +40,7 @@ async def test_start_finish_timer(hass: HomeAssistant, init_components) -> None:
 
     timer_id: str | None = None
 
-    async def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         nonlocal timer_id
 
         assert timer.name == timer_name
@@ -85,7 +85,7 @@ async def test_cancel_timer(hass: HomeAssistant, init_components) -> None:
 
     timer_id: str | None = None
 
-    async def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         nonlocal timer_id
 
         assert timer.device_id == device_id
@@ -189,7 +189,7 @@ async def test_increase_timer(hass: HomeAssistant, init_components) -> None:
     timer_id: str | None = None
     original_total_seconds = -1
 
-    async def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         nonlocal timer_id, original_total_seconds
 
         assert timer.device_id == device_id
@@ -284,7 +284,7 @@ async def test_decrease_timer(hass: HomeAssistant, init_components) -> None:
     timer_id: str | None = None
     original_total_seconds = 0
 
-    async def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         nonlocal timer_id, original_total_seconds
 
         assert timer.device_id == device_id
@@ -376,7 +376,7 @@ async def test_decrease_timer_below_zero(hass: HomeAssistant, init_components) -
     timer_id: str | None = None
     original_total_seconds = 0
 
-    async def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         nonlocal timer_id, original_total_seconds
 
         assert timer.device_id is None
@@ -578,7 +578,7 @@ async def test_disambiguation(
     cancelled_event = asyncio.Event()
     timer_info: TimerInfo | None = None
 
-    async def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         nonlocal timer_info
 
         if event_type == TimerEventType.CANCELLED:
@@ -796,7 +796,7 @@ async def test_pause_unpause_timer(hass: HomeAssistant, init_components) -> None
 
     expected_active = True
 
-    async def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         if event_type == TimerEventType.STARTED:
             started_event.set()
         elif event_type == TimerEventType.UPDATED:
@@ -848,19 +848,19 @@ async def test_timer_not_found(hass: HomeAssistant) -> None:
     timer_manager = TimerManager(hass)
 
     with pytest.raises(TimerNotFoundError):
-        await timer_manager.cancel_timer("does-not-exist")
+        timer_manager.cancel_timer("does-not-exist")
 
     with pytest.raises(TimerNotFoundError):
-        await timer_manager.add_time("does-not-exist", 1)
+        timer_manager.add_time("does-not-exist", 1)
 
     with pytest.raises(TimerNotFoundError):
-        await timer_manager.remove_time("does-not-exist", 1)
+        timer_manager.remove_time("does-not-exist", 1)
 
     with pytest.raises(TimerNotFoundError):
-        await timer_manager.pause_timer("does-not-exist")
+        timer_manager.pause_timer("does-not-exist")
 
     with pytest.raises(TimerNotFoundError):
-        await timer_manager.unpause_timer("does-not-exist")
+        timer_manager.unpause_timer("does-not-exist")
 
 
 async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> None:
@@ -868,7 +868,7 @@ async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> 
     started_event = asyncio.Event()
     num_started = 0
 
-    async def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         nonlocal num_started
 
         if event_type == TimerEventType.STARTED:

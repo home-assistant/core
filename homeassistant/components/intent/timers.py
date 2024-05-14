@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 from functools import cached_property
@@ -140,7 +140,7 @@ class TimerEventType(StrEnum):
     """Timer finished without being cancelled."""
 
 
-TimerHandler = Callable[[TimerEventType, TimerInfo], Coroutine[None, None, Any]]
+TimerHandler = Callable[[TimerEventType, TimerInfo], None]
 
 
 class TimerNotFoundError(intent.IntentHandleError):
@@ -180,7 +180,7 @@ class TimerManager:
         self.handlers.append(handler)
         return lambda: self.handlers.remove(handler)
 
-    async def start_timer(
+    def start_timer(
         self,
         hours: int | None,
         minutes: int | None,
@@ -231,9 +231,8 @@ class TimerManager:
             name=f"Timer {timer_id}",
         )
 
-        await asyncio.gather(
-            *(handler(TimerEventType.STARTED, timer) for handler in self.handlers)
-        )
+        for handler in self.handlers:
+            handler(TimerEventType.STARTED, timer)
 
         _LOGGER.debug(
             "Timer started: id=%s, name=%s, hours=%s, minutes=%s, seconds=%s, device_id=%s",
@@ -256,11 +255,11 @@ class TimerManager:
             if (timer := self.timers.get(timer_id)) and (
                 timer.updated_at == updated_at
             ):
-                await self._timer_finished(timer_id)
+                self._timer_finished(timer_id)
         except asyncio.CancelledError:
             pass  # expected when timer is updated
 
-    async def cancel_timer(self, timer_id: str) -> None:
+    def cancel_timer(self, timer_id: str) -> None:
         """Cancel a timer."""
         timer = self.timers.pop(timer_id, None)
         if timer is None:
@@ -272,9 +271,8 @@ class TimerManager:
 
         timer.cancel()
 
-        await asyncio.gather(
-            *(handler(TimerEventType.CANCELLED, timer) for handler in self.handlers)
-        )
+        for handler in self.handlers:
+            handler(TimerEventType.CANCELLED, timer)
 
         _LOGGER.debug(
             "Timer cancelled: id=%s, name=%s, seconds_left=%s, device_id=%s",
@@ -284,7 +282,7 @@ class TimerManager:
             timer.device_id,
         )
 
-    async def add_time(self, timer_id: str, seconds: int) -> None:
+    def add_time(self, timer_id: str, seconds: int) -> None:
         """Add time to a timer."""
         if seconds == 0:
             # Don't bother cancelling and recreating the timer task
@@ -303,15 +301,14 @@ class TimerManager:
                 name=f"Timer {timer_id}",
             )
 
-        await asyncio.gather(
-            *(handler(TimerEventType.UPDATED, timer) for handler in self.handlers)
-        )
+        for handler in self.handlers:
+            handler(TimerEventType.UPDATED, timer)
 
         if seconds > 0:
             log_verb = "increased"
             log_seconds = seconds
         else:
-            log_verb = "decrease"
+            log_verb = "decreased"
             log_seconds = -seconds
 
         _LOGGER.debug(
@@ -324,11 +321,11 @@ class TimerManager:
             timer.device_id,
         )
 
-    async def remove_time(self, timer_id: str, seconds: int) -> None:
+    def remove_time(self, timer_id: str, seconds: int) -> None:
         """Remove time from a timer."""
-        await self.add_time(timer_id, -seconds)
+        self.add_time(timer_id, -seconds)
 
-    async def pause_timer(self, timer_id: str) -> None:
+    def pause_timer(self, timer_id: str) -> None:
         """Pauses a timer."""
         timer = self.timers.get(timer_id)
         if timer is None:
@@ -342,9 +339,8 @@ class TimerManager:
         task = self.timer_tasks.pop(timer_id)
         task.cancel()
 
-        await asyncio.gather(
-            *(handler(TimerEventType.UPDATED, timer) for handler in self.handlers)
-        )
+        for handler in self.handlers:
+            handler(TimerEventType.UPDATED, timer)
 
         _LOGGER.debug(
             "Timer paused: id=%s, name=%s, seconds_left=%s, device_id=%s",
@@ -354,7 +350,7 @@ class TimerManager:
             timer.device_id,
         )
 
-    async def unpause_timer(self, timer_id: str) -> None:
+    def unpause_timer(self, timer_id: str) -> None:
         """Unpause a timer."""
         timer = self.timers.get(timer_id)
         if timer is None:
@@ -370,9 +366,8 @@ class TimerManager:
             name=f"Timer {timer.id}",
         )
 
-        await asyncio.gather(
-            *(handler(TimerEventType.UPDATED, timer) for handler in self.handlers)
-        )
+        for handler in self.handlers:
+            handler(TimerEventType.UPDATED, timer)
 
         _LOGGER.debug(
             "Timer unpaused: id=%s, name=%s, seconds_left=%s, device_id=%s",
@@ -382,14 +377,13 @@ class TimerManager:
             timer.device_id,
         )
 
-    async def _timer_finished(self, timer_id: str) -> None:
+    def _timer_finished(self, timer_id: str) -> None:
         """Call event handlers when a timer finishes."""
         timer = self.timers.pop(timer_id)
 
         timer.finish()
-        await asyncio.gather(
-            *(handler(TimerEventType.FINISHED, timer) for handler in self.handlers)
-        )
+        for handler in self.handlers:
+            handler(TimerEventType.FINISHED, timer)
 
         _LOGGER.debug(
             "Timer finished: id=%s, name=%s, device_id=%s",
@@ -581,6 +575,7 @@ def _find_timers(hass: HomeAssistant, slots: dict[str, Any]) -> list[TimerInfo]:
         return matching_timers
 
     def area_floor_sort(timer: TimerInfo) -> int:
+        """Sort by area, then floor."""
         if timer.area_id == area.id:
             return -2
 
@@ -645,7 +640,7 @@ class StartTimerIntentHandler(intent.IntentHandler):
         if "seconds" in slots:
             seconds = int(slots["seconds"]["value"])
 
-        await timer_manager.start_timer(
+        timer_manager.start_timer(
             hours,
             minutes,
             seconds,
@@ -674,7 +669,7 @@ class CancelTimerIntentHandler(intent.IntentHandler):
         slots = self.async_validate_slots(intent_obj.slots)
 
         timer = _find_timer(hass, slots)
-        await timer_manager.cancel_timer(timer.id)
+        timer_manager.cancel_timer(timer.id)
 
         return intent_obj.create_response()
 
@@ -698,7 +693,7 @@ class IncreaseTimerIntentHandler(intent.IntentHandler):
 
         total_seconds = _get_total_seconds(slots)
         timer = _find_timer(hass, slots)
-        await timer_manager.add_time(timer.id, total_seconds)
+        timer_manager.add_time(timer.id, total_seconds)
 
         return intent_obj.create_response()
 
@@ -722,7 +717,7 @@ class DecreaseTimerIntentHandler(intent.IntentHandler):
 
         total_seconds = _get_total_seconds(slots)
         timer = _find_timer(hass, slots)
-        await timer_manager.remove_time(timer.id, total_seconds)
+        timer_manager.remove_time(timer.id, total_seconds)
 
         return intent_obj.create_response()
 
@@ -744,7 +739,7 @@ class PauseTimerIntentHandler(intent.IntentHandler):
         slots = self.async_validate_slots(intent_obj.slots)
 
         timer = _find_timer(hass, slots)
-        await timer_manager.pause_timer(timer.id)
+        timer_manager.pause_timer(timer.id)
 
         return intent_obj.create_response()
 
@@ -766,7 +761,7 @@ class UnpauseTimerIntentHandler(intent.IntentHandler):
         slots = self.async_validate_slots(intent_obj.slots)
 
         timer = _find_timer(hass, slots)
-        await timer_manager.unpause_timer(timer.id)
+        timer_manager.unpause_timer(timer.id)
 
         return intent_obj.create_response()
 
