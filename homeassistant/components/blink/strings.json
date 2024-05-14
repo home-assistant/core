@@ -65,6 +65,10 @@
         }
       }
     },
+    "record": {
+      "name": "Record",
+      "description": "Requests camera to record a clip."
+    },
     "trigger_camera": {
       "name": "Trigger camera",
       "description": "Requests camera to take new image."
@@ -122,6 +126,9 @@
     },
     "failed_disarm": {
       "message": "Blink failed to disarm camera."
+    },
+    "failed_clip": {
+      "message": "Blink failed to record a clip."
     },
     "failed_snap": {
       "message": "Blink failed to snap a picture."

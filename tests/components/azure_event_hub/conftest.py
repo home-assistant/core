@@ -63,7 +63,7 @@ async def mock_entry_fixture(hass, filter_schema, mock_create_batch, mock_send_b
 
     yield entry
 
-    await entry.async_unload(hass)
+    await hass.config_entries.async_unload(entry.entry_id)
 
 
 # fixtures for init tests

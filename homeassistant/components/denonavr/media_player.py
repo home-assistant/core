@@ -177,7 +177,6 @@ def async_log_errors(
     async def wrapper(
         self: _DenonDeviceT, *args: _P.args, **kwargs: _P.kwargs
     ) -> _R | None:
-        # pylint: disable=protected-access
         available = True
         try:
             return await func(self, *args, **kwargs)
