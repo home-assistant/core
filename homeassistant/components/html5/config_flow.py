@@ -11,6 +11,7 @@ from py_vapid.utils import b64urlencode
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
@@ -68,6 +69,7 @@ class HTML5ConfigFlow(ConfigFlow, domain=DOMAIN):
                 ATTR_VAPID_EMAIL: data[ATTR_VAPID_EMAIL],
                 ATTR_VAPID_PRV_KEY: data[ATTR_VAPID_PRV_KEY],
                 ATTR_VAPID_PUB_KEY: data[ATTR_VAPID_PUB_KEY],
+                CONF_NAME: DOMAIN,
             }
             flow_result = self.async_create_entry(title="HTML5", data=config)
         return errors, flow_result
