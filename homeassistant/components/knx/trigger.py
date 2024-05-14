@@ -8,7 +8,7 @@ from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.address import DeviceGroupAddress, parse_device_group_address
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.const import CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -25,7 +25,6 @@ TRIGGER_TELEGRAM: Final = "telegram"
 PLATFORM_TYPE_TRIGGER_TELEGRAM: Final = f"{DOMAIN}.{TRIGGER_TELEGRAM}"
 
 CONF_KNX_DESTINATION: Final = "destination"
-CONF_KNX_TYPE: Final = "type"
 CONF_KNX_GROUP_VALUE_WRITE: Final = "group_value_write"
 CONF_KNX_GROUP_VALUE_READ: Final = "group_value_read"
 CONF_KNX_GROUP_VALUE_RESPONSE: Final = "group_value_response"
@@ -44,13 +43,13 @@ TELEGRAM_TRIGGER_SCHEMA: Final = {
         cv.ensure_list,
         [ga_validator],
     ),
-    vol.Optional(CONF_KNX_TYPE, default=None): vol.Any(sensor_type_validator, None),
     **TELEGRAM_TRIGGER_OPTIONS,
 }
-
+# TRIGGER_SCHEMA is exclusive to triggers, the above are used in device triggers too
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): PLATFORM_TYPE_TRIGGER_TELEGRAM,
+        vol.Optional(CONF_TYPE, default=None): vol.Any(sensor_type_validator, None),
         **TELEGRAM_TRIGGER_SCHEMA,
     }
 )
@@ -67,7 +66,7 @@ async def async_attach_trigger(
     dst_addresses: list[DeviceGroupAddress] = [
         parse_device_group_address(address) for address in _addresses
     ]
-    _transcoder = config.get(CONF_KNX_TYPE)
+    _transcoder = config.get(CONF_TYPE)
     trigger_transcoder = DPTBase.parse_transcoder(_transcoder) if _transcoder else None
 
     job = HassJob(action, f"KNX trigger {trigger_info}")
