@@ -339,7 +339,7 @@ def _add_reference_to_node_class(
     loader: LoaderType,
     node: yaml.nodes.Node,
 ) -> NodeDictClass | NodeListClass | NodeStrClass:
-    """Add file reference information to an node class object."""
+    """Add file reference information to a node class object."""
     try:  # suppress is much slower
         obj.__config_file__ = loader.get_name
         obj.__line__ = node.start_mark.line + 1
