@@ -671,20 +671,6 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=has
                 self.hass.config_entries.async_reload(self.config_entry.entry_id)
             )
 
-    async def get_prices(self, tibber_home: tibber.TibberHome) -> dict:
-        """Get price forecasts."""
-        data = tibber_home.info["viewer"]["home"]["currentSubscription"]["priceInfo"]
-
-        return [
-            {
-                "start_time": datetime.datetime.fromisoformat(price["startsAt"]),
-                "price": price["total"],
-                "level": price["level"],
-            }
-            for key in ("today", "tomorrow")
-            for price in data[key]
-        ]
-
     async def _insert_statistics(self) -> None:
         """Insert Tibber statistics."""
         for home in self._tibber_connection.get_homes():

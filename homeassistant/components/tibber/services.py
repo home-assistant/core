@@ -5,8 +5,9 @@ from __future__ import annotations
 import datetime as dt
 from datetime import date, datetime
 from functools import partial
-from typing import Final
+from typing import Any, Final
 
+import tibber
 import voluptuous as vol
 
 from homeassistant.core import (
@@ -20,7 +21,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .sensor import TibberDataCoordinator
 
 PRICE_SERVICE_NAME = "get_prices"
 ATTR_START: Final = "start"
@@ -36,10 +36,6 @@ SERVICE_SCHEMA: Final = vol.Schema(
 
 async def __get_prices(call: ServiceCall, *, hass: HomeAssistant) -> ServiceResponse:
     tibber_connection = hass.data[DOMAIN]
-    coordinator = TibberDataCoordinator(hass, tibber_connection)
-
-    for home in tibber_connection.get_homes(only_active=False):
-        tibber_home = home
 
     start = __get_date(call.data.get(ATTR_START), "start")
     end = __get_date(call.data.get(ATTR_END), "end")
@@ -47,26 +43,33 @@ async def __get_prices(call: ServiceCall, *, hass: HomeAssistant) -> ServiceResp
     if start >= end:
         end = start + dt.timedelta(days=1)
 
-    data = await coordinator.get_prices(tibber_home)
+    tibber_prices: dict[str, Any] = {}
 
-    selected_data = [
-        price
-        for price in data
-        if price["start_time"].replace(tzinfo=None) >= start
-        and price["start_time"].replace(tzinfo=None) < end
-    ]
+    for tibber_home in tibber_connection.get_homes(only_active=True):
+        home_nickname = (
+            tibber_home.info["viewer"]["home"]["appNickname"].replace('"', "").strip()
+        )
+        price_data = await get_prices(tibber_home)
 
-    return {"prices": selected_data}
+        selected_data = [
+            price
+            for price in price_data
+            if price["start_time"].replace(tzinfo=None) >= start
+            and price["start_time"].replace(tzinfo=None) < end
+        ]
+        tibber_prices[home_nickname] = selected_data
+
+    return {"prices": tibber_prices}
 
 
 def __get_date(date_input: str | None, mode: str | None) -> date | datetime:
     """Get date."""
     if not date_input:
         if mode == "end":
-            increment = dt.timedelta(days=1)
-        else:
-            increment = dt.timedelta()
-        return datetime.fromisoformat(dt_util.now().date().isoformat()) + increment
+            return datetime.fromisoformat(
+                dt_util.now().date().isoformat()
+            ) + dt.timedelta(days=1)
+        return datetime.fromisoformat(dt_util.now().date().isoformat())
 
     if value := dt_util.parse_datetime(date_input):
         return value
@@ -92,3 +95,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema=SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
+
+
+async def get_prices(tibber_home: tibber.TibberHome) -> dict:
+    """Get price forecasts."""
+    price_info = tibber_home.info["viewer"]["home"]["currentSubscription"]["priceInfo"]
+
+    return [
+        {
+            "start_time": dt.datetime.fromisoformat(price["startsAt"]),
+            "price": price["total"],
+            "level": price["level"],
+        }
+        for key in ("today", "tomorrow")
+        for price in price_info[key]
+    ]  # type: ignore[return-value]
