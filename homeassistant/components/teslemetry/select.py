@@ -24,7 +24,7 @@ HIGH = "high"
 
 @dataclass(frozen=True, kw_only=True)
 class SeatHeaterDescription(SelectEntityDescription):
-    """Seat Header entity description."""
+    """Seat Heater entity description."""
 
     position: Seat
     available_fn: Callable[[TeslemetrySeatHeaterSelectEntity], bool] = lambda _: True
