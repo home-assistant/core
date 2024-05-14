@@ -1,0 +1,10 @@
+{
+  "domain": "binary_sensor_as_x",
+  "name": "Change device type of a binary sensor",
+  "codeowners": ["@home-assistant/core", "@tetele"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/binary_sensor_as_x",
+  "integration_type": "helper",
+  "iot_class": "calculated",
+  "quality_scale": "internal"
+}
