@@ -1643,6 +1643,7 @@ omit =
     homeassistant/components/xbox/base_sensor.py
     homeassistant/components/xbox/binary_sensor.py
     homeassistant/components/xbox/browse_media.py
+    homeassistant/components/xbox/coordinator.py
     homeassistant/components/xbox/media_player.py
     homeassistant/components/xbox/remote.py
     homeassistant/components/xbox/sensor.py
