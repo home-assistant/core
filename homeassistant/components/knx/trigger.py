@@ -15,9 +15,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, SIGNAL_KNX_TELEGRAM_DICT
+from .const import DOMAIN
 from .schema import ga_validator
-from .telegrams import TelegramDict, decode_telegram_payload
+from .telegrams import SIGNAL_KNX_TELEGRAM, TelegramDict, decode_telegram_payload
 from .validation import sensor_type_validator
 
 TRIGGER_TELEGRAM: Final = "telegram"
@@ -113,6 +113,6 @@ async def async_attach_trigger(
 
     return async_dispatcher_connect(
         hass,
-        signal=SIGNAL_KNX_TELEGRAM_DICT,
+        signal=SIGNAL_KNX_TELEGRAM,
         target=async_call_trigger_action,
     )

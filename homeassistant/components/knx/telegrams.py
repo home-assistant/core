@@ -16,12 +16,16 @@ from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 import homeassistant.util.dt as dt_util
+from homeassistant.util.signal_type import SignalType
 
-from .const import DOMAIN, SIGNAL_KNX_TELEGRAM_DICT
+from .const import DOMAIN
 from .project import KNXProject
 
 STORAGE_VERSION: Final = 1
 STORAGE_KEY: Final = f"{DOMAIN}/telegrams_history.json"
+
+# dispatcher signal for KNX interface device triggers
+SIGNAL_KNX_TELEGRAM: SignalType[Telegram, TelegramDict] = SignalType("knx_telegram")
 
 
 class DecodedTelegramPayload(TypedDict):
@@ -95,9 +99,7 @@ class Telegrams:
         """Handle incoming and outgoing telegrams from xknx."""
         telegram_dict = self.telegram_to_dict(telegram)
         self.recent_telegrams.append(telegram_dict)
-        async_dispatcher_send(
-            self.hass, SIGNAL_KNX_TELEGRAM_DICT, telegram, telegram_dict
-        )
+        async_dispatcher_send(self.hass, SIGNAL_KNX_TELEGRAM, telegram, telegram_dict)
         for job in self._jobs:
             self.hass.async_run_hass_job(job, telegram_dict)
 
