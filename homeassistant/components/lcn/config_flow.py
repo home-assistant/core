@@ -28,7 +28,7 @@ from .helpers import purge_device_registry, purge_entity_registry
 
 _LOGGER = logging.getLogger(__name__)
 
-OPTIONS_DATA = {
+CONFIG_DATA = {
     vol.Required(CONF_IP_ADDRESS, default=""): str,
     vol.Required(CONF_PORT, default=4114): cv.positive_int,
     vol.Required(CONF_USERNAME, default=""): str,
@@ -37,9 +37,9 @@ OPTIONS_DATA = {
     vol.Required(CONF_DIM_MODE, default="STEPS200"): vol.In(DIM_MODES),
 }
 
-USER_DATA = {vol.Required(CONF_HOST, default="pchk"): str, **OPTIONS_DATA}
+USER_DATA = {vol.Required(CONF_HOST, default="pchk"): str, **CONFIG_DATA}
 
-OPTIONS_SCHEMA = vol.Schema(OPTIONS_DATA)
+CONFIG_SCHEMA = vol.Schema(CONFIG_DATA)
 USER_SCHEMA = vol.Schema(USER_DATA)
 
 
@@ -162,31 +162,27 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.ConfigFlowResult:
         """Reconfigure LCN configuration."""
         errors = None
-        config_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        assert config_entry
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert entry
 
         if user_input is not None:
-            user_input[CONF_HOST] = config_entry.data[CONF_HOST]
+            user_input[CONF_HOST] = entry.data[CONF_HOST]
 
-            await self.hass.config_entries.async_unload(config_entry.entry_id)
+            await self.hass.config_entries.async_unload(entry.entry_id)
             if (error := await validate_connection(user_input)) is not None:
                 errors = {CONF_BASE: error}
 
             if errors is None:
-                data = config_entry.data.copy()
+                data = entry.data.copy()
                 data.update(user_input)
-                self.hass.config_entries.async_update_entry(config_entry, data=data)
-                await self.hass.config_entries.async_setup(config_entry.entry_id)
+                self.hass.config_entries.async_update_entry(entry, data=data)
+                await self.hass.config_entries.async_setup(entry.entry_id)
                 return self.async_abort(reason="reconfigure_successful")
 
-            await self.hass.config_entries.async_setup(config_entry.entry_id)
+            await self.hass.config_entries.async_setup(entry.entry_id)
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=self.add_suggested_values_to_schema(
-                OPTIONS_SCHEMA, config_entry.data
-            ),
+            data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, entry.data),
             errors=errors or {},
         )
