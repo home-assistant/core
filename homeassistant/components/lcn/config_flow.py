@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -20,7 +19,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -107,14 +106,6 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
-        """Get options flow for this handler."""
-        return LcnOptionsFlowHandler(config_entry)
-
     async def async_step_import(
         self, data: ConfigType
     ) -> config_entries.ConfigFlowResult:
@@ -166,44 +157,36 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=data[CONF_HOST], data=data)
 
-
-class LcnOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle LCN options."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize LCN options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(
+    async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
-        """Manage the LCN options."""
+        """Reconfigure LCN configuration."""
         errors = None
-        if user_input is not None:
-            user_input[CONF_HOST] = self.config_entry.data[CONF_HOST]
+        config_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        assert config_entry
 
-            await self.hass.config_entries.async_unload(self.config_entry.entry_id)
+        if user_input is not None:
+            user_input[CONF_HOST] = config_entry.data[CONF_HOST]
+
+            await self.hass.config_entries.async_unload(config_entry.entry_id)
             if (error := await validate_connection(user_input)) is not None:
                 errors = {CONF_BASE: error}
 
-            # brief delay to allow host free up used license for validation
-            await asyncio.sleep(0.5)
-
             if errors is None:
-                data = self.config_entry.data.copy()
+                data = config_entry.data.copy()
                 data.update(user_input)
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry, data=data
-                )
-                await self.hass.config_entries.async_setup(self.config_entry.entry_id)
-                return self.async_create_entry(title="", data={})
+                self.hass.config_entries.async_update_entry(config_entry, data=data)
+                await self.hass.config_entries.async_setup(config_entry.entry_id)
+                return self.async_abort(reason="reconfigure_successful")
 
-            await self.hass.config_entries.async_setup(self.config_entry.entry_id)
+            await self.hass.config_entries.async_setup(config_entry.entry_id)
 
         return self.async_show_form(
-            step_id="init",
+            step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                OPTIONS_SCHEMA, self.config_entry.data
+                OPTIONS_SCHEMA, config_entry.data
             ),
             errors=errors or {},
         )
