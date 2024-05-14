@@ -8,6 +8,7 @@ from typing import Any
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, get_device_class
@@ -144,7 +145,7 @@ class BaseEntity(Entity):
     @callback
     def async_generate_entity_options(self) -> dict[str, Any]:
         """Generate entity options."""
-        return {"entity_id": self._binary_sensor_entity_id, "invert": False}
+        return {"entity_id": self._binary_sensor_entity_id}
 
 
 class BaseDeviceClassEntity(BaseEntity):
@@ -165,9 +166,13 @@ class BaseDeviceClassEntity(BaseEntity):
             hass, config_entry_title, domain, binary_sensor_entity_id, unique_id
         )
 
-        if device_class := get_device_class(hass, binary_sensor_entity_id):
-            if (
-                not self._accepted_device_classes
-                or device_class in self._accepted_device_classes
-            ):
-                self._attr_device_class = device_class
+        try:
+            # Don't fail if the entity doesn't exist
+            if device_class := get_device_class(hass, binary_sensor_entity_id):
+                if (
+                    not self._accepted_device_classes
+                    or device_class in self._accepted_device_classes
+                ):
+                    self._attr_device_class = device_class
+        except HomeAssistantError:
+            pass
