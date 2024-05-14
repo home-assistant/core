@@ -1424,21 +1424,21 @@ async def test_update_subentry_and_trigger_listener(
     entry.add_to_manager(manager)
     update_listener_calls = []
 
-    subentries = {"test": config_entries.ConfigSubentry({"test": "test"}, "Mock title")}
+    subentry = config_entries.ConfigSubentry({"test": "test"}, "test", "Mock title")
 
     async def update_listener(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
     ) -> None:
         """Test function."""
-        assert entry.subentries == subentries
+        assert entry.subentries == {subentry.subentry_id: subentry}
         update_listener_calls.append(None)
 
     entry.add_update_listener(update_listener)
 
-    assert manager.async_update_entry(entry, subentries=subentries) is True
+    assert manager.async_update_entry(entry, subentries=[subentry]) is True
 
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert entry.subentries == subentries
+    assert entry.subentries == {subentry.subentry_id: subentry}
     assert len(update_listener_calls) == 1
 
 
@@ -1781,10 +1781,12 @@ async def test_create_entry_subentries(
 
     subentrydata = config_entries.ConfigSubentryData(
         data={"test": "test"},
+        subentry_id="test",
         title="Mock title",
     )
     subentry = config_entries.ConfigSubentry(
         subentrydata["data"],
+        "test",
         subentrydata["title"],
     )
 
@@ -1818,7 +1820,7 @@ async def test_create_entry_subentries(
             return self.async_create_entry(
                 title="title",
                 data={"example": user_input["data"]},
-                subentries={"test": user_input["subentry"]},
+                subentries=[user_input["subentry"]],
             )
 
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
@@ -1877,7 +1879,9 @@ async def test_entry_subentry(
         assert entry.data == {"first": True}
         assert entry.options == {}
         assert entry.subentries == {
-            "test": config_entries.ConfigSubentry({"second": True}, "Mock title")
+            "test": config_entries.ConfigSubentry(
+                {"second": True}, "test", "Mock title"
+            )
         }
         assert entry.supports_subentries is True
 
@@ -1932,7 +1936,7 @@ async def test_entry_subentry_duplicate(
     entry = MockConfigEntry(
         domain="test",
         data={"first": True},
-        subentries={"test": {"data": {}, "title": "Mock title"}},
+        subentries=[{"data": {}, "subentry_id": "test", "title": "Mock title"}],
     )
     entry.add_to_manager(manager)
 
@@ -4234,26 +4238,23 @@ async def test_updating_entry_with_and_without_changes(
 
     assert manager.async_update_entry(entry) is False
 
-    for change in (
-        {"data": {"second": True, "third": 456}},
-        {"data": {"second": True}},
-        {"minor_version": 2},
-        {"options": {"hello": True}},
-        {"pref_disable_new_entities": True},
-        {"pref_disable_polling": True},
-        {
-            "subentries": {
-                "test": config_entries.ConfigSubentry({"test": "test"}, "Mock title")
-            }
-        },
-        {"title": "sometitle"},
-        {"unique_id": "abcd1234"},
-        {"version": 2},
+    subentry = config_entries.ConfigSubentry({"test": "test"}, "test", "Mock title")
+
+    for change, expected_value in (
+        ({"data": {"second": True, "third": 456}}, {"second": True, "third": 456}),
+        ({"data": {"second": True}}, {"second": True}),
+        ({"minor_version": 2}, 2),
+        ({"options": {"hello": True}}, {"hello": True}),
+        ({"pref_disable_new_entities": True}, True),
+        ({"pref_disable_polling": True}, True),
+        ({"subentries": [subentry]}, {subentry.subentry_id: subentry}),
+        ({"title": "sometitle"}, "sometitle"),
+        ({"unique_id": "abcd1234"}, "abcd1234"),
+        ({"version": 2}, 2),
     ):
         assert manager.async_update_entry(entry, **change) is True
         key = next(iter(change))
-        value = next(iter(change.values()))
-        assert getattr(entry, key) == value
+        assert getattr(entry, key) == expected_value
         assert manager.async_update_entry(entry, **change) is False
 
     assert manager.async_entry_for_domain_unique_id("test", "abc123") is None

@@ -592,7 +592,7 @@ async def test_create_account(hass: HomeAssistant, client: TestClient) -> None:
         "description_placeholders": None,
         "options": {},
         "minor_version": 1,
-        "subentries": {},
+        "subentries": [],
     }
 
 
@@ -677,7 +677,7 @@ async def test_two_step_flow(hass: HomeAssistant, client: TestClient) -> None:
             "description_placeholders": None,
             "options": {},
             "minor_version": 1,
-            "subentries": {},
+            "subentries": [],
         }
 
 
@@ -2766,11 +2766,11 @@ async def test_list_subentries(
     entry = MockConfigEntry(
         domain="test",
         state=core_ce.ConfigEntryState.LOADED,
-        subentries={
-            "test": core_ce.ConfigSubentryData(
-                data={"test": "test"}, title="Mock title"
+        subentries=[
+            core_ce.ConfigSubentryData(
+                data={"test": "test"}, subentry_id="test", title="Mock title"
             )
-        },
+        ],
     )
     entry.add_to_hass(hass)
 
@@ -2816,11 +2816,11 @@ async def test_delete_subentry(
     entry = MockConfigEntry(
         domain="test",
         state=core_ce.ConfigEntryState.LOADED,
-        subentries={
-            "test": core_ce.ConfigSubentryData(
-                data={"test": "test"}, title="Mock title"
+        subentries=[
+            core_ce.ConfigSubentryData(
+                data={"test": "test"}, subentry_id="test", title="Mock title"
             )
-        },
+        ],
     )
     entry.add_to_hass(hass)
 

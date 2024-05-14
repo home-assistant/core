@@ -1017,7 +1017,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
             "options": options or {},
             "pref_disable_new_entities": pref_disable_new_entities,
             "pref_disable_polling": pref_disable_polling,
-            "subentries": subentries or {},
+            "subentries": subentries or (),
             "title": title,
             "unique_id": unique_id,
             "version": version,
