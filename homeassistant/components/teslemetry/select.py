@@ -77,17 +77,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry select platform from a config entry."""
 
-    scoped = Scope.VEHICLE_CMDS in entry.runtime_data.scopes
-
     async_add_entities(
         chain(
             (
-                TeslemetrySeatHeaterSelectEntity(vehicle, description, scoped)
+                TeslemetrySeatHeaterSelectEntity(
+                    vehicle, description, entry.runtime_data.scopes
+                )
                 for description in SEAT_HEATER_DESCRIPTIONS
                 for vehicle in entry.runtime_data.vehicles
             ),
             (
-                TeslemetryWheelHeaterSelectEntity(vehicle, scoped)
+                TeslemetryWheelHeaterSelectEntity(vehicle, entry.runtime_data.scopes)
                 for vehicle in entry.runtime_data.vehicles
             ),
             (
@@ -121,11 +121,11 @@ class TeslemetrySeatHeaterSelectEntity(TeslemetryVehicleEntity, SelectEntity):
         self,
         data: TeslemetryVehicleData,
         description: SeatHeaterDescription,
-        scoped: bool,
+        scopes: list[Scope],
     ) -> None:
         """Initialize the vehicle seat select entity."""
         self.entity_description = description
-        self.scoped = scoped
+        self.scoped = Scope.VEHICLE_CMDS in scopes
         super().__init__(data, description.key)
 
     def _async_update_attrs(self) -> None:
@@ -164,10 +164,10 @@ class TeslemetryWheelHeaterSelectEntity(TeslemetryVehicleEntity, SelectEntity):
     def __init__(
         self,
         data: TeslemetryVehicleData,
-        scoped: bool,
+        scopes: list[Scope],
     ) -> None:
-        """Initialize the vehicle steering wheel select entity."""
-        self.scoped = scoped
+        """Initialize the vehicle seat select entity."""
+        self.scoped = Scope.VEHICLE_CMDS in scopes
         super().__init__(
             data,
             "climate_state_steering_wheel_heat_level",
