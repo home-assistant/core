@@ -266,10 +266,11 @@ class TimerManager:
         if timer is None:
             raise TimerNotFoundError
 
-        timer.cancel()
         if timer.is_active:
             task = self.timer_tasks.pop(timer_id)
             task.cancel()
+
+        timer.cancel()
 
         await asyncio.gather(
             *(handler(TimerEventType.CANCELLED, timer) for handler in self.handlers)
@@ -286,6 +287,7 @@ class TimerManager:
     async def add_time(self, timer_id: str, seconds: int) -> None:
         """Add time to a timer."""
         if seconds == 0:
+            # Don't bother cancelling and recreating the timer task
             return
 
         timer = self.timers.get(timer_id)
@@ -501,13 +503,6 @@ def _find_timer(hass: HomeAssistant, slots: dict[str, Any]) -> TimerInfo:
                 # Only 1 match remaining
                 return matching_floor_timers[0]
 
-    if has_filter and ("ordinal" in slots):
-        ordinal = int(slots["ordinal"]["value"])
-        if 0 <= ordinal < len(matching_timers):
-            # Sort by creation time
-            sorted_timers = sorted(matching_timers, key=lambda t: t.created_at)
-            return sorted_timers[ordinal]
-
     if matching_timers:
         raise MultipleTimersMatchedError
 
@@ -669,7 +664,6 @@ class CancelTimerIntentHandler(intent.IntentHandler):
     slot_schema = {
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
-        vol.Optional("ordinal"): cv.positive_int,
         vol.Optional("device_id"): cv.string,
     }
 
@@ -693,7 +687,6 @@ class IncreaseTimerIntentHandler(intent.IntentHandler):
         vol.Any("hours", "minutes", "seconds"): cv.positive_int,
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
-        vol.Optional("ordinal"): cv.positive_int,
         vol.Optional("device_id"): cv.string,
     }
 
@@ -718,7 +711,6 @@ class DecreaseTimerIntentHandler(intent.IntentHandler):
         vol.Required(vol.Any("hours", "minutes", "seconds")): cv.positive_int,
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
-        vol.Optional("ordinal"): cv.positive_int,
         vol.Optional("device_id"): cv.string,
     }
 
@@ -742,7 +734,6 @@ class PauseTimerIntentHandler(intent.IntentHandler):
     slot_schema = {
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
-        vol.Optional("ordinal"): cv.positive_int,
         vol.Optional("device_id"): cv.string,
     }
 
@@ -765,7 +756,6 @@ class UnpauseTimerIntentHandler(intent.IntentHandler):
     slot_schema = {
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
-        vol.Optional("ordinal"): cv.positive_int,
         vol.Optional("device_id"): cv.string,
     }
 
@@ -788,7 +778,6 @@ class TimerStatusIntentHandler(intent.IntentHandler):
     slot_schema = {
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
-        vol.Optional("ordinal"): cv.positive_int,
         vol.Optional("device_id"): cv.string,
     }
 

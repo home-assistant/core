@@ -12,7 +12,7 @@ from homeassistant.components.intent.timers import (
     TimerNotFoundError,
     async_register_timer_handler,
 )
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -25,10 +25,14 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 
-async def test_start_finish_timer(hass: HomeAssistant) -> None:
-    """Test starting a timer and having it finish."""
+@pytest.fixture
+async def init_components(hass: HomeAssistant) -> None:
+    """Initialize required components for tests."""
     assert await async_setup_component(hass, "intent", {})
 
+
+async def test_start_finish_timer(hass: HomeAssistant, init_components) -> None:
+    """Test starting a timer and having it finish."""
     device_id = "test_device"
     timer_name = "test timer"
     started_event = asyncio.Event()
@@ -72,10 +76,8 @@ async def test_start_finish_timer(hass: HomeAssistant) -> None:
         await asyncio.gather(started_event.wait(), finished_event.wait())
 
 
-async def test_cancel_timer(hass: HomeAssistant) -> None:
+async def test_cancel_timer(hass: HomeAssistant, init_components) -> None:
     """Test cancelling a timer."""
-    assert await async_setup_component(hass, "intent", {})
-
     device_id = "test_device"
     timer_name: str | None = None
     started_event = asyncio.Event()
@@ -176,10 +178,8 @@ async def test_cancel_timer(hass: HomeAssistant) -> None:
         await cancelled_event.wait()
 
 
-async def test_increase_timer(hass: HomeAssistant) -> None:
+async def test_increase_timer(hass: HomeAssistant, init_components) -> None:
     """Test increasing the time of a running timer."""
-    assert await async_setup_component(hass, "intent", {})
-
     device_id = "test_device"
     started_event = asyncio.Event()
     updated_event = asyncio.Event()
@@ -271,10 +271,8 @@ async def test_increase_timer(hass: HomeAssistant) -> None:
         await cancelled_event.wait()
 
 
-async def test_decrease_timer(hass: HomeAssistant) -> None:
+async def test_decrease_timer(hass: HomeAssistant, init_components) -> None:
     """Test decreasing the time of a running timer."""
-    assert await async_setup_component(hass, "intent", {})
-
     device_id = "test_device"
     started_event = asyncio.Event()
     updated_event = asyncio.Event()
@@ -367,10 +365,8 @@ async def test_decrease_timer(hass: HomeAssistant) -> None:
         await cancelled_event.wait()
 
 
-async def test_decrease_timer_below_zero(hass: HomeAssistant) -> None:
+async def test_decrease_timer_below_zero(hass: HomeAssistant, init_components) -> None:
     """Test decreasing the time of a running timer below 0 seconds."""
-    assert await async_setup_component(hass, "intent", {})
-
     started_event = asyncio.Event()
     updated_event = asyncio.Event()
     finished_event = asyncio.Event()
@@ -445,10 +441,8 @@ async def test_decrease_timer_below_zero(hass: HomeAssistant) -> None:
         )
 
 
-async def test_find_timer_failed(hass: HomeAssistant) -> None:
+async def test_find_timer_failed(hass: HomeAssistant, init_components) -> None:
     """Test finding a timer with the wrong info."""
-    assert await async_setup_component(hass, "intent", {})
-
     # Start a 5 minute timer for pizza
     result = await intent.async_handle(
         hass,
@@ -497,13 +491,12 @@ async def test_find_timer_failed(hass: HomeAssistant) -> None:
 
 async def test_disambiguation(
     hass: HomeAssistant,
+    init_components,
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     floor_registry: fr.FloorRegistry,
 ) -> None:
     """Test finding a timer by disambiguating with area/floor."""
-    assert await async_setup_component(hass, "intent", {})
-
     entry = MockConfigEntry()
     entry.add_to_hass(hass)
 
@@ -723,10 +716,8 @@ async def test_disambiguation(
     assert timer_info.start_minutes == 3
 
 
-async def test_pause_unpause_timer(hass: HomeAssistant) -> None:
+async def test_pause_unpause_timer(hass: HomeAssistant, init_components) -> None:
     """Test pausing and unpausing a running timer."""
-    assert await async_setup_component(hass, "intent", {})
-
     started_event = asyncio.Event()
     updated_event = asyncio.Event()
 
@@ -767,55 +758,6 @@ async def test_pause_unpause_timer(hass: HomeAssistant) -> None:
         await updated_event.wait()
 
 
-async def test_ordinal(hass: HomeAssistant) -> None:
-    """Test targeting a timer by the order it was set."""
-    assert await async_setup_component(hass, "intent", {})
-
-    started_event = asyncio.Event()
-    cancelled_event = asyncio.Event()
-
-    timer_ids: list[str] = []
-    ordinal = 1
-
-    async def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
-        if event_type == TimerEventType.STARTED:
-            timer_ids.append(timer.id)
-            started_event.set()
-        elif event_type == TimerEventType.CANCELLED:
-            cancelled_event.set()
-
-    async_register_timer_handler(hass, handle_timer)
-
-    # Set three 5 minute timers
-    for _ in range(3):
-        started_event.clear()
-        result = await intent.async_handle(
-            hass, "test", intent.INTENT_START_TIMER, {"minutes": {"value": 5}}
-        )
-        assert result.response_type == intent.IntentResponseType.ACTION_DONE
-
-        async with asyncio.timeout(1):
-            await started_event.wait()
-
-    # Cancelling "the" 5 minute timer is ambiguous
-    with pytest.raises(MultipleTimersMatchedError):
-        await intent.async_handle(
-            hass, "test", intent.INTENT_CANCEL_TIMER, {"start_minutes": {"value": 5}}
-        )
-
-    # Cancel the second 5 minute timer
-    result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_CANCEL_TIMER,
-        {"start_minutes": {"value": 5}, "ordinal": {"value": ordinal}},
-    )
-    assert result.response_type == intent.IntentResponseType.ACTION_DONE
-
-    async with asyncio.timeout(1):
-        await cancelled_event.wait()
-
-
 async def test_timer_not_found(hass: HomeAssistant) -> None:
     """Test invalid timer ids raise TimerNotFoundError."""
     timer_manager = TimerManager(hass)
@@ -834,3 +776,75 @@ async def test_timer_not_found(hass: HomeAssistant) -> None:
 
     with pytest.raises(TimerNotFoundError):
         await timer_manager.unpause_timer("does-not-exist")
+
+
+async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> None:
+    """Test getting the status of named timers."""
+    started_event = asyncio.Event()
+    num_started = 0
+
+    async def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+        nonlocal num_started
+
+        if event_type == TimerEventType.STARTED:
+            num_started += 1
+            if num_started == 3:
+                started_event.set()
+
+    async_register_timer_handler(hass, handle_timer)
+
+    # Start three timers with names
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_START_TIMER,
+        {"name": {"value": "pizza"}, "minutes": {"value": 10}},
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_START_TIMER,
+        {"name": {"value": "pizza"}, "minutes": {"value": 15}},
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_START_TIMER,
+        {"name": {"value": "cookies"}, "minutes": {"value": 20}},
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    # Wait for all timers to start
+    async with asyncio.timeout(1):
+        await started_event.wait()
+
+    # Get status of cookie timer
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_TIMER_STATUS,
+        {"name": {"value": "cookies"}},
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+    timers = result.speech_slots.get("timers", [])
+    assert len(timers) == 1
+    assert timers[0].get(ATTR_NAME) == "cookies"
+    assert timers[0].get("start_minutes") == 20
+
+    # Get status of pizza timers
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_TIMER_STATUS,
+        {"name": {"value": "pizza"}},
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+    timers = result.speech_slots.get("timers", [])
+    assert len(timers) == 2
+    assert timers[0].get(ATTR_NAME) == "pizza"
+    assert timers[1].get(ATTR_NAME) == "pizza"
+    assert {timers[0].get("start_minutes"), timers[1].get("start_minutes")} == {10, 15}
