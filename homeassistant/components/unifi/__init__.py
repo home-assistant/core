@@ -14,7 +14,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DOMAIN as UNIFI_DOMAIN, PLATFORMS, UNIFI_WIRELESS_CLIENTS
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import UnifiHub, get_unifi_api
-from .services import async_setup_services, async_unload_services
+from .services import async_setup_services
 
 UnifiConfigEntry = ConfigEntry[UnifiHub]
 
@@ -27,6 +27,8 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(UNIFI_DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Integration doesn't support configuration through configuration.yaml."""
+    async_setup_services(hass)
+
     hass.data[UNIFI_WIRELESS_CLIENTS] = wireless_clients = UnifiWirelessClients(hass)
     await wireless_clients.async_load()
 
@@ -55,9 +57,6 @@ async def async_setup_entry(
     hub.async_update_device_registry()
     hub.entity_loader.load_entities()
 
-    if len(hass.data[UNIFI_DOMAIN]) == 1:
-        async_setup_services(hass)
-
     hub.websocket.start()
 
     config_entry.async_on_unload(
@@ -71,9 +70,6 @@ async def async_unload_entry(
     hass: HomeAssistant, config_entry: UnifiConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    if not hass.data[UNIFI_DOMAIN]:
-        async_unload_services(hass)
-
     return await config_entry.runtime_data.async_reset()
 
 
