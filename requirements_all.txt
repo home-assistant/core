@@ -2813,6 +2813,9 @@ velbus-aio==2024.4.1
 # homeassistant.components.venstar
 venstarcolortouch==0.19
 
+# homeassistant.components.viam
+viam-sdk==0.17.0
+
 # homeassistant.components.vilfo
 vilfo-api-client==0.5.0
 

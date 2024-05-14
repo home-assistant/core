@@ -1,0 +1,8 @@
+{
+  "services": {
+    "capture_image": "mdi:camera",
+    "capture_data": "mdi:data-matrix",
+    "get_classifications": "mdi:cctv",
+    "get_detections": "mdi:cctv"
+  }
+}
