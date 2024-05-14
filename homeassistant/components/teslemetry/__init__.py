@@ -120,6 +120,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
     )
 
+    # Add energy device models
+    for energysite in energysites:
+        models = set()
+        for gateway in energysite.info_coordinator.data.get("components_gateways", []):
+            if gateway.get("part_name"):
+                models.add(gateway["part_name"])
+        for battery in energysite.info_coordinator.data.get("components_batteries", []):
+            if battery.get("part_name"):
+                models.add(battery["part_name"])
+        if models:
+            energysite.device["model"] = ", ".join(models)
+
     # Setup Platforms
     entry.runtime_data = TeslemetryData(vehicles, energysites, scopes)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
