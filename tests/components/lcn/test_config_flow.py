@@ -23,7 +23,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-OPTIONS_DATA = {
+CONFIG_DATA = {
     CONF_IP_ADDRESS: "127.0.0.1",
     CONF_PORT: 1234,
     CONF_USERNAME: "lcn",
@@ -32,7 +32,7 @@ OPTIONS_DATA = {
     CONF_DIM_MODE: "STEPS200",
 }
 
-CONNECTION_DATA = {CONF_HOST: "pchk", **OPTIONS_DATA}
+CONNECTION_DATA = {CONF_HOST: "pchk", **CONFIG_DATA}
 
 IMPORT_DATA = {
     **CONNECTION_DATA,
@@ -173,27 +173,31 @@ async def test_step_user_error(hass, error, errors):
         assert result["errors"] == errors
 
 
-async def test_options_flow(hass, entry):
-    """Test config flow options."""
+async def test_step_reconfigure(hass, entry):
+    """Test for reconfigure step."""
     entry.add_to_hass(hass)
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    user_input = OPTIONS_DATA.copy()
+    old_entry_data = entry.data.copy()
 
     with (
         patch("pypck.connection.PchkConnectionManager.async_connect"),
         patch("homeassistant.components.lcn.async_setup", return_value=True),
         patch("homeassistant.components.lcn.async_setup_entry", return_value=True),
     ):
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input=user_input
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_RECONFIGURE,
+                "entry_id": entry.entry_id,
+            },
+            data=CONFIG_DATA.copy(),
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert all(value == entry.data[key] for key, value in user_input.items())
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+
+        entry = hass.config_entries.async_get_entry(entry.entry_id)
+        assert entry.title == CONNECTION_DATA[CONF_HOST]
+        assert entry.data == {**old_entry_data, **CONFIG_DATA}
 
 
 @pytest.mark.parametrize(
@@ -204,25 +208,24 @@ async def test_options_flow(hass, entry):
         (TimeoutError, {CONF_BASE: "connection_refused"}),
     ],
 )
-async def test_options_flow_errors(hass, entry, error, errors):
-    """Test config flow options."""
+async def test_step_reconfigure_error(hass, entry, error, errors):
+    """Test for error in reconfigure step is handled correctly."""
     entry.add_to_hass(hass)
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    user_input = OPTIONS_DATA.copy()
-
     with patch(
         "pypck.connection.PchkConnectionManager.async_connect", side_effect=error
     ):
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input=user_input
+        data = {**CONNECTION_DATA, CONF_HOST: "pchk"}
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_RECONFIGURE,
+                "entry_id": entry.entry_id,
+            },
+            data=data,
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["errors"] == errors
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["errors"] == errors
 
 
 async def test_validate_connection():
