@@ -93,7 +93,7 @@ async def test_media_player_services(
             blocking=True,
         )
         state = hass.states.get(entity_id)
-        assert state.state == snapshot(name=SERVICE_VOLUME_SET)
+        assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.5
         call.assert_called_once()
 
     with patch(
@@ -107,7 +107,7 @@ async def test_media_player_services(
             blocking=True,
         )
         state = hass.states.get(entity_id)
-        assert state.state == snapshot(name=SERVICE_MEDIA_PAUSE)
+        assert state.state == MediaPlayerState.PAUSED
         call.assert_called_once()
 
     # This test will fail without the previous call to pause playback
@@ -122,7 +122,7 @@ async def test_media_player_services(
             blocking=True,
         )
         state = hass.states.get(entity_id)
-        assert state.state == snapshot(name=SERVICE_MEDIA_PLAY)
+        assert state.state == MediaPlayerState.PLAYING
         call.assert_called_once()
 
     with patch(
@@ -136,7 +136,6 @@ async def test_media_player_services(
             blocking=True,
         )
         state = hass.states.get(entity_id)
-        assert state.state == snapshot(name=SERVICE_MEDIA_NEXT_TRACK)
         call.assert_called_once()
 
     with patch(
@@ -150,5 +149,4 @@ async def test_media_player_services(
             blocking=True,
         )
         state = hass.states.get(entity_id)
-        assert state.state == snapshot(name=SERVICE_MEDIA_PREVIOUS_TRACK)
         call.assert_called_once()

@@ -111,18 +111,3 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_media_player_services[media_next_track]
-  'playing'
-# ---
-# name: test_media_player_services[media_pause]
-  'paused'
-# ---
-# name: test_media_player_services[media_play]
-  'playing'
-# ---
-# name: test_media_player_services[media_previous_track]
-  'playing'
-# ---
-# name: test_media_player_services[volume_set]
-  'playing'
-# ---
