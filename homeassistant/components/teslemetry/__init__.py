@@ -30,6 +30,7 @@ PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.LOCK,
+    Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
