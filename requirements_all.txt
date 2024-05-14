@@ -1803,7 +1803,7 @@ pyeconet==0.1.22
 pyedimax==0.2.1
 
 # homeassistant.components.efergy
-pyefergy==22.1.1
+pyefergy==22.5.0
 
 # homeassistant.components.energenie_power_sockets
 pyegps==0.2.5
