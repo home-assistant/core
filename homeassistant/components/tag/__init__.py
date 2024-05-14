@@ -136,7 +136,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if change_type == collection.CHANGE_UPDATED:
             # When tags are changed or updated in storage
-            if entities[updated_config[TAG_ID]]._last_scanned != updated_config.get(  # pylint: disable=protected-access
+            if entities[updated_config[TAG_ID]]._last_scanned != updated_config.get(  # noqa: SLF001
                 LAST_SCANNED
             ):
                 entities[updated_config[TAG_ID]].async_handle_event(
