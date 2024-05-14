@@ -148,7 +148,7 @@ class ApSystemsSensorWithDescription(CoordinatorEntity, SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Get the DeviceInfo."""
         return DeviceInfo(
-            identifiers={("apsystems_local", self._device_id)},
+            identifiers={("apsystems", self._device_id)},
             name=self._device_name,
             serial_number=self._device_id,
             manufacturer="APsystems",

@@ -81,10 +81,10 @@ omit =
     homeassistant/components/aprilaire/climate.py
     homeassistant/components/aprilaire/coordinator.py
     homeassistant/components/aprilaire/entity.py
-    homeassistant/components/apsystems_local/__init__.py
-    homeassistant/components/apsystems_local/const.py
-    homeassistant/components/apsystems_local/coordinator.py
-    homeassistant/components/apsystems_local/sensor.py
+    homeassistant/components/apsystems/__init__.py
+    homeassistant/components/apsystems/const.py
+    homeassistant/components/apsystems/coordinator.py
+    homeassistant/components/apsystems/sensor.py
     homeassistant/components/aqualogic/*
     homeassistant/components/aquostv/media_player.py
     homeassistant/components/arcam_fmj/__init__.py

@@ -3,4 +3,4 @@
 from logging import Logger, getLogger
 
 LOGGER: Logger = getLogger(__package__)
-DOMAIN = "apsystems_local"
+DOMAIN = "apsystems"

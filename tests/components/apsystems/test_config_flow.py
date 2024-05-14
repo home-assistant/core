@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant import config_entries
-from homeassistant.components.apsystems_local.const import DOMAIN
+from homeassistant.components.apsystems.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
@@ -18,7 +18,7 @@ async def test_form_cannot_connect_and_recover(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(
-        "homeassistant.components.apsystems_local.config_flow.APsystemsEZ1M",
+        "homeassistant.components.apsystems.config_flow.APsystemsEZ1M",
         return_value=AsyncMock(),
     ) as mock_api:
         mock_api.side_effect = TimeoutError
@@ -37,7 +37,7 @@ async def test_form_cannot_connect_and_recover(
     # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
     # we can show the config flow is able to recover from an error.
     with patch(
-        "homeassistant.components.apsystems_local.config_flow.APsystemsEZ1M",
+        "homeassistant.components.apsystems.config_flow.APsystemsEZ1M",
         return_value=AsyncMock(),
     ) as mock_api:
         ret_data = MagicMock()
@@ -60,7 +60,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, mock_setup_entry) -> Non
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(
-        "homeassistant.components.apsystems_local.config_flow.APsystemsEZ1M",
+        "homeassistant.components.apsystems.config_flow.APsystemsEZ1M",
         return_value=AsyncMock(),
     ) as mock_api:
         mock_api.side_effect = TimeoutError
@@ -79,7 +79,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, mock_setup_entry) -> Non
 async def test_form_create_success(hass: HomeAssistant, mock_setup_entry) -> None:
     """Test we handle creatinw with success."""
     with patch(
-        "homeassistant.components.apsystems_local.config_flow.APsystemsEZ1M",
+        "homeassistant.components.apsystems.config_flow.APsystemsEZ1M",
         return_value=AsyncMock(),
     ) as mock_api:
         ret_data = MagicMock()

@@ -408,7 +408,7 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
-    "apsystems_local": {
+    "apsystems": {
       "name": "APsystems",
       "integration_type": "hub",
       "config_flow": true,
