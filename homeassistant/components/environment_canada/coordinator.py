@@ -9,7 +9,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN
 
-
 _LOGGER = logging.getLogger(__name__)
 
 
