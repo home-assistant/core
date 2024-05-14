@@ -35,11 +35,9 @@ TELEGRAM_TRIGGER_OPTIONS: Final = {
     vol.Optional(CONF_KNX_OUTGOING, default=True): cv.boolean,
 }
 TELEGRAM_TRIGGER_SCHEMA: Final = {
-    vol.Optional(CONF_KNX_DESTINATION): vol.Maybe(
-        vol.All(
-            cv.ensure_list,
-            [ga_validator],
-        )
+    vol.Optional(CONF_KNX_DESTINATION): vol.All(
+        cv.ensure_list,
+        [ga_validator],
     ),
     **TELEGRAM_TRIGGER_OPTIONS,
 }
@@ -59,11 +57,7 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for telegrams based on configuration."""
-    _addresses: list[str] | None = config.get(CONF_KNX_DESTINATION, [])
-    if _addresses is None:
-        # no-op if CONF_KNX_DESTINATION is explicitly set to `None`
-        return lambda: None
-
+    _addresses: list[str] = config.get(CONF_KNX_DESTINATION, [])
     dst_addresses: list[DeviceGroupAddress] = [
         parse_device_group_address(address) for address in _addresses
     ]
