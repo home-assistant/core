@@ -29,6 +29,7 @@ from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_POLLING, DOMAIN, LOGGER
 
@@ -80,6 +81,12 @@ class AbodeSystem:
     logout_listener: CALLBACK_TYPE | None = None
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Abode component."""
+    setup_hass_services(hass)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Abode integration from a config entry."""
     username = entry.data[CONF_USERNAME]
@@ -108,7 +115,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     await setup_hass_events(hass)
-    await hass.async_add_executor_job(setup_hass_services, hass)
     await hass.async_add_executor_job(setup_abode_events, hass)
 
     return True
@@ -116,10 +122,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.services.async_remove(DOMAIN, SERVICE_SETTINGS)
-    hass.services.async_remove(DOMAIN, SERVICE_CAPTURE_IMAGE)
-    hass.services.async_remove(DOMAIN, SERVICE_TRIGGER_AUTOMATION)
-
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     await hass.async_add_executor_job(hass.data[DOMAIN].abode.events.stop)
@@ -172,15 +174,15 @@ def setup_hass_services(hass: HomeAssistant) -> None:
             signal = f"abode_trigger_automation_{entity_id}"
             dispatcher_send(hass, signal)
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_SETTINGS, change_setting, schema=CHANGE_SETTING_SCHEMA
     )
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_CAPTURE_IMAGE, capture_image, schema=CAPTURE_IMAGE_SCHEMA
     )
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_TRIGGER_AUTOMATION, trigger_automation, schema=AUTOMATION_SCHEMA
     )
 
