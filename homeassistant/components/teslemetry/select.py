@@ -89,6 +89,10 @@ async def async_setup_entry(
                 for vehicle in entry.runtime_data.vehicles
             ),
             (
+                TeslemetryWheelHeaterSelectEntity(vehicle, scoped)
+                for vehicle in entry.runtime_data.vehicles
+            ),
+            (
                 TeslemetryOperationSelectEntity(energysite, entry.runtime_data.scopes)
                 for energysite in entry.runtime_data.energysites
                 if energysite.info_coordinator.data.get("components_battery")

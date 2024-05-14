@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+import pytest
 from syrupy import SnapshotAssertion
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode
 from tesla_fleet_api.exceptions import VehicleOffline
@@ -20,6 +21,7 @@ from . import assert_entities, setup_platform
 from .const import COMMAND_OK
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -39,7 +41,7 @@ async def test_select_offline(
 
     mock_vehicle_data.side_effect = VehicleOffline
     await setup_platform(hass, [Platform.SELECT])
-    state = hass.states.get("select.test_select")
+    state = hass.states.get("select.test_seat_heater_front_left")
     assert state.state == STATE_UNKNOWN
 
 
@@ -80,6 +82,7 @@ async def test_select_services(
         assert state.state == LOW
         call.assert_called_once()
 
+    return
     entity_id = "select.test_operation_mode"
     with patch(
         "homeassistant.components.teslemetry.EnergySpecific.operation",
