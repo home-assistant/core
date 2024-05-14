@@ -1,7 +1,5 @@
 """Linear garage door light."""
 
-from datetime import timedelta
-import math
 from typing import Any
 
 from linear_garage_door import Linear
@@ -15,8 +13,6 @@ from .const import DOMAIN
 from .coordinator import LinearUpdateCoordinator
 from .entity import LinearEntity
 
-SCAN_INTERVAL = timedelta(seconds=60)
-PARALLEL_UPDATES = 0
 SUPPORTED_SUBDEVICES = ["Light"]
 
 
@@ -57,7 +53,7 @@ class LinearLightEntity(LinearEntity, LightEntity):
     @property
     def brightness(self) -> int | None:
         """Return the brightness of the light."""
-        return int(int(self.sub_device["On_P"]) / 100 * 255)
+        return round(int(self.sub_device["On_P"]) / 100 * 255)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
@@ -67,7 +63,7 @@ class LinearLightEntity(LinearEntity, LightEntity):
             if not kwargs:
                 await linear.operate_device(self._device_id, self._sub_device_id, "On")
             elif ATTR_BRIGHTNESS in kwargs:
-                brightness = math.floor((kwargs[ATTR_BRIGHTNESS] / 255) * 100)
+                brightness = round((kwargs[ATTR_BRIGHTNESS] / 255) * 100)
                 await linear.operate_device(
                     self._device_id, self._sub_device_id, f"DimPercent:{brightness}"
                 )
