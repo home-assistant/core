@@ -15,6 +15,7 @@ from homeassistant.components.html5.issues import (
     FAILED_IMPORT_TRANSLATION_KEY,
     SUCCESSFUL_IMPORT_TRANSLATION_KEY,
 )
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.issue_registry as ir
 
@@ -45,6 +46,7 @@ async def test_step_user_success(hass: HomeAssistant) -> None:
             ATTR_VAPID_PRV_KEY: MOCK_CONF[ATTR_VAPID_PRV_KEY],
             ATTR_VAPID_PUB_KEY: MOCK_CONF_PUB_KEY,
             ATTR_VAPID_EMAIL: MOCK_CONF[ATTR_VAPID_EMAIL],
+            CONF_NAME: DOMAIN,
         }
 
         assert mock_setup_entry.call_count == 1
@@ -155,6 +157,7 @@ async def test_step_import_good(
             ATTR_VAPID_PRV_KEY: conf[ATTR_VAPID_PRV_KEY],
             ATTR_VAPID_PUB_KEY: MOCK_CONF_PUB_KEY,
             ATTR_VAPID_EMAIL: conf[ATTR_VAPID_EMAIL],
+            CONF_NAME: DOMAIN,
         }
 
         assert mock_setup_entry.call_count == 1
