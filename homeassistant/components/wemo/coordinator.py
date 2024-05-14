@@ -88,7 +88,7 @@ class Options:
             )
 
 
-class DeviceCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
+class DeviceCoordinator(DataUpdateCoordinator[None]):
     """Home Assistant wrapper for a pyWeMo device."""
 
     options: Options | None = None
@@ -142,6 +142,8 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-en
 
     async def async_shutdown(self) -> None:
         """Unregister push subscriptions and remove from coordinators dict."""
+        if self._shutdown_requested:
+            return
         await super().async_shutdown()
         if TYPE_CHECKING:
             # mypy doesn't known that the device_id is set in async_setup.

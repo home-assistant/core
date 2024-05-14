@@ -1079,7 +1079,7 @@ async def merge_packages_config(
                 pack_name,
                 None,
                 config,
-                f"Invalid package definition '{pack_name}': {str(exc)}. Package "
+                f"Invalid package definition '{pack_name}': {exc!s}. Package "
                 f"will not be initialized",
             )
             invalid_packages.append(pack_name)
@@ -1107,7 +1107,7 @@ async def merge_packages_config(
                     pack_name,
                     comp_name,
                     config,
-                    f"Integration {comp_name} caused error: {str(exc)}",
+                    f"Integration {comp_name} caused error: {exc!s}",
                 )
                 continue
             except INTEGRATION_LOAD_EXCEPTIONS as exc:
@@ -1673,7 +1673,9 @@ async def async_process_component_config(
             validated_config
             for validated_config in await asyncio.gather(
                 *(
-                    create_eager_task(async_load_and_validate(p_integration))
+                    create_eager_task(
+                        async_load_and_validate(p_integration), loop=hass.loop
+                    )
                     for p_integration in platform_integrations_to_load
                 )
             )

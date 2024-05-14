@@ -1090,3 +1090,35 @@ async def test_same_aliased_entities_in_different_areas(
         hass, "how many lights are on?", None, Context(), None
     )
     assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER
+
+
+async def test_device_id_in_handler(hass: HomeAssistant, init_components) -> None:
+    """Test that the default agent passes device_id to intent handler."""
+    device_id = "test_device"
+
+    # Reuse custom sentences in test config to trigger default agent.
+    class OrderBeerIntentHandler(intent.IntentHandler):
+        intent_type = "OrderBeer"
+
+        def __init__(self) -> None:
+            super().__init__()
+            self.device_id: str | None = None
+
+        async def async_handle(
+            self, intent_obj: intent.Intent
+        ) -> intent.IntentResponse:
+            self.device_id = intent_obj.device_id
+            return intent_obj.create_response()
+
+    handler = OrderBeerIntentHandler()
+    intent.async_register(hass, handler)
+
+    result = await conversation.async_converse(
+        hass,
+        "I'd like to order a stout please",
+        None,
+        Context(),
+        device_id=device_id,
+    )
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert handler.device_id == device_id
