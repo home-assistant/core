@@ -486,8 +486,7 @@ class KodiEntity(MediaPlayerEntity):
             if not self._connection.can_subscribe:
                 self._reset_state()
                 return
-            else:
-                raise
+            raise
 
         if self._kodi_is_off:
             self._reset_state()
