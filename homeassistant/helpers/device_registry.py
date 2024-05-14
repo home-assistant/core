@@ -38,6 +38,7 @@ from .deprecation import (
 from .frame import report
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
 from .registry import BaseRegistry, BaseRegistryItems
+from .singleton import singleton
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -682,27 +683,27 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # Reconstruct a DeviceInfo dict from the arguments.
         # When we upgrade to Python 3.12, we can change this method to instead
         # accept kwargs typed as a DeviceInfo dict (PEP 692)
-        device_info: DeviceInfo = {}
-        for key, val in (
-            ("configuration_url", configuration_url),
-            ("connections", connections),
-            ("default_manufacturer", default_manufacturer),
-            ("default_model", default_model),
-            ("default_name", default_name),
-            ("entry_type", entry_type),
-            ("hw_version", hw_version),
-            ("identifiers", identifiers),
-            ("manufacturer", manufacturer),
-            ("model", model),
-            ("name", name),
-            ("serial_number", serial_number),
-            ("suggested_area", suggested_area),
-            ("sw_version", sw_version),
-            ("via_device", via_device),
-        ):
-            if val is UNDEFINED:
-                continue
-            device_info[key] = val  # type: ignore[literal-required]
+        device_info: DeviceInfo = {  # type: ignore[assignment]
+            key: val
+            for key, val in (
+                ("configuration_url", configuration_url),
+                ("connections", connections),
+                ("default_manufacturer", default_manufacturer),
+                ("default_model", default_model),
+                ("default_name", default_name),
+                ("entry_type", entry_type),
+                ("hw_version", hw_version),
+                ("identifiers", identifiers),
+                ("manufacturer", manufacturer),
+                ("model", model),
+                ("name", name),
+                ("serial_number", serial_number),
+                ("suggested_area", suggested_area),
+                ("sw_version", sw_version),
+                ("via_device", via_device),
+            )
+            if val is not UNDEFINED
+        }
 
         device_info_type = _validate_device_info(config_entry, device_info)
 
@@ -905,7 +906,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if not new_values:
             return old
 
-        self.hass.verify_event_loop_thread("async_update_device")
+        self.hass.verify_event_loop_thread("device_registry.async_update_device")
         new = attr.evolve(old, **new_values)
         self.devices[device_id] = new
 
@@ -932,7 +933,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     @callback
     def async_remove_device(self, device_id: str) -> None:
         """Remove a device from the device registry."""
-        self.hass.verify_event_loop_thread("async_remove_device")
+        self.hass.verify_event_loop_thread("device_registry.async_remove_device")
         device = self.devices.pop(device_id)
         self.deleted_devices[device_id] = DeletedDeviceEntry(
             config_entries=device.config_entries,
@@ -1077,16 +1078,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
 
 @callback
+@singleton(DATA_REGISTRY)
 def async_get(hass: HomeAssistant) -> DeviceRegistry:
     """Get device registry."""
-    return hass.data[DATA_REGISTRY]
+    return DeviceRegistry(hass)
 
 
 async def async_load(hass: HomeAssistant) -> None:
     """Load device registry."""
     assert DATA_REGISTRY not in hass.data
-    hass.data[DATA_REGISTRY] = DeviceRegistry(hass)
-    await hass.data[DATA_REGISTRY].async_load()
+    await async_get(hass).async_load()
 
 
 @callback

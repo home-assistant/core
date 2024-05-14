@@ -92,9 +92,7 @@ async def test_binary_sensor_setup_no_notify(
     caplog.set_level(logging.INFO)
 
     def raise_notification_error(self, port, callback, direction):
-        raise NumatoGpioError(
-            f"{repr(self)} Mockup device doesn't support notifications."
-        )
+        raise NumatoGpioError(f"{self!r} Mockup device doesn't support notifications.")
 
     with patch.object(
         NumatoModuleMock.NumatoDeviceMock,

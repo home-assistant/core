@@ -56,6 +56,8 @@ build.json @home-assistant/supervisor
 /tests/components/agent_dvr/ @ispysoftware
 /homeassistant/components/air_quality/ @home-assistant/core
 /tests/components/air_quality/ @home-assistant/core
+/homeassistant/components/airgradient/ @airgradienthq @joostlek
+/tests/components/airgradient/ @airgradienthq @joostlek
 /homeassistant/components/airly/ @bieniu
 /tests/components/airly/ @bieniu
 /homeassistant/components/airnow/ @asymworks
@@ -867,6 +869,8 @@ build.json @home-assistant/supervisor
 /tests/components/moehlenhoff_alpha2/ @j-a-n
 /homeassistant/components/monoprice/ @etsinko @OnFreund
 /tests/components/monoprice/ @etsinko @OnFreund
+/homeassistant/components/monzo/ @jakemartin-icl
+/tests/components/monzo/ @jakemartin-icl
 /homeassistant/components/moon/ @fabaff @frenck
 /tests/components/moon/ @fabaff @frenck
 /homeassistant/components/mopeka/ @bdraco
@@ -1361,8 +1365,8 @@ build.json @home-assistant/supervisor
 /tests/components/switchbee/ @jafar-atili
 /homeassistant/components/switchbot/ @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski
 /tests/components/switchbot/ @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski
-/homeassistant/components/switchbot_cloud/ @SeraphicRav
-/tests/components/switchbot_cloud/ @SeraphicRav
+/homeassistant/components/switchbot_cloud/ @SeraphicRav @laurence-presland
+/tests/components/switchbot_cloud/ @SeraphicRav @laurence-presland
 /homeassistant/components/switcher_kis/ @thecode
 /tests/components/switcher_kis/ @thecode
 /homeassistant/components/switchmate/ @danielhiversen @qiz-li
@@ -1519,6 +1523,8 @@ build.json @home-assistant/supervisor
 /tests/components/version/ @ludeeus
 /homeassistant/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja
 /tests/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja
+/homeassistant/components/viam/ @hipsterbrown
+/tests/components/viam/ @hipsterbrown
 /homeassistant/components/vicare/ @CFenner
 /tests/components/vicare/ @CFenner
 /homeassistant/components/vilfo/ @ManneW

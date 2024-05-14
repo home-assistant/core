@@ -18,6 +18,7 @@ from .normalized_name_base_registry import (
     normalize_name,
 )
 from .registry import BaseRegistry
+from .singleton import singleton
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
@@ -120,6 +121,7 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
         description: str | None = None,
     ) -> LabelEntry:
         """Create a new label."""
+        self.hass.verify_event_loop_thread("label_registry.async_create")
         if label := self.async_get_label_by_name(name):
             raise ValueError(
                 f"The name {name} ({label.normalized_name}) is already in use"
@@ -138,7 +140,7 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
         label_id = label.label_id
         self.labels[label_id] = label
         self.async_schedule_save()
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_LABEL_REGISTRY_UPDATED,
             EventLabelRegistryUpdatedData(
                 action="create",
@@ -150,8 +152,9 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
     @callback
     def async_delete(self, label_id: str) -> None:
         """Delete label."""
+        self.hass.verify_event_loop_thread("label_registry.async_delete")
         del self.labels[label_id]
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_LABEL_REGISTRY_UPDATED,
             EventLabelRegistryUpdatedData(
                 action="remove",
@@ -189,10 +192,11 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
         if not changes:
             return old
 
+        self.hass.verify_event_loop_thread("label_registry.async_update")
         new = self.labels[label_id] = dataclasses.replace(old, **changes)  # type: ignore[arg-type]
 
         self.async_schedule_save()
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_LABEL_REGISTRY_UPDATED,
             EventLabelRegistryUpdatedData(
                 action="update",
@@ -240,13 +244,13 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
 
 
 @callback
+@singleton(DATA_REGISTRY)
 def async_get(hass: HomeAssistant) -> LabelRegistry:
     """Get label registry."""
-    return hass.data[DATA_REGISTRY]
+    return LabelRegistry(hass)
 
 
 async def async_load(hass: HomeAssistant) -> None:
     """Load label registry."""
     assert DATA_REGISTRY not in hass.data
-    hass.data[DATA_REGISTRY] = LabelRegistry(hass)
-    await hass.data[DATA_REGISTRY].async_load()
+    await async_get(hass).async_load()

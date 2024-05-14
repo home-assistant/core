@@ -18,6 +18,7 @@ from .normalized_name_base_registry import (
     normalize_name,
 )
 from .registry import BaseRegistry
+from .singleton import singleton
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
@@ -203,7 +204,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         picture: str | None = None,
     ) -> AreaEntry:
         """Create a new area."""
-        self.hass.verify_event_loop_thread("async_create")
+        self.hass.verify_event_loop_thread("area_registry.async_create")
         normalized_name = normalize_name(name)
 
         if self.async_get_area_by_name(name):
@@ -232,7 +233,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
     @callback
     def async_delete(self, area_id: str) -> None:
         """Delete area."""
-        self.hass.verify_event_loop_thread("async_delete")
+        self.hass.verify_event_loop_thread("area_registry.async_delete")
         device_registry = dr.async_get(self.hass)
         entity_registry = er.async_get(self.hass)
         device_registry.async_clear_area_id(area_id)
@@ -313,7 +314,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         if not new_values:
             return old
 
-        self.hass.verify_event_loop_thread("_async_update")
+        self.hass.verify_event_loop_thread("area_registry.async_update")
         new = self.areas[area_id] = dataclasses.replace(old, **new_values)  # type: ignore[arg-type]
 
         self.async_schedule_save()
@@ -417,16 +418,16 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
 
 
 @callback
+@singleton(DATA_REGISTRY)
 def async_get(hass: HomeAssistant) -> AreaRegistry:
     """Get area registry."""
-    return hass.data[DATA_REGISTRY]
+    return AreaRegistry(hass)
 
 
 async def async_load(hass: HomeAssistant) -> None:
     """Load area registry."""
     assert DATA_REGISTRY not in hass.data
-    hass.data[DATA_REGISTRY] = AreaRegistry(hass)
-    await hass.data[DATA_REGISTRY].async_load()
+    await async_get(hass).async_load()
 
 
 @callback

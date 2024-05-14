@@ -93,6 +93,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "airgradient": {
+      "name": "Airgradient",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "airly": {
       "name": "Airly",
       "integration_type": "service",
@@ -302,7 +308,7 @@
       "name": "Anova",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_push"
     },
     "anthemav": {
       "name": "Anthem A/V Receivers",
@@ -1809,7 +1815,7 @@
     "file": {
       "name": "File",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "filesize": {
@@ -3738,6 +3744,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "monzo": {
+      "name": "Monzo",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "moon": {
       "integration_type": "service",
@@ -6583,6 +6595,12 @@
       "name": "Trenitalia ViaggiaTreno",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "cloud_polling"
+    },
+    "viam": {
+      "name": "Viam",
+      "integration_type": "hub",
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "vicare": {
