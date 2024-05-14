@@ -96,11 +96,11 @@ async def test_telegram_trigger(
 
 
 @pytest.mark.parametrize(
-    ("payload", "dpt_option", "expected_value", "expected_unit"),
+    ("payload", "type_option", "expected_value", "expected_unit"),
     [
-        ((0x4C,), {"dpt": "percent"}, 30, "%"),
+        ((0x4C,), {"type": "percent"}, 30, "%"),
         ((0x03,), {}, None, None),  # "dpt" omitted defaults to None
-        ((0x0C, 0x1A), {"dpt": "temperature"}, 21.00, "°C"),
+        ((0x0C, 0x1A), {"type": "temperature"}, 21.00, "°C"),
     ],
 )
 async def test_telegram_trigger_dpt_option(
@@ -108,11 +108,11 @@ async def test_telegram_trigger_dpt_option(
     calls: list[ServiceCall],
     knx: KNXTestKit,
     payload: tuple[int, ...],
-    dpt_option: dict[str, bool],
+    type_option: dict[str, bool],
     expected_value: int | None,
     expected_unit: str | None,
 ) -> None:
-    """Test telegram trigger dpt option."""
+    """Test telegram trigger type option."""
     await knx.setup_integration({})
     assert await async_setup_component(
         hass,
@@ -123,7 +123,7 @@ async def test_telegram_trigger_dpt_option(
                 {
                     "trigger": {
                         "platform": "knx.telegram",
-                        **dpt_option,
+                        **type_option,
                     },
                     "action": {
                         "service": "test.automation",

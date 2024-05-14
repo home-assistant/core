@@ -25,7 +25,7 @@ TRIGGER_TELEGRAM: Final = "telegram"
 PLATFORM_TYPE_TRIGGER_TELEGRAM: Final = f"{DOMAIN}.{TRIGGER_TELEGRAM}"
 
 CONF_KNX_DESTINATION: Final = "destination"
-CONF_KNX_DPT: Final = "dpt"
+CONF_KNX_TYPE: Final = "type"
 CONF_KNX_GROUP_VALUE_WRITE: Final = "group_value_write"
 CONF_KNX_GROUP_VALUE_READ: Final = "group_value_read"
 CONF_KNX_GROUP_VALUE_RESPONSE: Final = "group_value_response"
@@ -44,7 +44,7 @@ TELEGRAM_TRIGGER_SCHEMA: Final = {
         cv.ensure_list,
         [ga_validator],
     ),
-    vol.Optional(CONF_KNX_DPT, default=None): vol.Any(sensor_type_validator, None),
+    vol.Optional(CONF_KNX_TYPE, default=None): vol.Any(sensor_type_validator, None),
     **TELEGRAM_TRIGGER_OPTIONS,
 }
 
@@ -67,7 +67,7 @@ async def async_attach_trigger(
     dst_addresses: list[DeviceGroupAddress] = [
         parse_device_group_address(address) for address in _addresses
     ]
-    _transcoder = config.get(CONF_KNX_DPT)
+    _transcoder = config.get(CONF_KNX_TYPE)
     trigger_transcoder = DPTBase.parse_transcoder(_transcoder) if _transcoder else None
 
     job = HassJob(action, f"KNX trigger {trigger_info}")
