@@ -800,7 +800,7 @@ google-nest-sdm==3.0.4
 googlemaps==2.5.1
 
 # homeassistant.components.tailwind
-gotailwind==0.2.2
+gotailwind==0.2.3
 
 # homeassistant.components.govee_ble
 govee-ble==0.31.2
