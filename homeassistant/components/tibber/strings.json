@@ -95,7 +95,7 @@
         },
         "end": {
           "name": "End",
-          "description": "Specifies the date and time until which to retrieve prices. Defaults to today if omitted."
+          "description": "Specifies the date and time until which to retrieve prices. Defaults to the last hour of today if omitted."
         }
       }
     }

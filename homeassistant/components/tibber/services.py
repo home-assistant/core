@@ -7,7 +7,6 @@ from datetime import date, datetime
 from functools import partial
 from typing import Any, Final
 
-import tibber
 import voluptuous as vol
 
 from homeassistant.core import (
@@ -47,7 +46,19 @@ async def __get_prices(call: ServiceCall, *, hass: HomeAssistant) -> ServiceResp
 
     for tibber_home in tibber_connection.get_homes(only_active=True):
         home_nickname = tibber_home.name
-        price_data = await get_prices(tibber_home)
+
+        price_info = tibber_home.info["viewer"]["home"]["currentSubscription"][
+            "priceInfo"
+        ]
+        price_data = [
+            {
+                "start_time": dt.datetime.fromisoformat(price["startsAt"]),
+                "price": price["total"],
+                "level": price["level"],
+            }
+            for key in ("today", "tomorrow")
+            for price in price_info[key]
+        ]
 
         selected_data = [
             price
@@ -93,18 +104,3 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema=SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
-
-
-async def get_prices(tibber_home: tibber.TibberHome) -> dict:
-    """Get price forecasts."""
-    price_info = tibber_home.info["viewer"]["home"]["currentSubscription"]["priceInfo"]
-
-    return [
-        {
-            "start_time": dt.datetime.fromisoformat(price["startsAt"]),
-            "price": price["total"],
-            "level": price["level"],
-        }
-        for key in ("today", "tomorrow")
-        for price in price_info[key]
-    ]  # type: ignore[return-value]
