@@ -4858,7 +4858,7 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "rainforest": {
+    "rainforest_automation": {
       "name": "Rainforest Automation",
       "integrations": {
         "rainforest_eagle": {
