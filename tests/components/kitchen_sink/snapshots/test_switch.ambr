@@ -7,6 +7,7 @@
     'context': <ANY>,
     'entity_id': 'switch.outlet_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -96,7 +97,7 @@
     }),
     'manufacturer': None,
     'model': None,
-    'name': '2CH Power strip',
+    'name': 'Power strip with 2 sockets',
     'name_by_user': None,
     'serial_number': None,
     'suggested_area': None,
@@ -112,6 +113,7 @@
     'context': <ANY>,
     'entity_id': 'switch.outlet_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -201,7 +203,7 @@
     }),
     'manufacturer': None,
     'model': None,
-    'name': '2CH Power strip',
+    'name': 'Power strip with 2 sockets',
     'name_by_user': None,
     'serial_number': None,
     'suggested_area': None,

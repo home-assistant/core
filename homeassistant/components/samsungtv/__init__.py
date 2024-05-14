@@ -1,4 +1,5 @@
 """The Samsung TV integration."""
+
 from __future__ import annotations
 
 from collections.abc import Coroutine, Mapping
@@ -52,6 +53,8 @@ from .const import (
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+
+SamsungTVConfigEntry = ConfigEntry[SamsungTVBridge]
 
 
 @callback
@@ -122,10 +125,8 @@ async def _async_update_ssdp_locations(hass: HomeAssistant, entry: ConfigEntry) 
         hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) -> bool:
     """Set up the Samsung TV platform."""
-    hass.data.setdefault(DOMAIN, {})
-
     # Initialize bridge
     if entry.data.get(CONF_METHOD) == METHOD_ENCRYPTED_WEBSOCKET:
         if not entry.data.get(CONF_TOKEN) or not entry.data.get(CONF_SESSION_ID):
@@ -160,7 +161,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(debounced_reloader.async_shutdown)
     entry.async_on_unload(entry.add_update_listener(debounced_reloader.async_call))
 
-    hass.data[DOMAIN][entry.entry_id] = bridge
+    entry.runtime_data = bridge
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -249,11 +250,11 @@ async def _async_create_bridge_with_updated_data(
     return bridge
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        bridge: SamsungTVBridge = hass.data[DOMAIN][entry.entry_id]
+        bridge = entry.runtime_data
         LOGGER.debug("Stopping SamsungTVBridge %s", bridge.host)
         await bridge.async_close_remote()
     return unload_ok

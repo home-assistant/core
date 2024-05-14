@@ -1,4 +1,5 @@
 """Errors for the UniFi Network integration."""
+
 from homeassistant.exceptions import HomeAssistantError
 
 

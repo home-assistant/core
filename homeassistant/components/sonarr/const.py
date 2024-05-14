@@ -1,4 +1,5 @@
 """Constants for Sonarr."""
+
 import logging
 
 DOMAIN = "sonarr"

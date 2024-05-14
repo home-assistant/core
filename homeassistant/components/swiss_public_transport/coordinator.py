@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for the swiss_public_transport integration."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -13,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, SENSOR_CONNECTIONS_COUNT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,19 +23,29 @@ class DataConnection(TypedDict):
     """A connection data class."""
 
     departure: datetime | None
-    next_departure: str | None
-    next_on_departure: str | None
-    duration: str
+    next_departure: datetime | None
+    next_on_departure: datetime | None
+    duration: int | None
     platform: str
     remaining_time: str
     start: str
     destination: str
     train_number: str
-    transfers: str
+    transfers: int
     delay: int
 
 
-class SwissPublicTransportDataUpdateCoordinator(DataUpdateCoordinator[DataConnection]):
+def calculate_duration_in_seconds(duration_text: str) -> int | None:
+    """Transform and calculate the duration into seconds."""
+    # Transform 01d03:21:23 into 01 days 03:21:23
+    duration_text_pg_format = duration_text.replace("d", " days ")
+    duration = dt_util.parse_duration(duration_text_pg_format)
+    return duration.seconds if duration else None
+
+
+class SwissPublicTransportDataUpdateCoordinator(
+    DataUpdateCoordinator[list[DataConnection]]
+):
     """A SwissPublicTransport Data Update Coordinator."""
 
     config_entry: ConfigEntry
@@ -49,7 +60,22 @@ class SwissPublicTransportDataUpdateCoordinator(DataUpdateCoordinator[DataConnec
         )
         self._opendata = opendata
 
-    async def _async_update_data(self) -> DataConnection:
+    def remaining_time(self, departure) -> timedelta | None:
+        """Calculate the remaining time for the departure."""
+        departure_datetime = dt_util.parse_datetime(departure)
+
+        if departure_datetime:
+            return departure_datetime - dt_util.as_local(dt_util.utcnow())
+        return None
+
+    def nth_departure_time(self, i: int) -> datetime | None:
+        """Get nth departure time."""
+        connections = self._opendata.connections
+        if len(connections) > i and connections[i] is not None:
+            return dt_util.parse_datetime(connections[i]["departure"])
+        return None
+
+    async def _async_update_data(self) -> list[DataConnection]:
         try:
             await self._opendata.async_get_data()
         except OpendataTransportError as e:
@@ -58,41 +84,21 @@ class SwissPublicTransportDataUpdateCoordinator(DataUpdateCoordinator[DataConnec
             )
             raise UpdateFailed from e
 
-        departure_time = (
-            dt_util.parse_datetime(self._opendata.connections[0]["departure"])
-            if self._opendata.connections[0] is not None
-            else None
-        )
-        next_departure_time = (
-            dt_util.parse_datetime(self._opendata.connections[1]["departure"])
-            if self._opendata.connections[1] is not None
-            else None
-        )
-        next_on_departure_time = (
-            dt_util.parse_datetime(self._opendata.connections[2]["departure"])
-            if self._opendata.connections[2] is not None
-            else None
-        )
-
-        if departure_time:
-            remaining_time = departure_time - dt_util.as_local(dt_util.utcnow())
-        else:
-            remaining_time = None
-
-        return DataConnection(
-            departure=departure_time,
-            next_departure=next_departure_time.isoformat()
-            if next_departure_time is not None
-            else None,
-            next_on_departure=next_on_departure_time.isoformat()
-            if next_on_departure_time is not None
-            else None,
-            train_number=self._opendata.connections[0]["number"],
-            platform=self._opendata.connections[0]["platform"],
-            transfers=self._opendata.connections[0]["transfers"],
-            duration=self._opendata.connections[0]["duration"],
-            start=self._opendata.from_name,
-            destination=self._opendata.to_name,
-            remaining_time=f"{remaining_time}",
-            delay=self._opendata.connections[0]["delay"],
-        )
+        connections = self._opendata.connections
+        return [
+            DataConnection(
+                departure=self.nth_departure_time(i),
+                next_departure=self.nth_departure_time(i + 1),
+                next_on_departure=self.nth_departure_time(i + 2),
+                train_number=connections[i]["number"],
+                platform=connections[i]["platform"],
+                transfers=connections[i]["transfers"],
+                duration=calculate_duration_in_seconds(connections[i]["duration"]),
+                start=self._opendata.from_name,
+                destination=self._opendata.to_name,
+                remaining_time=str(self.remaining_time(connections[i]["departure"])),
+                delay=connections[i]["delay"],
+            )
+            for i in range(SENSOR_CONNECTIONS_COUNT)
+            if len(connections) > i and connections[i] is not None
+        ]

@@ -1,4 +1,5 @@
 """The Matter integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -45,7 +46,10 @@ def get_matter_device_info(
     hass: HomeAssistant, device_id: str
 ) -> MatterDeviceInfo | None:
     """Return Matter device info or None if device does not exist."""
-    if not (node := node_from_ha_device_id(hass, device_id)):
+    # Test hass.data[DOMAIN] to ensure config entry is set up
+    if not hass.data.get(DOMAIN, False) or not (
+        node := node_from_ha_device_id(hass, device_id)
+    ):
         return None
 
     return MatterDeviceInfo(
@@ -149,7 +153,7 @@ async def _client_listen(
         if entry.state != ConfigEntryState.LOADED:
             raise
         LOGGER.error("Failed to listen: %s", err)
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         # We need to guard against unknown exceptions to not crash this task.
         LOGGER.exception("Unexpected exception: %s", err)
         if entry.state != ConfigEntryState.LOADED:

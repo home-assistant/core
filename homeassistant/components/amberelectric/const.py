@@ -1,4 +1,5 @@
 """Amber Electric Constants."""
+
 import logging
 
 from homeassistant.const import Platform

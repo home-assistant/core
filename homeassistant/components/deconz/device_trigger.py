@@ -1,4 +1,5 @@
 """Provides device automations for deconz events."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -30,7 +31,7 @@ from .deconz_event import (
     DeconzPresenceEvent,
     DeconzRelativeRotaryEvent,
 )
-from .gateway import DeconzGateway
+from .hub import DeconzHub
 
 CONF_SUBTYPE = "subtype"
 
@@ -655,9 +656,9 @@ def _get_deconz_event_from_device(
     device: dr.DeviceEntry,
 ) -> DeconzAlarmEvent | DeconzEvent | DeconzPresenceEvent | DeconzRelativeRotaryEvent:
     """Resolve deconz event from device."""
-    gateways: dict[str, DeconzGateway] = hass.data.get(DOMAIN, {})
-    for gateway in gateways.values():
-        for deconz_event in gateway.events:
+    hubs: dict[str, DeconzHub] = hass.data.get(DOMAIN, {})
+    for hub in hubs.values():
+        for deconz_event in hub.events:
             if device.id == deconz_event.device_id:
                 return deconz_event
 

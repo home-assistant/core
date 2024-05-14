@@ -1,4 +1,5 @@
 """Support for MQTT climate devices."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -271,12 +272,12 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_FAN_MODE_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_HUMIDITY_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_HUMIDITY_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_HUMIDITY_MIN, default=DEFAULT_MIN_HUMIDITY): vol.Coerce(
-            float
-        ),
-        vol.Optional(CONF_HUMIDITY_MAX, default=DEFAULT_MAX_HUMIDITY): vol.Coerce(
-            float
-        ),
+        vol.Optional(
+            CONF_HUMIDITY_MIN, default=DEFAULT_MIN_HUMIDITY
+        ): cv.positive_float,
+        vol.Optional(
+            CONF_HUMIDITY_MAX, default=DEFAULT_MAX_HUMIDITY
+        ): cv.positive_float,
         vol.Optional(CONF_HUMIDITY_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_HUMIDITY_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
@@ -455,7 +456,7 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
         except ValueError:
             _LOGGER.error("Could not parse %s from %s", template_name, payload)
 
-    def prepare_subscribe_topics(  # noqa: C901
+    def prepare_subscribe_topics(
         self,
         topics: dict[str, dict[str, Any]],
     ) -> None:
@@ -660,15 +661,12 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             self._optimistic or CONF_PRESET_MODE_STATE_TOPIC not in config
         )
 
-        value_templates: dict[str, Template | None] = {}
-        for key in VALUE_TEMPLATE_KEYS:
-            value_templates[key] = None
-        if CONF_VALUE_TEMPLATE in config:
-            value_templates = {
-                key: config.get(CONF_VALUE_TEMPLATE) for key in VALUE_TEMPLATE_KEYS
-            }
-        for key in VALUE_TEMPLATE_KEYS & config.keys():
-            value_templates[key] = config[key]
+        value_templates: dict[str, Template | None] = {
+            key: config.get(CONF_VALUE_TEMPLATE) for key in VALUE_TEMPLATE_KEYS
+        }
+        value_templates.update(
+            {key: config[key] for key in VALUE_TEMPLATE_KEYS & config.keys()}
+        )
         self._value_templates = {
             key: MqttValueTemplate(
                 template,
@@ -677,11 +675,10 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             for key, template in value_templates.items()
         }
 
-        self._command_templates = {}
-        for key in COMMAND_TEMPLATE_KEYS:
-            self._command_templates[key] = MqttCommandTemplate(
-                config.get(key), entity=self
-            ).async_render
+        self._command_templates = {
+            key: MqttCommandTemplate(config.get(key), entity=self).async_render
+            for key in COMMAND_TEMPLATE_KEYS
+        }
 
         support = ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
         if (self._topic[CONF_TEMP_STATE_TOPIC] is not None) or (
@@ -717,7 +714,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
 
         self._attr_supported_features = support
 
-    def _prepare_subscribe_topics(self) -> None:  # noqa: C901
+    def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         topics: dict[str, dict[str, Any]] = {}
 
@@ -868,7 +865,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             await self.async_set_hvac_mode(operation_mode)
         await super().async_set_temperature(**kwargs)
 
-    async def async_set_humidity(self, humidity: int) -> None:
+    async def async_set_humidity(self, humidity: float) -> None:
         """Set new target humidity."""
 
         await self._set_climate_attribute(

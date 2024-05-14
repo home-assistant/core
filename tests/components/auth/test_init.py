@@ -1,4 +1,5 @@
 """Integration tests for the auth component."""
+
 from datetime import timedelta
 from http import HTTPStatus
 import logging
@@ -560,11 +561,15 @@ async def test_ws_delete_all_refresh_tokens_error(
         "message": "During removal, an error was raised.",
     }
 
-    assert (
-        "homeassistant.components.auth",
-        logging.ERROR,
-        "During refresh token removal, the following error occurred: I'm bad",
-    ) in caplog.record_tuples
+    records = [
+        record
+        for record in caplog.records
+        if record.msg == "Error during refresh token removal"
+    ]
+    assert len(records) == 1
+    assert records[0].levelno == logging.ERROR
+    assert records[0].exc_info and str(records[0].exc_info[1]) == "I'm bad"
+    assert records[0].name == "homeassistant.components.auth"
 
     for token in tokens:
         refresh_token = hass.auth.async_get_refresh_token(token["id"])

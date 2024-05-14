@@ -1,9 +1,10 @@
 """Decorators for the Websocket API."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from functools import wraps
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -24,7 +25,7 @@ async def _handle_async_response(
     """Create a response and handle exception."""
     try:
         await func(hass, connection, msg)
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         connection.async_handle_exception(msg, err)
 
 
@@ -62,7 +63,7 @@ def require_admin(func: const.WebSocketCommandHandler) -> const.WebSocketCommand
         user = connection.user
 
         if user is None or not user.is_admin:
-            raise Unauthorized()
+            raise Unauthorized
 
         func(hass, connection, msg)
 
@@ -136,25 +137,28 @@ def websocket_command(
     The schema must be either a dictionary where the keys are voluptuous markers, or
     a voluptuous.All schema where the first item is a voluptuous Mapping schema.
     """
-    if isinstance(schema, dict):
+    if is_dict := isinstance(schema, dict):
         command = schema["type"]
     else:
         command = schema.validators[0].schema["type"]
 
     def decorate(func: const.WebSocketCommandHandler) -> const.WebSocketCommandHandler:
         """Decorate ws command function."""
-        # pylint: disable=protected-access
-        if isinstance(schema, dict):
-            func._ws_schema = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend(schema)  # type: ignore[attr-defined]
+        if is_dict and len(schema) == 1:  # type only empty schema
+            func._ws_schema = False  # type: ignore[attr-defined]  # noqa: SLF001
+        elif is_dict:
+            func._ws_schema = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend(schema)  # type: ignore[attr-defined]  # noqa: SLF001
         else:
+            if TYPE_CHECKING:
+                assert not isinstance(schema, dict)
             extended_schema = vol.All(
                 schema.validators[0].extend(
                     messages.BASE_COMMAND_MESSAGE_SCHEMA.schema
                 ),
                 *schema.validators[1:],
             )
-            func._ws_schema = extended_schema  # type: ignore[attr-defined]
-        func._ws_command = command  # type: ignore[attr-defined]
+            func._ws_schema = extended_schema  # type: ignore[attr-defined]  # noqa: SLF001
+        func._ws_command = command  # type: ignore[attr-defined]  # noqa: SLF001
         return func
 
     return decorate

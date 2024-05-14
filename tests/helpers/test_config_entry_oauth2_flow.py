@@ -1,4 +1,5 @@
 """Tests for the Somfy config flow."""
+
 from http import HTTPStatus
 import logging
 import time
@@ -89,7 +90,7 @@ class MockOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implementa
 
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh a token."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 def test_inherit_enforces_domain_set() -> None:
@@ -103,9 +104,10 @@ def test_inherit_enforces_domain_set() -> None:
             """Return logger."""
             return logging.getLogger(__name__)
 
-    with patch.dict(
-        config_entries.HANDLERS, {TEST_DOMAIN: TestFlowHandler}
-    ), pytest.raises(TypeError):
+    with (
+        patch.dict(config_entries.HANDLERS, {TEST_DOMAIN: TestFlowHandler}),
+        pytest.raises(TypeError),
+    ):
         TestFlowHandler()
 
 

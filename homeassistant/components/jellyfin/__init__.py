@@ -1,4 +1,5 @@
 """The Jellyfin integration."""
+
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -72,6 +73,6 @@ async def async_remove_config_entry_device(
     return not device_entry.identifiers.intersection(
         (
             (DOMAIN, coordinator.server_id),
-            *((DOMAIN, id) for id in coordinator.device_ids),
+            *((DOMAIN, device_id) for device_id in coordinator.device_ids),
         )
     )

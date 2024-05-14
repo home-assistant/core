@@ -1,4 +1,5 @@
 """Common test tools."""
+
 from __future__ import annotations
 
 from unittest.mock import Mock, patch
@@ -60,6 +61,7 @@ async def setup_rfx_test_cfg(
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
     await hass.async_start()
+    await hass.async_block_till_done()
     return mock_entry
 
 
@@ -67,8 +69,9 @@ async def setup_rfx_test_cfg(
 async def transport_mock(hass):
     """Fixture that make sure all transports are fake."""
     transport = Mock(spec=RFXtrxTransport)
-    with patch("RFXtrx.PySerialTransport", new=transport), patch(
-        "RFXtrx.PyNetworkTransport", transport
+    with (
+        patch("RFXtrx.PySerialTransport", new=transport),
+        patch("RFXtrx.PyNetworkTransport", transport),
     ):
         yield transport
 

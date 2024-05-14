@@ -1,4 +1,5 @@
 """HTTP Support for Hass.io."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -23,11 +24,11 @@ from aiohttp.web_exceptions import HTTPBadGateway
 
 from homeassistant.components.http import (
     KEY_AUTHENTICATED,
+    KEY_HASS,
     KEY_HASS_USER,
     HomeAssistantView,
 )
 from homeassistant.components.onboarding import async_is_onboarded
-from homeassistant.core import HomeAssistant
 
 from .const import X_HASS_SOURCE
 
@@ -116,7 +117,7 @@ class HassIOView(HomeAssistantView):
         if path != unquote(path):
             return web.Response(status=HTTPStatus.BAD_REQUEST)
 
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         is_admin = request[KEY_AUTHENTICATED] and request[KEY_HASS_USER].is_admin
         authorized = is_admin
 
@@ -147,9 +148,9 @@ class HassIOView(HomeAssistantView):
                 return web.Response(status=HTTPStatus.UNAUTHORIZED)
 
             if authorized:
-                headers[
-                    AUTHORIZATION
-                ] = f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
+                headers[AUTHORIZATION] = (
+                    f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
+                )
 
             if request.method == "POST":
                 headers[CONTENT_TYPE] = request.content_type
@@ -157,10 +158,8 @@ class HassIOView(HomeAssistantView):
                 if path == "backups/new/upload":
                     # We need to reuse the full content type that includes the boundary
                     if TYPE_CHECKING:
-                        # pylint: disable-next=protected-access
-                        assert isinstance(request._stored_content_type, str)
-                    # pylint: disable-next=protected-access
-                    headers[CONTENT_TYPE] = request._stored_content_type
+                        assert isinstance(request._stored_content_type, str)  # noqa: SLF001
+                    headers[CONTENT_TYPE] = request._stored_content_type  # noqa: SLF001
 
         try:
             client = await self._websession.request(
@@ -187,15 +186,13 @@ class HassIOView(HomeAssistantView):
             async for data, _ in client.content.iter_chunks():
                 await response.write(data)
 
-            return response
-
         except aiohttp.ClientError as err:
             _LOGGER.error("Client error on api %s request %s", path, err)
-
-        except TimeoutError:
+            raise HTTPBadGateway from err
+        except TimeoutError as err:
             _LOGGER.error("Client timeout error on API request %s", path)
-
-        raise HTTPBadGateway()
+            raise HTTPBadGateway from err
+        return response
 
     get = _handle
     post = _handle

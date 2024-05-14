@@ -1,4 +1,5 @@
 """Tests for the sensors provided by the P1 Monitor integration."""
+
 from unittest.mock import MagicMock
 
 from p1monitor import P1MonitorNoDataError
@@ -13,7 +14,6 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     CURRENCY_EURO,
     UnitOfElectricCurrent,
@@ -47,7 +47,6 @@ async def test_smartmeter(
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
-    assert ATTR_ICON not in state.attributes
 
     state = hass.states.get("sensor.smartmeter_energy_consumption_high_tariff")
     entry = entity_registry.async_get(
@@ -64,7 +63,6 @@ async def test_smartmeter(
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
-    assert ATTR_ICON not in state.attributes
 
     state = hass.states.get("sensor.smartmeter_energy_tariff_period")
     entry = entity_registry.async_get("sensor.smartmeter_energy_tariff_period")
@@ -73,7 +71,6 @@ async def test_smartmeter(
     assert entry.unique_id == f"{entry_id}_smartmeter_energy_tariff_period"
     assert state.state == "high"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "SmartMeter Energy tariff period"
-    assert state.attributes.get(ATTR_ICON) == "mdi:calendar-clock"
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
     assert ATTR_DEVICE_CLASS not in state.attributes
 
@@ -109,7 +106,6 @@ async def test_phases(
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfElectricPotential.VOLT
     )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.VOLTAGE
-    assert ATTR_ICON not in state.attributes
 
     state = hass.states.get("sensor.phases_current_phase_l1")
     entry = entity_registry.async_get("sensor.phases_current_phase_l1")
@@ -123,7 +119,6 @@ async def test_phases(
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfElectricCurrent.AMPERE
     )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.CURRENT
-    assert ATTR_ICON not in state.attributes
 
     state = hass.states.get("sensor.phases_power_consumed_phase_l1")
     entry = entity_registry.async_get("sensor.phases_power_consumed_phase_l1")
@@ -135,7 +130,6 @@ async def test_phases(
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
-    assert ATTR_ICON not in state.attributes
 
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)
@@ -245,7 +239,7 @@ async def test_no_watermeter(
 
 @pytest.mark.parametrize(
     "entity_id",
-    ("sensor.smartmeter_gas_consumption",),
+    ["sensor.smartmeter_gas_consumption"],
 )
 async def test_smartmeter_disabled_by_default(
     hass: HomeAssistant, init_integration: MockConfigEntry, entity_id: str

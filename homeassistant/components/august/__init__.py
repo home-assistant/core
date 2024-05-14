@@ -1,4 +1,5 @@
 """Support for August devices."""
+
 from __future__ import annotations
 
 import asyncio
@@ -48,6 +49,8 @@ API_CACHED_ATTRS = {
 }
 YALEXS_BLE_DOMAIN = "yalexs_ble"
 
+AugustConfigEntry = ConfigEntry["AugustData"]
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up August from a config entry."""
@@ -65,22 +68,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> bool:
     """Unload a config entry."""
-
-    data: AugustData = hass.data[DOMAIN][entry.entry_id]
-    data.async_stop()
-
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    entry.runtime_data.async_stop()
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_setup_august(
-    hass: HomeAssistant, config_entry: ConfigEntry, august_gateway: AugustGateway
+    hass: HomeAssistant, config_entry: AugustConfigEntry, august_gateway: AugustGateway
 ) -> bool:
     """Set up the August component."""
 
@@ -94,10 +89,7 @@ async def async_setup_august(
     await august_gateway.async_authenticate()
     await august_gateway.async_refresh_access_token_if_needed()
 
-    hass.data.setdefault(DOMAIN, {})
-    data = hass.data[DOMAIN][config_entry.entry_id] = AugustData(
-        hass, config_entry, august_gateway
-    )
+    data = config_entry.runtime_data = AugustData(hass, config_entry, august_gateway)
     await data.async_setup()
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
@@ -159,8 +151,8 @@ class AugustData(AugustSubscriberMixin):
         token = self._august_gateway.access_token
         # This used to be a gather but it was less reliable with august's recent api changes.
         user_data = await self._api.async_get_user(token)
-        locks = await self._api.async_get_operable_locks(token)
-        doorbells = await self._api.async_get_doorbells(token)
+        locks: list[Lock] = await self._api.async_get_operable_locks(token)
+        doorbells: list[Doorbell] = await self._api.async_get_doorbells(token)
         if not doorbells:
             doorbells = []
         if not locks:
@@ -178,19 +170,6 @@ class AugustData(AugustSubscriberMixin):
         # detail as we cannot determine if they are usable.
         # This also allows us to avoid checking for
         # detail being None all over the place
-
-        # Currently we know how to feed data to yalexe_ble
-        # but we do not know how to send it to homekit_controller
-        # yet
-        _async_trigger_ble_lock_discovery(
-            self._hass,
-            [
-                lock_detail
-                for lock_detail in self._device_detail_by_id.values()
-                if isinstance(lock_detail, LockDetail) and lock_detail.offline_key
-            ],
-        )
-
         self._remove_inoperative_locks()
         self._remove_inoperative_doorbells()
 
@@ -305,6 +284,13 @@ class AugustData(AugustSubscriberMixin):
                     exc_info=err,
                 )
 
+    async def refresh_camera_by_id(self, device_id: str) -> None:
+        """Re-fetch doorbell/camera data from API."""
+        await self._async_update_device_detail(
+            self._doorbells_by_id[device_id],
+            self._api.async_get_doorbell_detail,
+        )
+
     async def _async_refresh_device_detail_by_id(self, device_id: str) -> None:
         if device_id in self._locks_by_id:
             if self.activity_stream and self.activity_stream.pubnub.connected:
@@ -338,28 +324,26 @@ class AugustData(AugustSubscriberMixin):
             [str, str], Coroutine[Any, Any, DoorbellDetail | LockDetail]
         ],
     ) -> None:
-        _LOGGER.debug(
-            "Started retrieving detail for %s (%s)",
-            device.device_name,
-            device.device_id,
-        )
+        device_id = device.device_id
+        device_name = device.device_name
+        _LOGGER.debug("Started retrieving detail for %s (%s)", device_name, device_id)
 
         try:
-            self._device_detail_by_id[device.device_id] = await api_call(
-                self._august_gateway.access_token, device.device_id
-            )
+            detail = await api_call(self._august_gateway.access_token, device_id)
         except ClientError as ex:
             _LOGGER.error(
                 "Request error trying to retrieve %s details for %s. %s",
-                device.device_id,
-                device.device_name,
+                device_id,
+                device_name,
                 ex,
             )
-        _LOGGER.debug(
-            "Completed retrieving detail for %s (%s)",
-            device.device_name,
-            device.device_id,
-        )
+        _LOGGER.debug("Completed retrieving detail for %s (%s)", device_name, device_id)
+        # If the key changes after startup we need to trigger a
+        # discovery to keep it up to date
+        if isinstance(detail, LockDetail) and detail.offline_key:
+            _async_trigger_ble_lock_discovery(self._hass, [detail])
+
+        self._device_detail_by_id[device_id] = detail
 
     def get_device(self, device_id: str) -> Doorbell | Lock | None:
         """Get a device by id."""
@@ -501,12 +485,12 @@ def _restore_live_attrs(
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: AugustConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove august config entry from a device if its no longer present."""
-    data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
     return not any(
         identifier
         for identifier in device_entry.identifiers
-        if identifier[0] == DOMAIN and data.get_device(identifier[1])
+        if identifier[0] == DOMAIN
+        and config_entry.runtime_data.get_device(identifier[1])
     )

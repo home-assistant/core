@@ -1,4 +1,5 @@
 """Support for Qwikswitch Sensors."""
+
 from __future__ import annotations
 
 import logging

@@ -1,4 +1,5 @@
 """The Wolf SmartSet sensors."""
+
 from __future__ import annotations
 
 from wolf_comm.models import (

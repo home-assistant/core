@@ -1,4 +1,5 @@
 """The Minecraft Server integration."""
+
 from __future__ import annotations
 
 import logging
@@ -14,7 +15,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.entity_registry as er
 
@@ -41,9 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await api.async_initialize()
     except MinecraftServerAddressError as error:
-        raise ConfigEntryError(
-            f"Server address in configuration entry is invalid: {error}"
-        ) from error
+        raise ConfigEntryNotReady(f"Initialization failed: {error}") from error
 
     # Create coordinator instance.
     coordinator = MinecraftServerCoordinator(hass, entry.data[CONF_NAME], api)
@@ -122,10 +121,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
             try:
                 await api.async_initialize()
-            except MinecraftServerAddressError as error:
+            except MinecraftServerAddressError:
                 _LOGGER.exception(
-                    "Can't migrate configuration entry due to error while parsing server address, try again later: %s",
-                    error,
+                    "Can't migrate configuration entry due to error while parsing server address, try again later"
                 )
                 return False
 

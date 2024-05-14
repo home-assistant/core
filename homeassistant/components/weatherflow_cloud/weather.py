@@ -1,7 +1,8 @@
 """Support for WeatherFlow Forecast weather service."""
+
 from __future__ import annotations
 
-from weatherflow4py.models.unified import WeatherFlowData
+from weatherflow4py.models.rest.unified import WeatherFlowDataREST
 
 from homeassistant.components.weather import (
     Forecast,
@@ -78,7 +79,7 @@ class WeatherFlowWeather(
         )
 
     @property
-    def local_data(self) -> WeatherFlowData:
+    def local_data(self) -> WeatherFlowDataREST:
         """Return the local weather data object for this station."""
         return self.coordinator.data[self.station_id]
 

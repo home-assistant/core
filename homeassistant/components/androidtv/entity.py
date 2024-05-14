@@ -1,4 +1,5 @@
 """Base AndroidTV Entity."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
@@ -7,9 +8,7 @@ import logging
 from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from androidtv.exceptions import LockNotAcquiredException
-from androidtv.setup_async import AndroidTVAsync, FireTVAsync
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONNECTIONS,
     ATTR_IDENTIFIERS,
@@ -22,7 +21,12 @@ from homeassistant.const import (
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from . import ADB_PYTHON_EXCEPTIONS, ADB_TCP_EXCEPTIONS, get_androidtv_mac
+from . import (
+    ADB_PYTHON_EXCEPTIONS,
+    ADB_TCP_EXCEPTIONS,
+    AndroidTVConfigEntry,
+    get_androidtv_mac,
+)
 from .const import DEVICE_ANDROIDTV, DOMAIN
 
 PREFIX_ANDROIDTV = "Android TV"
@@ -73,24 +77,33 @@ def adb_decorator(
                 )
                 return None
             except self.exceptions as err:
-                _LOGGER.error(
-                    (
-                        "Failed to execute an ADB command. ADB connection re-"
-                        "establishing attempt in the next update. Error: %s"
-                    ),
-                    err,
-                )
+                if self.available:
+                    _LOGGER.error(
+                        (
+                            "Failed to execute an ADB command. ADB connection re-"
+                            "establishing attempt in the next update. Error: %s"
+                        ),
+                        err,
+                    )
+
                 await self.aftv.adb_close()
-                # pylint: disable-next=protected-access
                 self._attr_available = False
                 return None
-            except Exception:
+            except Exception as err:  # noqa: BLE001
                 # An unforeseen exception occurred. Close the ADB connection so that
-                # it doesn't happen over and over again, then raise the exception.
+                # it doesn't happen over and over again.
+                if self.available:
+                    _LOGGER.error(
+                        (
+                            "Unexpected exception executing an ADB command. ADB connection"
+                            " re-establishing attempt in the next update. Error: %s"
+                        ),
+                        err,
+                    )
+
                 await self.aftv.adb_close()
-                # pylint: disable-next=protected-access
                 self._attr_available = False
-                raise
+                return None
 
         return _adb_exception_catcher
 
@@ -102,18 +115,13 @@ class AndroidTVEntity(Entity):
 
     _attr_has_entity_name = True
 
-    def __init__(
-        self,
-        aftv: AndroidTVAsync | FireTVAsync,
-        entry: ConfigEntry,
-        entry_data: dict[str, Any],
-    ) -> None:
+    def __init__(self, entry: AndroidTVConfigEntry) -> None:
         """Initialize the AndroidTV base entity."""
-        self.aftv = aftv
+        self.aftv = entry.runtime_data.aftv
         self._attr_unique_id = entry.unique_id
-        self._entry_data = entry_data
+        self._entry_runtime_data = entry.runtime_data
 
-        device_class = aftv.DEVICE_CLASS
+        device_class = self.aftv.DEVICE_CLASS
         device_type = (
             PREFIX_ANDROIDTV if device_class == DEVICE_ANDROIDTV else PREFIX_FIRETV
         )
@@ -121,7 +129,7 @@ class AndroidTVEntity(Entity):
         device_name = entry.data.get(
             CONF_NAME, f"{device_type} {entry.data[CONF_HOST]}"
         )
-        info = aftv.device_properties
+        info = self.aftv.device_properties
         model = info.get(ATTR_MODEL)
         self._attr_device_info = DeviceInfo(
             model=f"{model} ({device_type})" if model else device_type,
@@ -137,7 +145,7 @@ class AndroidTVEntity(Entity):
             self._attr_device_info[ATTR_CONNECTIONS] = {(CONNECTION_NETWORK_MAC, mac)}
 
         # ADB exceptions to catch
-        if not aftv.adb_server_ip:
+        if not self.aftv.adb_server_ip:
             # Using "adb_shell" (Python ADB implementation)
             self.exceptions = ADB_PYTHON_EXCEPTIONS
         else:

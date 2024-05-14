@@ -1,10 +1,11 @@
 """Config flow for HLK-SW16."""
+
 import asyncio
 
 from hlk_sw16 import create_hlk_sw16_connection
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -63,7 +64,7 @@ async def validate_input(hass: HomeAssistant, user_input):
     client.stop()
 
 
-class SW16FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class SW16FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a HLK-SW16 config flow."""
 
     VERSION = 1

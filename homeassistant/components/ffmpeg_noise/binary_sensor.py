@@ -1,4 +1,5 @@
 """Provides a binary sensor which is a collection of ffmpeg tools."""
+
 from __future__ import annotations
 
 from typing import Any

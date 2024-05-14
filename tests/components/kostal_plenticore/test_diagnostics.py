@@ -1,4 +1,5 @@
 """Test Kostal Plenticore diagnostics."""
+
 from pykoplenti import SettingsData
 
 from homeassistant.components.diagnostics import REDACTED

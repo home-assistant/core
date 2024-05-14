@@ -1,6 +1,5 @@
 """Test ESPHome climates."""
 
-
 import math
 from unittest.mock import call
 

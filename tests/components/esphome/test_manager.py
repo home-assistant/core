@@ -1,4 +1,5 @@
 """Test ESPHome manager."""
+
 import asyncio
 from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, call
@@ -10,6 +11,9 @@ from aioesphomeapi import (
     EntityInfo,
     EntityState,
     HomeassistantServiceCall,
+    InvalidAuthAPIError,
+    InvalidEncryptionKeyAPIError,
+    RequiresEncryptionAPIError,
     UserService,
     UserServiceArg,
     UserServiceArgType,
@@ -24,7 +28,12 @@ from homeassistant.components.esphome.const import (
     DOMAIN,
     STABLE_BLE_VERSION_STR,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_CLOSE,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
@@ -598,7 +607,7 @@ async def test_connection_aborted_wrong_device(
         "esphome", context={"source": config_entries.SOURCE_DHCP}, data=service_info
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == "192.168.43.184"
     await hass.async_block_till_done()
@@ -1082,3 +1091,64 @@ async def test_esphome_device_with_compilation_time(
         connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
     )
     assert "comp_time" in dev.sw_version
+
+
+async def test_disconnects_at_close_event(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test the device is disconnected at the close event."""
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        device_info={"compilation_time": "comp_time"},
+        states=[],
+    )
+    await hass.async_block_till_done()
+
+    assert mock_client.disconnect.call_count == 0
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
+    await hass.async_block_till_done()
+    assert mock_client.disconnect.call_count == 1
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        RequiresEncryptionAPIError,
+        InvalidEncryptionKeyAPIError,
+        InvalidAuthAPIError,
+    ],
+)
+async def test_start_reauth(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+    error: Exception,
+) -> None:
+    """Test exceptions on connect error trigger reauth."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        device_info={"compilation_time": "comp_time"},
+        states=[],
+    )
+    await hass.async_block_till_done()
+
+    await device.mock_connect_error(error("fail"))
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress(DOMAIN)
+    assert len(flows) == 1
+    flow = flows[0]
+    assert flow["context"]["source"] == "reauth"

@@ -1,4 +1,5 @@
 """Constants for the switchbot integration."""
+
 from enum import StrEnum
 
 from switchbot import SwitchbotModel

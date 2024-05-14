@@ -1,4 +1,5 @@
 """Common fixtures for the Traccar Server tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
@@ -31,12 +32,15 @@ from tests.common import (
 @pytest.fixture
 def mock_traccar_api_client() -> Generator[AsyncMock, None, None]:
     """Mock a Traccar ApiClient client."""
-    with patch(
-        "homeassistant.components.traccar_server.ApiClient",
-        autospec=True,
-    ) as mock_client, patch(
-        "homeassistant.components.traccar_server.config_flow.ApiClient",
-        new=mock_client,
+    with (
+        patch(
+            "homeassistant.components.traccar_server.ApiClient",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.traccar_server.config_flow.ApiClient",
+            new=mock_client,
+        ),
     ):
         client: ApiClient = mock_client.return_value
         client.subscription_status = SubscriptionStatus.DISCONNECTED

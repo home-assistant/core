@@ -1,4 +1,5 @@
 """The tests for the SamsungTV remote platform."""
+
 from unittest.mock import Mock
 
 import pytest

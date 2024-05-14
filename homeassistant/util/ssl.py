@@ -1,4 +1,5 @@
 """Helper to create SSL contexts."""
+
 import contextlib
 from enum import StrEnum
 from functools import cache

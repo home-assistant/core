@@ -1,4 +1,5 @@
 """Constants for the Vizio integration tests."""
+
 from ipaddress import ip_address
 
 from homeassistant.components import zeroconf
@@ -83,7 +84,7 @@ APP_LIST = [
     },
 ]
 APP_NAME_LIST = [app["name"] for app in APP_LIST]
-INPUT_LIST_WITH_APPS = INPUT_LIST + ["CAST"]
+INPUT_LIST_WITH_APPS = [*INPUT_LIST, "CAST"]
 CUSTOM_CONFIG = {CONF_APP_ID: "test", CONF_MESSAGE: None, CONF_NAME_SPACE: 10}
 ADDITIONAL_APP_CONFIG = {
     "name": CURRENT_APP,

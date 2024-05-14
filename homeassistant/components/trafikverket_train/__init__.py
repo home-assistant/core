@@ -1,4 +1,5 @@
 """The trafikverket_train component."""
+
 from __future__ import annotations
 
 from pytrafikverket import TrafikverketTrain
@@ -15,11 +16,13 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_FILTER_PRODUCT, CONF_FROM, CONF_TO, DOMAIN, PLATFORMS
+from .const import CONF_FROM, CONF_TO, PLATFORMS
 from .coordinator import TVDataUpdateCoordinator
 
+TVTrainConfigEntry = ConfigEntry[TVDataUpdateCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: TVTrainConfigEntry) -> bool:
     """Set up Trafikverket Train from a config entry."""
 
     http_session = async_get_clientsession(hass)
@@ -36,11 +39,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f" {entry.data[CONF_TO]}. Error: {error} "
         ) from error
 
-    coordinator = TVDataUpdateCoordinator(
-        hass, entry, to_station, from_station, entry.options.get(CONF_FILTER_PRODUCT)
-    )
+    coordinator = TVDataUpdateCoordinator(hass, to_station, from_station)
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     entity_reg = er.async_get(hass)
     entries = er.async_entries_for_config_entry(entity_reg, entry.entry_id)

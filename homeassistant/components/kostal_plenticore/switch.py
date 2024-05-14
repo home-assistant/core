@@ -1,4 +1,5 @@
 """Platform for Kostal Plenticore switches."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -20,9 +21,9 @@ from .helper import SettingDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class PlenticoreRequiredKeysMixin:
-    """A class that describes required properties for plenticore switch entities."""
+@dataclass(frozen=True, kw_only=True)
+class PlenticoreSwitchEntityDescription(SwitchEntityDescription):
+    """A class that describes plenticore switch entities."""
 
     module_id: str
     is_on: str
@@ -30,13 +31,6 @@ class PlenticoreRequiredKeysMixin:
     on_label: str
     off_value: str
     off_label: str
-
-
-@dataclass(frozen=True)
-class PlenticoreSwitchEntityDescription(
-    SwitchEntityDescription, PlenticoreRequiredKeysMixin
-):
-    """A class that describes plenticore switch entities."""
 
 
 SWITCH_SETTINGS_DATA = [

@@ -32,7 +32,6 @@ class ShoppingTodoListEntity(TodoListEntity):
     """A To-do List representation of the Shopping List."""
 
     _attr_has_entity_name = True
-    _attr_icon = "mdi:cart"
     _attr_translation_key = "shopping_list"
     _attr_should_poll = False
     _attr_supported_features = (

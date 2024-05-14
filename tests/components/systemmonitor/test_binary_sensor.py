@@ -1,4 +1,5 @@
 """Test System Monitor binary sensor."""
+
 from datetime import timedelta
 from unittest.mock import Mock, patch
 
@@ -96,7 +97,7 @@ async def test_sensor_process_fails(
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     process_sensor = hass.states.get("binary_sensor.system_monitor_process_python3")
     assert process_sensor is not None

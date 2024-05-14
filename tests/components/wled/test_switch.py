@@ -1,4 +1,5 @@
 """Tests for the WLED switch platform."""
+
 import json
 from unittest.mock import MagicMock
 

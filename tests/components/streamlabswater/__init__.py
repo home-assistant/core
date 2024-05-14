@@ -1,4 +1,5 @@
 """Tests for the StreamLabs integration."""
+
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 

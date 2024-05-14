@@ -1,4 +1,5 @@
 """The tests for mqtt select component."""
+
 from collections.abc import Generator
 import copy
 import json
@@ -15,12 +16,7 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
-    ATTR_ENTITY_ID,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.typing import ConfigType
 
@@ -68,13 +64,6 @@ DEFAULT_CONFIG = {
         }
     }
 }
-
-
-@pytest.fixture(autouse=True)
-def select_platform_only():
-    """Only setup the select platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SELECT]):
-        yield
 
 
 def _test_run_select_setup_params(

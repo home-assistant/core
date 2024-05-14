@@ -1,54 +1,17 @@
 """deCONZ service tests."""
-from unittest.mock import patch
 
-from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
+from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN as UNIFI_DOMAIN
 from homeassistant.components.unifi.services import (
     SERVICE_RECONNECT_CLIENT,
     SERVICE_REMOVE_CLIENTS,
-    SUPPORTED_SERVICES,
 )
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .test_hub import setup_unifi_integration
 
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-
-async def test_service_setup_and_unload(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Verify service setup works."""
-    config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    for service in SUPPORTED_SERVICES:
-        assert hass.services.has_service(UNIFI_DOMAIN, service)
-
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
-    for service in SUPPORTED_SERVICES:
-        assert not hass.services.has_service(UNIFI_DOMAIN, service)
-
-
-@patch("homeassistant.core.ServiceRegistry.async_remove")
-@patch("homeassistant.core.ServiceRegistry.async_register")
-async def test_service_setup_and_unload_not_called_if_multiple_integrations_detected(
-    register_service_mock,
-    remove_service_mock,
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Make sure that services are only setup and removed once."""
-    config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    register_service_mock.reset_mock()
-    config_entry_2 = await setup_unifi_integration(
-        hass, aioclient_mock, config_entry_id=2
-    )
-    register_service_mock.assert_not_called()
-
-    assert await hass.config_entries.async_unload(config_entry_2.entry_id)
-    remove_service_mock.assert_not_called()
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
-    assert remove_service_mock.call_count == 2
 
 
 async def test_reconnect_client(
@@ -66,11 +29,11 @@ async def test_reconnect_client(
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, clients_response=clients
     )
-    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{hub.host}:1234/api/s/{hub.site}/cmd/stamgr",
+        f"https://{config_entry.data[CONF_HOST]}:1234"
+        f"/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/stamgr",
     )
 
     device_entry = device_registry.async_get_or_create(
@@ -143,12 +106,13 @@ async def test_reconnect_client_hub_unavailable(
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, clients_response=clients
     )
-    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = config_entry.runtime_data
     hub.websocket.available = False
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{hub.host}:1234/api/s/{hub.site}/cmd/stamgr",
+        f"https://{config_entry.data[CONF_HOST]}:1234"
+        f"/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/stamgr",
     )
 
     device_entry = device_registry.async_get_or_create(
@@ -261,11 +225,11 @@ async def test_remove_clients(
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, clients_all_response=clients
     )
-    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{hub.host}:1234/api/s/{hub.site}/cmd/stamgr",
+        f"https://{config_entry.data[CONF_HOST]}:1234"
+        f"/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/stamgr",
     )
 
     await hass.services.async_call(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
@@ -291,7 +255,7 @@ async def test_remove_clients_hub_unavailable(
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, clients_all_response=clients
     )
-    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = config_entry.runtime_data
     hub.websocket.available = False
 
     aioclient_mock.clear_requests()

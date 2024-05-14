@@ -1,4 +1,5 @@
 """Support for exposing regular REST commands as services."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -172,33 +173,37 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                             _content = await response.text()
                     except (JSONDecodeError, AttributeError) as err:
                         raise HomeAssistantError(
-                            f"Response of '{request_url}' could not be decoded as JSON",
                             translation_domain=DOMAIN,
                             translation_key="decoding_error",
-                            translation_placeholders={"decoding_type": "json"},
+                            translation_placeholders={
+                                "request_url": request_url,
+                                "decoding_type": "JSON",
+                            },
                         ) from err
 
                     except UnicodeDecodeError as err:
                         raise HomeAssistantError(
-                            f"Response of '{request_url}' could not be decoded as text",
                             translation_domain=DOMAIN,
                             translation_key="decoding_error",
-                            translation_placeholders={"decoding_type": "text"},
+                            translation_placeholders={
+                                "request_url": request_url,
+                                "decoding_type": "text",
+                            },
                         ) from err
                     return {"content": _content, "status": response.status}
 
             except TimeoutError as err:
                 raise HomeAssistantError(
-                    f"Timeout when calling resource '{request_url}'",
                     translation_domain=DOMAIN,
                     translation_key="timeout",
+                    translation_placeholders={"request_url": request_url},
                 ) from err
 
             except aiohttp.ClientError as err:
                 raise HomeAssistantError(
-                    f"Client error occurred when calling resource '{request_url}'",
                     translation_domain=DOMAIN,
                     translation_key="client_error",
+                    translation_placeholders={"request_url": request_url},
                 ) from err
 
         # register services

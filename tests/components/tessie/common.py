@@ -57,11 +57,14 @@ async def setup_platform(
     )
     mock_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.tessie.get_state_of_all_vehicles",
-        return_value=TEST_STATE_OF_ALL_VEHICLES,
-        side_effect=side_effect,
-    ), patch("homeassistant.components.tessie.PLATFORMS", platforms):
+    with (
+        patch(
+            "homeassistant.components.tessie.get_state_of_all_vehicles",
+            return_value=TEST_STATE_OF_ALL_VEHICLES,
+            side_effect=side_effect,
+        ),
+        patch("homeassistant.components.tessie.PLATFORMS", platforms),
+    ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 

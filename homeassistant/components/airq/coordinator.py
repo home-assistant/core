@@ -1,4 +1,5 @@
 """The air-Q integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta

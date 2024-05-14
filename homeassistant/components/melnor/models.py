@@ -42,7 +42,7 @@ class MelnorDataUpdateCoordinator(DataUpdateCoordinator[Device]):  # pylint: dis
         return self._device
 
 
-class MelnorBluetoothEntity(CoordinatorEntity[MelnorDataUpdateCoordinator]):  # pylint: disable=hass-enforce-coordinator-module
+class MelnorBluetoothEntity(CoordinatorEntity[MelnorDataUpdateCoordinator]):
     """Base class for melnor entities."""
 
     _device: Device
@@ -117,14 +117,15 @@ def get_entities_for_valves(
     ],
 ) -> list[CoordinatorEntity[MelnorDataUpdateCoordinator]]:
     """Get descriptions for valves."""
-    entities = []
+    entities: list[CoordinatorEntity[MelnorDataUpdateCoordinator]] = []
 
     # This device may not have 4 valves total, but the library will only expose the right number of valves
     for i in range(1, 5):
         valve = coordinator.data[f"zone{i}"]
 
         if valve is not None:
-            for description in descriptions:
-                entities.append(function(valve, description))
+            entities.extend(
+                function(valve, description) for description in descriptions
+            )
 
     return entities

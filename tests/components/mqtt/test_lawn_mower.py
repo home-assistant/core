@@ -1,4 +1,5 @@
 """The tests for mqtt lawn_mower component."""
+
 import copy
 import json
 from typing import Any
@@ -15,12 +16,7 @@ from homeassistant.components.lawn_mower import (
     LawnMowerEntityFeature,
 )
 from homeassistant.components.mqtt.lawn_mower import MQTT_LAWN_MOWER_ATTRIBUTES_BLOCKED
-from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
-    ATTR_ENTITY_ID,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 
 from .test_common import (
@@ -76,13 +72,6 @@ DEFAULT_CONFIG = {
         }
     }
 }
-
-
-@pytest.fixture(autouse=True)
-def lawn_mower_platform_only():
-    """Only setup the lawn_mower platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LAWN_MOWER]):
-        yield
 
 
 @pytest.mark.parametrize(
@@ -742,8 +731,8 @@ async def test_mqtt_payload_not_a_valid_activity_warning(
     await hass.async_block_till_done()
 
     assert (
-        "Invalid activity for lawn_mower.test_lawn_mower: 'painting' (valid activies: ['error', 'paused', 'mowing', 'docked'])"
-        in caplog.text
+        "Invalid activity for lawn_mower.test_lawn_mower: 'painting' "
+        "(valid activities: ['error', 'paused', 'mowing', 'docked'])" in caplog.text
     )
 
 

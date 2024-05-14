@@ -1,4 +1,5 @@
 """The Xiaomi Bluetooth integration."""
+
 from __future__ import annotations
 
 import logging
@@ -167,25 +168,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return await data.async_poll(connectable_device)
 
     device_registry = async_get(hass)
-    coordinator = hass.data.setdefault(DOMAIN, {})[
-        entry.entry_id
-    ] = XiaomiActiveBluetoothProcessorCoordinator(
-        hass,
-        _LOGGER,
-        address=address,
-        mode=BluetoothScanningMode.PASSIVE,
-        update_method=lambda service_info: process_service_info(
-            hass, entry, data, service_info, device_registry
-        ),
-        needs_poll_method=_needs_poll,
-        device_data=data,
-        discovered_event_classes=set(entry.data.get(CONF_DISCOVERED_EVENT_CLASSES, [])),
-        poll_method=_async_poll,
-        # We will take advertisements from non-connectable devices
-        # since we will trade the BLEDevice for a connectable one
-        # if we need to poll it
-        connectable=False,
-        entry=entry,
+    coordinator = hass.data.setdefault(DOMAIN, {})[entry.entry_id] = (
+        XiaomiActiveBluetoothProcessorCoordinator(
+            hass,
+            _LOGGER,
+            address=address,
+            mode=BluetoothScanningMode.PASSIVE,
+            update_method=lambda service_info: process_service_info(
+                hass, entry, data, service_info, device_registry
+            ),
+            needs_poll_method=_needs_poll,
+            device_data=data,
+            discovered_event_classes=set(
+                entry.data.get(CONF_DISCOVERED_EVENT_CLASSES, [])
+            ),
+            poll_method=_async_poll,
+            # We will take advertisements from non-connectable devices
+            # since we will trade the BLEDevice for a connectable one
+            # if we need to poll it
+            connectable=False,
+            entry=entry,
+        )
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(

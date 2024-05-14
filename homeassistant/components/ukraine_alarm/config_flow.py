@@ -1,4 +1,5 @@
 """Config flow for Ukraine Alarm."""
+
 from __future__ import annotations
 
 import logging
@@ -7,7 +8,7 @@ import aiohttp
 from uasiren.client import Client
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_NAME, CONF_REGION
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -16,7 +17,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class UkraineAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class UkraineAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for Ukraine Alarm."""
 
     VERSION = 1
@@ -132,17 +133,5 @@ def _find(regions, region_id):
 
 
 def _make_regions_object(regions):
-    regions_list = []
-    for region in regions:
-        regions_list.append(
-            {
-                "id": region["regionId"],
-                "name": region["regionName"],
-            }
-        )
-    regions_list = sorted(regions_list, key=lambda region: region["name"].lower())
-    regions_object = {}
-    for region in regions_list:
-        regions_object[region["id"]] = region["name"]
-
-    return regions_object
+    regions = sorted(regions, key=lambda region: region["regionName"].lower())
+    return {region["regionId"]: region["regionName"] for region in regions}

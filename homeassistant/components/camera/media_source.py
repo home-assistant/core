@@ -1,4 +1,5 @@
 """Expose cameras as media sources."""
+
 from __future__ import annotations
 
 import asyncio
@@ -12,6 +13,7 @@ from homeassistant.components.media_source.models import (
     PlayMedia,
 )
 from homeassistant.components.stream import FORMAT_CONTENT_TYPE, HLS_PROVIDER
+from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_component import EntityComponent
@@ -25,13 +27,20 @@ async def async_get_media_source(hass: HomeAssistant) -> CameraMediaSource:
     return CameraMediaSource(hass)
 
 
-def _media_source_for_camera(camera: Camera, content_type: str) -> BrowseMediaSource:
+def _media_source_for_camera(
+    hass: HomeAssistant, camera: Camera, content_type: str
+) -> BrowseMediaSource:
+    camera_state = hass.states.get(camera.entity_id)
+    title = camera.name
+    if camera_state:
+        title = camera_state.attributes.get(ATTR_FRIENDLY_NAME, camera.name)
+
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier=camera.entity_id,
         media_class=MediaClass.VIDEO,
         media_content_type=content_type,
-        title=camera.name,
+        title=title,
         thumbnail=f"/api/camera_proxy/{camera.entity_id}",
         can_play=True,
         can_expand=False,
@@ -89,7 +98,7 @@ class CameraMediaSource(MediaSource):
         async def _filter_browsable_camera(camera: Camera) -> BrowseMediaSource | None:
             stream_type = camera.frontend_stream_type
             if stream_type is None:
-                return _media_source_for_camera(camera, camera.content_type)
+                return _media_source_for_camera(self.hass, camera, camera.content_type)
             if not can_stream_hls:
                 return None
 
@@ -97,7 +106,7 @@ class CameraMediaSource(MediaSource):
             if stream_type != StreamType.HLS and not (await camera.stream_source()):
                 return None
 
-            return _media_source_for_camera(camera, content_type)
+            return _media_source_for_camera(self.hass, camera, content_type)
 
         component: EntityComponent[Camera] = self.hass.data[DOMAIN]
         results = await asyncio.gather(

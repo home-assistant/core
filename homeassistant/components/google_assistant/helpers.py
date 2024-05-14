@@ -1,4 +1,5 @@
 """Helper classes for Google Assistant integration."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -164,7 +165,7 @@ class AbstractConfig(ABC):
     def get_local_user_id(self, webhook_id):
         """Map webhook ID to a Home Assistant user ID.
 
-        Any action inititated by Google Assistant via the local SDK will be attributed
+        Any action initiated by Google Assistant via the local SDK will be attributed
         to the returned user ID.
 
         Return None if no user id is found for the webhook_id.
@@ -624,7 +625,7 @@ class GoogleEntity:
         if (config_aliases := entity_config.get(CONF_ALIASES, [])) or (
             entity_entry and entity_entry.aliases
         ):
-            device["name"]["nicknames"] = [name] + config_aliases
+            device["name"]["nicknames"] = [name, *config_aliases]
             if entity_entry:
                 device["name"]["nicknames"].extend(entity_entry.aliases)
 

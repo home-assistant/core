@@ -1,4 +1,5 @@
 """Define tests for AirVisual init."""
+
 from unittest.mock import patch
 
 from homeassistant.components.airvisual import (

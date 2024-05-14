@@ -1,4 +1,5 @@
 """Support for Hikvision event stream events represented as binary sensors."""
+
 from __future__ import annotations
 
 from datetime import timedelta

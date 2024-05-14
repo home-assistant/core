@@ -46,14 +46,34 @@
       "relocate": {
         "name": "Relocate"
       },
+      "reset_lifespan_blade": {
+        "name": "Reset blade lifespan"
+      },
       "reset_lifespan_brush": {
         "name": "Reset main brush lifespan"
       },
       "reset_lifespan_filter": {
         "name": "Reset filter lifespan"
       },
+      "reset_lifespan_lens_brush": {
+        "name": "Reset lens brush lifespan"
+      },
       "reset_lifespan_side_brush": {
         "name": "Reset side brushes lifespan"
+      }
+    },
+    "event": {
+      "last_job": {
+        "name": "Last job",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "finished": "Finished",
+              "finished_with_warnings": "Finished with warnings",
+              "manually_stopped": "Manually stopped"
+            }
+          }
+        }
       }
     },
     "image": {
@@ -78,11 +98,17 @@
           }
         }
       },
+      "lifespan_blade": {
+        "name": "Blade lifespan"
+      },
       "lifespan_brush": {
         "name": "Main brush lifespan"
       },
       "lifespan_filter": {
         "name": "Filter lifespan"
+      },
+      "lifespan_lens_brush": {
+        "name": "Lens brush lifespan"
       },
       "lifespan_side_brush": {
         "name": "Side brushes lifespan"
@@ -136,14 +162,29 @@
       "advanced_mode": {
         "name": "Advanced mode"
       },
+      "border_switch": {
+        "name": "Border switch"
+      },
       "carpet_auto_fan_boost": {
         "name": "Carpet auto-boost suction"
+      },
+      "child_lock": {
+        "name": "Child lock"
       },
       "clean_preference": {
         "name": "Clean preference"
       },
+      "cross_map_border_warning": {
+        "name": "Cross map border warning"
+      },
       "continuous_cleaning": {
         "name": "Continuous cleaning"
+      },
+      "move_up_warning": {
+        "name": "Move up warning"
+      },
+      "safe_protect": {
+        "name": "Safe protect"
       },
       "true_detect": {
         "name": "True detect"
@@ -198,7 +239,7 @@
     },
     "deprecated_yaml_import_issue_continent_not_match": {
       "title": "The Ecovacs YAML configuration import failed",
-      "description": "Configuring Ecovacs using YAML is being removed but there is an unexpected continent specified in the YAML configuration.\n\nFrom the given country, the continent '{continent}' is expected. Change the continent and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually.\n\nIf the contintent '{continent}' is not applicable, please open an issue on [GitHub]({github_issue_url})."
+      "description": "Configuring Ecovacs using YAML is being removed but there is an unexpected continent specified in the YAML configuration.\n\nFrom the given country, the continent \"{continent}\" is expected. Change the continent and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually.\n\nIf the contintent \"{continent}\" is not applicable, please open an issue on [GitHub]({github_issue_url})."
     }
   },
   "selector": {

@@ -1,32 +1,27 @@
 """Component for interacting with a Lutron RadioRA 2 system."""
+
 from dataclasses import dataclass
 import logging
 
-from pylutron import Button, Keypad, Led, Lutron, LutronEvent, OccupancyGroup, Output
+from pylutron import Button, Keypad, Led, Lutron, OccupancyGroup, Output
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ID,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    Platform,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import slugify
 
 from .const import DOMAIN
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.COVER,
+    Platform.EVENT,
     Platform.FAN,
     Platform.LIGHT,
     Platform.SCENE,
@@ -104,69 +99,13 @@ async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     return True
 
 
-class LutronButton:
-    """Representation of a button on a Lutron keypad.
-
-    This is responsible for firing events as keypad buttons are pressed
-    (and possibly released, depending on the button type). It is not
-    represented as an entity; it simply fires events.
-    """
-
-    def __init__(
-        self, hass: HomeAssistant, area_name: str, keypad: Keypad, button: Button
-    ) -> None:
-        """Register callback for activity on the button."""
-        name = f"{keypad.name}: {button.name}"
-        if button.name == "Unknown Button":
-            name += f" {button.number}"
-        self._hass = hass
-        self._has_release_event = (
-            button.button_type is not None and "RaiseLower" in button.button_type
-        )
-        self._id = slugify(name)
-        self._keypad = keypad
-        self._area_name = area_name
-        self._button_name = button.name
-        self._button = button
-        self._event = "lutron_event"
-        self._full_id = slugify(f"{area_name} {name}")
-        self._uuid = button.uuid
-
-        button.subscribe(self.button_callback, None)
-
-    def button_callback(
-        self, _button: Button, _context: None, event: LutronEvent, _params: dict
-    ) -> None:
-        """Fire an event about a button being pressed or released."""
-        # Events per button type:
-        #   RaiseLower -> pressed/released
-        #   SingleAction -> single
-        action = None
-        if self._has_release_event:
-            if event == Button.Event.PRESSED:
-                action = "pressed"
-            else:
-                action = "released"
-        elif event == Button.Event.PRESSED:
-            action = "single"
-
-        if action:
-            data = {
-                ATTR_ID: self._id,
-                ATTR_ACTION: action,
-                ATTR_FULL_ID: self._full_id,
-                ATTR_UUID: self._uuid,
-            }
-            self._hass.bus.fire(self._event, data)
-
-
 @dataclass(slots=True, kw_only=True)
 class LutronData:
     """Storage class for platform global data."""
 
     client: Lutron
     binary_sensors: list[tuple[str, OccupancyGroup]]
-    buttons: list[LutronButton]
+    buttons: list[tuple[str, Keypad, Button]]
     covers: list[tuple[str, Output]]
     fans: list[tuple[str, Output]]
     lights: list[tuple[str, Output]]
@@ -272,8 +211,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                             led.legacy_uuid,
                             entry_data.client.guid,
                         )
-
-                entry_data.buttons.append(LutronButton(hass, area.name, keypad, button))
+                if button.button_type:
+                    entry_data.buttons.append((area.name, keypad, button))
         if area.occupancy_group is not None:
             entry_data.binary_sensors.append((area.name, area.occupancy_group))
             platform = Platform.BINARY_SENSOR

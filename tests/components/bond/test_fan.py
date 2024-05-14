@@ -1,4 +1,5 @@
 """Tests for the Bond fan device."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -252,13 +253,17 @@ async def test_turn_on_fan_preset_mode_not_supported(hass: HomeAssistant) -> Non
         props={"max_speed": 6},
     )
 
-    with patch_bond_action(), patch_bond_device_state(), pytest.raises(
-        NotValidPresetModeError
+    with (
+        patch_bond_action(),
+        patch_bond_device_state(),
+        pytest.raises(NotValidPresetModeError),
     ):
         await turn_fan_on(hass, "fan.name_1", preset_mode=PRESET_MODE_BREEZE)
 
-    with patch_bond_action(), patch_bond_device_state(), pytest.raises(
-        NotValidPresetModeError
+    with (
+        patch_bond_action(),
+        patch_bond_device_state(),
+        pytest.raises(NotValidPresetModeError),
     ):
         await hass.services.async_call(
             FAN_DOMAIN,
@@ -380,9 +385,11 @@ async def test_set_speed_belief_speed_api_error(hass: HomeAssistant) -> None:
         hass, FAN_DOMAIN, ceiling_fan("name-1"), bond_device_id="test-device-id"
     )
 
-    with pytest.raises(
-        HomeAssistantError
-    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+    with (
+        pytest.raises(HomeAssistantError),
+        patch_bond_action_returns_clientresponseerror(),
+        patch_bond_device_state(),
+    ):
         await hass.services.async_call(
             BOND_DOMAIN,
             SERVICE_SET_FAN_SPEED_TRACKED_STATE,

@@ -1,4 +1,5 @@
 """Representation of Idasen Desk sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -22,26 +23,17 @@ from . import DeskData, IdasenDeskCoordinator
 from .const import DOMAIN
 
 
-@dataclass(frozen=True)
-class IdasenDeskSensorDescriptionMixin:
-    """Required values for IdasenDesk sensors."""
+@dataclass(frozen=True, kw_only=True)
+class IdasenDeskSensorDescription(SensorEntityDescription):
+    """Class describing IdasenDesk sensor entities."""
 
     value_fn: Callable[[IdasenDeskCoordinator], float | None]
-
-
-@dataclass(frozen=True)
-class IdasenDeskSensorDescription(
-    SensorEntityDescription,
-    IdasenDeskSensorDescriptionMixin,
-):
-    """Class describing IdasenDesk sensor entities."""
 
 
 SENSORS = (
     IdasenDeskSensorDescription(
         key="height",
         translation_key="height",
-        icon="mdi:arrow-up-down",
         native_unit_of_measurement=UnitOfLength.METERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,

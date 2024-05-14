@@ -1,4 +1,5 @@
 """Shared Entity definition for UniFi Protect Integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
@@ -194,9 +195,9 @@ class ProtectDeviceEntity(Entity):
         super().__init__()
         self.data: ProtectData = data
         self.device = device
-        self._async_get_ufp_enabled: Callable[
-            [ProtectAdoptableDeviceModel], bool
-        ] | None = None
+        self._async_get_ufp_enabled: (
+            Callable[[ProtectAdoptableDeviceModel], bool] | None
+        ) = None
 
         if description is None:
             self._attr_unique_id = f"{self.device.mac}"
@@ -266,7 +267,7 @@ class ProtectDeviceEntity(Entity):
         return (self._attr_available,)
 
     @callback
-    def _async_updated_event(self, device: ProtectModelWithId) -> None:
+    def _async_updated_event(self, device: ProtectAdoptableDeviceModel | NVR) -> None:
         """When device is updated from Protect."""
 
         previous_attrs = self._async_get_state_attrs()
@@ -274,7 +275,7 @@ class ProtectDeviceEntity(Entity):
         current_attrs = self._async_get_state_attrs()
         if previous_attrs != current_attrs:
             if _LOGGER.isEnabledFor(logging.DEBUG):
-                device_name = device.name
+                device_name = device.name or ""
                 if hasattr(self, "entity_description") and self.entity_description.name:
                     device_name += f" {self.entity_description.name}"
 
@@ -301,7 +302,7 @@ class ProtectNVREntity(ProtectDeviceEntity):
     """Base class for unifi protect entities."""
 
     # separate subclass on purpose
-    device: NVR
+    device: NVR  # type: ignore[assignment]
 
     def __init__(
         self,
@@ -310,7 +311,7 @@ class ProtectNVREntity(ProtectDeviceEntity):
         description: EntityDescription | None = None,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(entry, device, description)
+        super().__init__(entry, device, description)  # type: ignore[arg-type]
 
     @callback
     def _async_set_device_info(self) -> None:

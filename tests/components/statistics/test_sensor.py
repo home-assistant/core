@@ -1,4 +1,5 @@
 """The test for the statistics sensor platform."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -1291,17 +1292,16 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
             "unit": "%",
         },
     )
-    sensors_config = []
-    for characteristic in characteristics:
-        sensors_config.append(
-            {
-                "platform": "statistics",
-                "name": f"test_{characteristic['source_sensor_domain']}_{characteristic['name']}",
-                "entity_id": f"{characteristic['source_sensor_domain']}.test_monitored",
-                "state_characteristic": characteristic["name"],
-                "max_age": {"minutes": 8},  # 9 values spaces by one minute
-            }
-        )
+    sensors_config = [
+        {
+            "platform": "statistics",
+            "name": f"test_{characteristic['source_sensor_domain']}_{characteristic['name']}",
+            "entity_id": f"{characteristic['source_sensor_domain']}.test_monitored",
+            "state_characteristic": characteristic["name"],
+            "max_age": {"minutes": 8},  # 9 values spaces by one minute
+        }
+        for characteristic in characteristics
+    ]
 
     with freeze_time(current_time) as freezer:
         assert await async_setup_component(
@@ -1342,7 +1342,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
                 "value mismatch for characteristic "
                 f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
                 "(buffer filled) - "
-                f"assert {state.state} == {str(characteristic['value_9'])}"
+                f"assert {state.state} == {characteristic['value_9']!s}"
             )
             assert (
                 state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == characteristic["unit"]
@@ -1368,7 +1368,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
                 "value mismatch for characteristic "
                 f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
                 "(one stored value) - "
-                f"assert {state.state} == {str(characteristic['value_1'])}"
+                f"assert {state.state} == {characteristic['value_1']!s}"
             )
 
         # With empty buffer
@@ -1391,7 +1391,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
                 "value mismatch for characteristic "
                 f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
                 "(buffer empty) - "
-                f"assert {state.state} == {str(characteristic['value_0'])}"
+                f"assert {state.state} == {characteristic['value_0']!s}"
             )
 
 
@@ -1530,8 +1530,9 @@ async def test_initialize_from_database_with_maxage(
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)
 
-    with freeze_time(current_time) as freezer, patch.object(
-        StatisticsSensor, "_purge_old_states", mock_purge
+    with (
+        freeze_time(current_time) as freezer,
+        patch.object(StatisticsSensor, "_purge_old_states", mock_purge),
     ):
         for value in VALUES_NUMERIC:
             hass.states.async_set(

@@ -1,4 +1,5 @@
 """An abstract class common to all Bond entities."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -127,7 +128,9 @@ class BondEntity(Entity):
                 _FALLBACK_SCAN_INTERVAL,
             )
             return
-        self.hass.async_create_task(self._async_update())
+        self.hass.async_create_background_task(
+            self._async_update(), f"{DOMAIN} {self.name} update", eager_start=True
+        )
 
     async def _async_update(self) -> None:
         """Fetch via the API."""

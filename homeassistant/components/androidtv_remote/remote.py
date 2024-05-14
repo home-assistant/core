@@ -1,11 +1,10 @@
 """Remote control support for Android TV Remote."""
+
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable
 from typing import Any
-
-from androidtvremote2 import AndroidTVRemote
 
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
@@ -18,11 +17,10 @@ from homeassistant.components.remote import (
     RemoteEntity,
     RemoteEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import AndroidTVRemoteConfigEntry
 from .entity import AndroidTVRemoteBaseEntity
 
 PARALLEL_UPDATES = 0
@@ -30,11 +28,11 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AndroidTVRemoteConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Android TV remote entity based on a config entry."""
-    api: AndroidTVRemote = hass.data[DOMAIN][config_entry.entry_id]
+    api = config_entry.runtime_data
     async_add_entities([AndroidTVRemoteEntity(api, config_entry)])
 
 

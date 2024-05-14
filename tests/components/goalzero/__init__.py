@@ -1,4 +1,5 @@
 """Tests for the Goal Zero Yeti integration."""
+
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components import dhcp

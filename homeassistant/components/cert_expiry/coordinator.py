@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for cert_expiry coordinator."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta

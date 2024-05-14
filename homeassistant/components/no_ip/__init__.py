@@ -1,4 +1,5 @@
 """Integrate with NO-IP Dynamic DNS service."""
+
 import asyncio
 import base64
 from datetime import datetime, timedelta
@@ -103,7 +104,7 @@ async def _update_no_ip(
             resp = await session.get(url, params=params, headers=headers)
             body = await resp.text()
 
-            if body.startswith("good") or body.startswith("nochg"):
+            if body.startswith(("good", "nochg")):
                 _LOGGER.debug("Updating NO-IP success: %s", domain)
                 return True
 

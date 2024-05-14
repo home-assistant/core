@@ -1,4 +1,5 @@
 """MediaPlayer platform for Roon integration."""
+
 from __future__ import annotations
 
 import logging
@@ -232,12 +233,13 @@ class RoonDevice(MediaPlayerEntity):
         }
         now_playing_data = None
 
+        media_position = convert(player_data.get("seek_position"), int, 0)
+
         try:
             now_playing_data = player_data["now_playing"]
             media_title = now_playing_data["three_line"]["line1"]
             media_artist = now_playing_data["three_line"]["line2"]
             media_album_name = now_playing_data["three_line"]["line3"]
-            media_position = convert(now_playing_data["seek_position"], int, 0)
             media_duration = convert(now_playing_data.get("length"), int, 0)
             image_id = now_playing_data.get("image_key")
         except KeyError:

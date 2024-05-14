@@ -1,4 +1,5 @@
 """Test the shelly bluetooth scanner."""
+
 from __future__ import annotations
 
 from aioshelly.ble.const import BLE_SCAN_RESULT_EVENT

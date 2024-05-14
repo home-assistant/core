@@ -1,4 +1,5 @@
 """Denon HEOS Media Player."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
@@ -160,9 +161,9 @@ class HeosMediaPlayer(MediaPlayerEntity):
             async_dispatcher_connect(self.hass, SIGNAL_HEOS_UPDATED, self._heos_updated)
         )
         # Register this player's entity_id so it can be resolved by the group manager
-        self.hass.data[HEOS_DOMAIN][DATA_ENTITY_ID_MAP][
-            self._player.player_id
-        ] = self.entity_id
+        self.hass.data[HEOS_DOMAIN][DATA_ENTITY_ID_MAP][self._player.player_id] = (
+            self.entity_id
+        )
         async_dispatcher_send(self.hass, SIGNAL_HEOS_PLAYER_ADDED)
 
     @log_command_error("clear playlist")

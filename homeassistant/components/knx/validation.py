@@ -1,4 +1,5 @@
 """Validation helpers for KNX config schemas."""
+
 from collections.abc import Callable
 import ipaddress
 from typing import Any
@@ -36,17 +37,17 @@ string_type_validator = dpt_subclass_validator(DPTString)
 
 def ga_validator(value: Any) -> str | int:
     """Validate that value is parsable as GroupAddress or InternalGroupAddress."""
-    if isinstance(value, (str, int)):
-        try:
-            parse_device_group_address(value)
-            return value
-        except CouldNotParseAddress as exc:
-            raise vol.Invalid(
-                f"'{value}' is not a valid KNX group address: {exc.message}"
-            ) from exc
-    raise vol.Invalid(
-        f"'{value}' is not a valid KNX group address: Invalid type '{type(value).__name__}'"
-    )
+    if not isinstance(value, (str, int)):
+        raise vol.Invalid(
+            f"'{value}' is not a valid KNX group address: Invalid type '{type(value).__name__}'"
+        )
+    try:
+        parse_device_group_address(value)
+    except CouldNotParseAddress as exc:
+        raise vol.Invalid(
+            f"'{value}' is not a valid KNX group address: {exc.message}"
+        ) from exc
+    return value
 
 
 ga_list_validator = vol.All(

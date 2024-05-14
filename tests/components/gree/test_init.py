@@ -1,4 +1,5 @@
 """Tests for the Gree Integration."""
+
 from unittest.mock import patch
 
 from homeassistant.components.gree.const import DOMAIN as GREE_DOMAIN
@@ -14,13 +15,16 @@ async def test_setup_simple(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=GREE_DOMAIN)
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.gree.climate.async_setup_entry",
-        return_value=True,
-    ) as climate_setup, patch(
-        "homeassistant.components.gree.switch.async_setup_entry",
-        return_value=True,
-    ) as switch_setup:
+    with (
+        patch(
+            "homeassistant.components.gree.climate.async_setup_entry",
+            return_value=True,
+        ) as climate_setup,
+        patch(
+            "homeassistant.components.gree.switch.async_setup_entry",
+            return_value=True,
+        ) as switch_setup,
+    ):
         assert await async_setup_component(hass, GREE_DOMAIN, {})
         await hass.async_block_till_done()
 

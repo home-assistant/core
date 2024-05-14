@@ -1,4 +1,5 @@
 """Component to allow running Python scripts."""
+
 import datetime
 import glob
 import logging
@@ -284,12 +285,12 @@ def execute(hass, filename, source, data=None, return_response=False):
             raise ServiceValidationError(f"Error executing script: {err}") from err
         logger.error("Error executing script: %s", err)
         return None
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:
         if return_response:
             raise HomeAssistantError(
                 f"Error executing script ({type(err).__name__}): {err}"
             ) from err
-        logger.exception("Error executing script: %s", err)
+        logger.exception("Error executing script")
         return None
 
     return restricted_globals["output"]

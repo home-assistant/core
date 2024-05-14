@@ -1,4 +1,5 @@
 """Support for MQTT lights."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -711,7 +712,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 keys.append("white")
             elif color_mode == ColorMode.RGBWW:
                 keys.extend(["cold_white", "warm_white"])
-            variables = dict(zip(keys, color))
+            variables = dict(zip(keys, color, strict=False))
             return self._command_templates[template](rgb_color_str, variables)
 
         def set_optimistic(

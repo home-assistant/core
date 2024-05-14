@@ -1,4 +1,5 @@
 """Code to handle the Plenticore API."""
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -100,8 +101,10 @@ class Plenticore:
             manufacturer="Kostal",
             model=f"{prod1} {prod2}",
             name=settings["scb:network"][hostname_id],
-            sw_version=f'IOC: {device_local["Properties:VersionIOC"]}'
-            + f' MC: {device_local["Properties:VersionMC"]}',
+            sw_version=(
+                f'IOC: {device_local["Properties:VersionIOC"]}'
+                f' MC: {device_local["Properties:VersionMC"]}'
+            ),
         )
 
         return True
@@ -232,8 +235,7 @@ class SettingDataUpdateCoordinator(
 
         _LOGGER.debug("Fetching %s for %s", self.name, self._fetch)
 
-        fetched_data = await client.get_setting_values(self._fetch)
-        return fetched_data
+        return await client.get_setting_values(self._fetch)
 
 
 class PlenticoreSelectUpdateCoordinator(DataUpdateCoordinator[_DataT]):  # pylint: disable=hass-enforce-coordinator-module
@@ -292,9 +294,7 @@ class SelectDataUpdateCoordinator(
 
         _LOGGER.debug("Fetching select %s for %s", self.name, self._fetch)
 
-        fetched_data = await self._async_get_current_option(self._fetch)
-
-        return fetched_data
+        return await self._async_get_current_option(self._fetch)
 
     async def _async_get_current_option(
         self,
@@ -310,8 +310,7 @@ class SelectDataUpdateCoordinator(
                     continue
                 for option in val.values():
                     if option[all_option] == "1":
-                        fetched = {mid: {cast(str, pids[0]): all_option}}
-                        return fetched
+                        return {mid: {cast(str, pids[0]): all_option}}
 
             return {mid: {cast(str, pids[0]): "None"}}
         return {}

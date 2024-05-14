@@ -1,4 +1,5 @@
 """Creates HomeWizard Energy switch entities."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -56,7 +57,7 @@ SWITCHES = [
         key="cloud_connection",
         translation_key="cloud_connection",
         entity_category=EntityCategory.CONFIG,
-        create_fn=lambda coordinator: coordinator.supports_system(),
+        create_fn=lambda _: True,
         available_fn=lambda data: data.system is not None,
         is_on_fn=lambda data: data.system.cloud_enabled if data.system else None,
         set_fn=lambda api, active: api.system_set(cloud_enabled=active),

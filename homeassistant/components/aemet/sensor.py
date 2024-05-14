@@ -1,4 +1,5 @@
 """Support for the AEMET OpenData service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -55,6 +56,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from . import AemetConfigEntry
 from .const import (
     ATTR_API_CONDITION,
     ATTR_API_FORECAST_CONDITION,
@@ -86,9 +88,6 @@ from .const import (
     ATTR_API_WIND_SPEED,
     ATTRIBUTION,
     CONDITIONS_MAP,
-    DOMAIN,
-    ENTRY_NAME,
-    ENTRY_WEATHER_COORDINATOR,
 )
 from .coordinator import WeatherUpdateCoordinator
 from .entity import AemetEntity
@@ -359,28 +358,24 @@ WEATHER_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AemetConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AEMET OpenData sensor entities based on a config entry."""
-    domain_data = hass.data[DOMAIN][config_entry.entry_id]
-    name: str = domain_data[ENTRY_NAME]
-    coordinator: WeatherUpdateCoordinator = domain_data[ENTRY_WEATHER_COORDINATOR]
+    domain_data = config_entry.runtime_data
+    name = domain_data.name
+    coordinator = domain_data.coordinator
 
-    entities: list[AemetSensor] = []
-
-    for description in FORECAST_SENSORS + WEATHER_SENSORS:
-        if dict_nested_value(coordinator.data["lib"], description.keys) is not None:
-            entities.append(
-                AemetSensor(
-                    name,
-                    coordinator,
-                    description,
-                    config_entry,
-                )
-            )
-
-    async_add_entities(entities)
+    async_add_entities(
+        AemetSensor(
+            name,
+            coordinator,
+            description,
+            config_entry,
+        )
+        for description in FORECAST_SENSORS + WEATHER_SENSORS
+        if dict_nested_value(coordinator.data["lib"], description.keys) is not None
+    )
 
 
 class AemetSensor(AemetEntity, SensorEntity):

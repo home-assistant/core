@@ -3,6 +3,7 @@
 All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
+
 from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
     ATTR_PARAMS,

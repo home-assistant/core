@@ -1,7 +1,8 @@
 """Test the Google Maps Travel Time config flow."""
+
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.google_travel_time.const import (
     ARRIVAL_TIME,
     CONF_ARRIVAL_TIME,
@@ -22,6 +23,7 @@ from homeassistant.components.google_travel_time.const import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_MODE, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .const import MOCK_CONFIG
 
@@ -32,7 +34,7 @@ async def test_minimum_fields(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -40,7 +42,7 @@ async def test_minimum_fields(hass: HomeAssistant) -> None:
         MOCK_CONFIG,
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == DEFAULT_NAME
     assert result2["data"] == {
         CONF_NAME: DEFAULT_NAME,
@@ -56,14 +58,14 @@ async def test_invalid_config_entry(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         MOCK_CONFIG,
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -73,14 +75,14 @@ async def test_invalid_api_key(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         MOCK_CONFIG,
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -90,14 +92,14 @@ async def test_transport_error(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         MOCK_CONFIG,
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -107,14 +109,14 @@ async def test_timeout(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         MOCK_CONFIG,
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "timeout_connect"}
 
 
@@ -123,14 +125,14 @@ async def test_malformed_api_key(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         MOCK_CONFIG,
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -153,7 +155,7 @@ async def test_options_flow(hass: HomeAssistant, mock_config) -> None:
         mock_config.entry_id, data=None
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -170,7 +172,7 @@ async def test_options_flow(hass: HomeAssistant, mock_config) -> None:
             CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
         },
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ""
     assert result["data"] == {
         CONF_MODE: "driving",
@@ -214,7 +216,7 @@ async def test_options_flow_departure_time(hass: HomeAssistant, mock_config) -> 
         mock_config.entry_id, data=None
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -231,7 +233,7 @@ async def test_options_flow_departure_time(hass: HomeAssistant, mock_config) -> 
             CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
         },
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ""
     assert result["data"] == {
         CONF_MODE: "driving",
@@ -284,7 +286,7 @@ async def test_reset_departure_time(hass: HomeAssistant, mock_config) -> None:
         mock_config.entry_id, data=None
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -330,7 +332,7 @@ async def test_reset_arrival_time(hass: HomeAssistant, mock_config) -> None:
         mock_config.entry_id, data=None
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -374,7 +376,7 @@ async def test_reset_options_flow_fields(hass: HomeAssistant, mock_config) -> No
         mock_config.entry_id, data=None
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -400,7 +402,7 @@ async def test_dupe(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -412,13 +414,13 @@ async def test_dupe(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -431,4 +433,4 @@ async def test_dupe(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY

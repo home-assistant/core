@@ -1,4 +1,5 @@
 """Support for Daikin AC sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -39,16 +40,11 @@ from .const import (
 )
 
 
-@dataclass(frozen=True)
-class DaikinRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class DaikinSensorEntityDescription(SensorEntityDescription):
+    """Describes Daikin sensor entity."""
 
     value_func: Callable[[Appliance], float | None]
-
-
-@dataclass(frozen=True)
-class DaikinSensorEntityDescription(SensorEntityDescription, DaikinRequiredKeysMixin):
-    """Describes Daikin sensor entity."""
 
 
 SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (

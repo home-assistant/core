@@ -1,4 +1,5 @@
 """Setup the Reolink tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -50,12 +51,15 @@ def reolink_connect_class(
     mock_get_source_ip: None,
 ) -> Generator[MagicMock, None, None]:
     """Mock reolink connection and return both the host_mock and host_mock_class."""
-    with patch(
-        "homeassistant.components.reolink.host.webhook.async_register",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.reolink.host.Host", autospec=True
-    ) as host_mock_class:
+    with (
+        patch(
+            "homeassistant.components.reolink.host.webhook.async_register",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.reolink.host.Host", autospec=True
+        ) as host_mock_class,
+    ):
         host_mock = host_mock_class.return_value
         host_mock.get_host_data.return_value = None
         host_mock.get_states.return_value = None

@@ -1,4 +1,5 @@
 """Constants for sensor."""
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -344,6 +345,7 @@ class SensorDeviceClass(StrEnum):
     - SI /metric: `mm/d`, `mm/h`, `m/s`, `km/h`
     - USCS / imperial: `in/d`, `in/h`, `ft/s`, `mph`
     - Nautical: `kn`
+    - Beaufort: `Beaufort`
     """
 
     SULPHUR_DIOXIDE = "sulphur_dioxide"
@@ -431,6 +433,7 @@ class SensorDeviceClass(StrEnum):
     - SI /metric: `m/s`, `km/h`
     - USCS / imperial: `ft/s`, `mph`
     - Nautical: `kn`
+    - Beaufort: `Beaufort`
     """
 
 

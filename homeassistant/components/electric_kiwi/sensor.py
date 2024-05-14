@@ -1,4 +1,5 @@
 """Support for Electric Kiwi sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -34,18 +35,11 @@ ATTR_NEXT_BILLING_DATE = "next_billing_date"
 ATTR_HOP_PERCENTAGE = "hop_percentage"
 
 
-@dataclass(frozen=True)
-class ElectricKiwiAccountRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class ElectricKiwiAccountSensorEntityDescription(SensorEntityDescription):
+    """Describes Electric Kiwi sensor entity."""
 
     value_func: Callable[[AccountBalance], float | datetime]
-
-
-@dataclass(frozen=True)
-class ElectricKiwiAccountSensorEntityDescription(
-    SensorEntityDescription, ElectricKiwiAccountRequiredKeysMixin
-):
-    """Describes Electric Kiwi sensor entity."""
 
 
 ACCOUNT_SENSOR_TYPES: tuple[ElectricKiwiAccountSensorEntityDescription, ...] = (
@@ -85,19 +79,11 @@ ACCOUNT_SENSOR_TYPES: tuple[ElectricKiwiAccountSensorEntityDescription, ...] = (
 )
 
 
-@dataclass(frozen=True)
-class ElectricKiwiHOPRequiredKeysMixin:
-    """Mixin for required HOP keys."""
+@dataclass(frozen=True, kw_only=True)
+class ElectricKiwiHOPSensorEntityDescription(SensorEntityDescription):
+    """Describes Electric Kiwi HOP sensor entity."""
 
     value_func: Callable[[Hop], datetime]
-
-
-@dataclass(frozen=True)
-class ElectricKiwiHOPSensorEntityDescription(
-    SensorEntityDescription,
-    ElectricKiwiHOPRequiredKeysMixin,
-):
-    """Describes Electric Kiwi HOP sensor entity."""
 
 
 def _check_and_move_time(hop: Hop, time: str) -> datetime:
@@ -181,8 +167,8 @@ class ElectricKiwiAccountEntity(
         super().__init__(coordinator)
 
         self._attr_unique_id = (
-            f"{coordinator._ek_api.customer_number}"
-            f"_{coordinator._ek_api.connection_id}_{description.key}"
+            f"{coordinator._ek_api.customer_number}"  # noqa: SLF001
+            f"_{coordinator._ek_api.connection_id}_{description.key}"  # noqa: SLF001
         )
         self.entity_description = description
 
@@ -210,8 +196,8 @@ class ElectricKiwiHOPEntity(
         super().__init__(coordinator)
 
         self._attr_unique_id = (
-            f"{coordinator._ek_api.customer_number}"
-            f"_{coordinator._ek_api.connection_id}_{description.key}"
+            f"{coordinator._ek_api.customer_number}"  # noqa: SLF001
+            f"_{coordinator._ek_api.connection_id}_{description.key}"  # noqa: SLF001
         )
         self.entity_description = description
 

@@ -1,4 +1,5 @@
 """Constants and shared schema for the Azure Event Hub integration."""
+
 from __future__ import annotations
 
 from typing import Any

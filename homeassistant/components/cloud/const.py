@@ -1,9 +1,10 @@
 """Constants for the cloud component."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.helpers.dispatcher import SignalType
+from homeassistant.util.signal_type import SignalType
 
 DOMAIN = "cloud"
 DATA_PLATFORMS_SETUP = "cloud_platforms_setup"
@@ -32,7 +33,8 @@ PREF_GOOGLE_SETTINGS_VERSION = "google_settings_version"
 PREF_TTS_DEFAULT_VOICE = "tts_default_voice"
 PREF_GOOGLE_CONNECTED = "google_connected"
 PREF_REMOTE_ALLOW_REMOTE_ENABLE = "remote_allow_remote_enable"
-DEFAULT_TTS_DEFAULT_VOICE = ("en-US", "female")
+PREF_STRICT_CONNECTION = "strict_connection"
+DEFAULT_TTS_DEFAULT_VOICE = ("en-US", "JennyNeural")
 DEFAULT_DISABLE_2FA = False
 DEFAULT_ALEXA_REPORT_STATE = True
 DEFAULT_GOOGLE_REPORT_STATE = True

@@ -1,4 +1,5 @@
 """Support for BT Smart Hub (Sometimes referred to as BT Home Hub 6)."""
+
 from __future__ import annotations
 
 from collections import namedtuple

@@ -1,4 +1,5 @@
 """Support for IQVIA sensors."""
+
 from __future__ import annotations
 
 from statistics import mean
@@ -211,12 +212,12 @@ class ForecastSensor(IQVIAEntity, SensorEntity):
             if not outlook_coordinator.last_update_success:
                 return
 
-            self._attr_extra_state_attributes[
-                ATTR_OUTLOOK
-            ] = outlook_coordinator.data.get("Outlook")
-            self._attr_extra_state_attributes[
-                ATTR_SEASON
-            ] = outlook_coordinator.data.get("Season")
+            self._attr_extra_state_attributes[ATTR_OUTLOOK] = (
+                outlook_coordinator.data.get("Outlook")
+            )
+            self._attr_extra_state_attributes[ATTR_SEASON] = (
+                outlook_coordinator.data.get("Season")
+            )
 
 
 class IndexSensor(IQVIAEntity, SensorEntity):
@@ -282,8 +283,8 @@ class IndexSensor(IQVIAEntity, SensorEntity):
                 )
         elif self.entity_description.key == TYPE_DISEASE_TODAY:
             for attrs in period["Triggers"]:
-                self._attr_extra_state_attributes[
-                    f"{attrs['Name'].lower()}_index"
-                ] = attrs["Index"]
+                self._attr_extra_state_attributes[f"{attrs['Name'].lower()}_index"] = (
+                    attrs["Index"]
+                )
 
         self._attr_native_value = period["Index"]

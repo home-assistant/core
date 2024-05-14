@@ -1,4 +1,5 @@
 """Support for monitoring a Sense energy sensor."""
+
 from datetime import timedelta
 import logging
 

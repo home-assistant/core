@@ -1,4 +1,5 @@
 """Support for the JustNimbus platform."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -28,25 +29,17 @@ from .const import DOMAIN
 from .entity import JustNimbusEntity
 
 
-@dataclass(frozen=True)
-class JustNimbusEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class JustNimbusEntityDescription(SensorEntityDescription):
+    """Describes JustNimbus sensor entity."""
 
     value_fn: Callable[[JustNimbusCoordinator], Any]
-
-
-@dataclass(frozen=True)
-class JustNimbusEntityDescription(
-    SensorEntityDescription, JustNimbusEntityDescriptionMixin
-):
-    """Describes JustNimbus sensor entity."""
 
 
 SENSOR_TYPES = (
     JustNimbusEntityDescription(
         key="pump_pressure",
         translation_key="pump_pressure",
-        icon="mdi:water-pump",
         native_unit_of_measurement=UnitOfPressure.BAR,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -56,7 +49,6 @@ SENSOR_TYPES = (
     JustNimbusEntityDescription(
         key="reservoir_temp",
         translation_key="reservoir_temperature",
-        icon="mdi:coolant-temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -66,7 +58,6 @@ SENSOR_TYPES = (
     JustNimbusEntityDescription(
         key="reservoir_content",
         translation_key="reservoir_content",
-        icon="mdi:car-coolant-level",
         native_unit_of_measurement=UnitOfVolume.LITERS,
         device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.TOTAL,
@@ -76,7 +67,6 @@ SENSOR_TYPES = (
     JustNimbusEntityDescription(
         key="water_saved",
         translation_key="water_saved",
-        icon="mdi:water-opacity",
         native_unit_of_measurement=UnitOfVolume.LITERS,
         device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -86,7 +76,6 @@ SENSOR_TYPES = (
     JustNimbusEntityDescription(
         key="water_used",
         translation_key="water_used",
-        icon="mdi:chart-donut",
         native_unit_of_measurement=UnitOfVolume.LITERS,
         device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -96,7 +85,6 @@ SENSOR_TYPES = (
     JustNimbusEntityDescription(
         key="reservoir_capacity",
         translation_key="reservoir_capacity",
-        icon="mdi:waves",
         native_unit_of_measurement=UnitOfVolume.LITERS,
         device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.TOTAL,
@@ -106,7 +94,6 @@ SENSOR_TYPES = (
     JustNimbusEntityDescription(
         key="pump_type",
         translation_key="pump_type",
-        icon="mdi:pump",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda coordinator: coordinator.data.pump_type,
     ),

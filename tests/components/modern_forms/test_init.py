@@ -1,4 +1,5 @@
 """Tests for the Modern Forms integration."""
+
 from unittest.mock import MagicMock, patch
 
 from aiomodernforms import ModernFormsConnectionError

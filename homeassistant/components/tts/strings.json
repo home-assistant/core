@@ -17,7 +17,7 @@
           "description": "Stores this message locally so that when the text is requested again, the output can be produced more quickly."
         },
         "language": {
-          "name": "Language",
+          "name": "[%key:common::config_flow::data::language%]",
           "description": "Language to use for speech generation."
         },
         "options": {
@@ -43,7 +43,7 @@
           "description": "[%key:component::tts::services::say::fields::cache::description%]"
         },
         "language": {
-          "name": "[%key:component::tts::services::say::fields::language::name%]",
+          "name": "[%key:common::config_flow::data::language%]",
           "description": "[%key:component::tts::services::say::fields::language::description%]"
         },
         "options": {

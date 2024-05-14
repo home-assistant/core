@@ -1,4 +1,5 @@
 """Provides a switch for Home Connect."""
+
 import logging
 from typing import Any
 
@@ -91,7 +92,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
     """Power switch class for Home Connect."""
 
     def __init__(self, device):
-        """Inititialize the entity."""
+        """Initialize the entity."""
         super().__init__(device, "Power")
 
     async def async_turn_on(self, **kwargs: Any) -> None:

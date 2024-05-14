@@ -1,4 +1,5 @@
 """Config flow for Awair."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -11,10 +12,9 @@ from python_awair.user import AwairUser
 import voluptuous as vol
 
 from homeassistant.components import onboarding, zeroconf
-from homeassistant.config_entries import SOURCE_ZEROCONF, ConfigFlow
+from homeassistant.config_entries import SOURCE_ZEROCONF, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DEVICE, CONF_HOST
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
@@ -29,7 +29,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
 
         host = discovery_info.host
@@ -58,7 +58,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm discovery."""
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             title = f"{self._device.model} ({self._device.device_id})"
@@ -79,12 +79,12 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
 
         return self.async_show_menu(step_id="user", menu_options=["local", "cloud"])
 
-    async def async_step_cloud(self, user_input: Mapping[str, Any]) -> FlowResult:
+    async def async_step_cloud(self, user_input: Mapping[str, Any]) -> ConfigFlowResult:
         """Handle collecting and verifying Awair Cloud API credentials."""
 
         errors = {}
@@ -122,14 +122,14 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
         for flow in self._async_in_progress():
             if flow["context"]["source"] == SOURCE_ZEROCONF:
                 info = flow["context"]["title_placeholders"]
-                entries[
-                    flow["context"]["host"]
-                ] = f"{info['model']} ({info['device_id']})"
+                entries[flow["context"]["host"]] = (
+                    f"{info['model']} ({info['device_id']})"
+                )
         return entries
 
     async def async_step_local(
         self, user_input: Mapping[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Show how to enable local API."""
         if user_input is not None:
             return await self.async_step_local_pick()
@@ -143,7 +143,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_local_pick(
         self, user_input: Mapping[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle collecting and verifying Awair Local API hosts."""
 
         errors = {}
@@ -188,13 +188,15 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle re-auth if token invalid."""
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         errors = {}
 
@@ -248,13 +250,12 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             user = await awair.user()
             devices = await user.devices()
-            if not devices:
-                return (None, "no_devices_found")
-
-            return (user, None)
-
         except AuthError:
             return (None, "invalid_access_token")
         except AwairError as err:
             LOGGER.error("Unexpected API error: %s", err)
             return (None, "unknown")
+
+        if not devices:
+            return (None, "no_devices_found")
+        return (user, None)

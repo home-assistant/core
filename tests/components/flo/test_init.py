@@ -1,4 +1,5 @@
 """Test init."""
+
 from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant

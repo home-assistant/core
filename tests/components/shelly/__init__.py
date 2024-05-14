@@ -1,4 +1,5 @@
 """Tests for the Shelly integration."""
+
 from collections.abc import Mapping
 from copy import deepcopy
 from datetime import timedelta
@@ -123,6 +124,18 @@ def register_entity(
         capabilities=capabilities,
     )
     return f"{domain}.{object_id}"
+
+
+def get_entity(
+    hass: HomeAssistant,
+    domain: str,
+    unique_id: str,
+) -> str | None:
+    """Get Shelly entity."""
+    entity_registry = async_get(hass)
+    return entity_registry.async_get_entity_id(
+        domain, DOMAIN, f"{MOCK_MAC}-{unique_id}"
+    )
 
 
 def get_entity_state(hass: HomeAssistant, entity_id: str) -> str:

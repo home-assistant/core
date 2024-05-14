@@ -1,12 +1,17 @@
 """DataUpdateCoordinator for the Bring! integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 import logging
 
 from bring_api.bring import Bring
-from bring_api.exceptions import BringParseException, BringRequestException
-from bring_api.types import BringItemsResponse, BringList
+from bring_api.exceptions import (
+    BringAuthException,
+    BringParseException,
+    BringRequestException,
+)
+from bring_api.types import BringList, BringPurchase
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -20,8 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 class BringData(BringList):
     """Coordinator data class."""
 
-    purchase_items: list[BringItemsResponse]
-    recently_items: list[BringItemsResponse]
+    purchase_items: list[BringPurchase]
+    recently_items: list[BringPurchase]
 
 
 class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
@@ -46,6 +51,10 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
             raise UpdateFailed("Unable to connect and retrieve data from bring") from e
         except BringParseException as e:
             raise UpdateFailed("Unable to parse response from bring") from e
+        except BringAuthException as e:
+            raise UpdateFailed(
+                "Unable to retrieve data from bring, authentication failed"
+            ) from e
 
         list_dict = {}
         for lst in lists_response["lists"]:

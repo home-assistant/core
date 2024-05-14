@@ -1,4 +1,5 @@
 """The tests for Kira."""
+
 import os
 import shutil
 import tempfile
@@ -6,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
-import homeassistant.components.kira as kira
+from homeassistant.components import kira
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 

@@ -1,8 +1,8 @@
 """The tests for Electric Kiwi sensors."""
 
-
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, Mock
+import zoneinfo
 
 from freezegun import freeze_time
 import pytest
@@ -20,9 +20,21 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 import homeassistant.util.dt as dt_util
 
-from .conftest import TIMEZONE, ComponentSetup, YieldFixture
+from .conftest import ComponentSetup, YieldFixture
 
 from tests.common import MockConfigEntry
+
+DEFAULT_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
+TEST_TZ_NAME = "Pacific/Auckland"
+TEST_TIMEZONE = zoneinfo.ZoneInfo(TEST_TZ_NAME)
+
+
+@pytest.fixture(autouse=True)
+def restore_timezone():
+    """Restore default timezone."""
+    yield
+
+    dt_util.set_default_time_zone(DEFAULT_TIME_ZONE)
 
 
 @pytest.mark.parametrize(
@@ -125,8 +137,8 @@ async def test_check_and_move_time(ek_api: AsyncMock) -> None:
     """Test correct time is returned depending on time of day."""
     hop = await ek_api(Mock()).get_hop()
 
-    test_time = datetime(2023, 6, 21, 18, 0, 0, tzinfo=TIMEZONE)
-    dt_util.set_default_time_zone(TIMEZONE)
+    test_time = datetime(2023, 6, 21, 18, 0, 0, tzinfo=TEST_TIMEZONE)
+    dt_util.set_default_time_zone(TEST_TIMEZONE)
 
     with freeze_time(test_time):
         value = _check_and_move_time(hop, "4:00 PM")

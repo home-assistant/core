@@ -1,4 +1,5 @@
 """The tests for the utility_meter component."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -61,10 +62,10 @@ async def test_restore_state(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     "meter",
-    (
+    [
         ["select.energy_bill"],
         "select.energy_bill",
-    ),
+    ],
 )
 async def test_services(hass: HomeAssistant, meter) -> None:
     """Test energy sensor reset service."""
@@ -384,7 +385,7 @@ async def test_setup_missing_discovery(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("tariffs", "expected_entities"),
-    (
+    [
         (
             [],
             ["sensor.electricity_meter"],
@@ -397,7 +398,7 @@ async def test_setup_missing_discovery(hass: HomeAssistant) -> None:
                 "select.electricity_meter",
             ],
         ),
-    ),
+    ],
 )
 async def test_setup_and_remove_config_entry(
     hass: HomeAssistant, tariffs: str, expected_entities: list[str]

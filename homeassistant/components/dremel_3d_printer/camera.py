@@ -1,4 +1,5 @@
 """Support for Dremel 3D45 Camera."""
+
 from __future__ import annotations
 
 from homeassistant.components.camera import CameraEntityDescription

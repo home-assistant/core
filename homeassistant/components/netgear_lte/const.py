@@ -1,4 +1,5 @@
 """Constants for the Netgear LTE integration."""
+
 import logging
 from typing import Final
 

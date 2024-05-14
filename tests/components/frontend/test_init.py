@@ -1,4 +1,5 @@
 """The tests for Home Assistant frontend."""
+
 from http import HTTPStatus
 import re
 from typing import Any
@@ -15,6 +16,8 @@ from homeassistant.components.frontend import (
     DOMAIN,
     EVENT_PANELS_UPDATED,
     THEMES_STORAGE_KEY,
+    async_register_built_in_panel,
+    async_remove_panel,
 )
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.core import HomeAssistant
@@ -416,8 +419,8 @@ async def test_get_panels(
     resp = await mock_http_client.get("/map")
     assert resp.status == HTTPStatus.NOT_FOUND
 
-    hass.components.frontend.async_register_built_in_panel(
-        "map", "Map", "mdi:tooltip-account", require_admin=True
+    async_register_built_in_panel(
+        hass, "map", "Map", "mdi:tooltip-account", require_admin=True
     )
 
     resp = await mock_http_client.get("/map")
@@ -439,7 +442,7 @@ async def test_get_panels(
     assert msg["result"]["map"]["title"] == "Map"
     assert msg["result"]["map"]["require_admin"] is True
 
-    hass.components.frontend.async_remove_panel("map")
+    async_remove_panel(hass, "map")
 
     resp = await mock_http_client.get("/map")
     assert resp.status == HTTPStatus.NOT_FOUND
@@ -453,12 +456,10 @@ async def test_get_panels_non_admin(
     """Test get_panels command."""
     hass_admin_user.groups = []
 
-    hass.components.frontend.async_register_built_in_panel(
-        "map", "Map", "mdi:tooltip-account", require_admin=True
+    async_register_built_in_panel(
+        hass, "map", "Map", "mdi:tooltip-account", require_admin=True
     )
-    hass.components.frontend.async_register_built_in_panel(
-        "history", "History", "mdi:history"
-    )
+    async_register_built_in_panel(hass, "history", "History", "mdi:history")
 
     await ws_client.send_json({"id": 5, "type": "get_panels"})
 

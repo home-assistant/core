@@ -26,7 +26,7 @@
         'model': 'AP2',
         'name': 'Airversa AP2 1808',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '1234',
         'suggested_area': None,
         'sw_version': '0.8.16',
       }),
@@ -37,6 +37,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -75,46 +77,10 @@
             'aliases': list([
             ]),
             'area_id': None,
-            'capabilities': None,
-            'config_entry_id': 'TestData',
-            'device_class': None,
-            'disabled_by': None,
-            'domain': 'button',
-            'entity_category': <EntityCategory.CONFIG: 'config'>,
-            'entity_id': 'button.airversa_ap2_1808_provision_preferred_thread_credentials',
-            'has_entity_name': False,
-            'hidden_by': None,
-            'icon': None,
-            'labels': list([
-            ]),
-            'name': None,
-            'options': dict({
-            }),
-            'original_device_class': None,
-            'original_icon': None,
-            'original_name': 'Airversa AP2 1808 Provision Preferred Thread Credentials',
-            'platform': 'homekit_controller',
-            'previous_unique_id': None,
-            'supported_features': 0,
-            'translation_key': None,
-            'unique_id': '00:00:00:00:00:00_1_112_119',
-            'unit_of_measurement': None,
-          }),
-          'state': dict({
-            'attributes': dict({
-              'friendly_name': 'Airversa AP2 1808 Provision Preferred Thread Credentials',
-            }),
-            'entity_id': 'button.airversa_ap2_1808_provision_preferred_thread_credentials',
-            'state': 'unknown',
-          }),
-        }),
-        dict({
-          'entry': dict({
-            'aliases': list([
-            ]),
-            'area_id': None,
             'capabilities': dict({
               'preset_modes': None,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -164,6 +130,8 @@
                 'manual',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -212,6 +180,8 @@
                 'purifying',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -258,6 +228,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -300,6 +272,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -341,6 +315,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -391,6 +367,8 @@
                 'router_eligible',
                 'sleepy',
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -449,6 +427,8 @@
                 'router',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -497,6 +477,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -512,19 +494,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:lock-open',
+            'original_icon': None,
             'original_name': 'Airversa AP2 1808 Lock Physical Controls',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'lock_physical_controls',
             'unique_id': '00:00:00:00:00:00_1_32832_32839',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Airversa AP2 1808 Lock Physical Controls',
-              'icon': 'mdi:lock-open',
             }),
             'entity_id': 'switch.airversa_ap2_1808_lock_physical_controls',
             'state': 'off',
@@ -536,6 +517,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -551,19 +534,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:volume-mute',
+            'original_icon': None,
             'original_name': 'Airversa AP2 1808 Mute',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'mute',
             'unique_id': '00:00:00:00:00:00_1_32832_32843',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Airversa AP2 1808 Mute',
-              'icon': 'mdi:volume-mute',
             }),
             'entity_id': 'switch.airversa_ap2_1808_mute',
             'state': 'on',
@@ -575,6 +557,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -590,19 +574,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:power-sleep',
+            'original_icon': None,
             'original_name': 'Airversa AP2 1808 Sleep Mode',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'sleep_mode',
             'unique_id': '00:00:00:00:00:00_1_32832_32842',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Airversa AP2 1808 Sleep Mode',
-              'icon': 'mdi:power-sleep',
             }),
             'entity_id': 'switch.airversa_ap2_1808_sleep_mode',
             'state': 'off',
@@ -639,7 +622,7 @@
         'model': 'T8010',
         'name': 'eufy HomeBase2-0AAA',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'A0000A000000000A',
         'suggested_area': None,
         'sw_version': '2.1.6',
       }),
@@ -650,6 +633,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -710,7 +695,7 @@
         'model': 'T8113',
         'name': 'eufyCam2-0000',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'A0000A000000000D',
         'suggested_area': None,
         'sw_version': '1.6.7',
       }),
@@ -721,6 +706,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -760,6 +747,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -799,6 +788,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -839,6 +830,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -882,6 +875,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -897,19 +892,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:volume-mute',
+            'original_icon': None,
             'original_name': 'eufyCam2-0000 Mute',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'mute',
             'unique_id': '00:00:00:00:00:00_4_80_83',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'eufyCam2-0000 Mute',
-              'icon': 'mdi:volume-mute',
             }),
             'entity_id': 'switch.eufycam2_0000_mute',
             'state': 'off',
@@ -942,7 +936,7 @@
         'model': 'T8113',
         'name': 'eufyCam2-000A',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'A0000A000000000B',
         'suggested_area': None,
         'sw_version': '1.6.7',
       }),
@@ -953,6 +947,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -992,6 +988,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1031,6 +1029,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1071,6 +1071,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -1114,6 +1116,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1129,19 +1133,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:volume-mute',
+            'original_icon': None,
             'original_name': 'eufyCam2-000A Mute',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'mute',
             'unique_id': '00:00:00:00:00:00_2_80_83',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'eufyCam2-000A Mute',
-              'icon': 'mdi:volume-mute',
             }),
             'entity_id': 'switch.eufycam2_000a_mute',
             'state': 'off',
@@ -1174,7 +1177,7 @@
         'model': 'T8113',
         'name': 'eufyCam2-000A',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'A0000A000000000C',
         'suggested_area': None,
         'sw_version': '1.6.7',
       }),
@@ -1185,6 +1188,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1224,6 +1229,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1263,6 +1270,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1303,6 +1312,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -1346,6 +1357,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1361,19 +1374,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:volume-mute',
+            'original_icon': None,
             'original_name': 'eufyCam2-000A Mute',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'mute',
             'unique_id': '00:00:00:00:00:00_3_80_83',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'eufyCam2-000A Mute',
-              'icon': 'mdi:volume-mute',
             }),
             'entity_id': 'switch.eufycam2_000a_mute_2',
             'state': 'off',
@@ -1410,7 +1422,7 @@
         'model': 'HE1-G01',
         'name': 'Aqara-Hub-E1-00A0',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '00aa00000a0',
         'suggested_area': None,
         'sw_version': '3.3.0',
       }),
@@ -1421,6 +1433,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1436,7 +1450,7 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:security',
+            'original_icon': None,
             'original_name': 'Aqara-Hub-E1-00A0 Security System',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -1451,7 +1465,6 @@
               'code_arm_required': True,
               'code_format': None,
               'friendly_name': 'Aqara-Hub-E1-00A0 Security System',
-              'icon': 'mdi:security',
               'supported_features': <AlarmControlPanelEntityFeature: 7>,
             }),
             'entity_id': 'alarm_control_panel.aqara_hub_e1_00a0_security_system',
@@ -1464,6 +1477,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1508,6 +1523,8 @@
               'mode': <NumberMode.AUTO: 'auto'>,
               'step': 1,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1523,19 +1540,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:volume-high',
+            'original_icon': None,
             'original_name': 'Aqara-Hub-E1-00A0 Volume',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'volume',
             'unique_id': '00:00:00:00:00:00_1_17_1114116',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Aqara-Hub-E1-00A0 Volume',
-              'icon': 'mdi:volume-high',
               'max': 100,
               'min': 0.0,
               'mode': <NumberMode.AUTO: 'auto'>,
@@ -1551,6 +1567,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1566,19 +1584,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:lock-open',
+            'original_icon': None,
             'original_name': 'Aqara-Hub-E1-00A0 Pairing Mode',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'pairing_mode',
             'unique_id': '00:00:00:00:00:00_1_17_1114117',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Aqara-Hub-E1-00A0 Pairing Mode',
-              'icon': 'mdi:lock-open',
             }),
             'entity_id': 'switch.aqara_hub_e1_00a0_pairing_mode',
             'state': 'off',
@@ -1611,7 +1628,7 @@
         'model': 'AS006',
         'name': 'Contact Sensor',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '158d0007c59c6a',
         'suggested_area': None,
         'sw_version': '0',
       }),
@@ -1622,6 +1639,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1661,6 +1680,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1701,6 +1722,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -1769,7 +1792,7 @@
         'model': 'ZHWA11LM',
         'name': 'Aqara Hub-1563',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '0000000123456789',
         'suggested_area': None,
         'sw_version': '1.4.7',
       }),
@@ -1780,6 +1803,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1795,7 +1820,7 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:security',
+            'original_icon': None,
             'original_name': 'Aqara Hub-1563 Security System',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -1810,7 +1835,6 @@
               'code_arm_required': True,
               'code_format': None,
               'friendly_name': 'Aqara Hub-1563 Security System',
-              'icon': 'mdi:security',
               'supported_features': <AlarmControlPanelEntityFeature: 7>,
             }),
             'entity_id': 'alarm_control_panel.aqara_hub_1563_security_system',
@@ -1823,6 +1847,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1870,6 +1896,8 @@
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -1930,6 +1958,8 @@
               'mode': <NumberMode.AUTO: 'auto'>,
               'step': 1,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1945,19 +1975,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:volume-high',
+            'original_icon': None,
             'original_name': 'Aqara Hub-1563 Volume',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'volume',
             'unique_id': '00:00:00:00:00:00_1_65536_65541',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Aqara Hub-1563 Volume',
-              'icon': 'mdi:volume-high',
               'max': 100,
               'min': 0.0,
               'mode': <NumberMode.AUTO: 'auto'>,
@@ -1973,6 +2002,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -1988,19 +2019,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:lock-open',
+            'original_icon': None,
             'original_name': 'Aqara Hub-1563 Pairing Mode',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'pairing_mode',
             'unique_id': '00:00:00:00:00:00_1_65536_65538',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Aqara Hub-1563 Pairing Mode',
-              'icon': 'mdi:lock-open',
             }),
             'entity_id': 'switch.aqara_hub_1563_pairing_mode',
             'state': 'off',
@@ -2037,7 +2067,7 @@
         'model': 'AR004',
         'name': 'Programmable Switch',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '111a1111a1a111',
         'suggested_area': None,
         'sw_version': '9',
       }),
@@ -2048,6 +2078,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2088,6 +2120,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -2156,7 +2190,7 @@
         'model': 'ABC1000',
         'name': 'ArloBabyA0',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '00A0000000000',
         'suggested_area': None,
         'sw_version': '1.10.931',
       }),
@@ -2167,6 +2201,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2206,6 +2242,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2245,6 +2283,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2292,6 +2332,8 @@
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -2349,6 +2391,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2390,6 +2434,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -2435,6 +2481,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2478,6 +2526,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2519,6 +2569,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2534,19 +2586,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:volume-mute',
+            'original_icon': None,
             'original_name': 'ArloBabyA0 Mute',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'mute',
             'unique_id': '00:00:00:00:00:00_1_300_302',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'ArloBabyA0 Mute',
-              'icon': 'mdi:volume-mute',
             }),
             'entity_id': 'switch.arlobabya0_mute',
             'state': 'off',
@@ -2558,6 +2609,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2573,19 +2626,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:volume-mute',
+            'original_icon': None,
             'original_name': 'ArloBabyA0 Mute',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'mute',
             'unique_id': '00:00:00:00:00:00_1_400_402',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'ArloBabyA0 Mute',
-              'icon': 'mdi:volume-mute',
             }),
             'entity_id': 'switch.arlobabya0_mute_2',
             'state': 'off',
@@ -2622,7 +2674,7 @@
         'model': 'CS-IWO',
         'name': 'InWall Outlet-0394DE',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '1020301376',
         'suggested_area': None,
         'sw_version': '1.0.0',
       }),
@@ -2633,6 +2685,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2673,6 +2727,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -2717,6 +2773,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2759,6 +2817,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -2803,6 +2863,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2845,6 +2907,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -2889,6 +2953,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2930,6 +2996,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -2969,6 +3037,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3033,7 +3103,7 @@
         'model': 'REMOTE SENSOR',
         'name': 'Basement',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'AB3C',
         'suggested_area': None,
         'sw_version': '1.0.0',
       }),
@@ -3044,6 +3114,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3083,6 +3155,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3123,6 +3197,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -3186,7 +3262,7 @@
         'model': 'ecobee3',
         'name': 'HomeW',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '123456789012',
         'suggested_area': None,
         'sw_version': '4.2.394',
       }),
@@ -3197,6 +3273,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3236,6 +3314,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3275,6 +3355,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3313,6 +3395,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3362,6 +3446,8 @@
               'max_temp': 33.3,
               'min_humidity': 20,
               'min_temp': 7.2,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -3425,6 +3511,8 @@
                 'away',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3473,6 +3561,8 @@
                 'fahrenheit',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3488,7 +3578,7 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:thermometer',
+            'original_icon': None,
             'original_name': 'HomeW Temperature Display Units',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -3500,7 +3590,6 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'HomeW Temperature Display Units',
-              'icon': 'mdi:thermometer',
               'options': list([
                 'celsius',
                 'fahrenheit',
@@ -3517,6 +3606,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -3560,6 +3651,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -3623,7 +3716,7 @@
         'model': 'REMOTE SENSOR',
         'name': 'Kitchen',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'AB1C',
         'suggested_area': None,
         'sw_version': '1.0.0',
       }),
@@ -3634,6 +3727,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3673,6 +3768,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3713,6 +3810,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -3776,7 +3875,7 @@
         'model': 'REMOTE SENSOR',
         'name': 'Porch',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'AB2C',
         'suggested_area': None,
         'sw_version': '1.0.0',
       }),
@@ -3787,6 +3886,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3826,6 +3927,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3866,6 +3969,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -3933,7 +4038,7 @@
         'model': 'ecobee3',
         'name': 'HomeW',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '123456789012',
         'suggested_area': None,
         'sw_version': '4.2.394',
       }),
@@ -3944,6 +4049,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -3983,6 +4090,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4022,6 +4131,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4060,6 +4171,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4109,6 +4222,8 @@
               'max_temp': 33.3,
               'min_humidity': 20,
               'min_temp': 7.2,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -4172,6 +4287,8 @@
                 'away',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4220,6 +4337,8 @@
                 'fahrenheit',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4235,7 +4354,7 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:thermometer',
+            'original_icon': None,
             'original_name': 'HomeW Temperature Display Units',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -4247,7 +4366,6 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'HomeW Temperature Display Units',
-              'icon': 'mdi:thermometer',
               'options': list([
                 'celsius',
                 'fahrenheit',
@@ -4264,6 +4382,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -4307,6 +4427,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -4374,7 +4496,7 @@
         'model': 'REMOTE SENSOR',
         'name': 'Basement',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'AB3C',
         'suggested_area': None,
         'sw_version': '1.0.0',
       }),
@@ -4385,6 +4507,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4424,6 +4548,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4484,7 +4610,7 @@
         'model': 'ecobee3',
         'name': 'HomeW',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '123456789012',
         'suggested_area': None,
         'sw_version': '4.2.394',
       }),
@@ -4495,6 +4621,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4544,6 +4672,8 @@
               'max_temp': 33.3,
               'min_humidity': 20,
               'min_temp': 7.2,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -4606,6 +4736,8 @@
                 'fahrenheit',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4621,7 +4753,7 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:thermometer',
+            'original_icon': None,
             'original_name': 'HomeW Temperature Display Units',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -4633,7 +4765,6 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'HomeW Temperature Display Units',
-              'icon': 'mdi:thermometer',
               'options': list([
                 'celsius',
                 'fahrenheit',
@@ -4650,6 +4781,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -4693,6 +4826,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -4756,7 +4891,7 @@
         'model': 'REMOTE SENSOR',
         'name': 'Kitchen',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'AB1C',
         'suggested_area': None,
         'sw_version': '1.0.0',
       }),
@@ -4767,6 +4902,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4806,6 +4943,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4846,6 +4985,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -4909,7 +5050,7 @@
         'model': 'REMOTE SENSOR',
         'name': 'Porch',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'AB2C',
         'suggested_area': None,
         'sw_version': '1.0.0',
       }),
@@ -4920,6 +5061,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4959,6 +5102,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -4999,6 +5144,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -5066,7 +5213,7 @@
         'model': 'ECB501',
         'name': 'My ecobee',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '123456789016',
         'suggested_area': None,
         'sw_version': '4.7.340214',
       }),
@@ -5077,6 +5224,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5116,6 +5265,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5155,6 +5306,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5193,6 +5346,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5246,6 +5401,8 @@
               'max_temp': 33.3,
               'min_humidity': 20,
               'min_temp': 7.2,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -5314,6 +5471,8 @@
                 'away',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5362,6 +5521,8 @@
                 'fahrenheit',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5377,7 +5538,7 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:thermometer',
+            'original_icon': None,
             'original_name': 'My ecobee Temperature Display Units',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -5389,7 +5550,6 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'My ecobee Temperature Display Units',
-              'icon': 'mdi:thermometer',
               'options': list([
                 'celsius',
                 'fahrenheit',
@@ -5406,6 +5566,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -5449,6 +5611,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -5516,7 +5680,7 @@
         'model': 'ecobee Switch+',
         'name': 'Master Fan',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '111111111111',
         'suggested_area': None,
         'sw_version': '4.5.130201',
       }),
@@ -5527,6 +5691,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5566,6 +5732,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5605,6 +5773,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5645,6 +5815,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -5689,6 +5861,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5730,6 +5904,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5793,7 +5969,7 @@
         'model': 'Eve Degree 00AAA0000',
         'name': 'Eve Degree AA11',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'AA00A0A00000',
         'suggested_area': None,
         'sw_version': '1.2.8',
       }),
@@ -5804,6 +5980,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5848,6 +6026,8 @@
               'mode': <NumberMode.AUTO: 'auto'>,
               'step': 1,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5863,19 +6043,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:elevation-rise',
+            'original_icon': None,
             'original_name': 'Eve Degree AA11 Elevation',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'elevation',
             'unique_id': '00:00:00:00:00:00_1_30_33',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Eve Degree AA11 Elevation',
-              'icon': 'mdi:elevation-rise',
               'max': 9000,
               'min': -450,
               'mode': <NumberMode.AUTO: 'auto'>,
@@ -5896,6 +6075,8 @@
                 'fahrenheit',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -5911,7 +6092,7 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:thermometer',
+            'original_icon': None,
             'original_name': 'Eve Degree AA11 Temperature Display Units',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -5923,7 +6104,6 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Eve Degree AA11 Temperature Display Units',
-              'icon': 'mdi:thermometer',
               'options': list([
                 'celsius',
                 'fahrenheit',
@@ -5940,6 +6120,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -5983,6 +6165,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -6028,6 +6212,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6070,6 +6256,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -6137,7 +6325,7 @@
         'model': 'Eve Energy 20EAO8601',
         'name': 'Eve Energy 50FF',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'AA00A0A00000',
         'suggested_area': None,
         'sw_version': '1.2.9',
       }),
@@ -6148,6 +6336,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6188,6 +6378,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -6232,6 +6424,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6274,6 +6468,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -6318,6 +6514,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6359,6 +6557,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6398,6 +6598,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6413,19 +6615,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:lock-open',
+            'original_icon': None,
             'original_name': 'Eve Energy 50FF Lock Physical Controls',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'lock_physical_controls',
             'unique_id': '00:00:00:00:00:00_1_28_36',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Eve Energy 50FF Lock Physical Controls',
-              'icon': 'mdi:lock-open',
             }),
             'entity_id': 'switch.eve_energy_50ff_lock_physical_controls',
             'state': 'off',
@@ -6462,7 +6663,7 @@
         'model': 'RavenSystem HAA',
         'name': 'HAA-C718B3',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'C718B3-1',
         'suggested_area': None,
         'sw_version': '5.0.18',
       }),
@@ -6473,6 +6674,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6512,6 +6715,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6527,19 +6732,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:cog',
+            'original_icon': None,
             'original_name': 'HAA-C718B3 Setup',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'setup',
             'unique_id': '00:00:00:00:00:00_1_1010_1012',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'HAA-C718B3 Setup',
-              'icon': 'mdi:cog',
             }),
             'entity_id': 'button.haa_c718b3_setup',
             'state': 'unknown',
@@ -6551,6 +6755,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6591,6 +6797,8 @@
             'area_id': None,
             'capabilities': dict({
               'preset_modes': None,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -6656,7 +6864,7 @@
         'model': 'RavenSystem HAA',
         'name': 'HAA-C718B3',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'C718B3-2',
         'suggested_area': None,
         'sw_version': '5.0.18',
       }),
@@ -6667,6 +6875,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6706,6 +6916,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6769,7 +6981,7 @@
         'model': 'RYSE Shade',
         'name': 'Family Room North',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'cover.family_door_north',
         'suggested_area': None,
         'sw_version': '3.6.2',
       }),
@@ -6780,6 +6992,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6819,6 +7033,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6860,6 +7076,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -6924,7 +7142,7 @@
         'model': 'Bridge',
         'name': 'HASS Bridge S6',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'homekit.bridge',
         'suggested_area': None,
         'sw_version': '2024.2.0',
       }),
@@ -6935,6 +7153,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -6995,7 +7215,7 @@
         'model': 'RYSE Shade',
         'name': 'Kitchen Window',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'cover.kitchen_window',
         'suggested_area': None,
         'sw_version': '3.6.2',
       }),
@@ -7006,6 +7226,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -7045,6 +7267,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -7086,6 +7310,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -7154,7 +7380,7 @@
         'model': 'Fan',
         'name': 'Ceiling Fan',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'fan.ceiling_fan',
         'suggested_area': None,
         'sw_version': '0.104.0.dev0',
       }),
@@ -7165,6 +7391,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -7205,6 +7433,8 @@
             'area_id': None,
             'capabilities': dict({
               'preset_modes': None,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -7270,7 +7500,7 @@
         'model': 'Bridge',
         'name': 'Home Assistant Bridge',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'homekit.bridge',
         'suggested_area': None,
         'sw_version': '0.104.0.dev0',
       }),
@@ -7281,6 +7511,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -7341,7 +7573,7 @@
         'model': 'Fan',
         'name': 'Living Room Fan',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'fan.living_room_fan',
         'suggested_area': None,
         'sw_version': '0.104.0.dev0',
       }),
@@ -7352,6 +7584,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -7392,6 +7626,8 @@
             'area_id': None,
             'capabilities': dict({
               'preset_modes': None,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -7462,7 +7698,7 @@
         'model': 'Climate Control',
         'name': '89 Living Room',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'climate.89_living_room',
         'suggested_area': None,
         'sw_version': '2024.2.0',
       }),
@@ -7473,6 +7709,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -7521,6 +7759,8 @@
               'max_temp': 35,
               'min_temp': 7,
               'target_temp_step': 1.0,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -7574,6 +7814,8 @@
             'capabilities': dict({
               'preset_modes': None,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -7623,6 +7865,8 @@
                 'fahrenheit',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -7638,7 +7882,7 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:thermometer',
+            'original_icon': None,
             'original_name': '89 Living Room Temperature Display Units',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -7650,7 +7894,6 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': '89 Living Room Temperature Display Units',
-              'icon': 'mdi:thermometer',
               'options': list([
                 'celsius',
                 'fahrenheit',
@@ -7667,6 +7910,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -7710,6 +7955,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -7773,7 +8020,7 @@
         'model': 'Bridge',
         'name': 'HASS Bridge S6',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'homekit.bridge',
         'suggested_area': None,
         'sw_version': '2024.2.0',
       }),
@@ -7784,6 +8031,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -7848,7 +8097,7 @@
         'model': 'Bridge',
         'name': 'HASS Bridge S6',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'homekit.bridge',
         'suggested_area': None,
         'sw_version': '2024.2.0',
       }),
@@ -7859,6 +8108,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -7919,7 +8170,7 @@
         'model': '1039102',
         'name': 'Laundry Smoke ED78',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'light.laundry_smoke_ed78',
         'suggested_area': None,
         'sw_version': '1.4.84',
       }),
@@ -7930,6 +8181,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -7972,6 +8225,8 @@
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -8018,6 +8273,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -8086,7 +8343,7 @@
         'model': 'RYSE Shade',
         'name': 'Family Room North',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'cover.family_door_north',
         'suggested_area': None,
         'sw_version': '3.6.2',
       }),
@@ -8097,6 +8354,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -8136,6 +8395,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -8177,6 +8438,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -8241,7 +8504,7 @@
         'model': 'Bridge',
         'name': 'HASS Bridge S6',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'homekit.bridge',
         'suggested_area': None,
         'sw_version': '2024.2.0',
       }),
@@ -8252,6 +8515,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -8312,7 +8577,7 @@
         'model': 'RYSE Shade',
         'name': 'Kitchen Window',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'cover.kitchen_window',
         'suggested_area': None,
         'sw_version': '3.6.2',
       }),
@@ -8323,6 +8588,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -8362,6 +8629,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -8403,6 +8672,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -8471,7 +8742,7 @@
         'model': 'Fan',
         'name': 'Ceiling Fan',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'fan.ceiling_fan',
         'suggested_area': None,
         'sw_version': '0.104.0.dev0',
       }),
@@ -8482,6 +8753,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -8522,6 +8795,8 @@
             'area_id': None,
             'capabilities': dict({
               'preset_modes': None,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -8587,7 +8862,7 @@
         'model': 'Bridge',
         'name': 'Home Assistant Bridge',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'homekit.bridge',
         'suggested_area': None,
         'sw_version': '0.104.0.dev0',
       }),
@@ -8598,6 +8873,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -8658,7 +8935,7 @@
         'model': 'Fan',
         'name': 'Living Room Fan',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'fan.living_room_fan',
         'suggested_area': None,
         'sw_version': '0.104.0.dev0',
       }),
@@ -8669,6 +8946,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -8709,6 +8988,8 @@
             'area_id': None,
             'capabilities': dict({
               'preset_modes': None,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -8780,7 +9061,7 @@
         'model': 'Bridge',
         'name': 'Home Assistant Bridge',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'homekit.bridge',
         'suggested_area': None,
         'sw_version': '0.104.0.dev0',
       }),
@@ -8791,6 +9072,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -8851,7 +9134,7 @@
         'model': 'Fan',
         'name': 'Living Room Fan',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'fan.living_room_fan',
         'suggested_area': None,
         'sw_version': '0.104.0.dev0',
       }),
@@ -8862,6 +9145,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -8902,6 +9187,8 @@
             'area_id': None,
             'capabilities': dict({
               'preset_modes': None,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -8973,7 +9260,7 @@
         'model': 'Climate Control',
         'name': '89 Living Room',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'climate.89_living_room',
         'suggested_area': None,
         'sw_version': '2024.2.0',
       }),
@@ -8984,6 +9271,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -9036,6 +9325,8 @@
                 'vertical',
               ]),
               'target_temp_step': 1.0,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -9094,6 +9385,8 @@
             'capabilities': dict({
               'preset_modes': None,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -9143,6 +9436,8 @@
                 'fahrenheit',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -9158,7 +9453,7 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:thermometer',
+            'original_icon': None,
             'original_name': '89 Living Room Temperature Display Units',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -9170,7 +9465,6 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': '89 Living Room Temperature Display Units',
-              'icon': 'mdi:thermometer',
               'options': list([
                 'celsius',
                 'fahrenheit',
@@ -9187,6 +9481,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -9230,6 +9526,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -9293,7 +9591,7 @@
         'model': 'Bridge',
         'name': 'HASS Bridge S6',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'homekit.bridge',
         'suggested_area': None,
         'sw_version': '2024.2.0',
       }),
@@ -9304,6 +9602,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -9368,7 +9668,7 @@
         'model': 'Bridge',
         'name': 'HASS Bridge S6',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'homekit.bridge',
         'suggested_area': None,
         'sw_version': '2024.2.0',
       }),
@@ -9379,6 +9679,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -9439,7 +9741,7 @@
         'model': 'WoHumi',
         'name': 'Humidifier 182A',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'humidifier.humidifier_182a',
         'suggested_area': None,
         'sw_version': '2024.2.0',
       }),
@@ -9450,6 +9752,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -9495,6 +9799,8 @@
               ]),
               'max_humidity': 100,
               'min_humidity': 0,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -9546,6 +9852,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -9613,7 +9921,7 @@
         'model': 'Bridge',
         'name': 'HASS Bridge S6',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'homekit.bridge',
         'suggested_area': None,
         'sw_version': '2024.2.0',
       }),
@@ -9624,6 +9932,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -9684,7 +9994,7 @@
         'model': 'WoHumi',
         'name': 'Humidifier 182A',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'humidifier.humidifier_182a',
         'suggested_area': None,
         'sw_version': '2024.2.0',
       }),
@@ -9695,6 +10005,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -9740,6 +10052,8 @@
               ]),
               'max_humidity': 80,
               'min_humidity': 20,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -9791,6 +10105,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -9858,7 +10174,7 @@
         'model': 'Bridge',
         'name': 'HASS Bridge S6',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'homekit.bridge',
         'suggested_area': None,
         'sw_version': '2024.2.0',
       }),
@@ -9869,6 +10185,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -9929,7 +10247,7 @@
         'model': '1039102',
         'name': 'Laundry Smoke ED78',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'light.laundry_smoke_ed78',
         'suggested_area': None,
         'sw_version': '1.4.84',
       }),
@@ -9940,6 +10258,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -9987,6 +10307,8 @@
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -10043,6 +10365,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -10111,7 +10435,7 @@
         'model': 'Daikin-fwec3a-esp32-homekit-bridge',
         'name': 'Air Conditioner',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '00000001',
         'suggested_area': None,
         'sw_version': '1.0.0',
       }),
@@ -10122,6 +10446,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -10176,6 +10502,8 @@
               'max_temp': 32,
               'min_temp': 18,
               'target_temp_step': 0.5,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -10236,6 +10564,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -10303,7 +10633,7 @@
         'model': 'LTW012',
         'name': 'Hue ambiance candle',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '6623462395276914',
         'suggested_area': None,
         'sw_version': '1.46.13',
       }),
@@ -10314,6 +10644,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -10360,6 +10692,8 @@
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -10435,7 +10769,7 @@
         'model': 'LTW012',
         'name': 'Hue ambiance candle',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '6623462395276939',
         'suggested_area': None,
         'sw_version': '1.46.13',
       }),
@@ -10446,6 +10780,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -10492,6 +10828,8 @@
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -10567,7 +10905,7 @@
         'model': 'LTW012',
         'name': 'Hue ambiance candle',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '6623462403113447',
         'suggested_area': None,
         'sw_version': '1.46.13',
       }),
@@ -10578,6 +10916,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -10624,6 +10964,8 @@
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -10699,7 +11041,7 @@
         'model': 'LTW012',
         'name': 'Hue ambiance candle',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '6623462403233419',
         'suggested_area': None,
         'sw_version': '1.46.13',
       }),
@@ -10710,6 +11052,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -10756,6 +11100,8 @@
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -10831,7 +11177,7 @@
         'model': 'LTW013',
         'name': 'Hue ambiance spot',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '6623462412411853',
         'suggested_area': None,
         'sw_version': '1.46.13',
       }),
@@ -10842,6 +11188,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -10888,6 +11236,8 @@
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -10973,7 +11323,7 @@
         'model': 'LTW013',
         'name': 'Hue ambiance spot',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '6623462412413293',
         'suggested_area': None,
         'sw_version': '1.46.13',
       }),
@@ -10984,6 +11334,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -11030,6 +11382,8 @@
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -11115,7 +11469,7 @@
         'model': 'RWL021',
         'name': 'Hue dimmer switch',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '6623462389072572',
         'suggested_area': None,
         'sw_version': '45.1.17846',
       }),
@@ -11126,6 +11480,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -11168,6 +11524,8 @@
               'event_types': list([
                 'single_press',
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -11216,6 +11574,8 @@
                 'single_press',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -11262,6 +11622,8 @@
               'event_types': list([
                 'single_press',
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -11310,6 +11672,8 @@
                 'single_press',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -11354,6 +11718,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -11418,7 +11784,7 @@
         'model': 'LWB010',
         'name': 'Hue white lamp',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '6623462378982941',
         'suggested_area': None,
         'sw_version': '1.46.13',
       }),
@@ -11429,6 +11795,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -11471,6 +11839,8 @@
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -11537,7 +11907,7 @@
         'model': 'LWB010',
         'name': 'Hue white lamp',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '6623462378983942',
         'suggested_area': None,
         'sw_version': '1.46.13',
       }),
@@ -11548,6 +11918,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -11590,6 +11962,8 @@
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -11656,7 +12030,7 @@
         'model': 'LWB010',
         'name': 'Hue white lamp',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '6623462379122122',
         'suggested_area': None,
         'sw_version': '1.46.13',
       }),
@@ -11667,6 +12041,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -11709,6 +12085,8 @@
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -11775,7 +12153,7 @@
         'model': 'LWB010',
         'name': 'Hue white lamp',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '6623462379123707',
         'suggested_area': None,
         'sw_version': '1.46.13',
       }),
@@ -11786,6 +12164,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -11828,6 +12208,8 @@
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -11894,7 +12276,7 @@
         'model': 'LWB010',
         'name': 'Hue white lamp',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '6623462383114163',
         'suggested_area': None,
         'sw_version': '1.46.13',
       }),
@@ -11905,6 +12287,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -11947,6 +12331,8 @@
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -12013,7 +12399,7 @@
         'model': 'LWB010',
         'name': 'Hue white lamp',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '6623462383114193',
         'suggested_area': None,
         'sw_version': '1.46.13',
       }),
@@ -12024,6 +12410,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -12066,6 +12454,8 @@
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -12132,7 +12522,7 @@
         'model': 'LWB010',
         'name': 'Hue white lamp',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '6623462385996792',
         'suggested_area': None,
         'sw_version': '1.46.13',
       }),
@@ -12143,6 +12533,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -12185,6 +12577,8 @@
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -12251,7 +12645,7 @@
         'model': 'BSB002',
         'name': 'Philips hue - 482544',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '123456',
         'suggested_area': None,
         'sw_version': '1.32.1932126170',
       }),
@@ -12262,6 +12656,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -12326,7 +12722,7 @@
         'model': 'LS1',
         'name': 'Koogeek-LS1-20833F',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'AAAA011111111111',
         'suggested_area': None,
         'sw_version': '2.2.15',
       }),
@@ -12337,6 +12733,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -12384,6 +12782,8 @@
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -12464,7 +12864,7 @@
         'model': 'P1EU',
         'name': 'Koogeek-P1-A00AA0',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'EUCP03190xxxxx48',
         'suggested_area': None,
         'sw_version': '2.3.7',
       }),
@@ -12475,6 +12875,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -12515,6 +12917,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -12557,6 +12961,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -12621,7 +13027,7 @@
         'model': 'KH02CN',
         'name': 'Koogeek-SW2-187A91',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'CNNT061751001372',
         'suggested_area': None,
         'sw_version': '1.0.3',
       }),
@@ -12632,6 +13038,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -12672,6 +13080,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -12714,6 +13124,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -12752,6 +13164,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -12815,7 +13229,7 @@
         'model': 'E30 2B',
         'name': 'Lennox',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'XXXXXXXX',
         'suggested_area': None,
         'sw_version': '3.40.XX',
       }),
@@ -12826,6 +13240,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -12873,6 +13289,8 @@
               ]),
               'max_temp': 37,
               'min_temp': 4.5,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -12932,6 +13350,8 @@
                 'fahrenheit',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -12947,7 +13367,7 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:thermometer',
+            'original_icon': None,
             'original_name': 'Lennox Temperature Display Units',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -12959,7 +13379,6 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Lennox Temperature Display Units',
-              'icon': 'mdi:thermometer',
               'options': list([
                 'celsius',
                 'fahrenheit',
@@ -12976,6 +13395,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -13019,6 +13440,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -13086,7 +13509,7 @@
         'model': 'OLED55B9PUA',
         'name': 'LG webOS TV AF80',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '999AAAAAA999',
         'suggested_area': None,
         'sw_version': '04.71.04',
       }),
@@ -13097,6 +13520,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13145,6 +13570,8 @@
                 'AV',
                 'HDMI 4',
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -13196,6 +13623,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13211,19 +13640,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:volume-mute',
+            'original_icon': None,
             'original_name': 'LG webOS TV AF80 Mute',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'mute',
             'unique_id': '00:00:00:00:00:00_1_80_82',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'LG webOS TV AF80 Mute',
-              'icon': 'mdi:volume-mute',
             }),
             'entity_id': 'switch.lg_webos_tv_af80_mute',
             'state': 'off',
@@ -13260,7 +13688,7 @@
         'model': 'PD-FSQN-XX',
         'name': 'Caséta® Wireless Fan Speed Control',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '39024290',
         'suggested_area': None,
         'sw_version': '001.005',
       }),
@@ -13271,6 +13699,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13311,6 +13741,8 @@
             'area_id': None,
             'capabilities': dict({
               'preset_modes': None,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -13376,7 +13808,7 @@
         'model': 'L-BDG2-WH',
         'name': 'Smart Bridge 2',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '12344331',
         'suggested_area': None,
         'sw_version': '08.08',
       }),
@@ -13387,6 +13819,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13451,7 +13885,7 @@
         'model': 'MSS425F',
         'name': 'MSS425F-15cc',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'HH41234',
         'suggested_area': None,
         'sw_version': '4.2.3',
       }),
@@ -13462,6 +13896,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13501,6 +13937,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13539,6 +13977,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13577,6 +14017,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13615,6 +14057,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13653,6 +14097,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13716,7 +14162,7 @@
         'model': 'MSS565',
         'name': 'MSS565-28da',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'BB1121',
         'suggested_area': None,
         'sw_version': '4.1.9',
       }),
@@ -13727,6 +14173,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13769,6 +14217,8 @@
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -13839,7 +14289,7 @@
         'model': 'v1',
         'name': 'Mysa-85dda9',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'AAAAAAA000',
         'suggested_area': None,
         'sw_version': '2.8.1',
       }),
@@ -13850,6 +14300,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -13897,6 +14349,8 @@
               ]),
               'max_temp': 35,
               'min_temp': 7,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -13953,6 +14407,8 @@
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14002,6 +14458,8 @@
                 'fahrenheit',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14017,7 +14475,7 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:thermometer',
+            'original_icon': None,
             'original_name': 'Mysa-85dda9 Temperature Display Units',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -14029,7 +14487,6 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Mysa-85dda9 Temperature Display Units',
-              'icon': 'mdi:thermometer',
               'options': list([
                 'celsius',
                 'fahrenheit',
@@ -14046,6 +14503,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -14089,6 +14548,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -14156,7 +14617,7 @@
         'model': 'NL55',
         'name': 'Nanoleaf Strip 3B32',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'AAAA011111111111',
         'suggested_area': None,
         'sw_version': '1.4.40',
       }),
@@ -14167,6 +14628,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14205,44 +14668,6 @@
             'aliases': list([
             ]),
             'area_id': None,
-            'capabilities': None,
-            'config_entry_id': 'TestData',
-            'device_class': None,
-            'disabled_by': None,
-            'domain': 'button',
-            'entity_category': <EntityCategory.CONFIG: 'config'>,
-            'entity_id': 'button.nanoleaf_strip_3b32_provision_preferred_thread_credentials',
-            'has_entity_name': False,
-            'hidden_by': None,
-            'icon': None,
-            'labels': list([
-            ]),
-            'name': None,
-            'options': dict({
-            }),
-            'original_device_class': None,
-            'original_icon': None,
-            'original_name': 'Nanoleaf Strip 3B32 Provision Preferred Thread Credentials',
-            'platform': 'homekit_controller',
-            'previous_unique_id': None,
-            'supported_features': 0,
-            'translation_key': None,
-            'unique_id': '00:00:00:00:00:00_1_31_119',
-            'unit_of_measurement': None,
-          }),
-          'state': dict({
-            'attributes': dict({
-              'friendly_name': 'Nanoleaf Strip 3B32 Provision Preferred Thread Credentials',
-            }),
-            'entity_id': 'button.nanoleaf_strip_3b32_provision_preferred_thread_credentials',
-            'state': 'unknown',
-          }),
-        }),
-        dict({
-          'entry': dict({
-            'aliases': list([
-            ]),
-            'area_id': None,
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
               'max_mireds': 470,
@@ -14252,6 +14677,8 @@
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -14326,6 +14753,8 @@
                 'sleepy',
               ]),
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14382,6 +14811,8 @@
                 'leader',
                 'router',
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -14456,7 +14887,7 @@
         'model': 'Netatmo Doorbell',
         'name': 'Netatmo-Doorbell-g738658',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'g738658',
         'suggested_area': None,
         'sw_version': '80.0.0',
       }),
@@ -14467,6 +14898,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14506,6 +14939,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14545,6 +14980,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14589,6 +15026,8 @@
                 'double_press',
                 'long_press',
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -14635,6 +15074,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14650,19 +15091,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:volume-mute',
+            'original_icon': None,
             'original_name': 'Netatmo-Doorbell-g738658 Mute',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'mute',
             'unique_id': '00:00:00:00:00:00_1_51_52',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Netatmo-Doorbell-g738658 Mute',
-              'icon': 'mdi:volume-mute',
             }),
             'entity_id': 'switch.netatmo_doorbell_g738658_mute',
             'state': 'off',
@@ -14674,6 +15114,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14689,19 +15131,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:volume-mute',
+            'original_icon': None,
             'original_name': 'Netatmo-Doorbell-g738658 Mute',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'mute',
             'unique_id': '00:00:00:00:00:00_1_8_9',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Netatmo-Doorbell-g738658 Mute',
-              'icon': 'mdi:volume-mute',
             }),
             'entity_id': 'switch.netatmo_doorbell_g738658_mute_2',
             'state': 'off',
@@ -14738,7 +15179,7 @@
         'model': 'Smart CO Alarm',
         'name': 'Smart CO Alarm',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '1234',
         'suggested_area': None,
         'sw_version': '1.0.3',
       }),
@@ -14749,6 +15190,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14788,6 +15231,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14827,6 +15272,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14891,7 +15338,7 @@
         'model': 'Healthy Home Coach',
         'name': 'Healthy Home Coach',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'AAAAAAAAAAAAA',
         'suggested_area': None,
         'sw_version': '59',
       }),
@@ -14902,6 +15349,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -14942,6 +15391,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -14984,6 +15435,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -15028,6 +15481,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15071,6 +15526,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15113,6 +15570,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -15180,7 +15639,7 @@
         'model': 'SPK5 Pro',
         'name': 'RainMachine-00ce4a',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '00aa0000aa0a',
         'suggested_area': None,
         'sw_version': '1.0.4',
       }),
@@ -15191,6 +15650,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15230,6 +15691,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15245,19 +15708,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:water',
+            'original_icon': None,
             'original_name': 'RainMachine-00ce4a',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'valve',
             'unique_id': '00:00:00:00:00:00_1_512',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'RainMachine-00ce4a',
-              'icon': 'mdi:water',
               'in_use': False,
               'is_configured': True,
               'remaining_duration': 0,
@@ -15272,6 +15734,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15287,19 +15751,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:water',
+            'original_icon': None,
             'original_name': 'RainMachine-00ce4a',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'valve',
             'unique_id': '00:00:00:00:00:00_1_768',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'RainMachine-00ce4a',
-              'icon': 'mdi:water',
               'in_use': False,
               'is_configured': True,
               'remaining_duration': 0,
@@ -15314,6 +15777,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15329,19 +15794,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:water',
+            'original_icon': None,
             'original_name': 'RainMachine-00ce4a',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'valve',
             'unique_id': '00:00:00:00:00:00_1_1024',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'RainMachine-00ce4a',
-              'icon': 'mdi:water',
               'in_use': False,
               'is_configured': True,
               'remaining_duration': 0,
@@ -15356,6 +15820,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15371,19 +15837,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:water',
+            'original_icon': None,
             'original_name': 'RainMachine-00ce4a',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'valve',
             'unique_id': '00:00:00:00:00:00_1_1280',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'RainMachine-00ce4a',
-              'icon': 'mdi:water',
               'in_use': False,
               'is_configured': True,
               'remaining_duration': 0,
@@ -15398,6 +15863,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15413,19 +15880,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:water',
+            'original_icon': None,
             'original_name': 'RainMachine-00ce4a',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'valve',
             'unique_id': '00:00:00:00:00:00_1_1536',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'RainMachine-00ce4a',
-              'icon': 'mdi:water',
               'in_use': False,
               'is_configured': True,
               'remaining_duration': 0,
@@ -15440,6 +15906,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15455,19 +15923,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:water',
+            'original_icon': None,
             'original_name': 'RainMachine-00ce4a',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'valve',
             'unique_id': '00:00:00:00:00:00_1_1792',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'RainMachine-00ce4a',
-              'icon': 'mdi:water',
               'in_use': False,
               'is_configured': True,
               'remaining_duration': 0,
@@ -15482,6 +15949,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15497,19 +15966,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:water',
+            'original_icon': None,
             'original_name': 'RainMachine-00ce4a',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'valve',
             'unique_id': '00:00:00:00:00:00_1_2048',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'RainMachine-00ce4a',
-              'icon': 'mdi:water',
               'in_use': False,
               'is_configured': True,
               'remaining_duration': 0,
@@ -15524,6 +15992,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15539,19 +16009,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:water',
+            'original_icon': None,
             'original_name': 'RainMachine-00ce4a',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'valve',
             'unique_id': '00:00:00:00:00:00_1_2304',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'RainMachine-00ce4a',
-              'icon': 'mdi:water',
               'in_use': False,
               'is_configured': True,
               'remaining_duration': 0,
@@ -15591,7 +16060,7 @@
         'model': 'RYSE Shade',
         'name': 'Master Bath South',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '1.0.0',
         'suggested_area': None,
         'sw_version': '3.0.8',
       }),
@@ -15602,6 +16071,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15641,6 +16112,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15682,6 +16155,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -15746,7 +16221,7 @@
         'model': 'RYSE SmartBridge',
         'name': 'RYSE SmartBridge',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '0101.3521.0436',
         'suggested_area': None,
         'sw_version': '1.3.0',
       }),
@@ -15757,6 +16232,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15817,7 +16294,7 @@
         'model': 'RYSE Shade',
         'name': 'RYSE SmartShade',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '',
         'suggested_area': None,
         'sw_version': '',
       }),
@@ -15828,6 +16305,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15867,6 +16346,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -15908,6 +16389,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -15976,7 +16459,7 @@
         'model': 'RYSE Shade',
         'name': 'BR Left',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '1.0.0',
         'suggested_area': None,
         'sw_version': '3.0.8',
       }),
@@ -15987,6 +16470,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -16026,6 +16511,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -16067,6 +16554,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -16131,7 +16620,7 @@
         'model': 'RYSE Shade',
         'name': 'LR Left',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '1.0.0',
         'suggested_area': None,
         'sw_version': '3.0.8',
       }),
@@ -16142,6 +16631,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -16181,6 +16672,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -16222,6 +16715,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -16286,7 +16781,7 @@
         'model': 'RYSE Shade',
         'name': 'LR Right',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '1.0.0',
         'suggested_area': None,
         'sw_version': '3.0.8',
       }),
@@ -16297,6 +16792,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -16336,6 +16833,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -16377,6 +16876,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -16441,7 +16942,7 @@
         'model': 'RYSE SmartBridge',
         'name': 'RYSE SmartBridge',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '0401.3521.0679',
         'suggested_area': None,
         'sw_version': '1.3.0',
       }),
@@ -16452,6 +16953,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -16512,7 +17015,7 @@
         'model': 'RYSE Shade',
         'name': 'RZSS',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '1.0.0',
         'suggested_area': None,
         'sw_version': '3.0.8',
       }),
@@ -16523,6 +17026,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -16562,6 +17067,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -16603,6 +17110,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -16671,7 +17180,7 @@
         'model': 'BE479CAM619',
         'name': 'SENSE  ',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'AAAAAAA000',
         'suggested_area': None,
         'sw_version': '004.027.000',
       }),
@@ -16682,6 +17191,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -16721,6 +17232,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -16785,7 +17298,7 @@
         'model': 'SIMPLEconnect',
         'name': 'SIMPLEconnect Fan-06F674',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '1234567890abcd',
         'suggested_area': None,
         'sw_version': '',
       }),
@@ -16796,6 +17309,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -16836,6 +17351,8 @@
             'area_id': None,
             'capabilities': dict({
               'preset_modes': None,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -16884,6 +17401,8 @@
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -16954,7 +17473,7 @@
         'model': 'VELUX Gateway',
         'name': 'VELUX Gateway',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'a1a11a1',
         'suggested_area': None,
         'sw_version': '70',
       }),
@@ -16965,6 +17484,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -17025,7 +17546,7 @@
         'model': 'VELUX Sensor',
         'name': 'VELUX Sensor',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'a11b111',
         'suggested_area': None,
         'sw_version': '16',
       }),
@@ -17036,6 +17557,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -17076,6 +17599,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -17120,6 +17645,8 @@
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -17162,6 +17689,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -17225,7 +17754,7 @@
         'model': 'VELUX Window',
         'name': 'VELUX Window',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': '1111111a114a111a',
         'suggested_area': None,
         'sw_version': '48',
       }),
@@ -17236,6 +17765,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -17275,6 +17806,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -17341,7 +17874,7 @@
         'model': 'Flowerbud',
         'name': 'VOCOlinc-Flowerbud-0d324b',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'AM01121849000327',
         'suggested_area': None,
         'sw_version': '3.121.2',
       }),
@@ -17352,6 +17885,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -17397,6 +17932,8 @@
               ]),
               'max_humidity': 100,
               'min_humidity': 0,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -17455,6 +17992,8 @@
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -17525,6 +18064,8 @@
               'mode': <NumberMode.AUTO: 'auto'>,
               'step': 1,
             }),
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -17540,19 +18081,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:water',
+            'original_icon': None,
             'original_name': 'VOCOlinc-Flowerbud-0d324b Spray Quantity',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'spray_quantity',
             'unique_id': '00:00:00:00:00:00_1_30_38',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'VOCOlinc-Flowerbud-0d324b Spray Quantity',
-              'icon': 'mdi:water',
               'max': 5,
               'min': 1,
               'mode': <NumberMode.AUTO: 'auto'>,
@@ -17569,6 +18109,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -17636,7 +18178,7 @@
         'model': 'VP3',
         'name': 'VOCOlinc-VP3-123456',
         'name_by_user': None,
-        'serial_number': None,
+        'serial_number': 'EU0121203xxxxx07',
         'suggested_area': None,
         'sw_version': '1.101.2',
       }),
@@ -17647,6 +18189,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,
@@ -17687,6 +18231,8 @@
             'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
             }),
             'config_entry_id': 'TestData',
             'device_class': None,
@@ -17729,6 +18275,8 @@
             ]),
             'area_id': None,
             'capabilities': None,
+            'categories': dict({
+            }),
             'config_entry_id': 'TestData',
             'device_class': None,
             'disabled_by': None,

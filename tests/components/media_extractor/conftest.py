@@ -1,4 +1,5 @@
 """The tests for Media Extractor integration."""
+
 from typing import Any
 from unittest.mock import patch
 

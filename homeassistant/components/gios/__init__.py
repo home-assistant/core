@@ -1,7 +1,9 @@
 """The GIOS component."""
+
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 import logging
 
 from aiohttp import ClientSession
@@ -24,8 +26,17 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
 
+GiosConfigEntry = ConfigEntry["GiosData"]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+@dataclass
+class GiosData:
+    """Data for GIOS integration."""
+
+    coordinator: GiosDataUpdateCoordinator
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: GiosConfigEntry) -> bool:
     """Set up GIOS as config entry."""
     station_id: int = entry.data[CONF_STATION_ID]
     _LOGGER.debug("Using station_id: %d", station_id)
@@ -47,8 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = GiosDataUpdateCoordinator(hass, websession, station_id)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = GiosData(coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -64,14 +74,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GiosConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class GiosDataUpdateCoordinator(DataUpdateCoordinator[GiosSensors]):  # pylint: disable=hass-enforce-coordinator-module

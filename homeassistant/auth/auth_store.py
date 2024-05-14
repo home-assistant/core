@@ -1,10 +1,12 @@
 """Storage for auth models."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 import hmac
 import itertools
 from logging import getLogger
+import time
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
@@ -30,6 +32,17 @@ GROUP_NAME_ADMIN = "Administrators"
 GROUP_NAME_USER = "Users"
 GROUP_NAME_READ_ONLY = "Read Only"
 
+# We always save the auth store after we load it since
+# we may migrate data and do not want to have to do it again
+# but we don't want to do it during startup so we schedule
+# the first save 5 minutes out knowing something else may
+# want to save the auth store before then, and since Storage
+# will honor the lower of the two delays, it will save it
+# faster if something else saves it.
+INITIAL_LOAD_SAVE_DELAY = 300
+
+DEFAULT_SAVE_DELAY = 1
+
 
 class AuthStore:
     """Stores authentication info.
@@ -50,6 +63,7 @@ class AuthStore:
         self._store = Store[dict[str, list[dict[str, Any]]]](
             hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
+        self._token_id_to_user_id: dict[str, str] = {}
 
     async def async_get_groups(self) -> list[models.Group]:
         """Retrieve all users."""
@@ -123,7 +137,10 @@ class AuthStore:
 
     async def async_remove_user(self, user: models.User) -> None:
         """Remove a user."""
-        self._users.pop(user.id)
+        user = self._users.pop(user.id)
+        for refresh_token_id in user.refresh_tokens:
+            del self._token_id_to_user_id[refresh_token_id]
+        user.refresh_tokens.clear()
         self._async_schedule_save()
 
     async def async_update_user(
@@ -206,7 +223,9 @@ class AuthStore:
             kwargs["client_icon"] = client_icon
 
         refresh_token = models.RefreshToken(**kwargs)
-        user.refresh_tokens[refresh_token.id] = refresh_token
+        token_id = refresh_token.id
+        user.refresh_tokens[token_id] = refresh_token
+        self._token_id_to_user_id[token_id] = user.id
 
         self._async_schedule_save()
         return refresh_token
@@ -214,19 +233,17 @@ class AuthStore:
     @callback
     def async_remove_refresh_token(self, refresh_token: models.RefreshToken) -> None:
         """Remove a refresh token."""
-        for user in self._users.values():
-            if user.refresh_tokens.pop(refresh_token.id, None):
-                self._async_schedule_save()
-                break
+        refresh_token_id = refresh_token.id
+        if user_id := self._token_id_to_user_id.get(refresh_token_id):
+            del self._users[user_id].refresh_tokens[refresh_token_id]
+            del self._token_id_to_user_id[refresh_token_id]
+            self._async_schedule_save()
 
     @callback
     def async_get_refresh_token(self, token_id: str) -> models.RefreshToken | None:
         """Get refresh token by id."""
-        for user in self._users.values():
-            refresh_token = user.refresh_tokens.get(token_id)
-            if refresh_token is not None:
-                return refresh_token
-
+        if user_id := self._token_id_to_user_id.get(token_id):
+            return self._users[user_id].refresh_tokens.get(token_id)
         return None
 
     @callback
@@ -278,7 +295,7 @@ class AuthStore:
         perm_lookup = PermissionLookup(ent_reg, dev_reg)
         self._perm_lookup = perm_lookup
 
-        now_ts = dt_util.utcnow().timestamp()
+        now_ts = time.time()
 
         if data is None or not isinstance(data, dict):
             self._set_defaults()
@@ -466,13 +483,22 @@ class AuthStore:
 
         self._groups = groups
         self._users = users
-
-        self._async_schedule_save()
+        self._build_token_id_to_user_id()
+        self._async_schedule_save(INITIAL_LOAD_SAVE_DELAY)
 
     @callback
-    def _async_schedule_save(self) -> None:
+    def _build_token_id_to_user_id(self) -> None:
+        """Build a map of token id to user id."""
+        self._token_id_to_user_id = {
+            token_id: user_id
+            for user_id, user in self._users.items()
+            for token_id in user.refresh_tokens
+        }
+
+    @callback
+    def _async_schedule_save(self, delay: float = DEFAULT_SAVE_DELAY) -> None:
         """Save users."""
-        self._store.async_delay_save(self._data_to_save, 1)
+        self._store.async_delay_save(self._data_to_save, delay)
 
     @callback
     def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:
@@ -562,6 +588,7 @@ class AuthStore:
         read_only_group = _system_read_only_group()
         groups[read_only_group.id] = read_only_group
         self._groups = groups
+        self._build_token_id_to_user_id()
 
 
 def _system_admin_group() -> models.Group:

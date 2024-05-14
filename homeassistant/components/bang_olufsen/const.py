@@ -10,27 +10,27 @@ from mozart_api.models import Source, SourceArray, SourceTypeEnum
 from homeassistant.components.media_player import MediaPlayerState, MediaType
 
 
-class SOURCE_ENUM(StrEnum):
+class BangOlufsenSource(StrEnum):
     """Enum used for associating device source ids with friendly names. May not include all sources."""
 
-    uriStreamer = "Audio Streamer"  # noqa: N815
-    bluetooth = "Bluetooth"
-    airPlay = "AirPlay"  # noqa: N815
-    chromeCast = "Chromecast built-in"  # noqa: N815
-    spotify = "Spotify Connect"
-    generator = "Tone Generator"
-    lineIn = "Line-In"  # noqa: N815
-    spdif = "Optical"
-    netRadio = "B&O Radio"  # noqa: N815
-    local = "Local"
-    dlna = "DLNA"
-    qplay = "QPlay"
-    wpl = "Wireless Powerlink"
-    pl = "Powerlink"
-    tv = "TV"
-    deezer = "Deezer"
-    beolink = "Networklink"
-    tidalConnect = "Tidal Connect"  # noqa: N815
+    URI_STREAMER = "Audio Streamer"
+    BLUETOOTH = "Bluetooth"
+    AIR_PLAY = "AirPlay"
+    CHROMECAST = "Chromecast built-in"
+    SPOTIFY = "Spotify Connect"
+    GENERATOR = "Tone Generator"
+    LINE_IN = "Line-In"
+    SPDIF = "Optical"
+    NET_RADIO = "B&O Radio"
+    LOCAL = "Local"
+    DLNA = "DLNA"
+    QPLAY = "QPlay"
+    WPL = "Wireless Powerlink"
+    PL = "Powerlink"
+    TV = "TV"
+    DEEZER = "Deezer"
+    BEOLINK = "Networklink"
+    TIDAL_CONNECT = "Tidal Connect"
 
 
 BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
@@ -48,7 +48,7 @@ BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
 
 
 # Media types for play_media
-class BANG_OLUFSEN_MEDIA_TYPE(StrEnum):
+class BangOlufsenMediaType(StrEnum):
     """Bang & Olufsen specific media types."""
 
     FAVOURITE = "favourite"
@@ -57,7 +57,7 @@ class BANG_OLUFSEN_MEDIA_TYPE(StrEnum):
     TTS = "provider"
 
 
-class MODEL_ENUM(StrEnum):
+class BangOlufsenModel(StrEnum):
     """Enum for compatible model names."""
 
     BEOLAB_8 = "BeoLab 8"
@@ -72,7 +72,7 @@ class MODEL_ENUM(StrEnum):
 
 
 # Dispatcher events
-class WEBSOCKET_NOTIFICATION(StrEnum):
+class WebsocketNotification(StrEnum):
     """Enum for WebSocket notification types."""
 
     PLAYBACK_ERROR: Final[str] = "playback_error"
@@ -94,14 +94,14 @@ class WEBSOCKET_NOTIFICATION(StrEnum):
 DOMAIN: Final[str] = "bang_olufsen"
 
 # Default values for configuration.
-DEFAULT_MODEL: Final[str] = MODEL_ENUM.BEOSOUND_BALANCE
+DEFAULT_MODEL: Final[str] = BangOlufsenModel.BEOSOUND_BALANCE
 
 # Configuration.
 CONF_SERIAL_NUMBER: Final = "serial_number"
 CONF_BEOLINK_JID: Final = "jid"
 
 # Models to choose from in manual configuration.
-COMPATIBLE_MODELS: list[str] = [x.value for x in MODEL_ENUM]
+COMPATIBLE_MODELS: list[str] = [x.value for x in BangOlufsenModel]
 
 # Attribute names for zeroconf discovery.
 ATTR_TYPE_NUMBER: Final[str] = "tn"
@@ -113,10 +113,10 @@ ATTR_FRIENDLY_NAME: Final[str] = "fn"
 BANG_OLUFSEN_ON: Final[str] = "on"
 
 VALID_MEDIA_TYPES: Final[tuple] = (
-    BANG_OLUFSEN_MEDIA_TYPE.FAVOURITE,
-    BANG_OLUFSEN_MEDIA_TYPE.DEEZER,
-    BANG_OLUFSEN_MEDIA_TYPE.RADIO,
-    BANG_OLUFSEN_MEDIA_TYPE.TTS,
+    BangOlufsenMediaType.FAVOURITE,
+    BangOlufsenMediaType.DEEZER,
+    BangOlufsenMediaType.RADIO,
+    BangOlufsenMediaType.TTS,
     MediaType.MUSIC,
     MediaType.URL,
     MediaType.CHANNEL,

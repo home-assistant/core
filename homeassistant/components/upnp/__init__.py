@@ -1,4 +1,5 @@
 """UPnP/IGD integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -35,12 +36,12 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
+UpnpConfigEntry = ConfigEntry[UpnpDataUpdateCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> bool:
     """Set up UPnP/IGD device from a config entry."""
     LOGGER.debug("Setting up config entry: %s", entry.entry_id)
-
-    hass.data.setdefault(DOMAIN, {})
 
     udn = entry.data[CONFIG_ENTRY_UDN]
     st = entry.data[CONFIG_ENTRY_ST]
@@ -79,6 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Create device.
     assert discovery_info is not None
+    assert discovery_info.ssdp_udn
     assert discovery_info.ssdp_all_locations
     location = get_preferred_location(discovery_info.ssdp_all_locations)
     try:
@@ -117,7 +119,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if device.serial_number:
         identifiers.add((IDENTIFIER_SERIAL_NUMBER, device.serial_number))
 
-    connections = {(dr.CONNECTION_UPNP, device.udn)}
+    connections = {(dr.CONNECTION_UPNP, discovery_info.ssdp_udn)}
+    if discovery_info.ssdp_udn != device.udn:
+        connections.add((dr.CONNECTION_UPNP, device.udn))
     if device_mac_address:
         connections.add((dr.CONNECTION_NETWORK_MAC, device_mac_address))
 
@@ -164,7 +168,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     # Save coordinator.
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     # Setup platforms, creating sensors/binary_sensors.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -175,10 +179,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a UPnP/IGD device from a config entry."""
     LOGGER.debug("Unloading config entry: %s", entry.entry_id)
-
-    # Unload platforms.
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        del hass.data[DOMAIN][entry.entry_id]
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

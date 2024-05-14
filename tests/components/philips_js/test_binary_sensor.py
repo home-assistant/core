@@ -1,4 +1,5 @@
 """The tests for philips_js binary_sensor."""
+
 import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON

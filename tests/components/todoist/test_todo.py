@@ -1,4 +1,5 @@
 """Unit tests for the Todoist todo platform."""
+
 from typing import Any
 from unittest.mock import AsyncMock
 

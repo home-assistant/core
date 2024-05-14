@@ -422,7 +422,7 @@ async def test_get_state_intent(
     assert not result.matched_states and not result.unmatched_states
 
     # Test unknown area failure
-    with pytest.raises(intent.IntentHandleError):
+    with pytest.raises(intent.MatchFailedError):
         await intent.async_handle(
             hass,
             "test",
@@ -431,4 +431,21 @@ async def test_get_state_intent(
                 "area": {"value": "does-not-exist"},
                 "domain": {"value": "light"},
             },
+        )
+
+
+async def test_set_position_intent_unsupported_domain(hass: HomeAssistant) -> None:
+    """Test that HassSetPosition intent fails with unsupported domain."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    # Can't set position of lights
+    hass.states.async_set("light.test_light", "off")
+
+    with pytest.raises(intent.IntentHandleError):
+        await intent.async_handle(
+            hass,
+            "test",
+            "HassSetPosition",
+            {"name": {"value": "test light"}, "position": {"value": 100}},
         )

@@ -1,4 +1,5 @@
 """Tests for Vallox number platform."""
+
 import pytest
 
 from homeassistant.components.number.const import (

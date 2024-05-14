@@ -1,4 +1,5 @@
 """PrusaLink sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -40,7 +41,6 @@ BUTTONS: dict[str, tuple[PrusaLinkButtonEntityDescription, ...]] = {
         PrusaLinkButtonEntityDescription[PrinterStatus](
             key="printer.cancel_job",
             translation_key="cancel_job",
-            icon="mdi:cancel",
             press_fn=lambda api: api.cancel_job,
             available_fn=lambda data: (
                 data["printer"]["state"]
@@ -50,7 +50,6 @@ BUTTONS: dict[str, tuple[PrusaLinkButtonEntityDescription, ...]] = {
         PrusaLinkButtonEntityDescription[PrinterStatus](
             key="job.pause_job",
             translation_key="pause_job",
-            icon="mdi:pause",
             press_fn=lambda api: api.pause_job,
             available_fn=lambda data: cast(
                 bool, data["printer"]["state"] == PrinterState.PRINTING.value
@@ -59,7 +58,6 @@ BUTTONS: dict[str, tuple[PrusaLinkButtonEntityDescription, ...]] = {
         PrusaLinkButtonEntityDescription[PrinterStatus](
             key="job.resume_job",
             translation_key="resume_job",
-            icon="mdi:play",
             press_fn=lambda api: api.resume_job,
             available_fn=lambda data: cast(
                 bool, data["printer"]["state"] == PrinterState.PAUSED.value

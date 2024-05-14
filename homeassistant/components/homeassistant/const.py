@@ -1,4 +1,5 @@
 """Constants for the Homeassistant integration."""
+
 from typing import Final
 
 import homeassistant.core as ha
