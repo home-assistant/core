@@ -42,31 +42,31 @@ SEAT_HEATER_DESCRIPTIONS: tuple[SeatHeaterDescription, ...] = (
     SeatHeaterDescription(
         key="climate_state_seat_heater_rear_left",
         position=Seat.REAR_LEFT,
-        avaliable_fn=lambda self: self.get("vehicle_config_rear_seat_heaters") != 0,
+        available_fn=lambda self: self.get("vehicle_config_rear_seat_heaters") != 0,
         entity_registry_enabled_default=False,
     ),
     SeatHeaterDescription(
         key="climate_state_seat_heater_rear_center",
         position=Seat.REAR_CENTER,
-        avaliable_fn=lambda self: self.get("vehicle_config_rear_seat_heaters") != 0,
+        available_fn=lambda self: self.get("vehicle_config_rear_seat_heaters") != 0,
         entity_registry_enabled_default=False,
     ),
     SeatHeaterDescription(
         key="climate_state_seat_heater_rear_right",
         position=Seat.REAR_RIGHT,
-        avaliable_fn=lambda self: self.get("vehicle_config_rear_seat_heaters") != 0,
+        available_fn=lambda self: self.get("vehicle_config_rear_seat_heaters") != 0,
         entity_registry_enabled_default=False,
     ),
     SeatHeaterDescription(
         key="climate_state_seat_heater_third_row_left",
         position=Seat.THIRD_LEFT,
-        avaliable_fn=lambda self: self.get("vehicle_config_third_row_seats") != "None",
+        available_fn=lambda self: self.get("vehicle_config_third_row_seats") != "None",
         entity_registry_enabled_default=False,
     ),
     SeatHeaterDescription(
         key="climate_state_seat_heater_third_row_right",
         position=Seat.THIRD_RIGHT,
-        avaliable_fn=lambda self: self.get("vehicle_config_third_row_seats") != "None",
+        available_fn=lambda self: self.get("vehicle_config_third_row_seats") != "None",
         entity_registry_enabled_default=False,
     ),
 )
@@ -130,7 +130,7 @@ class TeslemetrySeatHeaterSelectEntity(TeslemetryVehicleEntity, SelectEntity):
 
     def _async_update_attrs(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_available = self.entity_description.avaliable_fn(self)
+        self._attr_available = self.entity_description.available_fn(self)
         value = self._value
         if value is None:
             self._attr_current_option = None
