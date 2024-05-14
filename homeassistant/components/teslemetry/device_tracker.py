@@ -43,8 +43,6 @@ class TeslemetryDeviceTrackerEntity(TeslemetryVehicleEntity, TrackerEntity):
     def _async_update_attrs(self) -> None:
         """Update the attributes of the device tracker."""
 
-        self._attr_latitude = self.get(self.lat_key)
-        self._attr_longitude = self.get(self.lon_key)
         self._attr_available = (
             self.get(self.lat_key, False) is not None
             and self.get(self.lon_key, False) is not None
@@ -53,12 +51,12 @@ class TeslemetryDeviceTrackerEntity(TeslemetryVehicleEntity, TrackerEntity):
     @property
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
-        return self._attr_latitude
+        return self.get(self.lat_key)
 
     @property
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
-        return self._attr_longitude
+        return self.get(self.lon_key)
 
     @property
     def source_type(self) -> SourceType | str:
