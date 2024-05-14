@@ -10,8 +10,9 @@ from pywemo.exceptions import ActionException, PyWeMoException
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 
 from homeassistant import runner
-from homeassistant.components.wemo import CONF_DISCOVERY, CONF_STATIC, coordinator
+from homeassistant.components.wemo import CONF_DISCOVERY, CONF_STATIC
 from homeassistant.components.wemo.const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
+from homeassistant.components.wemo.coordinator import Options, async_get_coordinator
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -50,7 +51,7 @@ async def test_async_register_device_longpress_fails(
         await hass.async_block_till_done()
     device_entries = list(device_registry.devices.values())
     assert len(device_entries) == 1
-    device = coordinator.async_get_coordinator(hass, device_entries[0].id)
+    device = async_get_coordinator(hass, device_entries[0].id)
     assert device.supports_long_press is False
 
 
@@ -58,7 +59,7 @@ async def test_long_press_event(
     hass: HomeAssistant, pywemo_registry, wemo_entity
 ) -> None:
     """Device fires a long press event."""
-    device = coordinator.async_get_coordinator(hass, wemo_entity.device_id)
+    device = async_get_coordinator(hass, wemo_entity.device_id)
     got_event = asyncio.Event()
     event_data = {}
 
@@ -93,7 +94,7 @@ async def test_subscription_callback(
     hass: HomeAssistant, pywemo_registry, wemo_entity
 ) -> None:
     """Device processes a registry subscription callback."""
-    device = coordinator.async_get_coordinator(hass, wemo_entity.device_id)
+    device = async_get_coordinator(hass, wemo_entity.device_id)
     device.last_update_success = False
 
     got_callback = asyncio.Event()
@@ -117,7 +118,7 @@ async def test_subscription_update_action_exception(
     hass: HomeAssistant, pywemo_device, wemo_entity
 ) -> None:
     """Device handles ActionException on get_state properly."""
-    device = coordinator.async_get_coordinator(hass, wemo_entity.device_id)
+    device = async_get_coordinator(hass, wemo_entity.device_id)
     device.last_update_success = True
 
     pywemo_device.subscription_update.return_value = False
@@ -137,7 +138,7 @@ async def test_subscription_update_exception(
     hass: HomeAssistant, pywemo_device, wemo_entity
 ) -> None:
     """Device handles Exception on get_state properly."""
-    device = coordinator.async_get_coordinator(hass, wemo_entity.device_id)
+    device = async_get_coordinator(hass, wemo_entity.device_id)
     device.last_update_success = True
 
     pywemo_device.subscription_update.return_value = False
@@ -157,7 +158,7 @@ async def test_async_update_data_subscribed(
     hass: HomeAssistant, pywemo_registry, pywemo_device, wemo_entity
 ) -> None:
     """No update happens when the device is subscribed."""
-    device = coordinator.async_get_coordinator(hass, wemo_entity.device_id)
+    device = async_get_coordinator(hass, wemo_entity.device_id)
     pywemo_registry.is_subscribed.return_value = True
     pywemo_device.get_state.reset_mock()
     await device._async_update_data()
@@ -196,9 +197,7 @@ async def test_options_enable_subscription_false(
     config_entry = hass.config_entries.async_get_entry(wemo_entity.config_entry_id)
     assert hass.config_entries.async_update_entry(
         config_entry,
-        options=asdict(
-            coordinator.Options(enable_subscription=False, enable_long_press=False)
-        ),
+        options=asdict(Options(enable_subscription=False, enable_long_press=False)),
     )
     await hass.async_block_till_done()
     pywemo_registry.unregister.assert_called_once_with(pywemo_device)
@@ -208,7 +207,7 @@ async def test_options_enable_long_press_false(hass, pywemo_device, wemo_entity)
     """Test setting Options.enable_long_press = False."""
     config_entry = hass.config_entries.async_get_entry(wemo_entity.config_entry_id)
     assert hass.config_entries.async_update_entry(
-        config_entry, options=asdict(coordinator.Options(enable_long_press=False))
+        config_entry, options=asdict(Options(enable_long_press=False))
     )
     await hass.async_block_till_done()
     pywemo_device.remove_long_press_virtual_device.assert_called_once_with()
