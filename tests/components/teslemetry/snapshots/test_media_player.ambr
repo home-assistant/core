@@ -24,7 +24,7 @@
     }),
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
     'original_icon': None,
-    'original_name': 'Media Player',
+    'original_name': 'Media player',
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'supported_features': <MediaPlayerEntityFeature: 16437>,
@@ -37,7 +37,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'speaker',
-      'friendly_name': 'Test Media Player',
+      'friendly_name': 'Test Media player',
       'media_album_name': 'Elon Musk',
       'media_artist': 'Walter Isaacson',
       'media_duration': 651.0,
@@ -60,7 +60,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'speaker',
-      'friendly_name': 'Test Media Player',
+      'friendly_name': 'Test Media player',
       'media_album_name': '',
       'media_artist': '',
       'media_playlist': '',
@@ -102,7 +102,7 @@
     }),
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
     'original_icon': None,
-    'original_name': 'Media Player',
+    'original_name': 'Media player',
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'supported_features': 0,
