@@ -169,11 +169,6 @@ class AirNowSensor(CoordinatorEntity[AirNowDataUpdateCoordinator], SensorEntity)
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
-    def available(self) -> bool:
-        """Return if sensor data exists."""
-        return self.entity_description.value_fn(self.coordinator.data) is not None
-
-    @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes."""
         if self.entity_description.extra_state_attributes_fn:
