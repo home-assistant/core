@@ -66,10 +66,10 @@ def __get_date(date_input: str | None, mode: str | None) -> date | datetime:
     """Get date."""
     if not date_input:
         if mode == "end":
-            return datetime.fromisoformat(
-                dt_util.now().date().isoformat()
-            ) + dt.timedelta(days=1)
-        return datetime.fromisoformat(dt_util.now().date().isoformat())
+            increment = dt.timedelta(days=1)
+        else:
+            increment = dt.timedelta()
+        return datetime.fromisoformat(dt_util.now().date().isoformat()) + increment
 
     if value := dt_util.parse_datetime(date_input):
         return value
