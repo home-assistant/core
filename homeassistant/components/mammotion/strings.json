@@ -1,0 +1,16 @@
+{
+    "config": {
+        "flow_title": "[%key:component::bluetooth::config::flow_title%]",
+        "step": {
+            "user": {
+                "description": "[%key:component::bluetooth::config::step::user::description%]",
+                "data": {
+                    "address": "[%key:common::config_flow::data::device%]"
+                }
+            },
+            "bluetooth_confirm": {
+                "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+            }
+        }
+    }
+}
