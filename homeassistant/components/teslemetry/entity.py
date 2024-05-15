@@ -60,6 +60,12 @@ class TeslemetryEntity(
         """Return a specific value from coordinator data."""
         return self.coordinator.data.get(key, default)
 
+    def get_number(self, key: str, default: float) -> float:
+        """Return a specific number from coordinator data."""
+        if isinstance(value := self.coordinator.data.get(key), (int, float)):
+            return value
+        return default
+
     @property
     def is_none(self) -> bool:
         """Return if the value is a literal None."""

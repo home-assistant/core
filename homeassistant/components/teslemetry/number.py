@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from itertools import chain
-from typing import cast
 
 from tesla_fleet_api.const import Scope
 
@@ -167,19 +166,13 @@ class TeslemetryVehicleNumberEntity(TeslemetryVehicleEntity, NumberEntity):
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         self._attr_native_value = self._value
-        self._attr_native_min_value = cast(
-            float,
-            self.get(
-                self.entity_description.min_key,
-                self.entity_description.native_min_value,
-            ),
+        self._attr_native_min_value = self.get_number(
+            self.entity_description.min_key,
+            self.entity_description.native_min_value,
         )
-        self._attr_native_max_value = cast(
-            float,
-            self.get(
-                self.entity_description.max_key,
-                self.entity_description.native_max_value,
-            ),
+        self._attr_native_max_value = self.get_number(
+            self.entity_description.max_key,
+            self.entity_description.native_max_value,
         )
 
     async def async_set_native_value(self, value: float) -> None:
@@ -218,17 +211,11 @@ class TeslemetryImperialSpeedNumberEntity(TeslemetryVehicleEntity, NumberEntity)
             self._attr_native_value = None
         else:
             self._attr_native_value = self._value
-        self._attr_native_min_value = (
-            self.get(
-                "vehicle_state_speed_limit_mode_min_limit_mph",
-            )
-            or 50
+        self._attr_native_min_value = self.get_number(
+            "vehicle_state_speed_limit_mode_min_limit_mph", 50
         )
-        self._attr_native_max_value = (
-            self.get(
-                "vehicle_state_speed_limit_mode_max_limit_mph",
-            )
-            or 120
+        self._attr_native_max_value = self.get_number(
+            "vehicle_state_speed_limit_mode_max_limit_mph", 120
         )
 
     async def async_set_native_value(self, value: float) -> None:
@@ -276,13 +263,13 @@ class TeslemetryMetricSpeedNumberEntity(TeslemetryVehicleEntity, NumberEntity):
             self._attr_native_value = round(self.convert_to(self._value), 1)
         self._attr_native_min_value = round(
             self.convert_to(
-                self.get("vehicle_state_speed_limit_mode_min_limit_mph") or 50
+                self.get_number("vehicle_state_speed_limit_mode_min_limit_mph", 50)
             ),
             1,
         )
         self._attr_native_max_value = round(
             self.convert_to(
-                self.get("vehicle_state_speed_limit_mode_max_limit_mph") or 120
+                self.get_number("vehicle_state_speed_limit_mode_max_limit_mph", 120)
             ),
             1,
         )
@@ -317,19 +304,13 @@ class TeslemetryEnergyInfoNumberSensorEntity(TeslemetryEnergyInfoEntity, NumberE
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         self._attr_native_value = self._value
-        self._attr_native_min_value = cast(
-            float,
-            self.get(
-                self.entity_description.min_key,
-                self.entity_description.native_min_value,
-            ),
+        self._attr_native_min_value = self.get_number(
+            self.entity_description.min_key,
+            self.entity_description.native_min_value,
         )
-        self._attr_native_max_value = cast(
-            float,
-            self.get(
-                self.entity_description.max_key,
-                self.entity_description.native_max_value,
-            ),
+        self._attr_native_max_value = self.get_number(
+            self.entity_description.max_key,
+            self.entity_description.native_max_value,
         )
         self._attr_icon = icon_for_battery_level(self.native_value)
 
