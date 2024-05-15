@@ -1,7 +1,5 @@
 """Constants for the Home Assistant alerts integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 import aiohttp
