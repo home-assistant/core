@@ -74,19 +74,16 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
             # Fully API has different methods for setting string and bool values.
             # check if call.data[ATTR_VALUE] is a bool
-            if (isinstance(value, bool) or
-                    (isinstance(value, str) and value.lower() in ("true", "false"))):
-                await coordinator.fully.setConfigurationBool(
-                    key, value
-                )
+            if isinstance(value, bool) or (
+                isinstance(value, str) and value.lower() in ("true", "false")
+            ):
+                await coordinator.fully.setConfigurationBool(key, value)
             else:
                 # Convert any int values to string
                 if isinstance(value, int):
                     value = str(value)
 
-                await coordinator.fully.setConfigurationString(
-                    key, value
-                )
+                await coordinator.fully.setConfigurationString(key, value)
 
     # Register all the above services
     service_mapping = [
