@@ -39,7 +39,7 @@ class ReolinkSensorEntityDescription(
 ):
     """A class that describes sensor entities for a camera channel."""
 
-    value: Callable[[Host, int], int | float]
+    value: Callable[[Host, int], StateType]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -49,7 +49,7 @@ class ReolinkHostSensorEntityDescription(
 ):
     """A class that describes host sensor entities."""
 
-    value: Callable[[Host], int | None]
+    value: Callable[[Host], StateType]
 
 
 SENSORS = (
