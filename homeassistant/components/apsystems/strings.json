@@ -3,19 +3,29 @@
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "ip_address": "IP address"
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "total_power": { "name": "Total Power" },
+      "total_power_p1": { "name": "Power P1" },
+      "total_power_p2": { "name": "Power P2" },
+      "lifetime_production": { "name": "Total Lifetime Production" },
+      "lifetime_production_p1": { "name": "Lifetime Production of P1" },
+      "lifetime_production_p2": { "name": "Lifetime Production of P2" },
+      "today_production": { "name": "Today Production" },
+      "today_production_p1": { "name": "Today Production P1" },
+      "today_production_p2": { "name": "Today Production P2" }
     }
   }
 }

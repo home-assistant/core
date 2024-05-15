@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 from APsystemsEZ1 import APsystemsEZ1M
 
 from homeassistant.config_entries import ConfigEntry
@@ -12,14 +10,11 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import ApSystemsDataCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
-    entry.runtime_data = {}
     api = APsystemsEZ1M(ip_address=entry.data[CONF_IP_ADDRESS], timeout=8)
     coordinator = ApSystemsDataCoordinator(hass, api)
     await coordinator.async_config_entry_first_refresh()
