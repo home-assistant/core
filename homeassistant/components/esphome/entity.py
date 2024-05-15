@@ -130,7 +130,6 @@ def esphome_state_property(
 
     @functools.wraps(func)
     def _wrapper(self: _EntityT) -> _R | None:
-        # pylint: disable-next=protected-access
         if not self._has_state:
             return None
         val = func(self)

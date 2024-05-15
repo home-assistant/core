@@ -257,6 +257,11 @@ def assert_dict_of_states_equal_without_context_and_last_changed(
         )
 
 
+async def async_record_states(hass: HomeAssistant):
+    """Record some test states."""
+    return await hass.async_add_executor_job(record_states, hass)
+
+
 def record_states(hass):
     """Record some test states.
 

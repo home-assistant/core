@@ -79,7 +79,7 @@ async def async_send_text_commands(
     ) as assistant:
         command_response_list = []
         for command in commands:
-            resp = assistant.assist(command)
+            resp = await hass.async_add_executor_job(assistant.assist, command)
             text_response = resp[0]
             _LOGGER.debug("command: %s\nresponse: %s", command, text_response)
             audio_response = resp[2]

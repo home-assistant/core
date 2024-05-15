@@ -17,9 +17,9 @@ from .common import RESPONSE_DISARMED, ZONE_NORMAL, setup_platform
 from tests.common import snapshot_platform
 
 ZONE_ENTITY_ID = "binary_sensor.security"
-ZONE_LOW_BATTERY_ID = "binary_sensor.security_low_battery"
+ZONE_LOW_BATTERY_ID = "binary_sensor.security_battery"
 ZONE_TAMPER_ID = "binary_sensor.security_tamper"
-PANEL_BATTERY_ID = "binary_sensor.test_low_battery"
+PANEL_BATTERY_ID = "binary_sensor.test_battery"
 PANEL_TAMPER_ID = "binary_sensor.test_tamper"
 PANEL_POWER_ID = "binary_sensor.test_power"
 
@@ -49,7 +49,7 @@ async def test_state_and_attributes(hass: HomeAssistant) -> None:
         )
         assert state.attributes.get("device_class") == BinarySensorDeviceClass.DOOR
 
-        state = hass.states.get(f"{ZONE_ENTITY_ID}_low_battery")
+        state = hass.states.get(f"{ZONE_ENTITY_ID}_battery")
         assert state.state == STATE_OFF
         state = hass.states.get(f"{ZONE_ENTITY_ID}_tamper")
         assert state.state == STATE_OFF
@@ -58,7 +58,7 @@ async def test_state_and_attributes(hass: HomeAssistant) -> None:
         state = hass.states.get("binary_sensor.fire")
         assert state.state == STATE_OFF
         assert state.attributes.get("device_class") == BinarySensorDeviceClass.SMOKE
-        state = hass.states.get("binary_sensor.fire_low_battery")
+        state = hass.states.get("binary_sensor.fire_battery")
         assert state.state == STATE_ON
         state = hass.states.get("binary_sensor.fire_tamper")
         assert state.state == STATE_OFF
@@ -67,7 +67,7 @@ async def test_state_and_attributes(hass: HomeAssistant) -> None:
         state = hass.states.get("binary_sensor.gas")
         assert state.state == STATE_OFF
         assert state.attributes.get("device_class") == BinarySensorDeviceClass.GAS
-        state = hass.states.get("binary_sensor.gas_low_battery")
+        state = hass.states.get("binary_sensor.gas_battery")
         assert state.state == STATE_OFF
         state = hass.states.get("binary_sensor.gas_tamper")
         assert state.state == STATE_ON
@@ -76,7 +76,7 @@ async def test_state_and_attributes(hass: HomeAssistant) -> None:
         state = hass.states.get("binary_sensor.unknown")
         assert state.state == STATE_OFF
         assert state.attributes.get("device_class") == BinarySensorDeviceClass.DOOR
-        state = hass.states.get("binary_sensor.unknown_low_battery")
+        state = hass.states.get("binary_sensor.unknown_battery")
         assert state.state == STATE_OFF
         state = hass.states.get("binary_sensor.unknown_tamper")
         assert state.state == STATE_OFF
@@ -85,7 +85,7 @@ async def test_state_and_attributes(hass: HomeAssistant) -> None:
         state = hass.states.get("binary_sensor.temperature")
         assert state.state == STATE_OFF
         assert state.attributes.get("device_class") == BinarySensorDeviceClass.PROBLEM
-        state = hass.states.get("binary_sensor.temperature_low_battery")
+        state = hass.states.get("binary_sensor.temperature_battery")
         assert state.state == STATE_OFF
         state = hass.states.get("binary_sensor.temperature_tamper")
         assert state.state == STATE_OFF
