@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 import logging
+import os
 from typing import Any, Optional, Protocol, cast
 
 import voluptuous as vol
@@ -31,6 +32,7 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_PATH,
     CONF_PLATFORM,
+    CONF_ROUTINE_ARRIVAL_FILENAME,
     CONF_VARIABLES,
     CONF_ZONE,
     DOMAIN_RASCALSCHEDULER,
@@ -250,6 +252,50 @@ def blueprint_in_automation(hass: HomeAssistant, entity_id: str) -> str | None:
     return automation_entity.referenced_blueprint
 
 
+def trigger_automations_later(
+    hass: HomeAssistant,
+    component: EntityComponent[BaseAutomationEntity],
+    routine_arrival_filename: str,
+) -> None:
+    """Parse the routine arrival dataset."""
+    rasc_datasets = "homeassistant/components/rasc/datasets"
+    routine_arrival_pathname = os.path.join(rasc_datasets, routine_arrival_filename)
+    if not os.path.exists(routine_arrival_pathname):
+        LOGGER.error("The routine arrival dataset does not exist")
+        return
+
+    automations = list(component.entities)
+    arrival_time = 10.0
+    routine_arrivals = dict[str, list[float]]()
+    with open(routine_arrival_pathname, encoding="utf-8") as f:
+        for line in f:
+            interarrival_time, routine_id = line.split(",")
+            arrival_time = arrival_time + float(interarrival_time)
+            if routine_id not in routine_arrivals:
+                routine_arrivals[routine_id] = []
+            routine_arrivals[routine_id].append(arrival_time)
+
+    async def trigger_automation_later(
+        automation: BaseAutomationEntity, arrival_time: float
+    ) -> None:
+        """Trigger automation later."""
+        LOGGER.info(
+            "Trigger routine %s in %s seconds",
+            automation.unique_id,
+            arrival_time,
+        )
+        await asyncio.sleep(arrival_time)
+        await automation.async_trigger({"trigger": {"platform": None}})
+
+    for automation in automations:
+        if automation.unique_id in routine_arrivals:
+            arrival_times = routine_arrivals[automation.unique_id]
+            for arrival_time in arrival_times:
+                hass.async_create_task(
+                    trigger_automation_later(automation, arrival_time)
+                )
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up all automations."""
     hass.data[DOMAIN] = component = EntityComponent[BaseAutomationEntity](
@@ -333,6 +379,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     websocket_api.async_register_command(hass, websocket_config)
+
+    routine_arrival_filename: str = config["rasc"][CONF_ROUTINE_ARRIVAL_FILENAME]
+    trigger_automations_later(hass, component, routine_arrival_filename)
 
     return True
 
@@ -622,6 +671,14 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
         This method is a coroutine.
         """
+        self._logger.info(
+            "Trigger automation %s:\nrun variables: %s\ncontext: %s, skip_condition: %s",
+            self.unique_id,
+            run_variables,
+            context,
+            skip_condition,
+        )
+
         reason = ""
         alias = ""
         if "trigger" in run_variables:

@@ -637,7 +637,7 @@ class Queue(Generic[_KT, _VT]):
 
     def __contains__(self, key: object) -> bool:
         """Check if the key contains in the queue."""
-        return key in self._keys if isinstance(key, str) else False
+        return key in self._keys
 
     def keys(self) -> Iterator[_KT]:
         """Get keys."""

@@ -137,4 +137,6 @@ tmp_cache
 # python-language-server / Rope
 .ropeproject
 
+# results
 testrun*/
+results/

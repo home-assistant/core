@@ -50,8 +50,6 @@ from homeassistant.const import (
     REACTIVE,
     RESCHEDULE_ALL,
     RESCHEDULE_SOME,
-    RESCHEDULING_ACCURACY,
-    RESCHEDULING_ESTIMATION,
     RV,
     SHORTEST,
     SJFW,
@@ -63,7 +61,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .abstraction import RASCAbstraction
-from .const import DOMAIN, LOGGER
+from .const import CONF_RESULTS_DIR, DOMAIN, LOGGER
 from .rescheduler import RascalRescheduler
 from .scheduler import RascalScheduler
 
@@ -120,15 +118,15 @@ CONFIG_SCHEMA = vol.Schema(
                     supported_routine_priority_policies
                 ),
                 vol.Optional(
-                    CONF_ROUTINE_ARRIVAL_FILENAME, default="datasets/arrival.csv"
+                    CONF_ROUTINE_ARRIVAL_FILENAME, default="arrival_debug.csv"
                 ): cv.string,
                 vol.Optional(CONF_RECORD_RESULTS, default=True): cv.boolean,
-                vol.Optional(RESCHEDULING_ESTIMATION, default=True): cv.boolean,
-                vol.Optional(RESCHEDULING_ACCURACY, default=RESCHEDULE_ALL): vol.In(
-                    supported_rescheduling_accuracies
-                ),
-                vol.Optional("mthresh", default=1.0): cv.positive_float,  # seconds
-                vol.Optional("mithresh", default=2.0): cv.positive_float,  # seconds
+                # vol.Optional(RESCHEDULING_ESTIMATION, default=True): cv.boolean,
+                # vol.Optional(RESCHEDULING_ACCURACY, default=RESCHEDULE_ALL): vol.In(
+                #     supported_rescheduling_accuracies
+                # ),
+                # vol.Optional("mthresh", default=1.0): cv.positive_float,  # seconds
+                # vol.Optional("mithresh", default=2.0): cv.positive_float,  # seconds
             }
         )
     },
@@ -140,11 +138,11 @@ LOGGER.level = logging.DEBUG
 
 def _create_result_dir() -> str:
     """Create the result directory."""
-    if not os.path.exists("results"):
-        os.mkdir("results")
+    if not os.path.exists(CONF_RESULTS_DIR):
+        os.mkdir(CONF_RESULTS_DIR)
 
     result_dirname = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
-    result_dirpath = os.path.join("results", result_dirname)
+    result_dirpath = os.path.join(CONF_RESULTS_DIR, result_dirname)
     if os.path.isdir(result_dirpath):
         shutil.rmtree(result_dirpath)
     os.mkdir(result_dirpath)
@@ -153,31 +151,15 @@ def _create_result_dir() -> str:
 
 def _save_rasc_configs(configs: ConfigType, result_dir: str) -> None:
     """Save the rasc configurations."""
-    with open(f"results/{result_dir}/rasc_config.yaml", "w", encoding="utf-8") as f:
+    with open(f"{result_dir}/rasc_config.yaml", "w", encoding="utf-8") as f:
         for key, value in configs.items():
             f.write(f"{key}: {value}\n")
-
-
-def parse_routine_arrival_dataset(routine_arrival_filename: str) -> None:
-    """Parse the routine arrival dataset."""
-    rasc_pathname = "homeassistant/components/rasc"
-    routine_arrival_pathname = os.path.join(rasc_pathname, routine_arrival_filename)
-    if not os.path.exists(routine_arrival_pathname):
-        LOGGER.error("The routine arrival dataset does not exist")
-        return
-    with open(routine_arrival_pathname, encoding="utf-8") as f:
-        for line in f:
-            arrival_time, routine_id = line.split()
-            LOGGER.debug(line)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the RASC component."""
     result_dir = _create_result_dir()
     _save_rasc_configs(config[DOMAIN], result_dir)
-    routine_arrival_filename = config[DOMAIN][CONF_ROUTINE_ARRIVAL_FILENAME]
-    if routine_arrival_filename:
-        parse_routine_arrival_dataset(routine_arrival_filename)
 
     component = hass.data[DOMAIN] = RASCAbstraction(LOGGER, DOMAIN, hass)
     LOGGER.debug("RASC config: %s", config[DOMAIN])

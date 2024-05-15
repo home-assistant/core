@@ -16,4 +16,6 @@ ACTION_LENGTH_PADDING = 2.0  # second
 MIN_RESCHEDULE_TIME = 0.05  # second
 ACK_TO_START = 0.4  # second
 
+CONF_RESULTS_DIR = "results"
+
 LOGGER = logging.getLogger(__package__)

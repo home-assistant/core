@@ -2800,9 +2800,12 @@ class RascalScheduler(BaseScheduler):
     def initialize_routine(self, routine: RoutineEntity) -> None:
         """Initialize the given routine."""
         _LOGGER.info("New coming routine %s", routine.routine_id)
-        action_ids = set(routine.actions.keys())
+        sink_actions = {
+            action.action_id: get_target_entities(self._hass, action.action)
+            for action in routine.sink_actions
+        }
         self._metrics.record_routine_arrival(
-            routine.routine_id, datetime.now(), action_ids
+            routine.routine_id, datetime.now(), sink_actions
         )
 
         if self._eligibility_test(routine):
