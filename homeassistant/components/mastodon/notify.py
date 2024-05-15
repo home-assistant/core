@@ -83,7 +83,7 @@ class MastodonNotificationService(BaseNotificationService):
             media = data.get(ATTR_MEDIA)
             if media:
                 if not self.hass.config.is_allowed_path(media):
-                    LOGGER.warning(f"{media} is not a whitelisted directory")
+                    LOGGER.warning(f"'%s' is not a whitelisted directory", media)
                     return
                 mediadata = self.upload_media(media)
 
