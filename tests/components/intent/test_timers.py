@@ -1111,6 +1111,15 @@ async def test_area_filter(
     assert len(timers) == 1
     assert timers[0].get(ATTR_NAME) == "media"
 
+    # Cancel by area + time
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_CANCEL_TIMER,
+        {"area": {"value": "living room"}, "start_minutes": {"value": 15}},
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
 
 def test_round_time() -> None:
     """Test lower-precision time rounded."""
