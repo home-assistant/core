@@ -100,7 +100,7 @@ ENERGY_INFO_DESCRIPTIONS: tuple[TeslemetryNumberEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the Teslemetry sensor platform from a config entry."""
+    """Set up the Teslemetry number platform from a config entry."""
 
     async_add_entities(
         chain(
@@ -145,7 +145,7 @@ async def async_setup_entry(
 
 
 class TeslemetryVehicleNumberEntity(TeslemetryVehicleEntity, NumberEntity):
-    """Number entity for current charge."""
+    """Vehicle number entity base class."""
 
     entity_description: TeslemetryNumberEntityDescription
 
@@ -155,7 +155,7 @@ class TeslemetryVehicleNumberEntity(TeslemetryVehicleEntity, NumberEntity):
         description: TeslemetryNumberEntityDescription,
         scopes: list[Scope],
     ) -> None:
-        """Initialize the Number entity."""
+        """Initialize the number entity."""
         self.scoped = any(scope in scopes for scope in description.scopes)
         self.entity_description = description
         super().__init__(
@@ -186,7 +186,7 @@ class TeslemetryVehicleNumberEntity(TeslemetryVehicleEntity, NumberEntity):
 
 
 class TeslemetryImperialSpeedNumberEntity(TeslemetryVehicleEntity, NumberEntity):
-    """Number entity for speed limit."""
+    """Number entity for speed limit in MPH."""
 
     device_class = NumberDeviceClass.SPEED
     native_unit_of_measurement = UnitOfSpeed.MILES_PER_HOUR
@@ -228,7 +228,7 @@ class TeslemetryImperialSpeedNumberEntity(TeslemetryVehicleEntity, NumberEntity)
 
 
 class TeslemetryMetricSpeedNumberEntity(TeslemetryVehicleEntity, NumberEntity):
-    """Number entity for speed limit in metric."""
+    """Number entity for speed limit in KMPH."""
 
     device_class = NumberDeviceClass.SPEED
     mode = NumberMode.BOX
@@ -290,7 +290,7 @@ class TeslemetryMetricSpeedNumberEntity(TeslemetryVehicleEntity, NumberEntity):
 
 
 class TeslemetryEnergyInfoNumberSensorEntity(TeslemetryEnergyInfoEntity, NumberEntity):
-    """Number entity for energy info number entity."""
+    """Energy info number entity base class."""
 
     entity_description: TeslemetryNumberEntityDescription
 
@@ -300,7 +300,7 @@ class TeslemetryEnergyInfoNumberSensorEntity(TeslemetryEnergyInfoEntity, NumberE
         description: TeslemetryNumberEntityDescription,
         scopes: list[Scope],
     ) -> None:
-        """Initialize the Number entity."""
+        """Initialize the number entity."""
         self.scoped = any(scope in scopes for scope in description.scopes)
         self.entity_description = description
         super().__init__(data, description.key)
