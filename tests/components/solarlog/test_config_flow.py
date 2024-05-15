@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from solarlog_cli.solarlog_exceptions import SolarLogConnectionError
+from solarlog_cli.solarlog_exceptions import SolarLogConnectionError, SolarLogError
 
 from homeassistant import config_entries
 from homeassistant.components.solarlog import config_flow
@@ -82,7 +82,7 @@ async def test_user(
     ("exception", "error"),
     [
         (SolarLogConnectionError, {CONF_HOST: "cannot_connect"}),
-        (Exception, {CONF_HOST: "unknown"}),
+        (SolarLogError, {CONF_HOST: "unknown"}),
     ],
 )
 async def test_form_exceptions(
