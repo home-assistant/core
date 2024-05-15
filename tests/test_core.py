@@ -9,6 +9,7 @@ import functools
 import gc
 import logging
 import os
+import re
 from tempfile import TemporaryDirectory
 import threading
 import time
@@ -3486,3 +3487,18 @@ async def test_async_create_task_thread_safety(hass: HomeAssistant) -> None:
         match="Detected code that calls hass.async_create_task from a thread.",
     ):
         await hass.async_add_executor_job(hass.async_create_task, _any_coro)
+
+
+async def test_thread_safety_message(hass: HomeAssistant) -> None:
+    """Test the thread safety message."""
+    with pytest.raises(
+        RuntimeError,
+        match=re.escape(
+            "Detected code that calls test from a thread other than the event loop, "
+            "which is a non-thread-safe operation and may cause a crash. For more "
+            "information, see "
+            "https://developers.home-assistant.io/docs/asyncio_thread_safety/#test"
+            ". Please report this issue.",
+        ),
+    ):
+        await hass.async_add_executor_job(hass.verify_event_loop_thread, "test")
