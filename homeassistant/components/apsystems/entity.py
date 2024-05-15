@@ -23,7 +23,6 @@ class ApsystemsEntity(CoordinatorEntity[ApSystemsDataCoordinator]):
         """Initialize the APsystems entity."""
         super().__init__(data.coordinator)
         self._entry = entry
-        self.api = data.api
         assert entry.unique_id
         self._attr_unique_id = entry.unique_id
         self._attr_device_info = DeviceInfo(
