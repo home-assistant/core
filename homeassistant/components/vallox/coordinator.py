@@ -23,7 +23,7 @@ class ValloxDataUpdateCoordinator(DataUpdateCoordinator[MetricData]):
         name: str,
         client: Vallox,
     ) -> None:
-        """Initialize global Venstar data updater."""
+        """Initialize Vallox data coordinator."""
         super().__init__(
             hass,
             _LOGGER,
