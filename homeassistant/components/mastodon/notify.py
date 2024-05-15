@@ -83,9 +83,9 @@ class MastodonNotificationService(BaseNotificationService):
             media = data.get(ATTR_MEDIA)
             if media:
                 if not self.hass.config.is_allowed_path(media):
-                    LOGGER.warning(f"'%s' is not a whitelisted directory", media)
+                    LOGGER.warning("'%s' is not a whitelisted directory", media)
                     return
-                mediadata = self.upload_media(media)
+                mediadata = self._upload_media(media)
 
             target = data.get(ATTR_TARGET)
             sensitive = data.get(ATTR_MEDIA_WARNING)
@@ -113,7 +113,7 @@ class MastodonNotificationService(BaseNotificationService):
     def _upload_media(self, media_path: Any = None) -> Any:
         """Upload media."""
         with open(media_path, "rb"):
-            media_type = self.media_type(media_path)
+            media_type = self._media_type(media_path)
         try:
             mediadata = self._api.media_post(media_path, mime_type=media_type)
         except MastodonAPIError:
