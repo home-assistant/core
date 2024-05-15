@@ -421,6 +421,9 @@ apprise==1.8.0
 # homeassistant.components.aprs
 aprslib==0.7.2
 
+# homeassistant.components.apsystems
+apsystems-ez1==1.3.1
+
 # homeassistant.components.aranet
 aranet4==2.3.3
 
@@ -1192,7 +1195,7 @@ openhomedevice==2.2.0
 openwebifpy==4.2.4
 
 # homeassistant.components.opower
-opower==0.4.4
+opower==0.4.5
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2276,7 +2279,7 @@ yeelight==0.7.14
 yolink-api==0.4.4
 
 # homeassistant.components.youless
-youless-api==1.0.1
+youless-api==1.1.1
 
 # homeassistant.components.youtube
 youtubeaio==1.1.5
