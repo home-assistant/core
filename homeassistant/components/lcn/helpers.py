@@ -426,7 +426,7 @@ async def async_update_config_entry(
 def get_device_config(
     address: AddressType, config_entry: ConfigEntry
 ) -> ConfigType | None:
-    """Return the device configuration for given unique_device_id from ConfigEntry."""
+    """Return the device configuration for given address and ConfigEntry."""
     for device_config in config_entry.data[CONF_DEVICES]:
         if tuple(device_config[CONF_ADDRESS]) == address:
             return cast(ConfigType, device_config)
