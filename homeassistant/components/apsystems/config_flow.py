@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from aiohttp import client_exceptions
+from aiohttp.client_exceptions import ClientConnectionError
 from APsystemsEZ1 import APsystemsEZ1M
 import voluptuous as vol
 
@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -35,8 +35,7 @@ class APsystemsLocalAPIFlow(ConfigFlow, domain=DOMAIN):
             api = APsystemsEZ1M(user_input[CONF_IP_ADDRESS], session=session)
             try:
                 device_info = await api.get_device_info()
-            except (TimeoutError, client_exceptions.ClientConnectionError):
-                LOGGER.exception("Could not connect")
+            except (TimeoutError, ClientConnectionError):
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(device_info.deviceId)

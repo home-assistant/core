@@ -117,7 +117,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     config = config_entry.runtime_data
-    coordinator = config["COORDINATOR"]
+    coordinator = config.coordinator
     device_id = config_entry.unique_id
     assert device_id
 
@@ -142,11 +142,10 @@ class ApSystemsSensorWithDescription(
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._device_id = device_id
         self._attr_unique_id = f"{device_id}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._device_id)},
-            serial_number=self._device_id,
+            identifiers={(DOMAIN, device_id)},
+            serial_number=device_id,
             manufacturer="APsystems",
             model="EZ1-M",
         )
