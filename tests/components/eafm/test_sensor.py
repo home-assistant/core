@@ -447,7 +447,7 @@ async def test_unload_entry(hass: HomeAssistant, mock_get_station) -> None:
     state = hass.states.get("sensor.my_station_water_level_stage")
     assert state.state == "5"
 
-    assert await entry.async_unload(hass)
+    await hass.config_entries.async_unload(entry.entry_id)
 
     # And the entity should be unavailable
     assert (

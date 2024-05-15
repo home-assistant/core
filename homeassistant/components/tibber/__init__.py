@@ -22,7 +22,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import DATA_HASS_CONFIG, DOMAIN
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
@@ -68,8 +68,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # set up notify platform, no entry support for notify component yet,
-    # have to use discovery to load platform.
+    # Use discovery to load platform legacy notify platform
+    # The use of the legacy notify service was deprecated with HA Core 2024.6
+    # Support will be removed with HA Core 2024.12
     hass.async_create_task(
         discovery.async_load_platform(
             hass,
@@ -79,6 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.data[DATA_HASS_CONFIG],
         )
     )
+
     return True
 
 

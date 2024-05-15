@@ -2,9 +2,9 @@
 
 from collections.abc import Callable, Coroutine
 from logging import Logger
-from typing import Any
+from typing import Any, TypeVar
 
-from xiaomi_ble import XiaomiBluetoothDeviceData
+from xiaomi_ble import SensorUpdate, XiaomiBluetoothDeviceData
 
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
@@ -22,8 +22,12 @@ from homeassistant.helpers.debounce import Debouncer
 
 from .const import CONF_SLEEPY_DEVICE
 
+_T = TypeVar("_T")
 
-class XiaomiActiveBluetoothProcessorCoordinator(ActiveBluetoothProcessorCoordinator):
+
+class XiaomiActiveBluetoothProcessorCoordinator(
+    ActiveBluetoothProcessorCoordinator[SensorUpdate]
+):
     """Define a Xiaomi Bluetooth Active Update Processor Coordinator."""
 
     def __init__(
@@ -33,13 +37,13 @@ class XiaomiActiveBluetoothProcessorCoordinator(ActiveBluetoothProcessorCoordina
         *,
         address: str,
         mode: BluetoothScanningMode,
-        update_method: Callable[[BluetoothServiceInfoBleak], Any],
+        update_method: Callable[[BluetoothServiceInfoBleak], SensorUpdate],
         needs_poll_method: Callable[[BluetoothServiceInfoBleak, float | None], bool],
         device_data: XiaomiBluetoothDeviceData,
         discovered_event_classes: set[str],
         poll_method: Callable[
             [BluetoothServiceInfoBleak],
-            Coroutine[Any, Any, Any],
+            Coroutine[Any, Any, SensorUpdate],
         ]
         | None = None,
         poll_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
@@ -68,7 +72,9 @@ class XiaomiActiveBluetoothProcessorCoordinator(ActiveBluetoothProcessorCoordina
         return self.entry.data.get(CONF_SLEEPY_DEVICE, self.device_data.sleepy_device)
 
 
-class XiaomiPassiveBluetoothDataProcessor(PassiveBluetoothDataProcessor):
+class XiaomiPassiveBluetoothDataProcessor(
+    PassiveBluetoothDataProcessor[_T, SensorUpdate]
+):
     """Define a Xiaomi Bluetooth Passive Update Data Processor."""
 
     coordinator: XiaomiActiveBluetoothProcessorCoordinator

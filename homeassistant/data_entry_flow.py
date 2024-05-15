@@ -154,7 +154,6 @@ class FlowResult(TypedDict, Generic[_HandlerT], total=False):
     handler: Required[_HandlerT]
     last_step: bool | None
     menu_options: Container[str]
-    options: Mapping[str, Any]
     preview: str | None
     progress_action: str
     progress_task: asyncio.Task[Any] | None
@@ -501,7 +500,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
         flow.async_cancel_progress_task()
         try:
             flow.async_remove()
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error removing %s flow", flow.handler)
 
     async def _async_handle_step(

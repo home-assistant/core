@@ -35,7 +35,7 @@ async def test_config_not_ready(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.gios.Gios._get_stations",
+        "homeassistant.components.gios.coordinator.Gios._get_stations",
         side_effect=ConnectionError(),
     ):
         entry.add_to_hass(hass)
@@ -77,17 +77,21 @@ async def test_migrate_device_and_config_entry(
 
     with (
         patch(
-            "homeassistant.components.gios.Gios._get_stations", return_value=STATIONS
+            "homeassistant.components.gios.coordinator.Gios._get_stations",
+            return_value=STATIONS,
         ),
         patch(
-            "homeassistant.components.gios.Gios._get_station",
+            "homeassistant.components.gios.coordinator.Gios._get_station",
             return_value=station,
         ),
         patch(
-            "homeassistant.components.gios.Gios._get_all_sensors",
+            "homeassistant.components.gios.coordinator.Gios._get_all_sensors",
             return_value=sensors,
         ),
-        patch("homeassistant.components.gios.Gios._get_indexes", return_value=indexes),
+        patch(
+            "homeassistant.components.gios.coordinator.Gios._get_indexes",
+            return_value=indexes,
+        ),
     ):
         config_entry.add_to_hass(hass)
 

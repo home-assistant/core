@@ -17,11 +17,13 @@ from homeassistant.components.media_source.models import (
     MediaSourceItem,
     PlayMedia,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import (
     COLLECTION_TYPE_MOVIES,
     COLLECTION_TYPE_MUSIC,
+    CONF_AUDIO_CODEC,
     DOMAIN,
     ITEM_KEY_COLLECTION_TYPE,
     ITEM_KEY_ID,
@@ -57,7 +59,7 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     jellyfin_data: JellyfinData = hass.data[DOMAIN][entry.entry_id]
 
-    return JellyfinSource(hass, jellyfin_data.jellyfin_client)
+    return JellyfinSource(hass, jellyfin_data.jellyfin_client, entry)
 
 
 class JellyfinSource(MediaSource):
@@ -65,11 +67,14 @@ class JellyfinSource(MediaSource):
 
     name: str = "Jellyfin"
 
-    def __init__(self, hass: HomeAssistant, client: JellyfinClient) -> None:
+    def __init__(
+        self, hass: HomeAssistant, client: JellyfinClient, entry: ConfigEntry
+    ) -> None:
         """Initialize the Jellyfin media source."""
         super().__init__(DOMAIN)
 
         self.hass = hass
+        self.entry = entry
 
         self.client = client
         self.api = client.jellyfin
@@ -524,6 +529,8 @@ class JellyfinSource(MediaSource):
         item_id = media_item[ITEM_KEY_ID]
 
         if media_type == MEDIA_TYPE_AUDIO:
+            if audio_codec := self.entry.options.get(CONF_AUDIO_CODEC):
+                return self.api.audio_url(item_id, audio_codec=audio_codec)  # type: ignore[no-any-return]
             return self.api.audio_url(item_id)  # type: ignore[no-any-return]
         if media_type == MEDIA_TYPE_VIDEO:
             return self.api.video_url(item_id)  # type: ignore[no-any-return]
