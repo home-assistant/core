@@ -418,7 +418,9 @@ class DefaultAgent(ConversationEntity):
         language: str,
     ) -> RecognizeResult | None:
         """Search intents for a match to user input."""
-        maybe_result: RecognizeResult | None = None
+        name_result: RecognizeResult | None = None
+        best_results: list[RecognizeResult] = []
+        best_text_chunks_matched: int | None = None
         for result in recognize_all(
             user_input.text,
             lang_intents.intents,
@@ -426,18 +428,33 @@ class DefaultAgent(ConversationEntity):
             intent_context=intent_context,
             language=language,
         ):
-            if "name" in result.entities:
-                return result
+            if ("name" in result.entities) and (
+                not result.entities["name"].is_wildcard
+            ):
+                name_result = result
 
-            # Keep looking in case an entity has the same name
-            maybe_result = result
+            if (best_text_chunks_matched is None) or (
+                result.text_chunks_matched > best_text_chunks_matched
+            ):
+                # Only overwrite if more literal text was matched.
+                # This causes wildcards to match last.
+                best_results = [result]
+                best_text_chunks_matched = result.text_chunks_matched
+            elif result.text_chunks_matched == best_text_chunks_matched:
+                # Accumulate results with the same number of literal text matched.
+                # We will resolve the ambiguity below.
+                best_results.append(result)
 
-        if maybe_result is not None:
+        if name_result is not None:
+            # Prioritize matches with entity names above area names
+            return name_result
+
+        if best_results:
             # Successful strict match
-            return maybe_result
+            return best_results[0]
 
         # Try again with missing entities enabled
-        best_num_unmatched_entities = 0
+        maybe_result: RecognizeResult | None = None
         for result in recognize_all(
             user_input.text,
             lang_intents.intents,
