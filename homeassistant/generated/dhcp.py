@@ -3,9 +3,10 @@
 To update, run python3 -m script.hassfest
 """
 
+from typing import Final
 from __future__ import annotations
 
-DHCP: list[dict[str, str | bool]] = [
+DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "airzone",
         "macaddress": "E84F25*",
