@@ -1609,6 +1609,12 @@ omit =
     homeassistant/components/volumio/__init__.py
     homeassistant/components/volumio/browse_media.py
     homeassistant/components/volumio/media_player.py
+    homeassistant/components/volvooncall/__init__.py
+    homeassistant/components/volvooncall/binary_sensor.py
+    homeassistant/components/volvooncall/device_tracker.py
+    homeassistant/components/volvooncall/lock.py
+    homeassistant/components/volvooncall/sensor.py
+    homeassistant/components/volvooncall/switch.py
     homeassistant/components/vulcan/__init__.py
     homeassistant/components/vulcan/calendar.py
     homeassistant/components/vulcan/fetch_data.py
@@ -1683,6 +1689,11 @@ omit =
     homeassistant/components/yalexs_ble/lock.py
     homeassistant/components/yalexs_ble/sensor.py
     homeassistant/components/yalexs_ble/util.py
+    homeassistant/components/yamaha_musiccast/__init__.py
+    homeassistant/components/yamaha_musiccast/media_player.py
+    homeassistant/components/yamaha_musiccast/number.py
+    homeassistant/components/yamaha_musiccast/select.py
+    homeassistant/components/yamaha_musiccast/switch.py
     homeassistant/components/yandex_transport/sensor.py
     homeassistant/components/yardian/__init__.py
     homeassistant/components/yardian/coordinator.py
