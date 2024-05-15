@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from http import HTTPStatus
 import logging
-from typing import Any, Optional
+from typing import Any
 import uuid
 
 import aiohttp
