@@ -87,6 +87,12 @@ def async_remove(hass: HomeAssistant, intent_type: str) -> None:
     intents.pop(intent_type, None)
 
 
+@callback
+def async_get(hass: HomeAssistant) -> Iterable[IntentHandler]:
+    """Return registered intents."""
+    return hass.data.get(DATA_KEY, {}).values()
+
+
 @bind_hass
 async def async_handle(
     hass: HomeAssistant,

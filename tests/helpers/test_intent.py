@@ -610,7 +610,7 @@ def test_async_register(hass: HomeAssistant) -> None:
 
     intent.async_register(hass, handler)
 
-    assert hass.data[intent.DATA_KEY]["test_intent"] == handler
+    assert list(intent.async_get(hass)) == [handler]
 
 
 def test_async_register_overwrite(hass: HomeAssistant) -> None:
@@ -629,7 +629,7 @@ def test_async_register_overwrite(hass: HomeAssistant) -> None:
             "Intent %s is being overwritten by %s", "test_intent", handler2
         )
 
-    assert hass.data[intent.DATA_KEY]["test_intent"] == handler2
+    assert list(intent.async_get(hass)) == [handler2]
 
 
 def test_async_remove(hass: HomeAssistant) -> None:
@@ -640,7 +640,7 @@ def test_async_remove(hass: HomeAssistant) -> None:
     intent.async_register(hass, handler)
     intent.async_remove(hass, "test_intent")
 
-    assert "test_intent" not in hass.data[intent.DATA_KEY]
+    assert not list(intent.async_get(hass))
 
 
 def test_async_remove_no_existing_entry(hass: HomeAssistant) -> None:
@@ -651,7 +651,7 @@ def test_async_remove_no_existing_entry(hass: HomeAssistant) -> None:
 
     intent.async_remove(hass, "test_intent2")
 
-    assert "test_intent2" not in hass.data[intent.DATA_KEY]
+    assert list(intent.async_get(hass)) == [handler]
 
 
 def test_async_remove_no_existing(hass: HomeAssistant) -> None:
