@@ -60,17 +60,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in config:
         return True
 
-    _LOGGER.warning(
-        "Configuration of LCN integration in YAML is deprecated and "
-        "will be removed in a future release; Your existing configuration "
-        "has been imported into the UI automatically "
-        "and can be safely removed from your configuration.yaml file"
-    )
     async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2024.7.0",
+        breaks_in_ha_version="2024.12.0",
         is_fixable=False,
         is_persistent=False,
         issue_domain=DOMAIN,
