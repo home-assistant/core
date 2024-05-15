@@ -17,17 +17,6 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_apsystems_timeout():
-    """Override APsystemsEZ1M.get_device_info() to throw timeout."""
-    with patch(
-        "homeassistant.components.apsystems.config_flow.APsystemsEZ1M",
-        return_value=AsyncMock(),
-    ) as mock_api:
-        mock_api.return_value.get_device_info = AsyncMock(side_effect=TimeoutError)
-        yield mock_api
-
-
-@pytest.fixture
 def mock_apsystems_with_serial_id():
     """Override APsystemsEZ1M.get_device_info() to return MY_SERIAL_NUMBER as the serial number."""
     ret_data = MagicMock()
@@ -36,5 +25,5 @@ def mock_apsystems_with_serial_id():
         "homeassistant.components.apsystems.config_flow.APsystemsEZ1M",
         return_value=AsyncMock(),
     ) as mock_api:
-        mock_api.return_value.get_device_info = AsyncMock(return_value=ret_data)
+        mock_api.return_value.get_device_info.return_value = ret_data
         yield mock_api
