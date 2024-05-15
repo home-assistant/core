@@ -77,12 +77,17 @@ async def async_call_tool(hass: HomeAssistant, tool_input: ToolInput) -> JsonObj
     else:
         raise HomeAssistantError(f'Tool "{tool_input.tool_name}" not found')
 
-    if tool_input.context is None:
-        tool_input.context = Context()
+    _tool_input = ToolInput(
+        tool_name=tool.name,
+        tool_args=tool.parameters(tool_input.tool_args),
+        platform=tool_input.platform,
+        context=tool_input.context or Context(),
+        user_prompt=tool_input.user_prompt,
+        language=tool_input.language,
+        assistant=tool_input.assistant,
+    )
 
-    tool_input.tool_args = tool.parameters(tool_input.tool_args)
-
-    return await tool.async_call(hass, tool_input)
+    return await tool.async_call(hass, _tool_input)
 
 
 class IntentTool(Tool):
