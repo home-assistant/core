@@ -1552,6 +1552,8 @@ omit =
     homeassistant/components/v2c/number.py
     homeassistant/components/v2c/sensor.py
     homeassistant/components/v2c/switch.py
+    homeassistant/components/vallox/__init__.py
+    homeassistant/components/vallox/coordinator.py
     homeassistant/components/vasttrafik/sensor.py
     homeassistant/components/velbus/__init__.py
     homeassistant/components/velbus/binary_sensor.py
