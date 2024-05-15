@@ -27,13 +27,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from .common import (
+from .const import DOMAIN, DSL_CONNECTION, UPTIME_DEVIATION
+from .coordinator import (
     AvmWrapper,
     ConnectionInfo,
     FritzBoxBaseCoordinatorEntity,
     FritzEntityDescription,
 )
-from .const import DOMAIN, DSL_CONNECTION, UPTIME_DEVIATION
 
 _LOGGER = logging.getLogger(__name__)
 

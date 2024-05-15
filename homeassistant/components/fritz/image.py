@@ -14,8 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
-from .common import AvmWrapper, FritzBoxBaseEntity
 from .const import DOMAIN
+from .coordinator import AvmWrapper, FritzBoxBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
