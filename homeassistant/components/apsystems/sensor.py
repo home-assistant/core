@@ -131,6 +131,7 @@ class ApSystemsSensorWithDescription(
     """Base sensor to be used with description."""
 
     entity_description: ApsystemsLocalApiSensorDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
