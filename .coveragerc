@@ -1567,9 +1567,8 @@ omit =
     homeassistant/components/velux/__init__.py
     homeassistant/components/velux/cover.py
     homeassistant/components/velux/light.py
-    homeassistant/components/venstar/__init__.py
-    homeassistant/components/venstar/binary_sensor.py
     homeassistant/components/venstar/climate.py
+    homeassistant/components/venstar/coordinator.py
     homeassistant/components/venstar/sensor.py
     homeassistant/components/verisure/__init__.py
     homeassistant/components/verisure/alarm_control_panel.py
