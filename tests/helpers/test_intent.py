@@ -32,7 +32,12 @@ class MockIntentHandler(intent.IntentHandler):
 
     def __init__(self, slot_schema) -> None:
         """Initialize the mock handler."""
-        self.slot_schema = slot_schema
+        self._mock_slot_schema = slot_schema
+
+    @property
+    def slot_schema(self):
+        """Return the slot schema."""
+        return self._mock_slot_schema
 
 
 async def test_async_match_states(
