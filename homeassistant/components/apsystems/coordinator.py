@@ -24,7 +24,6 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ReturnOutputData]):
             update_interval=timedelta(seconds=12),
         )
         self.api = api
-        self.always_update = True
 
     async def _async_update_data(self) -> ReturnOutputData:
         return await self.api.get_output_data()
