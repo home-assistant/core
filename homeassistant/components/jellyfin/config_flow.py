@@ -16,7 +16,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.util.uuid import random_uuid_hex
 
 from .client_wrapper import CannotConnect, InvalidAuth, create_client, validate_input
