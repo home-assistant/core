@@ -88,7 +88,6 @@
         "default": "mdi:car-speed-limiter"
       }
     },
-
     "select": {
       "climate_state_seat_heater_left": {
         "default": "mdi:car-seat-heater",
