@@ -439,7 +439,8 @@ class HomeAssistant:
 
             # frame is a circular import, so we import it here
             frame.report(
-                f"calls {what} from a thread. "
+                f"calls {what} from a thread other than the event loop, "
+                "which may cause Home Assistant to crash or data to corrupt. "
                 "For more information, see "
                 "https://developers.home-assistant.io/docs/asyncio_thread_safety/"
                 f"#{what.replace('.', '')}",
