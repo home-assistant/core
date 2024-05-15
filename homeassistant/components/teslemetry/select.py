@@ -166,7 +166,7 @@ class TeslemetryWheelHeaterSelectEntity(TeslemetryVehicleEntity, SelectEntity):
         data: TeslemetryVehicleData,
         scopes: list[Scope],
     ) -> None:
-        """Initialize the vehicle seat select entity."""
+        """Initialize the vehicle steering wheel select entity."""
         self.scoped = Scope.VEHICLE_CMDS in scopes
         super().__init__(
             data,
