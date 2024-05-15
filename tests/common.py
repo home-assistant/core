@@ -38,7 +38,7 @@ from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
 from homeassistant.config import async_process_component_config
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, _DataT
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -973,8 +973,10 @@ class MockToggleEntity(entity.ToggleEntity):
             return None
 
 
-class MockConfigEntry(config_entries.ConfigEntry):
+class MockConfigEntry(config_entries.ConfigEntry[_DataT]):
     """Helper for creating config entries that adds some defaults."""
+
+    runtime_data: _DataT
 
     def __init__(
         self,
@@ -1175,6 +1177,7 @@ def mock_restore_cache(hass: HomeAssistant, states: Sequence[State]) -> None:
     _LOGGER.debug("Restore cache: %s", data.last_states)
     assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
 
+    restore_state.async_get.cache_clear()
     hass.data[key] = data
 
 
@@ -1202,6 +1205,7 @@ def mock_restore_cache_with_extra_data(
     _LOGGER.debug("Restore cache: %s", data.last_states)
     assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
 
+    restore_state.async_get.cache_clear()
     hass.data[key] = data
 
 
