@@ -30,8 +30,8 @@ PLATFORMS: Final = [
     Platform.CLIMATE,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Teslemetry config."""

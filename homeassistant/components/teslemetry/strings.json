@@ -273,6 +273,35 @@
       "wall_connector_state": {
         "name": "State code"
       }
+    },
+    "switch": {
+      "charge_state_user_charge_enable_request": {
+        "name": "Charge"
+      },
+      "climate_state_auto_seat_climate_left": {
+        "name": "Auto seat climate left"
+      },
+      "climate_state_auto_seat_climate_right": {
+        "name": "Auto seat climate right"
+      },
+      "climate_state_auto_steering_wheel_heat": {
+        "name": "Auto steering wheel heater"
+      },
+      "climate_state_defrost_mode": {
+        "name": "Defrost"
+      },
+      "components_disallow_charge_from_grid_with_solar_installed": {
+        "name": "Allow charging from grid"
+      },
+      "storm_mode_enabled": {
+        "name": "Storm mode"
+      },
+      "vehicle_state_sentry_mode": {
+        "name": "Sentry mode"
+      },
+      "vehicle_state_valet_mode": {
+        "name": "Valet mode"
+      }
     }
   }
 }
