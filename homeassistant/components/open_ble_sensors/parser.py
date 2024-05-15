@@ -64,6 +64,3 @@ class OpenBLESensorsBluetoothDeviceData(BluetoothData):
 
         batt = service_info.manufacturer_data[2167][3]
         self.update_predefined_sensor(SensorLibrary.BATTERY__PERCENTAGE, batt)
-        self.update_predefined_sensor(SensorLibrary.IMPEDANCE__OHM, 0)
-        # self.update_predefined_sensor(SensorLibrary.TEMPERATURE__CELSIUS, temp / 10)
-        # self.update_predefined_sensor(SensorLibrary.HUMIDITY__PERCENTAGE, humi / 10)

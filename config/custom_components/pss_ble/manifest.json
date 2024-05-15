@@ -1,9 +1,0 @@
-{
-  "domain": "pss_ble",
-  "name": "PSS BLE Scanner",
-  "version": "1.0",
-  "documentation": "https://example.com",
-  "requirements": [],
-  "dependencies": ["bluetooth_adapters"],
-  "codeowners": ["@mbush91"]
-}
