@@ -1356,7 +1356,7 @@ NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
 
 CONDITION_BASE_SCHEMA = {
     vol.Optional(CONF_ALIAS): string,
-    vol.Optional(CONF_ENABLED): boolean,
+    vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
 }
 
 NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
