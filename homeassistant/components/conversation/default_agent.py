@@ -335,8 +335,11 @@ class DefaultAgent(ConversationEntity):
         assert lang_intents is not None
 
         # Slot values to pass to the intent
-        slots = {
-            entity.name: {"value": entity.value, "text": entity.text or entity.value}
+        slots: dict[str, Any] = {
+            entity.name: {
+                "value": entity.value,
+                "text": entity.text or entity.value,
+            }
             for entity in result.entities_list
         }
 
@@ -350,6 +353,7 @@ class DefaultAgent(ConversationEntity):
                 user_input.context,
                 language,
                 assistant=DOMAIN,
+                device_id=user_input.device_id,
             )
         except intent.MatchFailedError as match_error:
             # Intent was valid, but no entities matched the constraints.
@@ -364,14 +368,16 @@ class DefaultAgent(ConversationEntity):
                 ),
                 conversation_id,
             )
-        except intent.IntentHandleError:
+        except intent.IntentHandleError as err:
             # Intent was valid and entities matched constraints, but an error
             # occurred during handling.
             _LOGGER.exception("Intent handling error")
             return _make_error_result(
                 language,
                 intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
-                self._get_error_text(ErrorKey.HANDLE_ERROR, lang_intents),
+                self._get_error_text(
+                    err.response_key or ErrorKey.HANDLE_ERROR, lang_intents
+                ),
                 conversation_id,
             )
         except intent.IntentUnexpectedError:
@@ -412,7 +418,6 @@ class DefaultAgent(ConversationEntity):
         language: str,
     ) -> RecognizeResult | None:
         """Search intents for a match to user input."""
-        # Prioritize matches with entity names above area names
         maybe_result: RecognizeResult | None = None
         for result in recognize_all(
             user_input.text,
@@ -518,13 +523,16 @@ class DefaultAgent(ConversationEntity):
             state1 = unmatched[0]
 
         # Render response template
+        speech_slots = {
+            entity_name: entity_value.text or entity_value.value
+            for entity_name, entity_value in recognize_result.entities.items()
+        }
+        speech_slots.update(intent_response.speech_slots)
+
         speech = response_template.async_render(
             {
-                # Slots from intent recognizer
-                "slots": {
-                    entity_name: entity_value.text or entity_value.value
-                    for entity_name, entity_value in recognize_result.entities.items()
-                },
+                # Slots from intent recognizer and response
+                "slots": speech_slots,
                 # First matched or unmatched state
                 "state": (
                     template.TemplateState(self.hass, state1)
@@ -849,7 +857,7 @@ class DefaultAgent(ConversationEntity):
 
     def _get_error_text(
         self,
-        error_key: ErrorKey,
+        error_key: ErrorKey | str,
         lang_intents: LanguageIntents | None,
         **response_args,
     ) -> str:
@@ -857,7 +865,11 @@ class DefaultAgent(ConversationEntity):
         if lang_intents is None:
             return _DEFAULT_ERROR_TEXT
 
-        response_key = error_key.value
+        if isinstance(error_key, ErrorKey):
+            response_key = error_key.value
+        else:
+            response_key = error_key
+
         response_str = (
             lang_intents.error_responses.get(response_key) or _DEFAULT_ERROR_TEXT
         )

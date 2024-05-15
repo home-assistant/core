@@ -1825,7 +1825,7 @@ async def help_test_reloadable(
     entry.add_to_hass(hass)
     mqtt_client_mock.connect.return_value = 0
     with patch("homeassistant.config.load_yaml_config_file", return_value=old_config):
-        await entry.async_setup(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
 
     assert hass.states.get(f"{domain}.test_old_1")
     assert hass.states.get(f"{domain}.test_old_2")

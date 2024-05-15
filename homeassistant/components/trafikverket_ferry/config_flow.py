@@ -121,7 +121,7 @@ class TVFerryConfigFlow(ConfigFlow, domain=DOMAIN):
             if ferry_to:
                 name = name + f" to {ferry_to}"
             if ferry_time != "00:00:00":
-                name = name + f" at {str(ferry_time)}"
+                name = name + f" at {ferry_time!s}"
 
             try:
                 await self.validate_input(api_key, ferry_from, ferry_to)

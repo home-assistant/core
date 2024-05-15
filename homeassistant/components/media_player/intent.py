@@ -48,7 +48,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             required_features=MediaPlayerEntityFeature.VOLUME_SET,
             required_slots={
                 ATTR_MEDIA_VOLUME_LEVEL: vol.All(
-                    vol.Range(min=0, max=100), lambda val: val / 100
+                    vol.Coerce(int), vol.Range(min=0, max=100), lambda val: val / 100
                 )
             },
         ),
