@@ -1,7 +1,7 @@
 """The tests for the mFi sensor platform."""
 
 from copy import deepcopy
-import unittest.mock as mock
+from unittest import mock
 
 from mficlient.client import FailedToLogin
 import pytest

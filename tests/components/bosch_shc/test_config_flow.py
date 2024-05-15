@@ -16,6 +16,7 @@ from homeassistant.components import zeroconf
 from homeassistant.components.bosch_shc.config_flow import write_tls_asset
 from homeassistant.components.bosch_shc.const import CONF_SHC_CERT, CONF_SHC_KEY, DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -40,7 +41,7 @@ async def test_form_user(hass: HomeAssistant, mock_zeroconf: None) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -65,7 +66,7 @@ async def test_form_user(hass: HomeAssistant, mock_zeroconf: None) -> None:
             {"host": "1.1.1.1"},
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "credentials"
     assert result2["errors"] == {}
 
@@ -92,7 +93,7 @@ async def test_form_user(hass: HomeAssistant, mock_zeroconf: None) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == "create_entry"
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "shc012345"
     assert result3["data"] == {
         "host": "1.1.1.1",
@@ -125,7 +126,7 @@ async def test_form_get_info_connection_error(
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
 
@@ -147,7 +148,7 @@ async def test_form_get_info_exception(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "unknown"}
 
@@ -179,7 +180,7 @@ async def test_form_pairing_error(hass: HomeAssistant, mock_zeroconf: None) -> N
             {"host": "1.1.1.1"},
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "credentials"
     assert result2["errors"] == {}
 
@@ -193,7 +194,7 @@ async def test_form_pairing_error(hass: HomeAssistant, mock_zeroconf: None) -> N
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == "form"
+    assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "credentials"
     assert result3["errors"] == {"base": "pairing_failed"}
 
@@ -225,7 +226,7 @@ async def test_form_user_invalid_auth(hass: HomeAssistant, mock_zeroconf: None) 
             {"host": "1.1.1.1"},
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "credentials"
     assert result2["errors"] == {}
 
@@ -251,7 +252,7 @@ async def test_form_user_invalid_auth(hass: HomeAssistant, mock_zeroconf: None) 
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == "form"
+    assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "credentials"
     assert result3["errors"] == {"base": "invalid_auth"}
 
@@ -285,7 +286,7 @@ async def test_form_validate_connection_error(
             {"host": "1.1.1.1"},
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "credentials"
     assert result2["errors"] == {}
 
@@ -311,7 +312,7 @@ async def test_form_validate_connection_error(
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == "form"
+    assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "credentials"
     assert result3["errors"] == {"base": "cannot_connect"}
 
@@ -345,7 +346,7 @@ async def test_form_validate_session_error(
             {"host": "1.1.1.1"},
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "credentials"
     assert result2["errors"] == {}
 
@@ -371,7 +372,7 @@ async def test_form_validate_session_error(
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == "form"
+    assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "credentials"
     assert result3["errors"] == {"base": "session_error"}
 
@@ -405,7 +406,7 @@ async def test_form_validate_exception(
             {"host": "1.1.1.1"},
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "credentials"
     assert result2["errors"] == {}
 
@@ -431,7 +432,7 @@ async def test_form_validate_exception(
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == "form"
+    assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "credentials"
     assert result3["errors"] == {"base": "unknown"}
 
@@ -471,7 +472,7 @@ async def test_form_already_configured(
             {"host": "1.1.1.1"},
         )
 
-        assert result2["type"] == "abort"
+        assert result2["type"] is FlowResultType.ABORT
         assert result2["reason"] == "already_configured"
 
     # Test config entry got updated with latest IP
@@ -502,7 +503,7 @@ async def test_zeroconf(hass: HomeAssistant, mock_zeroconf: None) -> None:
             data=DISCOVERY_INFO,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] == "form"
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "confirm_discovery"
         assert result["errors"] == {}
         context = next(
@@ -516,7 +517,7 @@ async def test_zeroconf(hass: HomeAssistant, mock_zeroconf: None) -> None:
         result["flow_id"],
         {},
     )
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "credentials"
 
     with (
@@ -544,7 +545,7 @@ async def test_zeroconf(hass: HomeAssistant, mock_zeroconf: None) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == "create_entry"
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "shc012345"
     assert result3["data"] == {
         "host": "1.1.1.1",
@@ -588,7 +589,7 @@ async def test_zeroconf_already_configured(
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
 
-        assert result["type"] == "abort"
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
     # Test config entry got updated with latest IP
@@ -607,7 +608,7 @@ async def test_zeroconf_cannot_connect(
             data=DISCOVERY_INFO,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] == "abort"
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
 
 
@@ -626,7 +627,7 @@ async def test_zeroconf_not_bosch_shc(hass: HomeAssistant, mock_zeroconf: None) 
         ),
         context={"source": config_entries.SOURCE_ZEROCONF},
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_bosch_shc"
 
 
@@ -650,7 +651,7 @@ async def test_reauth(hass: HomeAssistant, mock_zeroconf: None) -> None:
         context={"source": config_entries.SOURCE_REAUTH},
         data=mock_config.data,
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     with (
@@ -674,7 +675,7 @@ async def test_reauth(hass: HomeAssistant, mock_zeroconf: None) -> None:
             {"host": "2.2.2.2"},
         )
 
-        assert result2["type"] == "form"
+        assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "credentials"
         assert result2["errors"] == {}
 
@@ -701,7 +702,7 @@ async def test_reauth(hass: HomeAssistant, mock_zeroconf: None) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == "abort"
+    assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
 
     assert mock_config.data["host"] == "2.2.2.2"

@@ -48,7 +48,7 @@
       "cooling_state": {
         "name": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]"
       },
-      "slave_boiler_state": {
+      "secondary_boiler_state": {
         "name": "Secondary boiler state"
       },
       "plugwise_notification": {

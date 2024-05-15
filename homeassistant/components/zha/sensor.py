@@ -376,7 +376,7 @@ class EnumSensor(Sensor):
 
     def _init_from_quirks_metadata(self, entity_metadata: ZCLEnumMetadata) -> None:
         """Init this entity from the quirks metadata."""
-        ZhaEntity._init_from_quirks_metadata(self, entity_metadata)  # pylint: disable=protected-access
+        ZhaEntity._init_from_quirks_metadata(self, entity_metadata)  # noqa: SLF001
         self._attribute_name = entity_metadata.attribute_name
         self._enum = entity_metadata.enum
 
@@ -434,8 +434,7 @@ class Battery(Sensor):
         # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
         if not isinstance(value, numbers.Number) or value == -1 or value == 255:
             return None
-        value = round(value / 2)
-        return value
+        return round(value / 2)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

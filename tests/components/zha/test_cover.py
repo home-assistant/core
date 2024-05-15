@@ -6,8 +6,7 @@ from unittest.mock import patch
 import pytest
 import zigpy.profiles.zha
 import zigpy.types
-import zigpy.zcl.clusters.closures as closures
-import zigpy.zcl.clusters.general as general
+from zigpy.zcl.clusters import closures, general
 import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.cover import (

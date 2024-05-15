@@ -36,8 +36,7 @@ VALID_CONFIG_5 = {feedreader.DOMAIN: {CONF_URLS: [URL], CONF_MAX_ENTRIES: 1}}
 def load_fixture_bytes(src: str) -> bytes:
     """Return byte stream of fixture."""
     feed_data = load_fixture(src, DOMAIN)
-    raw = bytes(feed_data, "utf-8")
-    return raw
+    return bytes(feed_data, "utf-8")
 
 
 @pytest.fixture(name="feed_one_event")

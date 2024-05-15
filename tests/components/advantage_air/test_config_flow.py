@@ -4,9 +4,10 @@ from unittest.mock import AsyncMock, patch
 
 from advantage_air import ApiError
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.advantage_air.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import TEST_SYSTEM_DATA, USER_INPUT
 
@@ -17,7 +18,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result1 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result1["type"] == data_entry_flow.FlowResultType.FORM
+    assert result1["type"] is FlowResultType.FORM
     assert result1["step_id"] == "user"
     assert result1["errors"] == {}
 
@@ -39,7 +40,7 @@ async def test_form(hass: HomeAssistant) -> None:
         mock_setup_entry.assert_called_once()
         mock_get.assert_called_once()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "testname"
     assert result2["data"] == USER_INPUT
 
@@ -55,7 +56,7 @@ async def test_form(hass: HomeAssistant) -> None:
             result3["flow_id"],
             USER_INPUT,
         )
-    assert result4["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result4["type"] is FlowResultType.ABORT
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -74,6 +75,6 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
         mock_get.assert_called_once()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}

@@ -1927,9 +1927,7 @@ class ModesTrait(_Trait):
             # Shortcut since all domains are currently unique
             break
 
-        payload = {"availableModes": modes}
-
-        return payload
+        return {"availableModes": modes}
 
     def query_attributes(self):
         """Return current modes."""
@@ -2104,9 +2102,7 @@ class InputSelectorTrait(_Trait):
             for source in sourcelist
         ]
 
-        payload = {"availableInputs": inputs, "orderedInputs": True}
-
-        return payload
+        return {"availableInputs": inputs, "orderedInputs": True}
 
     def query_attributes(self):
         """Return current modes."""

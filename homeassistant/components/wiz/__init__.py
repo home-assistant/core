@@ -94,9 +94,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if bulb.power_monitoring is not False:
                 power: float | None = await bulb.get_power()
                 return power
-            return None
         except WIZ_EXCEPTIONS as ex:
             raise UpdateFailed(f"Failed to update device at {ip_address}: {ex}") from ex
+        return None
 
     coordinator = DataUpdateCoordinator(
         hass=hass,

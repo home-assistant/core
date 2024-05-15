@@ -27,7 +27,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LOGGER, SERVICE_CLEAN_ROOM, SHARK
-from .update_coordinator import SharkIqUpdateCoordinator
+from .coordinator import SharkIqUpdateCoordinator
 
 OPERATING_STATE_MAP = {
     OperatingModes.PAUSE: STATE_PAUSED,
@@ -267,11 +267,10 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return a dictionary of device state attributes specific to sharkiq."""
-        data = {
+        return {
             ATTR_ERROR_CODE: self.error_code,
             ATTR_ERROR_MSG: self.sharkiq.error_text,
             ATTR_LOW_LIGHT: self.low_light,
             ATTR_RECHARGE_RESUME: self.recharge_resume,
             ATTR_ROOMS: self.available_rooms,
         }
-        return data

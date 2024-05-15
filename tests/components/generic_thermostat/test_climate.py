@@ -50,7 +50,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.common import (
-    MockToggleEntity,
     assert_setup_component,
     async_fire_time_changed,
     async_mock_service,
@@ -59,6 +58,7 @@ from tests.common import (
     setup_test_component_platform,
 )
 from tests.components.climate import common
+from tests.components.switch.common import MockSwitch
 
 ENTITY = "climate.test"
 ENT_SENSOR = "sensor.test"
@@ -142,11 +142,11 @@ async def test_heater_input_boolean(hass: HomeAssistant, setup_comp_1) -> None:
 
 
 async def test_heater_switch(
-    hass: HomeAssistant, setup_comp_1, mock_toggle_entities: list[MockToggleEntity]
+    hass: HomeAssistant, setup_comp_1, mock_switch_entities: list[MockSwitch]
 ) -> None:
     """Test heater switching test switch."""
-    setup_test_component_platform(hass, switch.DOMAIN, mock_toggle_entities)
-    switch_1 = mock_toggle_entities[1]
+    setup_test_component_platform(hass, switch.DOMAIN, mock_switch_entities)
+    switch_1 = mock_switch_entities[1]
     assert await async_setup_component(
         hass, switch.DOMAIN, {"switch": {"platform": "test"}}
     )
@@ -808,10 +808,10 @@ async def test_heating_cooling_switch_does_not_toggle_when_within_min_cycle_dura
     # Given
     await _setup_thermostat_with_min_cycle_duration(hass, ac_mode, initial_hvac_mode)
     calls = _setup_switch(hass, initial_switch_state)
-    _setup_sensor(hass, sensor_temperature)
 
     # When
     await common.async_set_temperature(hass, target_temperature)
+    _setup_sensor(hass, sensor_temperature)
     await hass.async_block_till_done()
 
     # Then
@@ -849,10 +849,10 @@ async def test_heating_cooling_switch_toggles_when_outside_min_cycle_duration(
     fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
     with freeze_time(fake_changed):
         calls = _setup_switch(hass, initial_switch_state)
-    _setup_sensor(hass, sensor_temperature)
 
     # When
     await common.async_set_temperature(hass, target_temperature)
+    _setup_sensor(hass, sensor_temperature)
     await hass.async_block_till_done()
 
     # Then
@@ -894,10 +894,10 @@ async def test_hvac_mode_change_toggles_heating_cooling_switch_even_when_within_
     # Given
     await _setup_thermostat_with_min_cycle_duration(hass, ac_mode, initial_hvac_mode)
     calls = _setup_switch(hass, initial_switch_state)
-    _setup_sensor(hass, sensor_temperature)
 
     # When
     await common.async_set_temperature(hass, target_temperature)
+    _setup_sensor(hass, sensor_temperature)
     await hass.async_block_till_done()
 
     # Then

@@ -74,6 +74,7 @@ MQTT_CLIENT_RESPONSE = {
         "status": {"state": "active", "connectionStatus": "Connected"},
         "config": {
             "server": {"protocol": "tcp", "host": "192.168.0.90", "port": 1883},
+            "deviceTopicPrefix": f"axis/{MAC}",
         },
     },
 }

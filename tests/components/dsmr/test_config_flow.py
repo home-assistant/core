@@ -9,7 +9,7 @@ import pytest
 import serial
 import serial.tools.list_ports
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.dsmr import DOMAIN, config_flow
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -39,7 +39,7 @@ async def test_setup_network(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
 
@@ -48,7 +48,7 @@ async def test_setup_network(
         {"type": "Network"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_network"
     assert result["errors"] == {}
 
@@ -70,7 +70,7 @@ async def test_setup_network(
         "protocol": "dsmr_protocol",
     }
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.0.1:1234"
     assert result["data"] == {**entry_data, **SERIAL_DATA}
 
@@ -87,7 +87,7 @@ async def test_setup_network_rfxtrx(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
 
@@ -96,7 +96,7 @@ async def test_setup_network_rfxtrx(
         {"type": "Network"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_network"
     assert result["errors"] == {}
 
@@ -121,7 +121,7 @@ async def test_setup_network_rfxtrx(
         "protocol": "rfxtrx_dsmr_protocol",
     }
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.0.1:1234"
     assert result["data"] == {**entry_data, **SERIAL_DATA}
 
@@ -196,7 +196,7 @@ async def test_setup_serial(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
 
@@ -205,7 +205,7 @@ async def test_setup_serial(
         {"type": "Serial"},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {}
 
@@ -216,7 +216,7 @@ async def test_setup_serial(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == port.device
     assert result["data"] == entry_data
 
@@ -302,7 +302,7 @@ async def test_setup_serial_rfxtrx(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
 
@@ -311,7 +311,7 @@ async def test_setup_serial_rfxtrx(
         {"type": "Serial"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {}
 
@@ -331,7 +331,7 @@ async def test_setup_serial_rfxtrx(
         "protocol": "rfxtrx_dsmr_protocol",
     }
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == port.device
     assert result["data"] == {**entry_data, **SERIAL_DATA}
 
@@ -345,7 +345,7 @@ async def test_setup_serial_manual(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
 
@@ -354,7 +354,7 @@ async def test_setup_serial_manual(
         {"type": "Serial"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {}
 
@@ -363,7 +363,7 @@ async def test_setup_serial_manual(
         {"port": "Enter Manually", "dsmr_version": "2.2"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial_manual_path"
     assert result["errors"] is None
 
@@ -379,7 +379,7 @@ async def test_setup_serial_manual(
         "protocol": "dsmr_protocol",
     }
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "/dev/ttyUSB0"
     assert result["data"] == {**entry_data, **SERIAL_DATA}
 
@@ -403,7 +403,7 @@ async def test_setup_serial_fail(
         side_effect=chain([serial.SerialException], repeat(DEFAULT)),
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
 
@@ -412,7 +412,7 @@ async def test_setup_serial_fail(
         {"type": "Serial"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {}
 
@@ -425,7 +425,7 @@ async def test_setup_serial_fail(
             {"port": port.device, "dsmr_version": "2.2"},
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -463,7 +463,7 @@ async def test_setup_serial_timeout(
     )
     rfxtrx_protocol.wait_closed = first_timeout_wait_closed
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
 
@@ -472,7 +472,7 @@ async def test_setup_serial_timeout(
         {"type": "Serial"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {}
 
@@ -481,7 +481,7 @@ async def test_setup_serial_timeout(
             result["flow_id"], {"port": port.device, "dsmr_version": "2.2"}
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {"base": "cannot_communicate"}
 
@@ -507,7 +507,7 @@ async def test_setup_serial_wrong_telegram(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
 
@@ -516,7 +516,7 @@ async def test_setup_serial_wrong_telegram(
         {"type": "Serial"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {}
 
@@ -528,7 +528,7 @@ async def test_setup_serial_wrong_telegram(
         {"port": port.device, "dsmr_version": "2.2"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {"base": "cannot_communicate"}
 
@@ -550,7 +550,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -564,7 +564,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         patch("homeassistant.components.dsmr.async_setup_entry", return_value=True),
         patch("homeassistant.components.dsmr.async_unload_entry", return_value=True),
     ):
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
 

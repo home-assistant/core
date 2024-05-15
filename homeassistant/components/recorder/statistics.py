@@ -349,8 +349,7 @@ def get_start_time() -> datetime:
     now = dt_util.utcnow()
     current_period_minutes = now.minute - now.minute % 5
     current_period = now.replace(minute=current_period_minutes, second=0, microsecond=0)
-    last_period = current_period - timedelta(minutes=5)
-    return last_period
+    return current_period - timedelta(minutes=5)
 
 
 def _compile_hourly_statistics_summary_mean_stmt(
@@ -486,6 +485,12 @@ def compile_statistics(instance: Recorder, start: datetime, fire_events: bool) -
 
     The actual calculation is delegated to the platforms.
     """
+    # Define modified_statistic_ids outside of the "with" statement as
+    # _compile_statistics may raise and be trapped by
+    # filter_unique_constraint_integrity_error which would make
+    # modified_statistic_ids unbound.
+    modified_statistic_ids: set[str] | None = None
+
     # Return if we already have 5-minute statistics for the requested period
     with session_scope(
         session=instance.get_session(),
@@ -641,7 +646,6 @@ def _insert_statistics(
     try:
         stat = table.from_stats(metadata_id, statistic)
         session.add(stat)
-        return stat
     except SQLAlchemyError:
         _LOGGER.exception(
             "Unexpected exception when inserting statistics %s:%s ",
@@ -649,6 +653,7 @@ def _insert_statistics(
             statistic,
         )
         return None
+    return stat
 
 
 def _update_statistics(
@@ -685,7 +690,7 @@ def get_metadata_with_session(
     session: Session,
     *,
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
     """Fetch meta data.
@@ -706,7 +711,7 @@ def get_metadata(
     hass: HomeAssistant,
     *,
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
     """Return metadata for statistic_ids."""
@@ -754,7 +759,7 @@ def update_statistics_metadata(
 async def async_list_statistic_ids(
     hass: HomeAssistant,
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
 ) -> list[dict]:
     """Return all statistic_ids (or filtered one) and unit of measurement.
 
@@ -824,7 +829,7 @@ def _flatten_list_statistic_ids_metadata_result(
 def list_statistic_ids(
     hass: HomeAssistant,
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
 ) -> list[dict]:
     """Return all statistic_ids (or filtered one) and unit of measurement.
 

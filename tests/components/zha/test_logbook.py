@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 import zigpy.profiles.zha
-import zigpy.zcl.clusters.general as general
+from zigpy.zcl.clusters import general
 
 from homeassistant.components.zha.core.const import ZHA_EVENT
 from homeassistant.const import CONF_DEVICE_ID, CONF_UNIQUE_ID, Platform
@@ -96,7 +96,7 @@ async def test_zha_logbook_event_device_with_triggers(
                     CONF_DEVICE_ID: reg_device.id,
                     COMMAND: COMMAND_SHAKE,
                     "device_ieee": str(ieee_address),
-                    CONF_UNIQUE_ID: f"{str(ieee_address)}:1:0x0006",
+                    CONF_UNIQUE_ID: f"{ieee_address!s}:1:0x0006",
                     "endpoint_id": 1,
                     "cluster_id": 6,
                     "params": {
@@ -110,7 +110,7 @@ async def test_zha_logbook_event_device_with_triggers(
                     CONF_DEVICE_ID: reg_device.id,
                     COMMAND: COMMAND_DOUBLE,
                     "device_ieee": str(ieee_address),
-                    CONF_UNIQUE_ID: f"{str(ieee_address)}:1:0x0006",
+                    CONF_UNIQUE_ID: f"{ieee_address!s}:1:0x0006",
                     "endpoint_id": 1,
                     "cluster_id": 6,
                     "params": {
@@ -124,7 +124,7 @@ async def test_zha_logbook_event_device_with_triggers(
                     CONF_DEVICE_ID: reg_device.id,
                     COMMAND: COMMAND_DOUBLE,
                     "device_ieee": str(ieee_address),
-                    CONF_UNIQUE_ID: f"{str(ieee_address)}:1:0x0006",
+                    CONF_UNIQUE_ID: f"{ieee_address!s}:1:0x0006",
                     "endpoint_id": 2,
                     "cluster_id": 6,
                     "params": {
@@ -175,7 +175,7 @@ async def test_zha_logbook_event_device_no_triggers(
                     CONF_DEVICE_ID: reg_device.id,
                     COMMAND: COMMAND_SHAKE,
                     "device_ieee": str(ieee_address),
-                    CONF_UNIQUE_ID: f"{str(ieee_address)}:1:0x0006",
+                    CONF_UNIQUE_ID: f"{ieee_address!s}:1:0x0006",
                     "endpoint_id": 1,
                     "cluster_id": 6,
                     "params": {
@@ -188,7 +188,7 @@ async def test_zha_logbook_event_device_no_triggers(
                 {
                     CONF_DEVICE_ID: reg_device.id,
                     "device_ieee": str(ieee_address),
-                    CONF_UNIQUE_ID: f"{str(ieee_address)}:1:0x0006",
+                    CONF_UNIQUE_ID: f"{ieee_address!s}:1:0x0006",
                     "endpoint_id": 1,
                     "cluster_id": 6,
                     "params": {
@@ -201,7 +201,7 @@ async def test_zha_logbook_event_device_no_triggers(
                 {
                     CONF_DEVICE_ID: reg_device.id,
                     "device_ieee": str(ieee_address),
-                    CONF_UNIQUE_ID: f"{str(ieee_address)}:1:0x0006",
+                    CONF_UNIQUE_ID: f"{ieee_address!s}:1:0x0006",
                     "endpoint_id": 1,
                     "cluster_id": 6,
                     "params": {},
@@ -212,7 +212,7 @@ async def test_zha_logbook_event_device_no_triggers(
                 {
                     CONF_DEVICE_ID: reg_device.id,
                     "device_ieee": str(ieee_address),
-                    CONF_UNIQUE_ID: f"{str(ieee_address)}:1:0x0006",
+                    CONF_UNIQUE_ID: f"{ieee_address!s}:1:0x0006",
                     "endpoint_id": 1,
                     "cluster_id": 6,
                 },

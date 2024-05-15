@@ -9,6 +9,8 @@ from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import conversation
+from homeassistant.components.conversation import default_agent
+from homeassistant.components.conversation.models import ConversationInput
 from homeassistant.components.cover import SERVICE_OPEN_COVER
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME
@@ -33,7 +35,13 @@ from tests.common import (
 from tests.components.light.common import MockLight
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
-AGENT_ID_OPTIONS = [None, conversation.HOME_ASSISTANT_AGENT]
+AGENT_ID_OPTIONS = [
+    None,
+    # Old value of conversation.HOME_ASSISTANT_AGENT,
+    "homeassistant",
+    # Current value of conversation.HOME_ASSISTANT_AGENT,
+    "conversation.home_assistant",
+]
 
 
 class OrderBeerIntentHandler(intent.IntentHandler):
@@ -47,14 +55,6 @@ class OrderBeerIntentHandler(intent.IntentHandler):
         response = intent_obj.create_response()
         response.async_set_speech(f"You ordered a {beer_style}")
         return response
-
-
-@pytest.fixture
-async def init_components(hass):
-    """Initialize relevant components with empty configs."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
-    assert await async_setup_component(hass, "intent", {})
 
 
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
@@ -750,8 +750,8 @@ async def test_ws_prepare(
     """Test the Websocket prepare conversation API."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
-    agent = await conversation._get_agent_manager(hass).async_get_agent()
-    assert isinstance(agent, conversation.DefaultAgent)
+    agent = default_agent.async_get_default_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
 
     # No intents should be loaded yet
     assert not agent._lang_intents.get(hass.config.language)
@@ -852,8 +852,8 @@ async def test_prepare_reload(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "conversation", {})
 
     # Load intents
-    agent = await conversation._get_agent_manager(hass).async_get_agent()
-    assert isinstance(agent, conversation.DefaultAgent)
+    agent = default_agent.async_get_default_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
     await agent.async_prepare(language)
 
     # Confirm intents are loaded
@@ -880,8 +880,8 @@ async def test_prepare_fail(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "conversation", {})
 
     # Load intents
-    agent = await conversation._get_agent_manager(hass).async_get_agent()
-    assert isinstance(agent, conversation.DefaultAgent)
+    agent = default_agent.async_get_default_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
     await agent.async_prepare("not-a-language")
 
     # Confirm no intents were loaded
@@ -917,11 +917,11 @@ async def test_non_default_response(hass: HomeAssistant, init_components) -> Non
     hass.states.async_set("cover.front_door", "closed")
     calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
 
-    agent = await conversation._get_agent_manager(hass).async_get_agent()
-    assert isinstance(agent, conversation.DefaultAgent)
+    agent = default_agent.async_get_default_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
 
     result = await agent.async_process(
-        conversation.ConversationInput(
+        ConversationInput(
             text="open the front door",
             context=Context(),
             conversation_id=None,
@@ -1061,12 +1061,15 @@ async def test_light_area_same_name(
     assert call.data == {"entity_id": [kitchen_light.entity_id]}
 
 
-async def test_agent_id_validator_invalid_agent(hass: HomeAssistant) -> None:
+async def test_agent_id_validator_invalid_agent(
+    hass: HomeAssistant, init_components
+) -> None:
     """Test validating agent id."""
     with pytest.raises(vol.Invalid):
         conversation.agent_id_validator("invalid_agent")
 
     conversation.agent_id_validator(conversation.HOME_ASSISTANT_AGENT)
+    conversation.agent_id_validator("conversation.home_assistant")
 
 
 async def test_get_agent_list(
