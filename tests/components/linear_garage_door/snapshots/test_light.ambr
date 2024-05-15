@@ -31,7 +31,7 @@
     'platform': 'linear_garage_door',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'light',
     'unique_id': 'test1-Light',
     'unit_of_measurement': None,
   })
@@ -87,7 +87,7 @@
     'platform': 'linear_garage_door',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'light',
     'unique_id': 'test2-Light',
     'unit_of_measurement': None,
   })
@@ -143,7 +143,7 @@
     'platform': 'linear_garage_door',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'light',
     'unique_id': 'test3-Light',
     'unit_of_measurement': None,
   })
@@ -199,7 +199,7 @@
     'platform': 'linear_garage_door',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'light',
     'unique_id': 'test4-Light',
     'unit_of_measurement': None,
   })

@@ -42,8 +42,8 @@ class LinearLightEntity(LinearEntity, LightEntity):
     """Light for Linear devices."""
 
     _attr_color_mode = ColorMode.BRIGHTNESS
-    _attr_name = "Light"
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_translation_key = "light"
 
     @property
     def is_on(self) -> bool:
