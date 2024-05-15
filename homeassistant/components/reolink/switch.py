@@ -174,6 +174,26 @@ SWITCH_ENTITIES = (
         value=lambda api, ch: api.HDR_on(ch) is True,
         method=lambda api, ch, value: api.set_HDR(ch, value),
     ),
+    ReolinkSwitchEntityDescription(
+        key="pir_enabled",
+        cmd_key="GetPirInfo",
+        translation_key="pir_enabled",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "PIR"),
+        value=lambda api, ch: api.pir_enabled(ch) is True,
+        method=lambda api, ch, value: api.set_pir(ch, enable=value),
+    ),
+    ReolinkSwitchEntityDescription(
+        key="pir_reduce_alarm",
+        cmd_key="GetPirInfo",
+        translation_key="pir_reduce_alarm",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "PIR"),
+        value=lambda api, ch: api.pir_reduce_alarm(ch) is True,
+        method=lambda api, ch, value: api.set_pir(ch, reduce_alarm=value),
+    ),
 )
 
 NVR_SWITCH_ENTITIES = (

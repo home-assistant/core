@@ -103,6 +103,9 @@
       "motion_sensitivity": {
         "default": "mdi:motion-sensor"
       },
+      "pir_sensitivity": {
+        "default": "mdi:motion-sensor"
+      },
       "ai_face_sensitivity": {
         "default": "mdi:face-recognition"
       },
@@ -257,6 +260,12 @@
       },
       "hdr": {
         "default": "mdi:hdr"
+      },
+      "pir_enabled": {
+        "default": "mdi:motion-sensor"
+      },
+      "pir_reduce_alarm": {
+        "default": "mdi:motion-sensor"
       }
     }
   },
