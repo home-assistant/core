@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 import aiounifi
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import (
@@ -22,12 +22,18 @@ from .entity_helper import UnifiEntityHelper
 from .entity_loader import UnifiEntityLoader
 from .websocket import UnifiWebsocket
 
+if TYPE_CHECKING:
+    from .. import UnifiConfigEntry
+
 
 class UnifiHub:
     """Manages a single UniFi Network instance."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: aiounifi.Controller
+        self,
+        hass: HomeAssistant,
+        config_entry: UnifiConfigEntry,
+        api: aiounifi.Controller,
     ) -> None:
         """Initialize the system."""
         self.hass = hass
@@ -39,13 +45,6 @@ class UnifiHub:
 
         self.site = config_entry.data[CONF_SITE_ID]
         self.is_admin = False
-
-    @callback
-    @staticmethod
-    def get_hub(hass: HomeAssistant, config_entry: ConfigEntry) -> UnifiHub:
-        """Get UniFi hub from config entry."""
-        hub: UnifiHub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-        return hub
 
     @property
     def available(self) -> bool:
@@ -122,15 +121,14 @@ class UnifiHub:
 
     @staticmethod
     async def async_config_entry_updated(
-        hass: HomeAssistant, config_entry: ConfigEntry
+        hass: HomeAssistant, config_entry: UnifiConfigEntry
     ) -> None:
         """Handle signals of config entry being updated.
 
         If config entry is updated due to reauth flow
         the entry might already have been reset and thus is not available.
         """
-        if not (hub := hass.data[UNIFI_DOMAIN].get(config_entry.entry_id)):
-            return
+        hub = config_entry.runtime_data
         hub.config = UnifiConfig.from_config_entry(config_entry)
         async_dispatcher_send(hass, hub.signal_options_update)
 

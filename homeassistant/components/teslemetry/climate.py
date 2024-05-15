@@ -17,7 +17,7 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemper
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, TeslemetryClimateSide
+from .const import TeslemetryClimateSide
 from .entity import TeslemetryVehicleEntity
 from .models import TeslemetryVehicleData
 
@@ -29,11 +29,12 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Teslemetry Climate platform from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        TeslemetryClimateEntity(vehicle, TeslemetryClimateSide.DRIVER, data.scopes)
-        for vehicle in data.vehicles
+        TeslemetryClimateEntity(
+            vehicle, TeslemetryClimateSide.DRIVER, entry.runtime_data.scopes
+        )
+        for vehicle in entry.runtime_data.vehicles
     )
 
 

@@ -452,10 +452,13 @@ anthemav==1.4.1
 apple_weatherkit==1.1.2
 
 # homeassistant.components.apprise
-apprise==1.7.4
+apprise==1.8.0
 
 # homeassistant.components.aprs
 aprslib==0.7.2
+
+# homeassistant.components.apsystems
+apsystems-ez1==1.3.1
 
 # homeassistant.components.aqualogic
 aqualogic==2.6
@@ -464,7 +467,7 @@ aqualogic==2.6
 aranet4==2.3.3
 
 # homeassistant.components.arcam_fmj
-arcam-fmj==1.4.0
+arcam-fmj==1.5.2
 
 # homeassistant.components.arris_tg2492lg
 arris-tg2492lg==2.2.0
@@ -685,7 +688,7 @@ datadog==0.15.0
 datapoint==0.9.9
 
 # homeassistant.components.bluetooth
-dbus-fast==2.21.1
+dbus-fast==2.21.2
 
 # homeassistant.components.debugpy
 debugpy==1.8.1
@@ -977,7 +980,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.tailwind
-gotailwind==0.2.2
+gotailwind==0.2.3
 
 # homeassistant.components.govee_ble
 govee-ble==0.31.2
@@ -1087,7 +1090,7 @@ home-assistant-intents==2024.4.24
 homeconnect==0.7.2
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.1.0
+homematicip==1.1.1
 
 # homeassistant.components.horizon
 horimote==0.4.1
@@ -1119,7 +1122,7 @@ ibmiotf==0.3.4
 # homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==8.0.0
+ical==8.0.1
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -1658,7 +1661,7 @@ pyCEC==0.5.2
 pyControl4==1.1.0
 
 # homeassistant.components.duotecno
-pyDuotecno==2024.3.2
+pyDuotecno==2024.5.0
 
 # homeassistant.components.electrasmart
 pyElectra==1.2.0
@@ -1803,7 +1806,7 @@ pyeconet==0.1.22
 pyedimax==0.2.1
 
 # homeassistant.components.efergy
-pyefergy==22.1.1
+pyefergy==22.5.0
 
 # homeassistant.components.energenie_power_sockets
 pyegps==0.2.5
@@ -1884,7 +1887,7 @@ pyialarm==2.2.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.5.3
+pyinsteon==1.6.1
 
 # homeassistant.components.intesishome
 pyintesishome==1.8.0
@@ -2093,7 +2096,7 @@ pyqwikswitch==0.93
 pyrail==0.0.3
 
 # homeassistant.components.rainbird
-pyrainbird==4.0.2
+pyrainbird==6.0.1
 
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2
@@ -2343,7 +2346,7 @@ pytradfri[async]==9.0.1
 pytrafikverket==0.3.10
 
 # homeassistant.components.v2c
-pytrydan==0.4.0
+pytrydan==0.6.0
 
 # homeassistant.components.usb
 pyudev==0.24.1
@@ -2578,7 +2581,7 @@ smhi-pkg==1.0.16
 snapcast==2.3.6
 
 # homeassistant.components.sonos
-soco==0.30.3
+soco==0.30.4
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
@@ -2788,7 +2791,7 @@ universal-silabs-flasher==0.0.18
 upb-lib==0.5.6
 
 # homeassistant.components.upcloud
-upcloud-api==2.0.0
+upcloud-api==2.5.1
 
 # homeassistant.components.huawei_lte
 # homeassistant.components.syncthru
@@ -2872,10 +2875,10 @@ wiffi==1.1.2
 wirelesstagpy==0.8.1
 
 # homeassistant.components.wled
-wled==0.17.0
+wled==0.17.1
 
 # homeassistant.components.wolflink
-wolf-comm==0.0.7
+wolf-comm==0.0.8
 
 # homeassistant.components.wyoming
 wyoming==1.5.3
@@ -2923,7 +2926,7 @@ yeelightsunflower==0.0.10
 yolink-api==0.4.4
 
 # homeassistant.components.youless
-youless-api==1.0.1
+youless-api==1.1.1
 
 # homeassistant.components.youtube
 youtubeaio==1.1.5
@@ -2971,7 +2974,7 @@ zigpy==0.64.0
 zm-py==0.5.4
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.55.4
+zwave-js-server-python==0.56.0
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3

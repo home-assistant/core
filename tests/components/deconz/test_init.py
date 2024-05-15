@@ -150,7 +150,8 @@ async def test_unload_entry_multiple_gateways_parallel(
     assert len(hass.data[DECONZ_DOMAIN]) == 2
 
     await asyncio.gather(
-        config_entry.async_unload(hass), config_entry2.async_unload(hass)
+        hass.config_entries.async_unload(config_entry.entry_id),
+        hass.config_entries.async_unload(config_entry2.entry_id),
     )
 
     assert len(hass.data[DECONZ_DOMAIN]) == 0

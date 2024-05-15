@@ -16,13 +16,11 @@ MOCK_CONFIG_NOTIFY = {
     "platform": "notify",
     "file_path": "some_file",
     "timestamp": True,
-    "name": "File",
 }
 MOCK_CONFIG_SENSOR = {
     "platform": "sensor",
     "file_path": "some/path",
     "value_template": "{{ value | round(1) }}",
-    "name": "File",
 }
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
