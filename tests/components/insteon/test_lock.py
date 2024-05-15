@@ -43,14 +43,16 @@ def lock_platform_only():
 @pytest.fixture(autouse=True)
 def patch_setup_and_devices():
     """Patch the Insteon setup process and devices."""
-    with patch.object(insteon, "async_connect", new=mock_connection), patch.object(
-        insteon, "async_close"
-    ), patch.object(insteon, "devices", devices), patch.object(
-        insteon_utils, "devices", devices
-    ), patch.object(
-        insteon_entity,
-        "devices",
-        devices,
+    with (
+        patch.object(insteon, "async_connect", new=mock_connection),
+        patch.object(insteon, "async_close"),
+        patch.object(insteon, "devices", devices),
+        patch.object(insteon_utils, "devices", devices),
+        patch.object(
+            insteon_entity,
+            "devices",
+            devices,
+        ),
     ):
         yield
 

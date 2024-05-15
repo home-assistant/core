@@ -38,5 +38,3 @@ DOMAIN: Final = "fritzbox_callmonitor"
 MANUFACTURER: Final = "AVM"
 
 PLATFORMS = [Platform.SENSOR]
-UNDO_UPDATE_LISTENER: Final = "undo_update_listener"
-FRITZBOX_PHONEBOOK: Final = "fritzbox_phonebook"

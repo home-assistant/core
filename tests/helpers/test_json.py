@@ -34,7 +34,7 @@ TEST_JSON_A = {"a": 1, "B": "two"}
 TEST_JSON_B = {"a": "one", "B": 2}
 
 
-@pytest.mark.parametrize("encoder", (DefaultHASSJSONEncoder, ExtendedJSONEncoder))
+@pytest.mark.parametrize("encoder", [DefaultHASSJSONEncoder, ExtendedJSONEncoder])
 def test_json_encoder(hass: HomeAssistant, encoder: type[json.JSONEncoder]) -> None:
     """Test the JSON encoders."""
     ha_json_enc = encoder()

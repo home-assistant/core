@@ -17,7 +17,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -25,7 +24,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from .const import CONF_PROCESS, DOMAIN, DOMAIN_COORDINATOR
+from . import SystemMonitorConfigEntry
+from .const import CONF_PROCESS, DOMAIN
 from .coordinator import SystemMonitorCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -89,24 +89,25 @@ SENSOR_TYPES: tuple[SysMonitorBinarySensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SystemMonitorConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up System Montor binary sensors based on a config entry."""
-    entities: list[SystemMonitorSensor] = []
-    coordinator: SystemMonitorCoordinator = hass.data[DOMAIN_COORDINATOR]
+    coordinator = entry.runtime_data.coordinator
 
-    for sensor_description in SENSOR_TYPES:
-        _entry = entry.options.get(BINARY_SENSOR_DOMAIN, {})
-        for argument in _entry.get(CONF_PROCESS, []):
-            entities.append(
-                SystemMonitorSensor(
-                    coordinator,
-                    sensor_description,
-                    entry.entry_id,
-                    argument,
-                )
-            )
-    async_add_entities(entities)
+    async_add_entities(
+        SystemMonitorSensor(
+            coordinator,
+            sensor_description,
+            entry.entry_id,
+            argument,
+        )
+        for sensor_description in SENSOR_TYPES
+        for argument in entry.options.get(BINARY_SENSOR_DOMAIN, {}).get(
+            CONF_PROCESS, []
+        )
+    )
 
 
 class SystemMonitorSensor(

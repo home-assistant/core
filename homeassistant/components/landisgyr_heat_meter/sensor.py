@@ -286,11 +286,10 @@ async def async_setup_entry(
         name="Landis+Gyr Heat Meter",
     )
 
-    sensors = []
-    for description in HEAT_METER_SENSOR_TYPES:
-        sensors.append(HeatMeterSensor(coordinator, description, device))
-
-    async_add_entities(sensors)
+    async_add_entities(
+        HeatMeterSensor(coordinator, description, device)
+        for description in HEAT_METER_SENSOR_TYPES
+    )
 
 
 class HeatMeterSensor(

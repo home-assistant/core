@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from tololib.message_info import SettingsInfo, StatusInfo
+from tololib import ToloSettings, ToloStatus
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -31,8 +31,8 @@ from .const import DOMAIN
 class ToloSensorEntityDescription(SensorEntityDescription):
     """Class describing TOLO Sensor entities."""
 
-    getter: Callable[[StatusInfo], int | None]
-    availability_checker: Callable[[SettingsInfo, StatusInfo], bool] | None
+    getter: Callable[[ToloStatus], int | None]
+    availability_checker: Callable[[ToloSettings, ToloStatus], bool] | None
 
     state_class = SensorStateClass.MEASUREMENT
 

@@ -1,0 +1,7 @@
+{
+  "services": {
+    "set_zone_mode": "mdi:auto-mode",
+    "set_zone_override": "mdi:thermometer-lines",
+    "set_switch_override": "mdi:toggle-switch-variant"
+  }
+}

@@ -257,9 +257,7 @@ class HomeControlMock(HomeControl):
         self.gateway = MagicMock()
         self.gateway.local_connection = True
         self.gateway.firmware_version = "8.94.0"
-
-    def websocket_disconnect(self, event: str = "") -> None:
-        """Mock disconnect of the websocket."""
+        self.websocket_disconnect = MagicMock()
 
 
 class HomeControlMockBinarySensor(HomeControlMock):

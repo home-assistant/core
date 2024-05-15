@@ -44,7 +44,7 @@ class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
 
     def get_airzone_value(self, key: str) -> Any:
         """Return Airzone entity value by key."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class AirzoneSystemEntity(AirzoneEntity):

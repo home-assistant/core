@@ -40,6 +40,7 @@
     'context': <ANY>,
     'entity_id': 'switch.goat_g1_advanced_mode',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -85,6 +86,7 @@
     'context': <ANY>,
     'entity_id': 'switch.goat_g1_border_switch',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -130,6 +132,7 @@
     'context': <ANY>,
     'entity_id': 'switch.goat_g1_child_lock',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -175,6 +178,7 @@
     'context': <ANY>,
     'entity_id': 'switch.goat_g1_cross_map_border_warning',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -220,6 +224,7 @@
     'context': <ANY>,
     'entity_id': 'switch.goat_g1_move_up_warning',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -265,6 +270,7 @@
     'context': <ANY>,
     'entity_id': 'switch.goat_g1_safe_protect',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -310,6 +316,7 @@
     'context': <ANY>,
     'entity_id': 'switch.goat_g1_true_detect',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -355,6 +362,7 @@
     'context': <ANY>,
     'entity_id': 'switch.ozmo_950_advanced_mode',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -400,6 +408,7 @@
     'context': <ANY>,
     'entity_id': 'switch.ozmo_950_carpet_auto_boost_suction',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -445,6 +454,7 @@
     'context': <ANY>,
     'entity_id': 'switch.ozmo_950_continuous_cleaning',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })

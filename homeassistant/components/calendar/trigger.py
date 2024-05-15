@@ -137,7 +137,7 @@ def queued_event_fetcher(
         # time span, but need to be triggered later when the end happens.
         results = []
         for trigger_time, event in zip(
-            map(get_trigger_time, active_events), active_events
+            map(get_trigger_time, active_events), active_events, strict=False
         ):
             if trigger_time not in offset_timespan:
                 continue

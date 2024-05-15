@@ -503,7 +503,7 @@ class CalendarEntity(Entity):
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @final
     @property
@@ -599,11 +599,11 @@ class CalendarEntity(Entity):
         end_date: datetime.datetime,
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_create_event(self, **kwargs: Any) -> None:
         """Add a new event to calendar."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_delete_event(
         self,
@@ -612,7 +612,7 @@ class CalendarEntity(Entity):
         recurrence_range: str | None = None,
     ) -> None:
         """Delete an event on the calendar."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_update_event(
         self,
@@ -622,7 +622,7 @@ class CalendarEntity(Entity):
         recurrence_range: str | None = None,
     ) -> None:
         """Delete an event on the calendar."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class CalendarEventView(http.HomeAssistantView):
