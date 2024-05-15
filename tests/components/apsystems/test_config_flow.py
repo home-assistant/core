@@ -12,7 +12,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_form_create_success(
-    hass: HomeAssistant, mock_setup_entry, mock_apsystems_with_serial_id
+    hass: HomeAssistant, mock_setup_entry, mock_apsystems
 ) -> None:
     """Test we handle creatinw with success."""
     result = await hass.config_entries.flow.async_init(
@@ -28,13 +28,11 @@ async def test_form_create_success(
 
 
 async def test_form_cannot_connect_and_recover(
-    hass: HomeAssistant, mock_apsystems_with_serial_id: AsyncMock, mock_setup_entry
+    hass: HomeAssistant, mock_apsystems: AsyncMock, mock_setup_entry
 ) -> None:
     """Test we handle cannot connect error."""
 
-    mock_apsystems_with_serial_id.return_value.get_device_info.side_effect = (
-        TimeoutError
-    )
+    mock_apsystems.return_value.get_device_info.side_effect = TimeoutError
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -46,10 +44,7 @@ async def test_form_cannot_connect_and_recover(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
-    mock_apsystems_with_serial_id.return_value.get_device_info.side_effect = None
+    mock_apsystems.return_value.get_device_info.side_effect = None
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -63,7 +58,7 @@ async def test_form_cannot_connect_and_recover(
 
 
 async def test_form_unique_id_already_configured(
-    hass: HomeAssistant, mock_setup_entry, mock_apsystems_with_serial_id
+    hass: HomeAssistant, mock_setup_entry, mock_apsystems
 ) -> None:
     """Test we handle cannot connect error."""
     entry = MockConfigEntry(

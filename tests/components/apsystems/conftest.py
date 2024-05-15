@@ -17,7 +17,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_apsystems_with_serial_id():
+def mock_apsystems():
     """Override APsystemsEZ1M.get_device_info() to return MY_SERIAL_NUMBER as the serial number."""
     ret_data = MagicMock()
     ret_data.deviceId = "MY_SERIAL_NUMBER"
