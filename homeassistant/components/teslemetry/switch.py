@@ -18,11 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import (
-    TeslemetryEnergyInfoEntity,
-    TeslemetryEnergyLiveEntity,
-    TeslemetryVehicleEntity,
-)
+from .entity import TeslemetryEnergyInfoEntity, TeslemetryVehicleEntity
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 
@@ -115,11 +111,6 @@ async def async_setup_entry(
                 for vehicle in entry.runtime_data.vehicles
             ),
             (
-                TeslemetryStormModeSwitchEntity(energysite, entry.runtime_data.scopes)
-                for energysite in entry.runtime_data.energysites
-                if energysite.info_coordinator.data.get("components_storm_mode_capable")
-            ),
-            (
                 TeslemetryChargeFromGridSwitchEntity(
                     energysite,
                     entry.runtime_data.scopes,
@@ -127,6 +118,11 @@ async def async_setup_entry(
                 for energysite in entry.runtime_data.energysites
                 if energysite.info_coordinator.data.get("components_battery")
                 and energysite.info_coordinator.data.get("components_solar")
+            ),
+            (
+                TeslemetryStormModeSwitchEntity(energysite, entry.runtime_data.scopes)
+                for energysite in entry.runtime_data.energysites
+                if energysite.info_coordinator.data.get("components_storm_mode_capable")
             ),
         )
     )
@@ -157,7 +153,8 @@ class TeslemetryVehicleSwitchEntity(TeslemetryVehicleEntity, TeslemetrySwitchEnt
         """Update the attributes of the sensor."""
         if self._value is None:
             self._attr_is_on = None
-        self._attr_is_on = bool(self._value)
+        else:
+            self._attr_is_on = bool(self._value)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Switch."""
@@ -185,41 +182,6 @@ class TeslemetryChargeSwitchEntity(TeslemetryVehicleSwitchEntity):
             self._attr_is_on = self.get("charge_state_charge_enable_request")
         else:
             self._attr_is_on = self._value
-
-
-class TeslemetryStormModeSwitchEntity(
-    TeslemetryEnergyLiveEntity, TeslemetrySwitchEntity
-):
-    """Entity class for Storm Mode switch."""
-
-    def __init__(
-        self,
-        data: TeslemetryEnergyData,
-        scopes: list[Scope],
-    ) -> None:
-        """Initialize the Switch."""
-        super().__init__(data, "storm_mode_enabled")
-        self.scoped = Scope.ENERGY_CMDS in scopes
-
-    def _async_update_attrs(self) -> None:
-        """Update the attributes of the sensor."""
-        if self._value is None:
-            self._attr_is_on = None
-        self._attr_is_on = bool(self._value)
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on the Switch."""
-        self.raise_for_scope()
-        await self.handle_command(self.api.storm_mode(enabled=True))
-        self._attr_is_on = True
-        self.async_write_ha_state()
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off the Switch."""
-        self.raise_for_scope()
-        await self.handle_command(self.api.storm_mode(enabled=False))
-        self._attr_is_on = False
-        self.async_write_ha_state()
 
 
 class TeslemetryChargeFromGridSwitchEntity(
@@ -263,5 +225,39 @@ class TeslemetryChargeFromGridSwitchEntity(
                 disallow_charge_from_grid_with_solar_installed=True
             )
         )
+        self._attr_is_on = False
+        self.async_write_ha_state()
+
+
+class TeslemetryStormModeSwitchEntity(
+    TeslemetryEnergyInfoEntity, TeslemetrySwitchEntity
+):
+    """Entity class for Storm Mode switch."""
+
+    def __init__(
+        self,
+        data: TeslemetryEnergyData,
+        scopes: list[Scope],
+    ) -> None:
+        """Initialize the Switch."""
+        super().__init__(data, "user_settings_storm_mode_enabled")
+        self.scoped = Scope.ENERGY_CMDS in scopes
+
+    def _async_update_attrs(self) -> None:
+        """Update the attributes of the sensor."""
+        self._attr_available = self._value is not None
+        self._attr_is_on = bool(self._value)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the Switch."""
+        self.raise_for_scope()
+        await self.handle_command(self.api.storm_mode(enabled=True))
+        self._attr_is_on = True
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the Switch."""
+        self.raise_for_scope()
+        await self.handle_command(self.api.storm_mode(enabled=False))
         self._attr_is_on = False
         self.async_write_ha_state()

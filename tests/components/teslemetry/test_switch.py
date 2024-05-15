@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, setup_platform
-from .const import COMMAND_OK
+from .const import COMMAND_OK, VEHICLE_DATA_ALT
 
 
 async def test_switch(
@@ -34,6 +34,19 @@ async def test_switch(
 
     entry = await setup_platform(hass, [Platform.SWITCH])
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
+
+
+async def test_switch_alt(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_vehicle_data,
+) -> None:
+    """Tests that the switch entities are correct."""
+
+    mock_vehicle_data.return_value = VEHICLE_DATA_ALT
+    entry = await setup_platform(hass, [Platform.SWITCH])
+    assert_entities(hass, entry.entry_id, entity_registry, snapshot, assert_entry=False)
 
 
 async def test_switch_offline(
@@ -74,12 +87,12 @@ async def test_switch_offline(
             "VehicleSpecific.set_preconditioning_max",
         ),
         (
-            "energy_site_allow_charging_from_grid",
+            "energy_site_storm_mode",
             "EnergySpecific.storm_mode",
             "EnergySpecific.storm_mode",
         ),
         (
-            "energy_site_storm_mode",
+            "energy_site_allow_charging_from_grid",
             "EnergySpecific.grid_import_export",
             "EnergySpecific.grid_import_export",
         ),
