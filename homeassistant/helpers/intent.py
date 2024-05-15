@@ -724,22 +724,17 @@ class IntentHandler:
     """Intent handler registration."""
 
     intent_type: str
-    slot_schema: vol.Schema | None = None
     platforms: Iterable[str] | None = []
+
+    @property
+    def slot_schema(self) -> dict | None:
+        """Return a slot schema."""
+        return None
 
     @callback
     def async_can_handle(self, intent_obj: Intent) -> bool:
         """Test if an intent can be handled."""
         return self.platforms is None or intent_obj.platform in self.platforms
-
-    @cached_property
-    def effective_slot_schema(self) -> vol.Schema:
-        """Return the schema including any extra slots."""
-        if self.slot_schema is None:
-            return vol.Schema({})
-        if isinstance(self.slot_schema, vol.Schema):
-            return self.slot_schema
-        return vol.Schema(self.slot_schema)
 
     @callback
     def async_validate_slots(self, slots: _SlotsType) -> _SlotsType:
@@ -752,10 +747,11 @@ class IntentHandler:
     @cached_property
     def _slot_schema(self) -> vol.Schema:
         """Create validation schema for slots."""
+        assert self.slot_schema is not None
         return vol.Schema(
             {
                 key: SLOT_SCHEMA.extend({"value": validator})
-                for key, validator in self.effective_slot_schema.schema.items()
+                for key, validator in self.slot_schema.items()
             },
             extra=vol.ALLOW_EXTRA,
         )
@@ -774,14 +770,6 @@ class DynamicServiceIntentHandler(IntentHandler):
 
     Service specific intent handler that calls a service by name/entity_id.
     """
-
-    slot_schema = {
-        vol.Any("name", "area", "floor"): cv.string,
-        vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional("preferred_area_id"): cv.string,
-        vol.Optional("preferred_floor_id"): cv.string,
-    }
 
     # We use a small timeout in service calls to (hopefully) pass validation
     # checks, but not try to wait for the call to fully complete.
@@ -822,24 +810,33 @@ class DynamicServiceIntentHandler(IntentHandler):
 
                 self.optional_slots[key] = value_schema
 
-    @cached_property
-    def effective_slot_schema(self) -> vol.Schema:
-        """Create validation schema for slots (with extra slots)."""
-        if not self.required_slots and not self.optional_slots:
-            return super().effective_slot_schema
-
-        extra_slots = {
-            **{
-                vol.Required(key[0]): schema
-                for key, schema in self.required_slots.items()
-            },
-            **{
-                vol.Optional(key[0]): schema
-                for key, schema in self.optional_slots.items()
-            },
+    def slot_schema(self) -> dict:
+        """Return a slot schema."""
+        slot_schema = {
+            vol.Any("name", "area", "floor"): cv.string,
+            vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional("preferred_area_id"): cv.string,
+            vol.Optional("preferred_floor_id"): cv.string,
         }
 
-        return super().effective_slot_schema.extend(extra_slots)
+        if self.required_slots:
+            slot_schema.update(
+                {
+                    vol.Required(key[0]): validator
+                    for key, validator in self.required_slots.items()
+                }
+            )
+
+        if self.optional_slots:
+            slot_schema.update(
+                {
+                    vol.Optional(key[0]): validator
+                    for key, validator in self.optional_slots.items()
+                }
+            )
+
+        return slot_schema
 
     @abstractmethod
     def get_domain_and_service(

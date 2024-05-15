@@ -270,6 +270,9 @@
       "motion_sensitivity": {
         "name": "Motion sensitivity"
       },
+      "pir_sensitivity": {
+        "name": "PIR sensitivity"
+      },
       "ai_face_sensitivity": {
         "name": "AI face sensitivity"
       },
@@ -451,6 +454,12 @@
       },
       "hdr": {
         "name": "HDR"
+      },
+      "pir_enabled": {
+        "name": "PIR enabled"
+      },
+      "pir_reduce_alarm": {
+        "name": "PIR reduce false alarm"
       }
     }
   }

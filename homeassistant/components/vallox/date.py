@@ -12,8 +12,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ValloxDataUpdateCoordinator, ValloxEntity
+from . import ValloxEntity
 from .const import DOMAIN
+from .coordinator import ValloxDataUpdateCoordinator
 
 
 class ValloxFilterChangeDateEntity(ValloxEntity, DateEntity):

@@ -404,7 +404,7 @@ amberelectric==1.1.0
 androidtv[async]==0.0.73
 
 # homeassistant.components.androidtv_remote
-androidtvremote2==0.0.15
+androidtvremote2==0.1.1
 
 # homeassistant.components.anova
 anova-wifi==0.12.0
@@ -1906,7 +1906,7 @@ renault-api==0.2.2
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.8.9
+reolink-aio==0.8.10
 
 # homeassistant.components.rflink
 rflink==0.0.66
