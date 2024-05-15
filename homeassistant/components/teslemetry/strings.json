@@ -118,7 +118,8 @@
           "backup": "Backup",
           "self_consumption": "Self consumption"
         }
-      },
+      }
+    },
     "media_player": {
       "media": {
         "name": "Media player"
