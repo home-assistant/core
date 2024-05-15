@@ -8,7 +8,11 @@ from xknx import XKNX
 from xknx.devices import Notification as XknxNotification
 
 from homeassistant import config_entries
-from homeassistant.components.notify import BaseNotificationService, NotifyEntity
+from homeassistant.components.notify import (
+    BaseNotificationService,
+    NotifyEntity,
+    migrate_notify_issue,
+)
 from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -16,7 +20,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS
 from .knx_entity import KnxEntity
-from .repairs import migrate_notify_issue
 
 
 async def async_get_service(
@@ -57,7 +60,7 @@ class KNXNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a notification to knx bus."""
-        migrate_notify_issue(self.hass)
+        migrate_notify_issue(self.hass, DOMAIN, "KNX", "2024.11.0")
         if "target" in kwargs:
             await self._async_send_to_device(message, kwargs["target"])
         else:

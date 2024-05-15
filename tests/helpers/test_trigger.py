@@ -110,6 +110,90 @@ async def test_if_disabled_trigger_not_firing(
     assert len(calls) == 1
 
 
+async def test_trigger_enabled_templates(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test triggers enabled by template."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": [
+                    {
+                        "enabled": "{{ 'some text' }}",
+                        "platform": "event",
+                        "event_type": "truthy_template_trigger_event",
+                    },
+                    {
+                        "enabled": "{{ 3 == 4 }}",
+                        "platform": "event",
+                        "event_type": "falsy_template_trigger_event",
+                    },
+                    {
+                        "enabled": False,  # eg. from a blueprints input defaulting to `false`
+                        "platform": "event",
+                        "event_type": "falsy_trigger_event",
+                    },
+                    {
+                        "enabled": "some text",  # eg. from a blueprints input value
+                        "platform": "event",
+                        "event_type": "truthy_trigger_event",
+                    },
+                ],
+                "action": {
+                    "service": "test.automation",
+                },
+            }
+        },
+    )
+
+    hass.bus.async_fire("falsy_template_trigger_event")
+    await hass.async_block_till_done()
+    assert not calls
+
+    hass.bus.async_fire("falsy_trigger_event")
+    await hass.async_block_till_done()
+    assert not calls
+
+    hass.bus.async_fire("truthy_template_trigger_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    hass.bus.async_fire("truthy_trigger_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+
+async def test_trigger_enabled_template_limited(
+    hass: HomeAssistant, calls: list[ServiceCall], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test triggers enabled invalid template."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": [
+                    {
+                        "enabled": "{{ states('sensor.limited') }}",  # only limited template supported
+                        "platform": "event",
+                        "event_type": "test_event",
+                    },
+                ],
+                "action": {
+                    "service": "test.automation",
+                },
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert not calls
+    assert "Error rendering enabled template" in caplog.text
+
+
 async def test_trigger_alias(
     hass: HomeAssistant, calls: list[ServiceCall], caplog: pytest.LogCaptureFixture
 ) -> None:
