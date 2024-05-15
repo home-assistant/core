@@ -14,11 +14,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity, UpdateFailed
 
 from .const import (
     DEFAULT_FAN_SPEED_AWAY,
@@ -28,6 +24,7 @@ from .const import (
     DOMAIN,
     STATE_SCAN_INTERVAL,
 )
+from .coordinator import ValloxDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,10 +88,6 @@ SERVICE_TO_METHOD = {
         schema=SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
     ),
 }
-
-
-class ValloxDataUpdateCoordinator(DataUpdateCoordinator[MetricData]):  # pylint: disable=hass-enforce-coordinator-module
-    """The DataUpdateCoordinator for Vallox."""
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -161,7 +154,7 @@ class ValloxServiceHandler:
     """Services implementation."""
 
     def __init__(
-        self, client: Vallox, coordinator: DataUpdateCoordinator[MetricData]
+        self, client: Vallox, coordinator: ValloxDataUpdateCoordinator
     ) -> None:
         """Initialize the proxy."""
         self._client = client
