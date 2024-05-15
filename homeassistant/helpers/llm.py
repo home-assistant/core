@@ -95,7 +95,8 @@ class IntentTool(Tool):
         """Init the class."""
         self.name = intent_handler.intent_type
         self.description = f"Execute Home Assistant {self.name} intent"
-        self.parameters = intent_handler.effective_slot_schema
+        if slot_schema := intent_handler.slot_schema:
+            self.parameters = vol.Schema(slot_schema)
 
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput

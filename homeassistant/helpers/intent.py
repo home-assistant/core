@@ -810,6 +810,7 @@ class DynamicServiceIntentHandler(IntentHandler):
 
                 self.optional_slots[key] = value_schema
 
+    @cached_property
     def slot_schema(self) -> dict:
         """Return a slot schema."""
         slot_schema = {

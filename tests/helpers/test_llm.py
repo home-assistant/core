@@ -29,16 +29,16 @@ async def test_call_tool_no_existing(hass: HomeAssistant) -> None:
 
 async def test_intent_tool(hass: HomeAssistant) -> None:
     """Test IntentTool class."""
-    schema = vol.Schema(
-        {
-            vol.Optional("area"): cv.string,
-            vol.Optional("floor"): cv.string,
-        }
-    )
+    schema = {
+        vol.Optional("area"): cv.string,
+        vol.Optional("floor"): cv.string,
+    }
 
-    intent_handler = intent.IntentHandler()
-    intent_handler.intent_type = "test_intent"
-    intent_handler.slot_schema = schema
+    class MyIntentHandler(intent.IntentHandler):
+        intent_type = "test_intent"
+        slot_schema = schema
+
+    intent_handler = MyIntentHandler()
 
     intent.async_register(hass, intent_handler)
 
@@ -46,7 +46,7 @@ async def test_intent_tool(hass: HomeAssistant) -> None:
     tool = list(llm.async_get_tools(hass))[0]
     assert tool.name == "test_intent"
     assert tool.description == "Execute Home Assistant test_intent intent"
-    assert tool.parameters == schema
+    assert tool.parameters == vol.Schema(intent_handler.slot_schema)
     assert str(tool) == "<IntentTool - test_intent>"
 
     test_context = Context()
