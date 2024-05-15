@@ -1,4 +1,4 @@
-"""The OpenBLESensors integration."""
+"""The Open BLE Sensors integration."""
 
 from __future__ import annotations
 

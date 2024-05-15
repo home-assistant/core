@@ -1,15 +1,18 @@
 {
   "domain": "open_ble_sensors",
-  "name": "OpenBLESensors",
+  "name": "Open BLE Sensors",
   "bluetooth": [
     {
       "manufacturer_id": 2167
     }
   ],
-  "codeowners": ["@mbush91"],
+  "codeowners": [
+    "@mbush91"
+  ],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],
-  "documentation": "https://www.example.com",
+  "documentation": "https://www.home-assistant.io/integrations/open_ble_sensors",
+  "homekit": {},
   "iot_class": "local_push",
   "requirements": [
     "bluetooth_sensor_state_data",

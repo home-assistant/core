@@ -1,7 +1,8 @@
-"""Config flow for bluemaestro ble integration."""
+"""Config flow for Open BLE Sensors integration."""
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -15,6 +16,8 @@ from homeassistant.const import CONF_ADDRESS
 
 from .const import DOMAIN
 from .parser import OpenBLESensorsBluetoothDeviceData as DeviceData
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class OpenBLESensorsConfigFlow(ConfigFlow, domain=DOMAIN):
