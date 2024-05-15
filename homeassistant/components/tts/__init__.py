@@ -374,9 +374,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
     "default_language",
+    "default_options",
     "supported_languages",
     "supported_options",
-    "default_options",
 }
 
 
@@ -387,9 +387,9 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
     __last_tts_loaded: str | None = None
 
     _attr_default_language: str
+    _attr_default_options: Mapping[str, Any] | None = None
     _attr_supported_languages: list[str]
     _attr_supported_options: list[str] | None = None
-    _attr_default_options: Mapping[str, Any] | None = None
 
     @property
     @final
