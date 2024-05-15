@@ -10,7 +10,7 @@ from swidget.exceptions import SwidgetException
 from swidget.swidgetdevice import SwidgetDevice
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -27,21 +27,38 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     try:
         device = await discover_single(
-            host=entry.data["host"],
+            host=entry.data[CONF_HOST],
             token_name="x-secret-key",
-            password=entry.data["password"],
+            password=entry.data[CONF_PASSWORD],
             use_https=True,
             use_websockets=True,
         )
     except SwidgetException as ex:
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady(
+            f"Unable to connect to Swidget device to get metadata: {entry.data[CONF_HOST]}"
+        ) from ex
 
-    hass.data[DOMAIN][entry.entry_id] = SwidgetDataUpdateCoordinator(hass, device)
+    coordinator = SwidgetDataUpdateCoordinator(hass, device)
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except Exception as ex:
+        raise ConfigEntryNotReady(
+            f"Unable to to perform initial refresh: {entry.data[CONF_HOST]}"
+        ) from ex
+    hass.data[DOMAIN][entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    await device.start()
-    hass.loop.create_task(device.get_websocket().listen())
-    await device.update()
-    return True
+    try:
+        await device.start()
+        hass.async_create_background_task(
+            device.get_websocket().listen(), "websocket_connection"
+        )
+    except Exception as ex:
+        raise ConfigEntryNotReady(
+            f"Unable to connect to Swidget device over websockets: {entry.data[CONF_HOST]}"
+        ) from ex
+    if await coordinator.async_initialize():
+        return True
+    return False
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

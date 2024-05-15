@@ -7,7 +7,7 @@ import math
 from typing import Any, cast
 
 from swidget.swidgetdimmer import SwidgetDimmer
-import voluptuous as vol
+import voluptuous as vol  # type: ignore[import-untyped]
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -18,7 +18,7 @@ from homeassistant.util.color import brightness_to_value, value_to_brightness
 
 from .const import DOMAIN
 from .coordinator import SwidgetDataUpdateCoordinator
-from .entity import CoordinatedSwidgetEntity, async_refresh_after
+from .entity import CoordinatedSwidgetEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,8 +45,9 @@ class SwidgetSmartDimmer(CoordinatedSwidgetEntity, LightEntity):
     """Representation of a Swidget Dimmer."""
 
     device: SwidgetDimmer
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
 
-    @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
@@ -55,30 +56,20 @@ class SwidgetSmartDimmer(CoordinatedSwidgetEntity, LightEntity):
             )
         await self._async_turn_on_with_brightness(brightness)
 
-    @async_refresh_after
     async def _async_turn_on_with_brightness(self, brightness: int | None) -> None:
         # Fallback to adjusting brightness or turning the bulb on
         if brightness is not None:
             await self.device.set_brightness(brightness)
+            # await self.coordinator._async_update_data()
             return
         await self.device.turn_on()
+        # await self.coordinator._async_update_data()
 
-    @property
-    def supported_color_modes(self) -> set[ColorMode] | set[str] | None:
-        """Return list of available color modes."""
-        modes: set[ColorMode | str] = set()
-        modes.add(ColorMode.BRIGHTNESS)
-        return modes
-
-    @property
-    def color_mode(self) -> ColorMode:
-        """Return the active color mode."""
-        return ColorMode.BRIGHTNESS
-
-    @async_refresh_after
+    # @async_refresh_after
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self.device.turn_off()
+        # await self.coordinator._async_update_data()
 
     @property
     def brightness(self) -> int | None:

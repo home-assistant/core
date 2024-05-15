@@ -8,12 +8,12 @@ from typing import Any
 
 from swidget import SwidgetDevice, SwidgetException
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
-REQUEST_REFRESH_DELAY = 0.35
+REQUEST_REFRESH_DELAY = 1.0
 
 
 class SwidgetDataUpdateCoordinator(DataUpdateCoordinator):
@@ -30,17 +30,25 @@ class SwidgetDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=device.ip_address,
-            update_interval=timedelta(seconds=30.0),
+            always_update=False,
+            update_interval=timedelta(seconds=300),
             request_refresh_debouncer=Debouncer(
-                hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
+                hass, _LOGGER, cooldown=0.35, immediate=False
             ),
         )
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def async_initialize(self) -> Any:
+        """Initialize a callback for any websocket events received from the device."""
+        return self.device.add_event_callback(self.websocket_event_callback)
+
+    @callback
+    async def websocket_event_callback(self, message: dict[Any, Any]) -> None:
+        """Update the entity state."""
+        self.async_set_updated_data(self.device.__dict__)
+
+    async def _async_update_data(self) -> Any:
         """Fetch all device and sensor data from api."""
-        # No need to call any explicit update function here. The device will update the state itself
         try:
             await self.device.get_state()
         except SwidgetException as ex:
             raise UpdateFailed(ex) from ex
-        return {}

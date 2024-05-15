@@ -35,6 +35,8 @@ def async_refresh_after(
 class CoordinatedSwidgetEntity(CoordinatorEntity[SwidgetDataUpdateCoordinator]):
     """Common base class for all coordinated entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, device: SwidgetDevice, coordinator: SwidgetDataUpdateCoordinator
     ) -> None:
