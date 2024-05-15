@@ -14,12 +14,12 @@ MANUFACTURER_ID = 0x0877  # Updated manufacturer ID
 
 async def async_setup(hass, config):
     """Set up the PSS BLE Scanner component."""
-    _LOGGER.info("Setting up PSS BLE Scanner component")
+    _LOGGER.warning("Setting up PSS BLE Scanner component")
 
     def process_ble_advertisement(service_info: BluetoothServiceInfo, change: BluetoothChange):
         """Process a new BLE advertisement."""
         if service_info.manufacturer_data and MANUFACTURER_ID in service_info.manufacturer_data:
-            _LOGGER.warning(f"Detected BLE device with Manufacturer ID: {MANUFACTURER_ID}")
+            _LOGGER.warning(f"Detected BLE device with Manufacturer ID: {MANUFACTURER_ID}, data: {service_info.manufacturer_data}")
             # Add your custom logic here, e.g., create a sensor entity, trigger an automation, etc.
 
     async_register_callback(hass, process_ble_advertisement, {"manufacturer_id": MANUFACTURER_ID}, BluetoothScanningMode.ACTIVE)
