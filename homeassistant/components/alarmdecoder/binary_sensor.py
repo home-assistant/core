@@ -25,6 +25,7 @@ from .const import (
     DATA_AD,
     DOMAIN,
 )
+from .entity import AlarmDecoderEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +64,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AlarmDecoderBinarySensor(BinarySensorEntity):
+class AlarmDecoderBinarySensor(AlarmDecoderEntity, BinarySensorEntity):
     """Representation of an AlarmDecoder binary sensor."""
 
     _attr_has_entity_name = True
@@ -119,15 +120,6 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
                 self.hass, SIGNAL_REL_MESSAGE, self._rel_message_callback
             )
         )
-
-    @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self._client.serial_number)},
-            "manufacturer": "NuTech",
-            "serial_number": self._client.serial_number,
-            "sw_version": self._client.version_number,
-        }
 
     def _fault_callback(self, zone):
         """Update the zone's state, if needed."""

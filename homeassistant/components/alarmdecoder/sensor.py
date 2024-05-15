@@ -11,6 +11,7 @@ from .const import (
     DATA_AD,
     DOMAIN,
 )
+from .entity import AlarmDecoderEntity
 
 
 async def async_setup_entry(
@@ -23,7 +24,7 @@ async def async_setup_entry(
     async_add_entities([entity])
 
 
-class AlarmDecoderSensor(SensorEntity):
+class AlarmDecoderSensor(AlarmDecoderEntity, SensorEntity):
     """Representation of an AlarmDecoder keypad."""
 
     _attr_has_entity_name = True
@@ -42,15 +43,6 @@ class AlarmDecoderSensor(SensorEntity):
                 self.hass, SIGNAL_PANEL_MESSAGE, self._message_callback
             )
         )
-
-    @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self._client.serial_number)},
-            "manufacturer": "NuTech",
-            "serial_number": self._client.serial_number,
-            "sw_version": self._client.version_number,
-        }
 
     def _message_callback(self, message):
         if self._attr_native_value != message.text:

@@ -34,6 +34,7 @@ from .const import (
     OPTIONS_ARM,
     SIGNAL_PANEL_MESSAGE,
 )
+from .entity import AlarmDecoderEntity
 
 SERVICE_ALARM_TOGGLE_CHIME = "alarm_toggle_chime"
 
@@ -75,7 +76,7 @@ async def async_setup_entry(
     )
 
 
-class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
+class AlarmDecoderAlarmPanel(AlarmDecoderEntity, AlarmControlPanelEntity):
     """Representation of an AlarmDecoder-based alarm panel."""
 
     _attr_name = "Alarm Panel"
@@ -96,15 +97,6 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
         self._attr_code_arm_required = code_arm_required
         self._alt_night_mode = alt_night_mode
 
-
-    @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self._client.serial_number)},
-            "manufacturer": "NuTech",
-            "serial_number": self._client.serial_number,
-            "sw_version": self._client.version_number,
-        }
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
