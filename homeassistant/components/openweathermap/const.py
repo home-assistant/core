@@ -1,4 +1,5 @@
 """Consts for the OpenWeatherMap."""
+
 from __future__ import annotations
 
 from homeassistant.components.weather import (
@@ -25,8 +26,6 @@ DEFAULT_LANGUAGE = "en"
 ATTRIBUTION = "Data provided by OpenWeatherMap"
 MANUFACTURER = "OpenWeather"
 CONFIG_FLOW_VERSION = 2
-ENTRY_NAME = "name"
-ENTRY_WEATHER_COORDINATOR = "weather_coordinator"
 ATTR_API_PRECIPITATION = "precipitation"
 ATTR_API_PRECIPITATION_KIND = "precipitation_kind"
 ATTR_API_DATETIME = "datetime"

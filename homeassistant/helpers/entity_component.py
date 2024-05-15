@@ -1,4 +1,5 @@
 """Helpers for components that manage entities."""
+
 from __future__ import annotations
 
 import asyncio
@@ -145,7 +146,7 @@ class EntityComponent(Generic[_EntityT]):
         # Look in config for Domain, Domain 2, Domain 3 etc and load them
         for p_type, p_config in conf_util.config_per_platform(config, self.domain):
             if p_type is not None:
-                self.hass.async_create_task(
+                self.hass.async_create_task_internal(
                     self.async_setup_platform(p_type, p_config),
                     f"EntityComponent setup platform {p_type} {self.domain}",
                     eager_start=True,
@@ -153,15 +154,15 @@ class EntityComponent(Generic[_EntityT]):
 
         # Generic discovery listener for loading platform dynamically
         # Refer to: homeassistant.helpers.discovery.async_load_platform()
-        async def component_platform_discovered(
-            platform: str, info: dict[str, Any] | None
-        ) -> None:
-            """Handle the loading of a platform."""
-            await self.async_setup_platform(platform, {}, info)
-
         discovery.async_listen_platform(
-            self.hass, self.domain, component_platform_discovered
+            self.hass, self.domain, self._async_component_platform_discovered
         )
+
+    async def _async_component_platform_discovered(
+        self, platform: str, info: dict[str, Any] | None
+    ) -> None:
+        """Handle the loading of a platform."""
+        await self.async_setup_platform(platform, {}, info)
 
     async def async_setup_entry(self, config_entry: ConfigEntry) -> bool:
         """Set up a config entry."""
@@ -181,7 +182,10 @@ class EntityComponent(Generic[_EntityT]):
         key = config_entry.entry_id
 
         if key in self._platforms:
-            raise ValueError("Config entry has already been setup!")
+            raise ValueError(
+                f"Config entry {config_entry.title} ({key}) for "
+                f"{platform_type}.{self.domain} has already been setup!"
+            )
 
         self._platforms[key] = self._async_init_entity_platform(
             platform_type,

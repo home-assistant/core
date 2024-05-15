@@ -3,6 +3,7 @@
 These are mostly used where a HomeKit accessory exposes additional non-standard
 characteristics that don't map to a Home Assistant feature.
 """
+
 from __future__ import annotations
 
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes

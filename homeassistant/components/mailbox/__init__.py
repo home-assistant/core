@@ -1,4 +1,5 @@
 """Support for Voice mailboxes."""
+
 from __future__ import annotations
 
 import asyncio
@@ -97,7 +98,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 _LOGGER.error("Failed to initialize mailbox platform %s", p_type)
                 return
 
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error setting up platform %s", p_type)
             return
 
@@ -109,14 +110,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         component.register_shutdown()
         await component.async_add_entities([mailbox_entity])
 
-    setup_tasks = [
-        asyncio.create_task(async_setup_platform(p_type, p_config))
-        for p_type, p_config in config_per_platform(config, DOMAIN)
-        if p_type is not None
-    ]
-
-    if setup_tasks:
-        await asyncio.wait(setup_tasks)
+    for p_type, p_config in config_per_platform(config, DOMAIN):
+        if p_type is not None:
+            hass.async_create_task(
+                async_setup_platform(p_type, p_config), eager_start=True
+            )
 
     async def async_platform_discovered(
         platform: str, info: DiscoveryInfoType | None
@@ -179,7 +177,7 @@ class Mailbox:
     @property
     def media_type(self) -> str:
         """Return the supported media type."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def can_delete(self) -> bool:
@@ -193,15 +191,15 @@ class Mailbox:
 
     async def async_get_media(self, msgid: str) -> bytes:
         """Return the media blob for the msgid."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_get_messages(self) -> list[dict[str, Any]]:
         """Return a list of the current messages."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_delete(self, msgid: str) -> bool:
         """Delete the specified messages."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class StreamError(Exception):
@@ -231,16 +229,16 @@ class MailboxPlatformsView(MailboxView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Retrieve list of platforms."""
-        platforms: list[dict[str, Any]] = []
-        for mailbox in self.mailboxes:
-            platforms.append(
+        return self.json(
+            [
                 {
                     "name": mailbox.name,
                     "has_media": mailbox.has_media,
                     "can_delete": mailbox.can_delete,
                 }
-            )
-        return self.json(platforms)
+                for mailbox in self.mailboxes
+            ]
+        )
 
 
 class MailboxMessageView(MailboxView):

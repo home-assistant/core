@@ -1,4 +1,5 @@
 """Config flow for ScreenLogic."""
+
 from __future__ import annotations
 
 import logging

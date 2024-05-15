@@ -1,4 +1,5 @@
 """Config flow for ONVIF."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -66,7 +67,7 @@ def wsdiscovery() -> list[Service]:
     finally:
         discovery.stop()
         # Stop the threads started by WSDiscovery since otherwise there is a leak.
-        discovery._stopThreads()  # pylint: disable=protected-access
+        discovery._stopThreads()  # noqa: SLF001
 
 
 async def async_discovery(hass: HomeAssistant) -> list[dict[str, Any]]:
@@ -310,7 +311,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
                         self.device_id = interface.Info.HwAddress
                 except Fault as fault:
                     if "not implemented" not in fault.message:
-                        raise fault
+                        raise
                     LOGGER.debug(
                         "%s: Could not get network interfaces: %s",
                         self.onvif_config[CONF_NAME],

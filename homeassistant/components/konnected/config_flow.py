@@ -1,4 +1,5 @@
 """Config flow for konnected.io integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -569,9 +570,10 @@ class OptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             zone = {"zone": self.active_cfg}
             zone.update(user_input)
-            self.new_opt[CONF_BINARY_SENSORS] = self.new_opt.get(
-                CONF_BINARY_SENSORS, []
-            ) + [zone]
+            self.new_opt[CONF_BINARY_SENSORS] = [
+                *self.new_opt.get(CONF_BINARY_SENSORS, []),
+                zone,
+            ]
             self.io_cfg.pop(self.active_cfg)
             self.active_cfg = None
 
@@ -644,7 +646,7 @@ class OptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             zone = {"zone": self.active_cfg}
             zone.update(user_input)
-            self.new_opt[CONF_SENSORS] = self.new_opt.get(CONF_SENSORS, []) + [zone]
+            self.new_opt[CONF_SENSORS] = [*self.new_opt.get(CONF_SENSORS, []), zone]
             self.io_cfg.pop(self.active_cfg)
             self.active_cfg = None
 
@@ -713,7 +715,7 @@ class OptionsFlowHandler(OptionsFlow):
             zone = {"zone": self.active_cfg}
             zone.update(user_input)
             del zone[CONF_MORE_STATES]
-            self.new_opt[CONF_SWITCHES] = self.new_opt.get(CONF_SWITCHES, []) + [zone]
+            self.new_opt[CONF_SWITCHES] = [*self.new_opt.get(CONF_SWITCHES, []), zone]
 
             # iterate through multiple switch states
             if self.current_states:

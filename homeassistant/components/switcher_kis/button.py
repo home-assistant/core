@@ -1,4 +1,5 @@
 """Switcher integration Button platform."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -29,19 +30,12 @@ from .const import SIGNAL_DEVICE_ADD
 from .utils import get_breeze_remote_manager
 
 
-@dataclass(frozen=True)
-class SwitcherThermostatButtonDescriptionMixin:
-    """Mixin to describe a Switcher Thermostat Button entity."""
+@dataclass(frozen=True, kw_only=True)
+class SwitcherThermostatButtonEntityDescription(ButtonEntityDescription):
+    """Class to describe a Switcher Thermostat Button entity."""
 
     press_fn: Callable[[SwitcherType2Api, SwitcherBreezeRemote], SwitcherBaseResponse]
     supported: Callable[[SwitcherBreezeRemote], bool]
-
-
-@dataclass(frozen=True)
-class SwitcherThermostatButtonEntityDescription(
-    ButtonEntityDescription, SwitcherThermostatButtonDescriptionMixin
-):
-    """Class to describe a Switcher Thermostat Button entity."""
 
 
 THERMOSTAT_BUTTONS = [

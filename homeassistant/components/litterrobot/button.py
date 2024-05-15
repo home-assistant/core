@@ -1,4 +1,5 @@
 """Support for Litter-Robot button."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine

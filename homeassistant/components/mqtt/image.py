@@ -1,4 +1,5 @@
 """Support for MQTT images."""
+
 from __future__ import annotations
 
 from base64 import b64decode

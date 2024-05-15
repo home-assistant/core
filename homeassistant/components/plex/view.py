@@ -1,4 +1,5 @@
 """Implement a view to provide proxied Plex thumbnails to the media browser."""
+
 from __future__ import annotations
 
 from http import HTTPStatus

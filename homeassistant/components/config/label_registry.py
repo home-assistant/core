@@ -1,4 +1,5 @@
 """Websocket API to interact with the label registry."""
+
 from typing import Any
 
 import voluptuous as vol
@@ -8,6 +9,35 @@ from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.label_registry import LabelEntry, async_get
+
+SUPPORTED_LABEL_THEME_COLORS = {
+    "primary",
+    "accent",
+    "disabled",
+    "red",
+    "pink",
+    "purple",
+    "deep-purple",
+    "indigo",
+    "blue",
+    "light-blue",
+    "cyan",
+    "teal",
+    "green",
+    "light-green",
+    "lime",
+    "yellow",
+    "amber",
+    "orange",
+    "deep-orange",
+    "brown",
+    "light-grey",
+    "grey",
+    "dark-grey",
+    "blue-grey",
+    "black",
+    "white",
+}
 
 
 @callback
@@ -41,7 +71,9 @@ def websocket_list_labels(
     {
         vol.Required("type"): "config/label_registry/create",
         vol.Required("name"): str,
-        vol.Optional("color"): vol.Any(cv.color_hex, None),
+        vol.Optional("color"): vol.Any(
+            cv.color_hex, vol.In(SUPPORTED_LABEL_THEME_COLORS), None
+        ),
         vol.Optional("description"): vol.Any(str, None),
         vol.Optional("icon"): vol.Any(cv.icon, None),
     }
@@ -92,7 +124,9 @@ def websocket_delete_label(
     {
         vol.Required("type"): "config/label_registry/update",
         vol.Required("label_id"): str,
-        vol.Optional("color"): vol.Any(cv.color_hex, None),
+        vol.Optional("color"): vol.Any(
+            cv.color_hex, vol.In(SUPPORTED_LABEL_THEME_COLORS), None
+        ),
         vol.Optional("description"): vol.Any(str, None),
         vol.Optional("icon"): vol.Any(cv.icon, None),
         vol.Optional("name"): str,

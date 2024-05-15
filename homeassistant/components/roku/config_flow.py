@@ -1,4 +1,5 @@
 """Config flow for Roku."""
+
 from __future__ import annotations
 
 import logging
@@ -74,7 +75,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Roku Error", exc_info=True)
             errors["base"] = ERROR_CANNOT_CONNECT
             return self._show_form(errors)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unknown error trying to connect")
             return self.async_abort(reason=ERROR_UNKNOWN)
 
@@ -99,7 +100,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
         except RokuError:
             _LOGGER.debug("Roku Error", exc_info=True)
             return self.async_abort(reason=ERROR_CANNOT_CONNECT)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unknown error trying to connect")
             return self.async_abort(reason=ERROR_UNKNOWN)
 
@@ -133,7 +134,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
         except RokuError:
             _LOGGER.debug("Roku Error", exc_info=True)
             return self.async_abort(reason=ERROR_CANNOT_CONNECT)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unknown error trying to connect")
             return self.async_abort(reason=ERROR_UNKNOWN)
 

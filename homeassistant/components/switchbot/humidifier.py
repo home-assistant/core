@@ -1,4 +1,5 @@
 """Support for Switchbot humidifier."""
+
 from __future__ import annotations
 
 import logging

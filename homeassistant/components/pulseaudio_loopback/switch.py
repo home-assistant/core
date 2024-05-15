@@ -1,4 +1,5 @@
 """Switch logic for loading/unloading pulseaudio loopback modules."""
+
 from __future__ import annotations
 
 import logging

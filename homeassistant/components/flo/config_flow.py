@@ -1,4 +1,5 @@
 """Config flow for flo integration."""
+
 from aioflo import async_get_api
 from aioflo.errors import RequestError
 import voluptuous as vol

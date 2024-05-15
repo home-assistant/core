@@ -1,4 +1,5 @@
 """Config flow for epson integration."""
+
 import logging
 
 import voluptuous as vol

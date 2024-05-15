@@ -1,4 +1,5 @@
 """Support for Tellstick Net/Telstick Live sensors."""
+
 from __future__ import annotations
 
 from homeassistant.components import sensor

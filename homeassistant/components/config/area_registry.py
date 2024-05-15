@@ -1,4 +1,5 @@
 """HTTP views to interact with the area registry."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -39,7 +40,9 @@ def websocket_list_areas(
     {
         vol.Required("type"): "config/area_registry/create",
         vol.Optional("aliases"): list,
+        vol.Optional("floor_id"): str,
         vol.Optional("icon"): str,
+        vol.Optional("labels"): [str],
         vol.Required("name"): str,
         vol.Optional("picture"): vol.Any(str, None),
     }
@@ -61,6 +64,10 @@ def websocket_create_area(
     if "aliases" in data:
         # Convert aliases to a set
         data["aliases"] = set(data["aliases"])
+
+    if "labels" in data:
+        # Convert labels to a set
+        data["labels"] = set(data["labels"])
 
     try:
         entry = registry.async_create(**data)
@@ -99,7 +106,9 @@ def websocket_delete_area(
         vol.Required("type"): "config/area_registry/update",
         vol.Optional("aliases"): list,
         vol.Required("area_id"): str,
+        vol.Optional("floor_id"): vol.Any(str, None),
         vol.Optional("icon"): vol.Any(str, None),
+        vol.Optional("labels"): [str],
         vol.Optional("name"): str,
         vol.Optional("picture"): vol.Any(str, None),
     }
@@ -122,6 +131,10 @@ def websocket_update_area(
         # Convert aliases to a set
         data["aliases"] = set(data["aliases"])
 
+    if "labels" in data:
+        # Convert labels to a set
+        data["labels"] = set(data["labels"])
+
     try:
         entry = registry.async_update(**data)
     except ValueError as err:
@@ -136,7 +149,9 @@ def _entry_dict(entry: AreaEntry) -> dict[str, Any]:
     return {
         "aliases": list(entry.aliases),
         "area_id": entry.id,
+        "floor_id": entry.floor_id,
         "icon": entry.icon,
+        "labels": list(entry.labels),
         "name": entry.name,
         "picture": entry.picture,
     }

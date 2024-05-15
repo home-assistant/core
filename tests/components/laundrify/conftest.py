@@ -1,4 +1,5 @@
 """Configure py.test."""
+
 import json
 from unittest.mock import patch
 
@@ -41,11 +42,14 @@ def laundrify_validate_token_fixture():
 @pytest.fixture(name="laundrify_api_mock", autouse=True)
 def laundrify_api_fixture(laundrify_exchange_code, laundrify_validate_token):
     """Mock valid laundrify API responses."""
-    with patch(
-        "laundrify_aio.LaundrifyAPI.get_account_id",
-        return_value=VALID_ACCOUNT_ID,
-    ), patch(
-        "laundrify_aio.LaundrifyAPI.get_machines",
-        return_value=json.loads(load_fixture("laundrify/machines.json")),
-    ) as get_machines_mock:
+    with (
+        patch(
+            "laundrify_aio.LaundrifyAPI.get_account_id",
+            return_value=VALID_ACCOUNT_ID,
+        ),
+        patch(
+            "laundrify_aio.LaundrifyAPI.get_machines",
+            return_value=json.loads(load_fixture("laundrify/machines.json")),
+        ) as get_machines_mock,
+    ):
         yield get_machines_mock

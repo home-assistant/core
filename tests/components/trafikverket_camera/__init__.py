@@ -1,4 +1,5 @@
 """Tests for the Trafikverket Camera integration."""
+
 from __future__ import annotations
 
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_LOCATION

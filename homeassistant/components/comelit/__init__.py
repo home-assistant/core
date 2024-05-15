@@ -1,6 +1,5 @@
 """Comelit integration."""
 
-
 from aiocomelit.const import BRIDGE
 
 from homeassistant.config_entries import ConfigEntry

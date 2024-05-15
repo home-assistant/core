@@ -1,4 +1,5 @@
 """Config flow for the Vallox integration."""
+
 from __future__ import annotations
 
 import logging
@@ -61,7 +62,7 @@ class ValloxConfigFlow(ConfigFlow, domain=DOMAIN):
             errors[CONF_HOST] = "invalid_host"
         except ValloxApiException:
             errors[CONF_HOST] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors[CONF_HOST] = "unknown"
         else:

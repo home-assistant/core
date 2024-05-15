@@ -1,4 +1,5 @@
 """Support for Climate devices of (EMEA/EU-based) Honeywell TCC systems."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta

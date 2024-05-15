@@ -1,4 +1,5 @@
 """Config flow for Litter-Robot integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -93,7 +94,7 @@ class LitterRobotConfigFlow(ConfigFlow, domain=DOMAIN):
             return "invalid_auth"
         except LitterRobotException:
             return "cannot_connect"
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception: %s", ex)
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
             return "unknown"
         return ""

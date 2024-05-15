@@ -1,4 +1,5 @@
 """Support for Z-Wave controls using the number platform."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -30,7 +31,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Number entity from Config Entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
 
     @callback
     def async_add_number(info: ZwaveDiscoveryInfo) -> None:

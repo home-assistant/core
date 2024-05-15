@@ -1,4 +1,5 @@
 """Update platform for Sensibo integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -11,31 +12,23 @@ from homeassistant.components.update import (
     UpdateEntity,
     UpdateEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import SensiboConfigEntry
 from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity
 
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
-class DeviceBaseEntityDescriptionMixin:
-    """Mixin for required Sensibo base description keys."""
+@dataclass(frozen=True, kw_only=True)
+class SensiboDeviceUpdateEntityDescription(UpdateEntityDescription):
+    """Describes Sensibo Update entity."""
 
     value_version: Callable[[SensiboDevice], str | None]
     value_available: Callable[[SensiboDevice], str | None]
-
-
-@dataclass(frozen=True)
-class SensiboDeviceUpdateEntityDescription(
-    UpdateEntityDescription, DeviceBaseEntityDescriptionMixin
-):
-    """Describes Sensibo Update entity."""
 
 
 DEVICE_SENSOR_TYPES: tuple[SensiboDeviceUpdateEntityDescription, ...] = (
@@ -50,11 +43,13 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceUpdateEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SensiboConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Sensibo Update platform."""
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         SensiboDeviceUpdate(coordinator, device_id, description)

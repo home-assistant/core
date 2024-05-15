@@ -1,4 +1,5 @@
 """Support for RFXtrx devices."""
+
 from __future__ import annotations
 
 import binascii
@@ -24,7 +25,10 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    DeviceInfo,
+    EventDeviceRegistryUpdatedData,
+)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -258,7 +262,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
         devices.pop(device_id)
 
     @callback
-    def _updated_device(event: Event) -> None:
+    def _updated_device(event: Event[EventDeviceRegistryUpdatedData]) -> None:
         if event.data["action"] != "remove":
             return
         device_entry = device_registry.deleted_devices[event.data["device_id"]]
@@ -408,7 +412,7 @@ def find_possible_pt2262_device(device_ids: set[str], device_id: str) -> str | N
     for dev_id in device_ids:
         if len(dev_id) == len(device_id):
             size = None
-            for i, (char1, char2) in enumerate(zip(dev_id, device_id)):
+            for i, (char1, char2) in enumerate(zip(dev_id, device_id, strict=False)):
                 if char1 != char2:
                     break
                 size = i

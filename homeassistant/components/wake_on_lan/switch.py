@@ -1,4 +1,5 @@
 """Support for wake on lan."""
+
 from __future__ import annotations
 
 import logging
@@ -128,7 +129,7 @@ class WolSwitch(SwitchEntity):
 
         if self._attr_assumed_state:
             self._state = True
-            self.async_write_ha_state()
+            self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off if an off action is present."""
@@ -137,7 +138,7 @@ class WolSwitch(SwitchEntity):
 
         if self._attr_assumed_state:
             self._state = False
-            self.async_write_ha_state()
+            self.schedule_update_ha_state()
 
     def update(self) -> None:
         """Check if device is on and update the state. Only called if assumed state is false."""

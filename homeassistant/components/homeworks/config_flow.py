@@ -1,4 +1,5 @@
 """Lutron Homeworks Series 4 and 8 config flow."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -8,6 +9,7 @@ from typing import Any
 from pyhomeworks.pyhomeworks import Homeworks
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
@@ -43,6 +45,7 @@ from .const import (
     CONF_DIMMERS,
     CONF_INDEX,
     CONF_KEYPADS,
+    CONF_LED,
     CONF_NUMBER,
     CONF_RATE,
     CONF_RELEASE_DELAY,
@@ -77,6 +80,7 @@ LIGHT_EDIT = {
 }
 
 BUTTON_EDIT = {
+    vol.Optional(CONF_LED, default=False): selector.BooleanSelector(),
     vol.Optional(CONF_RELEASE_DELAY, default=0): selector.NumberSelector(
         selector.NumberSelectorConfig(
             min=0,
@@ -89,7 +93,7 @@ BUTTON_EDIT = {
 }
 
 
-validate_addr = cv.matches_regex(r"\[\d\d:\d\d:\d\d:\d\d\]")
+validate_addr = cv.matches_regex(r"\[(?:\d\d:)?\d\d:\d\d:\d\d\]")
 
 
 async def validate_add_controller(
@@ -99,14 +103,14 @@ async def validate_add_controller(
     user_input[CONF_CONTROLLER_ID] = slugify(user_input[CONF_NAME])
     user_input[CONF_PORT] = int(user_input[CONF_PORT])
     try:
-        handler._async_abort_entries_match(  # pylint: disable=protected-access
+        handler._async_abort_entries_match(  # noqa: SLF001
             {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
         )
     except AbortFlow as err:
         raise SchemaFlowError("duplicated_host_port") from err
 
     try:
-        handler._async_abort_entries_match(  # pylint: disable=protected-access
+        handler._async_abort_entries_match(  # noqa: SLF001
             {CONF_CONTROLLER_ID: user_input[CONF_CONTROLLER_ID]}
         )
     except AbortFlow as err:
@@ -379,16 +383,17 @@ async def validate_remove_button(
         if str(index) not in removed_indexes:
             items.append(item)
         button_number = keypad[CONF_BUTTONS][index][CONF_NUMBER]
-        if entity_id := entity_registry.async_get_entity_id(
-            BUTTON_DOMAIN,
-            DOMAIN,
-            calculate_unique_id(
-                handler.options[CONF_CONTROLLER_ID],
-                keypad[CONF_ADDR],
-                button_number,
-            ),
-        ):
-            entity_registry.async_remove(entity_id)
+        for domain in (BINARY_SENSOR_DOMAIN, BUTTON_DOMAIN):
+            if entity_id := entity_registry.async_get_entity_id(
+                domain,
+                DOMAIN,
+                calculate_unique_id(
+                    handler.options[CONF_CONTROLLER_ID],
+                    keypad[CONF_ADDR],
+                    button_number,
+                ),
+            ):
+                entity_registry.async_remove(entity_id)
     keypad[CONF_BUTTONS] = items
     return {}
 
@@ -429,6 +434,7 @@ DATA_SCHEMA_ADD_CONTROLLER = vol.Schema(
         **CONTROLLER_EDIT,
     }
 )
+DATA_SCHEMA_EDIT_CONTROLLER = vol.Schema(CONTROLLER_EDIT)
 DATA_SCHEMA_ADD_LIGHT = vol.Schema(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_LIGHT_NAME): TextSelector(),
@@ -559,14 +565,7 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_KEYPADS: [
                 {
                     CONF_ADDR: keypad[CONF_ADDR],
-                    CONF_BUTTONS: [
-                        {
-                            CONF_NAME: button[CONF_NAME],
-                            CONF_NUMBER: button[CONF_NUMBER],
-                            CONF_RELEASE_DELAY: button[CONF_RELEASE_DELAY],
-                        }
-                        for button in keypad[CONF_BUTTONS]
-                    ],
+                    CONF_BUTTONS: [],
                     CONF_NAME: keypad[CONF_NAME],
                 }
                 for keypad in config[CONF_KEYPADS]
@@ -641,6 +640,69 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_show_form(step_id="import_finish", data_schema=vol.Schema({}))
+
+    async def _validate_edit_controller(
+        self, user_input: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Validate controller setup."""
+        user_input[CONF_PORT] = int(user_input[CONF_PORT])
+
+        our_entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert our_entry
+        other_entries = self._async_current_entries()
+        for entry in other_entries:
+            if entry.entry_id == our_entry.entry_id:
+                continue
+            if (
+                user_input[CONF_HOST] == entry.options[CONF_HOST]
+                and user_input[CONF_PORT] == entry.options[CONF_PORT]
+            ):
+                raise SchemaFlowError("duplicated_host_port")
+
+        await _try_connection(user_input)
+        return user_input
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfigure flow."""
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert entry
+
+        errors = {}
+        suggested_values = {
+            CONF_HOST: entry.options[CONF_HOST],
+            CONF_PORT: entry.options[CONF_PORT],
+        }
+
+        if user_input:
+            suggested_values = {
+                CONF_HOST: user_input[CONF_HOST],
+                CONF_PORT: user_input[CONF_PORT],
+            }
+            try:
+                await self._validate_edit_controller(user_input)
+            except SchemaFlowError as err:
+                errors["base"] = str(err)
+            else:
+                new_options = entry.options | {
+                    CONF_HOST: user_input[CONF_HOST],
+                    CONF_PORT: user_input[CONF_PORT],
+                }
+                return self.async_update_reload_and_abort(
+                    entry,
+                    options=new_options,
+                    reason="reconfigure_successful",
+                    reload_even_if_entry_is_unchanged=False,
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA_EDIT_CONTROLLER, suggested_values
+            ),
+            errors=errors,
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

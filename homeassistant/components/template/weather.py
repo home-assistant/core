@@ -1,4 +1,5 @@
 """Template platform that aggregates meteorological data."""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
@@ -117,7 +118,6 @@ WEATHER_SCHEMA = vol.Schema(
         vol.Optional(CONF_WIND_BEARING_TEMPLATE): cv.template,
         vol.Optional(CONF_OZONE_TEMPLATE): cv.template,
         vol.Optional(CONF_VISIBILITY_TEMPLATE): cv.template,
-        vol.Optional(CONF_FORECAST_TEMPLATE): cv.template,
         vol.Optional(CONF_FORECAST_DAILY_TEMPLATE): cv.template,
         vol.Optional(CONF_FORECAST_HOURLY_TEMPLATE): cv.template,
         vol.Optional(CONF_FORECAST_TWICE_DAILY_TEMPLATE): cv.template,
@@ -192,7 +192,6 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         self._wind_bearing_template = config.get(CONF_WIND_BEARING_TEMPLATE)
         self._ozone_template = config.get(CONF_OZONE_TEMPLATE)
         self._visibility_template = config.get(CONF_VISIBILITY_TEMPLATE)
-        self._forecast_template = config.get(CONF_FORECAST_TEMPLATE)
         self._forecast_daily_template = config.get(CONF_FORECAST_DAILY_TEMPLATE)
         self._forecast_hourly_template = config.get(CONF_FORECAST_HOURLY_TEMPLATE)
         self._forecast_twice_daily_template = config.get(
@@ -226,7 +225,6 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         self._cloud_coverage = None
         self._dew_point = None
         self._apparent_temperature = None
-        self._forecast: list[Forecast] = []
         self._forecast_daily: list[Forecast] = []
         self._forecast_hourly: list[Forecast] = []
         self._forecast_twice_daily: list[Forecast] = []
@@ -298,11 +296,6 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
     def native_apparent_temperature(self) -> float | None:
         """Return the apparent temperature."""
         return self._apparent_temperature
-
-    @property
-    def forecast(self) -> list[Forecast]:
-        """Return the forecast."""
-        return self._forecast
 
     async def async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
@@ -393,11 +386,6 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
                 "_apparent_temperature",
                 self._apparent_temperature_template,
             )
-        if self._forecast_template:
-            self.add_template_attribute(
-                "_forecast",
-                self._forecast_template,
-            )
 
         if self._forecast_daily_template:
             self.add_template_attribute(
@@ -432,7 +420,9 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         """Save template result and trigger forecast listener."""
         attr_result = None if isinstance(result, TemplateError) else result
         setattr(self, f"_forecast_{forecast_type}", attr_result)
-        self.hass.create_task(self.async_update_listeners([forecast_type]))
+        self.hass.async_create_task(
+            self.async_update_listeners([forecast_type]), eager_start=True
+        )
 
     @callback
     def _validate_forecast(
@@ -571,12 +561,12 @@ class TriggerWeatherEntity(TriggerEntity, WeatherEntity, RestoreEntity):
             and state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
             and (weather_data := await self.async_get_last_weather_data())
         ):
-            self._rendered[
-                CONF_APPARENT_TEMPERATURE_TEMPLATE
-            ] = weather_data.last_apparent_temperature
-            self._rendered[
-                CONF_CLOUD_COVERAGE_TEMPLATE
-            ] = weather_data.last_cloud_coverage
+            self._rendered[CONF_APPARENT_TEMPERATURE_TEMPLATE] = (
+                weather_data.last_apparent_temperature
+            )
+            self._rendered[CONF_CLOUD_COVERAGE_TEMPLATE] = (
+                weather_data.last_cloud_coverage
+            )
             self._rendered[CONF_CONDITION_TEMPLATE] = state.state
             self._rendered[CONF_DEW_POINT_TEMPLATE] = weather_data.last_dew_point
             self._rendered[CONF_HUMIDITY_TEMPLATE] = weather_data.last_humidity
@@ -585,9 +575,9 @@ class TriggerWeatherEntity(TriggerEntity, WeatherEntity, RestoreEntity):
             self._rendered[CONF_TEMPERATURE_TEMPLATE] = weather_data.last_temperature
             self._rendered[CONF_VISIBILITY_TEMPLATE] = weather_data.last_visibility
             self._rendered[CONF_WIND_BEARING_TEMPLATE] = weather_data.last_wind_bearing
-            self._rendered[
-                CONF_WIND_GUST_SPEED_TEMPLATE
-            ] = weather_data.last_wind_gust_speed
+            self._rendered[CONF_WIND_GUST_SPEED_TEMPLATE] = (
+                weather_data.last_wind_gust_speed
+            )
             self._rendered[CONF_WIND_SPEED_TEMPLATE] = weather_data.last_wind_speed
 
     @property

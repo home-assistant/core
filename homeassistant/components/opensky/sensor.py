@@ -1,4 +1,5 @@
 """Sensor for the Open Sky Network."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass

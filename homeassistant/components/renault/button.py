@@ -1,4 +1,5 @@
 """Support for Renault button entities."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -6,41 +7,30 @@ from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import RenaultConfigEntry
 from .entity import RenaultEntity
-from .renault_hub import RenaultHub
 
 
-@dataclass(frozen=True)
-class RenaultButtonRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    async_press: Callable[[RenaultButtonEntity], Coroutine[Any, Any, Any]]
-
-
-@dataclass(frozen=True)
-class RenaultButtonEntityDescription(
-    ButtonEntityDescription, RenaultButtonRequiredKeysMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class RenaultButtonEntityDescription(ButtonEntityDescription):
     """Class describing Renault button entities."""
 
+    async_press: Callable[[RenaultButtonEntity], Coroutine[Any, Any, Any]]
     requires_electricity: bool = False
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RenaultConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Renault entities from config entry."""
-    proxy: RenaultHub = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[RenaultButtonEntity] = [
         RenaultButtonEntity(vehicle, description)
-        for vehicle in proxy.vehicles.values()
+        for vehicle in config_entry.runtime_data.vehicles.values()
         for description in BUTTON_TYPES
         if not description.requires_electricity or vehicle.details.uses_electricity()
     ]

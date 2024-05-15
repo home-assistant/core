@@ -1,4 +1,5 @@
 """Test ZHA firmware updates."""
+
 from unittest.mock import AsyncMock, call, patch
 
 import pytest
@@ -6,10 +7,10 @@ from zigpy.exceptions import DeliveryError
 from zigpy.ota import OtaImageWithMetadata
 import zigpy.ota.image as firmware
 from zigpy.ota.providers import BaseOtaImageMetadata
-import zigpy.profiles.zha as zha
+from zigpy.profiles import zha
 import zigpy.types as t
-import zigpy.zcl.clusters.general as general
-import zigpy.zcl.foundation as foundation
+from zigpy.zcl import foundation
+from zigpy.zcl.clusters import general
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
@@ -228,7 +229,7 @@ def make_packet(zigpy_device, cluster, cmd_name: str, **kwargs):
         kwargs=kwargs,
     )
 
-    ota_packet = t.ZigbeePacket(
+    return t.ZigbeePacket(
         src=t.AddrModeAddress(addr_mode=t.AddrMode.NWK, address=zigpy_device.nwk),
         src_ep=1,
         dst=t.AddrModeAddress(addr_mode=t.AddrMode.NWK, address=0x0000),
@@ -240,8 +241,6 @@ def make_packet(zigpy_device, cluster, cmd_name: str, **kwargs):
         lqi=255,
         rssi=-30,
     )
-
-    return ota_packet
 
 
 @patch("zigpy.device.AFTER_OTA_ATTR_READ_DELAY", 0.01)
@@ -515,10 +514,13 @@ async def test_firmware_update_raises(
             blocking=True,
         )
 
-    with patch(
-        "zigpy.device.Device.update_firmware",
-        AsyncMock(side_effect=DeliveryError("failed to deliver")),
-    ), pytest.raises(HomeAssistantError):
+    with (
+        patch(
+            "zigpy.device.Device.update_firmware",
+            AsyncMock(side_effect=DeliveryError("failed to deliver")),
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,

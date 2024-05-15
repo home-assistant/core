@@ -1,4 +1,5 @@
 """Binary Sensor platform for Sensibo integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -12,44 +13,29 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import SensiboConfigEntry
 from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity, SensiboMotionBaseEntity
 
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
-class MotionBaseEntityDescriptionMixin:
-    """Mixin for required Sensibo base description keys."""
+@dataclass(frozen=True, kw_only=True)
+class SensiboMotionBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes Sensibo Motion sensor entity."""
 
     value_fn: Callable[[MotionSensor], bool | None]
 
 
-@dataclass(frozen=True)
-class DeviceBaseEntityDescriptionMixin:
-    """Mixin for required Sensibo base description keys."""
+@dataclass(frozen=True, kw_only=True)
+class SensiboDeviceBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes Sensibo Motion sensor entity."""
 
     value_fn: Callable[[SensiboDevice], bool | None]
-
-
-@dataclass(frozen=True)
-class SensiboMotionBinarySensorEntityDescription(
-    BinarySensorEntityDescription, MotionBaseEntityDescriptionMixin
-):
-    """Describes Sensibo Motion sensor entity."""
-
-
-@dataclass(frozen=True)
-class SensiboDeviceBinarySensorEntityDescription(
-    BinarySensorEntityDescription, DeviceBaseEntityDescriptionMixin
-):
-    """Describes Sensibo Motion sensor entity."""
 
 
 FILTER_CLEAN_REQUIRED_DESCRIPTION = SensiboDeviceBinarySensorEntityDescription(
@@ -128,11 +114,13 @@ DESCRIPTION_BY_MODELS = {"pure": PURE_SENSOR_TYPES}
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SensiboConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Sensibo binary sensor platform."""
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     entities: list[SensiboMotionSensor | SensiboDeviceSensor] = []
 

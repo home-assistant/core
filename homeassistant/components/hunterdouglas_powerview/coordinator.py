@@ -1,4 +1,5 @@
 """Coordinate data for powerview devices."""
+
 from __future__ import annotations
 
 import asyncio
@@ -25,6 +26,10 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
         """Initialize DataUpdateCoordinator to gather data for specific Powerview Hub."""
         self.shades = shades
         self.hub = hub
+        # The hub tends to crash if there are multiple radio operations at the same time
+        # but it seems to handle all other requests that do not use RF without issue
+        # so we have a lock to prevent multiple radio operations at the same time
+        self.radio_operation_lock = asyncio.Lock()
         super().__init__(
             hass,
             _LOGGER,
@@ -35,16 +40,15 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
     async def _async_update_data(self) -> PowerviewShadeData:
         """Fetch data from shade endpoint."""
 
-        async with asyncio.timeout(10):
-            try:
-                shade_entries = await self.shades.get_shades()
-            except PvApiMaintenance as error:
-                # hub is undergoing maintenance, pause polling
-                raise UpdateFailed(error) from error
-            except HUB_EXCEPTIONS as error:
-                raise UpdateFailed(
-                    f"Powerview Hub {self.hub.hub_address} did not return any data: {error}"
-                ) from error
+        try:
+            shade_entries = await self.shades.get_shades()
+        except PvApiMaintenance as error:
+            # hub is undergoing maintenance, pause polling
+            raise UpdateFailed(error) from error
+        except HUB_EXCEPTIONS as error:
+            raise UpdateFailed(
+                f"Powerview Hub {self.hub.hub_address} did not return any data: {error}"
+            ) from error
 
         if not shade_entries:
             raise UpdateFailed("No new shade data was returned")

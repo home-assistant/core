@@ -1,4 +1,5 @@
 """Base ScreenLogicEntity definitions."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -28,19 +29,11 @@ from .util import generate_unique_id
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class ScreenLogicEntityRequiredKeyMixin:
-    """Mixin for required ScreenLogic entity data_path."""
-
-    data_root: ScreenLogicDataPath
-
-
-@dataclass(frozen=True)
-class ScreenLogicEntityDescription(
-    EntityDescription, ScreenLogicEntityRequiredKeyMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class ScreenLogicEntityDescription(EntityDescription):
     """Base class for a ScreenLogic entity description."""
 
+    data_root: ScreenLogicDataPath
     enabled_lambda: Callable[..., bool] | None = None
 
 
@@ -103,19 +96,11 @@ class ScreenLogicEntity(CoordinatorEntity[ScreenlogicDataUpdateCoordinator]):
             raise HomeAssistantError(f"Data not found: {self._data_path}") from ke
 
 
-@dataclass(frozen=True)
-class ScreenLogicPushEntityRequiredKeyMixin:
-    """Mixin for required key for ScreenLogic push entities."""
+@dataclass(frozen=True, kw_only=True)
+class ScreenLogicPushEntityDescription(ScreenLogicEntityDescription):
+    """Base class for a ScreenLogic push entity description."""
 
     subscription_code: CODE
-
-
-@dataclass(frozen=True)
-class ScreenLogicPushEntityDescription(
-    ScreenLogicEntityDescription,
-    ScreenLogicPushEntityRequiredKeyMixin,
-):
-    """Base class for a ScreenLogic push entity description."""
 
 
 class ScreenLogicPushEntity(ScreenLogicEntity):
@@ -174,7 +159,7 @@ class ScreenLogicSwitchingEntity(ScreenLogicEntity):
         await self._async_set_state(ON_OFF.OFF)
 
     async def _async_set_state(self, state: ON_OFF) -> None:
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class ScreenLogicCircuitEntity(ScreenLogicSwitchingEntity, ScreenLogicPushEntity):

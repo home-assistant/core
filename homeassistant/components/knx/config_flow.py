@@ -1,4 +1,5 @@
 """Config flow for KNX."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -596,17 +597,17 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
                 value=CONF_KNX_AUTOMATIC, label=CONF_KNX_AUTOMATIC.capitalize()
             )
         ]
-        for endpoint in self._tunnel_endpoints:
-            tunnel_endpoint_options.append(
-                selector.SelectOptionDict(
-                    value=str(endpoint.individual_address),
-                    label=(
-                        f"{endpoint.individual_address} "
-                        f"{'🔐 ' if endpoint.user_id else ''}"
-                        f"(Data Secure GAs: {len(endpoint.group_addresses)})"
-                    ),
-                )
+        tunnel_endpoint_options.extend(
+            selector.SelectOptionDict(
+                value=str(endpoint.individual_address),
+                label=(
+                    f"{endpoint.individual_address} "
+                    f"{'🔐 ' if endpoint.user_id else ''}"
+                    f"(Data Secure GAs: {len(endpoint.group_addresses)})"
+                ),
             )
+            for endpoint in self._tunnel_endpoints
+        )
         return self.async_show_form(
             step_id="knxkeys_tunnel_select",
             data_schema=vol.Schema(
@@ -755,8 +756,6 @@ class KNXConfigFlow(KNXCommonFlow, ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
         return await self.async_step_connection_type()
 
 

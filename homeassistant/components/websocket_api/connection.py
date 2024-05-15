@@ -1,9 +1,10 @@
 """Connection session."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Hashable
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from aiohttp import web
 import voluptuous as vol
@@ -64,9 +65,9 @@ class ActiveConnection:
         self.last_id = 0
         self.can_coalesce = False
         self.supported_features: dict[str, float] = {}
-        self.handlers: dict[str, tuple[MessageHandler, vol.Schema]] = self.hass.data[
-            const.DOMAIN
-        ]
+        self.handlers: dict[str, tuple[MessageHandler, vol.Schema | Literal[False]]] = (
+            self.hass.data[const.DOMAIN]
+        )
         self.binary_handlers: list[BinaryHandler | None] = []
         current_connection.set(self)
 
@@ -170,7 +171,7 @@ class ActiveConnection:
 
         try:
             handler(self.hass, self, payload)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             self.logger.exception("Error handling binary message")
             self.binary_handlers[index] = None
 
@@ -184,6 +185,7 @@ class ActiveConnection:
             or (
                 not (cur_id := msg.get("id"))
                 or type(cur_id) is not int  # noqa: E721
+                or cur_id < 0
                 or not (type_ := msg.get("type"))
                 or type(type_) is not str  # noqa: E721
             )
@@ -219,8 +221,13 @@ class ActiveConnection:
         handler, schema = handler_schema
 
         try:
-            handler(self.hass, self, schema(msg))
-        except Exception as err:  # pylint: disable=broad-except
+            if schema is False:
+                if len(msg) > 2:
+                    raise vol.Invalid("extra keys not allowed")
+                handler(self.hass, self, msg)
+            else:
+                handler(self.hass, self, schema(msg))
+        except Exception as err:  # noqa: BLE001
             self.async_handle_exception(msg, err)
 
         self.last_id = cur_id
@@ -231,7 +238,7 @@ class ActiveConnection:
         for unsub in self.subscriptions.values():
             try:
                 unsub()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 # If one fails, make sure we still try the rest
                 self.logger.exception(
                     "Error unsubscribing from subscription: %s", unsub

@@ -1,4 +1,5 @@
 """Config flow for NZBGet."""
+
 from __future__ import annotations
 
 import logging
@@ -62,7 +63,7 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(_validate_input, user_input)
             except NZBGetAPIException:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
             else:
@@ -81,9 +82,9 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
         }
 
         if self.show_advanced_options:
-            data_schema[
-                vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL)
-            ] = bool
+            data_schema[vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL)] = (
+                bool
+            )
 
         return self.async_show_form(
             step_id="user",

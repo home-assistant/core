@@ -1,4 +1,5 @@
 """Config flow for Bosch Smart Home Controller integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -123,7 +124,7 @@ class BoschSHCConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.info = await self._get_info(self.host)
             except SHCConnectionError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -160,7 +161,7 @@ class BoschSHCConfigFlow(ConfigFlow, domain=DOMAIN):
             except SHCRegistrationError as err:
                 _LOGGER.warning("Registration error: %s", err.message)
                 errors["base"] = "pairing_failed"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

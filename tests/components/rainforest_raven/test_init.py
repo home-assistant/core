@@ -1,4 +1,5 @@
 """Tests for the Rainforest RAVEn component initialisation."""
+
 import pytest
 
 from homeassistant.components.rainforest_raven.const import DOMAIN

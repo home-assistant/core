@@ -1,4 +1,5 @@
 """Config flow to configure WiLight."""
+
 from urllib.parse import urlparse
 
 import pywilight

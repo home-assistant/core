@@ -1,4 +1,5 @@
 """Constants for the syncthing integration."""
+
 from datetime import timedelta
 
 DOMAIN = "syncthing"

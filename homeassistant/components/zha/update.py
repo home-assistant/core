@@ -1,4 +1,5 @@
 """Representation of ZHA updates."""
+
 from __future__ import annotations
 
 import functools
@@ -93,7 +94,9 @@ class ZHAFirmwareUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disa
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_OTA)
-class ZHAFirmwareUpdateEntity(ZhaEntity, CoordinatorEntity, UpdateEntity):
+class ZHAFirmwareUpdateEntity(
+    ZhaEntity, CoordinatorEntity[ZHAFirmwareUpdateCoordinator], UpdateEntity
+):
     """Representation of a ZHA firmware update entity."""
 
     _unique_id_suffix = "firmware_update"
@@ -127,13 +130,8 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, CoordinatorEntity, UpdateEntity):
     def _get_cluster_version(self) -> str | None:
         """Synchronize current file version with the cluster."""
 
-        device = self._ota_cluster_handler._endpoint.device  # pylint: disable=protected-access
-
         if self._ota_cluster_handler.current_file_version is not None:
             return f"0x{self._ota_cluster_handler.current_file_version:08x}"
-
-        if device.sw_version is not None:
-            return device.sw_version
 
         return None
 

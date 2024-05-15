@@ -1,4 +1,5 @@
 """Get WHOIS information for a given host."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

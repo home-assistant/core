@@ -1,4 +1,5 @@
 """Test Zeroconf multiple instance protection."""
+
 from unittest.mock import Mock, patch
 
 import pytest
@@ -51,29 +52,33 @@ async def test_multiple_zeroconf_instances_gives_shared(
         lineno="23",
         line="self.light.is_on",
     )
-    with patch(
-        "homeassistant.helpers.frame.linecache.getline", return_value=correct_frame.line
-    ), patch(
-        "homeassistant.helpers.frame.get_current_frame",
-        return_value=extract_stack_to_frame(
-            [
-                Mock(
-                    filename="/home/dev/homeassistant/core.py",
-                    lineno="23",
-                    line="do_something()",
-                ),
-                correct_frame,
-                Mock(
-                    filename="/home/dev/homeassistant/components/zeroconf/usage.py",
-                    lineno="23",
-                    line="self.light.is_on",
-                ),
-                Mock(
-                    filename="/home/dev/mdns/lights.py",
-                    lineno="2",
-                    line="something()",
-                ),
-            ]
+    with (
+        patch(
+            "homeassistant.helpers.frame.linecache.getline",
+            return_value=correct_frame.line,
+        ),
+        patch(
+            "homeassistant.helpers.frame.get_current_frame",
+            return_value=extract_stack_to_frame(
+                [
+                    Mock(
+                        filename="/home/dev/homeassistant/core.py",
+                        lineno="23",
+                        line="do_something()",
+                    ),
+                    correct_frame,
+                    Mock(
+                        filename="/home/dev/homeassistant/components/zeroconf/usage.py",
+                        lineno="23",
+                        line="self.light.is_on",
+                    ),
+                    Mock(
+                        filename="/home/dev/mdns/lights.py",
+                        lineno="2",
+                        line="something()",
+                    ),
+                ]
+            ),
         ),
     ):
         assert zeroconf.Zeroconf() == zeroconf_instance

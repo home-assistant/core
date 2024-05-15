@@ -1,4 +1,5 @@
 """Support for interfacing with the XBMC/Kodi JSON-RPC API."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
@@ -479,7 +480,13 @@ class KodiEntity(MediaPlayerEntity):
             self._reset_state()
             return
 
-        self._players = await self._kodi.get_players()
+        try:
+            self._players = await self._kodi.get_players()
+        except (TransportError, ProtocolError):
+            if not self._connection.can_subscribe:
+                self._reset_state()
+                return
+            raise
 
         if self._kodi_is_off:
             self._reset_state()

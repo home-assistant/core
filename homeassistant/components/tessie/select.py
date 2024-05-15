@@ -1,4 +1,5 @@
 """Select platform for Tessie integration."""
+
 from __future__ import annotations
 
 from tessie_api import set_seat_heat

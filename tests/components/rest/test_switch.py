@@ -1,4 +1,5 @@
 """The tests for the REST switch platform."""
+
 from http import HTTPStatus
 
 import httpx

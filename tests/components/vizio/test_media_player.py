@@ -1,4 +1,5 @@
 """Tests for Vizio config flow."""
+
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
@@ -27,6 +28,8 @@ from homeassistant.components.media_player import (
     ATTR_SOUND_MODE,
     DOMAIN as MP_DOMAIN,
     SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
@@ -128,15 +131,19 @@ async def _cm_for_test_setup_without_apps(
     all_settings: dict[str, Any], vizio_power_state: bool | None
 ) -> None:
     """Context manager to setup test for Vizio devices without including app specific patches."""
-    with patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_all_settings",
-        return_value=all_settings,
-    ), patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_setting_options",
-        return_value=EQ_LIST,
-    ), patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
-        return_value=vizio_power_state,
+    with (
+        patch(
+            "homeassistant.components.vizio.media_player.VizioAsync.get_all_settings",
+            return_value=all_settings,
+        ),
+        patch(
+            "homeassistant.components.vizio.media_player.VizioAsync.get_setting_options",
+            return_value=EQ_LIST,
+        ),
+        patch(
+            "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
+            return_value=vizio_power_state,
+        ),
     ):
         yield
 
@@ -438,6 +445,8 @@ async def test_services(
         "eq",
         "Music",
     )
+    await _test_service(hass, MP_DOMAIN, "play", SERVICE_MEDIA_PLAY, None)
+    await _test_service(hass, MP_DOMAIN, "pause", SERVICE_MEDIA_PAUSE, None)
 
 
 async def test_options_update(
@@ -483,10 +492,13 @@ async def _test_update_availability_switch(
     # Fast forward time to future twice to trigger update and assert vizio log message
     for i in range(1, 3):
         future = now + (future_interval * i)
-        with patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
-            return_value=final_power_state,
-        ), freeze_time(future):
+        with (
+            patch(
+                "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
+                return_value=final_power_state,
+            ),
+            freeze_time(future),
+        ):
             async_fire_time_changed(hass, future)
             await hass.async_block_till_done()
             if final_power_state is None:
@@ -563,7 +575,7 @@ async def test_setup_with_apps_include(
         hass, MOCK_TV_WITH_INCLUDE_CONFIG, CURRENT_APP_CONFIG
     ):
         attr = hass.states.get(ENTITY_ID).attributes
-        _assert_source_list_with_apps(list(INPUT_LIST_WITH_APPS + [CURRENT_APP]), attr)
+        _assert_source_list_with_apps([*INPUT_LIST_WITH_APPS, CURRENT_APP], attr)
         assert CURRENT_APP in attr[ATTR_INPUT_SOURCE_LIST]
         assert attr[ATTR_INPUT_SOURCE] == CURRENT_APP
         assert attr["app_name"] == CURRENT_APP
@@ -581,7 +593,7 @@ async def test_setup_with_apps_exclude(
         hass, MOCK_TV_WITH_EXCLUDE_CONFIG, CURRENT_APP_CONFIG
     ):
         attr = hass.states.get(ENTITY_ID).attributes
-        _assert_source_list_with_apps(list(INPUT_LIST_WITH_APPS + [CURRENT_APP]), attr)
+        _assert_source_list_with_apps([*INPUT_LIST_WITH_APPS, CURRENT_APP], attr)
         assert CURRENT_APP in attr[ATTR_INPUT_SOURCE_LIST]
         assert attr[ATTR_INPUT_SOURCE] == CURRENT_APP
         assert attr["app_name"] == CURRENT_APP
@@ -640,11 +652,14 @@ async def test_setup_with_apps_additional_apps_config(
     )
 
     # Test that invalid app does nothing
-    with patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.launch_app"
-    ) as service_call1, patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.launch_app_config"
-    ) as service_call2:
+    with (
+        patch(
+            "homeassistant.components.vizio.media_player.VizioAsync.launch_app"
+        ) as service_call1,
+        patch(
+            "homeassistant.components.vizio.media_player.VizioAsync.launch_app_config"
+        ) as service_call2,
+    ):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_SELECT_SOURCE,

@@ -53,8 +53,7 @@ async def ws_move_item(
         if previous_uid is not None:
             data["previous_uid"] = previous_uid
         await client.send_json_auto_id(data)
-        resp = await client.receive_json()
-        return resp
+        return await client.receive_json()
 
     return move
 
@@ -166,7 +165,7 @@ async def test_bulk_remove(
 ) -> None:
     """Test removing a todo item."""
 
-    for _i in range(0, 5):
+    for _i in range(5):
         await hass.services.async_call(
             TODO_DOMAIN,
             "add_item",

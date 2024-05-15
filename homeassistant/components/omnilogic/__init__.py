@@ -1,4 +1,5 @@
 """The Omnilogic integration."""
+
 import logging
 
 from omnilogic import LoginException, OmniLogic, OmniLogicException

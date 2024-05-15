@@ -1,4 +1,5 @@
 """Test core config."""
+
 from http import HTTPStatus
 from unittest.mock import Mock, patch
 
@@ -119,9 +120,12 @@ async def test_websocket_core_update(hass: HomeAssistant, client) -> None:
     assert hass.config.country != "SE"
     assert hass.config.language != "sv"
 
-    with patch("homeassistant.util.dt.set_default_time_zone") as mock_set_tz, patch(
-        "homeassistant.components.config.core.async_update_suggested_units"
-    ) as mock_update_sensor_units:
+    with (
+        patch("homeassistant.util.dt.set_default_time_zone") as mock_set_tz,
+        patch(
+            "homeassistant.components.config.core.async_update_suggested_units"
+        ) as mock_update_sensor_units,
+    ):
         await client.send_json(
             {
                 "id": 5,
@@ -159,9 +163,12 @@ async def test_websocket_core_update(hass: HomeAssistant, client) -> None:
     assert len(mock_set_tz.mock_calls) == 1
     assert mock_set_tz.mock_calls[0][1][0] == dt_util.get_time_zone("America/New_York")
 
-    with patch("homeassistant.util.dt.set_default_time_zone") as mock_set_tz, patch(
-        "homeassistant.components.config.core.async_update_suggested_units"
-    ) as mock_update_sensor_units:
+    with (
+        patch("homeassistant.util.dt.set_default_time_zone") as mock_set_tz,
+        patch(
+            "homeassistant.components.config.core.async_update_suggested_units"
+        ) as mock_update_sensor_units,
+    ):
         await client.send_json(
             {
                 "id": 6,

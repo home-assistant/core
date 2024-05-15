@@ -1,4 +1,5 @@
 """Feed Entity Manager Sensor support for GDACS Feed."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

@@ -1,4 +1,5 @@
 """Basic checks for HomeKit sensor."""
+
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 

@@ -1,4 +1,5 @@
 """Support for Blink Alarm Control Panel."""
+
 from __future__ import annotations
 
 import logging

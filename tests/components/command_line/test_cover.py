@@ -1,4 +1,5 @@
 """The tests the cover command line platform."""
+
 from __future__ import annotations
 
 import asyncio
@@ -264,7 +265,7 @@ async def test_updating_to_often(
         not in caplog.text
     )
     async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=11))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert called
     called.clear()
 
@@ -281,7 +282,7 @@ async def test_updating_to_often(
     wait_till_event.set()
 
     # Finish processing update
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert called
     assert (
         "Updating Command Line Cover Test took longer than the scheduled update interval"
@@ -326,7 +327,7 @@ async def test_updating_manually(
         await hass.async_block_till_done()
 
     async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert called
     called.clear()
 
@@ -366,7 +367,7 @@ async def test_availability(
     hass.states.async_set("sensor.input1", "on")
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("cover.test")
     assert entity_state
@@ -377,8 +378,53 @@ async def test_availability(
     with mock_asyncio_subprocess_run(b"50\n"):
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("cover.test")
     assert entity_state
     assert entity_state.state == STATE_UNAVAILABLE
+
+
+async def test_icon_template(hass: HomeAssistant) -> None:
+    """Test with state value."""
+    with tempfile.TemporaryDirectory() as tempdirname:
+        path = os.path.join(tempdirname, "cover_status_icon")
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "command_line": [
+                    {
+                        "cover": {
+                            "command_state": f"cat {path}",
+                            "command_open": f"echo 100 > {path}",
+                            "command_close": f"echo 0 > {path}",
+                            "command_stop": f"echo 0 > {path}",
+                            "name": "Test",
+                            "icon": "{% if this.state=='open' %} mdi:open {% else %} mdi:closed {% endif %}",
+                        }
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: "cover.test"},
+            blocking=True,
+        )
+        entity_state = hass.states.get("cover.test")
+        assert entity_state
+        assert entity_state.attributes.get("icon") == "mdi:closed"
+
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: "cover.test"},
+            blocking=True,
+        )
+        entity_state = hass.states.get("cover.test")
+        assert entity_state
+        assert entity_state.attributes.get("icon") == "mdi:open"

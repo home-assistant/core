@@ -1,4 +1,5 @@
 """Support for System health ."""
+
 from __future__ import annotations
 
 import asyncio
@@ -88,7 +89,7 @@ async def get_integration_info(
             data = await registration.info_callback(hass)
     except TimeoutError:
         data = {"error": {"type": "failed", "error": "timeout"}}
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Error fetching info")
         data = {"error": {"type": "failed", "error": "unknown"}}
 
@@ -126,6 +127,7 @@ async def handle_info(
                 for registration in registrations.values()
             )
         ),
+        strict=False,
     ):
         for key, value in domain_data["info"].items():
             if asyncio.iscoroutine(value):
@@ -234,11 +236,12 @@ async def async_check_can_reach_url(
 
     try:
         await session.get(url, timeout=5)
-        return "ok"
     except aiohttp.ClientError:
         data = {"type": "failed", "error": "unreachable"}
     except TimeoutError:
         data = {"type": "failed", "error": "timeout"}
+    else:
+        return "ok"
     if more_info is not None:
         data["more_info"] = more_info
     return data

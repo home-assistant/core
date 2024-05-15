@@ -1,4 +1,5 @@
 """Webhook handlers for mobile_app."""
+
 from __future__ import annotations
 
 import asyncio
@@ -99,7 +100,6 @@ from .const import (
     DATA_DEVICES,
     DOMAIN,
     ERR_ENCRYPTION_ALREADY_ENABLED,
-    ERR_ENCRYPTION_NOT_AVAILABLE,
     ERR_ENCRYPTION_REQUIRED,
     ERR_INVALID_FORMAT,
     ERR_SENSOR_NOT_REGISTERED,
@@ -114,7 +114,6 @@ from .helpers import (
     error_response,
     registration_context,
     safe_registration,
-    supports_encryption,
     webhook_response,
 )
 
@@ -297,7 +296,7 @@ async def webhook_call_service(
             config_entry.data[ATTR_DEVICE_NAME],
             ex,
         )
-        raise HTTPBadRequest() from ex
+        raise HTTPBadRequest from ex
 
     return empty_okay_response()
 
@@ -483,13 +482,6 @@ async def webhook_enable_encryption(
             ERR_ENCRYPTION_ALREADY_ENABLED, "Encryption already enabled"
         )
 
-    if not supports_encryption():
-        _LOGGER.warning(
-            "Unable to enable encryption for %s because libsodium is unavailable!",
-            config_entry.data[ATTR_DEVICE_NAME],
-        )
-        return error_response(ERR_ENCRYPTION_NOT_AVAILABLE, "Encryption is unavailable")
-
     secret = secrets.token_hex(SecretBox.KEY_SIZE)
 
     update_data = {
@@ -610,9 +602,9 @@ async def webhook_register_sensor(
         async_dispatcher_send(hass, f"{SIGNAL_SENSOR_UPDATE}-{unique_store_key}", data)
     else:
         data[CONF_UNIQUE_ID] = unique_store_key
-        data[
-            CONF_NAME
-        ] = f"{config_entry.data[ATTR_DEVICE_NAME]} {data[ATTR_SENSOR_NAME]}"
+        data[CONF_NAME] = (
+            f"{config_entry.data[ATTR_DEVICE_NAME]} {data[ATTR_SENSOR_NAME]}"
+        )
 
         register_signal = f"{DOMAIN}_{data[ATTR_SENSOR_TYPE]}_register"
         async_dispatcher_send(hass, register_signal, data)

@@ -1,4 +1,5 @@
 """Support for Canary camera."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -63,22 +64,22 @@ async def async_setup_entry(
     ffmpeg_arguments: str = entry.options.get(
         CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
     )
-    cameras: list[CanaryCamera] = []
 
-    for location_id, location in coordinator.data["locations"].items():
-        for device in location.devices:
-            if device.is_online:
-                cameras.append(
-                    CanaryCamera(
-                        hass,
-                        coordinator,
-                        location_id,
-                        device,
-                        ffmpeg_arguments,
-                    )
-                )
-
-    async_add_entities(cameras, True)
+    async_add_entities(
+        (
+            CanaryCamera(
+                hass,
+                coordinator,
+                location_id,
+                device,
+                ffmpeg_arguments,
+            )
+            for location_id, location in coordinator.data["locations"].items()
+            for device in location.devices
+            if device.is_online
+        ),
+        True,
+    )
 
 
 class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):

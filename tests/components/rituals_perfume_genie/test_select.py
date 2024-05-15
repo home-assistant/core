@@ -1,4 +1,5 @@
 """Tests for the Rituals Perfume Genie select platform."""
+
 import pytest
 
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY

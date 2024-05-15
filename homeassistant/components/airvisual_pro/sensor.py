@@ -1,4 +1,5 @@
 """Support for AirVisual Pro sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -11,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -22,8 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AirVisualProData, AirVisualProEntity
-from .const import DOMAIN
+from . import AirVisualProConfigEntry, AirVisualProEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -128,13 +127,13 @@ def async_get_aqi_locale(settings: dict[str, Any]) -> str:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AirVisualProConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AirVisual sensors based on a config entry."""
-    data: AirVisualProData = hass.data[DOMAIN][entry.entry_id]
-
     async_add_entities(
-        AirVisualProSensor(data.coordinator, description)
+        AirVisualProSensor(entry.runtime_data.coordinator, description)
         for description in SENSOR_DESCRIPTIONS
     )
 

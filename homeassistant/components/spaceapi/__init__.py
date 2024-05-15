@@ -1,4 +1,5 @@
 """Support for the SpaceAPI."""
+
 from contextlib import suppress
 
 import voluptuous as vol

@@ -1,4 +1,5 @@
 """Tests for the Modern Forms sensor platform."""
+
 from datetime import datetime
 
 from homeassistant.components.sensor import SensorDeviceClass

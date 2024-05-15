@@ -1,4 +1,5 @@
 """The tests for the MQTT statestream component."""
+
 from unittest.mock import ANY, call
 
 import pytest
@@ -99,7 +100,7 @@ async def test_setup_and_stop_waits_for_ha(
 # We use xfail with this test because there is an unhandled exception
 # in a background task in this test.
 # The exception is raised by mqtt.async_publish.
-@pytest.mark.xfail()
+@pytest.mark.xfail
 async def test_startup_no_mqtt(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:

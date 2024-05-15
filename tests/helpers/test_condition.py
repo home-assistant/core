@@ -1,4 +1,5 @@
 """Test the condition helper."""
+
 from datetime import datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -7,7 +8,7 @@ from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -2177,12 +2178,12 @@ def _find_run_id(traces, trace_type, item_id):
 
 async def assert_automation_condition_trace(hass_ws_client, automation_id, expected):
     """Test the result of automation condition."""
-    id = 1
+    msg_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     client = await hass_ws_client()
 
@@ -3396,7 +3397,7 @@ async def test_disabled_condition(hass: HomeAssistant) -> None:
     hass.states.async_set("binary_sensor.test", "on")
     assert test(hass) is None
 
-    # Still passses, condition is not enabled
+    # Still passes, condition is not enabled
     hass.states.async_set("binary_sensor.test", "off")
     assert test(hass) is None
 

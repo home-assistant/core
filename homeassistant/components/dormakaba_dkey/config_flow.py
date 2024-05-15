@@ -1,4 +1,5 @@
 """Config flow for Dormakaba dKey integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -174,7 +175,7 @@ class DormkabaConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_code"
         except dkey_errors.WrongActivationCode:
             errors["base"] = "wrong_code"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
         else:

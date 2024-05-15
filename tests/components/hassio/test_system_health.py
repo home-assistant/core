@@ -1,4 +1,5 @@
 """Test hassio system health."""
+
 import asyncio
 import os
 from unittest.mock import patch

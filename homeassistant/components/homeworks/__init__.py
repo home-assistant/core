@@ -1,6 +1,9 @@
 """Support for Lutron Homeworks Series 4 and 8 systems."""
+
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
 from typing import Any
@@ -17,9 +20,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
@@ -36,13 +40,16 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.LIGHT]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.LIGHT]
+
+CONF_COMMAND = "command"
 
 EVENT_BUTTON_PRESS = "homeworks_button_press"
 EVENT_BUTTON_RELEASE = "homeworks_button_release"
 
 DEFAULT_FADE_RATE = 1.0
 
+KEYPAD_LEDSTATE_POLL_COOLDOWN = 1.0
 
 CV_FADE_RATE = vol.All(vol.Coerce(float), vol.Range(min=0, max=20))
 
@@ -74,6 +81,13 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+SERVICE_SEND_COMMAND_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_CONTROLLER_ID): str,
+        vol.Required(CONF_COMMAND): vol.All(cv.ensure_list, [str]),
+    }
+)
+
 
 @dataclass
 class HomeworksData:
@@ -82,6 +96,63 @@ class HomeworksData:
     controller: Homeworks
     controller_id: str
     keypads: dict[str, HomeworksKeypad]
+
+
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
+    """Set up services for Lutron Homeworks Series 4 and 8 integration."""
+
+    async def async_call_service(service_call: ServiceCall) -> None:
+        """Call the service."""
+        await async_send_command(hass, service_call.data)
+
+    hass.services.async_register(
+        DOMAIN,
+        "send_command",
+        async_call_service,
+        schema=SERVICE_SEND_COMMAND_SCHEMA,
+    )
+
+
+async def async_send_command(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
+    """Send command to a controller."""
+
+    def get_controller_ids() -> list[str]:
+        """Get homeworks data for the specified controller ID."""
+        return [data.controller_id for data in hass.data[DOMAIN].values()]
+
+    def get_homeworks_data(controller_id: str) -> HomeworksData | None:
+        """Get homeworks data for the specified controller ID."""
+        data: HomeworksData
+        for data in hass.data[DOMAIN].values():
+            if data.controller_id == controller_id:
+                return data
+        return None
+
+    homeworks_data = get_homeworks_data(data[CONF_CONTROLLER_ID])
+    if not homeworks_data:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_controller_id",
+            translation_placeholders={
+                "controller_id": data[CONF_CONTROLLER_ID],
+                "controller_ids": ",".join(get_controller_ids()),
+            },
+        )
+
+    commands = data[CONF_COMMAND]
+    _LOGGER.debug("Send commands: %s", commands)
+    for command in commands:
+        if command.lower().startswith("delay"):
+            delay = int(command.partition(" ")[2])
+            _LOGGER.debug("Sleeping for %s ms", delay)
+            await asyncio.sleep(delay / 1000)
+        else:
+            _LOGGER.debug("Sending command '%s'", command)
+            await hass.async_add_executor_job(
+                homeworks_data.controller._send,  # noqa: SLF001
+                command,
+            )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -93,6 +164,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
             )
         )
+
+    async_setup_services(hass)
 
     return True
 
@@ -207,6 +280,13 @@ class HomeworksKeypad:
         """Register callback that will be used for signals."""
         self._addr = addr
         self._controller = controller
+        self._debouncer = Debouncer(
+            hass,
+            _LOGGER,
+            cooldown=KEYPAD_LEDSTATE_POLL_COOLDOWN,
+            immediate=False,
+            function=self._request_keypad_led_states,
+        )
         self._hass = hass
         self._name = name
         self._id = slugify(self._name)
@@ -228,3 +308,14 @@ class HomeworksKeypad:
             return
         data = {CONF_ID: self._id, CONF_NAME: self._name, "button": values[1]}
         self._hass.bus.async_fire(event, data)
+
+    def _request_keypad_led_states(self) -> None:
+        """Query keypad led state."""
+        self._controller._send(f"RKLS, {self._addr}")  # noqa: SLF001
+
+    async def request_keypad_led_states(self) -> None:
+        """Query keypad led state.
+
+        Debounced to not storm the controller during setup.
+        """
+        await self._debouncer.async_call()

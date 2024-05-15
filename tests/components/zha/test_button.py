@@ -1,4 +1,5 @@
 """Test ZHA button."""
+
 from typing import Final
 from unittest.mock import call, patch
 
@@ -14,13 +15,12 @@ from zhaquirks.const import (
 from zhaquirks.tuya.ts0601_valve import ParksideTuyaValveManufCluster
 from zigpy.const import SIG_EP_PROFILE
 from zigpy.exceptions import ZigbeeException
-import zigpy.profiles.zha as zha
+from zigpy.profiles import zha
 from zigpy.quirks import CustomCluster, CustomDevice
 from zigpy.quirks.v2 import add_to_registry_v2
 import zigpy.types as t
-import zigpy.zcl.clusters.general as general
+from zigpy.zcl.clusters import general, security
 from zigpy.zcl.clusters.manufacturer_specific import ManufacturerSpecificCluster
-import zigpy.zcl.clusters.security as security
 import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.button import DOMAIN, SERVICE_PRESS, ButtonDeviceClass

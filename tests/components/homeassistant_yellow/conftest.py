@@ -1,4 +1,5 @@
 """Test fixtures for the Home Assistant Yellow integration."""
+
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -20,14 +21,19 @@ def mock_zha_config_flow_setup() -> Generator[None, None, None]:
         MagicMock()
     )
 
-    with patch(
-        "bellows.zigbee.application.ControllerApplication.probe", side_effect=mock_probe
-    ), patch(
-        "homeassistant.components.zha.radio_manager.ZhaRadioManager.connect_zigpy_app",
-        return_value=mock_connect_app,
-    ), patch(
-        "homeassistant.components.zha.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "bellows.zigbee.application.ControllerApplication.probe",
+            side_effect=mock_probe,
+        ),
+        patch(
+            "homeassistant.components.zha.radio_manager.ZhaRadioManager.connect_zigpy_app",
+            return_value=mock_connect_app,
+        ),
+        patch(
+            "homeassistant.components.zha.async_setup_entry",
+            return_value=True,
+        ),
     ):
         yield
 

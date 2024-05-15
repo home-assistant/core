@@ -1,4 +1,5 @@
 """Support for Homekit device discovery."""
+
 from __future__ import annotations
 
 import asyncio
@@ -23,6 +24,7 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.async_ import create_eager_task
 
 from .config_flow import normalize_hkid
 from .connection import HKDevice
@@ -79,7 +81,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def _async_stop_homekit_controller(event: Event) -> None:
         await asyncio.gather(
             *(
-                connection.async_unload()
+                create_eager_task(connection.async_unload())
                 for connection in hass.data[KNOWN_DEVICES].values()
             )
         )

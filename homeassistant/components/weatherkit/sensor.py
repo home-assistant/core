@@ -1,6 +1,5 @@
 """WeatherKit sensors."""
 
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,

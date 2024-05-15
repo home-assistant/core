@@ -1,4 +1,5 @@
 """The Philips TV integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -41,8 +42,10 @@ PLATFORMS = [
 
 LOGGER = logging.getLogger(__name__)
 
+PhilipsTVConfigEntry = ConfigEntry["PhilipsTVDataUpdateCoordinator"]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: PhilipsTVConfigEntry) -> bool:
     """Set up Philips TV from a config entry."""
 
     system: SystemType | None = entry.data.get(CONF_SYSTEM)
@@ -61,8 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data = {**entry.data, CONF_SYSTEM: actual_system}
         hass.config_entries.async_update_entry(entry, data=data)
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -71,18 +73,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_update_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_update_entry(hass: HomeAssistant, entry: PhilipsTVConfigEntry) -> None:
     """Update options."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PhilipsTVConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module

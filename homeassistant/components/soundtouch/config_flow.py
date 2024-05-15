@@ -1,4 +1,5 @@
 """Config flow for Bose SoundTouch integration."""
+
 import logging
 
 from libsoundtouch import soundtouch_device

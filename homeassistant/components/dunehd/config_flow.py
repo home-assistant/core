@@ -1,4 +1,5 @@
 """Adds config flow for Dune HD integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -24,7 +25,7 @@ class DuneHDConfigFlow(ConfigFlow, domain=DOMAIN):
         player = DuneHDPlayer(host)
         state = await self.hass.async_add_executor_job(player.update_state)
         if not state:
-            raise CannotConnect()
+            raise CannotConnect
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -38,7 +39,7 @@ class DuneHDConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 try:
                     if self.host_already_configured(host):
-                        raise AlreadyConfigured()
+                        raise AlreadyConfigured
                     await self.init_device(host)
                 except CannotConnect:
                     errors[CONF_HOST] = "cannot_connect"

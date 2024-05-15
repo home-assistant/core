@@ -1,4 +1,5 @@
 """Config flow for Elk-M1 Control integration."""
+
 from __future__ import annotations
 
 import logging
@@ -77,7 +78,7 @@ async def validate_input(data: dict[str, str], mac: str | None) -> dict[str, str
 
     prefix = data[CONF_PREFIX]
     url = _make_url_from_data(data)
-    requires_password = url.startswith("elks://") or url.startswith("elksv1_2")
+    requires_password = url.startswith(("elks://", "elksv1_2"))
 
     if requires_password and (not userid or not password):
         raise InvalidAuth
@@ -173,9 +174,7 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
                 or hostname_from_url(entry.data[CONF_HOST]) == host
             ):
                 if async_update_entry_from_discovery(self.hass, entry, device):
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(entry.entry_id)
-                    )
+                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
                 return self.async_abort(reason="already_configured")
         self.context[CONF_HOST] = host
         for progress in self._async_in_progress():
@@ -249,7 +248,7 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "cannot_connect"}, None
         except InvalidAuth:
             return {CONF_PASSWORD: "invalid_auth"}, None
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return {"base": "unknown"}, None
 

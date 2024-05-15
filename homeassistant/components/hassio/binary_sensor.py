@@ -1,4 +1,5 @@
 """Binary sensor platform for Hass.io addons."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

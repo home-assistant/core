@@ -1,4 +1,5 @@
 """Config flow to configure the Synology DSM integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -33,7 +34,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_SSL,
-    CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
@@ -178,7 +178,9 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
                 port = DEFAULT_PORT
 
         session = async_get_clientsession(self.hass, verify_ssl)
-        api = SynologyDSM(session, host, port, username, password, use_ssl, timeout=30)
+        api = SynologyDSM(
+            session, host, port, username, password, use_ssl, timeout=DEFAULT_TIMEOUT
+        )
 
         errors = {}
         try:
@@ -392,12 +394,6 @@ class SynologyDSMOptionsFlowHandler(OptionsFlow):
                     ),
                 ): cv.positive_int,
                 vol.Required(
-                    CONF_TIMEOUT,
-                    default=self.config_entry.options.get(
-                        CONF_TIMEOUT, DEFAULT_TIMEOUT
-                    ),
-                ): cv.positive_int,
-                vol.Required(
                     CONF_SNAPSHOT_QUALITY,
                     default=self.config_entry.options.get(
                         CONF_SNAPSHOT_QUALITY, DEFAULT_SNAPSHOT_QUALITY
@@ -424,7 +420,7 @@ async def _login_and_fetch_syno_info(api: SynologyDSM, otp_code: str | None) -> 
     ):
         raise InvalidData
 
-    return api.information.serial  # type: ignore[no-any-return]
+    return api.information.serial
 
 
 class InvalidData(HomeAssistantError):

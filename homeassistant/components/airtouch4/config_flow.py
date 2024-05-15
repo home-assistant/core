@@ -1,4 +1,5 @@
 """Config flow for AirTouch4."""
+
 from airtouch4pyapi import AirTouch, AirTouchStatus
 import voluptuous as vol
 

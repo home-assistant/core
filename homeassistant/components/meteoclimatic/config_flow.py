@@ -1,4 +1,5 @@
 """Config flow to configure the Meteoclimatic integration."""
+
 import logging
 
 from meteoclimatic import MeteoclimaticClient

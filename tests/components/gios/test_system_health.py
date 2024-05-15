@@ -1,4 +1,5 @@
 """Test GIOS system health."""
+
 import asyncio
 
 from aiohttp import ClientError

@@ -1,4 +1,5 @@
 """Config flow to configure the Tailwind integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -60,7 +61,7 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors[CONF_TOKEN] = "invalid_auth"
             except TailwindConnectionError:
                 errors[CONF_HOST] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
         else:
@@ -126,7 +127,7 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors[CONF_TOKEN] = "invalid_auth"
             except TailwindConnectionError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
@@ -166,7 +167,7 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors[CONF_TOKEN] = "invalid_auth"
             except TailwindConnectionError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
@@ -212,14 +213,13 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unsupported_firmware")
 
         if self.reauth_entry:
-            self.hass.config_entries.async_update_entry(
+            return self.async_update_reload_and_abort(
                 self.reauth_entry,
-                data={CONF_HOST: host, CONF_TOKEN: token},
+                data={
+                    CONF_HOST: host,
+                    CONF_TOKEN: token,
+                },
             )
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-            )
-            return self.async_abort(reason="reauth_successful")
 
         await self.async_set_unique_id(
             format_mac(status.mac_address), raise_on_progress=False

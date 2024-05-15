@@ -1,4 +1,5 @@
 """The tests for the UniFi Network update platform."""
+
 from copy import deepcopy
 
 from aiounifi.models.message import MessageKey

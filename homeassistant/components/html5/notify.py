@@ -1,4 +1,5 @@
 """HTML5 Push Messaging notification service."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -164,7 +165,7 @@ HTML5_SHOWNOTIFICATION_PARAMETERS = (
 )
 
 
-def get_service(
+async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
@@ -172,7 +173,7 @@ def get_service(
     """Get the HTML5 push notification service."""
     json_path = hass.config.path(REGISTRATIONS_FILE)
 
-    registrations = _load_config(json_path)
+    registrations = await hass.async_add_executor_job(_load_config, json_path)
 
     vapid_pub_key = config[ATTR_VAPID_PUB_KEY]
     vapid_prv_key = config[ATTR_VAPID_PRV_KEY]

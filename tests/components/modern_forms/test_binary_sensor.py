@@ -1,4 +1,5 @@
 """Tests for the Modern Forms sensor platform."""
+
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.modern_forms.const import DOMAIN
 from homeassistant.core import HomeAssistant

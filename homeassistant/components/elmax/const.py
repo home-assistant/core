@@ -1,4 +1,5 @@
 """Constants for the elmax-cloud integration."""
+
 from homeassistant.const import Platform
 
 DOMAIN = "elmax"

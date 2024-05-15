@@ -2,6 +2,7 @@
 
 Receives data from advertisements but can also poll.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -98,6 +99,7 @@ class ActiveBluetoothDataUpdateCoordinator(
                 cooldown=POLL_DEFAULT_COOLDOWN,
                 immediate=POLL_DEFAULT_IMMEDIATE,
                 function=self._async_poll,
+                background=True,
             )
         else:
             poll_debouncer.function = self._async_poll
@@ -134,7 +136,7 @@ class ActiveBluetoothDataUpdateCoordinator(
                 )
                 self.last_poll_successful = False
             return
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             if self.last_poll_successful:
                 self.logger.exception("%s: Failure while polling", self.address)
                 self.last_poll_successful = False

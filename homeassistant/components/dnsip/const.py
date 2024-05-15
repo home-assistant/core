@@ -1,4 +1,5 @@
 """Constants for dnsip integration."""
+
 from homeassistant.const import Platform
 
 DOMAIN = "dnsip"

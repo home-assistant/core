@@ -1,4 +1,5 @@
 """Support for Sonarr sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -53,9 +54,9 @@ def get_disk_space_attr(disks: list[Diskspace]) -> dict[str, str]:
         free = disk.freeSpace / 1024**3
         total = disk.totalSpace / 1024**3
         usage = free / total * 100
-        attrs[
-            disk.path
-        ] = f"{free:.2f}/{total:.2f}{UnitOfInformation.GIGABYTES} ({usage:.2f}%)"
+        attrs[disk.path] = (
+            f"{free:.2f}/{total:.2f}{UnitOfInformation.GIGABYTES} ({usage:.2f}%)"
+        )
     return attrs
 
 

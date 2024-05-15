@@ -168,6 +168,7 @@ mqtt:
         payload_off: "off"
 
 """
+
 import copy
 from typing import Any
 from unittest.mock import call, patch
@@ -189,13 +190,7 @@ from homeassistant.components.mqtt.light.schema_basic import (
     VALUE_TEMPLATE_KEYS,
 )
 from homeassistant.components.mqtt.models import PublishPayloadType
-from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 
 from .test_common import (
@@ -236,13 +231,6 @@ from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {light.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
-
-
-@pytest.fixture(autouse=True)
-def light_platform_only():
-    """Only setup the light platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT]):
-        yield
 
 
 @pytest.mark.parametrize(

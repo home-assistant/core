@@ -1,4 +1,5 @@
 """The tests for the Template cover platform."""
+
 from typing import Any
 
 import pytest

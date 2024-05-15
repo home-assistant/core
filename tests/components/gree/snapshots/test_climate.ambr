@@ -46,6 +46,7 @@
       'context': <ANY>,
       'entity_id': 'climate.fake_device_1',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),

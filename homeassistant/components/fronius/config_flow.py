@@ -1,4 +1,5 @@
 """Config flow for Fronius integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -96,7 +97,7 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
             unique_id, info = await validate_host(self.hass, user_input[CONF_HOST])
         except CannotConnect:
             errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -114,7 +115,7 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the DHCP client."""
         for entry in self._async_current_entries(include_ignore=False):
-            if entry.data[CONF_HOST].lstrip("http://").rstrip("/").lower() in (
+            if entry.data[CONF_HOST].removeprefix("http://").rstrip("/").lower() in (
                 discovery_info.ip,
                 discovery_info.hostname,
             ):

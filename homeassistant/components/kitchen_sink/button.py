@@ -1,4 +1,5 @@
 """Demo platform that offers a fake button entity."""
+
 from __future__ import annotations
 
 from homeassistant.components import persistent_notification

@@ -1,4 +1,5 @@
 """Support for Renault sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -7,42 +8,32 @@ from typing import cast
 from renault_api.kamereon.models import KamereonVehicleBatteryStatusData
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
+from . import RenaultConfigEntry
 from .entity import RenaultDataEntity, RenaultDataEntityDescription
-from .renault_hub import RenaultHub
 
 
-@dataclass(frozen=True)
-class RenaultSelectRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class RenaultSelectEntityDescription(
+    SelectEntityDescription, RenaultDataEntityDescription
+):
+    """Class describing Renault select entities."""
 
     data_key: str
 
 
-@dataclass(frozen=True)
-class RenaultSelectEntityDescription(
-    SelectEntityDescription,
-    RenaultDataEntityDescription,
-    RenaultSelectRequiredKeysMixin,
-):
-    """Class describing Renault select entities."""
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RenaultConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Renault entities from config entry."""
-    proxy: RenaultHub = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[RenaultSelectEntity] = [
         RenaultSelectEntity(vehicle, description)
-        for vehicle in proxy.vehicles.values()
+        for vehicle in config_entry.runtime_data.vehicles.values()
         for description in SENSOR_TYPES
         if description.coordinator in vehicle.coordinators
     ]
@@ -77,6 +68,6 @@ SENSOR_TYPES: tuple[RenaultSelectEntityDescription, ...] = (
         coordinator="charge_mode",
         data_key="chargeMode",
         translation_key="charge_mode",
-        options=["always", "always_charging", "schedule_mode"],
+        options=["always", "always_charging", "schedule_mode", "scheduled"],
     ),
 )

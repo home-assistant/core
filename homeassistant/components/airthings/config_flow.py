@@ -1,4 +1,5 @@
 """Config flow for Airthings integration."""
+
 from __future__ import annotations
 
 import logging
@@ -55,7 +56,7 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except airthings.AirthingsAuthError:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:

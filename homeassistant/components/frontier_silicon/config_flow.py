@@ -1,4 +1,5 @@
 """Config flow for Frontier Silicon Media Player integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -73,8 +74,8 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._webfsapi_url = await AFSAPI.get_webfsapi_endpoint(device_url)
             except FSConnectionError:
                 errors["base"] = "cannot_connect"
-            except Exception as exception:  # pylint: disable=broad-except
-                _LOGGER.exception(exception)
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return await self._async_step_device_config_if_needed()
@@ -107,7 +108,7 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
             self._webfsapi_url = await AFSAPI.get_webfsapi_endpoint(device_url)
         except FSConnectionError:
             return self.async_abort(reason="cannot_connect")
-        except Exception as exception:  # pylint: disable=broad-except
+        except Exception as exception:  # noqa: BLE001
             _LOGGER.debug(exception)
             return self.async_abort(reason="unknown")
 
@@ -205,8 +206,8 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidPinException:
             errors["base"] = "invalid_auth"
-        except Exception as exception:  # pylint: disable=broad-except
-            _LOGGER.exception(exception)
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
             if self._reauth_entry:

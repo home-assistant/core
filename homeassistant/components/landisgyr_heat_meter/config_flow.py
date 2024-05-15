@@ -1,4 +1,5 @@
 """Config flow for Landis+Gyr Heat Meter integration."""
+
 from __future__ import annotations
 
 import asyncio

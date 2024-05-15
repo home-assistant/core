@@ -1,4 +1,5 @@
 """Adds config flow for SabNzbd."""
+
 from __future__ import annotations
 
 import logging
@@ -67,7 +68,7 @@ class SABnzbdConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_data):
         """Import sabnzbd config from configuration.yaml."""
         protocol = "https://" if import_data[CONF_SSL] else "http://"
-        import_data[
-            CONF_URL
-        ] = f"{protocol}{import_data[CONF_HOST]}:{import_data[CONF_PORT]}"
+        import_data[CONF_URL] = (
+            f"{protocol}{import_data[CONF_HOST]}:{import_data[CONF_PORT]}"
+        )
         return await self.async_step_user(import_data)

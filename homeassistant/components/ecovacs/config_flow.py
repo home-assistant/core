@@ -1,4 +1,5 @@
 """Config flow for Ecovacs mqtt integration."""
+
 from __future__ import annotations
 
 import logging
@@ -70,7 +71,7 @@ async def _validate_input(
     if errors:
         return errors
 
-    device_id = get_client_device_id()
+    device_id = get_client_device_id(hass, rest_url is not None)
     country = user_input[CONF_COUNTRY]
     rest_config = create_rest_config(
         aiohttp_client.async_get_clientsession(hass),
@@ -92,7 +93,7 @@ async def _validate_input(
         errors["base"] = "cannot_connect"
     except InvalidAuthenticationError:
         errors["base"] = "invalid_auth"
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Unexpected exception during login")
         errors["base"] = "unknown"
 
@@ -120,7 +121,7 @@ async def _validate_input(
         errors[cannot_connect_field] = "cannot_connect"
     except InvalidAuthenticationError:
         errors["base"] = "invalid_auth"
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Unexpected exception during mqtt connection verification")
         errors["base"] = "unknown"
 
@@ -302,7 +303,7 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
         except AbortFlow as ex:
             if ex.reason == "already_configured":
                 create_repair()
-            raise ex
+            raise
 
         if errors := result.get("errors"):
             error = errors["base"]

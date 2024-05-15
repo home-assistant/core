@@ -1,4 +1,5 @@
 """Backup manager for the Backup integration."""
+
 from __future__ import annotations
 
 import asyncio

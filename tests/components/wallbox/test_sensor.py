@@ -1,4 +1,5 @@
 """Test Wallbox Switch component."""
+
 from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, UnitOfPower
 from homeassistant.core import HomeAssistant
 

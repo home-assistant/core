@@ -1,4 +1,5 @@
 """Tests for Vanderbilt SPC component."""
+
 from unittest.mock import Mock, PropertyMock, patch
 
 from homeassistant.bootstrap import async_setup_component

@@ -1,4 +1,5 @@
 """Config flow for Slack integration."""
+
 from __future__ import annotations
 
 import logging
@@ -67,7 +68,7 @@ class SlackFlowHandler(ConfigFlow, domain=DOMAIN):
             if ex.response["error"] == "invalid_auth":
                 return "invalid_auth", None
             return "cannot_connect", None
-        except Exception as ex:  # pylint:disable=broad-except
-            _LOGGER.exception("Unexpected exception: %s", ex)
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
             return "unknown", None
         return None, info

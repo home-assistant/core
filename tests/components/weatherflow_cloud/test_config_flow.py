@@ -1,4 +1,5 @@
 """Test the WeatherflowCloud config flow."""
+
 import pytest
 
 from homeassistant import config_entries
@@ -16,7 +17,7 @@ async def test_config(hass: HomeAssistant, mock_get_stations) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -26,7 +27,7 @@ async def test_config(hass: HomeAssistant, mock_get_stations) -> None:
     )
 
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_config_flow_abort(hass: HomeAssistant, mock_get_stations) -> None:
@@ -42,7 +43,7 @@ async def test_config_flow_abort(hass: HomeAssistant, mock_get_stations) -> None
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -50,7 +51,7 @@ async def test_config_flow_abort(hass: HomeAssistant, mock_get_stations) -> None
         },
     )
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -70,7 +71,7 @@ async def test_config_errors(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {}
 
         result = await hass.config_entries.flow.async_configure(
@@ -79,7 +80,7 @@ async def test_config_errors(
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": expected_error}
 
     with mock_get_stations:
@@ -89,7 +90,7 @@ async def test_config_errors(
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth(hass: HomeAssistant, mock_get_stations_401_error) -> None:
@@ -109,7 +110,7 @@ async def test_reauth(hass: HomeAssistant, mock_get_stations_401_error) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id}, data=None
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
@@ -117,4 +118,4 @@ async def test_reauth(hass: HomeAssistant, mock_get_stations_401_error) -> None:
     )
 
     assert result["reason"] == "reauth_successful"
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT

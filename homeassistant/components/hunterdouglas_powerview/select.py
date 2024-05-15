@@ -1,4 +1,5 @@
 """Support for hunterdouglass_powerview settings."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -67,19 +68,18 @@ async def async_setup_entry(
         if not shade.has_battery_info():
             continue
         room_name = getattr(pv_entry.room_data.get(shade.room_id), ATTR_NAME, "")
-        for description in DROPDOWNS:
-            if description.create_entity_fn(shade):
-                entities.append(
-                    PowerViewSelect(
-                        pv_entry.coordinator,
-                        pv_entry.device_info,
-                        room_name,
-                        shade,
-                        shade.name,
-                        description,
-                    )
-                )
-
+        entities.extend(
+            PowerViewSelect(
+                pv_entry.coordinator,
+                pv_entry.device_info,
+                room_name,
+                shade,
+                shade.name,
+                description,
+            )
+            for description in DROPDOWNS
+            if description.create_entity_fn(shade)
+        )
     async_add_entities(entities)
 
 
@@ -114,5 +114,6 @@ class PowerViewSelect(ShadeEntity, SelectEntity):
         """Change the selected option."""
         await self.entity_description.select_fn(self._shade, option)
         # force update data to ensure new info is in coordinator
-        await self._shade.refresh()
+        async with self.coordinator.radio_operation_lock:
+            await self._shade.refresh(suppress_timeout=True)
         self.async_write_ha_state()

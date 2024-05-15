@@ -1,4 +1,5 @@
 """Update entities for Linn devices."""
+
 from __future__ import annotations
 
 import logging

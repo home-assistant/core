@@ -1,4 +1,5 @@
 """The Assist pipeline integration."""
+
 from __future__ import annotations
 
 from collections.abc import AsyncIterable
@@ -30,6 +31,8 @@ from .pipeline import (
     async_create_default_pipeline,
     async_get_pipeline,
     async_get_pipelines,
+    async_migrate_engine,
+    async_run_migrations,
     async_setup_pipeline_store,
     async_update_pipeline,
 )
@@ -39,6 +42,7 @@ __all__ = (
     "DOMAIN",
     "async_create_default_pipeline",
     "async_get_pipelines",
+    "async_migrate_engine",
     "async_setup",
     "async_pipeline_from_audio_stream",
     "async_update_pipeline",
@@ -71,6 +75,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_LAST_WAKE_UP] = {}
 
     await async_setup_pipeline_store(hass)
+    await async_run_migrations(hass)
     async_register_websocket_api(hass)
 
     return True

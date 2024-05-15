@@ -1,4 +1,5 @@
 """Provide pre-made queries on top of the recorder component."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Collection, Iterable
@@ -197,7 +198,7 @@ class Filters:
         # - Otherwise, entity matches domain exclude: exclude
         # - Otherwise: include
         if self._excluded_domains or self._excluded_entity_globs:
-            return (not_(or_(*excludes)) | i_entities).self_group()  # type: ignore[no-any-return, no-untyped-call]
+            return (not_(or_(*excludes)) | i_entities).self_group()
 
         # Case 6 - No Domain and/or glob includes or excludes
         # - Entity listed in entities include: include

@@ -1,4 +1,5 @@
 """The tests for sensor recorder platform."""
+
 import datetime
 from datetime import timedelta
 from statistics import fmean
@@ -22,6 +23,7 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.recorder.websocket_api import UNIT_SCHEMA
 from homeassistant.components.sensor import UNIT_CONVERTERS
+from homeassistant.const import CONF_DOMAINS, CONF_EXCLUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component
@@ -37,7 +39,7 @@ from .common import (
 )
 
 from tests.common import async_fire_time_changed
-from tests.typing import WebSocketGenerator
+from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
 
 DISTANCE_SENSOR_FT_ATTRIBUTES = {
     "device_class": "distance",
@@ -131,6 +133,13 @@ VOLUME_SENSOR_M3_ATTRIBUTES_TOTAL = {
 }
 
 
+@pytest.fixture
+async def mock_recorder_before_hass(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> None:
+    """Set up recorder."""
+
+
 def test_converters_align_with_sensor() -> None:
     """Ensure UNIT_SCHEMA is aligned with sensor UNIT_CONVERTERS."""
     for converter in UNIT_CONVERTERS.values():
@@ -215,7 +224,7 @@ async def test_statistics_during_period(
 
 
 @pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
-@pytest.mark.parametrize("offset", (0, 1, 2))
+@pytest.mark.parametrize("offset", [0, 1, 2])
 async def test_statistic_during_period(
     recorder_mock: Recorder,
     hass: HomeAssistant,
@@ -241,7 +250,7 @@ async def test_statistic_during_period(
             "min": -76 + i * 2,
             "sum": i,
         }
-        for i in range(0, 39)
+        for i in range(39)
     ]
     imported_stats = []
     slice_end = 12 - offset
@@ -254,7 +263,7 @@ async def test_statistic_during_period(
             "sum": imported_stats_5min[slice_end - 1]["sum"],
         }
     )
-    for i in range(0, 2):
+    for i in range(2):
         slice_start = i * 12 + (12 - offset)
         slice_end = (i + 1) * 12 + (12 - offset)
         assert imported_stats_5min[slice_start]["start"].minute == 0
@@ -640,12 +649,12 @@ async def test_statistic_during_period_hole(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test statistic_during_period when there are holes in the data."""
-    id = 1
+    stat_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal stat_id
+        stat_id += 1
+        return stat_id
 
     now = dt_util.utcnow()
 
@@ -663,7 +672,7 @@ async def test_statistic_during_period_hole(
             "min": -76 + i * 2,
             "sum": i,
         }
-        for i in range(0, 6)
+        for i in range(6)
     ]
 
     imported_metadata = {
@@ -796,7 +805,7 @@ async def test_statistic_during_period_hole(
 @pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
 @pytest.mark.parametrize(
     ("calendar_period", "start_time", "end_time"),
-    (
+    [
         (
             {"period": "hour"},
             "2022-10-21T07:00:00+00:00",
@@ -847,7 +856,7 @@ async def test_statistic_during_period_hole(
             "2021-01-01T08:00:00+00:00",
             "2022-01-01T08:00:00+00:00",
         ),
-    ),
+    ],
 )
 async def test_statistic_during_period_calendar(
     recorder_mock: Recorder,
@@ -2165,16 +2174,19 @@ async def test_recorder_info_migration_queue_exhausted(
         migration_done.wait()
         return real_migration(*args)
 
-    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
-        "homeassistant.components.recorder.Recorder.async_periodic_statistics"
-    ), patch(
-        "homeassistant.components.recorder.core.create_engine",
-        new=create_engine_test,
-    ), patch.object(recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1), patch.object(
-        recorder.core, "QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY", 0
-    ), patch(
-        "homeassistant.components.recorder.migration._apply_update",
-        wraps=stalled_migration,
+    with (
+        patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True),
+        patch("homeassistant.components.recorder.Recorder.async_periodic_statistics"),
+        patch(
+            "homeassistant.components.recorder.core.create_engine",
+            new=create_engine_test,
+        ),
+        patch.object(recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1),
+        patch.object(recorder.core, "QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY", 0),
+        patch(
+            "homeassistant.components.recorder.migration._apply_update",
+            wraps=stalled_migration,
+        ),
     ):
         recorder_helper.async_initialize_recorder(hass)
         hass.create_task(
@@ -2392,10 +2404,10 @@ async def test_get_statistics_metadata(
 
 @pytest.mark.parametrize(
     ("source", "statistic_id"),
-    (
+    [
         ("test", "test:total_energy_import"),
         ("recorder", "sensor.total_energy_import"),
-    ),
+    ],
 )
 async def test_import_statistics(
     recorder_mock: Recorder,
@@ -2606,10 +2618,10 @@ async def test_import_statistics(
 
 @pytest.mark.parametrize(
     ("source", "statistic_id"),
-    (
+    [
         ("test", "test:total_energy_import"),
         ("recorder", "sensor.total_energy_import"),
-    ),
+    ],
 )
 async def test_adjust_sum_statistics_energy(
     recorder_mock: Recorder,
@@ -2799,10 +2811,10 @@ async def test_adjust_sum_statistics_energy(
 
 @pytest.mark.parametrize(
     ("source", "statistic_id"),
-    (
+    [
         ("test", "test:total_gas"),
         ("recorder", "sensor.total_gas"),
-    ),
+    ],
 )
 async def test_adjust_sum_statistics_gas(
     recorder_mock: Recorder,
@@ -2999,14 +3011,14 @@ async def test_adjust_sum_statistics_gas(
         "valid_units",
         "invalid_units",
     ),
-    (
+    [
         ("kWh", "kWh", "energy", 1, ("Wh", "kWh", "MWh"), ("ft³", "m³", "cats", None)),
         ("MWh", "MWh", "energy", 1, ("Wh", "kWh", "MWh"), ("ft³", "m³", "cats", None)),
         ("m³", "m³", "volume", 1, ("ft³", "m³"), ("Wh", "kWh", "MWh", "cats", None)),
         ("ft³", "ft³", "volume", 1, ("ft³", "m³"), ("Wh", "kWh", "MWh", "cats", None)),
         ("dogs", "dogs", None, 1, ("dogs",), ("cats", None)),
         (None, None, "unitless", 1, (None,), ("cats",)),
-    ),
+    ],
 )
 async def test_adjust_sum_statistics_errors(
     recorder_mock: Recorder,
@@ -3173,3 +3185,64 @@ async def test_adjust_sum_statistics_errors(
         stats = statistics_during_period(hass, zero, period="hour")
         assert stats != previous_stats
         previous_stats = stats
+
+
+async def test_recorder_recorded_entities_no_filter(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> None:
+    """Test getting the list of recorded entities without a filter."""
+    await async_setup_recorder_instance(hass, {recorder.CONF_COMMIT_INTERVAL: 0})
+    client = await hass_ws_client()
+
+    await client.send_json({"id": 1, "type": "recorder/recorded_entities"})
+    response = await client.receive_json()
+    assert response["result"] == {"entity_ids": []}
+    assert response["id"] == 1
+    assert response["success"]
+    assert response["type"] == "result"
+
+    hass.states.async_set("sensor.test", 10)
+    await async_wait_recording_done(hass)
+
+    await client.send_json({"id": 2, "type": "recorder/recorded_entities"})
+    response = await client.receive_json()
+    assert response["result"] == {"entity_ids": ["sensor.test"]}
+    assert response["id"] == 2
+    assert response["success"]
+    assert response["type"] == "result"
+
+
+async def test_recorder_recorded_entities_with_filter(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> None:
+    """Test getting the list of recorded entities with a filter."""
+    await async_setup_recorder_instance(
+        hass,
+        {
+            recorder.CONF_COMMIT_INTERVAL: 0,
+            CONF_EXCLUDE: {CONF_DOMAINS: ["sensor"]},
+        },
+    )
+    client = await hass_ws_client()
+
+    await client.send_json({"id": 1, "type": "recorder/recorded_entities"})
+    response = await client.receive_json()
+    assert response["result"] == {"entity_ids": []}
+    assert response["id"] == 1
+    assert response["success"]
+    assert response["type"] == "result"
+
+    hass.states.async_set("switch.test", 10)
+    hass.states.async_set("sensor.test", 10)
+    await async_wait_recording_done(hass)
+
+    await client.send_json({"id": 2, "type": "recorder/recorded_entities"})
+    response = await client.receive_json()
+    assert response["result"] == {"entity_ids": ["switch.test"]}
+    assert response["id"] == 2
+    assert response["success"]
+    assert response["type"] == "result"

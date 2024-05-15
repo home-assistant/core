@@ -1,4 +1,5 @@
 """Offer reusable conditions."""
+
 from __future__ import annotations
 
 import asyncio
@@ -163,7 +164,7 @@ def trace_condition(variables: TemplateVarsType) -> Generator[TraceElement, None
         yield trace_element
     except Exception as ex:
         trace_element.set_error(ex)
-        raise ex
+        raise
     finally:
         if should_pop:
             trace_stack_pop(trace_stack_cv)
@@ -361,7 +362,7 @@ def numeric_state(
     ).result()
 
 
-def async_numeric_state(  # noqa: C901
+def async_numeric_state(
     hass: HomeAssistant,
     entity: None | str | State,
     below: float | str | None = None,

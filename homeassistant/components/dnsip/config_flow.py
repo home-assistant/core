@@ -1,4 +1,5 @@
 """Adds config flow for dnsip integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -13,7 +14,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
@@ -145,12 +146,8 @@ class DnsIPConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class DnsIPOptionsFlowHandler(OptionsFlow):
+class DnsIPOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Handle a option config flow for dnsip integration."""
-
-    def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.entry = entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -158,34 +155,41 @@ class DnsIPOptionsFlowHandler(OptionsFlow):
         """Manage the options."""
         errors = {}
         if user_input is not None:
+            resolver = user_input.get(CONF_RESOLVER, DEFAULT_RESOLVER)
+            resolver_ipv6 = user_input.get(CONF_RESOLVER_IPV6, DEFAULT_RESOLVER_IPV6)
             validate = await async_validate_hostname(
-                self.entry.data[CONF_HOSTNAME],
-                user_input[CONF_RESOLVER],
-                user_input[CONF_RESOLVER_IPV6],
+                self.config_entry.data[CONF_HOSTNAME],
+                resolver,
+                resolver_ipv6,
             )
 
-            if validate[CONF_IPV4] is False and self.entry.data[CONF_IPV4] is True:
+            if (
+                validate[CONF_IPV4] is False
+                and self.config_entry.data[CONF_IPV4] is True
+            ):
                 errors[CONF_RESOLVER] = "invalid_resolver"
-            elif validate[CONF_IPV6] is False and self.entry.data[CONF_IPV6] is True:
+            elif (
+                validate[CONF_IPV6] is False
+                and self.config_entry.data[CONF_IPV6] is True
+            ):
                 errors[CONF_RESOLVER_IPV6] = "invalid_resolver"
             else:
-                return self.async_create_entry(title=self.entry.title, data=user_input)
+                return self.async_create_entry(
+                    title=self.config_entry.title,
+                    data={
+                        CONF_RESOLVER: resolver,
+                        CONF_RESOLVER_IPV6: resolver_ipv6,
+                    },
+                )
 
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
+        schema = self.add_suggested_values_to_schema(
+            vol.Schema(
                 {
-                    vol.Optional(
-                        CONF_RESOLVER,
-                        default=self.entry.options.get(CONF_RESOLVER, DEFAULT_RESOLVER),
-                    ): cv.string,
-                    vol.Optional(
-                        CONF_RESOLVER_IPV6,
-                        default=self.entry.options.get(
-                            CONF_RESOLVER_IPV6, DEFAULT_RESOLVER_IPV6
-                        ),
-                    ): cv.string,
+                    vol.Optional(CONF_RESOLVER): cv.string,
+                    vol.Optional(CONF_RESOLVER_IPV6): cv.string,
                 }
             ),
-            errors=errors,
+            self.config_entry.options,
         )
+
+        return self.async_show_form(step_id="init", data_schema=schema, errors=errors)

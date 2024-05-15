@@ -1,4 +1,5 @@
 """Provide frame helper for finding the current frame context."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,20 +7,16 @@ from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 import functools
+from functools import cached_property
 import linecache
 import logging
 import sys
 from types import FrameType
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import Any, TypeVar, cast
 
 from homeassistant.core import HomeAssistant, async_get_hass
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_suggest_report_issue
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +75,7 @@ def get_integration_logger(fallback_name: str) -> logging.Logger:
 def get_current_frame(depth: int = 0) -> FrameType:
     """Return the current frame."""
     # Add one to depth since get_current_frame is included
-    return sys._getframe(depth + 1)  # pylint: disable=protected-access
+    return sys._getframe(depth + 1)  # noqa: SLF001
 
 
 def get_integration_frame(exclude_integrations: set | None = None) -> IntegrationFrame:
@@ -139,6 +136,7 @@ def report(
     error_if_core: bool = True,
     level: int = logging.WARNING,
     log_custom_component_only: bool = False,
+    error_if_integration: bool = False,
 ) -> None:
     """Report incorrect usage.
 
@@ -156,14 +154,19 @@ def report(
             _LOGGER.warning(msg, stack_info=True)
         return
 
-    if not log_custom_component_only or integration_frame.custom_integration:
-        _report_integration(what, integration_frame, level)
+    if (
+        error_if_integration
+        or not log_custom_component_only
+        or integration_frame.custom_integration
+    ):
+        _report_integration(what, integration_frame, level, error_if_integration)
 
 
 def _report_integration(
     what: str,
     integration_frame: IntegrationFrame,
     level: int = logging.WARNING,
+    error: bool = False,
 ) -> None:
     """Report incorrect usage in an integration.
 
@@ -171,7 +174,7 @@ def _report_integration(
     """
     # Keep track of integrations already reported to prevent flooding
     key = f"{integration_frame.filename}:{integration_frame.line_number}"
-    if key in _REPORTED_INTEGRATIONS:
+    if not error and key in _REPORTED_INTEGRATIONS:
         return
     _REPORTED_INTEGRATIONS.add(key)
 
@@ -183,17 +186,26 @@ def _report_integration(
         integration_domain=integration_frame.integration,
         module=integration_frame.module,
     )
-
+    integration_type = "custom " if integration_frame.custom_integration else ""
     _LOGGER.log(
         level,
         "Detected that %sintegration '%s' %s at %s, line %s: %s, please %s",
-        "custom " if integration_frame.custom_integration else "",
+        integration_type,
         integration_frame.integration,
         what,
         integration_frame.relative_filename,
         integration_frame.line_number,
         integration_frame.line,
         report_issue,
+    )
+    if not error:
+        return
+    raise RuntimeError(
+        f"Detected that {integration_type}integration "
+        f"'{integration_frame.integration}' {what} at "
+        f"{integration_frame.relative_filename}, line "
+        f"{integration_frame.line_number}: {integration_frame.line}. "
+        f"Please {report_issue}."
     )
 
 

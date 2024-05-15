@@ -1,4 +1,5 @@
 """Light platform support for yeelight."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -1001,7 +1002,6 @@ class YeelightNightLightMode(YeelightBaseLight):
     """Representation of a Yeelight when in nightlight mode."""
 
     _attr_color_mode = ColorMode.BRIGHTNESS
-    _attr_icon = "mdi:weather-night"
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_translation_key = "nightlight"
 

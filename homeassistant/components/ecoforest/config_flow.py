@@ -1,4 +1,5 @@
 """Config flow for Ecoforest integration."""
+
 from __future__ import annotations
 
 import logging
@@ -45,7 +46,7 @@ class EcoForestConfigFlow(ConfigFlow, domain=DOMAIN):
                 device = await api.get()
             except EcoforestAuthenticationRequired:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "cannot_connect"
             else:

@@ -1,4 +1,5 @@
 """YoLink BinarySensor."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -98,16 +99,14 @@ async def async_setup_entry(
         for device_coordinator in device_coordinators.values()
         if device_coordinator.device.device_type in SENSOR_DEVICE_TYPE
     ]
-    entities = []
-    for binary_sensor_device_coordinator in binary_sensor_device_coordinators:
-        for description in SENSOR_TYPES:
-            if description.exists_fn(binary_sensor_device_coordinator.device):
-                entities.append(
-                    YoLinkBinarySensorEntity(
-                        config_entry, binary_sensor_device_coordinator, description
-                    )
-                )
-    async_add_entities(entities)
+    async_add_entities(
+        YoLinkBinarySensorEntity(
+            config_entry, binary_sensor_device_coordinator, description
+        )
+        for binary_sensor_device_coordinator in binary_sensor_device_coordinators
+        for description in SENSOR_TYPES
+        if description.exists_fn(binary_sensor_device_coordinator.device)
+    )
 
 
 class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):

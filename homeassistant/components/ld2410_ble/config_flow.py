@@ -1,4 +1,5 @@
 """Config flow for LD2410BLE integration."""
+
 from __future__ import annotations
 
 import logging
@@ -63,7 +64,7 @@ class Ld2410BleConfigFlow(ConfigFlow, domain=DOMAIN):
                 await ld2410_ble.initialise()
             except BLEAK_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected error")
                 errors["base"] = "unknown"
             else:

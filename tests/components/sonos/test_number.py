@@ -1,4 +1,5 @@
 """Tests for the Sonos number platform."""
+
 from unittest.mock import PropertyMock, patch
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE

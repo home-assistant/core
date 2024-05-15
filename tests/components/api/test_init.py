@@ -1,4 +1,5 @@
 """The tests for the Home Assistant API component."""
+
 import asyncio
 from http import HTTPStatus
 import json
@@ -305,7 +306,7 @@ async def test_api_get_services(
     for serv_domain in data:
         local = local_services.pop(serv_domain["domain"])
 
-        assert serv_domain["services"] == local
+        assert serv_domain["services"].keys() == local.keys()
 
 
 async def test_api_call_service_no_data(

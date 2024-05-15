@@ -1,4 +1,5 @@
 """Test Automation config panel."""
+
 from http import HTTPStatus
 import json
 from typing import Any
@@ -9,7 +10,7 @@ import pytest
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
 from homeassistant.components.config import automation
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import yaml
@@ -26,7 +27,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 async def setup_automation(
     hass,
     automation_config,
-    stub_blueprint_populate,  # noqa: F811
+    stub_blueprint_populate,
 ):
     """Set up automation integration."""
     assert await async_setup_component(
@@ -34,7 +35,7 @@ async def setup_automation(
     )
 
 
-@pytest.mark.parametrize("automation_config", ({},))
+@pytest.mark.parametrize("automation_config", [{}])
 async def test_get_automation_config(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -57,7 +58,7 @@ async def test_get_automation_config(
     assert result == {"id": "moon"}
 
 
-@pytest.mark.parametrize("automation_config", ({},))
+@pytest.mark.parametrize("automation_config", [{}])
 async def test_update_automation_config(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -81,10 +82,8 @@ async def test_update_automation_config(
     )
     await hass.async_block_till_done()
     assert sorted(hass.states.async_entity_ids("automation")) == [
-        "automation.automation_0",
         "automation.automation_1",
     ]
-    assert hass.states.get("automation.automation_0").state == STATE_UNAVAILABLE
     assert hass.states.get("automation.automation_1").state == STATE_ON
 
     assert resp.status == HTTPStatus.OK
@@ -96,7 +95,7 @@ async def test_update_automation_config(
     assert new_data[1] == {"id": "moon", "trigger": [], "condition": [], "action": []}
 
 
-@pytest.mark.parametrize("automation_config", ({},))
+@pytest.mark.parametrize("automation_config", [{}])
 @pytest.mark.parametrize(
     ("updated_config", "validation_error"),
     [
@@ -178,7 +177,7 @@ async def test_update_automation_config_with_error(
     assert validation_error not in caplog.text
 
 
-@pytest.mark.parametrize("automation_config", ({},))
+@pytest.mark.parametrize("automation_config", [{}])
 @pytest.mark.parametrize(
     ("updated_config", "validation_error"),
     [
@@ -235,7 +234,7 @@ async def test_update_automation_config_with_blueprint_substitution_error(
     assert validation_error not in caplog.text
 
 
-@pytest.mark.parametrize("automation_config", ({},))
+@pytest.mark.parametrize("automation_config", [{}])
 async def test_update_remove_key_automation_config(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -259,10 +258,8 @@ async def test_update_remove_key_automation_config(
     )
     await hass.async_block_till_done()
     assert sorted(hass.states.async_entity_ids("automation")) == [
-        "automation.automation_0",
         "automation.automation_1",
     ]
-    assert hass.states.get("automation.automation_0").state == STATE_UNAVAILABLE
     assert hass.states.get("automation.automation_1").state == STATE_ON
 
     assert resp.status == HTTPStatus.OK
@@ -274,7 +271,7 @@ async def test_update_remove_key_automation_config(
     assert new_data[1] == {"id": "moon", "trigger": [], "condition": [], "action": []}
 
 
-@pytest.mark.parametrize("automation_config", ({},))
+@pytest.mark.parametrize("automation_config", [{}])
 async def test_bad_formatted_automations(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -304,10 +301,8 @@ async def test_bad_formatted_automations(
     )
     await hass.async_block_till_done()
     assert sorted(hass.states.async_entity_ids("automation")) == [
-        "automation.automation_0",
         "automation.automation_1",
     ]
-    assert hass.states.get("automation.automation_0").state == STATE_UNAVAILABLE
     assert hass.states.get("automation.automation_1").state == STATE_ON
 
     assert resp.status == HTTPStatus.OK
@@ -322,7 +317,7 @@ async def test_bad_formatted_automations(
 
 @pytest.mark.parametrize(
     "automation_config",
-    (
+    [
         [
             {
                 "id": "sun",
@@ -335,7 +330,7 @@ async def test_bad_formatted_automations(
                 "action": {"service": "test.automation"},
             },
         ],
-    ),
+    ],
 )
 async def test_delete_automation(
     hass: HomeAssistant,
@@ -377,7 +372,7 @@ async def test_delete_automation(
     assert len(entity_registry.entities) == 1
 
 
-@pytest.mark.parametrize("automation_config", ({},))
+@pytest.mark.parametrize("automation_config", [{}])
 async def test_api_calls_require_admin(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

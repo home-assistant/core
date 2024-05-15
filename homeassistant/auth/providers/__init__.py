@@ -1,8 +1,8 @@
 """Auth providers for Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
-import importlib
 import logging
 import types
 from typing import Any
@@ -14,15 +14,17 @@ from homeassistant import data_entry_flow, requirements
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.importlib import async_import_module
 from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
+from homeassistant.util.hass_dict import HassKey
 
 from ..auth_store import AuthStore
 from ..const import MFA_SESSION_EXPIRATION
 from ..models import AuthFlowResult, Credentials, RefreshToken, User, UserMeta
 
 _LOGGER = logging.getLogger(__name__)
-DATA_REQS = "auth_prov_reqs_processed"
+DATA_REQS: HassKey[set[str]] = HassKey("auth_prov_reqs_processed")
 
 AUTH_PROVIDERS: Registry[str, type[AuthProvider]] = Registry()
 
@@ -156,7 +158,9 @@ async def load_auth_provider_module(
 ) -> types.ModuleType:
     """Load an auth provider."""
     try:
-        module = importlib.import_module(f"homeassistant.auth.providers.{provider}")
+        module = await async_import_module(
+            hass, f"homeassistant.auth.providers.{provider}"
+        )
     except ImportError as err:
         _LOGGER.error("Unable to load auth provider %s: %s", provider, err)
         raise HomeAssistantError(

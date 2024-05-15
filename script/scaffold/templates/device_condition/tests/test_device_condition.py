@@ -1,4 +1,5 @@
 """The tests for NEW_NAME device conditions."""
+
 from __future__ import annotations
 
 import pytest

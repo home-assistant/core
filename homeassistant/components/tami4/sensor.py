@@ -1,4 +1,5 @@
 """Sensor entities for Tami4Edge."""
+
 import logging
 
 from Tami4EdgeAPI import Tami4EdgeAPI
@@ -68,17 +69,14 @@ async def async_setup_entry(
     api: Tami4EdgeAPI = data[API]
     coordinator: Tami4EdgeWaterQualityCoordinator = data[COORDINATOR]
 
-    entities = []
-    for entity_description in ENTITY_DESCRIPTIONS:
-        entities.append(
-            Tami4EdgeSensorEntity(
-                coordinator=coordinator,
-                api=api,
-                entity_description=entity_description,
-            )
+    async_add_entities(
+        Tami4EdgeSensorEntity(
+            coordinator=coordinator,
+            api=api,
+            entity_description=entity_description,
         )
-
-    async_add_entities(entities)
+        for entity_description in ENTITY_DESCRIPTIONS
+    )
 
 
 class Tami4EdgeSensorEntity(

@@ -1,4 +1,5 @@
 """Config flow for Logitech Squeezebox integration."""
+
 import asyncio
 from http import HTTPStatus
 import logging
@@ -121,7 +122,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
                 if server.http_status == HTTPStatus.UNAUTHORIZED:
                     return "invalid_auth"
                 return "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             return "unknown"
 
         if "uuid" in status:

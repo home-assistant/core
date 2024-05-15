@@ -1,4 +1,5 @@
 """The tests for WS66i Media player platform."""
+
 from collections import defaultdict
 from unittest.mock import patch
 
@@ -85,7 +86,7 @@ class MockWs66i:
     def open(self):
         """Open socket. Do nothing."""
         if self.fail_open is True:
-            raise ConnectionError()
+            raise ConnectionError
 
     def close(self):
         """Close socket. Do nothing."""
@@ -194,7 +195,7 @@ async def test_update(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> No
     with patch.object(MockWs66i, "open") as method_call:
         freezer.tick(POLL_INTERVAL)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert not method_call.called
 
@@ -225,13 +226,13 @@ async def test_failed_update(
 
     freezer.tick(POLL_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Failed update, close called
     with patch.object(MockWs66i, "zone_status", return_value=None):
         freezer.tick(POLL_INTERVAL)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.is_state(ZONE_1_ID, STATE_UNAVAILABLE)
 
@@ -239,12 +240,12 @@ async def test_failed_update(
     with patch.object(MockWs66i, "zone_status", return_value=None):
         freezer.tick(POLL_INTERVAL)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     # A connection re-attempt succeeds
     freezer.tick(POLL_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # confirm entity is back on
     state = hass.states.get(ZONE_1_ID)
@@ -314,7 +315,7 @@ async def test_source_select(
 
     freezer.tick(POLL_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ZONE_1_ID)
 
@@ -369,14 +370,14 @@ async def test_volume_up_down(
     )
     freezer.tick(POLL_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     # should not go below zero
     assert ws66i.zones[11].volume == 0
 
     await _call_media_player_service(hass, SERVICE_VOLUME_UP, {"entity_id": ZONE_1_ID})
     freezer.tick(POLL_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert ws66i.zones[11].volume == 1
 
     await _call_media_player_service(
@@ -384,14 +385,14 @@ async def test_volume_up_down(
     )
     freezer.tick(POLL_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert ws66i.zones[11].volume == MAX_VOL
 
     await _call_media_player_service(hass, SERVICE_VOLUME_UP, {"entity_id": ZONE_1_ID})
 
     freezer.tick(POLL_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     # should not go above 38 (MAX_VOL)
     assert ws66i.zones[11].volume == MAX_VOL
 

@@ -1,4 +1,5 @@
 """Template helper methods for rendering strings with Home Assistant data."""
+
 from __future__ import annotations
 
 from ast import literal_eval
@@ -8,7 +9,7 @@ import collections.abc
 from collections.abc import Callable, Generator, Iterable
 from contextlib import AbstractContextManager, suppress
 from contextvars import ContextVar
-from datetime import datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from functools import cache, lru_cache, partial, wraps
 import json
 import logging
@@ -27,6 +28,7 @@ from typing import (
     Literal,
     NoReturn,
     ParamSpec,
+    Self,
     TypeVar,
     cast,
     overload,
@@ -74,6 +76,7 @@ from homeassistant.util import (
     slugify as slugify_util,
 )
 from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.thread import ThreadWithException
@@ -82,7 +85,9 @@ from . import (
     area_registry,
     device_registry,
     entity_registry,
+    floor_registry as fr,
     issue_registry,
+    label_registry,
     location as loc_helper,
 )
 from .singleton import singleton
@@ -95,9 +100,13 @@ _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
 DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
-_ENVIRONMENT = "template.environment"
-_ENVIRONMENT_LIMITED = "template.environment_limited"
-_ENVIRONMENT_STRICT = "template.environment_strict"
+_ENVIRONMENT: HassKey[TemplateEnvironment] = HassKey("template.environment")
+_ENVIRONMENT_LIMITED: HassKey[TemplateEnvironment] = HassKey(
+    "template.environment_limited"
+)
+_ENVIRONMENT_STRICT: HassKey[TemplateEnvironment] = HassKey(
+    "template.environment_strict"
+)
 _HASS_LOADER = "template.hass_loader"
 
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
@@ -129,8 +138,8 @@ _T = TypeVar("_T")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
 
-ALL_STATES_RATE_LIMIT = timedelta(minutes=1)
-DOMAIN_STATES_RATE_LIMIT = timedelta(seconds=1)
+ALL_STATES_RATE_LIMIT = 60  # seconds
+DOMAIN_STATES_RATE_LIMIT = 1  # seconds
 
 _render_info: ContextVar[RenderInfo | None] = ContextVar("_render_info", default=None)
 
@@ -301,9 +310,11 @@ def gen_result_wrapper(kls: type[dict | list | set]) -> type:
 class TupleWrapper(tuple, ResultWrapper):
     """Wrap a tuple."""
 
+    __slots__ = ()
+
     # This is all magic to be allowed to subclass a tuple.
 
-    def __new__(cls, value: tuple, *, render_result: str | None = None) -> TupleWrapper:
+    def __new__(cls, value: tuple, *, render_result: str | None = None) -> Self:
         """Create a new tuple class."""
         return super().__new__(cls, tuple(value))
 
@@ -368,7 +379,7 @@ class RenderInfo:
         self.domains: collections.abc.Set[str] = set()
         self.domains_lifecycle: collections.abc.Set[str] = set()
         self.entities: collections.abc.Set[str] = set()
-        self.rate_limit: timedelta | None = None
+        self.rate_limit: float | None = None
         self.has_time = False
 
     def __repr__(self) -> str:
@@ -505,8 +516,7 @@ class Template:
             wanted_env = _ENVIRONMENT_STRICT
         else:
             wanted_env = _ENVIRONMENT
-        ret: TemplateEnvironment | None = self.hass.data.get(wanted_env)
-        if ret is None:
+        if (ret := self.hass.data.get(wanted_env)) is None:
             ret = self.hass.data[wanted_env] = TemplateEnvironment(
                 self.hass, self._limited, self._strict, self._log_fn
             )
@@ -660,7 +670,7 @@ class Template:
                 _render_with_context(self.template, compiled, **kwargs)
             except TimeoutError:
                 pass
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 self._exc_info = sys.exc_info()
             finally:
                 self.hass.loop.call_soon_threadsafe(finish_event.set)
@@ -689,20 +699,21 @@ class Template:
         **kwargs: Any,
     ) -> RenderInfo:
         """Render the template and collect an entity filter."""
+        if self.hass and self.hass.config.debug:
+            self.hass.verify_event_loop_thread("async_render_to_info")
         self._renders += 1
         assert self.hass and _render_info.get() is None
 
         render_info = RenderInfo(self)
 
-        # pylint: disable=protected-access
         if self.is_static:
-            render_info._result = self.template.strip()
-            render_info._freeze_static()
+            render_info._result = self.template.strip()  # noqa: SLF001
+            render_info._freeze_static()  # noqa: SLF001
             return render_info
 
         token = _render_info.set(render_info)
         try:
-            render_info._result = self.async_render(
+            render_info._result = self.async_render(  # noqa: SLF001
                 variables, strict=strict, log_fn=log_fn, **kwargs
             )
         except TemplateError as ex:
@@ -710,7 +721,7 @@ class Template:
         finally:
             _render_info.reset(token)
 
-        render_info._freeze()
+        render_info._freeze()  # noqa: SLF001
         return render_info
 
     def render_with_possible_json_value(self, value, error_value=_SENTINEL):
@@ -1037,6 +1048,12 @@ class TemplateStateBase(State):
         return self._state.last_changed
 
     @property
+    def last_reported(self) -> datetime:  # type: ignore[override]
+        """Wrap State.last_reported."""
+        self._collect_state()
+        return self._state.last_reported
+
+    @property
     def last_updated(self) -> datetime:  # type: ignore[override]
         """Wrap State.last_updated."""
         self._collect_state()
@@ -1089,7 +1106,7 @@ class TemplateStateBase(State):
             return f"{state} {unit}"
         return state
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Ensure we collect on equality check."""
         self._collect_state()
         return self._state.__eq__(other)
@@ -1155,7 +1172,7 @@ def _state_generator(
     #
     container: Iterable[State]
     if domain is None:
-        container = states._states.values()  # pylint: disable=protected-access
+        container = states._states.values()  # noqa: SLF001
     else:
         container = states.async_all(domain)
     for state in container:
@@ -1196,13 +1213,11 @@ def _resolve_state(
 
 
 @overload
-def forgiving_boolean(value: Any) -> bool | object:
-    ...
+def forgiving_boolean(value: Any) -> bool | object: ...
 
 
 @overload
-def forgiving_boolean(value: Any, default: _T) -> bool | _T:
-    ...
+def forgiving_boolean(value: Any, default: _T) -> bool | _T: ...
 
 
 def forgiving_boolean(
@@ -1240,6 +1255,7 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
 
     search = list(args)
     found = {}
+    sources = entity_helper.entity_sources(hass)
     while search:
         entity = search.pop()
         if isinstance(entity, str):
@@ -1255,14 +1271,17 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
             # ignore other types
             continue
 
-        if entity_id.startswith(_GROUP_DOMAIN_PREFIX) or (
-            (source := entity_helper.entity_sources(hass).get(entity_id))
-            and source["domain"] == "group"
+        if entity_id in found:
+            continue
+
+        domain = entity.domain
+        if domain == "group" or (
+            (source := sources.get(entity_id)) and source["domain"] == "group"
         ):
             # Collect state will be called in here since it's wrapped
             if group_entities := entity.attributes.get(ATTR_ENTITY_ID):
                 search += group_entities
-        elif entity_id.startswith(_ZONE_DOMAIN_PREFIX):
+        elif domain == "zone":
             if zone_entities := entity.attributes.get(ATTR_PERSONS):
                 search += zone_entities
         else:
@@ -1333,8 +1352,8 @@ def device_id(hass: HomeAssistant, entity_id_or_device_name: str) -> str | None:
     dev_reg = device_registry.async_get(hass)
     return next(
         (
-            id
-            for id, device in dev_reg.devices.items()
+            device_id
+            for device_id, device in dev_reg.devices.items()
             if (name := device.name_by_user or device.name)
             and (str(entity_id_or_device_name) == name)
         ),
@@ -1382,10 +1401,64 @@ def issue(hass: HomeAssistant, domain: str, issue_id: str) -> dict[str, Any] | N
     return None
 
 
+def floors(hass: HomeAssistant) -> Iterable[str | None]:
+    """Return all floors."""
+    floor_registry = fr.async_get(hass)
+    return [floor.floor_id for floor in floor_registry.async_list_floors()]
+
+
+def floor_id(hass: HomeAssistant, lookup_value: Any) -> str | None:
+    """Get the floor ID from a floor name."""
+    floor_registry = fr.async_get(hass)
+    if floor := floor_registry.async_get_floor_by_name(str(lookup_value)):
+        return floor.floor_id
+
+    if aid := area_id(hass, lookup_value):
+        area_reg = area_registry.async_get(hass)
+        if area := area_reg.async_get_area(aid):
+            return area.floor_id
+
+    return None
+
+
+def floor_name(hass: HomeAssistant, lookup_value: str) -> str | None:
+    """Get the floor name from a floor id."""
+    floor_registry = fr.async_get(hass)
+    if floor := floor_registry.async_get_floor(lookup_value):
+        return floor.name
+
+    if aid := area_id(hass, lookup_value):
+        area_reg = area_registry.async_get(hass)
+        if (
+            (area := area_reg.async_get_area(aid))
+            and area.floor_id
+            and (floor := floor_registry.async_get_floor(area.floor_id))
+        ):
+            return floor.name
+
+    return None
+
+
+def floor_areas(hass: HomeAssistant, floor_id_or_name: str) -> Iterable[str]:
+    """Return area IDs for a given floor ID or name."""
+    _floor_id: str | None
+    # If floor_name returns a value, we know the input was an ID, otherwise we
+    # assume it's a name, and if it's neither, we return early
+    if floor_name(hass, floor_id_or_name) is not None:
+        _floor_id = floor_id_or_name
+    else:
+        _floor_id = floor_id(hass, floor_id_or_name)
+    if _floor_id is None:
+        return []
+
+    area_reg = area_registry.async_get(hass)
+    entries = area_registry.async_entries_for_floor(area_reg, _floor_id)
+    return [entry.id for entry in entries if entry.id]
+
+
 def areas(hass: HomeAssistant) -> Iterable[str | None]:
     """Return all areas."""
-    area_reg = area_registry.async_get(hass)
-    return [area.id for area in area_reg.async_list_areas()]
+    return list(area_registry.async_get(hass).areas)
 
 
 def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
@@ -1505,6 +1578,92 @@ def area_devices(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:
     dev_reg = device_registry.async_get(hass)
     entries = device_registry.async_entries_for_area(dev_reg, _area_id)
     return [entry.id for entry in entries]
+
+
+def labels(hass: HomeAssistant, lookup_value: Any = None) -> Iterable[str | None]:
+    """Return all labels, or those from a area ID, device ID, or entity ID."""
+    label_reg = label_registry.async_get(hass)
+    if lookup_value is None:
+        return list(label_reg.labels)
+
+    ent_reg = entity_registry.async_get(hass)
+
+    # Import here, not at top-level to avoid circular import
+    from . import config_validation as cv  # pylint: disable=import-outside-toplevel
+
+    lookup_value = str(lookup_value)
+
+    try:
+        cv.entity_id(lookup_value)
+    except vol.Invalid:
+        pass
+    else:
+        if entity := ent_reg.async_get(lookup_value):
+            return list(entity.labels)
+
+    # Check if this could be a device ID
+    dev_reg = device_registry.async_get(hass)
+    if device := dev_reg.async_get(lookup_value):
+        return list(device.labels)
+
+    # Check if this could be a area ID
+    area_reg = area_registry.async_get(hass)
+    if area := area_reg.async_get_area(lookup_value):
+        return list(area.labels)
+
+    return []
+
+
+def label_id(hass: HomeAssistant, lookup_value: Any) -> str | None:
+    """Get the label ID from a label name."""
+    label_reg = label_registry.async_get(hass)
+    if label := label_reg.async_get_label_by_name(str(lookup_value)):
+        return label.label_id
+    return None
+
+
+def label_name(hass: HomeAssistant, lookup_value: str) -> str | None:
+    """Get the label name from a label ID."""
+    label_reg = label_registry.async_get(hass)
+    if label := label_reg.async_get_label(lookup_value):
+        return label.name
+    return None
+
+
+def _label_id_or_name(hass: HomeAssistant, label_id_or_name: str) -> str | None:
+    """Get the label ID from a label name or ID."""
+    # If label_name returns a value, we know the input was an ID, otherwise we
+    # assume it's a name, and if it's neither, we return early.
+    if label_name(hass, label_id_or_name) is not None:
+        return label_id_or_name
+    return label_id(hass, label_id_or_name)
+
+
+def label_areas(hass: HomeAssistant, label_id_or_name: str) -> Iterable[str]:
+    """Return areas for a given label ID or name."""
+    if (_label_id := _label_id_or_name(hass, label_id_or_name)) is None:
+        return []
+    area_reg = area_registry.async_get(hass)
+    entries = area_registry.async_entries_for_label(area_reg, _label_id)
+    return [entry.id for entry in entries]
+
+
+def label_devices(hass: HomeAssistant, label_id_or_name: str) -> Iterable[str]:
+    """Return device IDs for a given label ID or name."""
+    if (_label_id := _label_id_or_name(hass, label_id_or_name)) is None:
+        return []
+    dev_reg = device_registry.async_get(hass)
+    entries = device_registry.async_entries_for_label(dev_reg, _label_id)
+    return [entry.id for entry in entries]
+
+
+def label_entities(hass: HomeAssistant, label_id_or_name: str) -> Iterable[str]:
+    """Return entities for a given label ID or name."""
+    if (_label_id := _label_id_or_name(hass, label_id_or_name)) is None:
+        return []
+    ent_reg = entity_registry.async_get(hass)
+    entries = entity_registry.async_entries_for_label(ent_reg, _label_id)
+    return [entry.entity_id for entry in entries]
 
 
 def closest(hass, *args):
@@ -1729,6 +1888,17 @@ def multiply(value, amount, default=_SENTINEL):
         return default
 
 
+def add(value, amount, default=_SENTINEL):
+    """Filter to convert value to float and add it."""
+    try:
+        return float(value) + amount
+    except (ValueError, TypeError):
+        # If value can't be converted to float
+        if default is _SENTINEL:
+            raise_no_default("add", value)
+        return default
+
+
 def logarithm(value, base=math.e, default=_SENTINEL):
     """Filter and function to get logarithm of the value with a specific base."""
     try:
@@ -1847,12 +2017,12 @@ def square_root(value, default=_SENTINEL):
 def timestamp_custom(value, date_format=DATE_STR_FORMAT, local=True, default=_SENTINEL):
     """Filter to convert given timestamp to format."""
     try:
-        date = dt_util.utc_from_timestamp(value)
+        result = dt_util.utc_from_timestamp(value)
 
         if local:
-            date = dt_util.as_local(date)
+            result = dt_util.as_local(result)
 
-        return date.strftime(date_format)
+        return result.strftime(date_format)
     except (ValueError, TypeError):
         # If timestamp can't be converted
         if default is _SENTINEL:
@@ -1894,6 +2064,12 @@ def forgiving_as_timestamp(value, default=_SENTINEL):
 
 def as_datetime(value: Any, default: Any = _SENTINEL) -> Any:
     """Filter and to convert a time string or UNIX timestamp to datetime object."""
+    # Return datetime.datetime object without changes
+    if type(value) is datetime:
+        return value
+    # Add midnight to datetime.date object
+    if type(value) is date:
+        return datetime.combine(value, time(0, 0, 0))
     try:
         # Check for a valid UNIX timestamp string, int or float
         timestamp = float(value)
@@ -2314,10 +2490,15 @@ def relative_time(hass: HomeAssistant, value: Any) -> Any:
     The age can be in second, minute, hour, day, month or year. Only the
     biggest unit is considered, e.g. if it's 2 days and 3 hours, "2 days" will
     be returned.
-    Make sure date is not in the future, or else it will return None.
+    If the input datetime is in the future,
+    the input datetime will be returned.
 
     If the input are not a datetime object the input will be returned unmodified.
+
+    Note: This template function is deprecated in favor of `time_until`, but is still
+    supported so as not to break old templates.
     """
+
     if (render_info := _render_info.get()) is not None:
         render_info.has_time = True
 
@@ -2328,6 +2509,50 @@ def relative_time(hass: HomeAssistant, value: Any) -> Any:
     if dt_util.now() < value:
         return value
     return dt_util.get_age(value)
+
+
+def time_since(hass: HomeAssistant, value: Any | datetime, precision: int = 1) -> Any:
+    """Take a datetime and return its "age" as a string.
+
+    The age can be in seconds, minutes, hours, days, months and year.
+
+    precision is the number of units to return, with the last unit rounded.
+
+    If the value not a datetime object the input will be returned unmodified.
+    """
+    if (render_info := _render_info.get()) is not None:
+        render_info.has_time = True
+
+    if not isinstance(value, datetime):
+        return value
+    if not value.tzinfo:
+        value = dt_util.as_local(value)
+    if dt_util.now() < value:
+        return value
+
+    return dt_util.get_age(value, precision)
+
+
+def time_until(hass: HomeAssistant, value: Any | datetime, precision: int = 1) -> Any:
+    """Take a datetime and return the amount of time until that time as a string.
+
+    The time until can be in seconds, minutes, hours, days, months and years.
+
+    precision is the number of units to return, with the last unit rounded.
+
+    If the value not a datetime object the input will be returned unmodified.
+    """
+    if (render_info := _render_info.get()) is not None:
+        render_info.has_time = True
+
+    if not isinstance(value, datetime):
+        return value
+    if not value.tzinfo:
+        value = dt_util.as_local(value)
+    if dt_util.now() > value:
+        return value
+
+    return dt_util.get_time_remaining(value, precision)
 
 
 def urlencode(value):
@@ -2419,9 +2644,9 @@ def make_logging_undefined(
         def _fail_with_undefined_error(self, *args, **kwargs):
             try:
                 return super()._fail_with_undefined_error(*args, **kwargs)
-            except self._undefined_exception as ex:
+            except self._undefined_exception:
                 _log_fn(logging.ERROR, self._undefined_message)
-                raise ex
+                raise
 
         def __str__(self) -> str:
             """Log undefined __str___."""
@@ -2514,6 +2739,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.add_extension("jinja2.ext.loopcontrols")
         self.filters["round"] = forgiving_round
         self.filters["multiply"] = multiply
+        self.filters["add"] = add
         self.filters["log"] = logarithm
         self.filters["sin"] = sine
         self.filters["cos"] = cosine
@@ -2663,8 +2889,38 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["area_devices"] = hassfunction(area_devices)
         self.filters["area_devices"] = self.globals["area_devices"]
 
+        self.globals["floors"] = hassfunction(floors)
+        self.filters["floors"] = self.globals["floors"]
+
+        self.globals["floor_id"] = hassfunction(floor_id)
+        self.filters["floor_id"] = self.globals["floor_id"]
+
+        self.globals["floor_name"] = hassfunction(floor_name)
+        self.filters["floor_name"] = self.globals["floor_name"]
+
+        self.globals["floor_areas"] = hassfunction(floor_areas)
+        self.filters["floor_areas"] = self.globals["floor_areas"]
+
         self.globals["integration_entities"] = hassfunction(integration_entities)
         self.filters["integration_entities"] = self.globals["integration_entities"]
+
+        self.globals["labels"] = hassfunction(labels)
+        self.filters["labels"] = self.globals["labels"]
+
+        self.globals["label_id"] = hassfunction(label_id)
+        self.filters["label_id"] = self.globals["label_id"]
+
+        self.globals["label_name"] = hassfunction(label_name)
+        self.filters["label_name"] = self.globals["label_name"]
+
+        self.globals["label_areas"] = hassfunction(label_areas)
+        self.filters["label_areas"] = self.globals["label_areas"]
+
+        self.globals["label_devices"] = hassfunction(label_devices)
+        self.filters["label_devices"] = self.globals["label_devices"]
+
+        self.globals["label_entities"] = hassfunction(label_entities)
+        self.filters["label_entities"] = self.globals["label_entities"]
 
         if limited:
             # Only device_entities is available to limited templates, mark other
@@ -2695,8 +2951,14 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "device_id",
                 "area_id",
                 "area_name",
+                "floor_id",
+                "floor_name",
                 "relative_time",
+                "time_since",
+                "time_until",
                 "today_at",
+                "label_id",
+                "label_name",
             ]
             hass_filters = [
                 "closest",
@@ -2704,7 +2966,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "device_id",
                 "area_id",
                 "area_name",
+                "floor_id",
+                "floor_name",
                 "has_value",
+                "label_id",
+                "label_name",
             ]
             hass_tests = [
                 "has_value",
@@ -2746,6 +3012,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["now"] = hassfunction(now)
         self.globals["relative_time"] = hassfunction(relative_time)
         self.filters["relative_time"] = self.globals["relative_time"]
+        self.globals["time_since"] = hassfunction(time_since)
+        self.filters["time_since"] = self.globals["time_since"]
+        self.globals["time_until"] = hassfunction(time_until)
+        self.filters["time_until"] = self.globals["time_until"]
         self.globals["today_at"] = hassfunction(today_at)
         self.filters["today_at"] = self.globals["today_at"]
 
@@ -2775,8 +3045,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         filename: str | None = None,
         raw: Literal[False] = False,
         defer_init: bool = False,
-    ) -> CodeType:
-        ...
+    ) -> CodeType: ...
 
     @overload
     def compile(
@@ -2786,8 +3055,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         filename: str | None = None,
         raw: Literal[True] = ...,
         defer_init: bool = False,
-    ) -> str:
-        ...
+    ) -> str: ...
 
     def compile(
         self,

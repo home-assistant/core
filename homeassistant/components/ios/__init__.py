@@ -1,4 +1,5 @@
 """Native Home Assistant iOS app component."""
+
 import datetime
 from http import HTTPStatus
 from typing import Any

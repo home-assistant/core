@@ -1,4 +1,5 @@
 """Support for Skybeacon temperature/humidity Bluetooth LE sensors."""
+
 from __future__ import annotations
 
 import logging
@@ -158,8 +159,7 @@ class Monitor(threading.Thread, SensorEntity):
                     )
                 if SKIP_HANDLE_LOOKUP:
                     # HACK: inject handle mapping collected offline
-                    # pylint: disable-next=protected-access
-                    device._characteristics[UUID(BLE_TEMP_UUID)] = cached_char
+                    device._characteristics[UUID(BLE_TEMP_UUID)] = cached_char  # noqa: SLF001
                 # Magic: writing this makes device happy
                 device.char_write_handle(0x1B, bytearray([255]), False)
                 device.subscribe(BLE_TEMP_UUID, self._update)

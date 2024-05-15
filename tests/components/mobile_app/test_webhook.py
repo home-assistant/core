@@ -1,7 +1,8 @@
 """Webhook tests for mobile_app."""
+
 from binascii import unhexlify
 from http import HTTPStatus
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import pytest
 
@@ -23,10 +24,6 @@ from homeassistant.setup import async_setup_component
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
 from tests.common import async_capture_events, async_mock_service
-from tests.components.conversation.conftest import mock_agent
-
-# To avoid autoflake8 removing the import
-mock_agent = mock_agent
 
 
 @pytest.fixture
@@ -320,7 +317,7 @@ async def test_webhook_handle_get_config(
         "time_zone": hass_config["time_zone"],
         "components": set(hass_config["components"]),
         "version": hass_config["version"],
-        "theme_color": "#03A9F4",  # Default frontend theme color
+        "theme_color": ANY,
         "entities": {
             "mock-device-id": {"disabled": False},
             "battery-state-id": {"disabled": False},
@@ -347,13 +344,13 @@ async def test_webhook_returns_error_incorrect_json(
 
 @pytest.mark.parametrize(
     ("msg", "generate_response"),
-    (
+    [
         (RENDER_TEMPLATE, lambda hass: {"one": "Hello world"}),
         (
             {"type": "get_zones", "data": {}},
             lambda hass: [hass.states.get("zone.home").as_dict()],
         ),
-    ),
+    ],
 )
 async def test_webhook_handle_decryption(
     hass: HomeAssistant, webhook_client, create_registrations, msg, generate_response
@@ -1026,14 +1023,18 @@ async def test_reregister_sensor(
 
 
 async def test_webhook_handle_conversation_process(
-    hass: HomeAssistant, homeassistant, create_registrations, webhook_client, mock_agent
+    hass: HomeAssistant,
+    homeassistant,
+    create_registrations,
+    webhook_client,
+    mock_conversation_agent,
 ) -> None:
     """Test that we can converse."""
     webhook_client.server.app.router._frozen = False
 
     with patch(
-        "homeassistant.components.conversation.AgentManager.async_get_agent",
-        return_value=mock_agent,
+        "homeassistant.components.conversation.agent_manager.async_get_agent",
+        return_value=mock_conversation_agent,
     ):
         resp = await webhook_client.post(
             "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),

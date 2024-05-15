@@ -1,4 +1,5 @@
 """Config flow for Soma."""
+
 import logging
 
 from api.soma_api import SomaApi

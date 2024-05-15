@@ -1,4 +1,5 @@
 """Config flow for Hong Kong Observatory integration."""
+
 from __future__ import annotations
 
 from asyncio import timeout
@@ -53,7 +54,7 @@ class HKOConfigFlow(ConfigFlow, domain=DOMAIN):
 
         except HKOError:
             errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             errors["base"] = "unknown"
         else:
             await self.async_set_unique_id(

@@ -1,4 +1,5 @@
 """Service calling related helpers."""
+
 from __future__ import annotations
 
 import asyncio
@@ -17,6 +18,8 @@ from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    ATTR_FLOOR_ID,
+    ATTR_LABEL_ID,
     CONF_ENTITY_ID,
     CONF_SERVICE,
     CONF_SERVICE_DATA,
@@ -44,6 +47,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.loader import Integration, async_get_integrations, bind_hass
 from homeassistant.util.async_ import create_eager_task
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.yaml import load_yaml_dict
 from homeassistant.util.yaml.loader import JSON_TYPE
 
@@ -52,6 +56,8 @@ from . import (
     config_validation as cv,
     device_registry,
     entity_registry,
+    floor_registry,
+    label_registry,
     template,
     translation,
 )
@@ -69,8 +75,14 @@ CONF_SERVICE_ENTITY_ID = "entity_id"
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_DESCRIPTION_CACHE = "service_description_cache"
-ALL_SERVICE_DESCRIPTIONS_CACHE = "all_service_descriptions_cache"
+SERVICE_DESCRIPTION_CACHE: HassKey[dict[tuple[str, str], dict[str, Any] | None]] = (
+    HassKey("service_description_cache")
+)
+ALL_SERVICE_DESCRIPTIONS_CACHE: HassKey[
+    tuple[set[tuple[str, str]], dict[str, dict[str, Any]]]
+] = HassKey("all_service_descriptions_cache")
+
+_T = TypeVar("_T")
 
 
 @cache
@@ -88,6 +100,7 @@ def _base_components() -> dict[str, ModuleType]:
         light,
         lock,
         media_player,
+        notify,
         remote,
         siren,
         todo,
@@ -107,6 +120,7 @@ def _base_components() -> dict[str, ModuleType]:
         "light": light,
         "lock": lock,
         "media_player": media_player,
+        "notify": notify,
         "remote": remote,
         "siren": siren,
         "todo": todo,
@@ -193,7 +207,7 @@ class ServiceParams(TypedDict):
 class ServiceTargetSelector:
     """Class to hold a target selector for a service."""
 
-    __slots__ = ("entity_ids", "device_ids", "area_ids")
+    __slots__ = ("entity_ids", "device_ids", "area_ids", "floor_ids", "label_ids")
 
     def __init__(self, service_call: ServiceCall) -> None:
         """Extract ids from service call data."""
@@ -201,6 +215,8 @@ class ServiceTargetSelector:
         entity_ids: str | list | None = service_call_data.get(ATTR_ENTITY_ID)
         device_ids: str | list | None = service_call_data.get(ATTR_DEVICE_ID)
         area_ids: str | list | None = service_call_data.get(ATTR_AREA_ID)
+        floor_ids: str | list | None = service_call_data.get(ATTR_FLOOR_ID)
+        label_ids: str | list | None = service_call_data.get(ATTR_LABEL_ID)
 
         self.entity_ids = (
             set(cv.ensure_list(entity_ids)) if _has_match(entity_ids) else set()
@@ -209,11 +225,23 @@ class ServiceTargetSelector:
             set(cv.ensure_list(device_ids)) if _has_match(device_ids) else set()
         )
         self.area_ids = set(cv.ensure_list(area_ids)) if _has_match(area_ids) else set()
+        self.floor_ids = (
+            set(cv.ensure_list(floor_ids)) if _has_match(floor_ids) else set()
+        )
+        self.label_ids = (
+            set(cv.ensure_list(label_ids)) if _has_match(label_ids) else set()
+        )
 
     @property
     def has_any_selector(self) -> bool:
         """Determine if any selectors are present."""
-        return bool(self.entity_ids or self.device_ids or self.area_ids)
+        return bool(
+            self.entity_ids
+            or self.device_ids
+            or self.area_ids
+            or self.floor_ids
+            or self.label_ids
+        )
 
 
 @dataclasses.dataclass(slots=True)
@@ -223,24 +251,29 @@ class SelectedEntities:
     # Entities that were explicitly mentioned.
     referenced: set[str] = dataclasses.field(default_factory=set)
 
-    # Entities that were referenced via device/area ID.
+    # Entities that were referenced via device/area/floor/label ID.
     # Should not trigger a warning when they don't exist.
     indirectly_referenced: set[str] = dataclasses.field(default_factory=set)
 
     # Referenced items that could not be found.
     missing_devices: set[str] = dataclasses.field(default_factory=set)
     missing_areas: set[str] = dataclasses.field(default_factory=set)
+    missing_floors: set[str] = dataclasses.field(default_factory=set)
+    missing_labels: set[str] = dataclasses.field(default_factory=set)
 
     # Referenced devices
     referenced_devices: set[str] = dataclasses.field(default_factory=set)
+    referenced_areas: set[str] = dataclasses.field(default_factory=set)
 
     def log_missing(self, missing_entities: set[str]) -> None:
         """Log about missing items."""
         parts = []
         for label, items in (
+            ("floors", self.missing_floors),
             ("areas", self.missing_areas),
             ("devices", self.missing_devices),
             ("entities", missing_entities),
+            ("labels", self.missing_labels),
         ):
             if items:
                 parts.append(f"{label} {', '.join(sorted(items))}")
@@ -455,7 +488,7 @@ def _has_match(ids: str | list[str] | None) -> TypeGuard[str | list[str]]:
 
 
 @bind_hass
-def async_extract_referenced_entity_ids(
+def async_extract_referenced_entity_ids(  # noqa: C901
     hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
 ) -> SelectedEntities:
     """Extract referenced entity IDs from a service call."""
@@ -471,37 +504,77 @@ def async_extract_referenced_entity_ids(
 
     selected.referenced.update(entity_ids)
 
-    if not selector.device_ids and not selector.area_ids:
+    if (
+        not selector.device_ids
+        and not selector.area_ids
+        and not selector.floor_ids
+        and not selector.label_ids
+    ):
         return selected
 
-    ent_reg = entity_registry.async_get(hass)
+    entities = entity_registry.async_get(hass).entities
     dev_reg = device_registry.async_get(hass)
     area_reg = area_registry.async_get(hass)
 
-    for device_id in selector.device_ids:
-        if device_id not in dev_reg.devices:
-            selected.missing_devices.add(device_id)
+    if selector.floor_ids:
+        floor_reg = floor_registry.async_get(hass)
+        for floor_id in selector.floor_ids:
+            if floor_id not in floor_reg.floors:
+                selected.missing_floors.add(floor_id)
 
     for area_id in selector.area_ids:
         if area_id not in area_reg.areas:
             selected.missing_areas.add(area_id)
 
+    for device_id in selector.device_ids:
+        if device_id not in dev_reg.devices:
+            selected.missing_devices.add(device_id)
+
+    if selector.label_ids:
+        label_reg = label_registry.async_get(hass)
+        for label_id in selector.label_ids:
+            if label_id not in label_reg.labels:
+                selected.missing_labels.add(label_id)
+
+            for entity_entry in entities.get_entries_for_label(label_id):
+                if (
+                    entity_entry.entity_category is None
+                    and entity_entry.hidden_by is None
+                ):
+                    selected.indirectly_referenced.add(entity_entry.entity_id)
+
+            for device_entry in dev_reg.devices.get_devices_for_label(label_id):
+                selected.referenced_devices.add(device_entry.id)
+
+            for area_entry in area_reg.areas.get_areas_for_label(label_id):
+                selected.referenced_areas.add(area_entry.id)
+
+    # Find areas for targeted floors
+    if selector.floor_ids:
+        selected.referenced_areas.update(
+            area_entry.id
+            for floor_id in selector.floor_ids
+            for area_entry in area_reg.areas.get_areas_for_floor(floor_id)
+        )
+
     # Find devices for targeted areas
     selected.referenced_devices.update(selector.device_ids)
 
-    if selector.area_ids:
-        for device_entry in dev_reg.devices.values():
-            if device_entry.area_id in selector.area_ids:
-                selected.referenced_devices.add(device_entry.id)
+    selected.referenced_areas.update(selector.area_ids)
+    if selected.referenced_areas:
+        for area_id in selected.referenced_areas:
+            selected.referenced_devices.update(
+                device_entry.id
+                for device_entry in dev_reg.devices.get_devices_for_area_id(area_id)
+            )
 
-    if not selector.area_ids and not selected.referenced_devices:
+    if not selected.referenced_areas and not selected.referenced_devices:
         return selected
 
-    entities = ent_reg.entities
     # Add indirectly referenced by area
     selected.indirectly_referenced.update(
         entry.entity_id
-        for area_id in selector.area_ids
+        for area_id in selected.referenced_areas
         # The entity's area matches a targeted area
         for entry in entities.get_entries_for_area_id(area_id)
         # Do not add entities which are hidden or which are config
@@ -592,9 +665,7 @@ async def async_get_all_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, dict[str, Any]]:
     """Return descriptions (i.e. user documentation) for all service calls."""
-    descriptions_cache: dict[
-        tuple[str, str], dict[str, Any] | None
-    ] = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
+    descriptions_cache = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
 
     # We don't mutate services here so we avoid calling
     # async_services which makes a copy of every services
@@ -618,7 +689,7 @@ async def async_get_all_descriptions(
         previous_all_services, previous_descriptions_cache = all_cache
         # If the services are the same, we can return the cache
         if previous_all_services == all_services:
-            return previous_descriptions_cache  # type: ignore[no-any-return]
+            return previous_descriptions_cache
 
     # Files we loaded for missing descriptions
     loaded: dict[str, JSON_TYPE] = {}
@@ -632,16 +703,18 @@ async def async_get_all_descriptions(
         ints_or_excs = await async_get_integrations(hass, domains_with_missing_services)
         integrations: list[Integration] = []
         for domain, int_or_exc in ints_or_excs.items():
-            if type(int_or_exc) is Integration:  # noqa: E721
+            if type(int_or_exc) is Integration and int_or_exc.has_services:
                 integrations.append(int_or_exc)
                 continue
             if TYPE_CHECKING:
                 assert isinstance(int_or_exc, Exception)
             _LOGGER.error("Failed to load integration: %s", domain, exc_info=int_or_exc)
-        contents = await hass.async_add_executor_job(
-            _load_services_files, hass, integrations
-        )
-        loaded = dict(zip(domains_with_missing_services, contents))
+
+        if integrations:
+            contents = await hass.async_add_executor_job(
+                _load_services_files, hass, integrations
+            )
+            loaded = dict(zip(domains_with_missing_services, contents, strict=False))
 
     # Load translations for all service domains
     translations = await translation.async_get_translations(
@@ -742,9 +815,7 @@ def async_set_service_schema(
     domain = domain.lower()
     service = service.lower()
 
-    descriptions_cache: dict[
-        tuple[str, str], dict[str, Any] | None
-    ] = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
+    descriptions_cache = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
 
     description = {
         "name": schema.get("name", ""),
@@ -925,7 +996,7 @@ async def entity_service_call(
     )
 
     response_data: EntityServiceResponse = {}
-    for entity, result in zip(entities, results):
+    for entity, result in zip(entities, results, strict=False):
         if isinstance(result, BaseException):
             raise result from None
         response_data[entity.entity_id] = result
@@ -962,9 +1033,11 @@ async def _handle_entity_call(
 
     task: asyncio.Future[ServiceResponse] | None
     if isinstance(func, str):
-        task = hass.async_run_hass_job(
-            HassJob(partial(getattr(entity, func), **data))  # type: ignore[arg-type]
+        job = HassJob(
+            partial(getattr(entity, func), **data),  # type: ignore[arg-type]
+            job_type=entity.get_hassjob_type(func),
         )
+        task = hass.async_run_hass_job(job)
     else:
         task = hass.async_run_hass_job(func, entity, data)
 
@@ -1084,40 +1157,67 @@ def verify_domain_control(
 
 
 class ReloadServiceHelper:
-    """Helper for reload services to minimize unnecessary reloads."""
+    """Helper for reload services.
 
-    def __init__(self, service_func: Callable[[ServiceCall], Awaitable]) -> None:
+    The helper has the following purposes:
+    - Make sure reloads do not happen in parallel
+    - Avoid redundant reloads of the same target
+    """
+
+    def __init__(
+        self,
+        service_func: Callable[[ServiceCall], Awaitable],
+        reload_targets_func: Callable[[ServiceCall], set[_T]],
+    ) -> None:
         """Initialize ReloadServiceHelper."""
         self._service_func = service_func
         self._service_running = False
         self._service_condition = asyncio.Condition()
+        self._pending_reload_targets: set[_T] = set()
+        self._reload_targets_func = reload_targets_func
 
     async def execute_service(self, service_call: ServiceCall) -> None:
         """Execute the service.
 
-        If a previous reload task if currently in progress, wait for it to finish first.
+        If a previous reload task is currently in progress, wait for it to finish first.
         Once the previous reload task has finished, one of the waiting tasks will be
-        assigned to execute the reload, the others will wait for the reload to finish.
+        assigned to execute the reload of the targets it is assigned to reload. The
+        other tasks will wait if they should reload the same target, otherwise they
+        will wait for the next round.
         """
 
         do_reload = False
+        reload_targets = None
         async with self._service_condition:
             if self._service_running:
-                # A previous reload task is already in progress, wait for it to finish
+                # A previous reload task is already in progress, wait for it to finish,
+                # because that task may be reloading a stale version of the resource.
                 await self._service_condition.wait()
 
-        async with self._service_condition:
-            if not self._service_running:
-                # This task will do the reload
-                self._service_running = True
-                do_reload = True
-            else:
-                # Another task will perform the reload, wait for it to finish
+        while True:
+            async with self._service_condition:
+                # Once we've passed this point, we assume the version of the resource is
+                # the one our task was assigned to reload, or a newer one. Regardless of
+                # which, our task is happy as long as the target is reloaded at least
+                # once.
+                if reload_targets is None:
+                    reload_targets = self._reload_targets_func(service_call)
+                    self._pending_reload_targets |= reload_targets
+                if not self._service_running:
+                    # This task will do a reload
+                    self._service_running = True
+                    do_reload = True
+                    break
+                # Another task will perform a reload, wait for it to finish
                 await self._service_condition.wait()
+                # Check if the reload this task is waiting for has been completed
+                if reload_targets.isdisjoint(self._pending_reload_targets):
+                    break
 
         if do_reload:
             # Reload, then notify other tasks
             await self._service_func(service_call)
             async with self._service_condition:
                 self._service_running = False
+                self._pending_reload_targets -= reload_targets
                 self._service_condition.notify_all()

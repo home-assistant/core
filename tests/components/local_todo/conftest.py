@@ -1,4 +1,5 @@
 """Common fixtures for the local_todo tests."""
+
 from collections.abc import Generator
 from pathlib import Path
 from typing import Any

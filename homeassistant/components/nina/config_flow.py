@@ -1,4 +1,5 @@
 """Config flow for Nina integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -106,9 +107,6 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, Any] = {}
 
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         if not self._all_region_codes_sorted:
             nina: Nina = Nina(async_get_clientsession(self.hass))
 
@@ -118,7 +116,7 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except ApiError:
                 errors["base"] = "cannot_connect"
-            except Exception as err:  # pylint: disable=broad-except
+            except Exception as err:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception: %s", err)
                 return self.async_abort(reason="unknown")
 
@@ -197,7 +195,7 @@ class OptionsFlowHandler(OptionsFlow):
                 )
             except ApiError:
                 errors["base"] = "cannot_connect"
-            except Exception as err:  # pylint: disable=broad-except
+            except Exception as err:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception: %s", err)
                 return self.async_abort(reason="unknown")
 
@@ -224,7 +222,7 @@ class OptionsFlowHandler(OptionsFlow):
                 removed_entities_slots = [
                     f"{region}-{slot_id}"
                     for region in self.data[CONF_REGIONS]
-                    for slot_id in range(0, self.data[CONF_MESSAGE_SLOTS] + 1)
+                    for slot_id in range(self.data[CONF_MESSAGE_SLOTS] + 1)
                     if slot_id > user_input[CONF_MESSAGE_SLOTS]
                 ]
 

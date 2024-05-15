@@ -1,4 +1,5 @@
 """Blebox button entities tests."""
+
 import logging
 from unittest.mock import PropertyMock
 

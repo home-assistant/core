@@ -1,7 +1,10 @@
 """Withings coordinator."""
+
+from __future__ import annotations
+
 from abc import abstractmethod
 from datetime import date, datetime, timedelta
-from typing import TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 from aiowithings import (
     Activity,
@@ -17,13 +20,15 @@ from aiowithings import (
     aggregate_measurements,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import LOGGER
+
+if TYPE_CHECKING:
+    from . import WithingsConfigEntry
 
 _T = TypeVar("_T")
 
@@ -33,7 +38,7 @@ UPDATE_INTERVAL = timedelta(minutes=10)
 class WithingsDataUpdateCoordinator(DataUpdateCoordinator[_T]):
     """Base coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: WithingsConfigEntry
     _default_update_interval: timedelta | None = UPDATE_INTERVAL
     _last_valid_update: datetime | None = None
     webhooks_connected: bool = False
@@ -44,9 +49,10 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[_T]):
         super().__init__(
             hass,
             LOGGER,
-            name=f"Withings {self.coordinator_name}",
+            name="",
             update_interval=self._default_update_interval,
         )
+        self.name = f"Withings {self.config_entry.unique_id} {self.coordinator_name}"
         self._client = client
         self.notification_categories: set[NotificationCategory] = set()
 
@@ -62,7 +68,11 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[_T]):
         self, notification_category: NotificationCategory
     ) -> None:
         """Update data when webhook is called."""
-        LOGGER.debug("Withings webhook triggered for %s", notification_category)
+        LOGGER.debug(
+            "Withings webhook triggered for category %s for user %s",
+            notification_category,
+            self.config_entry.unique_id,
+        )
         await self.async_request_refresh()
 
     async def _async_update_data(self) -> _T:

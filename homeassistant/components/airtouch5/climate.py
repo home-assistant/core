@@ -1,4 +1,5 @@
 """AirTouch 5 component to control AirTouch 5 Climate Devices."""
+
 import logging
 from typing import Any
 
@@ -33,12 +34,12 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import Airtouch5ConfigEntry
 from .const import DOMAIN, FAN_INTELLIGENT_AUTO, FAN_TURBO
 from .entity import Airtouch5Entity
 
@@ -91,11 +92,11 @@ FAN_MODE_TO_SET_AC_FAN_SPEED = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: Airtouch5ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Airtouch 5 Climate entities."""
-    client: Airtouch5SimpleClient = hass.data[DOMAIN][config_entry.entry_id]
+    client = config_entry.runtime_data
 
     entities: list[ClimateEntity] = []
 
@@ -108,8 +109,10 @@ async def async_setup_entry(
         entities.append(Airtouch5AC(client, ac))
 
     # Add each zone
-    for zone in client.zones:
-        entities.append(Airtouch5Zone(client, zone, zone_to_ac[zone.zone_number]))
+    entities.extend(
+        Airtouch5Zone(client, zone, zone_to_ac[zone.zone_number])
+        for zone in client.zones
+    )
 
     async_add_entities(entities)
 

@@ -1,4 +1,5 @@
 """Adds config flow for Trafikverket Train integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -113,7 +114,7 @@ async def validate_input(
     except UnknownError as error:
         _LOGGER.error("Unknown error occurred during validation %s", str(error))
         errors["base"] = "cannot_connect"
-    except Exception as error:  # pylint: disable=broad-exception-caught
+    except Exception as error:  # noqa: BLE001
         _LOGGER.error("Unknown exception occurred during validation %s", str(error))
         errors["base"] = "cannot_connect"
 

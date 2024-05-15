@@ -1,4 +1,5 @@
 """Config flow to configure the Netgear integration."""
+
 from __future__ import annotations
 
 import logging

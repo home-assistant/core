@@ -1,4 +1,5 @@
 """Fixtures for the trend component tests."""
+
 from collections.abc import Awaitable, Callable
 from typing import Any
 

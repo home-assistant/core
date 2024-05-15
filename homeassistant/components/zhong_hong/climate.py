@@ -1,4 +1,5 @@
 """Support for ZhongHong HVAC Controller."""
+
 from __future__ import annotations
 
 import logging

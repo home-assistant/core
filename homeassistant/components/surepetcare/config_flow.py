@@ -1,4 +1,5 @@
 """Config flow for Sure Petcare integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -65,7 +66,7 @@ class SurePetCareConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except SurePetcareError:
             errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -102,7 +103,7 @@ class SurePetCareConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except SurePetcareError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

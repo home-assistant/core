@@ -1,4 +1,5 @@
 """Component for the Portuguese weather service - IPMA."""
+
 import asyncio
 import logging
 

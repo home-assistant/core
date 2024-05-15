@@ -1,11 +1,16 @@
 """DataUpdateCoordinator for the Bring! integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 import logging
 
 from bring_api.bring import Bring
-from bring_api.exceptions import BringParseException, BringRequestException
+from bring_api.exceptions import (
+    BringAuthException,
+    BringParseException,
+    BringRequestException,
+)
 from bring_api.types import BringList, BringPurchase
 
 from homeassistant.config_entries import ConfigEntry
@@ -46,6 +51,10 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
             raise UpdateFailed("Unable to connect and retrieve data from bring") from e
         except BringParseException as e:
             raise UpdateFailed("Unable to parse response from bring") from e
+        except BringAuthException as e:
+            raise UpdateFailed(
+                "Unable to retrieve data from bring, authentication failed"
+            ) from e
 
         list_dict = {}
         for lst in lists_response["lists"]:

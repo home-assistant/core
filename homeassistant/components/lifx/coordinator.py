@@ -1,4 +1,5 @@
 """Coordinator for lifx."""
+
 from __future__ import annotations
 
 import asyncio
@@ -380,8 +381,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
 
         # pad the color list with blanks if necessary
         if len(colors) < 82:
-            for _ in range(82 - len(colors)):
-                colors.append((0, 0, 0, 0))
+            colors.extend([(0, 0, 0, 0) for _ in range(82 - len(colors))])
 
         await async_execute_lifx(
             partial(

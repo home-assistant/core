@@ -1,4 +1,5 @@
 """The Tasmota integration."""
+
 from __future__ import annotations
 
 import logging
@@ -15,7 +16,7 @@ from hatasmota.models import TasmotaDeviceConfig
 from hatasmota.mqtt import TasmotaMQTTClient
 
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt.subscription import (
+from homeassistant.components.mqtt import (
     async_prepare_subscribe_topics,
     async_subscribe_topics,
     async_unsubscribe_topics,

@@ -1,4 +1,5 @@
 """Support for Big Ass Fans binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -7,7 +8,6 @@ from typing import cast
 
 from aiobafi6 import Device
 
-from homeassistant import config_entries
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -16,9 +16,8 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import BAFConfigEntry
 from .entity import BAFEntity
-from .models import BAFData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -41,12 +40,11 @@ OCCUPANCY_SENSORS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: BAFConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up BAF binary sensors."""
-    data: BAFData = hass.data[DOMAIN][entry.entry_id]
-    device = data.device
+    device = entry.runtime_data
     sensors_descriptions: list[BAFBinarySensorDescription] = []
     if device.has_occupancy:
         sensors_descriptions.extend(OCCUPANCY_SENSORS)

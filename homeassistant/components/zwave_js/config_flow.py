@@ -1,4 +1,5 @@
 """Config flow for Z-Wave JS integration."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -182,7 +183,7 @@ class BaseZwaveJSFlow(ConfigEntryBaseFlow, ABC):
 
     @property
     @abstractmethod
-    def flow_manager(self) -> FlowManager[ConfigFlowResult, str]:
+    def flow_manager(self) -> FlowManager[ConfigFlowResult]:
         """Return the flow manager of the flow."""
 
     async def async_step_install_addon(
@@ -476,7 +477,7 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
             version_info = await validate_input(self.hass, user_input)
         except InvalidInput as err:
             errors["base"] = err.error
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -742,7 +743,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
             version_info = await validate_input(self.hass, user_input)
         except InvalidInput as err:
             errors["base"] = err.error
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:

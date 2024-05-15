@@ -18,6 +18,7 @@ from homeassistant.const import (
     STATE_JAMMED,
     STATE_LOCKED,
     STATE_LOCKING,
+    STATE_OPEN,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     STATE_UNLOCKED,
@@ -204,8 +205,8 @@ async def test_service_calls_openable(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: "lock.lock_group"},
         blocking=True,
     )
-    assert hass.states.get("lock.openable_lock").state == STATE_UNLOCKED
-    assert hass.states.get("lock.another_openable_lock").state == STATE_UNLOCKED
+    assert hass.states.get("lock.openable_lock").state == STATE_OPEN
+    assert hass.states.get("lock.another_openable_lock").state == STATE_OPEN
 
     await hass.services.async_call(
         LOCK_DOMAIN,

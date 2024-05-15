@@ -1,4 +1,5 @@
 """Config flow for Sense integration."""
+
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -80,7 +81,7 @@ class SenseConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except SenseAuthenticationException:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -97,7 +98,7 @@ class SenseConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except SenseAuthenticationException:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

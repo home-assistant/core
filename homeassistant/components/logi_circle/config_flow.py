@@ -1,4 +1,5 @@
 """Config flow to configure Logi Circle component."""
+
 import asyncio
 from collections import OrderedDict
 from http import HTTPStatus

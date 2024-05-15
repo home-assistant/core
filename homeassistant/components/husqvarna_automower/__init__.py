@@ -3,12 +3,12 @@
 import logging
 
 from aioautomower.session import AutomowerSession
-from aiohttp import ClientError
+from aiohttp import ClientResponseError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from . import api
@@ -17,7 +17,15 @@ from .coordinator import AutomowerDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.LAWN_MOWER, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.DEVICE_TRACKER,
+    Platform.LAWN_MOWER,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -35,7 +43,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     automower_api = AutomowerSession(api_api)
     try:
         await api_api.async_get_access_token()
-    except ClientError as err:
+    except ClientResponseError as err:
+        if 400 <= err.status < 500:
+            raise ConfigEntryAuthFailed from err
         raise ConfigEntryNotReady from err
     coordinator = AutomowerDataUpdateCoordinator(hass, automower_api, entry)
     await coordinator.async_config_entry_first_refresh()
@@ -46,6 +56,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+
+    if "amc:api" not in entry.data["token"]["scope"]:
+        # We raise ConfigEntryAuthFailed here because the websocket can't be used
+        # without the scope. So only polling would be possible.
+        raise ConfigEntryAuthFailed
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
