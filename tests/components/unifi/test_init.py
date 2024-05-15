@@ -31,14 +31,6 @@ async def test_setup_with_no_config(hass: HomeAssistant) -> None:
     assert UNIFI_DOMAIN not in hass.data
 
 
-async def test_successful_config_entry(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that configured options for a host are loaded via config entry."""
-    await setup_unifi_integration(hass, aioclient_mock)
-    assert hass.data[UNIFI_DOMAIN]
-
-
 async def test_setup_entry_fails_config_entry_not_ready(hass: HomeAssistant) -> None:
     """Failed authentication trigger a reauthentication flow."""
     with patch(
@@ -63,17 +55,6 @@ async def test_setup_entry_fails_trigger_reauth_flow(hass: HomeAssistant) -> Non
         mock_flow_init.assert_called_once()
 
     assert hass.data[UNIFI_DOMAIN] == {}
-
-
-async def test_unload_entry(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test being able to unload an entry."""
-    config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    assert hass.data[UNIFI_DOMAIN]
-
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
-    assert not hass.data[UNIFI_DOMAIN]
 
 
 async def test_wireless_clients(

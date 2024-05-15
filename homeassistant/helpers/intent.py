@@ -43,6 +43,13 @@ INTENT_TOGGLE = "HassToggle"
 INTENT_GET_STATE = "HassGetState"
 INTENT_NEVERMIND = "HassNevermind"
 INTENT_SET_POSITION = "HassSetPosition"
+INTENT_START_TIMER = "HassStartTimer"
+INTENT_CANCEL_TIMER = "HassCancelTimer"
+INTENT_INCREASE_TIMER = "HassIncreaseTimer"
+INTENT_DECREASE_TIMER = "HassDecreaseTimer"
+INTENT_PAUSE_TIMER = "HassPauseTimer"
+INTENT_UNPAUSE_TIMER = "HassUnpauseTimer"
+INTENT_TIMER_STATUS = "HassTimerStatus"
 
 SLOT_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
@@ -57,9 +64,10 @@ SPEECH_TYPE_SSML = "ssml"
 def async_register(hass: HomeAssistant, handler: IntentHandler) -> None:
     """Register an intent with Home Assistant."""
     if (intents := hass.data.get(DATA_KEY)) is None:
-        intents = hass.data[DATA_KEY] = {}
+        intents = {}
+        hass.data[DATA_KEY] = intents
 
-    assert handler.intent_type is not None, "intent_type cannot be None"
+    assert getattr(handler, "intent_type", None), "intent_type should be set"
 
     if handler.intent_type in intents:
         _LOGGER.warning(
@@ -89,6 +97,7 @@ async def async_handle(
     context: Context | None = None,
     language: str | None = None,
     assistant: str | None = None,
+    device_id: str | None = None,
 ) -> IntentResponse:
     """Handle an intent."""
     handler = hass.data.get(DATA_KEY, {}).get(intent_type)
@@ -111,6 +120,7 @@ async def async_handle(
         context=context,
         language=language,
         assistant=assistant,
+        device_id=device_id,
     )
 
     try:
@@ -140,6 +150,11 @@ class InvalidSlotInfo(IntentError):
 
 class IntentHandleError(IntentError):
     """Error while handling intent."""
+
+    def __init__(self, message: str = "", response_key: str | None = None) -> None:
+        """Initialize error."""
+        super().__init__(message)
+        self.response_key = response_key
 
 
 class IntentUnexpectedError(IntentError):
@@ -702,7 +717,7 @@ def async_test_feature(state: State, feature: int, feature_name: str) -> None:
 class IntentHandler:
     """Intent handler registration."""
 
-    intent_type: str | None = None
+    intent_type: str
     slot_schema: vol.Schema | None = None
     platforms: Iterable[str] | None = []
 
@@ -1103,6 +1118,7 @@ class Intent:
         "language",
         "category",
         "assistant",
+        "device_id",
     ]
 
     def __init__(
@@ -1116,6 +1132,7 @@ class Intent:
         language: str,
         category: IntentCategory | None = None,
         assistant: str | None = None,
+        device_id: str | None = None,
     ) -> None:
         """Initialize an intent."""
         self.hass = hass
@@ -1127,6 +1144,7 @@ class Intent:
         self.language = language
         self.category = category
         self.assistant = assistant
+        self.device_id = device_id
 
     @callback
     def create_response(self) -> IntentResponse:
@@ -1207,6 +1225,7 @@ class IntentResponse:
         self.failed_results: list[IntentResponseTarget] = []
         self.matched_states: list[State] = []
         self.unmatched_states: list[State] = []
+        self.speech_slots: dict[str, Any] = {}
 
         if (self.intent is not None) and (self.intent.category == IntentCategory.QUERY):
             # speech will be the answer to the query
@@ -1281,6 +1300,11 @@ class IntentResponse:
         """Set entity states that were matched or not matched during intent handling (query)."""
         self.matched_states = matched_states
         self.unmatched_states = unmatched_states or []
+
+    @callback
+    def async_set_speech_slots(self, speech_slots: dict[str, Any]) -> None:
+        """Set slots that will be used in the response template of the default agent."""
+        self.speech_slots = speech_slots
 
     @callback
     def as_dict(self) -> dict[str, Any]:
