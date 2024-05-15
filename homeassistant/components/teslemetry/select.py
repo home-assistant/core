@@ -187,7 +187,7 @@ class TeslemetryWheelHeaterSelectEntity(TeslemetryVehicleEntity, SelectEntity):
         self.raise_for_scope()
         await self.wake_up_if_asleep()
         level = self._attr_options.index(option)
-        # AC must be on to turn on seat heater
+        # AC must be on to turn on steering wheel heater
         if level and not self.get("climate_state_is_climate_on"):
             await self.handle_command(self.api.auto_conditioning_start())
         await self.handle_command(
