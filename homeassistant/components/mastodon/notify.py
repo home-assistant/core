@@ -121,7 +121,7 @@ class MastodonNotificationService(BaseNotificationService):
 
         return mediadata
 
-    def media_type(self, media_path: Any = None) -> Any:
+    def _media_type(self, media_path: Any = None) -> Any:
         """Get media Type."""
         (media_type, _) = mimetypes.guess_type(media_path)
 
