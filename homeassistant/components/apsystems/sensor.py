@@ -117,12 +117,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     config = config_entry.runtime_data
-    coordinator = config.coordinator
     device_id = config_entry.unique_id
     assert device_id
 
     add_entities(
-        ApSystemsSensorWithDescription(coordinator, desc, device_id) for desc in SENSORS
+        ApSystemsSensorWithDescription(config, desc, device_id) for desc in SENSORS
     )
 
 
