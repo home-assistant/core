@@ -114,7 +114,7 @@ def default_language_code(hass: HomeAssistant) -> str:
 
 
 def best_matching_language_code(
-    hass: HomeAssistant, assist_language: str, agent_language: Optional[str] = None
+    hass: HomeAssistant, assist_language: str, agent_language: str | None = None
 ) -> str:
     """Get the best matching language, based on the preferred assist language and the configured agent language."""
 
