@@ -110,7 +110,7 @@ class MastodonNotificationService(BaseNotificationService):
             except MastodonAPIError:
                 LOGGER.error("Unable to send message")
 
-    def upload_media(self, media_path: Any = None) -> Any:
+    def _upload_media(self, media_path: Any = None) -> Any:
         """Upload media."""
         with open(media_path, "rb"):
             media_type = self.media_type(media_path)
