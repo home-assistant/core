@@ -87,9 +87,6 @@ class IntentTool(Tool):
         intent_handler: intent.IntentHandler,
     ) -> None:
         """Init the class."""
-        if intent_handler.intent_type is None:
-            raise HomeAssistantError("intent type cannot be None")
-
         self.name = intent_handler.intent_type
         self.description = f"Execute Home Assistant {self.name} intent"
         self.parameters = intent_handler.effective_slot_schema
