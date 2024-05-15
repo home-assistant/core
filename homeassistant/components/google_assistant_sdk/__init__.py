@@ -175,7 +175,7 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
         language = best_matching_language_code(
             self.hass,
             user_input.language,
-            self.entry.options.get(CONF_LANGUAGE_CODE, None),
+            self.entry.options.get(CONF_LANGUAGE_CODE),
         )
 
         if not self.assistant or language != self.language:
