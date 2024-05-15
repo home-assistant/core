@@ -71,6 +71,9 @@ class TimerInfo:
     area_id: str | None = None
     """Id of area that the device belongs to."""
 
+    area_name: str | None = None
+    """Normalized name of the area that the device belongs to."""
+
     floor_id: str | None = None
     """Id of floor that the device's area belongs to."""
 
@@ -90,7 +93,7 @@ class TimerInfo:
         if self.name is None:
             return None
 
-        return self.name.strip().casefold()
+        return _normalize_name(self.name)
 
     def cancel(self) -> None:
         """Cancel the timer."""
@@ -223,6 +226,7 @@ class TimerManager:
             if device.area_id and (
                 area := area_registry.async_get_area(device.area_id)
             ):
+                timer.area_name = _normalize_name(area.name)
                 timer.floor_id = area.floor_id
 
         self.timers[timer_id] = timer
@@ -422,9 +426,22 @@ def _find_timer(
         has_filter = True
         name = slots["name"]["value"]
         assert name is not None
-        name_norm = name.strip().casefold()
+        name_norm = _normalize_name(name)
 
         matching_timers = [t for t in matching_timers if t.name_normalized == name_norm]
+        if len(matching_timers) == 1:
+            # Only 1 match
+            return matching_timers[0]
+
+    # Search by area name
+    area_name: str | None = None
+    if "area" in slots:
+        has_filter = True
+        area_name = slots["area"]["value"]
+        assert area_name is not None
+        area_name_norm = _normalize_name(area_name)
+
+        matching_timers = [t for t in matching_timers if t.area_name == area_name_norm]
         if len(matching_timers) == 1:
             # Only 1 match
             return matching_timers[0]
@@ -501,8 +518,9 @@ def _find_timer(
         raise MultipleTimersMatchedError
 
     _LOGGER.warning(
-        "Timer not found: name=%s, hours=%s, minutes=%s, seconds=%s, device_id=%s",
+        "Timer not found: name=%s, area=%s, hours=%s, minutes=%s, seconds=%s, device_id=%s",
         name,
+        area_name,
         start_hours,
         start_minutes,
         start_seconds,
@@ -524,9 +542,21 @@ def _find_timers(
     if "name" in slots:
         name = slots["name"]["value"]
         assert name is not None
-        name_norm = name.strip().casefold()
+        name_norm = _normalize_name(name)
 
         matching_timers = [t for t in matching_timers if t.name_normalized == name_norm]
+        if not matching_timers:
+            # No matches
+            return matching_timers
+
+    # Filter by area name
+    area_name: str | None = None
+    if "area" in slots:
+        area_name = slots["area"]["value"]
+        assert area_name is not None
+        area_name_norm = _normalize_name(area_name)
+
+        matching_timers = [t for t in matching_timers if t.area_name == area_name_norm]
         if not matching_timers:
             # No matches
             return matching_timers
@@ -588,6 +618,11 @@ def _find_timers(
     matching_timers.sort(key=area_floor_sort)
 
     return matching_timers
+
+
+def _normalize_name(name: str) -> str:
+    """Normalize name for comparison."""
+    return name.strip().casefold()
 
 
 def _get_total_seconds(slots: dict[str, Any]) -> int:
@@ -655,6 +690,7 @@ class CancelTimerIntentHandler(intent.IntentHandler):
     slot_schema = {
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
+        vol.Optional("area"): cv.string,
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -677,6 +713,7 @@ class IncreaseTimerIntentHandler(intent.IntentHandler):
         vol.Any("hours", "minutes", "seconds"): cv.positive_int,
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
+        vol.Optional("area"): cv.string,
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -700,6 +737,7 @@ class DecreaseTimerIntentHandler(intent.IntentHandler):
         vol.Required(vol.Any("hours", "minutes", "seconds")): cv.positive_int,
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
+        vol.Optional("area"): cv.string,
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -722,6 +760,7 @@ class PauseTimerIntentHandler(intent.IntentHandler):
     slot_schema = {
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
+        vol.Optional("area"): cv.string,
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -743,6 +782,7 @@ class UnpauseTimerIntentHandler(intent.IntentHandler):
     slot_schema = {
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
+        vol.Optional("area"): cv.string,
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -764,6 +804,7 @@ class TimerStatusIntentHandler(intent.IntentHandler):
     slot_schema = {
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
+        vol.Optional("area"): cv.string,
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
