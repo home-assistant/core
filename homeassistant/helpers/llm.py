@@ -10,6 +10,7 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.climate.intent import INTENT_GET_TEMPERATURE
 from homeassistant.components.weather.intent import INTENT_GET_WEATHER
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -19,7 +20,12 @@ from . import intent
 
 _LOGGER = logging.getLogger(__name__)
 
-IGNORE_INTENTS = [intent.INTENT_NEVERMIND, intent.INTENT_GET_STATE, INTENT_GET_WEATHER]
+IGNORE_INTENTS = [
+    intent.INTENT_NEVERMIND,
+    intent.INTENT_GET_STATE,
+    INTENT_GET_WEATHER,
+    INTENT_GET_TEMPERATURE,
+]
 
 
 @dataclass(slots=True)
