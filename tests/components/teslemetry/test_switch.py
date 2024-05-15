@@ -25,7 +25,6 @@ from . import assert_entities, setup_platform
 from .const import COMMAND_OK
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_switch(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -45,7 +44,7 @@ async def test_switch_offline(
 
     mock_vehicle_data.side_effect = VehicleOffline
     await setup_platform(hass, [Platform.SWITCH])
-    state = hass.states.get("switch.test_defrost")
+    state = hass.states.get("switch.test_auto_seat_climate_left")
     assert state.state == STATE_UNKNOWN
 
 
@@ -53,44 +52,44 @@ async def test_switch_offline(
 @pytest.mark.parametrize(
     ("name", "on", "off"),
     [
-        ("charge", "VehicleSpecific.charge_start", "VehicleSpecific.charge_stop"),
+        ("test_charge", "VehicleSpecific.charge_start", "VehicleSpecific.charge_stop"),
         (
-            "auto_seat_climate_left",
+            "test_auto_seat_climate_left",
             "VehicleSpecific.remote_auto_seat_climate_request",
             "VehicleSpecific.remote_auto_seat_climate_request",
         ),
         (
-            "auto_seat_climate_right",
+            "test_auto_seat_climate_right",
             "VehicleSpecific.remote_auto_seat_climate_request",
             "VehicleSpecific.remote_auto_seat_climate_request",
         ),
         (
-            "auto_steering_wheel_heater",
+            "test_auto_steering_wheel_heater",
             "VehicleSpecific.remote_auto_steering_wheel_heat_climate_request",
             "VehicleSpecific.remote_auto_steering_wheel_heat_climate_request",
         ),
         (
-            "defrost",
+            "test_defrost",
             "VehicleSpecific.set_preconditioning_max",
             "VehicleSpecific.set_preconditioning_max",
         ),
         (
-            "allow_charging_from_grid",
+            "energy_site_allow_charging_from_grid",
             "EnergySpecific.storm_mode",
             "EnergySpecific.storm_mode",
         ),
         (
-            "storm_mode",
+            "energy_site_storm_mode",
             "EnergySpecific.grid_import_export",
             "EnergySpecific.grid_import_export",
         ),
         (
-            "sentry_mode",
+            "test_sentry_mode",
             "VehicleSpecific.set_sentry_mode",
             "VehicleSpecific.set_sentry_mode",
         ),
         (
-            "valet_mode",
+            "test_valet_mode",
             "VehicleSpecific.set_valet_mode",
             "VehicleSpecific.set_valet_mode",
         ),
@@ -101,7 +100,7 @@ async def test_switch_services(hass: HomeAssistant, name, on, off) -> None:
 
     await setup_platform(hass, [Platform.SWITCH])
 
-    entity_id = f"switch.test_{name}"
+    entity_id = f"switch.{name}"
     with patch(
         f"homeassistant.components.teslemetry.{on}",
         return_value=COMMAND_OK,
