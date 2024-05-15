@@ -3495,7 +3495,7 @@ async def test_thread_safety_message(hass: HomeAssistant) -> None:
         RuntimeError,
         match=re.escape(
             "Detected code that calls test from a thread other than the event loop, "
-            "which is a non-thread-safe operation and may cause a crash. For more "
+            "which may cause Home Assistant to crash or data to corrupt. For more "
             "information, see "
             "https://developers.home-assistant.io/docs/asyncio_thread_safety/#test"
             ". Please report this issue.",
