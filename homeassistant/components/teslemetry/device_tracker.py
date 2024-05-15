@@ -1,4 +1,4 @@
-"""Device Tracker platform for Teslemetry integration."""
+"""Device tracker platform for Teslemetry integration."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ async def async_setup_entry(
 
 
 class TeslemetryDeviceTrackerEntity(TeslemetryVehicleEntity, TrackerEntity):
-    """Base class for Teslemetry Tracker Entities."""
+    """Base class for Teslemetry tracker entities."""
 
     lat_key: str
     lon_key: str
@@ -65,7 +65,7 @@ class TeslemetryDeviceTrackerEntity(TeslemetryVehicleEntity, TrackerEntity):
 
 
 class TeslemetryDeviceTrackerLocationEntity(TeslemetryDeviceTrackerEntity):
-    """Vehicle Location Device Tracker Class."""
+    """Vehicle location device tracker class."""
 
     key = "location"
     lat_key = "drive_state_latitude"
@@ -73,7 +73,7 @@ class TeslemetryDeviceTrackerLocationEntity(TeslemetryDeviceTrackerEntity):
 
 
 class TeslemetryDeviceTrackerRouteEntity(TeslemetryDeviceTrackerEntity):
-    """Vehicle Navigation Device Tracker Class."""
+    """Vehicle navigation device tracker class."""
 
     key = "route"
     lat_key = "drive_state_active_route_latitude"
