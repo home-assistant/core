@@ -38,7 +38,6 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         key="last_updated",
         translation_key="last_update",
         device_class=SensorDeviceClass.TIMESTAMP,
-        # value=as_local,
     ),
     SolarLogSensorEntityDescription(
         key="power_ac",
