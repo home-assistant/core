@@ -163,7 +163,7 @@ async def test_template_state_boolean_off(hass: HomeAssistant, start_ha) -> None
     ],
 )
 async def test_template_syntax_error(hass: HomeAssistant, start_ha) -> None:
-    """Test templating syntax error."""
+    """Test templating syntax errors don't create entities."""
     assert hass.states.async_all("lock") == []
 
 
@@ -361,6 +361,45 @@ async def test_lock_actions_fail_with_invalid_code(
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            lock.DOMAIN: {
+                **OPTIMISTIC_LOCK_CONFIG,
+                "value_template": "{{ 1 == 1 }}",
+                "code_format_template": "{{ 1/0 }}",
+            }
+        },
+    ],
+)
+async def test_lock_actions_execute_with_code_template_rendering_error(
+    hass: HomeAssistant, start_ha, calls
+) -> None:
+    """Test lock code format rendering fails are ignored."""
+    await hass.services.async_call(
+        lock.DOMAIN,
+        lock.SERVICE_LOCK,
+        {ATTR_ENTITY_ID: "lock.template_lock"},
+    )
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        lock.DOMAIN,
+        lock.SERVICE_UNLOCK,
+        {ATTR_ENTITY_ID: "lock.template_lock", ATTR_CODE: "any-value"},
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 2
+    assert calls[0].data["action"] == "lock"
+    assert calls[0].data["caller"] == "lock.template_lock"
+    assert calls[0].data["code"] is None
+    assert calls[1].data["action"] == "unlock"
+    assert calls[1].data["caller"] == "lock.template_lock"
+    assert calls[1].data["code"] == "any-value"
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])
 @pytest.mark.parametrize("action", [lock.SERVICE_LOCK, lock.SERVICE_UNLOCK])
 @pytest.mark.parametrize(
     "config",
@@ -396,6 +435,51 @@ async def test_actions_with_none_as_codeformat_ignores_code(
     assert calls[0].data["action"] == action
     assert calls[0].data["caller"] == "lock.template_lock"
     assert calls[0].data["code"] == "any code"
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])
+@pytest.mark.parametrize("action", [lock.SERVICE_LOCK, lock.SERVICE_UNLOCK])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            lock.DOMAIN: {
+                **OPTIMISTIC_LOCK_CONFIG,
+                "value_template": "{{ states.switch.test_state.state }}",
+                "code_format_template": "[12]{1",
+            }
+        },
+    ],
+)
+async def test_actions_with_invalid_regexp_as_codeformat_never_execute(
+    hass: HomeAssistant, action, start_ha, calls
+) -> None:
+    """Test lock actions don't execute with invalid regexp."""
+    await setup.async_setup_component(hass, "switch", {})
+    hass.states.async_set("switch.test_state", STATE_OFF)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lock.template_lock")
+    assert state.state == lock.STATE_UNLOCKED
+
+    await hass.services.async_call(
+        lock.DOMAIN,
+        action,
+        {ATTR_ENTITY_ID: "lock.template_lock", ATTR_CODE: "1"},
+    )
+    await hass.services.async_call(
+        lock.DOMAIN,
+        action,
+        {ATTR_ENTITY_ID: "lock.template_lock", ATTR_CODE: "x"},
+    )
+    await hass.services.async_call(
+        lock.DOMAIN,
+        action,
+        {ATTR_ENTITY_ID: "lock.template_lock"},
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 0
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])
