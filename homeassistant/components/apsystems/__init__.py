@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from APsystemsEZ1 import APsystemsEZ1M
 
 from homeassistant.config_entries import ConfigEntry
@@ -15,12 +17,20 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 type ApsystemsConfigEntry = ConfigEntry[ApSystemsDataCoordinator]
 
 
+@dataclass
+class ApSystemsData:
+    """Store runtime data."""
+
+    coordinator: ApSystemsDataCoordinator
+    device_id: str
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ApsystemsConfigEntry) -> bool:
     """Set up this integration using UI."""
     api = APsystemsEZ1M(ip_address=entry.data[CONF_IP_ADDRESS], timeout=8)
     coordinator = ApSystemsDataCoordinator(hass, api)
     await coordinator.async_config_entry_first_refresh()
-    entry.runtime_data = coordinator
+    entry.runtime_data = ApSystemsData(coordinator=coordinator, api=api)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
