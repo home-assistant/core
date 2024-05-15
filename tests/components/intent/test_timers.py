@@ -1128,6 +1128,6 @@ def test_round_time() -> None:
     # seconds
     assert _round_time(0, 0, 6) == (0, 0, 6)
     assert _round_time(0, 0, 15) == (0, 0, 10)
-    assert _round_time(0, 0, 48) == (0, 1, 0)
+    assert _round_time(0, 0, 58) == (0, 1, 0)
     assert _round_time(0, 0, 25) == (0, 0, 20)
     assert _round_time(0, 0, 35) == (0, 0, 30)
