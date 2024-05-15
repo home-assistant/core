@@ -2,9 +2,12 @@
 
 from enum import StrEnum
 
-from deebot_client.events import LifeSpan
+from deebot_client.events import LifeSpan, PositionType
 
 DOMAIN = "ecovacs"
+
+ATTRIBUTE_POSITION_X = "x"
+ATTRIBUTE_POSITION_Y = "y"
 
 CONF_CONTINENT = "continent"
 CONF_OVERRIDE_REST_URL = "override_rest_url"
@@ -17,6 +20,11 @@ SUPPORTED_LIFESPANS = (
     LifeSpan.FILTER,
     LifeSpan.LENS_BRUSH,
     LifeSpan.SIDE_BRUSH,
+)
+
+SUPPORTED_POSITION_TYPES = (
+    PositionType.DEEBOT,
+    PositionType.CHARGER,
 )
 
 
