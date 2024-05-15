@@ -461,8 +461,6 @@ omit =
     homeassistant/components/freebox/camera.py
     homeassistant/components/freebox/home_base.py
     homeassistant/components/freebox/switch.py
-    homeassistant/components/fritz/coordinator.py
-    homeassistant/components/fritz/device_tracker.py
     homeassistant/components/fritz/services.py
     homeassistant/components/fritz/switch.py
     homeassistant/components/fritzbox_callmonitor/__init__.py
