@@ -22,9 +22,6 @@ class HassEnforceCoordinatorModule(BaseChecker):
 
     def visit_classdef(self, node: nodes.ClassDef) -> None:
         """Check if derived data update coordinator is placed in its own module."""
-        if self.linter.config.ignore_wrong_coordinator_module:
-            return
-
         root_name = node.root().name
 
         # we only want to check component update coordinators
