@@ -14,7 +14,6 @@ from deebot_client.events import (
     LifeSpan,
     LifeSpanEvent,
     NetworkInfoEvent,
-    Position,
     PositionsEvent,
     PositionType,
     StatsEvent,
@@ -181,15 +180,11 @@ class EcovacsPositionSensorEntityDescription(SensorEntityDescription):
     """Ecovacs position sensor entity description."""
 
     position_type: PositionType
-    value_fn: Callable[[PositionsEvent], Position | None]
 
 
 POSITION_ENTITY_DESCRIPTIONS = tuple(
     EcovacsPositionSensorEntityDescription(
         position_type=position_type,
-        value_fn=lambda e, position_type=position_type: next(
-            iter([p for p in e.positions if p.type == position_type]), None
-        ),
         key=f"position_{position_type.name.lower()}",
         translation_key=f"position_{position_type.name.lower()}",
         entity_registry_enabled_default=False,
@@ -215,6 +210,11 @@ async def async_setup_entry(
         for device in controller.devices(Capabilities)
         for description in LIFESPAN_ENTITY_DESCRIPTIONS
         if description.component in device.capabilities.life_span.types
+    )
+    entities.extend(
+        EcovacsPositionSensor(device, device.capabilities.map, description)
+        for device in controller.devices(Capabilities)
+        for description in POSITION_ENTITY_DESCRIPTIONS
     )
     entities.extend(
         EcovacsErrorSensor(device, capability)
@@ -281,15 +281,14 @@ class EcovacsPositionSensor(
         await super().async_added_to_hass()
 
         async def on_event(event: PositionsEvent) -> None:
-            if event.type == self.entity_description.component:
-                if position := self.entity_description.value_fn(event):
-                    self._attr_native_value = position
+            for position in event.positions:
+                if position.type == self.entity_description.position_type:
+                    self._attr_native_value = position.type
                     self._attr_extra_state_attributes = {
                         ATTRIBUTE_POSITION_X: position.x,
                         ATTRIBUTE_POSITION_Y: position.y,
                     }
-
-                self.async_write_ha_state()
+                    self.async_write_ha_state()
 
         self._subscribe(self._capability.event, on_event)
 
