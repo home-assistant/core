@@ -67,7 +67,7 @@ def async_register(hass: HomeAssistant, handler: IntentHandler) -> None:
         intents = {}
         hass.data[DATA_KEY] = intents
 
-    assert handler.intent_type is not None, "intent_type cannot be None"
+    assert getattr(handler, "intent_type", None), "intent_type should be set"
 
     if handler.intent_type in intents:
         _LOGGER.warning(
@@ -717,7 +717,7 @@ def async_test_feature(state: State, feature: int, feature_name: str) -> None:
 class IntentHandler:
     """Intent handler registration."""
 
-    intent_type: str | None = None
+    intent_type: str
     slot_schema: vol.Schema | None = None
     platforms: Iterable[str] | None = []
 
