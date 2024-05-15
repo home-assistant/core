@@ -66,18 +66,15 @@ class PicnicCart(TodoListEntity, CoordinatorEntity[PicnicUpdateCoordinator]):
 
         _LOGGER.debug(self.coordinator.data["cart_data"]["items"])
 
-        items = []
-        for item in self.coordinator.data["cart_data"]["items"]:
-            for article in item["items"]:
-                items.append(
-                    TodoItem(
-                        summary=f"{article['name']} ({article['unit_quantity']})",
-                        uid=f"{item['id']}-{article['id']}",
-                        status=TodoItemStatus.NEEDS_ACTION,  # We set 'NEEDS_ACTION' so they count as state
-                    )
-                )
-
-        return items
+        return [
+            TodoItem(
+                summary=f"{article['name']} ({article['unit_quantity']})",
+                uid=f"{item['id']}-{article['id']}",
+                status=TodoItemStatus.NEEDS_ACTION,  # We set 'NEEDS_ACTION' so they count as state
+            )
+            for item in self.coordinator.data["cart_data"]["items"]
+            for article in item["items"]
+        ]
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add item to shopping cart."""

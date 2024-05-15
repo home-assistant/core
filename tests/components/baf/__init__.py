@@ -29,7 +29,6 @@ class MockBAFDevice(Device):
         """Mock async_wait_available."""
         if self._async_wait_available_side_effect:
             raise self._async_wait_available_side_effect
-        return
 
     def async_run(self):
         """Mock async_run."""

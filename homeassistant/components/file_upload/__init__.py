@@ -128,7 +128,7 @@ class FileUploadView(HomeAssistantView):
     async def _upload_file(self, request: web.Request) -> web.Response:
         """Handle uploaded file."""
         # Increase max payload
-        request._client_max_size = MAX_SIZE  # pylint: disable=protected-access
+        request._client_max_size = MAX_SIZE  # noqa: SLF001
 
         reader = await request.multipart()
         file_field_reader = await reader.next()
@@ -154,9 +154,9 @@ class FileUploadView(HomeAssistantView):
 
         file_upload_data: FileUploadData = hass.data[DOMAIN]
         file_dir = file_upload_data.file_dir(file_id)
-        queue: SimpleQueue[
-            tuple[bytes, asyncio.Future[None] | None] | None
-        ] = SimpleQueue()
+        queue: SimpleQueue[tuple[bytes, asyncio.Future[None] | None] | None] = (
+            SimpleQueue()
+        )
 
         def _sync_queue_consumer() -> None:
             file_dir.mkdir()
@@ -203,13 +203,13 @@ class FileUploadView(HomeAssistantView):
         hass = request.app[KEY_HASS]
 
         if DOMAIN not in hass.data:
-            raise web.HTTPNotFound()
+            raise web.HTTPNotFound
 
         file_id = data["file_id"]
         file_upload_data: FileUploadData = hass.data[DOMAIN]
 
         if file_upload_data.files.pop(file_id, None) is None:
-            raise web.HTTPNotFound()
+            raise web.HTTPNotFound
 
         await hass.async_add_executor_job(
             lambda: shutil.rmtree(file_upload_data.file_dir(file_id))

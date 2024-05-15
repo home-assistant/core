@@ -50,8 +50,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 def get_user_from_client(api_key, api_token):
     """Get the user name from Coinbase API credentials."""
     client = Client(api_key, api_token)
-    user = client.get_current_user()
-    return user
+    return client.get_current_user()
 
 
 async def validate_api(hass: HomeAssistant, data):
@@ -131,7 +130,7 @@ class CoinbaseConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth_secret"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -189,7 +188,7 @@ class OptionsFlowHandler(OptionsFlow):
                 errors["base"] = "currency_unavailable"
             except ExchangeRateUnavailable:
                 errors["base"] = "exchange_rate_unavailable"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

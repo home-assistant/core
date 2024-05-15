@@ -142,8 +142,8 @@ def session_scope(
         if session.get_transaction() and not read_only:
             need_rollback = True
             session.commit()
-    except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.exception("Error executing query: %s", err)
+    except Exception as err:
+        _LOGGER.exception("Error executing query")
         if need_rollback:
             session.rollback()
         if not exception_filter or not exception_filter(err):
@@ -160,7 +160,7 @@ def execute(
     This method also retries a few times in the case of stale connections.
     """
     debug = _LOGGER.isEnabledFor(logging.DEBUG)
-    for tryno in range(0, RETRIES):
+    for tryno in range(RETRIES):
         try:
             if debug:
                 timer_start = time.perf_counter()
@@ -192,13 +192,14 @@ def execute(
                         elapsed,
                     )
 
-            return result
         except SQLAlchemyError as err:
             _LOGGER.error("Error executing query: %s", err)
 
             if tryno == RETRIES - 1:
                 raise
             time.sleep(QUERY_RETRY_WAIT)
+        else:
+            return result
 
     # Unreachable
     raise RuntimeError  # pragma: no cover
@@ -645,7 +646,7 @@ def retryable_database_job(
                 return job(instance, *args, **kwargs)
             except OperationalError as err:
                 if _is_retryable_error(instance, err):
-                    assert isinstance(err.orig, BaseException)
+                    assert isinstance(err.orig, BaseException)  # noqa: PT017
                     _LOGGER.info(
                         "%s; %s not completed, retrying", err.orig.args[1], description
                     )
@@ -685,18 +686,19 @@ def database_job_retry_wrapper(
             for attempt in range(attempts):
                 try:
                     job(instance, *args, **kwargs)
-                    return
                 except OperationalError as err:
                     if attempt == attempts - 1 or not _is_retryable_error(
                         instance, err
                     ):
                         raise
-                    assert isinstance(err.orig, BaseException)
+                    assert isinstance(err.orig, BaseException)  # noqa: PT017
                     _LOGGER.info(
                         "%s; %s failed, retrying", err.orig.args[1], description
                     )
                     time.sleep(instance.db_retry_wait)
                     # Failed with retryable error
+                else:
+                    return
 
         return wrapper
 

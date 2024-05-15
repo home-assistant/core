@@ -134,8 +134,7 @@ class NX584Watcher(threading.Thread):
         zone = event["zone"]
         if not (zone_sensor := self._zone_sensors.get(zone)):
             return
-        # pylint: disable-next=protected-access
-        zone_sensor._zone["state"] = event["zone_state"]
+        zone_sensor._zone["state"] = event["zone_state"]  # noqa: SLF001
         zone_sensor.schedule_update_ha_state()
 
     def _process_events(self, events):

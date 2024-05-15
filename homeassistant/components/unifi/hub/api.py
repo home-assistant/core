@@ -56,7 +56,6 @@ async def get_unifi_api(
     try:
         async with asyncio.timeout(10):
             await api.login()
-        return api
 
     except aiounifi.Unauthorized as err:
         LOGGER.warning(
@@ -90,3 +89,5 @@ async def get_unifi_api(
     except aiounifi.AiounifiException as err:
         LOGGER.exception("Unknown UniFi Network communication error occurred: %s", err)
         raise AuthenticationRequired from err
+
+    return api

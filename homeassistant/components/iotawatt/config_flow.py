@@ -31,7 +31,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
         is_connected = await iotawatt.connect()
     except CONNECTION_ERRORS:
         return {"base": "cannot_connect"}
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Unexpected exception")
         return {"base": "unknown"}
 

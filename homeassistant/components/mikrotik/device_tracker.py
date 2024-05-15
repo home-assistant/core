@@ -17,7 +17,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
-from .hub import Device, MikrotikDataUpdateCoordinator
+from .coordinator import Device, MikrotikDataUpdateCoordinator
 
 
 async def async_setup_entry(

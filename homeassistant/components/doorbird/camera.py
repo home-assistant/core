@@ -107,8 +107,6 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
                 response = await websession.get(self._url)
 
             self._last_image = await response.read()
-            self._last_update = now
-            return self._last_image
         except TimeoutError:
             _LOGGER.error("DoorBird %s: Camera image timed out", self.name)
             return self._last_image
@@ -117,6 +115,9 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
                 "DoorBird %s: Error getting camera image: %s", self.name, error
             )
             return self._last_image
+
+        self._last_update = now
+        return self._last_image
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to events."""

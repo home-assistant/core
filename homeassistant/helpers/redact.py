@@ -34,15 +34,13 @@ def partial_redact(
 @overload
 def async_redact_data(  # type: ignore[overload-overlap]
     data: Mapping, to_redact: Iterable[Any] | Mapping[Any, Callable[[_ValueT], _ValueT]]
-) -> dict:
-    ...
+) -> dict: ...
 
 
 @overload
 def async_redact_data(
     data: _T, to_redact: Iterable[Any] | Mapping[Any, Callable[[_ValueT], _ValueT]]
-) -> _T:
-    ...
+) -> _T: ...
 
 
 @callback

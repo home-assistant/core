@@ -1,48 +1,20 @@
 """Melnor integration models."""
 
 from collections.abc import Callable
-from datetime import timedelta
-import logging
 from typing import TypeVar
 
 from melnor_bluetooth.device import Device, Valve
 
 from homeassistant.components.number import EntityDescription
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
-
-
-class MelnorDataUpdateCoordinator(DataUpdateCoordinator[Device]):  # pylint: disable=hass-enforce-coordinator-module
-    """Melnor data update coordinator."""
-
-    _device: Device
-
-    def __init__(self, hass: HomeAssistant, device: Device) -> None:
-        """Initialize my coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name="Melnor Bluetooth",
-            update_interval=timedelta(seconds=5),
-        )
-        self._device = device
-
-    async def _async_update_data(self):
-        """Update the device state."""
-
-        await self._device.fetch_state()
-        return self._device
+from .coordinator import MelnorDataUpdateCoordinator
 
 
-class MelnorBluetoothEntity(CoordinatorEntity[MelnorDataUpdateCoordinator]):  # pylint: disable=hass-enforce-coordinator-module
+class MelnorBluetoothEntity(CoordinatorEntity[MelnorDataUpdateCoordinator]):
     """Base class for melnor entities."""
 
     _device: Device
@@ -117,14 +89,15 @@ def get_entities_for_valves(
     ],
 ) -> list[CoordinatorEntity[MelnorDataUpdateCoordinator]]:
     """Get descriptions for valves."""
-    entities = []
+    entities: list[CoordinatorEntity[MelnorDataUpdateCoordinator]] = []
 
     # This device may not have 4 valves total, but the library will only expose the right number of valves
     for i in range(1, 5):
         valve = coordinator.data[f"zone{i}"]
 
         if valve is not None:
-            for description in descriptions:
-                entities.append(function(valve, description))
+            entities.extend(
+                function(valve, description) for description in descriptions
+            )
 
     return entities
