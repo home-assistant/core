@@ -333,7 +333,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         return self._current_datetime.strftime(FMT_TIME)
 
     @property
-    def capability_attributes(self) -> dict:
+    def capability_attributes(self) -> dict[str, Any]:
         """Return the capability attributes."""
         return {
             CONF_HAS_DATE: self.has_date,

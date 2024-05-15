@@ -346,8 +346,9 @@ async def test_component_base_exception_setup(hass: HomeAssistant) -> None:
 
     mock_integration(hass, MockModule("comp", setup=exception_setup))
 
-    with pytest.raises(BaseException):
+    with pytest.raises(BaseException) as exc_info:
         await setup.async_setup_component(hass, "comp", {})
+    assert str(exc_info.value) == "fail!"
 
     assert "comp" not in hass.config.components
 
@@ -738,7 +739,6 @@ async def test_integration_only_setup_entry(hass: HomeAssistant) -> None:
 async def test_async_start_setup_running(hass: HomeAssistant) -> None:
     """Test setup started context manager does nothing when running."""
     assert hass.state is CoreState.running
-    setup_started: dict[tuple[str, str | None], float]
     setup_started = hass.data.setdefault(setup.DATA_SETUP_STARTED, {})
 
     with setup.async_start_setup(
@@ -752,7 +752,6 @@ async def test_async_start_setup_config_entry(
 ) -> None:
     """Test setup started keeps track of setup times with a config entry."""
     hass.set_state(CoreState.not_running)
-    setup_started: dict[tuple[str, str | None], float]
     setup_started = hass.data.setdefault(setup.DATA_SETUP_STARTED, {})
     setup_time = setup._setup_times(hass)
 
@@ -863,7 +862,6 @@ async def test_async_start_setup_config_entry_late_platform(
 ) -> None:
     """Test setup started tracks config entry time with a late platform load."""
     hass.set_state(CoreState.not_running)
-    setup_started: dict[tuple[str, str | None], float]
     setup_started = hass.data.setdefault(setup.DATA_SETUP_STARTED, {})
     setup_time = setup._setup_times(hass)
 
@@ -918,7 +916,6 @@ async def test_async_start_setup_config_entry_platform_wait(
 ) -> None:
     """Test setup started tracks wait time when a platform loads inside of config entry setup."""
     hass.set_state(CoreState.not_running)
-    setup_started: dict[tuple[str, str | None], float]
     setup_started = hass.data.setdefault(setup.DATA_SETUP_STARTED, {})
     setup_time = setup._setup_times(hass)
 
@@ -961,7 +958,6 @@ async def test_async_start_setup_config_entry_platform_wait(
 async def test_async_start_setup_top_level_yaml(hass: HomeAssistant) -> None:
     """Test setup started context manager keeps track of setup times with modern yaml."""
     hass.set_state(CoreState.not_running)
-    setup_started: dict[tuple[str, str | None], float]
     setup_started = hass.data.setdefault(setup.DATA_SETUP_STARTED, {})
     setup_time = setup._setup_times(hass)
 
@@ -978,7 +974,6 @@ async def test_async_start_setup_top_level_yaml(hass: HomeAssistant) -> None:
 async def test_async_start_setup_platform_integration(hass: HomeAssistant) -> None:
     """Test setup started keeps track of setup times a platform integration."""
     hass.set_state(CoreState.not_running)
-    setup_started: dict[tuple[str, str | None], float]
     setup_started = hass.data.setdefault(setup.DATA_SETUP_STARTED, {})
     setup_time = setup._setup_times(hass)
 
@@ -1013,7 +1008,6 @@ async def test_async_start_setup_legacy_platform_integration(
 ) -> None:
     """Test setup started keeps track of setup times for a legacy platform integration."""
     hass.set_state(CoreState.not_running)
-    setup_started: dict[tuple[str, str | None], float]
     setup_started = hass.data.setdefault(setup.DATA_SETUP_STARTED, {})
     setup_time = setup._setup_times(hass)
 

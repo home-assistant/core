@@ -43,6 +43,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
+    HomeAssistantError,
     ServiceValidationError,
 )
 from homeassistant.helpers import (
@@ -108,14 +109,31 @@ async def async_setup_entry(
             supported = await version.check_supported()
     except AuthenticationException as exception:
         _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
-        raise ConfigEntryAuthFailed from exception
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+            translation_placeholders={
+                "title": entry.title,
+                "host": entry.data[CONF_HOST],
+            },
+        ) from exception
     except (ConnectionClosedException, ConnectionErrorException) as exception:
         raise ConfigEntryNotReady(
-            f"Could not connect to {entry.title} ({entry.data[CONF_HOST]})."
+            translation_domain=DOMAIN,
+            translation_key="connection_failed",
+            translation_placeholders={
+                "title": entry.title,
+                "host": entry.data[CONF_HOST],
+            },
         ) from exception
     except TimeoutError as exception:
         raise ConfigEntryNotReady(
-            f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
+            translation_domain=DOMAIN,
+            translation_key="timeout",
+            translation_placeholders={
+                "title": entry.title,
+                "host": entry.data[CONF_HOST],
+            },
         ) from exception
 
     # If not supported, create an issue and raise ConfigEntryNotReady
@@ -130,7 +148,12 @@ async def async_setup_entry(
             is_fixable=False,
         )
         raise ConfigEntryNotReady(
-            "You are not running a supported version of System Bridge. Please update to the latest version."
+            translation_domain=DOMAIN,
+            translation_key="unsupported_version",
+            translation_placeholders={
+                "title": entry.title,
+                "host": entry.data[CONF_HOST],
+            },
         )
 
     coordinator = SystemBridgeDataUpdateCoordinator(
@@ -143,14 +166,31 @@ async def async_setup_entry(
             await coordinator.async_get_data(MODULES)
     except AuthenticationException as exception:
         _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
-        raise ConfigEntryAuthFailed from exception
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+            translation_placeholders={
+                "title": entry.title,
+                "host": entry.data[CONF_HOST],
+            },
+        ) from exception
     except (ConnectionClosedException, ConnectionErrorException) as exception:
         raise ConfigEntryNotReady(
-            f"Could not connect to {entry.title} ({entry.data[CONF_HOST]})."
+            translation_domain=DOMAIN,
+            translation_key="connection_failed",
+            translation_placeholders={
+                "title": entry.title,
+                "host": entry.data[CONF_HOST],
+            },
         ) from exception
     except TimeoutError as exception:
         raise ConfigEntryNotReady(
-            f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
+            translation_domain=DOMAIN,
+            translation_key="timeout",
+            translation_placeholders={
+                "title": entry.title,
+                "host": entry.data[CONF_HOST],
+            },
         ) from exception
 
     # Fetch initial data so we have data when entities subscribe
@@ -168,7 +208,12 @@ async def async_setup_entry(
                 await asyncio.sleep(1)
     except TimeoutError as exception:
         raise ConfigEntryNotReady(
-            f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
+            translation_domain=DOMAIN,
+            translation_key="timeout",
+            translation_placeholders={
+                "title": entry.title,
+                "host": entry.data[CONF_HOST],
+            },
         ) from exception
 
     hass.data.setdefault(DOMAIN, {})
@@ -208,8 +253,16 @@ async def async_setup_entry(
                     if entry.entry_id in device_entry.config_entries
                 )
             except StopIteration as exception:
-                raise vol.Invalid(f"Could not find device {device}") from exception
-        raise vol.Invalid(f"Device {device} does not exist")
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="device_not_found",
+                    translation_placeholders={"device": device},
+                ) from exception
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={"device": device},
+        )
 
     async def handle_get_process_by_id(service_call: ServiceCall) -> ServiceResponse:
         """Handle the get process by id service call."""

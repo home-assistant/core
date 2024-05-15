@@ -37,7 +37,7 @@ class MockInput:
 
 def get_mock_inputs(input_list):
     """Return list of MockInput."""
-    return [MockInput(input) for input in input_list]
+    return [MockInput(device_input) for device_input in input_list]
 
 
 @pytest.fixture(name="vizio_get_unique_id", autouse=True)
