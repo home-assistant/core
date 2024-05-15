@@ -5,9 +5,10 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from datetime import timedelta
 from enum import StrEnum
+from functools import cached_property
 import logging
 import re
-from typing import TYPE_CHECKING, Any, final
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -33,11 +34,6 @@ from .const import (
     DOMAIN,
     SERVICE_SET_VALUE,
 )
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -237,7 +233,7 @@ class TextEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_value(self, value: str) -> None:
         """Change the value."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_value(self, value: str) -> None:
         """Change the value."""

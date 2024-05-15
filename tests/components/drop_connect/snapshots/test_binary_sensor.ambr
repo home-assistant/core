@@ -41,6 +41,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.hub_drop_1_c0ffee_leak_detected',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -86,6 +87,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.hub_drop_1_c0ffee_notification_unread',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -132,6 +134,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.leak_detector_leak_detected',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -178,6 +181,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.protection_valve_leak_detected',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -224,6 +228,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.pump_controller_leak_detected',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -269,6 +274,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.pump_controller_pump_status',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -315,6 +321,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.ro_filter_leak_detected',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -360,6 +367,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.softener_reserve_capacity_in_use',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })

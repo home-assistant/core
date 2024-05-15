@@ -61,9 +61,7 @@ class FiveMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except FiveMServerOfflineError as err:
             raise UpdateFailed from err
 
-        players_list: list[str] = []
-        for player in server.players:
-            players_list.append(player.name)
+        players_list: list[str] = [player.name for player in server.players]
         players_list.sort()
 
         resources_list = server.resources

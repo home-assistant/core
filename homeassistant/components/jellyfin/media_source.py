@@ -291,7 +291,7 @@ class JellyfinSource(MediaSource):
         mime_type = _media_mime_type(track)
         thumbnail_url = self._get_thumbnail_url(track)
 
-        result = BrowseMediaSource(
+        return BrowseMediaSource(
             domain=DOMAIN,
             identifier=track_id,
             media_class=MediaClass.TRACK,
@@ -301,8 +301,6 @@ class JellyfinSource(MediaSource):
             can_expand=False,
             thumbnail=thumbnail_url,
         )
-
-        return result
 
     async def _build_movie_library(
         self, library: dict[str, Any], include_children: bool
@@ -352,7 +350,7 @@ class JellyfinSource(MediaSource):
         mime_type = _media_mime_type(movie)
         thumbnail_url = self._get_thumbnail_url(movie)
 
-        result = BrowseMediaSource(
+        return BrowseMediaSource(
             domain=DOMAIN,
             identifier=movie_id,
             media_class=MediaClass.MOVIE,
@@ -362,8 +360,6 @@ class JellyfinSource(MediaSource):
             can_expand=False,
             thumbnail=thumbnail_url,
         )
-
-        return result
 
     async def _build_tv_library(
         self, library: dict[str, Any], include_children: bool
@@ -491,7 +487,7 @@ class JellyfinSource(MediaSource):
         mime_type = _media_mime_type(episode)
         thumbnail_url = self._get_thumbnail_url(episode)
 
-        result = BrowseMediaSource(
+        return BrowseMediaSource(
             domain=DOMAIN,
             identifier=episode_id,
             media_class=MediaClass.EPISODE,
@@ -501,8 +497,6 @@ class JellyfinSource(MediaSource):
             can_expand=False,
             thumbnail=thumbnail_url,
         )
-
-        return result
 
     async def _get_children(
         self, parent_id: str, item_type: str

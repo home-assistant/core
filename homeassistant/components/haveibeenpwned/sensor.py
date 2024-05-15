@@ -49,11 +49,7 @@ def setup_platform(
     api_key = config[CONF_API_KEY]
     data = HaveIBeenPwnedData(emails, api_key)
 
-    devices = []
-    for email in emails:
-        devices.append(HaveIBeenPwnedSensor(data, email))
-
-    add_entities(devices)
+    add_entities(HaveIBeenPwnedSensor(data, email) for email in emails)
 
 
 class HaveIBeenPwnedSensor(SensorEntity):

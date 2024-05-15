@@ -7,5 +7,5 @@
   "iot_class": "calculated",
   "loggers": ["yt_dlp"],
   "quality_scale": "internal",
-  "requirements": ["yt-dlp==2023.11.16"]
+  "requirements": ["yt-dlp==2024.04.09"]
 }

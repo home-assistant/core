@@ -30,13 +30,12 @@ async def async_setup_entry(
 
     device_types = CONST.TYPE_SWITCH
 
-    switches = []
     partial_func = partial(data.get_devices, generic_type=device_types)
     devices = await hass.async_add_executor_job(partial_func)
-    for device in devices:
-        switches.append(LupusecSwitch(device, config_entry.entry_id))
 
-    async_add_entities(switches)
+    async_add_entities(
+        LupusecSwitch(device, config_entry.entry_id) for device in devices
+    )
 
 
 class LupusecSwitch(LupusecBaseSensor, SwitchEntity):

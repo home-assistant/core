@@ -82,7 +82,7 @@ def domain_data_mock(hass: HomeAssistant) -> Iterable[Mock]:
 @pytest.fixture
 def config_entry_mock() -> MockConfigEntry:
     """Mock a config entry for this platform."""
-    mock_entry = MockConfigEntry(
+    return MockConfigEntry(
         unique_id=MOCK_DEVICE_UDN,
         domain=DLNA_DOMAIN,
         data={
@@ -94,13 +94,12 @@ def config_entry_mock() -> MockConfigEntry:
         title=MOCK_DEVICE_NAME,
         options={},
     )
-    return mock_entry
 
 
 @pytest.fixture
 def config_entry_mock_no_mac() -> MockConfigEntry:
     """Mock a config entry that does not already contain a MAC address."""
-    mock_entry = MockConfigEntry(
+    return MockConfigEntry(
         unique_id=MOCK_DEVICE_UDN,
         domain=DLNA_DOMAIN,
         data={
@@ -111,7 +110,6 @@ def config_entry_mock_no_mac() -> MockConfigEntry:
         title=MOCK_DEVICE_NAME,
         options={},
     )
-    return mock_entry
 
 
 @pytest.fixture

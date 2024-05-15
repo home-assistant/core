@@ -104,13 +104,10 @@ async def async_setup_entry(
     """Set up switches for Netgear component."""
     router = hass.data[DOMAIN][entry.entry_id][KEY_ROUTER]
 
-    # Router entities
-    router_entities = []
-
-    for description in ROUTER_SWITCH_TYPES:
-        router_entities.append(NetgearRouterSwitchEntity(router, description))
-
-    async_add_entities(router_entities)
+    async_add_entities(
+        NetgearRouterSwitchEntity(router, description)
+        for description in ROUTER_SWITCH_TYPES
+    )
 
     # Entities per network device
     coordinator = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR]

@@ -1,5 +1,6 @@
 """Test the repairs websocket API."""
 
+from functools import partial
 from typing import Any
 
 import pytest
@@ -160,7 +161,7 @@ async def test_load_save_issues(hass: HomeAssistant) -> None:
         "issue_id": "issue_3",
     }
 
-    registry: ir.IssueRegistry = hass.data[ir.DATA_REGISTRY]
+    registry = hass.data[ir.DATA_REGISTRY]
     assert len(registry.issues) == 3
     issue1 = registry.async_get_issue("test", "issue_1")
     issue2 = registry.async_get_issue("test", "issue_2")
@@ -326,7 +327,7 @@ async def test_loading_issues_from_storage(
 
     await ir.async_load(hass)
 
-    registry: ir.IssueRegistry = hass.data[ir.DATA_REGISTRY]
+    registry = hass.data[ir.DATA_REGISTRY]
     assert len(registry.issues) == 3
 
 
@@ -356,5 +357,73 @@ async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) 
 
     await ir.async_load(hass)
 
-    registry: ir.IssueRegistry = hass.data[ir.DATA_REGISTRY]
+    registry = hass.data[ir.DATA_REGISTRY]
     assert len(registry.issues) == 2
+
+
+async def test_get_or_create_thread_safety(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test call async_get_or_create_from a thread."""
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls issue_registry.async_get_or_create from a thread.",
+    ):
+        await hass.async_add_executor_job(
+            partial(
+                ir.async_create_issue,
+                hass,
+                "any",
+                "any",
+                is_fixable=True,
+                severity="error",
+                translation_key="any",
+            )
+        )
+
+
+async def test_async_delete_issue_thread_safety(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test call async_delete_issue from a thread."""
+    ir.async_create_issue(
+        hass,
+        "any",
+        "any",
+        is_fixable=True,
+        severity="error",
+        translation_key="any",
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls issue_registry.async_delete from a thread.",
+    ):
+        await hass.async_add_executor_job(
+            ir.async_delete_issue,
+            hass,
+            "any",
+            "any",
+        )
+
+
+async def test_async_ignore_issue_thread_safety(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test call async_ignore_issue from a thread."""
+    ir.async_create_issue(
+        hass,
+        "any",
+        "any",
+        is_fixable=True,
+        severity="error",
+        translation_key="any",
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls issue_registry.async_ignore from a thread.",
+    ):
+        await hass.async_add_executor_job(
+            ir.async_ignore_issue, hass, "any", "any", True
+        )

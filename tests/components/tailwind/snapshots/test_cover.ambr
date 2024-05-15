@@ -9,6 +9,7 @@
     'context': <ANY>,
     'entity_id': 'cover.door_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
@@ -86,6 +87,7 @@
     'context': <ANY>,
     'entity_id': 'cover.door_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })

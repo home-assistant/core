@@ -62,7 +62,7 @@ def infrared_brightness_value_to_option(value: int) -> str | None:
 def infrared_brightness_option_to_value(option: str) -> int | None:
     """Convert infrared brightness option to value."""
     option_values = {v: k for k, v in INFRARED_BRIGHTNESS_VALUES_MAP.items()}
-    return option_values.get(option, None)
+    return option_values.get(option)
 
 
 def convert_8_to_16(value: int) -> int:
@@ -149,7 +149,7 @@ def merge_hsbk(
 
     Hue, Saturation, Brightness, Kelvin
     """
-    return [b if c is None else c for b, c in zip(base, change)]
+    return [b if c is None else c for b, c in zip(base, change, strict=False)]
 
 
 def _get_mac_offset(mac_addr: str, offset: int) -> str:

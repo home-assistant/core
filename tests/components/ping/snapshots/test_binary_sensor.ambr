@@ -104,6 +104,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.10_10_10_10',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -121,6 +122,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.10_10_10_10',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })

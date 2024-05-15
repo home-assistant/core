@@ -16,10 +16,23 @@ MOCK_SAID4 = "said4"
 
 @pytest.fixture(
     name="region",
-    params=[("EU", Region.EU, Brand.Whirlpool), ("US", Region.US, Brand.Maytag)],
+    params=[("EU", Region.EU), ("US", Region.US)],
 )
 def fixture_region(request):
     """Return a region for input."""
+    return request.param
+
+
+@pytest.fixture(
+    name="brand",
+    params=[
+        ("Whirlpool", Brand.Whirlpool),
+        ("KitchenAid", Brand.KitchenAid),
+        ("Maytag", Brand.Maytag),
+    ],
+)
+def fixture_brand(request):
+    """Return a brand for input."""
     return request.param
 
 

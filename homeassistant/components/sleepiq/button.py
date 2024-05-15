@@ -18,18 +18,11 @@ from .coordinator import SleepIQData
 from .entity import SleepIQEntity
 
 
-@dataclass(frozen=True)
-class SleepIQButtonEntityDescriptionMixin:
-    """Describes a SleepIQ Button entity."""
+@dataclass(frozen=True, kw_only=True)
+class SleepIQButtonEntityDescription(ButtonEntityDescription):
+    """Class to describe a Button entity."""
 
     press_action: Callable[[SleepIQBed], Any]
-
-
-@dataclass(frozen=True)
-class SleepIQButtonEntityDescription(
-    ButtonEntityDescription, SleepIQButtonEntityDescriptionMixin
-):
-    """Class to describe a Button entity."""
 
 
 ENTITY_DESCRIPTIONS = [

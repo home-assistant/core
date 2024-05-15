@@ -34,18 +34,11 @@ from .entity import TadoDeviceEntity, TadoZoneEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class TadoBinarySensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class TadoBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes Tado binary sensor entity."""
 
     state_fn: Callable[[Any], bool]
-
-
-@dataclass(frozen=True)
-class TadoBinarySensorEntityDescription(
-    BinarySensorEntityDescription, TadoBinarySensorEntityDescriptionMixin
-):
-    """Describes Tado binary sensor entity."""
 
     attributes_fn: Callable[[Any], dict[Any, StateType]] | None = None
 
