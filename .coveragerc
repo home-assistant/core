@@ -800,6 +800,7 @@ omit =
     homeassistant/components/microbees/sensor.py
     homeassistant/components/microbees/switch.py
     homeassistant/components/microsoft/tts.py
+    homeassistant/components/mikrotik/coordinator.py
     homeassistant/components/mill/climate.py
     homeassistant/components/mill/sensor.py
     homeassistant/components/minio/minio_helper.py
