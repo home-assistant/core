@@ -209,7 +209,8 @@
           "backup": "Backup",
           "self_consumption": "Self consumption"
         }
-      },
+      }
+    },
     "number": {
       "backup_reserve_percent": {
         "name": "Backup reserve"

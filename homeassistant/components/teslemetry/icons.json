@@ -124,7 +124,8 @@
           "backup": "mdi:battery-charging-100",
           "self_consumption": "mdi:home-battery"
         }
-      },
+      }
+    },
     "number": {
       "vehicle_state_speed_limit_mode_current_limit_mph": {
         "default": "mdi:car-speed-limiter"
