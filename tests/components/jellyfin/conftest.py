@@ -144,6 +144,8 @@ def api_artwork_side_effect(*args, **kwargs):
 def api_audio_url_side_effect(*args, **kwargs):
     """Handle variable responses for audio_url method."""
     item_id = args[0]
+    if audio_codec := kwargs.get("audio_codec"):
+        return f"http://localhost/Audio/{item_id}/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000,AudioCodec={audio_codec}"
     return f"http://localhost/Audio/{item_id}/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000"
 
 
