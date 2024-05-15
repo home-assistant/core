@@ -23,6 +23,7 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.recorder.websocket_api import UNIT_SCHEMA
 from homeassistant.components.sensor import UNIT_CONVERTERS
+from homeassistant.const import CONF_DOMAINS, CONF_EXCLUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component
@@ -38,7 +39,7 @@ from .common import (
 )
 
 from tests.common import async_fire_time_changed
-from tests.typing import WebSocketGenerator
+from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
 
 DISTANCE_SENSOR_FT_ATTRIBUTES = {
     "device_class": "distance",
@@ -130,6 +131,13 @@ VOLUME_SENSOR_M3_ATTRIBUTES_TOTAL = {
     "state_class": "total",
     "unit_of_measurement": "m³",
 }
+
+
+@pytest.fixture
+async def mock_recorder_before_hass(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> None:
+    """Set up recorder."""
 
 
 def test_converters_align_with_sensor() -> None:
@@ -3177,3 +3185,64 @@ async def test_adjust_sum_statistics_errors(
         stats = statistics_during_period(hass, zero, period="hour")
         assert stats != previous_stats
         previous_stats = stats
+
+
+async def test_recorder_recorded_entities_no_filter(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> None:
+    """Test getting the list of recorded entities without a filter."""
+    await async_setup_recorder_instance(hass, {recorder.CONF_COMMIT_INTERVAL: 0})
+    client = await hass_ws_client()
+
+    await client.send_json({"id": 1, "type": "recorder/recorded_entities"})
+    response = await client.receive_json()
+    assert response["result"] == {"entity_ids": []}
+    assert response["id"] == 1
+    assert response["success"]
+    assert response["type"] == "result"
+
+    hass.states.async_set("sensor.test", 10)
+    await async_wait_recording_done(hass)
+
+    await client.send_json({"id": 2, "type": "recorder/recorded_entities"})
+    response = await client.receive_json()
+    assert response["result"] == {"entity_ids": ["sensor.test"]}
+    assert response["id"] == 2
+    assert response["success"]
+    assert response["type"] == "result"
+
+
+async def test_recorder_recorded_entities_with_filter(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> None:
+    """Test getting the list of recorded entities with a filter."""
+    await async_setup_recorder_instance(
+        hass,
+        {
+            recorder.CONF_COMMIT_INTERVAL: 0,
+            CONF_EXCLUDE: {CONF_DOMAINS: ["sensor"]},
+        },
+    )
+    client = await hass_ws_client()
+
+    await client.send_json({"id": 1, "type": "recorder/recorded_entities"})
+    response = await client.receive_json()
+    assert response["result"] == {"entity_ids": []}
+    assert response["id"] == 1
+    assert response["success"]
+    assert response["type"] == "result"
+
+    hass.states.async_set("switch.test", 10)
+    hass.states.async_set("sensor.test", 10)
+    await async_wait_recording_done(hass)
+
+    await client.send_json({"id": 2, "type": "recorder/recorded_entities"})
+    response = await client.receive_json()
+    assert response["result"] == {"entity_ids": ["switch.test"]}
+    assert response["id"] == 2
+    assert response["success"]
+    assert response["type"] == "result"

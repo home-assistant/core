@@ -487,7 +487,7 @@ async def test_group_probe_cleanup_called(
     """Test cleanup happens when ZHA is unloaded."""
     await setup_zha()
     disc.GROUP_PROBE.cleanup = mock.Mock(wraps=disc.GROUP_PROBE.cleanup)
-    await config_entry.async_unload(hass_disable_services)
+    await hass_disable_services.config_entries.async_unload(config_entry.entry_id)
     await hass_disable_services.async_block_till_done()
     disc.GROUP_PROBE.cleanup.assert_called()
 

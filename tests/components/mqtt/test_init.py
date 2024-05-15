@@ -1927,7 +1927,7 @@ async def test_reload_entry_with_restored_subscriptions(
     hass.config.components.add(mqtt.DOMAIN)
     mqtt_client_mock.connect.return_value = 0
     with patch("homeassistant.config.load_yaml_config_file", return_value={}):
-        await entry.async_setup(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
 
     await mqtt.async_subscribe(hass, "test-topic", record_calls)
     await mqtt.async_subscribe(hass, "wild/+/card", record_calls)
@@ -4404,6 +4404,34 @@ async def test_server_sock_connect_and_disconnect(
 
     # Should have failed
     assert len(calls) == 0
+
+
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+async def test_server_sock_buffer_size(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test handling the socket buffer size fails."""
+    mqtt_mock = await mqtt_mock_entry()
+    await hass.async_block_till_done()
+    assert mqtt_mock.connected is True
+
+    mqtt_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_SUCCESS
+
+    client, server = socket.socketpair(
+        family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0
+    )
+    client.setblocking(False)
+    server.setblocking(False)
+    with patch.object(client, "setsockopt", side_effect=OSError("foo")):
+        mqtt_client_mock.on_socket_open(mqtt_client_mock, None, client)
+        mqtt_client_mock.on_socket_register_write(mqtt_client_mock, None, client)
+        await hass.async_block_till_done()
+    assert "Unable to increase the socket buffer size" in caplog.text
 
 
 @patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
