@@ -24,7 +24,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 @pytest.fixture
 def mock_apsystems() -> Generator[AsyncMock, None, None]:
-    """Override APsystemsEZ1M.get_device_info() to return MY_SERIAL_NUMBER as the serial number."""
+    """Mock APSystems lib."""
     with (
         patch(
             "homeassistant.components.apsystems.APsystemsEZ1M",
