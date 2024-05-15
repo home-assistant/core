@@ -7,9 +7,9 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components import script
 from homeassistant.components.script import DOMAIN, EVENT_SCRIPT_STARTED, ScriptEntity
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
@@ -729,7 +729,7 @@ async def test_extraction_functions(
 ) -> None:
     """Test extraction functions."""
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
 
     device_in_both = device_registry.async_get_or_create(
@@ -1164,7 +1164,7 @@ async def test_script_variables(
 async def test_script_this_var_always(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test script always has reference to this, even with no variabls are configured."""
+    """Test script always has reference to this, even with no variables are configured."""
 
     assert await async_setup_component(
         hass,

@@ -44,7 +44,7 @@ async def setup_config_entry(
 ) -> list[Platform]:
     """Fixture to setup the config entry."""
     await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(
@@ -146,20 +146,24 @@ async def test_switch_on(
 
 
 @pytest.mark.parametrize(
-    "zone_state_response",
-    [ZONE_3_ON_RESPONSE],
+    ("zone_state_response", "start_state"),
+    [
+        (ZONE_3_ON_RESPONSE, "on"),
+        (ZONE_OFF_RESPONSE, "off"),  # Already off
+    ],
 )
 async def test_switch_off(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     responses: list[AiohttpClientMockResponse],
+    start_state: str,
 ) -> None:
     """Test turning off irrigation switch."""
 
     # Initially the test zone is on
     zone = hass.states.get("switch.rain_bird_sprinkler_3")
     assert zone is not None
-    assert zone.state == "on"
+    assert zone.state == start_state
 
     aioclient_mock.mock_calls.clear()
     responses.extend(
@@ -294,7 +298,7 @@ async def test_no_unique_id(
     responses.insert(0, mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE))
 
     await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     zone = hass.states.get("switch.rain_bird_sprinkler_3")
     assert zone is not None

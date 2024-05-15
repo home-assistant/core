@@ -1391,14 +1391,14 @@ async def test_restore_state_sensor(
         },
     ],
 )
-async def test_service_sensor_update(hass: HomeAssistant, mock_modbus, mock_ha) -> None:
+async def test_service_sensor_update(hass: HomeAssistant, mock_modbus_ha) -> None:
     """Run test for service homeassistant.update_entity."""
-    mock_modbus.read_input_registers.return_value = ReadResult([27])
+    mock_modbus_ha.read_input_registers.return_value = ReadResult([27])
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
     assert hass.states.get(ENTITY_ID).state == "27"
-    mock_modbus.read_input_registers.return_value = ReadResult([32])
+    mock_modbus_ha.read_input_registers.return_value = ReadResult([32])
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )

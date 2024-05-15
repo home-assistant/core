@@ -49,7 +49,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import Event, HomeAssistant, State
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State
 from homeassistant.helpers import entityfilter, state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_registry import (
@@ -57,7 +57,6 @@ from homeassistant.helpers.entity_registry import (
     EventEntityRegistryUpdatedData,
 )
 from homeassistant.helpers.entity_values import EntityValues
-from homeassistant.helpers.event import EventStateChangedData
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import as_timestamp
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -258,7 +257,7 @@ class PrometheusMetrics:
         self, entity_id: str, friendly_name: str | None = None
     ) -> None:
         """Remove labelsets matching the given entity id from all metrics."""
-        for metric in self._metrics.values():
+        for metric in list(self._metrics.values()):
             for sample in cast(list[prometheus_client.Metric], metric.collect())[
                 0
             ].samples:

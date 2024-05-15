@@ -127,9 +127,9 @@ async def async_setup_entry(
     forked_daapd_updater = ForkedDaapdUpdater(
         hass, forked_daapd_api, config_entry.entry_id
     )
-    hass.data[DOMAIN][config_entry.entry_id][
-        HASS_DATA_UPDATER_KEY
-    ] = forked_daapd_updater
+    hass.data[DOMAIN][config_entry.entry_id][HASS_DATA_UPDATER_KEY] = (
+        forked_daapd_updater
+    )
     await forked_daapd_updater.async_init()
 
 
@@ -956,9 +956,9 @@ class ForkedDaapdUpdater:
         if not {"outputs", "volume"}.isdisjoint(update_types):  # update outputs
             if outputs := await self._api.get_request("outputs"):
                 outputs = outputs["outputs"]
-                update_events[
-                    "outputs"
-                ] = asyncio.Event()  # only for master, zones should ignore
+                update_events["outputs"] = (
+                    asyncio.Event()
+                )  # only for master, zones should ignore
                 async_dispatcher_send(
                     self.hass,
                     SIGNAL_UPDATE_OUTPUTS.format(self._entry_id),

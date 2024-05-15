@@ -335,9 +335,9 @@ class ClusterHandler(LogMixin):
             return
 
         for record in res:
-            event_data[self.cluster.find_attribute(record.attrid).name][
-                "status"
-            ] = record.status.name
+            event_data[self.cluster.find_attribute(record.attrid).name]["status"] = (
+                record.status.name
+            )
         failed = [
             self.cluster.find_attribute(record.attrid).name
             for record in res
@@ -583,7 +583,7 @@ class ZDOClusterHandler(LogMixin):
         self._cluster = device.device.endpoints[0]
         self._zha_device = device
         self._status = ClusterHandlerStatus.CREATED
-        self._unique_id = f"{str(device.ieee)}:{device.name}_ZDO"
+        self._unique_id = f"{device.ieee!s}:{device.name}_ZDO"
         self._cluster.add_listener(self)
 
     @property

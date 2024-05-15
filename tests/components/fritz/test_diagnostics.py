@@ -28,7 +28,7 @@ async def test_entry_diagnostics(
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     entry_dict = entry.as_dict()
     for key in TO_REDACT:

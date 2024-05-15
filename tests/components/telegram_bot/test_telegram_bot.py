@@ -4,9 +4,13 @@ from unittest.mock import AsyncMock, patch
 
 from telegram import Update
 
-from homeassistant.components.telegram_bot import DOMAIN, SERVICE_SEND_MESSAGE
+from homeassistant.components.telegram_bot import (
+    ATTR_MESSAGE,
+    DOMAIN,
+    SERVICE_SEND_MESSAGE,
+)
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_capture_events
@@ -21,6 +25,24 @@ async def test_webhook_platform_init(hass: HomeAssistant, webhook_platform) -> N
 async def test_polling_platform_init(hass: HomeAssistant, polling_platform) -> None:
     """Test initialization of the polling platform."""
     assert hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE) is True
+
+
+async def test_send_message(hass: HomeAssistant, webhook_platform) -> None:
+    """Test the send_message service."""
+    context = Context()
+    events = async_capture_events(hass, "telegram_sent")
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {ATTR_MESSAGE: "test_message"},
+        blocking=True,
+        context=context,
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].context == context
 
 
 async def test_webhook_endpoint_generates_telegram_text_event(
@@ -47,6 +69,7 @@ async def test_webhook_endpoint_generates_telegram_text_event(
 
     assert len(events) == 1
     assert events[0].data["text"] == update_message_text["message"]["text"]
+    assert isinstance(events[0].context, Context)
 
 
 async def test_webhook_endpoint_generates_telegram_command_event(
@@ -73,6 +96,7 @@ async def test_webhook_endpoint_generates_telegram_command_event(
 
     assert len(events) == 1
     assert events[0].data["command"] == update_message_command["message"]["text"]
+    assert isinstance(events[0].context, Context)
 
 
 async def test_webhook_endpoint_generates_telegram_callback_event(
@@ -99,6 +123,7 @@ async def test_webhook_endpoint_generates_telegram_callback_event(
 
     assert len(events) == 1
     assert events[0].data["data"] == update_callback_query["callback_query"]["data"]
+    assert isinstance(events[0].context, Context)
 
 
 async def test_polling_platform_message_text_update(
@@ -140,6 +165,7 @@ async def test_polling_platform_message_text_update(
 
     assert len(events) == 1
     assert events[0].data["text"] == update_message_text["message"]["text"]
+    assert isinstance(events[0].context, Context)
 
 
 async def test_webhook_endpoint_unauthorized_update_doesnt_generate_telegram_text_event(

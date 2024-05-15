@@ -26,7 +26,6 @@ async def get_deconz_api(
     try:
         async with asyncio.timeout(10):
             await api.refresh_state()
-        return api
 
     except errors.Unauthorized as err:
         LOGGER.warning("Invalid key for deCONZ at %s", config.host)
@@ -35,3 +34,4 @@ async def get_deconz_api(
     except (TimeoutError, errors.RequestError, errors.ResponseError) as err:
         LOGGER.error("Error connecting to deCONZ gateway at %s", config.host)
         raise CannotConnect from err
+    return api

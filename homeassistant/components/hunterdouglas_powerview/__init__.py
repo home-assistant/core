@@ -1,4 +1,5 @@
 """The Hunter Douglas PowerView integration."""
+
 import logging
 
 from aiopvapi.helpers.aiorequest import AioRequest

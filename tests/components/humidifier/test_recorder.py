@@ -36,12 +36,13 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
         get_significant_states, hass, now, None, hass.states.async_entity_ids()
     )
     assert len(states) >= 1
-    for entity_states in states.values():
-        for state in filter(
-            lambda state: split_entity_id(state.entity_id)[0] == humidifier.DOMAIN,
-            entity_states,
-        ):
-            assert ATTR_MIN_HUMIDITY not in state.attributes
-            assert ATTR_MAX_HUMIDITY not in state.attributes
-            assert ATTR_AVAILABLE_MODES not in state.attributes
-            assert ATTR_FRIENDLY_NAME in state.attributes
+    for state in (
+        state
+        for entity_states in states.values()
+        for state in entity_states
+        if split_entity_id(state.entity_id)[0] == humidifier.DOMAIN
+    ):
+        assert ATTR_MIN_HUMIDITY not in state.attributes
+        assert ATTR_MAX_HUMIDITY not in state.attributes
+        assert ATTR_AVAILABLE_MODES not in state.attributes
+        assert ATTR_FRIENDLY_NAME in state.attributes

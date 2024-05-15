@@ -5,7 +5,7 @@ import json
 
 import pytest
 
-import homeassistant.components.device_tracker as device_tracker
+from homeassistant.components import device_tracker
 from homeassistant.components.device_tracker import legacy
 from homeassistant.components.meraki.device_tracker import (
     CONF_SECRET,

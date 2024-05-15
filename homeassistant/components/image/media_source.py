@@ -1,4 +1,4 @@
-"""Expose iamges as media sources."""
+"""Expose images as media sources."""
 
 from __future__ import annotations
 

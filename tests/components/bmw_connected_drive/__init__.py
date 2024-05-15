@@ -54,9 +54,9 @@ async def setup_mocked_integration(hass: HomeAssistant) -> MockConfigEntry:
 
 def check_remote_service_call(
     router: respx.MockRouter,
-    remote_service: str = None,
-    remote_service_params: dict = None,
-    remote_service_payload: dict = None,
+    remote_service: str | None = None,
+    remote_service_params: dict | None = None,
+    remote_service_payload: dict | None = None,
 ):
     """Check if the last call was a successful remote service call."""
 
