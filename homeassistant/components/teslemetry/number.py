@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from itertools import chain
+from typing import cast
 
 from tesla_fleet_api.const import Scope
 
@@ -166,18 +167,20 @@ class TeslemetryVehicleNumberEntity(TeslemetryVehicleEntity, NumberEntity):
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         self._attr_native_value = self._value
-        self._attr_native_min_value = float(self.get(
-            self.entity_description.min_key,
-            self.entity_description.native_min_value,
-        ))
-        self._attr_native_max_value = float(self.get(
-            self.entity_description.max_key,
-            self.entity_description.native_max_value,
-        ))
-
-    def _async_value_from_stream(self, value) -> None:
-        """Update the value of the entity."""
-        self._attr_native_value = value
+        self._attr_native_min_value = cast(
+            float,
+            self.get(
+                self.entity_description.min_key,
+                self.entity_description.native_min_value,
+            ),
+        )
+        self._attr_native_max_value = cast(
+            float,
+            self.get(
+                self.entity_description.max_key,
+                self.entity_description.native_max_value,
+            ),
+        )
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
@@ -314,13 +317,19 @@ class TeslemetryEnergyInfoNumberSensorEntity(TeslemetryEnergyInfoEntity, NumberE
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         self._attr_native_value = self._value
-        self._attr_native_min_value = self.get(
-            self.entity_description.min_key,
-            self.entity_description.native_min_value,
+        self._attr_native_min_value = cast(
+            float,
+            self.get(
+                self.entity_description.min_key,
+                self.entity_description.native_min_value,
+            ),
         )
-        self._attr_native_max_value = self.get(
-            self.entity_description.max_key,
-            self.entity_description.native_max_value,
+        self._attr_native_max_value = cast(
+            float,
+            self.get(
+                self.entity_description.max_key,
+                self.entity_description.native_max_value,
+            ),
         )
         self._attr_icon = icon_for_battery_level(self.native_value)
 
