@@ -58,6 +58,7 @@ from homeassistant.util.enum import try_parse_enum
 
 from .const import (
     ATTR_CRON_PATTERN,
+    ATTR_NEXT_RESET,
     ATTR_VALUE,
     BIMONTHLY,
     CONF_CRON_PATTERN,
@@ -373,6 +374,7 @@ class UtilityMeterSensor(RestoreSensor):
 
     _attr_translation_key = "utility_meter"
     _attr_should_poll = False
+    _unrecorded_attributes = frozenset({ATTR_NEXT_RESET})
 
     def __init__(
         self,
@@ -424,6 +426,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._sensor_periodically_resetting = periodically_resetting
         self._tariff = tariff
         self._tariff_entity = tariff_entity
+        self._next_reset = None
 
     def start(self, attributes: Mapping[str, Any]) -> None:
         """Initialize unit and state upon source initial update."""
@@ -564,13 +567,14 @@ class UtilityMeterSensor(RestoreSensor):
         """Program the reset of the utility meter."""
         if self._cron_pattern is not None:
             tz = dt_util.get_time_zone(self.hass.config.time_zone)
+            self._next_reset = croniter(self._cron_pattern, dt_util.now(tz)).get_next(
+                datetime
+            )  # we need timezone for DST purposes (see issue #102984)
             self.async_on_remove(
                 async_track_point_in_time(
                     self.hass,
                     self._async_reset_meter,
-                    croniter(self._cron_pattern, dt_util.now(tz)).get_next(
-                        datetime
-                    ),  # we need timezone for DST purposes (see issue #102984)
+                    self._next_reset,
                 )
             )
 
@@ -754,6 +758,8 @@ class UtilityMeterSensor(RestoreSensor):
         # in extra state attributes.
         if last_reset := self._last_reset:
             state_attr[ATTR_LAST_RESET] = last_reset.isoformat()
+        if self._next_reset is not None:
+            state_attr[ATTR_NEXT_RESET] = self._next_reset.isoformat()
 
         return state_attr
 

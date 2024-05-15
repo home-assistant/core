@@ -38,7 +38,7 @@ from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
 from homeassistant.config import async_process_component_config
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, _DataT
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -973,8 +973,10 @@ class MockToggleEntity(entity.ToggleEntity):
             return None
 
 
-class MockConfigEntry(config_entries.ConfigEntry):
+class MockConfigEntry(config_entries.ConfigEntry[_DataT]):
     """Helper for creating config entries that adds some defaults."""
+
+    runtime_data: _DataT
 
     def __init__(
         self,

@@ -196,8 +196,8 @@ class EntityPlatform:
           to that number.
 
         The default value for parallel requests is decided based on the first
-        entity that is added to Home Assistant. It's 0 if the entity defines
-        the async_update method, else it's 1.
+        entity of the platform which is added to Home Assistant. It's 1 if the
+        entity implements the update method, else it's 0.
         """
         if self.parallel_updates_created:
             return self.parallel_updates

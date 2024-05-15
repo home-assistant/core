@@ -9,7 +9,6 @@ from unittest.mock import patch
 from aiounifi.models.message import MessageKey
 import pytest
 
-from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
 from homeassistant.components.unifi.hub.websocket import RETRY_TIMER
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
@@ -44,7 +43,9 @@ class WebsocketStateManager(asyncio.Event):
         Mock api calls done by 'await self.api.login'.
         Fail will make 'await self.api.start_websocket' return immediately.
         """
-        hub = self.hass.data[UNIFI_DOMAIN][DEFAULT_CONFIG_ENTRY_ID]
+        hub = self.hass.config_entries.async_get_entry(
+            DEFAULT_CONFIG_ENTRY_ID
+        ).runtime_data
         self.aioclient_mock.get(
             f"https://{hub.config.host}:1234", status=302
         )  # Check UniFi OS
@@ -80,7 +81,7 @@ def mock_unifi_websocket(hass):
         data: list[dict] | dict | None = None,
     ):
         """Generate a websocket call."""
-        hub = hass.data[UNIFI_DOMAIN][DEFAULT_CONFIG_ENTRY_ID]
+        hub = hass.config_entries.async_get_entry(DEFAULT_CONFIG_ENTRY_ID).runtime_data
         if data and not message:
             hub.api.messages.handler(data)
         elif data and message:
