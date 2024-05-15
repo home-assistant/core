@@ -6,12 +6,12 @@ from unittest.mock import AsyncMock, patch
 from hassil.recognize import Intent, IntentData, MatchEntity, RecognizeResult
 import pytest
 
-from homeassistant.components import conversation
+from homeassistant.components import conversation, cover
 from homeassistant.components.conversation import default_agent
 from homeassistant.components.homeassistant.exposed_entities import (
     async_get_assistant_settings,
 )
-from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, STATE_CLOSED
 from homeassistant.core import DOMAIN as HASS_DOMAIN, Context, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -607,14 +607,23 @@ async def test_error_no_domain_in_floor(
 
 async def test_error_no_device_class(hass: HomeAssistant, init_components) -> None:
     """Test error message when no entities of a device class exist."""
+    # Create a cover entity that is not a window.
+    # This ensures that the filtering below won't exit early because there are
+    # no entities in the cover domain.
+    hass.states.async_set(
+        "cover.garage_door",
+        STATE_CLOSED,
+        attributes={ATTR_DEVICE_CLASS: cover.CoverDeviceClass.GARAGE},
+    )
 
     # We don't have a sentence for opening all windows
+    cover_domain = MatchEntity(name="domain", value="cover", text="cover")
     window_class = MatchEntity(name="device_class", value="window", text="windows")
     recognize_result = RecognizeResult(
         intent=Intent("HassTurnOn"),
         intent_data=IntentData([]),
-        entities={"device_class": window_class},
-        entities_list=[window_class],
+        entities={"domain": cover_domain, "device_class": window_class},
+        entities_list=[cover_domain, window_class],
     )
 
     with patch(
@@ -792,7 +801,9 @@ async def test_no_states_matched_default_error(
 
     with patch(
         "homeassistant.components.conversation.default_agent.intent.async_handle",
-        side_effect=intent.NoStatesMatchedError(),
+        side_effect=intent.MatchFailedError(
+            intent.MatchTargetsResult(False), intent.MatchTargetsConstraints()
+        ),
     ):
         result = await conversation.async_converse(
             hass, "turn on lights in the kitchen", None, Context(), None
@@ -863,17 +874,14 @@ async def test_empty_aliases(
         assert slot_lists.keys() == {"area", "name", "floor"}
         areas = slot_lists["area"]
         assert len(areas.values) == 1
-        assert areas.values[0].value_out == area_kitchen.id
         assert areas.values[0].text_in.text == area_kitchen.normalized_name
 
         names = slot_lists["name"]
         assert len(names.values) == 1
-        assert names.values[0].value_out == kitchen_light.name
         assert names.values[0].text_in.text == kitchen_light.name
 
         floors = slot_lists["floor"]
         assert len(floors.values) == 1
-        assert floors.values[0].value_out == floor_1.floor_id
         assert floors.values[0].text_in.text == floor_1.name
 
 
@@ -1082,3 +1090,35 @@ async def test_same_aliased_entities_in_different_areas(
         hass, "how many lights are on?", None, Context(), None
     )
     assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER
+
+
+async def test_device_id_in_handler(hass: HomeAssistant, init_components) -> None:
+    """Test that the default agent passes device_id to intent handler."""
+    device_id = "test_device"
+
+    # Reuse custom sentences in test config to trigger default agent.
+    class OrderBeerIntentHandler(intent.IntentHandler):
+        intent_type = "OrderBeer"
+
+        def __init__(self) -> None:
+            super().__init__()
+            self.device_id: str | None = None
+
+        async def async_handle(
+            self, intent_obj: intent.Intent
+        ) -> intent.IntentResponse:
+            self.device_id = intent_obj.device_id
+            return intent_obj.create_response()
+
+    handler = OrderBeerIntentHandler()
+    intent.async_register(hass, handler)
+
+    result = await conversation.async_converse(
+        hass,
+        "I'd like to order a stout please",
+        None,
+        Context(),
+        device_id=device_id,
+    )
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert handler.device_id == device_id

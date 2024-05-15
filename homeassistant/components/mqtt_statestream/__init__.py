@@ -57,7 +57,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _state_publisher(evt: Event[EventStateChangedData]) -> None:
         entity_id = evt.data["entity_id"]
-        assert (new_state := evt.data["new_state"])
+        new_state = evt.data["new_state"]
+        assert new_state
 
         payload = new_state.state
 

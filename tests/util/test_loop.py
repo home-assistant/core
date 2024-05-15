@@ -1,9 +1,11 @@
 """Tests for async util methods from Python source."""
 
+import threading
 from unittest.mock import Mock, patch
 
 import pytest
 
+from homeassistant.core import HomeAssistant
 from homeassistant.util import loop as haloop
 
 from tests.common import extract_stack_to_frame
@@ -13,22 +15,24 @@ def banned_function():
     """Mock banned function."""
 
 
-async def test_check_loop_async() -> None:
-    """Test check_loop detects when called from event loop without integration context."""
+async def test_raise_for_blocking_call_async() -> None:
+    """Test raise_for_blocking_call detects when called from event loop without integration context."""
     with pytest.raises(RuntimeError):
-        haloop.check_loop(banned_function)
+        haloop.raise_for_blocking_call(banned_function)
 
 
-async def test_check_loop_async_non_strict_core(
+async def test_raise_for_blocking_call_async_non_strict_core(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test non_strict_core check_loop detects from event loop without integration context."""
-    haloop.check_loop(banned_function, strict_core=False)
+    """Test non_strict_core raise_for_blocking_call detects from event loop without integration context."""
+    haloop.raise_for_blocking_call(banned_function, strict_core=False)
     assert "Detected blocking call to banned_function" in caplog.text
 
 
-async def test_check_loop_async_integration(caplog: pytest.LogCaptureFixture) -> None:
-    """Test check_loop detects and raises when called from event loop from integration context."""
+async def test_raise_for_blocking_call_async_integration(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test raise_for_blocking_call detects and raises when called from event loop from integration context."""
     frames = extract_stack_to_frame(
         [
             Mock(
@@ -67,7 +71,7 @@ async def test_check_loop_async_integration(caplog: pytest.LogCaptureFixture) ->
             return_value=frames,
         ),
     ):
-        haloop.check_loop(banned_function)
+        haloop.raise_for_blocking_call(banned_function)
     assert (
         "Detected blocking call to banned_function inside the event loop by integration"
         " 'hue' at homeassistant/components/hue/light.py, line 23: self.light.is_on "
@@ -77,10 +81,10 @@ async def test_check_loop_async_integration(caplog: pytest.LogCaptureFixture) ->
     )
 
 
-async def test_check_loop_async_integration_non_strict(
+async def test_raise_for_blocking_call_async_integration_non_strict(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test check_loop detects when called from event loop from integration context."""
+    """Test raise_for_blocking_call detects when called from event loop from integration context."""
     frames = extract_stack_to_frame(
         [
             Mock(
@@ -118,7 +122,7 @@ async def test_check_loop_async_integration_non_strict(
             return_value=frames,
         ),
     ):
-        haloop.check_loop(banned_function, strict=False)
+        haloop.raise_for_blocking_call(banned_function, strict=False)
     assert (
         "Detected blocking call to banned_function inside the event loop by integration"
         " 'hue' at homeassistant/components/hue/light.py, line 23: self.light.is_on "
@@ -128,8 +132,10 @@ async def test_check_loop_async_integration_non_strict(
     )
 
 
-async def test_check_loop_async_custom(caplog: pytest.LogCaptureFixture) -> None:
-    """Test check_loop detects when called from event loop with custom component context."""
+async def test_raise_for_blocking_call_async_custom(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test raise_for_blocking_call detects when called from event loop with custom component context."""
     frames = extract_stack_to_frame(
         [
             Mock(
@@ -168,7 +174,7 @@ async def test_check_loop_async_custom(caplog: pytest.LogCaptureFixture) -> None
             return_value=frames,
         ),
     ):
-        haloop.check_loop(banned_function)
+        haloop.raise_for_blocking_call(banned_function)
     assert (
         "Detected blocking call to banned_function inside the event loop by custom "
         "integration 'hue' at custom_components/hue/light.py, line 23: self.light.is_on"
@@ -178,18 +184,23 @@ async def test_check_loop_async_custom(caplog: pytest.LogCaptureFixture) -> None
     ) in caplog.text
 
 
-def test_check_loop_sync(caplog: pytest.LogCaptureFixture) -> None:
-    """Test check_loop does nothing when called from thread."""
-    haloop.check_loop(banned_function)
+async def test_raise_for_blocking_call_sync(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test raise_for_blocking_call does nothing when called from thread."""
+    func = haloop.protect_loop(banned_function, threading.get_ident())
+    await hass.async_add_executor_job(func)
     assert "Detected blocking call inside the event loop" not in caplog.text
 
 
-def test_protect_loop_sync() -> None:
-    """Test protect_loop calls check_loop."""
+async def test_protect_loop_async() -> None:
+    """Test protect_loop calls raise_for_blocking_call."""
     func = Mock()
-    with patch("homeassistant.util.loop.check_loop") as mock_check_loop:
-        haloop.protect_loop(func)(1, test=2)
-    mock_check_loop.assert_called_once_with(
+    with patch(
+        "homeassistant.util.loop.raise_for_blocking_call"
+    ) as mock_raise_for_blocking_call:
+        haloop.protect_loop(func, threading.get_ident())(1, test=2)
+    mock_raise_for_blocking_call.assert_called_once_with(
         func,
         strict=True,
         args=(1,),

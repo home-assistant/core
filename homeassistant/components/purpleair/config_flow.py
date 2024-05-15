@@ -153,7 +153,7 @@ async def async_validate_api_key(hass: HomeAssistant, api_key: str) -> Validatio
     except PurpleAirError as err:
         LOGGER.error("PurpleAir error while checking API key: %s", err)
         errors["base"] = "unknown"
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         LOGGER.exception("Unexpected exception while checking API key: %s", err)
         errors["base"] = "unknown"
 
@@ -181,7 +181,7 @@ async def async_validate_coordinates(
     except PurpleAirError as err:
         LOGGER.error("PurpleAir error while getting nearby sensors: %s", err)
         errors["base"] = "unknown"
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         LOGGER.exception("Unexpected exception while getting nearby sensors: %s", err)
         errors["base"] = "unknown"
     else:

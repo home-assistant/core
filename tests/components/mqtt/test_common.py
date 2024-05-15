@@ -3,7 +3,6 @@
 from collections.abc import Iterable
 from contextlib import suppress
 import copy
-from datetime import datetime
 import json
 from pathlib import Path
 from typing import Any
@@ -83,7 +82,7 @@ def help_all_subscribe_calls(mqtt_client_mock: MqttMockPahoClient) -> list[Any]:
 def help_custom_config(
     mqtt_entity_domain: str,
     mqtt_base_config: ConfigType,
-    mqtt_entity_configs: Iterable[ConfigType,],
+    mqtt_entity_configs: Iterable[ConfigType],
 ) -> ConfigType:
     """Tweak a default config for parametrization.
 
@@ -1326,12 +1325,12 @@ async def help_test_entity_debug_info_max_messages(
         "subscriptions"
     ]
 
-    start_dt = datetime(2019, 1, 1, 0, 0, 0, tzinfo=dt_util.UTC)
-    with freeze_time(start_dt):
+    with freeze_time(start_dt := dt_util.utcnow()):
         for i in range(debug_info.STORED_MESSAGES + 1):
             async_fire_mqtt_message(hass, "test-topic", f"{i}")
 
-    debug_info_data = debug_info.info_for_device(hass, device.id)
+        debug_info_data = debug_info.info_for_device(hass, device.id)
+
     assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
     assert (
         len(debug_info_data["entities"][0]["subscriptions"][0]["messages"])
@@ -1401,36 +1400,35 @@ async def help_test_entity_debug_info_message(
 
     debug_info_data = debug_info.info_for_device(hass, device.id)
 
-    start_dt = datetime(2019, 1, 1, 0, 0, 0, tzinfo=dt_util.UTC)
-
     if state_topic is not None:
         assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
         assert {"topic": state_topic, "messages": []} in debug_info_data["entities"][0][
             "subscriptions"
         ]
 
-        with freeze_time(start_dt):
+        with freeze_time(start_dt := dt_util.utcnow()):
             async_fire_mqtt_message(hass, str(state_topic), state_payload)
 
-        debug_info_data = debug_info.info_for_device(hass, device.id)
-        assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
-        assert {
-            "topic": state_topic,
-            "messages": [
-                {
-                    "payload": str(state_payload),
-                    "qos": 0,
-                    "retain": False,
-                    "time": start_dt,
-                    "topic": state_topic,
-                }
-            ],
-        } in debug_info_data["entities"][0]["subscriptions"]
+            debug_info_data = debug_info.info_for_device(hass, device.id)
+            assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
+            assert {
+                "topic": state_topic,
+                "messages": [
+                    {
+                        "payload": str(state_payload),
+                        "qos": 0,
+                        "retain": False,
+                        "time": start_dt,
+                        "topic": state_topic,
+                    }
+                ],
+            } in debug_info_data["entities"][0]["subscriptions"]
 
     expected_transmissions = []
-    if service:
-        # Trigger an outgoing MQTT message
-        with freeze_time(start_dt):
+
+    with freeze_time(start_dt := dt_util.utcnow()):
+        if service:
+            # Trigger an outgoing MQTT message
             if service:
                 service_data = {ATTR_ENTITY_ID: f"{domain}.beer_test"}
                 if service_parameters:
@@ -1443,23 +1441,23 @@ async def help_test_entity_debug_info_message(
                     blocking=True,
                 )
 
-        expected_transmissions = [
-            {
-                "topic": command_topic,
-                "messages": [
-                    {
-                        "payload": str(command_payload),
-                        "qos": 0,
-                        "retain": False,
-                        "time": start_dt,
-                        "topic": command_topic,
-                    }
-                ],
-            }
-        ]
+            expected_transmissions = [
+                {
+                    "topic": command_topic,
+                    "messages": [
+                        {
+                            "payload": str(command_payload),
+                            "qos": 0,
+                            "retain": False,
+                            "time": start_dt,
+                            "topic": command_topic,
+                        }
+                    ],
+                }
+            ]
 
-    debug_info_data = debug_info.info_for_device(hass, device.id)
-    assert debug_info_data["entities"][0]["transmitted"] == expected_transmissions
+        debug_info_data = debug_info.info_for_device(hass, device.id)
+        assert debug_info_data["entities"][0]["transmitted"] == expected_transmissions
 
 
 async def help_test_entity_debug_info_remove(
@@ -1827,7 +1825,7 @@ async def help_test_reloadable(
     entry.add_to_hass(hass)
     mqtt_client_mock.connect.return_value = 0
     with patch("homeassistant.config.load_yaml_config_file", return_value=old_config):
-        await entry.async_setup(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
 
     assert hass.states.get(f"{domain}.test_old_1")
     assert hass.states.get(f"{domain}.test_old_2")
