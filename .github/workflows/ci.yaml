@@ -611,14 +611,14 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          pylint --ignore-missing-annotations=y --ignore-wrong-coordinator-module=y homeassistant
+          pylint --ignore-missing-annotations=y homeassistant
       - name: Run pylint (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
         run: |
           . venv/bin/activate
           python --version
-          pylint --ignore-missing-annotations=y --ignore-wrong-coordinator-module=y homeassistant/components/${{ needs.info.outputs.integrations_glob }}
+          pylint --ignore-missing-annotations=y homeassistant/components/${{ needs.info.outputs.integrations_glob }}
 
   mypy:
     name: Check mypy
@@ -1106,7 +1106,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@v4.3.0
+        uses: codecov/codecov-action@v4.4.0
         with:
           fail_ci_if_error: true
           flags: full-suite
@@ -1240,7 +1240,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v4.3.0
+        uses: codecov/codecov-action@v4.4.0
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}

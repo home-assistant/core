@@ -95,7 +95,10 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             _LOGGER.error(err)
             raise AbortFlow(
                 "addon_set_config_failed",
-                description_placeholders=self._get_translation_placeholders(),
+                description_placeholders={
+                    **self._get_translation_placeholders(),
+                    "addon_name": addon_manager.addon_name,
+                },
             ) from err
 
     async def _async_get_addon_info(self, addon_manager: AddonManager) -> AddonInfo:

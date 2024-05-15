@@ -485,6 +485,12 @@ def compile_statistics(instance: Recorder, start: datetime, fire_events: bool) -
 
     The actual calculation is delegated to the platforms.
     """
+    # Define modified_statistic_ids outside of the "with" statement as
+    # _compile_statistics may raise and be trapped by
+    # filter_unique_constraint_integrity_error which would make
+    # modified_statistic_ids unbound.
+    modified_statistic_ids: set[str] | None = None
+
     # Return if we already have 5-minute statistics for the requested period
     with session_scope(
         session=instance.get_session(),

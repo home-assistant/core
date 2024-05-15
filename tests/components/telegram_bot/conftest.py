@@ -1,9 +1,11 @@
 """Tests for the telegram_bot integration."""
 
+from datetime import datetime
 from unittest.mock import patch
 
 import pytest
-from telegram import User
+from telegram import Chat, Message, User
+from telegram.constants import ChatType
 
 from homeassistant.components.telegram_bot import (
     CONF_ALLOWED_CHAT_IDS,
@@ -79,6 +81,11 @@ def mock_register_webhook():
 def mock_external_calls():
     """Mock calls that make calls to the live Telegram API."""
     test_user = User(123456, "Testbot", True)
+    message = Message(
+        message_id=12345,
+        date=datetime.now(),
+        chat=Chat(id=123456, type=ChatType.PRIVATE),
+    )
     with (
         patch(
             "telegram.Bot.get_me",
@@ -91,6 +98,10 @@ def mock_external_calls():
         patch(
             "telegram.Bot.bot",
             test_user,
+        ),
+        patch(
+            "telegram.Bot.send_message",
+            return_value=message,
         ),
         patch("telegram.ext.Updater._bootstrap"),
     ):
