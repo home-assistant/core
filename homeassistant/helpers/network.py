@@ -331,3 +331,23 @@ def is_cloud_connection(hass: HomeAssistant) -> bool:
         return False
 
     return remote.is_cloud_request.get()
+
+
+@bind_hass
+def is_internal_network_available(hass: HomeAssistant) -> bool:
+    """Check if the Home Assistant instance has access to the internal network."""
+    # Check the availability of the router's network interface
+    router_ip = "192.168.1.1"  # IP address of the router in your network
+    router_port = 80  # Port for accessing the router's web interface (e.g., 80 for HTTP)
+
+    try:
+        # Example of checking the router's availability
+        # This could be an HTTP request or an ICMP check (ping)
+        # Here, you can use any method you deem necessary
+        import socket
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(2)  # Connection timeout in seconds
+            s.connect((router_ip, router_port))
+        return True  # If the connection is successful, the network is available
+    except Exception as e:
+        return False  # If the connection fails, the network is unavailable
