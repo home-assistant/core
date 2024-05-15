@@ -2,7 +2,6 @@
 
 from unittest.mock import patch
 
-from homeassistant import config_entries
 from homeassistant.components import hue
 from homeassistant.components.hue import bridge
 from homeassistant.components.hue.const import (
@@ -12,6 +11,8 @@ from homeassistant.components.hue.const import (
 from homeassistant.core import HomeAssistant
 
 from .conftest import setup_bridge, setup_component
+
+from tests.common import MockConfigEntry
 
 GROUP_RESPONSE = {
     "group_1": {
@@ -49,11 +50,8 @@ SCENE_RESPONSE = {
 
 async def test_hue_activate_scene(hass: HomeAssistant, mock_api_v1) -> None:
     """Test successful hue_activate_scene."""
-    config_entry = config_entries.ConfigEntry(
-        version=1,
-        minor_version=1,
+    config_entry = MockConfigEntry(
         domain=hue.DOMAIN,
-        title="Mock Title",
         data={"host": "1.2.3.4", "api_key": "mock-api-key", "api_version": 1},
         source="test",
         options={CONF_ALLOW_HUE_GROUPS: True, CONF_ALLOW_UNREACHABLE: False},
@@ -87,11 +85,8 @@ async def test_hue_activate_scene(hass: HomeAssistant, mock_api_v1) -> None:
 
 async def test_hue_activate_scene_transition(hass: HomeAssistant, mock_api_v1) -> None:
     """Test successful hue_activate_scene with transition."""
-    config_entry = config_entries.ConfigEntry(
-        version=1,
-        minor_version=1,
+    config_entry = MockConfigEntry(
         domain=hue.DOMAIN,
-        title="Mock Title",
         data={"host": "1.2.3.4", "api_key": "mock-api-key", "api_version": 1},
         source="test",
         options={CONF_ALLOW_HUE_GROUPS: True, CONF_ALLOW_UNREACHABLE: False},
@@ -127,11 +122,8 @@ async def test_hue_activate_scene_group_not_found(
     hass: HomeAssistant, mock_api_v1
 ) -> None:
     """Test failed hue_activate_scene due to missing group."""
-    config_entry = config_entries.ConfigEntry(
-        version=1,
-        minor_version=1,
+    config_entry = MockConfigEntry(
         domain=hue.DOMAIN,
-        title="Mock Title",
         data={"host": "1.2.3.4", "api_key": "mock-api-key", "api_version": 1},
         source="test",
         options={CONF_ALLOW_HUE_GROUPS: True, CONF_ALLOW_UNREACHABLE: False},
@@ -162,11 +154,8 @@ async def test_hue_activate_scene_scene_not_found(
     hass: HomeAssistant, mock_api_v1
 ) -> None:
     """Test failed hue_activate_scene due to missing scene."""
-    config_entry = config_entries.ConfigEntry(
-        version=1,
-        minor_version=1,
+    config_entry = MockConfigEntry(
         domain=hue.DOMAIN,
-        title="Mock Title",
         data={"host": "1.2.3.4", "api_key": "mock-api-key", "api_version": 1},
         source="test",
         options={CONF_ALLOW_HUE_GROUPS: True, CONF_ALLOW_UNREACHABLE: False},

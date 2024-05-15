@@ -114,6 +114,7 @@ def default_request_fixture(
     port_management_payload: dict[str, Any],
     param_properties_payload: dict[str, Any],
     param_ports_payload: dict[str, Any],
+    mqtt_status_code: int,
 ) -> Callable[[str], None]:
     """Mock default Vapix requests responses."""
 
@@ -131,7 +132,7 @@ def default_request_fixture(
             json=port_management_payload,
         )
         respx.post("/axis-cgi/mqtt/client.cgi").respond(
-            json=MQTT_CLIENT_RESPONSE,
+            json=MQTT_CLIENT_RESPONSE, status_code=mqtt_status_code
         )
         respx.post("/axis-cgi/streamprofile.cgi").respond(
             json=STREAM_PROFILES_RESPONSE,
@@ -237,6 +238,12 @@ def param_properties_data_fixture() -> dict[str, Any]:
 def param_ports_data_fixture() -> dict[str, Any]:
     """Property parameter data."""
     return PORTS_RESPONSE
+
+
+@pytest.fixture(name="mqtt_status_code")
+def mqtt_status_code_fixture():
+    """Property parameter data."""
+    return 200
 
 
 @pytest.fixture(name="setup_default_vapix_requests")

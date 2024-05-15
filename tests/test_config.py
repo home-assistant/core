@@ -857,6 +857,7 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
             "internal_url": "http://example.local",
             "media_dirs": {"mymedia": "/usr"},
             "legacy_templates": True,
+            "debug": True,
             "currency": "EUR",
             "country": "SE",
             "language": "sv",
@@ -877,6 +878,7 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
     assert hass.config.media_dirs == {"mymedia": "/usr"}
     assert hass.config.config_source is ConfigSource.YAML
     assert hass.config.legacy_templates is True
+    assert hass.config.debug is True
     assert hass.config.currency == "EUR"
     assert hass.config.country == "SE"
     assert hass.config.language == "sv"

@@ -477,7 +477,7 @@ async def test_media_image_proxy(
     class MockWebsession:
         """Test websession."""
 
-        async def get(self, url):
+        async def get(self, url, **kwargs):
             """Test websession get."""
             return MockResponse()
 

@@ -154,7 +154,6 @@ class FlowResult(TypedDict, Generic[_HandlerT], total=False):
     handler: Required[_HandlerT]
     last_step: bool | None
     menu_options: Container[str]
-    options: Mapping[str, Any]
     preview: str | None
     progress_action: str
     progress_task: asyncio.Task[Any] | None
@@ -352,6 +351,18 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
     ) -> _FlowResultT:
         """Continue a data entry flow."""
         result: _FlowResultT | None = None
+
+        # Workaround for flow handlers which have not been upgraded to pass a show
+        # progress task, needed because of the change to eager tasks in HA Core 2024.5,
+        # can be removed in HA Core 2024.8.
+        flow = self._progress.get(flow_id)
+        if flow and flow.deprecated_show_progress:
+            if (cur_step := flow.cur_step) and cur_step[
+                "type"
+            ] == FlowResultType.SHOW_PROGRESS:
+                # Allow the progress task to finish before we call the flow handler
+                await asyncio.sleep(0)
+
         while not result or result["type"] == FlowResultType.SHOW_PROGRESS_DONE:
             result = await self._async_configure(flow_id, user_input)
             flow = self._progress.get(flow_id)
@@ -442,7 +453,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
                 )
             ):
                 # Tell frontend to reload the flow state.
-                self.hass.bus.async_fire(
+                self.hass.bus.async_fire_internal(
                     EVENT_DATA_ENTRY_FLOW_PROGRESSED,
                     {"handler": flow.handler, "flow_id": flow_id, "refresh": True},
                 )
@@ -489,7 +500,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
         flow.async_cancel_progress_task()
         try:
             flow.async_remove()
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error removing %s flow", flow.handler)
 
     async def _async_handle_step(

@@ -45,7 +45,7 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_api_key"
             except (ApiError, ClientConnectorError, TimeoutError):
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
             else:
                 return await self.async_step_profiles()

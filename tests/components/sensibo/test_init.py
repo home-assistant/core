@@ -152,20 +152,6 @@ async def test_unload_entry(hass: HomeAssistant, get_data: SensiboData) -> None:
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def remove_device(ws_client, device_id, config_entry_id):
-    """Remove config entry from a device."""
-    await ws_client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": config_entry_id,
-            "device_id": device_id,
-        }
-    )
-    response = await ws_client.receive_json()
-    return response["success"]
-
-
 async def test_device_remove_devices(
     hass: HomeAssistant,
     load_int: ConfigEntry,
@@ -178,20 +164,13 @@ async def test_device_remove_devices(
 
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get(entity.device_id)
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), device_entry.id, load_int.entry_id
-        )
-        is False
-    )
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_entry.id, load_int.entry_id)
+    assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=load_int.entry_id,
         identifiers={(DOMAIN, "remove-device-id")},
     )
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), dead_device_entry.id, load_int.entry_id
-        )
-        is True
-    )
+    response = await client.remove_device(dead_device_entry.id, load_int.entry_id)
+    assert response["success"]

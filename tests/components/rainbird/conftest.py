@@ -187,7 +187,7 @@ def aioclient_mock(hass: HomeAssistant) -> Generator[AiohttpClientMocker, None, 
 def rainbird_json_response(result: dict[str, str]) -> bytes:
     """Create a fake API response."""
     return encryption.encrypt(
-        '{"jsonrpc": "2.0", "result": %s, "id": 1} ' % json.dumps(result),
+        f'{{"jsonrpc": "2.0", "result": {json.dumps(result)}, "id": 1}} ',
         PASSWORD,
     )
 

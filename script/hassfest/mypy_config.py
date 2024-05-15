@@ -32,6 +32,7 @@ HEADER: Final = """
 
 GENERAL_SETTINGS: Final[dict[str, str]] = {
     "python_version": ".".join(str(x) for x in REQUIRED_PYTHON_VER[:2]),
+    "platform": "linux",
     "plugins": "pydantic.mypy",
     "show_error_codes": "true",
     "follow_imports": "normal",
