@@ -3,13 +3,12 @@
     "step": {
       "user": {
         "data": {
-          "ip_address": "IP address"
+          "ip_address": "[%key:common::config_flow::data::ip%]"
         }
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
@@ -18,14 +17,14 @@
   "entity": {
     "sensor": {
       "total_power": { "name": "Total Power" },
-      "total_power_p1": { "name": "Power P1" },
-      "total_power_p2": { "name": "Power P2" },
+      "total_power_p1": { "name": "Power of P1" },
+      "total_power_p2": { "name": "Power of P2" },
       "lifetime_production": { "name": "Total Lifetime Production" },
       "lifetime_production_p1": { "name": "Lifetime Production of P1" },
       "lifetime_production_p2": { "name": "Lifetime Production of P2" },
-      "today_production": { "name": "Today Production" },
-      "today_production_p1": { "name": "Today Production P1" },
-      "today_production_p2": { "name": "Today Production P2" }
+      "today_production": { "name": "Production of Today" },
+      "today_production_p1": { "name": "P1's Production of Today" },
+      "today_production_p2": { "name": "P2's Production of Today" }
     }
   }
 }
