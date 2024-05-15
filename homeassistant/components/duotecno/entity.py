@@ -32,6 +32,7 @@ class DuotecnoEntity(Entity):
             name=unit.get_node_name(),
         )
         self._attr_unique_id = f"{unit.get_node_address()}-{unit.get_number()}"
+        self._attr_available = self._unit.is_available()
 
     async def async_added_to_hass(self) -> None:
         """When added to hass."""
@@ -40,11 +41,6 @@ class DuotecnoEntity(Entity):
     async def _on_update(self) -> None:
         """When a unit has an update."""
         self.async_write_ha_state()
-
-    @property
-    def available(self) -> bool:
-        """Available state for the unit."""
-        return self._unit.is_available()
 
 
 _T = TypeVar("_T", bound="DuotecnoEntity")
