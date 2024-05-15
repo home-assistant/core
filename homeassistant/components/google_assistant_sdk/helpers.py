@@ -128,7 +128,7 @@ def best_matching_language_code(
         return best_matching_language_code(hass, agent_language)
 
     # If assist and agent are not matching, try to find the default language
-    default_language = DEFAULT_LANGUAGE_CODES.get(language, None)
+    default_language = DEFAULT_LANGUAGE_CODES.get(language)
     if default_language is not None:
         return default_language
 
